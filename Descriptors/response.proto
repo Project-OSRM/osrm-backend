@@ -1,0 +1,4 @@
+message Response {
+  required int32  status = 1;
+  required string status_message = 2;
+}
