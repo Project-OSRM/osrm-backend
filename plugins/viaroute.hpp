@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../descriptors/descriptor_base.hpp"
 #include "../descriptors/gpx_descriptor.hpp"
 #include "../descriptors/json_descriptor.hpp"
+#include "../Descriptors/ProtoBufDescriptor.h"
 #include "../util/integer_range.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/make_unique.hpp"
@@ -178,6 +179,9 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         // case 2:
         //      descriptor = osrm::make_unique<GEOJSONDescriptor<DataFacadeT>>();
         //      break;
+        case 3:
+            descriptor = std::make_shared<PBFDescriptor<DataFacadeT>>(facade);
+            break;
         default:
             descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
             break;
