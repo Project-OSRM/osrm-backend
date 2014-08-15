@@ -11,6 +11,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 
+
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/Messages/*.proto")
+PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
+add_library(messages STATIC ${ProtoSources} ${ProtoHeaders})
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
@@ -52,14 +59,16 @@ configure_file(
   ${CMAKE_SOURCE_DIR}/util/git_sha.cpp.in
   ${CMAKE_SOURCE_DIR}/util/git_sha.cpp
 )
+
 file(GLOB ExtractorGlob extractor/*.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp)
-add_library(IMPORT OBJECT ${ImporterGlob})
-add_library(LOGGER OBJECT util/simple_logger.cpp)
+add_library(IMPORT OBJECT ${ImporterGlob} ${ProtoHeaders})
+add_library(LOGGER OBJECT Util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
 add_library(EXCEPTION OBJECT util/osrm_exception.cpp)
 add_library(MERCATOR OBJECT util/mercator.cpp)
 
+include_directories(${CMAKE_BINARY_DIR})
 set(ExtractorSources extract.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
@@ -215,14 +224,13 @@ if(NOT Boost_FOUND)
 endif()
 include_directories(${Boost_INCLUDE_DIRS})
 
-target_link_libraries(OSRM ${Boost_LIBRARIES})
-target_link_libraries(osrm-extract ${Boost_LIBRARIES})
-target_link_libraries(osrm-prepare ${Boost_LIBRARIES})
-target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
-target_link_libraries(osrm-datastore ${Boost_LIBRARIES})
-target_link_libraries(datastructure-tests ${Boost_LIBRARIES})
-target_link_libraries(algorithm-tests ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
-target_link_libraries(rtree-bench ${Boost_LIBRARIES})
+target_link_libraries(OSRM ${Boost_LIBRARIES} COORDLIB)
+target_link_libraries(osrm-extract ${Boost_LIBRARIES} COORDLIB)
+target_link_libraries(osrm-prepare ${Boost_LIBRARIES} COORDLIB)
+target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM messages)
+target_link_libraries(osrm-datastore ${Boost_LIBRARIES} COORDLIB)
+target_link_libraries(datastructure-tests ${Boost_LIBRARIES} COORDLIB)
+target_link_libraries(rtree-bench ${Boost_LIBRARIES} COORDLIB)
 
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
@@ -288,6 +296,9 @@ find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${PROTOBUF_LIBRARY})
 target_link_libraries(osrm-prepare ${PROTOBUF_LIBRARY})
+target_link_libraries(osrm-routed ${PROTOBUF_LIBRARY})
+
+
 
 find_package(BZip2 REQUIRED)
 include_directories(${BZIP_INCLUDE_DIRS})
