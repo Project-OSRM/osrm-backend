@@ -30,20 +30,152 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PBF_DESCRIPTOR_H
 
 #include "BaseDescriptor.h"
+#include "DescriptionFactory.h"
+#include "response.pb.h"
 
 template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFacadeT>
 {
   private:
+    DataFacadeT *facade;
     DescriptorConfig config;
+    DescriptionFactory description_factory, alternate_description_factory;
     FixedPointCoordinate current;
-    DataFacadeT * facade;
+    unsigned entered_restricted_area_count;
+    struct RoundAbout
+    {
+        RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
+        int start_index;
+        unsigned name_id;
+        int leave_at_exit;
+    } round_about;
+
+    struct Segment
+    {
+        Segment() : name_id(INVALID_NAMEID), length(-1), position(0) {}
+        Segment(unsigned n, int l, unsigned p) : name_id(n), length(l), position(p) {}
+        unsigned name_id;
+        int length;
+        unsigned position;
+    };
+    std::vector<Segment> shortest_path_segments, alternative_path_segments;
+    ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
+
   public:
     PBFDescriptor(DataFacadeT *facade) : facade(facade) {}
 
     void SetConfig(const DescriptorConfig &c) { config = c; }
 
+    unsigned DescribeLeg(const std::vector<PathData> route_leg,
+                         const PhantomNodes &leg_phantoms,
+                         const bool target_traversed_in_reverse,
+                         const bool is_via_leg)
+    {
+        unsigned added_element_count = 0;
+        // Get all the coordinates for the computed route
+        FixedPointCoordinate current_coordinate;
+        for (const PathData &path_data : route_leg)
+        {
+            current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+            description_factory.AppendSegment(current_coordinate, path_data);
+            ++added_element_count;
+        }
+        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
+        ++added_element_count;
+        BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
+        return added_element_count;
+    }
+
     void Run(const RawRouteData &raw_route, http::Reply &reply)
     {
+        protobufResponse::Response response;
+        std::string output;
+
+        if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
+        {
+            // We do not need to do much, if there is no route ;-)
+            response.set_status(207);
+            response.set_status_message("Cannot find route between points");
+            response.SerializeToString(&output);
+            reply.content.insert(reply.content.end(), output.begin(), output.end());
+            return;
+        }
+
+        std::string road_name = facade->GetEscapedNameForNameID(
+            raw_route.segment_end_coordinates.front().source_phantom.name_id);
+
+        BOOST_ASSERT(raw_route.unpacked_path_segments.size() ==
+                     raw_route.segment_end_coordinates.size());
+
+        description_factory.SetStartSegment(
+            raw_route.segment_end_coordinates.front().source_phantom,
+            raw_route.source_traversed_in_reverse.front());
+        response.set_status(0);
+        response.set_status_message("Found route between points");
+
+        // for each unpacked segment add the leg to the description
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+        {
+#ifndef NDEBUG
+            const int added_segments =
+#endif
+            DescribeLeg(raw_route.unpacked_path_segments[i],
+                        raw_route.segment_end_coordinates[i],
+                        raw_route.target_traversed_in_reverse[i],
+                        raw_route.is_via_leg(i));
+            BOOST_ASSERT(0 < added_segments);
+        }
+        description_factory.Run(facade, config.zoom_level);
+        if (config.geometry)
+        {
+
+            std::string route_geometry;
+            description_factory.AppendEncodedPolylineStringEncoded(route_geometry);
+            response.set_route_geometry(route_geometry);
+        }
+        //route_instructions
+
+        description_factory.BuildRouteSummary(description_factory.entireLength,
+                                              raw_route.shortest_path_length);
+
+        protobufResponse::RouteSummary routeSummary;
+
+        std::cout << description_factory.summary.distance << std::endl;
+        routeSummary.set_total_distance(description_factory.summary.distance);
+        routeSummary.set_total_time(description_factory.summary.duration);
+        std::cout << description_factory.summary.duration << std::endl;
+        routeSummary.set_start_point(facade->GetEscapedNameForNameID(description_factory.summary.source_name_id));
+        routeSummary.set_end_point(facade->GetEscapedNameForNameID(description_factory.summary.target_name_id));
+        response.mutable_route_summary()->CopyFrom(routeSummary);
+
+        BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
+
+        protobufResponse::Point point;
+        point.set_lat(raw_route.segment_end_coordinates.front().source_phantom.location.lat /
+                                             COORDINATE_PRECISION);
+        point.set_lon(raw_route.segment_end_coordinates.front().source_phantom.location.lon /
+                                             COORDINATE_PRECISION);
+        response.add_via_points()->CopyFrom(point);
+
+
+        for (const PhantomNodes &nodes : raw_route.segment_end_coordinates)
+        {
+            point.set_lat(nodes.target_phantom.location.lat /
+                                             COORDINATE_PRECISION);
+            point.set_lon(nodes.target_phantom.location.lon /
+                                             COORDINATE_PRECISION);
+            response.add_via_points()->CopyFrom(point);
+        }
+
+        std::vector<unsigned> const &shortest_leg_end_indices = description_factory.GetViaIndices();
+        for (unsigned v : shortest_leg_end_indices)
+        {
+            response.add_via_indices(v);
+        }
+
+        std::cout << response.DebugString() << std::endl;
+
+        response.SerializeToString(&output);
+        reply.content.insert(reply.content.end(), output.begin(), output.end());
     }
 };
 #endif // PBF_DESCRIPTOR_H
