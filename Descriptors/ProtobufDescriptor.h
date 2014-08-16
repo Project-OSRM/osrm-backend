@@ -172,6 +172,9 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             mainRoute.add_via_indices(v);
         }
 
+        RouteNames route_names =
+            GenerateRouteNames(shortest_path_segments, alternative_path_segments, facade);
+
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             protobufResponse::Route alternativeRoute;
@@ -216,8 +219,15 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             {
                 alternativeRoute.add_via_indices(v);
             }
+
+            alternativeRoute.add_route_name(route_names.alternative_path_name_1);
+            alternativeRoute.add_route_name(route_names.alternative_path_name_2);
+
             response.mutable_alternative_route()->CopyFrom(mainRoute);
         }
+
+        mainRoute.add_route_name(route_names.shortest_path_name_1);
+        mainRoute.add_route_name(route_names.shortest_path_name_2);
 
         response.mutable_main_route()->CopyFrom(mainRoute);
 

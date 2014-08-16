@@ -20,6 +20,7 @@ message Route
 	optional string route_geometry = 2;
 	repeated Point via_points = 3;
     repeated int32 via_indices = 4;
+    repeated string route_name = 5;
 }
 
 message Response {
