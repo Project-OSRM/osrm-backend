@@ -1,4 +1,24 @@
+package protobufResponse;
+
+message Point
+{
+	required float lat = 1;
+	required float lon = 2;
+}
+
+message RouteSummary
+{
+	required uint32 total_distance = 1;
+	required uint32 total_time = 2;
+	required string start_point = 3;
+	required string end_point = 4;
+}
+
 message Response {
-  required int32  status = 1;
-  required string status_message = 2;
+    required int32  status = 1;
+    required string status_message = 2;
+    optional string route_geometry = 3;
+    optional RouteSummary route_summary = 4;
+    repeated Point via_points = 5;
+    repeated int32 via_indices = 6;
 }
