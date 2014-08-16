@@ -124,13 +124,15 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
                         raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
+
+        protobufResponse::Route mainRoute;
         description_factory.Run(facade, config.zoom_level);
         if (config.geometry)
         {
 
             std::string route_geometry;
             description_factory.AppendEncodedPolylineStringEncoded(route_geometry);
-            response.set_route_geometry(route_geometry);
+            mainRoute.set_route_geometry(route_geometry);
         }
         //route_instructions
 
@@ -145,7 +147,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         std::cout << description_factory.summary.duration << std::endl;
         routeSummary.set_start_point(facade->GetEscapedNameForNameID(description_factory.summary.source_name_id));
         routeSummary.set_end_point(facade->GetEscapedNameForNameID(description_factory.summary.target_name_id));
-        response.mutable_route_summary()->CopyFrom(routeSummary);
+        mainRoute.mutable_route_summary()->CopyFrom(routeSummary);
 
         BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
 
@@ -154,7 +156,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
                                              COORDINATE_PRECISION);
         point.set_lon(raw_route.segment_end_coordinates.front().source_phantom.location.lon /
                                              COORDINATE_PRECISION);
-        response.add_via_points()->CopyFrom(point);
+        mainRoute.add_via_points()->CopyFrom(point);
 
 
         for (const PhantomNodes &nodes : raw_route.segment_end_coordinates)
@@ -163,14 +165,16 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
                                              COORDINATE_PRECISION);
             point.set_lon(nodes.target_phantom.location.lon /
                                              COORDINATE_PRECISION);
-            response.add_via_points()->CopyFrom(point);
+            mainRoute.add_via_points()->CopyFrom(point);
         }
 
         std::vector<unsigned> const &shortest_leg_end_indices = description_factory.GetViaIndices();
         for (unsigned v : shortest_leg_end_indices)
         {
-            response.add_via_indices(v);
+            mainRoute.add_via_indices(v);
         }
+
+        response.mutable_main_route()->CopyFrom(mainRoute);
 
         std::cout << response.DebugString() << std::endl;
 
