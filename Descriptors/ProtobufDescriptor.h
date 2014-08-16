@@ -60,6 +60,104 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
     std::vector<Segment> shortest_path_segments, alternative_path_segments;
     ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
 
+    inline void AddInstructionToRoute(protobufResponse::Route &route,
+                                      const std::string &id,
+                                      const std::string &streetName,
+                                      const int &length,
+                                      const unsigned &position,
+                                      const int &time,
+                                      const std::string &lengthStr,
+                                      const std::string &earthDirection,
+                                      const int &azimuth)
+    {
+        protobufResponse::RouteInstructions routeInstructions;
+        routeInstructions.set_instruction_id(id);
+        routeInstructions.set_street_name(streetName);
+        routeInstructions.set_length(length);
+        routeInstructions.set_position(position);
+        routeInstructions.set_time(time);
+        routeInstructions.set_length_str(lengthStr);
+        routeInstructions.set_earth_direction(earthDirection);
+        routeInstructions.set_azimuth(azimuth);
+        route.add_route_instructions()->CopyFrom(routeInstructions);
+
+    }
+
+    inline void BuildTextualDescription(const int route_length,
+                                        DescriptionFactory &description_factory,
+                                        std::vector<Segment> &route_segments_list,
+                                        protobufResponse::Route &route
+                                        )
+    {
+        // Segment information has following format:
+        //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]
+        unsigned necessary_segments_running_index = 0;
+        round_about.leave_at_exit = 0;
+        round_about.name_id = 0;
+        std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
+
+        // Fetch data from Factory and generate a string from it.
+        for (const SegmentInformation &segment : description_factory.path_description)
+        {
+            TurnInstruction current_instruction = segment.turn_instruction;
+            entered_restricted_area_count += (current_instruction != segment.turn_instruction);
+            if (TurnInstructionsClass::TurnIsNecessary(current_instruction))
+            {
+                if (TurnInstruction::EnterRoundAbout == current_instruction)
+                {
+                    round_about.name_id = segment.name_id;
+                    round_about.start_index = necessary_segments_running_index;
+                }
+                else
+                {
+                    std::string current_turn_instruction;
+                    if (TurnInstruction::LeaveRoundAbout == current_instruction)
+                    {
+                        temp_instruction =
+                            IntToString(as_integer(TurnInstruction::EnterRoundAbout));
+                        current_turn_instruction += temp_instruction;
+                        current_turn_instruction += "-";
+                        temp_instruction = IntToString(round_about.leave_at_exit + 1);
+                        current_turn_instruction += temp_instruction;
+                        round_about.leave_at_exit = 0;
+                    }
+                    else
+                    {
+                        temp_instruction = IntToString(as_integer(current_instruction));
+                        current_turn_instruction += temp_instruction;
+                    }
+
+                    const double bearing_value = (segment.bearing / 10.);
+                    AddInstructionToRoute(route,
+                                          current_turn_instruction,
+                                          facade->GetEscapedNameForNameID(segment.name_id),
+                                          std::round(segment.length),
+                                          necessary_segments_running_index,
+                                          round(segment.duration / 10),
+                                          UintToString(static_cast<int>(segment.length)) + "m",
+                                          Azimuth::Get(bearing_value),
+                                          round(bearing_value));
+                    route_segments_list.emplace_back(
+                        segment.name_id, static_cast<int>(segment.length), static_cast<unsigned>(route_segments_list.size()));
+                }
+            }
+            else if (TurnInstruction::StayOnRoundAbout == current_instruction)
+            {
+                ++round_about.leave_at_exit;
+            }
+            if (segment.necessary)
+            {
+                ++necessary_segments_running_index;
+            }
+        }
+
+        temp_instruction = IntToString(as_integer(TurnInstruction::ReachedYourDestination));
+        AddInstructionToRoute(route,
+                              temp_instruction, "", 0,
+                              necessary_segments_running_index - 1,
+                              0, "0m", Azimuth::Get(0.0),0.);
+    }
+
   public:
     PBFDescriptor(DataFacadeT *facade) : facade(facade) {}
 
@@ -133,6 +231,13 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             description_factory.AppendEncodedPolylineStringEncoded(route_geometry);
             mainRoute.set_route_geometry(route_geometry);
         }
+        if (config.instructions)
+        {
+            BuildTextualDescription(raw_route.shortest_path_length,
+                                    description_factory,
+                                    shortest_path_segments,
+                                    mainRoute);
+        }
 
         //route_instructions
 
@@ -198,7 +303,13 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
                 alternativeRoute.set_route_geometry(alternateGeometry);
             }
             // Generate instructions for each alternative (simulated here)
-            //if (config.instructions)
+            if (config.instructions)
+            {
+                BuildTextualDescription(raw_route.alternative_path_length,
+                                        alternate_description_factory,
+                                        alternative_path_segments,
+                                        alternativeRoute);
+            }
 
             alternate_description_factory.BuildRouteSummary(
                 alternate_description_factory.entireLength, raw_route.alternative_path_length);
