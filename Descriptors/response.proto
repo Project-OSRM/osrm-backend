@@ -14,6 +14,18 @@ message RouteSummary
 	required string end_point = 4;
 }
 
+message RouteInstructions
+{
+    required string instruction_id = 1;
+    required string street_name = 2;
+    required int32 length = 3;
+    required int32 position = 4;
+    required int32 time = 5;
+    required string length_str = 6;
+    required string earth_direction = 7;
+    required int32 azimuth = 8;
+}
+
 message Route
 {
 	optional RouteSummary route_summary = 1;
@@ -21,6 +33,7 @@ message Route
 	repeated Point via_points = 3;
     repeated int32 via_indices = 4;
     repeated string route_name = 5;
+    repeated RouteInstructions route_instructions = 6;
 }
 
 message Hint
