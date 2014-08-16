@@ -69,10 +69,8 @@ void PolylineCompressor::encodeNumber(int number_to_encode, std::string &output)
     }
 }
 
-JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline)
-    const
+void PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline, std::string &output) const
 {
-    std::string output;
     std::vector<int> delta_numbers;
     if (!polyline.empty())
     {
@@ -90,25 +88,39 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
         }
         encodeVectorSignedNumber(delta_numbers, output);
     }
+}
+
+JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline) const
+{
+    std::string output;
+    printEncodedString(polyline, output);
     JSON::String return_value(output);
     return return_value;
+}
+
+void PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline, std::vector<std::string> &output) const
+{
+    for (const auto &segment : polyline)
+    {
+        if (segment.necessary)
+        {
+            std::string tmp, res;
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lat, tmp);
+            res += (tmp + ",");
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lon, tmp);
+            res += tmp;
+            output.push_back(res);
+        }
+    }
 }
 
 JSON::Array
 PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
 {
     JSON::Array json_geometry_array;
-    for (const auto &segment : polyline)
-    {
-        if (segment.necessary)
-        {
-            std::string tmp, output;
-            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lat, tmp);
-            output += (tmp + ",");
-            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lon, tmp);
-            output += tmp;
-            json_geometry_array.values.push_back(output);
-        }
-    }
+    std::vector<std::string> output;
+    printUnencodedString(polyline, output);
+    for (std::string str : output)
+        json_geometry_array.values.push_back(str);
     return json_geometry_array;
 }
