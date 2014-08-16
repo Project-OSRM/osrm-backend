@@ -14,11 +14,17 @@ message RouteSummary
 	required string end_point = 4;
 }
 
+message Route
+{
+	optional RouteSummary route_summary = 1;
+	optional string route_geometry = 2;
+	repeated Point via_points = 3;
+    repeated int32 via_indices = 4;
+}
+
 message Response {
     required int32  status = 1;
     required string status_message = 2;
-    optional string route_geometry = 3;
-    optional RouteSummary route_summary = 4;
-    repeated Point via_points = 5;
-    repeated int32 via_indices = 6;
+    optional Route main_route = 3;
+    optional Route additional_route = 4;
 }
