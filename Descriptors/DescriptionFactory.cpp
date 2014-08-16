@@ -85,11 +85,18 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         return;
     }
 
+    // make sure mode changes are announced, even when there otherwise is no turn
+    const TurnInstruction turn =
+        (TurnInstruction::NoTurn == path_point.turn_instruction &&
+        path_description.front().travel_mode != path_point.travel_mode &&
+        path_point.segment_duration>0) ? TurnInstruction::GoStraight
+                                       : path_point.turn_instruction;
+
     path_description.emplace_back(coordinate,
                                   path_point.name_id,
                                   path_point.segment_duration,
                                   0.f,
-                                  path_point.turn_instruction,
+                                  turn,
                                   path_point.travel_mode);
 }
 

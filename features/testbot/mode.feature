@@ -35,6 +35,19 @@ Feature: Testbot - Mode flag
         | b    | d  | bc,cd          | head,left,destination                         | 2,1       |
         | a    | f  | ab,bc,cd,de,ef | head,right,left,straight,straight,destination | 1,2,1,1,1 |
 
+    Scenario: Testbot - Different modes in each direction, start between nodes
+        Given the node map
+            | a | 1 | b |
+
+        And the ways
+            | nodes | highway |
+            | ab    | river   |
+
+        When I route I should get
+            | from | to | route | modes |
+            | 1    | b  | ab    | 3     |
+            | 1    | a  | ab    | 4     |
+
     Scenario: Testbot - Modes for each direction
        Given the node map
         |   |   |   |   |   |   | d |
@@ -122,7 +135,21 @@ Feature: Testbot - Mode flag
         | from | to | route | modes |
         | b    | a  | ab    | 6     |
         | a    | b  |       |       |
-        
+
+    @via
+    Scenario: Testbot - Mode should be set at via points
+        Given the node map
+            | a | 1 | b |
+
+        And the ways
+            | nodes | highway |
+            | ab    | river   |
+
+        When I route I should get
+            | waypoints | route    | modes | turns                |
+            | a,1,b     | ab,ab    | 3,3   | head,via,destination |
+            | b,1,a     | ab,ab    | 4,4   | head,via,destination |
+
     @via
     Scenario: Testbot - Modes and via point at dead end
         Given the node map
@@ -135,9 +162,9 @@ Feature: Testbot - Mode flag
         | bd    | steps   |
 
         When I route I should get
-        | waypoints | route            | modes     | turns                                   |
-        | a,d,c     | abc,bd,bd,bd,abc | 1,5,5,6,1 | head,right,via,u_turn,right,destination |
-        | c,d,a     | abc,bd,bd,bd,abc | 1,5,5,6,1 | head,left,via,u_turn,left,destination   |
+        | waypoints | route            | modes     |
+        | a,d,c     | abc,bd,bd,bd,abc | 1,5,5,6,1 |
+        | c,d,a     | abc,bd,bd,bd,abc | 1,5,5,6,1 |
 
     @via
     Scenario: Testbot - Modes and via point at river
@@ -183,28 +210,10 @@ Feature: Testbot - Mode flag
         | a    | b  |       |       |
         | b    | a  | ab    | 4     |
 
-    Scenario: Testbot - Starting at a tricky node, 1m
-        Given a grid size of 1 meters
+    Scenario: Testbot - Starting at a tricky node
        Given the node map
-        | a | 1 |   |   |   |
-        |   | 2 | b |   | c |
-        |   | 3 |   |   |   |
-
-       And the ways
-        | nodes | highway |
-        | ab    | river   |
-        | bc    | primary |
-
-       When I route I should get
-        | from | to | route | modes |
-        | 1    | a  | ab    | 4     |
-        | 2    | a  | ab    | 4     |
-        | 3    | a  | ab    | 4     |
-
-    Scenario: Testbot - Starting at a tricky node, 100m
-       Given the node map
-        |   | a |   |   |   |
-        |   |   |   | b | c |
+        |  | a |  |   |   |
+        |  |   |  | b | c |
 
        And the ways
         | nodes | highway |
@@ -215,15 +224,18 @@ Feature: Testbot - Mode flag
         | from | to | route | modes |
         | b    | a  | ab    | 4     |
 
-    Scenario: Testbot - Mode changes on straight way
+    Scenario: Testbot - Mode changes on straight way without name change
        Given the node map
-        | a | b | c |
+        | a | 1 | b | 2 | c |
 
        And the ways
-        | nodes | highway |name   |
-        | ab    | primary |Street |
-        | bc    | river   |Street |
+        | nodes | highway | name   |
+        | ab    | primary | Avenue |
+        | bc    | river   | Avenue |
 
        When I route I should get
         | from | to | route         | modes | turns                     |
-        | a    | c  | Street,Street | 1,4   | head,straight,destination |
+        | a    | c  | Avenue,Avenue | 1,3   | head,straight,destination |
+        | c    | a  | Avenue,Avenue | 3,1   | head,straight,destination |
+        | 1    | 2  | Avenue,Avenue | 1,3   | head,straight,destination |
+        | 2    | 1  | Avenue,Avenue | 3,1   | head,straight,destination |
