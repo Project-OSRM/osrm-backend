@@ -163,7 +163,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
 
     void SetConfig(const DescriptorConfig &c) { config = c; }
 
-    unsigned DescribeLeg(const std::vector<PathData> route_leg,
+    unsigned DescribeLeg(const std::vector<PathData> &route_leg,
                          const PhantomNodes &leg_phantoms,
                          const bool target_traversed_in_reverse,
                          const bool is_via_leg)
