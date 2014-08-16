@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "TurnInstructions.h"
 
+#include "../DataStructures/TravelMode.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>

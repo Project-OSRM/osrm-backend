@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RAW_ROUTE_DATA_H
 
 #include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/TravelMode.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../typedefs.h"
 
@@ -42,7 +43,7 @@ struct PathData
         : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT),
           segment_duration(INVALID_EDGE_WEIGHT),
           turn_instruction(TurnInstruction::NoTurn),
-          travel_mode(0)
+          travel_mode(TravelMode::None)
     {
     }
 

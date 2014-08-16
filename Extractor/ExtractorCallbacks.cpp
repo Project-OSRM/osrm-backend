@@ -121,12 +121,12 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         std::reverse(parsed_way.path.begin(), parsed_way.path.end());
         parsed_way.direction = ExtractionWay::oneway;
         parsed_way.travel_mode = parsed_way.backward_travel_mode;
-        parsed_way.backward_travel_mode = 0;
+        parsed_way.backward_travel_mode = TravelMode::None;
     }
 
     const bool split_edge =
       (parsed_way.speed>0) && (parsed_way.travel_mode>0) &&
-      (parsed_way.backward_speed>0) && (parsed_way.backward_travel_mode>0) &&
+      (TravelMode::None != parsed_way.backward_speed) && (TravelMode::None != parsed_way.backward_travel_mode) &&
       ((parsed_way.speed != parsed_way.backward_speed) ||
       (parsed_way.travel_mode != parsed_way.backward_travel_mode));
 

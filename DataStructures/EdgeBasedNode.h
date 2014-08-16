@@ -1,6 +1,7 @@
 #ifndef EDGE_BASED_NODE_H
 #define EDGE_BASED_NODE_H
 
+#include "../DataStructures/TravelMode.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
@@ -26,8 +27,8 @@ struct EdgeBasedNode
         packed_geometry_id(SPECIAL_EDGEID),
         fwd_segment_position( std::numeric_limits<unsigned short>::max() ),
         is_in_tiny_cc(false),
-        travel_mode(0),
-        backward_travel_mode(0)
+        travel_mode(TravelMode::None),
+        backward_travel_mode(TravelMode::None)
     { }
 
     explicit EdgeBasedNode(

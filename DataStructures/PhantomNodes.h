@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PHANTOM_NODES_H
 
 #include <osrm/Coordinate.h>
+#include "../DataStructures/TravelMode.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
@@ -65,8 +66,8 @@ struct PhantomNode
         reverse_offset(0),
         packed_geometry_id(SPECIAL_EDGEID),
         fwd_segment_position(0),
-        travel_mode(0),
-        backward_travel_mode(0)
+        travel_mode(TravelMode::None),
+        backward_travel_mode(TravelMode::None)
     { }
 
     NodeID forward_node_id;

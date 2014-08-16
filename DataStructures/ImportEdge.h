@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef IMPORT_EDGE_H
 #define IMPORT_EDGE_H
 
+#include "../DataStructures/TravelMode.h"
 #include "../typedefs.h"
 
 struct NodeBasedEdge

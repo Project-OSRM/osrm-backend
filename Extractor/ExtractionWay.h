@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EXTRACTION_WAY_H
 
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/TravelMode.h"
 #include "../typedefs.h"
 
 #include <string>
@@ -53,8 +54,8 @@ struct ExtractionWay
         roundabout = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
-        travel_mode = 1;
-        backward_travel_mode = 1;
+        travel_mode = TravelMode::Default;
+        backward_travel_mode = TravelMode::Default;
     }
 
     enum Directions
