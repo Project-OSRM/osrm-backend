@@ -129,11 +129,11 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         description_factory.Run(facade, config.zoom_level);
         if (config.geometry)
         {
-
             std::string route_geometry;
             description_factory.AppendEncodedPolylineStringEncoded(route_geometry);
             mainRoute.set_route_geometry(route_geometry);
         }
+
         //route_instructions
 
         description_factory.BuildRouteSummary(description_factory.entireLength,
@@ -141,10 +141,8 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
 
         protobufResponse::RouteSummary routeSummary;
 
-        std::cout << description_factory.summary.distance << std::endl;
         routeSummary.set_total_distance(description_factory.summary.distance);
         routeSummary.set_total_time(description_factory.summary.duration);
-        std::cout << description_factory.summary.duration << std::endl;
         routeSummary.set_start_point(facade->GetEscapedNameForNameID(description_factory.summary.source_name_id));
         routeSummary.set_end_point(facade->GetEscapedNameForNameID(description_factory.summary.target_name_id));
         mainRoute.mutable_route_summary()->CopyFrom(routeSummary);
@@ -172,6 +170,53 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         for (unsigned v : shortest_leg_end_indices)
         {
             mainRoute.add_via_indices(v);
+        }
+
+        if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
+        {
+            protobufResponse::Route alternativeRoute;
+            BOOST_ASSERT(!raw_route.alt_source_traversed_in_reverse.empty());
+            alternate_description_factory.SetStartSegment(
+                raw_route.segment_end_coordinates.front().source_phantom,
+                raw_route.alt_source_traversed_in_reverse.front());
+            // Get all the coordinates for the computed route
+            for (const PathData &path_data : raw_route.unpacked_alternative)
+            {
+                current = facade->GetCoordinateOfNode(path_data.node);
+                alternate_description_factory.AppendSegment(current, path_data);
+            }
+            alternate_description_factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom, raw_route.alt_source_traversed_in_reverse.back());
+            alternate_description_factory.Run(facade, config.zoom_level);
+
+            if (config.geometry)
+            {
+                std::string alternateGeometry;
+                alternate_description_factory.AppendEncodedPolylineStringEncoded(alternateGeometry);
+                alternativeRoute.set_route_geometry(alternateGeometry);
+            }
+            // Generate instructions for each alternative (simulated here)
+            //if (config.instructions)
+
+            alternate_description_factory.BuildRouteSummary(
+                alternate_description_factory.entireLength, raw_route.alternative_path_length);
+
+            protobufResponse::RouteSummary alternativeRouteSummary;
+
+            alternativeRouteSummary.set_total_distance(alternate_description_factory.summary.distance);
+            alternativeRouteSummary.set_total_time(alternate_description_factory.summary.duration);
+            alternativeRouteSummary.set_start_point(facade->GetEscapedNameForNameID(
+                alternate_description_factory.summary.source_name_id));
+            alternativeRouteSummary.set_end_point(facade->GetEscapedNameForNameID(
+                alternate_description_factory.summary.target_name_id));
+            alternativeRoute.mutable_route_summary()->CopyFrom(routeSummary);
+
+            std::vector<unsigned> const &alternate_leg_end_indices =
+                alternate_description_factory.GetViaIndices();
+            for (unsigned v : alternate_leg_end_indices)
+            {
+                alternativeRoute.add_via_indices(v);
+            }
+            response.mutable_alternative_route()->CopyFrom(mainRoute);
         }
 
         response.mutable_main_route()->CopyFrom(mainRoute);
