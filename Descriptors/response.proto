@@ -26,5 +26,5 @@ message Response {
     required int32  status = 1;
     required string status_message = 2;
     optional Route main_route = 3;
-    optional Route additional_route = 4;
+    optional Route alternative_route = 4;
 }
