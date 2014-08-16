@@ -50,7 +50,7 @@ struct OriginalEdgeData
         : via_node(std::numeric_limits<unsigned>::max()),
           name_id(std::numeric_limits<unsigned>::max()),
           turn_instruction(TurnInstruction::NoTurn), compressed_geometry(false),
-          travel_mode(TravelMode::None)
+          travel_mode(TravelMode::Inaccessible)
     {
     }
 

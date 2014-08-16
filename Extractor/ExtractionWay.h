@@ -68,11 +68,11 @@ struct ExtractionWay
         if (Directions::oneway == m )
         {
             travel_mode = TravelMode::Default;
-            backward_travel_mode = TravelMode::None;
+            backward_travel_mode = TravelMode::Inaccessible;
         }
         else if (Directions::opposite == m )
         {
-          travel_mode = TravelMode::None;
+          travel_mode = TravelMode::Inaccessible;
           backward_travel_mode = TravelMode::Default;
         }
         else if (Directions::bidirectional == m )
@@ -84,15 +84,15 @@ struct ExtractionWay
 
     inline const Directions get_direction()
     {
-        if (TravelMode::None != travel_mode && TravelMode::None != backward_travel_mode )
+        if (TravelMode::Inaccessible != travel_mode && TravelMode::Inaccessible != backward_travel_mode )
         {
             return Directions::bidirectional;
         }
-        else if (TravelMode::None != travel_mode )
+        else if (TravelMode::Inaccessible != travel_mode )
         {
             return Directions::oneway;
         }
-        else if (TravelMode::None != backward_travel_mode )
+        else if (TravelMode::Inaccessible != backward_travel_mode )
         {
             return Directions::opposite;
         }

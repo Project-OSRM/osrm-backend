@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TRAVEL_MODE_H
 
 enum TravelMode : unsigned char {
-    None=0, Default=1
+    Inaccessible=0, Default=1
 };
 
 #endif /* TRAVEL_MODE_H */

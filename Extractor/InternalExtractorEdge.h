@@ -39,7 +39,7 @@ struct InternalExtractorEdge
     InternalExtractorEdge()
         : start(0), target(0), type(0), direction(0), speed(0), name_id(0), is_roundabout(false),
           is_in_tiny_cc(false), is_duration_set(false), is_access_restricted(false),
-          travel_mode(TravelMode::None), is_split(false)
+          travel_mode(TravelMode::Inaccessible), is_split(false)
     {
     }
 
@@ -66,12 +66,12 @@ struct InternalExtractorEdge
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_value()
     {
-        return InternalExtractorEdge(0, 0, 0, 0, 0, 0, false, false, false, false, TravelMode::None, false);
+        return InternalExtractorEdge(0, 0, 0, 0, 0, 0, false, false, false, false, TravelMode::Inaccessible, false);
     }
     static InternalExtractorEdge max_value()
     {
         return InternalExtractorEdge(
-            SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, 0, false, false, false, false, TravelMode::None, false);
+            SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, 0, false, false, false, false, TravelMode::Inaccessible, false);
     }
 
     NodeID start;

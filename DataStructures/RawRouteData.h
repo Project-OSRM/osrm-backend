@@ -43,7 +43,7 @@ struct PathData
         : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT),
           segment_duration(INVALID_EDGE_WEIGHT),
           turn_instruction(TurnInstruction::NoTurn),
-          travel_mode(TravelMode::None)
+          travel_mode(TravelMode::Inaccessible)
     {
     }
 

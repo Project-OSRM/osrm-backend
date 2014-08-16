@@ -15,7 +15,7 @@ struct NodeBasedEdgeData
         : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID),
           nameID(std::numeric_limits<unsigned>::max()), type(std::numeric_limits<short>::max()),
           isAccessRestricted(false), shortcut(false), forward(false), backward(false),
-          roundabout(false), ignore_in_grid(false), travel_mode(TravelMode::None)
+          roundabout(false), ignore_in_grid(false), travel_mode(TravelMode::Inaccessible)
     {
     }
 
