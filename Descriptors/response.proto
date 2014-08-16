@@ -23,9 +23,16 @@ message Route
     repeated string route_name = 5;
 }
 
+message Hint
+{
+	required int32 check_sum = 1;
+	repeated string location = 2;
+}
+
 message Response {
     required int32  status = 1;
     required string status_message = 2;
     optional Route main_route = 3;
     optional Route alternative_route = 4;
+    optional Hint hint = 5;
 }

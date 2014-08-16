@@ -229,6 +229,18 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         mainRoute.add_route_name(route_names.shortest_path_name_1);
         mainRoute.add_route_name(route_names.shortest_path_name_2);
 
+        protobufResponse::Hint hint;
+        hint.set_check_sum(raw_route.check_sum);
+        std::string res;
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
+        {
+            EncodeObjectToBase64(raw_route.segment_end_coordinates[i].source_phantom, res);
+            hint.add_location(res);
+        }
+        EncodeObjectToBase64(raw_route.segment_end_coordinates.back().target_phantom, res);
+        hint.add_location(res);
+
+        response.mutable_hint()->CopyFrom(hint);
         response.mutable_main_route()->CopyFrom(mainRoute);
 
         std::cout << response.DebugString() << std::endl;
