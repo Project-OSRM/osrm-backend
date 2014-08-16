@@ -106,27 +106,16 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         parsed_way.nameID = string_map_iterator->second;
     }
 
-    if (0 == parsed_way.travel_mode )
-    {
-        parsed_way.direction = ExtractionWay::opposite;
-    }
-
-    if (0 == parsed_way.backward_travel_mode )
-    {
-        parsed_way.direction = ExtractionWay::oneway;
-    }
-
-    if (ExtractionWay::opposite == parsed_way.direction)
+    if (TravelMode::None == parsed_way.travel_mode)
     {
         std::reverse(parsed_way.path.begin(), parsed_way.path.end());
-        parsed_way.direction = ExtractionWay::oneway;
         parsed_way.travel_mode = parsed_way.backward_travel_mode;
         parsed_way.backward_travel_mode = TravelMode::None;
     }
 
     const bool split_edge =
-      (parsed_way.speed>0) && (parsed_way.travel_mode>0) &&
-      (TravelMode::None != parsed_way.backward_speed) && (TravelMode::None != parsed_way.backward_travel_mode) &&
+      (parsed_way.speed>0) && (TravelMode::None != parsed_way.travel_mode) &&
+      (parsed_way.backward_speed>0) && (TravelMode::None != parsed_way.backward_travel_mode) &&
       ((parsed_way.speed != parsed_way.backward_speed) ||
       (parsed_way.travel_mode != parsed_way.backward_travel_mode));
 
@@ -137,7 +126,8 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
             parsed_way.path[n],
             parsed_way.path[n + 1],
             parsed_way.type,
-            (split_edge ? ExtractionWay::oneway : parsed_way.direction),
+            ((split_edge || TravelMode::None == parsed_way.backward_travel_mode) ? ExtractionWay::oneway
+                                                                                 : ExtractionWay::bidirectional),
             parsed_way.speed,
             parsed_way.nameID,
             parsed_way.roundabout,

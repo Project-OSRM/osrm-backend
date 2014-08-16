@@ -45,7 +45,6 @@ struct ExtractionWay
         nameID = INVALID_NAMEID;
         path.clear();
         keyVals.Clear();
-        direction = ExtractionWay::notSure;
         speed = -1;
         backward_speed = -1;
         duration = -1;
@@ -64,6 +63,45 @@ struct ExtractionWay
       bidirectional,
       opposite };
     
+    inline void set_direction(const Directions m)
+    {
+        if (Directions::oneway == m )
+        {
+            travel_mode = TravelMode::Default;
+            backward_travel_mode = TravelMode::None;
+        }
+        else if (Directions::opposite == m )
+        {
+          travel_mode = TravelMode::None;
+          backward_travel_mode = TravelMode::Default;
+        }
+        else if (Directions::bidirectional == m )
+        {
+          travel_mode = TravelMode::Default;
+          backward_travel_mode = TravelMode::Default;
+        }
+    }
+
+    inline const Directions get_direction()
+    {
+        if (TravelMode::None != travel_mode && TravelMode::None != backward_travel_mode )
+        {
+            return Directions::bidirectional;
+        }
+        else if (TravelMode::None != travel_mode )
+        {
+            return Directions::oneway;
+        }
+        else if (TravelMode::None != backward_travel_mode )
+        {
+            return Directions::opposite;
+        }
+        else
+        {
+            return Directions::notSure;
+        }
+    }
+
     inline void set_mode(const TravelMode m) { travel_mode = m; }
     inline const TravelMode get_mode() { return travel_mode; }
     inline void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
@@ -74,7 +112,6 @@ struct ExtractionWay
     double speed;
     double backward_speed;
     double duration;
-    Directions direction;
     std::string name;
     short type;
     bool access;

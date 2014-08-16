@@ -225,7 +225,6 @@ function way_function (way)
     -- ferries (doesn't cover routes tagged using relations)
     way.mode = mode_ferry
     way.backward_mode = mode_ferry
-    way.direction = Way.bidirectional
     way.ignore_in_grid = true
     if durationIsValid(duration) then
       way.duration = math.max( 1, parseDuration(duration) )
@@ -248,7 +247,6 @@ function way_function (way)
     if access and access_tag_whitelist[access] then
       way.speed = railway_speeds[railway]
       way.backward_speed = railway_speeds[railway]
-      way.direction = Way.bidirectional
     end
   elseif amenity and amenity_speeds[amenity] then
     -- parking areas

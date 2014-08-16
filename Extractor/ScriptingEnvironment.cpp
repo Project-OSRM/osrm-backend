@@ -85,7 +85,7 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
         .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
         .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
         .def_readwrite("tags", &ExtractionWay::keyVals)
-        .def_readwrite("direction", &ExtractionWay::direction)
+        .property("direction", &ExtractionWay::get_direction, &ExtractionWay::set_direction)
         .property("mode", &ExtractionWay::get_mode, &ExtractionWay::set_mode)
         .property("backward_mode", &ExtractionWay::get_backward_mode, &ExtractionWay::set_backward_mode)
         .enum_("constants")[
