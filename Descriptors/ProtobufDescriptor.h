@@ -29,36 +29,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PBF_DESCRIPTOR_H
 #define PBF_DESCRIPTOR_H
 
-#include "BaseDescriptor.h"
-#include "DescriptionFactory.h"
+#include "Descriptor.h"
 #include "response.pb.h"
 
-template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFacadeT>
+template <class DataFacadeT> class PBFDescriptor : public Descriptor<DataFacadeT>
 {
   private:
-    DataFacadeT *facade;
-    DescriptorConfig config;
-    DescriptionFactory description_factory, alternate_description_factory;
-    FixedPointCoordinate current;
-    unsigned entered_restricted_area_count;
-    struct RoundAbout
-    {
-        RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
-        int start_index;
-        unsigned name_id;
-        int leave_at_exit;
-    } round_about;
-
-    struct Segment
-    {
-        Segment() : name_id(INVALID_NAMEID), length(-1), position(0) {}
-        Segment(unsigned n, int l, unsigned p) : name_id(n), length(l), position(p) {}
-        unsigned name_id;
-        int length;
-        unsigned position;
-    };
-    std::vector<Segment> shortest_path_segments, alternative_path_segments;
-    ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
 
     inline void AddInstructionToRoute(protobufResponse::Route &route,
                                       const std::string &id,
@@ -85,103 +61,27 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
 
     inline void BuildTextualDescription(const int route_length,
                                         DescriptionFactory &description_factory,
-                                        std::vector<Segment> &route_segments_list,
+                                        std::vector<typename Descriptor<DataFacadeT>::Segment> &route_segments_list,
                                         protobufResponse::Route &route
                                         )
     {
-        // Segment information has following format:
-        //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]
-        unsigned necessary_segments_running_index = 0;
-        round_about.leave_at_exit = 0;
-        round_about.name_id = 0;
-        std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
+        std::vector<typename Descriptor<DataFacadeT>::Instruction> instructions;
+        Descriptor<DataFacadeT>::BuildTextualDescription(description_factory,
+                                                         instructions,
+                                                         route_length,
+                                                         route_segments_list);
 
-        // Fetch data from Factory and generate a string from it.
-        for (const SegmentInformation &segment : description_factory.path_description)
+        for (const typename Descriptor<DataFacadeT>::Instruction &i : instructions)
         {
-            TurnInstruction current_instruction = segment.turn_instruction;
-            entered_restricted_area_count += (current_instruction != segment.turn_instruction);
-            if (TurnInstructionsClass::TurnIsNecessary(current_instruction))
-            {
-                if (TurnInstruction::EnterRoundAbout == current_instruction)
-                {
-                    round_about.name_id = segment.name_id;
-                    round_about.start_index = necessary_segments_running_index;
-                }
-                else
-                {
-                    std::string current_turn_instruction;
-                    if (TurnInstruction::LeaveRoundAbout == current_instruction)
-                    {
-                        temp_instruction =
-                            IntToString(as_integer(TurnInstruction::EnterRoundAbout));
-                        current_turn_instruction += temp_instruction;
-                        current_turn_instruction += "-";
-                        temp_instruction = IntToString(round_about.leave_at_exit + 1);
-                        current_turn_instruction += temp_instruction;
-                        round_about.leave_at_exit = 0;
-                    }
-                    else
-                    {
-                        temp_instruction = IntToString(as_integer(current_instruction));
-                        current_turn_instruction += temp_instruction;
-                    }
-
-                    const double bearing_value = (segment.bearing / 10.);
-                    AddInstructionToRoute(route,
-                                          current_turn_instruction,
-                                          facade->GetEscapedNameForNameID(segment.name_id),
-                                          std::round(segment.length),
-                                          necessary_segments_running_index,
-                                          round(segment.duration / 10),
-                                          UintToString(static_cast<int>(segment.length)) + "m",
-                                          Azimuth::Get(bearing_value),
-                                          round(bearing_value));
-                    route_segments_list.emplace_back(
-                        segment.name_id, static_cast<int>(segment.length), static_cast<unsigned>(route_segments_list.size()));
-                }
-            }
-            else if (TurnInstruction::StayOnRoundAbout == current_instruction)
-            {
-                ++round_about.leave_at_exit;
-            }
-            if (segment.necessary)
-            {
-                ++necessary_segments_running_index;
-            }
+            AddInstructionToRoute(route, i.instructionId, i.streetName, i.length, 
+                                  i.position, i.time, i.lengthStr, i.earthDirection,
+                                  i.azimuth);
         }
-
-        temp_instruction = IntToString(as_integer(TurnInstruction::ReachedYourDestination));
-        AddInstructionToRoute(route,
-                              temp_instruction, "", 0,
-                              necessary_segments_running_index - 1,
-                              0, "0m", Azimuth::Get(0.0),0.);
     }
 
   public:
-    PBFDescriptor(DataFacadeT *facade) : facade(facade) {}
-
-    void SetConfig(const DescriptorConfig &c) { config = c; }
-
-    unsigned DescribeLeg(const std::vector<PathData> &route_leg,
-                         const PhantomNodes &leg_phantoms,
-                         const bool target_traversed_in_reverse,
-                         const bool is_via_leg)
-    {
-        unsigned added_element_count = 0;
-        // Get all the coordinates for the computed route
-        FixedPointCoordinate current_coordinate;
-        for (const PathData &path_data : route_leg)
-        {
-            current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-            description_factory.AppendSegment(current_coordinate, path_data);
-            ++added_element_count;
-        }
-        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
-        ++added_element_count;
-        BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
-        return added_element_count;
-    }
+    PBFDescriptor(DataFacadeT *facade) : Descriptor<DataFacadeT>(facade)
+    {}
 
     void Run(const RawRouteData &raw_route, http::Reply &reply)
     {
@@ -198,13 +98,13 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             return;
         }
 
-        std::string road_name = facade->GetEscapedNameForNameID(
+        std::string road_name = Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(
             raw_route.segment_end_coordinates.front().source_phantom.name_id);
 
         BOOST_ASSERT(raw_route.unpacked_path_segments.size() ==
                      raw_route.segment_end_coordinates.size());
 
-        description_factory.SetStartSegment(
+        Descriptor<DataFacadeT>::description_factory.SetStartSegment(
             raw_route.segment_end_coordinates.front().source_phantom,
             raw_route.source_traversed_in_reverse.front());
         response.set_status(0);
@@ -216,7 +116,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
 #ifndef NDEBUG
             const int added_segments =
 #endif
-            DescribeLeg(raw_route.unpacked_path_segments[i],
+            Descriptor<DataFacadeT>::DescribeLeg(raw_route.unpacked_path_segments[i],
                         raw_route.segment_end_coordinates[i],
                         raw_route.target_traversed_in_reverse[i],
                         raw_route.is_via_leg(i));
@@ -224,32 +124,30 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         }
 
         protobufResponse::Route mainRoute;
-        description_factory.Run(facade, config.zoom_level);
-        if (config.geometry)
+        Descriptor<DataFacadeT>::description_factory.Run(Descriptor<DataFacadeT>::facade, Descriptor<DataFacadeT>::config.zoom_level);
+        if (Descriptor<DataFacadeT>::config.geometry)
         {
             std::string route_geometry;
-            description_factory.AppendEncodedPolylineStringEncoded(route_geometry);
+            Descriptor<DataFacadeT>::description_factory.AppendEncodedPolylineStringEncoded(route_geometry);
             mainRoute.set_route_geometry(route_geometry);
         }
-        if (config.instructions)
+        if (Descriptor<DataFacadeT>::config.instructions)
         {
             BuildTextualDescription(raw_route.shortest_path_length,
-                                    description_factory,
-                                    shortest_path_segments,
+                                    Descriptor<DataFacadeT>::description_factory,
+                                    Descriptor<DataFacadeT>::shortest_path_segments,
                                     mainRoute);
         }
 
-        //route_instructions
-
-        description_factory.BuildRouteSummary(description_factory.entireLength,
+        Descriptor<DataFacadeT>::description_factory.BuildRouteSummary(Descriptor<DataFacadeT>::description_factory.entireLength,
                                               raw_route.shortest_path_length);
 
         protobufResponse::RouteSummary routeSummary;
 
-        routeSummary.set_total_distance(description_factory.summary.distance);
-        routeSummary.set_total_time(description_factory.summary.duration);
-        routeSummary.set_start_point(facade->GetEscapedNameForNameID(description_factory.summary.source_name_id));
-        routeSummary.set_end_point(facade->GetEscapedNameForNameID(description_factory.summary.target_name_id));
+        routeSummary.set_total_distance(Descriptor<DataFacadeT>::description_factory.summary.distance);
+        routeSummary.set_total_time(Descriptor<DataFacadeT>::description_factory.summary.duration);
+        routeSummary.set_start_point(Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(Descriptor<DataFacadeT>::description_factory.summary.source_name_id));
+        routeSummary.set_end_point(Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(Descriptor<DataFacadeT>::description_factory.summary.target_name_id));
         mainRoute.mutable_route_summary()->CopyFrom(routeSummary);
 
         BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
@@ -271,61 +169,62 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             mainRoute.add_via_points()->CopyFrom(point);
         }
 
-        std::vector<unsigned> const &shortest_leg_end_indices = description_factory.GetViaIndices();
+        std::vector<unsigned> const &shortest_leg_end_indices = Descriptor<DataFacadeT>::description_factory.GetViaIndices();
         for (unsigned v : shortest_leg_end_indices)
         {
             mainRoute.add_via_indices(v);
         }
 
         RouteNames route_names =
-            GenerateRouteNames(shortest_path_segments, alternative_path_segments, facade);
+            Descriptor<DataFacadeT>::GenerateRouteNames(Descriptor<DataFacadeT>::shortest_path_segments, 
+                Descriptor<DataFacadeT>::alternative_path_segments, Descriptor<DataFacadeT>::facade);
 
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             protobufResponse::Route alternativeRoute;
             BOOST_ASSERT(!raw_route.alt_source_traversed_in_reverse.empty());
-            alternate_description_factory.SetStartSegment(
+            Descriptor<DataFacadeT>::alternate_description_factory.SetStartSegment(
                 raw_route.segment_end_coordinates.front().source_phantom,
                 raw_route.alt_source_traversed_in_reverse.front());
             // Get all the coordinates for the computed route
             for (const PathData &path_data : raw_route.unpacked_alternative)
             {
-                current = facade->GetCoordinateOfNode(path_data.node);
-                alternate_description_factory.AppendSegment(current, path_data);
+                Descriptor<DataFacadeT>::current = Descriptor<DataFacadeT>::facade->GetCoordinateOfNode(path_data.node);
+                Descriptor<DataFacadeT>::alternate_description_factory.AppendSegment(Descriptor<DataFacadeT>::current, path_data);
             }
-            alternate_description_factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom, raw_route.alt_source_traversed_in_reverse.back());
-            alternate_description_factory.Run(facade, config.zoom_level);
+            Descriptor<DataFacadeT>::alternate_description_factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom, raw_route.alt_source_traversed_in_reverse.back());
+            Descriptor<DataFacadeT>::alternate_description_factory.Run(Descriptor<DataFacadeT>::facade, Descriptor<DataFacadeT>::config.zoom_level);
 
-            if (config.geometry)
+            if (Descriptor<DataFacadeT>::config.geometry)
             {
                 std::string alternateGeometry;
-                alternate_description_factory.AppendEncodedPolylineStringEncoded(alternateGeometry);
+                Descriptor<DataFacadeT>::alternate_description_factory.AppendEncodedPolylineStringEncoded(alternateGeometry);
                 alternativeRoute.set_route_geometry(alternateGeometry);
             }
             // Generate instructions for each alternative (simulated here)
-            if (config.instructions)
+            if (Descriptor<DataFacadeT>::config.instructions)
             {
                 BuildTextualDescription(raw_route.alternative_path_length,
-                                        alternate_description_factory,
-                                        alternative_path_segments,
+                                        Descriptor<DataFacadeT>::alternate_description_factory,
+                                        Descriptor<DataFacadeT>::alternative_path_segments,
                                         alternativeRoute);
             }
 
-            alternate_description_factory.BuildRouteSummary(
-                alternate_description_factory.entireLength, raw_route.alternative_path_length);
+            Descriptor<DataFacadeT>::alternate_description_factory.BuildRouteSummary(
+                Descriptor<DataFacadeT>::alternate_description_factory.entireLength, raw_route.alternative_path_length);
 
             protobufResponse::RouteSummary alternativeRouteSummary;
 
-            alternativeRouteSummary.set_total_distance(alternate_description_factory.summary.distance);
-            alternativeRouteSummary.set_total_time(alternate_description_factory.summary.duration);
-            alternativeRouteSummary.set_start_point(facade->GetEscapedNameForNameID(
-                alternate_description_factory.summary.source_name_id));
-            alternativeRouteSummary.set_end_point(facade->GetEscapedNameForNameID(
-                alternate_description_factory.summary.target_name_id));
+            alternativeRouteSummary.set_total_distance(Descriptor<DataFacadeT>::alternate_description_factory.summary.distance);
+            alternativeRouteSummary.set_total_time(Descriptor<DataFacadeT>::alternate_description_factory.summary.duration);
+            alternativeRouteSummary.set_start_point(Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(
+                Descriptor<DataFacadeT>::alternate_description_factory.summary.source_name_id));
+            alternativeRouteSummary.set_end_point(Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(
+                Descriptor<DataFacadeT>::alternate_description_factory.summary.target_name_id));
             alternativeRoute.mutable_route_summary()->CopyFrom(routeSummary);
 
             std::vector<unsigned> const &alternate_leg_end_indices =
-                alternate_description_factory.GetViaIndices();
+                Descriptor<DataFacadeT>::alternate_description_factory.GetViaIndices();
             for (unsigned v : alternate_leg_end_indices)
             {
                 alternativeRoute.add_via_indices(v);
