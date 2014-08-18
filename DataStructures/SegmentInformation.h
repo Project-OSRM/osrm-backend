@@ -44,10 +44,10 @@ struct SegmentInformation
     float length;
     short bearing; // more than enough [0..3600] fits into 12 bits
     TurnInstruction turn_instruction;
-    bool necessary:1;
-    bool is_via_location:1;
-    TravelMode  travel_mode;
-    
+    TravelMode travel_mode;
+    bool necessary;
+    bool is_via_location;
+
     explicit SegmentInformation(const FixedPointCoordinate &location,
                                 const NodeID name_id,
                                 const EdgeWeight duration,
