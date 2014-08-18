@@ -60,9 +60,9 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
 
     virtual ~DistanceTablePlugin() {}
 
-    const std::string GetDescriptor() const { return descriptor_string; }
+    const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
         // check number of parameters
         if (2 > route_parameters.coordinates.size())
@@ -77,7 +77,9 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         if (std::any_of(begin(route_parameters.coordinates),
                         end(route_parameters.coordinates),
                         [&](FixedPointCoordinate coordinate)
-                        { return !coordinate.isValid(); }))
+                        {
+                return !coordinate.isValid();
+            }))
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;

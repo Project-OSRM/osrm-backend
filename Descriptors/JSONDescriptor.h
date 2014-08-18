@@ -72,7 +72,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
   public:
     JSONDescriptor(DataFacadeT *facade) : facade(facade), entered_restricted_area_count(0) {}
 
-    void SetConfig(const DescriptorConfig &c) { config = c; }
+    void SetConfig(const DescriptorConfig &c) final { config = c; }
 
     unsigned DescribeLeg(const std::vector<PathData> route_leg,
                          const PhantomNodes &leg_phantoms,
@@ -88,13 +88,14 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
-        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
+        description_factory.SetEndSegment(
+            leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
         ++added_element_count;
         BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
         return added_element_count;
     }
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply)
+    void Run(const RawRouteData &raw_route, http::Reply &reply) final
     {
         JSON::Object json_result;
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
@@ -125,10 +126,10 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 #ifndef NDEBUG
             const int added_segments =
 #endif
-            DescribeLeg(raw_route.unpacked_path_segments[i],
-                        raw_route.segment_end_coordinates[i],
-                        raw_route.target_traversed_in_reverse[i],
-                        raw_route.is_via_leg(i));
+                DescribeLeg(raw_route.unpacked_path_segments[i],
+                            raw_route.segment_end_coordinates[i],
+                            raw_route.target_traversed_in_reverse[i],
+                            raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
         description_factory.Run(facade, config.zoom_level);
@@ -204,7 +205,9 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                 current = facade->GetCoordinateOfNode(path_data.node);
                 alternate_description_factory.AppendSegment(current, path_data);
             }
-            alternate_description_factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom, raw_route.alt_source_traversed_in_reverse.back());
+            alternate_description_factory.SetEndSegment(
+                raw_route.segment_end_coordinates.back().target_phantom,
+                raw_route.alt_source_traversed_in_reverse.back());
             alternate_description_factory.Run(facade, config.zoom_level);
 
             if (config.geometry)
@@ -349,12 +352,15 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                     json_instruction_row.values.push_back(round(segment.duration / 10));
                     json_instruction_row.values.push_back(
                         UintToString(static_cast<int>(segment.length)) + "m");
-                    const double bearing_value = (segment.bearing / 10.) ;
+                    const double bearing_value = (segment.bearing / 10.);
                     json_instruction_row.values.push_back(Azimuth::Get(bearing_value));
-                    json_instruction_row.values.push_back(static_cast<unsigned>(round(bearing_value)));
+                    json_instruction_row.values.push_back(
+                        static_cast<unsigned>(round(bearing_value)));
 
                     route_segments_list.emplace_back(
-                        segment.name_id, static_cast<int>(segment.length), static_cast<unsigned>(route_segments_list.size()));
+                        segment.name_id,
+                        static_cast<int>(segment.length),
+                        static_cast<unsigned>(route_segments_list.size()));
                     json_instruction_array.values.push_back(json_instruction_row);
                 }
             }

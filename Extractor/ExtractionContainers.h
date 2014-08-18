@@ -60,7 +60,7 @@ class ExtractionContainers
 
     ExtractionContainers();
 
-    virtual ~ExtractionContainers();
+    ~ExtractionContainers();
 
     void PrepareData(const std::string &output_file_name,
                      const std::string &restrictions_file_name);

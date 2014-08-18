@@ -40,8 +40,8 @@ template <class DataFacadeT> class TimestampPlugin : public BasePlugin
         : facade(facade), descriptor_string("timestamp")
     {
     }
-    const std::string GetDescriptor() const { return descriptor_string; }
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
+    const std::string GetDescriptor() const final { return descriptor_string; }
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
         reply.status = http::Reply::ok;
         JSON::Object json_result;

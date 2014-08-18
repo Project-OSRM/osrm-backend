@@ -67,16 +67,18 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
 
     virtual ~ViaRoutePlugin() {}
 
-    const std::string GetDescriptor() const { return descriptor_string; }
+    const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
         // check number of parameters
         if (2 > route_parameters.coordinates.size() ||
             std::any_of(begin(route_parameters.coordinates),
                         end(route_parameters.coordinates),
                         [&](FixedPointCoordinate coordinate)
-                        { return !coordinate.isValid(); }))
+                        {
+                return !coordinate.isValid();
+            }))
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
@@ -125,7 +127,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         }
         else
         {
-            search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
+            search_engine_ptr->shortest_path(
+                raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
         }
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
