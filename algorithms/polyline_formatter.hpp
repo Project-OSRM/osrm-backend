@@ -30,16 +30,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct SegmentInformation;
 
-#include <osrm/json_container.hpp>
-
 #include <string>
 #include <vector>
 
 struct PolylineFormatter
 {
-    osrm::json::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
+  private:
+    void encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output) const;
 
-    osrm::json::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
+    void encodeNumber(int number_to_encode, std::string &output) const;
+
+  public:
+    std::string printEncodedStr(const std::vector<SegmentInformation> &polyline) const;
+
+    std::vector<std::string> printUnencodedStr(const std::vector<SegmentInformation> &polyline) const;
 };
 
 #endif /* POLYLINE_FORMATTER_HPP */

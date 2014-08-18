@@ -65,7 +65,8 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         descriptor_table.emplace("json", 0);
         descriptor_table.emplace("gpx", 1);
-        // descriptor_table.emplace("geojson", 2);
+        descriptor_table.emplace("pb", 2);
+        // descriptor_table.emplace("geojson", 3);
     }
 
     virtual ~ViaRoutePlugin() {}

@@ -38,8 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<DataFacadeT>
 {
   private:
+    typedef BaseDescriptor<DataFacadeT> super;
     DescriptorConfig config;
-    DataFacadeT *facade;
+    FixedPointCoordinate current;
 
     void AddRoutePoint(const FixedPointCoordinate &coordinate, osrm::json::Array &json_route)
     {
@@ -63,9 +64,9 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
     }
 
   public:
-    explicit GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
+    explicit GPXDescriptor(DataFacadeT *facade) : super(facade) {}
 
-    virtual void SetConfig(const DescriptorConfig &c) final { config = c; }
+    void SetConfig(const DescriptorConfig &c) { config = c; }
 
     virtual void Run(const InternalRouteResult &raw_route, osrm::json::Object &json_result) final
     {
@@ -80,8 +81,8 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
                 for (const PathData &path_data : path_data_vector)
                 {
                     const FixedPointCoordinate current_coordinate =
-                        facade->GetCoordinateOfNode(path_data.node);
-                    AddRoutePoint(current_coordinate, json_route);
+                        super::facade->GetCoordinateOfNode(path_data.node);
+                    AddRoutePoint(current_coordinate, reply.content);
                 }
             }
             AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location,
