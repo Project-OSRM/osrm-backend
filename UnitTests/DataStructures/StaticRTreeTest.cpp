@@ -110,7 +110,7 @@ class LinearSearchNN
                                        e.packed_geometry_id,
                                        nearest,
                                        e.fwd_segment_position,
-                                       e.travel_mode,
+                                       e.forward_travel_mode,
                                        e.backward_travel_mode};
                 nearest_edge = e;
             }
