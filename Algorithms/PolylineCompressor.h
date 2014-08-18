@@ -43,9 +43,9 @@ class PolylineCompressor
     void encodeNumber(int number_to_encode, std::string &output) const;
 
   public:
-  	void printEncodedString(const std::vector<SegmentInformation> &polyline, std::string &output) const;
+  	std::string printEncodedStr(const std::vector<SegmentInformation> &polyline) const;
 
-  	void printUnencodedString(const std::vector<SegmentInformation> &polyline, std::vector<std::string> &output) const;
+  	std::vector<std::string> printUnencodedStr(const std::vector<SegmentInformation> &polyline) const;
 
     JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
 

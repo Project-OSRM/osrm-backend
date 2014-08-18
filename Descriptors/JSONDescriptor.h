@@ -28,16 +28,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_DESCRIPTOR_H_
 #define JSON_DESCRIPTOR_H_
 
-#include "Descriptor.h"
+#include "BaseDescriptor.h"
 #include "../DataStructures/JSONContainer.h"
 
 #include <algorithm>
 
 
-template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacadeT>
+template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFacadeT>
 {
+    typedef BaseDescriptor<DataFacadeT> super;
   public:
-    JSONDescriptor(DataFacadeT *facade) : Descriptor<DataFacadeT>(facade)
+    JSONDescriptor(DataFacadeT *facade) : super(facade)
     {}
 
     void Run(const RawRouteData &raw_route, http::Reply &reply) final
@@ -53,13 +54,13 @@ template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacade
         }
 
         // check if first segment is non-zero
-        std::string road_name = Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(
+        std::string road_name = super::facade->GetEscapedNameForNameID(
             raw_route.segment_end_coordinates.front().source_phantom.name_id);
 
         BOOST_ASSERT(raw_route.unpacked_path_segments.size() ==
                      raw_route.segment_end_coordinates.size());
 
-        Descriptor<DataFacadeT>::description_factory.SetStartSegment(
+        super::description_factory.SetStartSegment(
             raw_route.segment_end_coordinates.front().source_phantom,
             raw_route.source_traversed_in_reverse.front());
         json_result.values["status"] = 0;
@@ -71,41 +72,41 @@ template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacade
 #ifndef NDEBUG
             const int added_segments =
 #endif
-            Descriptor<DataFacadeT>::DescribeLeg(
+            super::DescribeLeg(
                         raw_route.unpacked_path_segments[i],
                         raw_route.segment_end_coordinates[i],
                         raw_route.target_traversed_in_reverse[i],
                         raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
-        Descriptor<DataFacadeT>::description_factory.Run(Descriptor<DataFacadeT>::facade, Descriptor<DataFacadeT>::config.zoom_level);
+        super::description_factory.Run(super::facade, super::config.zoom_level);
 
-        if (Descriptor<DataFacadeT>::config.geometry)
+        if (super::config.geometry)
         {
             JSON::Value route_geometry =
-                Descriptor<DataFacadeT>::description_factory.AppendEncodedPolylineString(Descriptor<DataFacadeT>::config.encode_geometry);
+                super::description_factory.AppendEncodedPolylineString(super::config.encode_geometry);
             json_result.values["route_geometry"] = route_geometry;
         }
-        if (Descriptor<DataFacadeT>::config.instructions)
+        if (super::config.instructions)
         {
             JSON::Array json_route_instructions;
             BuildTextualDescription(
-                                    Descriptor<DataFacadeT>::description_factory,
+                                    super::description_factory,
                                     json_route_instructions,
                                     raw_route.shortest_path_length,
-                                    Descriptor<DataFacadeT>::shortest_path_segments);
+                                    super::shortest_path_segments);
             json_result.values["route_instructions"] = json_route_instructions;
         }
-        Descriptor<DataFacadeT>::description_factory.BuildRouteSummary(
-                                              Descriptor<DataFacadeT>::description_factory.entireLength,
+        super::description_factory.BuildRouteSummary(
+                                              super::description_factory.entireLength,
                                               raw_route.shortest_path_length);
         JSON::Object json_route_summary;
-        json_route_summary.values["total_distance"] = Descriptor<DataFacadeT>::description_factory.summary.distance;
-        json_route_summary.values["total_time"] = Descriptor<DataFacadeT>::description_factory.summary.duration;
+        json_route_summary.values["total_distance"] = super::description_factory.summary.distance;
+        json_route_summary.values["total_time"] = super::description_factory.summary.duration;
         json_route_summary.values["start_point"] =
-            Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(Descriptor<DataFacadeT>::description_factory.summary.source_name_id);
+            super::facade->GetEscapedNameForNameID(super::description_factory.summary.source_name_id);
         json_route_summary.values["end_point"] =
-            Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(Descriptor<DataFacadeT>::description_factory.summary.target_name_id);
+            super::facade->GetEscapedNameForNameID(super::description_factory.summary.target_name_id);
         json_result.values["route_summary"] = json_route_summary;
 
         BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
@@ -133,7 +134,7 @@ template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacade
 
         JSON::Array json_via_indices_array;
 
-        std::vector<unsigned> const &shortest_leg_end_indices = Descriptor<DataFacadeT>::description_factory.GetViaIndices();
+        std::vector<unsigned> const &shortest_leg_end_indices = super::description_factory.GetViaIndices();
         json_via_indices_array.values.insert(json_via_indices_array.values.end(),
                                              shortest_leg_end_indices.begin(),
                                              shortest_leg_end_indices.end());
@@ -144,26 +145,26 @@ template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacade
         {
             json_result.values["found_alternative"] = JSON::True();
             BOOST_ASSERT(!raw_route.alt_source_traversed_in_reverse.empty());
-            Descriptor<DataFacadeT>::alternate_description_factory.SetStartSegment(
+            super::alternate_description_factory.SetStartSegment(
                 raw_route.segment_end_coordinates.front().source_phantom,
                 raw_route.alt_source_traversed_in_reverse.front());
             // Get all the coordinates for the computed route
             for (const PathData &path_data : raw_route.unpacked_alternative)
             {
-                Descriptor<DataFacadeT>::current = Descriptor<DataFacadeT>::facade->GetCoordinateOfNode(path_data.node);
-                Descriptor<DataFacadeT>::alternate_description_factory.AppendSegment(Descriptor<DataFacadeT>::current, path_data);
+                super::current = super::facade->GetCoordinateOfNode(path_data.node);
+                super::alternate_description_factory.AppendSegment(super::current, path_data);
             }
-            Descriptor<DataFacadeT>::alternate_description_factory.SetEndSegment(
+            super::alternate_description_factory.SetEndSegment(
                                                    raw_route.segment_end_coordinates.back().target_phantom, 
                                                    raw_route.alt_source_traversed_in_reverse.back());
-            Descriptor<DataFacadeT>::alternate_description_factory.Run(
-                                                   Descriptor<DataFacadeT>::facade, Descriptor<DataFacadeT>::config.zoom_level);
+            super::alternate_description_factory.Run(
+                                                   super::facade, super::config.zoom_level);
 
-            if (Descriptor<DataFacadeT>::config.geometry)
+            if (super::config.geometry)
             {
                 JSON::Value alternate_geometry_string =
-                    Descriptor<DataFacadeT>::alternate_description_factory.AppendEncodedPolylineString(
-                        Descriptor<DataFacadeT>::config.encode_geometry);
+                    super::alternate_description_factory.AppendEncodedPolylineString(
+                        super::config.encode_geometry);
                 JSON::Array json_alternate_geometries_array;
                 json_alternate_geometries_array.values.push_back(alternate_geometry_string);
                 json_result.values["alternative_geometries"] = json_alternate_geometries_array;
@@ -171,33 +172,33 @@ template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacade
             // Generate instructions for each alternative (simulated here)
             JSON::Array json_alt_instructions;
             JSON::Array json_current_alt_instructions;
-            if (Descriptor<DataFacadeT>::config.instructions)
+            if (super::config.instructions)
             {
-                BuildTextualDescription(Descriptor<DataFacadeT>::alternate_description_factory,
+                BuildTextualDescription(super::alternate_description_factory,
                                         json_current_alt_instructions,
                                         raw_route.alternative_path_length,
-                                        Descriptor<DataFacadeT>::alternative_path_segments);
+                                        super::alternative_path_segments);
                 json_alt_instructions.values.push_back(json_current_alt_instructions);
                 json_result.values["alternative_instructions"] = json_alt_instructions;
             }
-            Descriptor<DataFacadeT>::alternate_description_factory.BuildRouteSummary(
-                Descriptor<DataFacadeT>::alternate_description_factory.entireLength, raw_route.alternative_path_length);
+            super::alternate_description_factory.BuildRouteSummary(
+                super::alternate_description_factory.entireLength, raw_route.alternative_path_length);
 
             JSON::Object json_alternate_route_summary;
             JSON::Array json_alternate_route_summary_array;
             json_alternate_route_summary.values["total_distance"] =
-                Descriptor<DataFacadeT>::alternate_description_factory.summary.distance;
+                super::alternate_description_factory.summary.distance;
             json_alternate_route_summary.values["total_time"] =
-                Descriptor<DataFacadeT>::alternate_description_factory.summary.duration;
-            json_alternate_route_summary.values["start_point"] = Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(
-                Descriptor<DataFacadeT>::alternate_description_factory.summary.source_name_id);
-            json_alternate_route_summary.values["end_point"] = Descriptor<DataFacadeT>::facade->GetEscapedNameForNameID(
-                Descriptor<DataFacadeT>::alternate_description_factory.summary.target_name_id);
+                super::alternate_description_factory.summary.duration;
+            json_alternate_route_summary.values["start_point"] = super::facade->GetEscapedNameForNameID(
+                super::alternate_description_factory.summary.source_name_id);
+            json_alternate_route_summary.values["end_point"] = super::facade->GetEscapedNameForNameID(
+                super::alternate_description_factory.summary.target_name_id);
             json_alternate_route_summary_array.values.push_back(json_alternate_route_summary);
             json_result.values["alternative_summaries"] = json_alternate_route_summary_array;
 
             std::vector<unsigned> const &alternate_leg_end_indices =
-                Descriptor<DataFacadeT>::alternate_description_factory.GetViaIndices();
+                super::alternate_description_factory.GetViaIndices();
             JSON::Array json_altenative_indices_array;
             json_altenative_indices_array.values.insert(json_altenative_indices_array.values.end(),
                                                         alternate_leg_end_indices.begin(),
@@ -211,8 +212,8 @@ template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacade
 
         // Get Names for both routes
         RouteNames route_names =
-            Descriptor<DataFacadeT>::GenerateRouteNames(Descriptor<DataFacadeT>::shortest_path_segments, Descriptor<DataFacadeT>::alternative_path_segments, 
-                Descriptor<DataFacadeT>::facade);
+            super::GenerateRouteNames(super::shortest_path_segments, super::alternative_path_segments, 
+                super::facade);
         JSON::Array json_route_names;
         json_route_names.values.push_back(route_names.shortest_path_name_1);
         json_route_names.values.push_back(route_names.shortest_path_name_2);
@@ -253,15 +254,15 @@ template <class DataFacadeT> class JSONDescriptor : public Descriptor<DataFacade
     inline void BuildTextualDescription(DescriptionFactory &description_factory,
                                         JSON::Array &json_instruction_array,
                                         const int route_length,
-                                        std::vector<typename Descriptor<DataFacadeT>::Segment> &route_segments_list)
+                                        std::vector<typename super::Segment> &route_segments_list)
     {
-        std::vector<typename Descriptor<DataFacadeT>::Instruction> instructions;
-        Descriptor<DataFacadeT>::BuildTextualDescription(description_factory,
+        std::vector<typename super::Instruction> instructions;
+        super::BuildTextualDescription(description_factory,
                                                          instructions,
                                                          route_length,
                                                          route_segments_list);
 
-        for (const typename Descriptor<DataFacadeT>::Instruction &i : instructions)
+        for (const typename super::Instruction &i : instructions)
         {
             JSON::Array json_instruction_row;
             json_instruction_row.values.push_back(i.instructionId);

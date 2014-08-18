@@ -109,14 +109,14 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.travel_mode);
 }
 
-void DescriptionFactory::AppendEncodedPolylineStringEncoded(std::string &output)
+std::string DescriptionFactory::AppendEncodedPolylineStringEncoded()
 {
-    polyline_compressor.printEncodedString(path_description, output);
+    return polyline_compressor.printEncodedStr(path_description);
 }
 
-void DescriptionFactory::AppendEncodedPolylineStringUnencoded(std::vector<std::string> &output)
+std::vector<std::string> DescriptionFactory::AppendEncodedPolylineStringUnencoded()
 {
-    polyline_compressor.printUnencodedString(path_description, output);
+    return polyline_compressor.printUnencodedStr(path_description);
 }
 
 

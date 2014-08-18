@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
-#include "../Descriptors/ProtoBufDescriptor.h"
+#include "../Descriptors/ProtobufDescriptor.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
@@ -63,8 +63,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
 
         descriptor_table.emplace("json", 0);
         descriptor_table.emplace("gpx", 1);
-        // descriptor_table.emplace("geojson", 2);
-        descriptor_table.emplace("pb", 3);
+        descriptor_table.emplace("pb", 2);
+        // descriptor_table.emplace("geojson", 3);
     }
 
     virtual ~ViaRoutePlugin() {}
@@ -158,12 +158,12 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         case 1:
             descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>(facade);
             break;
-        // case 2:
-        //      descriptor = std::make_shared<GEOJSONDescriptor<DataFacadeT>>();
-        //      break;
-        case 3:
+        case 2:
             descriptor = std::make_shared<PBFDescriptor<DataFacadeT>>(facade);
             break;
+        // case 3:
+        //      descriptor = std::make_shared<GEOJSONDescriptor<DataFacadeT>>();
+        //      break;
         default:
             descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>(facade);
             break;

@@ -2,16 +2,16 @@ package protobufResponse;
 
 message Point
 {
-	required float lat = 1;
-	required float lon = 2;
+    required float lat = 1;
+    required float lon = 2;
 }
 
 message RouteSummary
 {
-	required uint32 total_distance = 1;
-	required uint32 total_time = 2;
-	required string start_point = 3;
-	required string end_point = 4;
+    required uint32 total_distance = 1;
+    required uint32 total_time = 2;
+    required string start_point = 3;
+    required string end_point = 4;
 }
 
 message RouteInstructions
@@ -28,9 +28,9 @@ message RouteInstructions
 
 message Route
 {
-	optional RouteSummary route_summary = 1;
-	optional string route_geometry = 2;
-	repeated Point via_points = 3;
+    optional RouteSummary route_summary = 1;
+    optional string route_geometry = 2;
+    repeated Point via_points = 3;
     repeated int32 via_indices = 4;
     repeated string route_name = 5;
     repeated RouteInstructions route_instructions = 6;
@@ -38,8 +38,8 @@ message Route
 
 message Hint
 {
-	required int32 check_sum = 1;
-	repeated string location = 2;
+    required int32 check_sum = 1;
+    repeated string location = 2;
 }
 
 message Response {
