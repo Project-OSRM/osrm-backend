@@ -53,8 +53,8 @@ struct ExtractionWay
         roundabout = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
-        travel_mode = TravelMode::Default;
-        backward_travel_mode = TravelMode::Default;
+        travel_mode = TRAVEL_MODE_DEFAULT;
+        backward_travel_mode = TRAVEL_MODE_DEFAULT;
     }
 
     enum Directions
@@ -67,32 +67,32 @@ struct ExtractionWay
     {
         if (Directions::oneway == m )
         {
-            travel_mode = TravelMode::Default;
-            backward_travel_mode = TravelMode::Inaccessible;
+            travel_mode = TRAVEL_MODE_DEFAULT;
+            backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         }
         else if (Directions::opposite == m )
         {
-          travel_mode = TravelMode::Inaccessible;
-          backward_travel_mode = TravelMode::Default;
+          travel_mode = TRAVEL_MODE_INACCESSIBLE;
+          backward_travel_mode = TRAVEL_MODE_DEFAULT;
         }
         else if (Directions::bidirectional == m )
         {
-          travel_mode = TravelMode::Default;
-          backward_travel_mode = TravelMode::Default;
+          travel_mode = TRAVEL_MODE_DEFAULT;
+          backward_travel_mode = TRAVEL_MODE_DEFAULT;
         }
     }
 
     inline const Directions get_direction()
     {
-        if (TravelMode::Inaccessible != travel_mode && TravelMode::Inaccessible != backward_travel_mode )
+        if (TRAVEL_MODE_INACCESSIBLE != travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode )
         {
             return Directions::bidirectional;
         }
-        else if (TravelMode::Inaccessible != travel_mode )
+        else if (TRAVEL_MODE_INACCESSIBLE != travel_mode )
         {
             return Directions::oneway;
         }
-        else if (TravelMode::Inaccessible != backward_travel_mode )
+        else if (TRAVEL_MODE_INACCESSIBLE != backward_travel_mode )
         {
             return Directions::opposite;
         }

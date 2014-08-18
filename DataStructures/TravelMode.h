@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRAVEL_MODE_H
 #define TRAVEL_MODE_H
 
-enum TravelMode : unsigned char {
-    Inaccessible=0, Default=1
-};
+typedef unsigned char TravelMode;
+static const TravelMode TRAVEL_MODE_INACCESSIBLE = 0;
+static const TravelMode TRAVEL_MODE_DEFAULT = 1;
 
 #endif /* TRAVEL_MODE_H */

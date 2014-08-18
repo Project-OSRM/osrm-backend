@@ -66,8 +66,8 @@ struct PhantomNode
         reverse_offset(0),
         packed_geometry_id(SPECIAL_EDGEID),
         fwd_segment_position(0),
-        travel_mode(TravelMode::Inaccessible),
-        backward_travel_mode(TravelMode::Inaccessible)
+        travel_mode(TRAVEL_MODE_INACCESSIBLE),
+        backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     { }
 
     NodeID forward_node_id;

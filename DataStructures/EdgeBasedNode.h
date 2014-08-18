@@ -27,8 +27,8 @@ struct EdgeBasedNode
         packed_geometry_id(SPECIAL_EDGEID),
         fwd_segment_position( std::numeric_limits<unsigned short>::max() ),
         is_in_tiny_cc(false),
-        travel_mode(TravelMode::Inaccessible),
-        backward_travel_mode(TravelMode::Inaccessible)
+        travel_mode(TRAVEL_MODE_INACCESSIBLE),
+        backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     { }
 
     explicit EdgeBasedNode(
