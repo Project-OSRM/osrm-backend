@@ -45,7 +45,7 @@ struct ExtractionWay
         nameID = INVALID_NAMEID;
         path.clear();
         keyVals.Clear();
-        speed = -1;
+        forward_speed = -1;
         backward_speed = -1;
         duration = -1;
         type = -1;
@@ -53,7 +53,7 @@ struct ExtractionWay
         roundabout = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
-        travel_mode = TRAVEL_MODE_DEFAULT;
+        forward_travel_mode = TRAVEL_MODE_DEFAULT;
         backward_travel_mode = TRAVEL_MODE_DEFAULT;
     }
 
@@ -67,28 +67,28 @@ struct ExtractionWay
     {
         if (Directions::oneway == m )
         {
-            travel_mode = TRAVEL_MODE_DEFAULT;
+            forward_travel_mode = TRAVEL_MODE_DEFAULT;
             backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         }
         else if (Directions::opposite == m )
         {
-          travel_mode = TRAVEL_MODE_INACCESSIBLE;
+          forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
           backward_travel_mode = TRAVEL_MODE_DEFAULT;
         }
         else if (Directions::bidirectional == m )
         {
-          travel_mode = TRAVEL_MODE_DEFAULT;
+          forward_travel_mode = TRAVEL_MODE_DEFAULT;
           backward_travel_mode = TRAVEL_MODE_DEFAULT;
         }
     }
 
     inline const Directions get_direction()
     {
-        if (TRAVEL_MODE_INACCESSIBLE != travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode )
+        if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode )
         {
             return Directions::bidirectional;
         }
-        else if (TRAVEL_MODE_INACCESSIBLE != travel_mode )
+        else if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode )
         {
             return Directions::oneway;
         }
@@ -102,14 +102,14 @@ struct ExtractionWay
         }
     }
 
-    inline void set_mode(const TravelMode m) { travel_mode = m; }
-    inline const TravelMode get_mode() { return travel_mode; }
+    inline void set_forward_mode(const TravelMode m) { forward_travel_mode = m; }
+    inline const TravelMode get_forward_mode() { return forward_travel_mode; }
     inline void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
     inline const TravelMode get_backward_mode() { return backward_travel_mode; }
 
     unsigned id;
     unsigned nameID;
-    double speed;
+    double forward_speed;
     double backward_speed;
     double duration;
     std::string name;
@@ -120,7 +120,7 @@ struct ExtractionWay
     bool ignoreInGrid;
     std::vector<NodeID> path;
     HashTable<std::string, std::string> keyVals;
-    TravelMode travel_mode : 4;
+    TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
 };
 

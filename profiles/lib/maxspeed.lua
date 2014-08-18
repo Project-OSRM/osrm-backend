@@ -4,9 +4,9 @@ module "MaxSpeed"
 
 function limit(way,max,maxf,maxb)
   if maxf and maxf>0 then
-    way.speed = math.min(way.speed, maxf)
+    way.forward_speed = math.min(way.forward_speed, maxf)
   elseif max and max>0 then
-    way.speed = math.min(way.speed, max)
+    way.forward_speed = math.min(way.forward_speed, max)
   end
 
   if maxb and maxb>0 then

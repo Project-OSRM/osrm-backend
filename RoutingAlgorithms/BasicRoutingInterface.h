@@ -306,7 +306,7 @@ template <class DataFacadeT> class BasicRoutingInterface
                                                     phantom_node_pair.target_phantom.name_id,
                                                     TurnInstruction::NoTurn,
                                                     0,
-                                                    phantom_node_pair.target_phantom.travel_mode});
+                                                    phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
 

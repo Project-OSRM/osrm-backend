@@ -70,22 +70,22 @@ function way_function (way)
 
   if route ~= nil and durationIsValid(duration) then
     way.duration = math.max( 1, parseDuration(duration) )
-  	way.mode = 2
-  	way.backward_mode = 2
+    way.forward_mode = 2
+    way.backward_mode = 2
   else
     local speed_forw = speed_profile[highway] or speed_profile['default']
     local speed_back = speed_forw
 
     if highway == "river" then
       local temp_speed = speed_forw;
-    	way.mode = 3
-    	way.backward_mode = 4
+      way.forward_mode = 3
+      way.backward_mode = 4
       speed_forw = temp_speed*1.5
       speed_back = temp_speed/1.5
     elseif highway == "steps" then
-      way.mode = 5
+      way.forward_mode = 5
       way.backward_mode = 6
-   	end
+    end
 
     if maxspeed_forward ~= nil and maxspeed_forward > 0 then
       speed_forw = maxspeed_forward
@@ -103,14 +103,14 @@ function way_function (way)
       end
     end
 
-    way.speed = speed_forw
+    way.forward_speed = speed_forw
     way.backward_speed = speed_back
   end
 
   if oneway == "no" or oneway == "0" or oneway == "false" then
     -- nothing to do
   elseif oneway == "-1" then
-    way.mode = 0
+    way.forward_mode = 0
   elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
     way.backward_mode = 0
   end

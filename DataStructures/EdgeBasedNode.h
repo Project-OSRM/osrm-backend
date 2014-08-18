@@ -27,7 +27,7 @@ struct EdgeBasedNode
         packed_geometry_id(SPECIAL_EDGEID),
         fwd_segment_position( std::numeric_limits<unsigned short>::max() ),
         is_in_tiny_cc(false),
-        travel_mode(TRAVEL_MODE_INACCESSIBLE),
+        forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
         backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     { }
 
@@ -44,7 +44,7 @@ struct EdgeBasedNode
         unsigned packed_geometry_id,
         unsigned short fwd_segment_position,
         bool belongs_to_tiny_component,
-        TravelMode travel_mode ,
+        TravelMode forward_travel_mode,
         TravelMode backward_travel_mode
     ) :
         forward_edge_based_node_id(forward_edge_based_node_id),
@@ -59,7 +59,7 @@ struct EdgeBasedNode
         packed_geometry_id(packed_geometry_id),
         fwd_segment_position(fwd_segment_position),
         is_in_tiny_cc(belongs_to_tiny_component),
-        travel_mode(travel_mode),
+        forward_travel_mode(forward_travel_mode),
         backward_travel_mode(backward_travel_mode)
     {
         BOOST_ASSERT((forward_edge_based_node_id != SPECIAL_NODEID) ||
@@ -92,7 +92,7 @@ struct EdgeBasedNode
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
     unsigned short fwd_segment_position; // segment id in a compressed geometry
     bool is_in_tiny_cc;
-    TravelMode travel_mode : 4;
+    TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
 };
 

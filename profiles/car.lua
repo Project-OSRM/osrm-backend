@@ -170,7 +170,7 @@ function way_function (way)
       way.duration = max( parseDuration(duration), 1 );
     end
     way.direction = Way.bidirectional
-    way.speed = route_speed
+    way.forward_speed = route_speed
   end
 
   -- leave early of this way is not accessible
@@ -178,30 +178,30 @@ function way_function (way)
     return
   end
 
-  if way.speed == -1 then
+  if way.forward_speed == -1 then
     local highway_speed = speed_profile[highway]
     local max_speed = parse_maxspeed( way.tags:Find("maxspeed") )
     -- Set the avg speed on the way if it is accessible by road class
     if highway_speed then
       if max_speed > highway_speed then
-        way.speed = max_speed
+        way.forward_speed = max_speed
         -- max_speed = math.huge
       else
-        way.speed = highway_speed
+        way.forward_speed = highway_speed
       end
     else
       -- Set the avg speed on ways that are marked accessible
       if access_tag_whitelist[access] then
-        way.speed = speed_profile["default"]
+        way.forward_speed = speed_profile["default"]
       end
     end
     if 0 == max_speed then
       max_speed = math.huge
     end
-    way.speed = min(way.speed, max_speed)
+    way.forward_speed = min(way.forward_speed, max_speed)
   end
 
-  if -1 == way.speed then
+  if -1 == way.forward_speed then
     return
   end
 
@@ -256,9 +256,9 @@ function way_function (way)
   local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
   if maxspeed_forward > 0 then
     if Way.bidirectional == way.direction then
-      way.backward_speed = way.speed
+      way.backward_speed = way.forward_speed
     end
-    way.speed = maxspeed_forward
+    way.forward_speed = maxspeed_forward
   end
   if maxspeed_backward > 0 then
     way.backward_speed = maxspeed_backward
@@ -271,7 +271,7 @@ function way_function (way)
   way.type = 1
 
   -- scale speeds to get better avg driving times
-  way.speed = way.speed * speed_reduction
+  way.forward_speed = way.forward_speed * speed_reduction
   if maxspeed_backward > 0 then
     way.backward_speed = way.backward_speed*speed_reduction
   end

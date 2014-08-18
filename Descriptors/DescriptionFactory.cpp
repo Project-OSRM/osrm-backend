@@ -46,7 +46,7 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
     const TravelMode travel_mode =
-          (traversed_in_reverse ? source.backward_travel_mode : source.travel_mode);
+          (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
     AppendSegment(source.location,
                   PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration, travel_mode));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
@@ -60,7 +60,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     const TravelMode travel_mode =
-          (traversed_in_reverse ? target.backward_travel_mode : target.travel_mode);
+          (traversed_in_reverse ? target.backward_travel_mode : target.forward_travel_mode);
     path_description.emplace_back(target.location,
                                   target.name_id,
                                   segment_duration,

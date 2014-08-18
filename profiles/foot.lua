@@ -161,23 +161,23 @@ function way_function (way)
 		if durationIsValid(duration) then
 			way.duration = math.max( 1, parseDuration(duration) )
 		else
-		 	way.speed = route_speeds[route]
+		 	way.forward_speed = route_speeds[route]
 		end
 	elseif railway and platform_speeds[railway] then
 		-- railway platforms (old tagging scheme)
-		way.speed = platform_speeds[railway]
+		way.forward_speed = platform_speeds[railway]
 	elseif platform_speeds[public_transport] then
 		-- public_transport platforms (new tagging platform)
-		way.speed = platform_speeds[public_transport]
+		way.forward_speed = platform_speeds[public_transport]
 	elseif amenity and amenity_speeds[amenity] then
 		-- parking areas
-		way.speed = amenity_speeds[amenity]
+		way.forward_speed = amenity_speeds[amenity]
 	elseif speeds[highway] then
 		-- regular ways
-      	way.speed = speeds[highway]
+      	way.forward_speed = speeds[highway]
 	elseif access and access_tag_whitelist[access] then
 	    -- unknown way, but valid access tag
-		way.speed = walking_speed
+		way.forward_speed = walking_speed
     end
 
 	-- oneway
@@ -195,7 +195,7 @@ function way_function (way)
     if surface then
         surface_speed = surface_speeds[surface]
         if surface_speed then
-            way.speed = math.min(way.speed, surface_speed)
+            way.forward_speed = math.min(way.forward_speed, surface_speed)
             way.backward_speed  = math.min(way.backward_speed, surface_speed)
         end
     end
