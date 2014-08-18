@@ -301,7 +301,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
             {
                 BOOST_ASSERT(i < id_vector.size());
-                BOOST_ASSERT(phantom_node_pair.target_phantom.travel_mode>0 );
+                BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode>0 );
                 unpacked_path.emplace_back(PathData{id_vector[i],
                                                     phantom_node_pair.target_phantom.name_id,
                                                     TurnInstruction::NoTurn,
