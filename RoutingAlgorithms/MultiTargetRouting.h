@@ -149,12 +149,12 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
             if (0 < forward_heap.Size())
             {
                 super::RoutingStep(
-                    forward_heap, backward_heap, &middle, &local_upper_bound, forward_dir);
+                    forward_heap, backward_heap, &middle, &local_upper_bound, 0, forward_dir);
             }
             if (0 < backward_heap.Size())
             {
                 super::RoutingStep(
-                    backward_heap, forward_heap, &middle, &local_upper_bound, !forward_dir);
+                    backward_heap, forward_heap, &middle, &local_upper_bound, 0, !forward_dir);
             }
         }
 
