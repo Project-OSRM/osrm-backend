@@ -48,6 +48,11 @@ local max = math.max
 
 local speed_reduction = 0.8
 
+--modes
+local mode_normal = 1
+local mode_ferry = 2
+
+
 local function find_access_tag(source,access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
     local has_tag = source.tags:Holds(v)
@@ -169,8 +174,10 @@ function way_function (way)
     if durationIsValid(duration) then
       way.duration = max( parseDuration(duration), 1 );
     end
-    way.direction = Way.bidirectional
+    way.forward_mode = mode_ferry
+    way.backward_mode = mode_ferry
     way.forward_speed = route_speed
+    way.backward_speed = route_speed
   end
 
   -- leave early of this way is not accessible
@@ -237,17 +244,16 @@ function way_function (way)
   end
 
   -- Set direction according to tags on way
-  way.direction = Way.bidirectional
   if obey_oneway  then
     if oneway == "-1" then
-      way.direction = Way.opposite
+      way.forward_mode = 0
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
-      way.direction = Way.oneway
+      way.backward_mode = 0
     end
   end
 
@@ -255,7 +261,7 @@ function way_function (way)
   local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
   local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
   if maxspeed_forward > 0 then
-    if Way.bidirectional == way.direction then
+    if 0 ~= way.forward_mode and 0 ~= way.backward_mode then
       way.backward_speed = way.forward_speed
     end
     way.forward_speed = maxspeed_forward
