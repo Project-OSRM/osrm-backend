@@ -54,7 +54,7 @@ Then /^routability should be$/ do |table|
         want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
         case want
         when '', 'x'
-          output_row[direction] = result[direction][:time] ? result[direction][:status].to_s : ''
+          output_row[direction] = result[direction][:status] ? result[direction][:status].to_s : ''
         when /^\d+s/
           output_row[direction] = result[direction][:time] ? "#{result[direction][:time]}s" : ''
         when /^\d+ km\/h/
