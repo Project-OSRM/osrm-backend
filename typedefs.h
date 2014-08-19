@@ -37,9 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #endif
 
-typedef unsigned int NodeID;
-typedef unsigned int EdgeID;
-typedef int EdgeWeight;
+using NodeID = unsigned int;
+using EdgeID = unsigned int;
+using EdgeWeight = int;
 
 static const NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
 static const EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();

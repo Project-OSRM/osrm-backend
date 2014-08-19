@@ -71,13 +71,13 @@ struct Null
 {
 };
 
-typedef mapbox::util::variant<String,
+using Value = mapbox::util::variant<String,
                        Number,
                        mapbox::util::recursive_wrapper<Object>,
                        mapbox::util::recursive_wrapper<Array>,
                        True,
                        False,
-                       Null > Value;
+                       Null>;
 
 struct Object
 {

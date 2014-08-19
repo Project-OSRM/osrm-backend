@@ -45,7 +45,7 @@ template <class EdgeDataT> class BaseDataFacade;
 class OSRM_impl
 {
   private:
-    typedef std::unordered_map<std::string, BasePlugin *> PluginMap;
+    using PluginMap = std::unordered_map<std::string, BasePlugin *>;
 
   public:
     OSRM_impl(const ServerPaths &paths, const bool use_shared_memory);

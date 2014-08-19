@@ -44,9 +44,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-typedef BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf RTreeLeaf;
-typedef StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;
-typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
+using RTreeLeaf = BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf;
+using RTreeNode = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode;
+using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 
 #ifdef __linux__
 #include <sys/mman.h>

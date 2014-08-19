@@ -48,7 +48,7 @@ class IteratorbasedCRC32
         unsigned crc = 0;
         while (iter != end)
         {
-            typedef typename std::iterator_traits<Iterator>::value_type value_type;
+            using value_type = typename std::iterator_traits<Iterator>::value_type;
             char *data = (char *)(&(*iter));
 
             if (use_hardware_implementation)

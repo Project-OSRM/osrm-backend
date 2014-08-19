@@ -254,7 +254,7 @@ class StaticRTree
         }
     };
 
-    typedef RectangleInt2D RectangleT;
+    using RectangleT = RectangleInt2D;
 
     struct TreeNode
     {
@@ -307,7 +307,7 @@ class StaticRTree
         }
     };
 
-    typedef mapbox::util::variant<TreeNode, EdgeDataT> IncrementalQueryNodeType;
+    using IncrementalQueryNodeType = mapbox::util::variant<TreeNode, EdgeDataT>;
     struct IncrementalQueryCandidate
     {
         explicit IncrementalQueryCandidate(const float dist, const IncrementalQueryNodeType &node)

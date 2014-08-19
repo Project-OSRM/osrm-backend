@@ -52,8 +52,8 @@ struct SimpleEdgeData
     EdgeWeight capacity;
 };
 
-typedef DynamicGraph<NodeBasedEdgeData> NodeBasedDynamicGraph;
-typedef DynamicGraph<SimpleEdgeData> SimpleNodeBasedDynamicGraph;
+using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
+using SimpleNodeBasedDynamicGraph = DynamicGraph<SimpleEdgeData>;
 
 // Factory method to create NodeBasedDynamicGraph from ImportEdges
 inline std::shared_ptr<NodeBasedDynamicGraph>

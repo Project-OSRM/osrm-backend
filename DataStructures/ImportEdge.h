@@ -87,6 +87,6 @@ struct EdgeBasedEdge
     bool backward : 1;
 };
 
-typedef NodeBasedEdge ImportEdge;
+using ImportEdge = NodeBasedEdge;
 
 #endif /* IMPORT_EDGE_H */

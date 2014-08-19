@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class GeometryCompressor
 {
   public:
-    typedef std::pair<NodeID, EdgeWeight> CompressedNode;
+    using CompressedNode = std::pair<NodeID, EdgeWeight>;
 
     GeometryCompressor();
     void CompressEdge(const EdgeID surviving_edge_id,

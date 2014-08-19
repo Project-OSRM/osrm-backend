@@ -134,7 +134,7 @@ struct PhantomNode
     }
 };
 
-typedef std::vector<std::vector<PhantomNode>> PhantomNodeArray;
+using PhantomNodeArray = std::vector<std::vector<PhantomNode>>;
 
 struct PhantomNodeLists
 {

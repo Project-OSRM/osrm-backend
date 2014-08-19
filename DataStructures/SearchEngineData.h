@@ -41,8 +41,8 @@ struct HeapData
 
 struct SearchEngineData
 {
-    typedef BinaryHeap<NodeID, NodeID, int, HeapData, UnorderedMapStorage<NodeID, int>> QueryHeap;
-    typedef boost::thread_specific_ptr<QueryHeap> SearchEngineHeapPtr;
+    using QueryHeap = BinaryHeap<NodeID, NodeID, int, HeapData, UnorderedMapStorage<NodeID, int>>;
+    using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
 
     static SearchEngineHeapPtr forwardHeap;
     static SearchEngineHeapPtr backwardHeap;

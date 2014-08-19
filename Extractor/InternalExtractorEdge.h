@@ -92,7 +92,7 @@ struct InternalExtractorEdge
 
 struct CmpEdgeByStartID
 {
-    typedef InternalExtractorEdge value_type;
+    using value_type = InternalExtractorEdge;
     bool operator()(const InternalExtractorEdge &a, const InternalExtractorEdge &b) const
     {
         return a.start < b.start;
@@ -105,7 +105,7 @@ struct CmpEdgeByStartID
 
 struct CmpEdgeByTargetID
 {
-    typedef InternalExtractorEdge value_type;
+    using value_type = InternalExtractorEdge;
 
     bool operator()(const InternalExtractorEdge &a, const InternalExtractorEdge &b) const
     {
