@@ -202,3 +202,26 @@ Feature: Testbot - Travel mode
             | e    | a  | ce,abc       | 4,1     |
             | a    | d  | abc,cd       | 1,1     |
             | d    | a  | de,ce,abc    | 1,4,1   |
+
+    Scenario: Testbot - River in the middle
+        Given the node map
+            | a | b | c |   |   |
+            |   |   | d |   |   |
+            |   |   | e | f | g |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | cde   | river   |
+            | efg   | primary |
+
+        When I route I should get
+            | from | to | route       | modes |
+            | a    | g  | abc,cde,efg | 1,3,1 |
+            | b    | f  | abc,cde,efg | 1,3,1 |
+            | e    | c  | cde         | 4     |
+            | e    | b  | cde,abc     | 4,1   |
+            | e    | a  | cde,abc     | 4,1   |
+            | c    | e  | cde         | 3     |
+            | c    | f  | cde,efg     | 3,1   |
+            | c    | g  | cde,efg     | 3,1   |
