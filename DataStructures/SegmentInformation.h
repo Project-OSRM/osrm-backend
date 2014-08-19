@@ -57,8 +57,8 @@ struct SegmentInformation
                                 const bool is_via_location,
                                 const TravelMode travel_mode)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
-          turn_instruction(turn_instruction), necessary(necessary), is_via_location(is_via_location),
-          travel_mode(travel_mode)
+          turn_instruction(turn_instruction), travel_mode(travel_mode), necessary(necessary),
+          is_via_location(is_via_location)
     {
     }
 
@@ -69,8 +69,8 @@ struct SegmentInformation
                                 const TurnInstruction turn_instruction,
                                 const TravelMode travel_mode)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
-          turn_instruction(turn_instruction), necessary(turn_instruction != TurnInstruction::NoTurn), is_via_location(false),
-          travel_mode(travel_mode)
+          turn_instruction(turn_instruction), travel_mode(travel_mode),
+          necessary(turn_instruction != TurnInstruction::NoTurn), is_via_location(false)
     {
     }
 };
