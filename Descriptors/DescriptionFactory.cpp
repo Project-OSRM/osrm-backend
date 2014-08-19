@@ -80,8 +80,11 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     //in which case we dont' add a new description, but instead update the existing one
     if ((1 == path_description.size()) && (path_description.front().location == coordinate))
     {
-        path_description.front().name_id = path_point.name_id;
-        path_description.front().travel_mode = path_point.travel_mode;
+        if (path_point.segment_duration>0)
+        {
+            path_description.front().name_id = path_point.name_id;
+            path_description.front().travel_mode = path_point.travel_mode;
+        }
         return;
     }
 
