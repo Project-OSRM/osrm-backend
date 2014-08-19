@@ -200,7 +200,7 @@ function way_function (way)
   local area = way.tags:Find("area")
   local foot = way.tags:Find("foot")
   local surface = way.tags:Find("surface")
-	local bicycle = way.tags:Find("bicycle")
+  local bicycle = way.tags:Find("bicycle")
 
   -- name
   if "" ~= ref and "" ~= name then

@@ -64,17 +64,17 @@ struct ExtractionWay
     
     inline void set_direction(const Directions m)
     {
-        if (Directions::oneway == m )
+        if (Directions::oneway == m)
         {
             forward_travel_mode = TRAVEL_MODE_DEFAULT;
             backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         }
-        else if (Directions::opposite == m )
+        else if (Directions::opposite == m)
         {
           forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
           backward_travel_mode = TRAVEL_MODE_DEFAULT;
         }
-        else if (Directions::bidirectional == m )
+        else if (Directions::bidirectional == m)
         {
           forward_travel_mode = TRAVEL_MODE_DEFAULT;
           backward_travel_mode = TRAVEL_MODE_DEFAULT;
@@ -83,15 +83,15 @@ struct ExtractionWay
 
     inline const Directions get_direction()
     {
-        if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode )
+        if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
         {
             return Directions::bidirectional;
         }
-        else if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode )
+        else if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode)
         {
             return Directions::oneway;
         }
-        else if (TRAVEL_MODE_INACCESSIBLE != backward_travel_mode )
+        else if (TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
         {
             return Directions::opposite;
         }
