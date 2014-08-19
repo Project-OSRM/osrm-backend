@@ -63,6 +63,10 @@ traffic_signal_penalty 	= 2
 u_turn_penalty 			= 2
 use_turn_restrictions   = false
 
+--modes
+local mode_normal = 1
+local mode_ferry = 2
+
 function get_exceptions(vector)
 	for i,v in ipairs(restriction_exception_tags) do
 		vector:Add(v)
@@ -156,13 +160,14 @@ function way_function (way)
     -- speed
     if route_speeds[route] then
 		-- ferries (doesn't cover routes tagged using relations)
-		way.direction = Way.bidirectional
 		way.ignore_in_grid = true
 		if durationIsValid(duration) then
 			way.duration = math.max( 1, parseDuration(duration) )
 		else
 		 	way.forward_speed = route_speeds[route]
 		end
+		way.forward_mode = mode_ferry
+		way.backward_mode = mode_ferry
 	elseif railway and platform_speeds[railway] then
 		-- railway platforms (old tagging scheme)
 		way.forward_speed = platform_speeds[railway]
@@ -182,13 +187,11 @@ function way_function (way)
 
 	-- oneway
 	if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
-		way.direction = Way.oneway
+		way.backward_mode = 0
 	elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
-		way.direction = Way.bidirectional
+		-- nothing to do
 	elseif onewayClass == "-1" then
-		way.direction = Way.opposite
-	else
-      way.direction = Way.bidirectional
+		way.forward_mode = 0
     end
 
     -- surfaces
