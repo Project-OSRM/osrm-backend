@@ -203,6 +203,5 @@ function way_function (way)
         end
     end
 
-  	way.type = 1
-    return 1
+    return true
 end

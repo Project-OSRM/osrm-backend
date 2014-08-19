@@ -119,6 +119,5 @@ function way_function (way)
     way.roundabout = true
   end
 
-  way.type = 1
-  return 1
+  return true
 end

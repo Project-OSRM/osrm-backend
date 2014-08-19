@@ -125,7 +125,6 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         external_memory.all_edges_list.push_back(InternalExtractorEdge(
             parsed_way.path[n],
             parsed_way.path[n + 1],
-            parsed_way.type,
             ((split_edge || TRAVEL_MODE_INACCESSIBLE == parsed_way.backward_travel_mode) ? ExtractionWay::oneway
                                                                                  : ExtractionWay::bidirectional),
             parsed_way.forward_speed,
@@ -157,7 +156,6 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
             external_memory.all_edges_list.push_back(
                 InternalExtractorEdge(parsed_way.path[n],
                                       parsed_way.path[n + 1],
-                                      parsed_way.type,
                                       ExtractionWay::oneway,
                                       parsed_way.backward_speed,
                                       parsed_way.nameID,

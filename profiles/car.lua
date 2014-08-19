@@ -274,14 +274,13 @@ function way_function (way)
   if ignore_in_grid[highway] then
     way.ignore_in_grid = true
   end
-  way.type = 1
 
   -- scale speeds to get better avg driving times
   way.forward_speed = way.forward_speed * speed_reduction
   if maxspeed_backward > 0 then
     way.backward_speed = way.backward_speed*speed_reduction
   end
-  return
+  return true
 end
 
 -- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT

@@ -373,8 +373,7 @@ function way_function (way)
   -- maxspeed
   MaxSpeed.limit( way, maxspeed, maxspeed_forward, maxspeed_backward )
 
-  way.type = 1
-  return 1
+  return true
 end
 
 function turn_function (angle)

@@ -138,7 +138,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&length, sizeof(int));
         input_stream.read((char *)&dir, sizeof(short));
         input_stream.read((char *)&weight, sizeof(int));
-        input_stream.read((char *)&type, sizeof(short));
         input_stream.read((char *)&nameID, sizeof(unsigned));
         input_stream.read((char *)&is_roundabout, sizeof(bool));
         input_stream.read((char *)&ignore_in_grid, sizeof(bool));
@@ -316,7 +315,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&length, sizeof(int));
         input_stream.read((char *)&dir, sizeof(short));
         input_stream.read((char *)&weight, sizeof(int));
-        input_stream.read((char *)&type, sizeof(short));
         input_stream.read((char *)&nameID, sizeof(unsigned));
         input_stream.read((char *)&is_roundabout, sizeof(bool));
         input_stream.read((char *)&ignore_in_grid, sizeof(bool));
