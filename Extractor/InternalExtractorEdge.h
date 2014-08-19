@@ -59,7 +59,6 @@ struct InternalExtractorEdge
           is_duration_set(is_duration_set), is_access_restricted(is_access_restricted),
           travel_mode(travel_mode), is_split(is_split)
     {
-        BOOST_ASSERT(0 <= type);
     }
 
     // necessary static util functions for stxxl's sorting
