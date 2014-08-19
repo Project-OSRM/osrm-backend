@@ -23,6 +23,7 @@ platform: x64
 
 install:
   # by default, all script lines are interpreted as batch
+  - nuget install Google.ProtocolBuffers
   - cd c:\projects\osrm
   - curl -O http://build.project-osrm.org/libs_osrm_%Configuration%.7z
   - 7z x libs_osrm_%Configuration%.7z | find ":"
