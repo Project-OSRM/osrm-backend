@@ -63,7 +63,11 @@ bool ExtractorCallbacks::ProcessRestriction(const InputRestrictionContainer &res
 /** warning: caller needs to take care of synchronization! */
 void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
 {
-    if ((0 >= parsed_way.forward_speed) && (0 >= parsed_way.duration))
+    if (((0 >= parsed_way.forward_speed) || 
+            (TRAVEL_MODE_INACCESSIBLE == parsed_way.forward_travel_mode)) && 
+        ((0 >= parsed_way.backward_speed) ||
+            (TRAVEL_MODE_INACCESSIBLE == parsed_way.backward_travel_mode)) &&
+        (0 >= parsed_way.duration))
     { // Only true if the way is specified by the speed profile
         return;
     }

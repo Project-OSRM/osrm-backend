@@ -168,18 +168,18 @@ function way_function (way)
   (not man_made or man_made=='') and
   (not public_transport or public_transport=='')
   then
-    return 0
+    return
   end
 
   -- don't route on ways or railways that are still under construction
   if highway=='construction' or railway=='construction' then
-    return 0
+    return
   end
 
   -- access
   local access = Access.find_access_tag(way, access_tags_hierachy)
   if access_tag_blacklist[access] then
-    return 0
+    return
   end
 
   -- other tags
@@ -267,15 +267,18 @@ function way_function (way)
       if pedestrian_speeds[highway] then
         -- pedestrian-only ways and areas
         way.forward_speed = pedestrian_speeds[highway]
+        way.backward_speed = pedestrian_speeds[highway]
         way.forward_mode = mode_pushing
         way.backward_mode = mode_pushing
       elseif man_made and man_made_speeds[man_made] then
         -- man made structures
         way.forward_speed = man_made_speeds[man_made]
+        way.backward_speed = man_made_speeds[man_made]
         way.forward_mode = mode_pushing
         way.backward_mode = mode_pushing
       elseif foot == 'yes' then
         way.forward_speed = walking_speed
+        way.backward_speed = walking_speed
         way.forward_mode = mode_pushing
         way.backward_mode = mode_pushing
       elseif foot_forward == 'yes' then
@@ -308,6 +311,7 @@ function way_function (way)
     if impliedOneway then
       way.forward_mode = 0
       way.backward_mode = mode_normal
+      way.backward_speed = bicycle_speeds["cycleway"]
     end
   elseif cycleway_left and cycleway_tags[cycleway_left] and cycleway_right and cycleway_tags[cycleway_right] then
     -- prevent implied
@@ -315,10 +319,12 @@ function way_function (way)
     if impliedOneway then
       way.forward_mode = 0
       way.backward_mode = mode_normal
+      way.backward_speed = bicycle_speeds["cycleway"]
     end
   elseif cycleway_right and cycleway_tags[cycleway_right] then
     if impliedOneway then
       way.forward_mode = mode_normal
+      way.backward_speed = bicycle_speeds["cycleway"]
       way.backward_mode = 0
     end
   elseif oneway == "-1" then
@@ -372,8 +378,6 @@ function way_function (way)
 
   -- maxspeed
   MaxSpeed.limit( way, maxspeed, maxspeed_forward, maxspeed_backward )
-
-  return true
 end
 
 function turn_function (angle)

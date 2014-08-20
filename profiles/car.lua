@@ -192,23 +192,27 @@ function way_function (way)
     if highway_speed then
       if max_speed > highway_speed then
         way.forward_speed = max_speed
+        way.backward_speed = max_speed
         -- max_speed = math.huge
       else
         way.forward_speed = highway_speed
+        way.backward_speed = highway_speed
       end
     else
       -- Set the avg speed on ways that are marked accessible
       if access_tag_whitelist[access] then
         way.forward_speed = speed_profile["default"]
+        way.backward_speed = speed_profile["default"]
       end
     end
     if 0 == max_speed then
       max_speed = math.huge
     end
     way.forward_speed = min(way.forward_speed, max_speed)
+    way.backward_speed = min(way.backward_speed, max_speed)
   end
 
-  if -1 == way.forward_speed then
+  if -1 == way.forward_speed and -1 == way.backward_speed then
     return
   end
 
@@ -280,7 +284,6 @@ function way_function (way)
   if maxspeed_backward > 0 then
     way.backward_speed = way.backward_speed*speed_reduction
   end
-  return true
 end
 
 -- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT

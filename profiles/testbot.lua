@@ -118,6 +118,4 @@ function way_function (way)
   if junction == 'roundabout' then
     way.roundabout = true
   end
-
-  return true
 end
