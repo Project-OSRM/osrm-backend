@@ -330,7 +330,6 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 edge_iterator->source_coordinate.lon != std::numeric_limits<int>::min())
             {
                 BOOST_ASSERT(edge_iterator->speed != -1);
-                BOOST_ASSERT(edge_iterator->type >= 0);
                 edge_iterator->target_coordinate.lat = node_iterator->lat;
                 edge_iterator->target_coordinate.lon = node_iterator->lon;
 

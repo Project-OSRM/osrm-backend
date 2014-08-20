@@ -13,7 +13,7 @@ struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
         : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID),
-          nameID(std::numeric_limits<unsigned>::max()), type(std::numeric_limits<short>::max()),
+          nameID(std::numeric_limits<unsigned>::max()),
           isAccessRestricted(false), shortcut(false), forward(false), backward(false),
           roundabout(false), ignore_in_grid(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
@@ -22,7 +22,6 @@ struct NodeBasedEdgeData
     int distance;
     unsigned edgeBasedNodeID;
     unsigned nameID;
-    short type;
     bool isAccessRestricted : 1;
     bool shortcut : 1;
     bool forward : 1;
@@ -91,7 +90,6 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         edge.data.roundabout = import_edge.roundabout;
         edge.data.ignore_in_grid = import_edge.in_tiny_cc;
         edge.data.nameID = import_edge.name_id;
-        edge.data.type = import_edge.type;
         edge.data.isAccessRestricted = import_edge.access_restricted;
         edge.data.travel_mode = import_edge.travel_mode;
 

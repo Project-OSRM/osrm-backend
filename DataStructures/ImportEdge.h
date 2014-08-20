@@ -41,7 +41,6 @@ struct NodeBasedEdge
                            EdgeWeight weight,
                            bool forward,
                            bool backward,
-                           short type,
                            bool roundabout,
                            bool in_tiny_cc,
                            bool access_restricted,
@@ -52,7 +51,6 @@ struct NodeBasedEdge
     NodeID target;
     NodeID name_id;
     EdgeWeight weight;
-    short type;
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;

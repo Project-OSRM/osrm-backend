@@ -504,7 +504,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
             }
 
             BOOST_ASSERT(u < v);
-            BOOST_ASSERT(edge_data.type != SHRT_MAX);
 
             // Note: edges that end on barrier nodes or on a turn restriction
             // may actually be in two distinct components. We choose the smallest
