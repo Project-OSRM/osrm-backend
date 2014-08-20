@@ -25,25 +25,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVER_FACTORY_H
-#define SERVER_FACTORY_H
+#ifndef MAKE_UNIQUE_H__
+#define MAKE_UNIQUE_H__
 
-#include "Server.h"
-#include "../Util/SimpleLogger.h"
+#include <cstdlib>
+#include <memory>
+#include <type_traits>
 
-#include <zlib.h>
-
-struct ServerFactory
+namespace osrm
 {
-    ServerFactory() = delete;
-    ServerFactory(const ServerFactory &) = delete;
-    static Server *CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
-    {
-        SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
-        const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
-        const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
-        return new Server(ip_address, ip_port, real_num_threads);
-    }
-};
+// Taken from http://msdn.microsoft.com/en-us/library/dn439780.asp
+// Note, that the snippet is broken there and needed minor massaging
 
-#endif // SERVER_FACTORY_H
+// make_unique<T>
+template <class T, class... Types> std::unique_ptr<T> make_unique(Types &&... Args)
+{
+    return (std::unique_ptr<T>(new T(std::forward<Types>(Args)...)));
+}
+
+// make_unique<T[]>
+template <class T> std::unique_ptr<T> make_unique(std::size_t Size)
+{
+    return (std::unique_ptr<T>(new T[Size]()));
+}
+
+// make_unique<T[N]> disallowed
+template <class T, class... Types>
+typename std::enable_if<std::extent<T>::value != 0, void>::type make_unique(Types &&...) = delete;
+}
+#endif
