@@ -49,12 +49,13 @@ class Server
 {
   public:
 
-    static std::unique_ptr<Server> CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
+    // Note: returns a shared instead of a unique ptr as it is captured in a lambda somewhere else
+    static std::shared_ptr<Server> CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
     {
         SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
-        return osrm::make_unique<Server>(ip_address, ip_port, real_num_threads);
+        return std::make_shared<Server>(ip_address, ip_port, real_num_threads);
     }
 
     explicit Server(const std::string &address, const int port, const unsigned thread_pool_size)
