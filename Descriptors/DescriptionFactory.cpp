@@ -46,9 +46,10 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
     const TravelMode travel_mode =
-          (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
-    AppendSegment(source.location,
-                  PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration, travel_mode));
+        (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
+    AppendSegment(
+        source.location,
+        PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration, travel_mode));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -60,7 +61,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     const TravelMode travel_mode =
-          (traversed_in_reverse ? target.backward_travel_mode : target.forward_travel_mode);
+        (traversed_in_reverse ? target.backward_travel_mode : target.forward_travel_mode);
     path_description.emplace_back(target.location,
                                   target.name_id,
                                   segment_duration,
@@ -76,11 +77,11 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
 void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                        const PathData &path_point)
 {
-    //if the start location is on top of a node, the first movement might be zero-length,
-    //in which case we dont' add a new description, but instead update the existing one
+    // if the start location is on top of a node, the first movement might be zero-length,
+    // in which case we dont' add a new description, but instead update the existing one
     if ((1 == path_description.size()) && (path_description.front().location == coordinate))
     {
-        if (path_point.segment_duration>0)
+        if (path_point.segment_duration > 0)
         {
             path_description.front().name_id = path_point.name_id;
             path_description.front().travel_mode = path_point.travel_mode;
@@ -93,14 +94,11 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     {
         if (TurnInstruction::NoTurn == path_point.turn_instruction &&
             path_description.front().travel_mode != path_point.travel_mode &&
-            path_point.segment_duration>0)
+            path_point.segment_duration > 0)
         {
-          return TurnInstruction::GoStraight;
+            return TurnInstruction::GoStraight;
         }
-        else
-        {
-          return path_point.turn_instruction;
-        }
+        return path_point.turn_instruction;
     }();
 
     path_description.emplace_back(coordinate,
