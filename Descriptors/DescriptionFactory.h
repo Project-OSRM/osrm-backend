@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../typedefs.h"
@@ -93,7 +94,7 @@ class DescriptionFactory
 
         /** starts at index 1 */
         path_description[0].length = 0;
-        for (unsigned i = 1; i < path_description.size(); ++i)
+        for (const auto i : osrm::irange<std::size_t>(1, path_description.size()))
         {
             // move down names by one, q&d hack
             path_description[i - 1].name_id = path_description[i].name_id;
@@ -148,7 +149,7 @@ class DescriptionFactory
         unsigned segment_duration = 0;
         unsigned segment_start_index = 0;
 
-        for (unsigned i = 1; i < path_description.size(); ++i)
+        for (const auto i : osrm::irange<std::size_t>(1, path_description.size()))
         {
             entireLength += path_description[i].length;
             segment_length += path_description[i].length;
@@ -192,17 +193,20 @@ class DescriptionFactory
 
         // fix what needs to be fixed else
         unsigned necessary_pieces = 0; // a running index that counts the necessary pieces
-        for (unsigned i = 0; i < path_description.size() - 1 && path_description.size() >= 2; ++i)
+        if (path_description.size() >= 2)
         {
-            if (path_description[i].necessary)
+            for (const auto i : osrm::irange<std::size_t>(0, path_description.size() - 1))
             {
-                ++necessary_pieces;
-                if (path_description[i].is_via_location)
-                {   //mark the end of a leg
-                    via_indices.push_back(necessary_pieces);
+                if (path_description[i].necessary)
+                {
+                    ++necessary_pieces;
+                    if (path_description[i].is_via_location)
+                    {   //mark the end of a leg
+                        via_indices.push_back(necessary_pieces);
+                    }
+                    const double angle = path_description[i+1].location.GetBearing(path_description[i].location);
+                    path_description[i].bearing = static_cast<unsigned>(angle * 10);
                 }
-                const double angle = path_description[i+1].location.GetBearing(path_description[i].location);
-                path_description[i].bearing = static_cast<unsigned>(angle * 10);
             }
         }
         via_indices.push_back(necessary_pieces+1);

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/ObjectToBase64.h"
 
 #include "../DataStructures/QueryEdge.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
@@ -94,7 +95,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         std::vector<PhantomNode> phantom_node_vector(raw_route.raw_via_node_coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
 
-        for (unsigned i = 0; i < raw_route.raw_via_node_coordinates.size(); ++i)
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.raw_via_node_coordinates.size()))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -111,7 +112,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         }
 
         PhantomNodes current_phantom_node_pair;
-        for (unsigned i = 0; i < phantom_node_vector.size() - 1; ++i)
+        for (const auto i : osrm::irange<std::size_t>(0, phantom_node_vector.size() - 1))
         {
             current_phantom_node_pair.source_phantom = phantom_node_vector[i];
             current_phantom_node_pair.target_phantom = phantom_node_vector[i + 1];

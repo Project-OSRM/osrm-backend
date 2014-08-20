@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/ObjectToBase64.h"
 #include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/QueryEdge.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Util/SimpleLogger.h"
@@ -91,10 +92,10 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         }
 
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
-        unsigned max_locations =
-            std::min(100u, static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
+        auto max_locations =
+            std::min((std::size_t)100u, raw_route.raw_via_node_coordinates.size());
         PhantomNodeArray phantom_node_vector(max_locations);
-        for (unsigned i = 0; i < max_locations; ++i)
+        for (const auto i : osrm::range<std::size_t>(0, max_locations))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -127,8 +128,8 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         }
         JSON::Object json_object;
         JSON::Array json_array;
-        const unsigned number_of_locations = static_cast<unsigned>(phantom_node_vector.size());
-        for (unsigned row = 0; row < number_of_locations; ++row)
+        const auto number_of_locations = phantom_node_vector.size();
+        for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
         {
             JSON::Array json_row;
             auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
