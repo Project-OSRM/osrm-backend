@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HilbertValue.h"
 #include "PhantomNodes.h"
 #include "QueryNode.h"
-#include "Range.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
@@ -82,7 +81,7 @@ class StaticRTree
                                           const uint32_t element_count,
                                           const std::vector<NodeInfo> &coordinate_list)
         {
-            for (const auto i : osrm::irange<uint32_t>(0, element_count))
+            for (uint32_t i = 0; i < element_count; ++i)
             {
                 min_lon = std::min(min_lon,
                                    std::min(coordinate_list.at(objects[i].u).lon,
@@ -145,7 +144,7 @@ class StaticRTree
                 return 0.;
             }
 
-            enum class Direction : unsigned char
+            enum Direction
             {
                 INVALID    = 0,
                 NORTH      = 1,
@@ -158,57 +157,51 @@ class StaticRTree
                 SOUTH_WEST = 10
             };
 
-            Direction d { Direction::INVALID };
+            Direction d = INVALID;
             if (location.lat > max_lat)
-            {
-                d = (Direction::NORTH);
-            }
+                d = (Direction) (d | NORTH);
             else if (location.lat < min_lat)
-            {
-                d = (Direction::SOUTH);
-            }
-            if (location.lon > max_lon && d != Direction::INVALID)
-            {
-                d = (Direction::EAST);
-            }
-            else if (location.lon < min_lon && d != Direction::INVALID)
-            {
-                d = (Direction::WEST);
-            }
+                d = (Direction) (d | SOUTH);
+            if (location.lon > max_lon)
+                d = (Direction) (d | EAST);
+            else if (location.lon < min_lon)
+                d = (Direction) (d | WEST);
 
-            BOOST_ASSERT(d != Direction::INVALID);
+            BOOST_ASSERT(d != INVALID);
 
             float min_dist = std::numeric_limits<float>::max();
             switch (d)
             {
-                case Direction::NORTH:
+                case NORTH:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, location.lon));
                     break;
-                case Direction::SOUTH:
+                case SOUTH:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, location.lon));
                     break;
-                case Direction::WEST:
+                case WEST:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, min_lon));
                     break;
-                case Direction::EAST:
+                case EAST:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, max_lon));
                     break;
-                case Direction::NORTH_EAST:
+                case NORTH_EAST:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, max_lon));
                     break;
-                case Direction::NORTH_WEST:
+                case NORTH_WEST:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, min_lon));
                     break;
-                case Direction::SOUTH_EAST:
+                case SOUTH_EAST:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, max_lon));
                     break;
-                case Direction::SOUTH_WEST:
+                case SOUTH_WEST:
                     min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, min_lon));
                     break;
                 default:
                     break;
             }
+
             BOOST_ASSERT(min_dist != std::numeric_limits<float>::max());
+
             return min_dist;
         }
 
@@ -404,18 +397,18 @@ class StaticRTree
             TreeNode current_node;
             // SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " <<
             // (sizeof(TreeNode)*tree_size) << " bytes";
-            for (const auto current_element_index : osrm::irange<uint32_t>(0, LEAF_NODE_SIZE))
+            for (uint32_t current_element_index = 0; LEAF_NODE_SIZE > current_element_index;
+                 ++current_element_index)
             {
-                if (m_element_count <= (processed_objects_count + current_element_index))
+                if (m_element_count > (processed_objects_count + current_element_index))
                 {
-                    continue;
+                    uint32_t index_of_next_object =
+                        input_wrapper_vector[processed_objects_count + current_element_index]
+                            .m_array_index;
+                    current_leaf.objects[current_element_index] =
+                        input_data_vector[index_of_next_object];
+                    ++current_leaf.object_count;
                 }
-                uint32_t index_of_next_object =
-                    input_wrapper_vector[processed_objects_count + current_element_index]
-                        .m_array_index;
-                current_leaf.objects[current_element_index] =
-                    input_data_vector[index_of_next_object];
-                ++current_leaf.object_count;
             }
 
             // generate tree node that resemble the objects in leaf and store it for next level
@@ -442,23 +435,24 @@ class StaticRTree
             {
                 TreeNode parent_node;
                 // pack BRANCHING_FACTOR elements into tree_nodes each
-                for (const auto current_child_node_index : osrm::irange<uint32_t>(0, BRANCHING_FACTOR))
+                for (uint32_t current_child_node_index = 0;
+                     BRANCHING_FACTOR > current_child_node_index;
+                     ++current_child_node_index)
                 {
-                    if (processed_tree_nodes_in_level >= tree_nodes_in_level.size())
+                    if (processed_tree_nodes_in_level < tree_nodes_in_level.size())
                     {
-                        continue;
+                        TreeNode &current_child_node =
+                            tree_nodes_in_level[processed_tree_nodes_in_level];
+                        // add tree node to parent entry
+                        parent_node.children[current_child_node_index] = m_search_tree.size();
+                        m_search_tree.emplace_back(current_child_node);
+                        // merge MBRs
+                        parent_node.minimum_bounding_rectangle.MergeBoundingBoxes(
+                            current_child_node.minimum_bounding_rectangle);
+                        // increase counters
+                        ++parent_node.child_count;
+                        ++processed_tree_nodes_in_level;
                     }
-                    TreeNode &current_child_node =
-                        tree_nodes_in_level[processed_tree_nodes_in_level];
-                    // add tree node to parent entry
-                    parent_node.children[current_child_node_index] = m_search_tree.size();
-                    m_search_tree.emplace_back(current_child_node);
-                    // merge MBRs
-                    parent_node.minimum_bounding_rectangle.MergeBoundingBoxes(
-                        current_child_node.minimum_bounding_rectangle);
-                    // increase counters
-                    ++parent_node.child_count;
-                    ++processed_tree_nodes_in_level;
                 }
                 tree_nodes_in_next_level.emplace_back(parent_node);
             }
@@ -479,7 +473,7 @@ class StaticRTree
             for (uint32_t i = range.begin(); i != range.end(); ++i)
             {
                 TreeNode &current_tree_node = this->m_search_tree[i];
-                for (const auto j : osrm::irange<uint32_t>(0, current_tree_node.child_count))
+                for (uint32_t j = 0; j < current_tree_node.child_count; ++j)
                 {
                     const uint32_t old_id = current_tree_node.children[j];
                     const uint32_t new_id = search_tree_size - old_id - 1;
@@ -577,7 +571,7 @@ class StaticRTree
                                             FixedPointCoordinate &result_coordinate,
                                             const unsigned zoom_level)
     {
-        const bool ignore_tiny_components = (zoom_level <= 14);
+        bool ignore_tiny_components = (zoom_level <= 14);
 
         float min_dist = std::numeric_limits<float>::max();
         float min_max_dist = std::numeric_limits<float>::max();
@@ -600,7 +594,7 @@ class StaticRTree
                 {
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
-                    for (const auto i : osrm::irange<uint32_t>(0, current_leaf_node.object_count))
+                    for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         EdgeDataT const &current_edge = current_leaf_node.objects[i];
                         if (ignore_tiny_components && current_edge.is_in_tiny_cc)
@@ -706,7 +700,7 @@ class StaticRTree
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     // Add all objects from leaf into queue
-                    for (const auto i : osrm::irange<uint32_t>(0, current_leaf_node.object_count))
+                    for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         const auto &current_edge = current_leaf_node.objects[i];
                         const float current_perpendicular_distance =
@@ -739,7 +733,7 @@ class StaticRTree
                     //     current_tree_node.minimum_bounding_rectangle.max_lon/COORDINATE_PRECISION << "," << "]";
 
                     // for each child mbr
-                    for (const auto i : osrm::irange<uint32_t>(0, current_tree_node.child_count))
+                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
                     {
                         const int32_t child_id = current_tree_node.children[i];
                         const TreeNode &child_tree_node = m_search_tree[child_id];
@@ -900,7 +894,7 @@ class StaticRTree
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     // Add all objects from leaf into queue
-                    for (const auto i : osrm::irange<uint32_t>(0, current_leaf_node.object_count))
+                    for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         const auto &current_edge = current_leaf_node.objects[i];
                         const float current_perpendicular_distance =
@@ -920,7 +914,7 @@ class StaticRTree
                 else
                 {
                     // for each child mbr
-                    for (const auto i : osrm::irange<uint32_t>(0, current_tree_node.child_count))
+                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
                     {
                         const int32_t child_id = current_tree_node.children[i];
                         const TreeNode &child_tree_node = m_search_tree[child_id];
@@ -1050,7 +1044,7 @@ class StaticRTree
                 {
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
-                    for (const auto i : osrm::irange<uint32_t>(0, current_leaf_node.object_count))
+                    for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         const EdgeDataT &current_edge = current_leaf_node.objects[i];
                         if (ignore_tiny_components && current_edge.is_in_tiny_cc)
@@ -1123,11 +1117,11 @@ class StaticRTree
 
         if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
         {
-            result_phantom_node.forward_weight *= static_cast<decltype(result_phantom_node.forward_weight)>(ratio);
+            result_phantom_node.forward_weight *= ratio;
         }
         if (SPECIAL_NODEID != result_phantom_node.reverse_node_id)
         {
-            result_phantom_node.reverse_weight *= static_cast<decltype(result_phantom_node.reverse_weight)>(1.f - ratio);
+            result_phantom_node.reverse_weight *= (1.f - ratio);
         }
     }
 
@@ -1154,7 +1148,7 @@ class StaticRTree
     {
         float new_min_max_dist = min_max_dist;
         // traverse children, prune if global mindist is smaller than local one
-        for (const auto i : osrm::irange(0u, parent.child_count))
+        for (uint32_t i = 0; i < parent.child_count; ++i)
         {
             const int32_t child_id = parent.children[i];
             const TreeNode &child_tree_node = m_search_tree[child_id];

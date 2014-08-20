@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/OriginalEdgeData.h"
 #include "../../DataStructures/QueryNode.h"
 #include "../../DataStructures/QueryEdge.h"
-#include "../../DataStructures/Range.h"
 #include "../../DataStructures/SharedMemoryVectorWrapper.h"
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
@@ -131,7 +130,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list =
             std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
-        for (const auto i : osrm::irange(0u, number_of_coordinates))
+        for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
             m_coordinate_list->at(i) = FixedPointCoordinate(current_node.lat, current_node.lon);
@@ -151,7 +150,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         unsigned compressed = 0;
 
         OriginalEdgeData current_edge_data;
-        for (const auto i : osrm::irange(0u, number_of_edges))
+        for (unsigned i = 0; i < number_of_edges; ++i)
         {
             edges_input_stream.read((char *)&(current_edge_data), sizeof(OriginalEdgeData));
             m_via_node_list[i] = current_edge_data.via_node;
