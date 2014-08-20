@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm
 {
 // Taken from http://msdn.microsoft.com/en-us/library/dn439780.asp
-// Note, that the snippet is broken there and needed minor massaging
+// Note, that the snippet was broken there and needed minor massaging
 
 // make_unique<T>
 template <class T, class... Types> std::unique_ptr<T> make_unique(Types &&... Args)
