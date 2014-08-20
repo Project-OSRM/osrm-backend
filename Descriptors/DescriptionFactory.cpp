@@ -89,7 +89,7 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     }
 
     // make sure mode changes are announced, even when there otherwise is no turn
-    const TurnInstruction turn = [] -> TurnInstruction ()
+    const TurnInstruction turn = [&]() -> TurnInstruction
     {
         if (TurnInstruction::NoTurn == path_point.turn_instruction &&
             path_description.front().travel_mode != path_point.travel_mode &&
@@ -99,9 +99,9 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         }
         else
         {
-          return path_point.turn_instruction
-        } 
-    }
+          return path_point.turn_instruction;
+        }
+    }();
 
     path_description.emplace_back(coordinate,
                                   path_point.name_id,
