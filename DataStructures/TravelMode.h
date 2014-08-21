@@ -25,40 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ORIGINAL_EDGE_DATA_H
-#define ORIGINAL_EDGE_DATA_H
+#ifndef TRAVEL_MODE_H
+#define TRAVEL_MODE_H
 
-#include "TurnInstructions.h"
-#include "../DataStructures/TravelMode.h"
-#include "../typedefs.h"
+using TravelMode = unsigned char;
+static const TravelMode TRAVEL_MODE_INACCESSIBLE = 0;
+static const TravelMode TRAVEL_MODE_DEFAULT = 1;
 
-#include <limits>
-
-struct OriginalEdgeData
-{
-    explicit OriginalEdgeData(NodeID via_node,
-                              unsigned name_id,
-                              TurnInstruction turn_instruction,
-                              bool compressed_geometry,
-                              TravelMode travel_mode)
-        : via_node(via_node), name_id(name_id), turn_instruction(turn_instruction),
-          compressed_geometry(compressed_geometry), travel_mode(travel_mode)
-    {
-    }
-
-    OriginalEdgeData()
-        : via_node(std::numeric_limits<unsigned>::max()),
-          name_id(std::numeric_limits<unsigned>::max()),
-          turn_instruction(TurnInstruction::NoTurn), compressed_geometry(false),
-          travel_mode(TRAVEL_MODE_INACCESSIBLE)
-    {
-    }
-
-    NodeID via_node;
-    unsigned name_id;
-    TurnInstruction turn_instruction;
-    bool compressed_geometry;
-    TravelMode travel_mode;
-};
-
-#endif // ORIGINAL_EDGE_DATA_H
+#endif /* TRAVEL_MODE_H */

@@ -181,7 +181,9 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
                                                 reverse_dist_prefix_sum[i],
                                                 m_geometry_compressor.GetPositionForID(e1),
                                                 i,
-                                                belongs_to_tiny_cc);
+                                                belongs_to_tiny_cc,
+                                                forward_data.travel_mode,
+                                                reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -231,7 +233,9 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
                                             0,
                                             SPECIAL_EDGEID,
                                             0,
-                                            belongs_to_tiny_cc);
+                                            belongs_to_tiny_cc,
+                                            forward_data.travel_mode,
+                                            reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -500,7 +504,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
             }
 
             BOOST_ASSERT(u < v);
-            BOOST_ASSERT(edge_data.type != SHRT_MAX);
 
             // Note: edges that end on barrier nodes or on a turn restriction
             // may actually be in two distinct components. We choose the smallest
@@ -648,7 +651,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                     (edge_is_compressed ? m_geometry_compressor.GetPositionForID(e1) : v),
                     edge_data1.nameID,
                     turn_instruction,
-                    edge_is_compressed);
+                    edge_is_compressed,
+                    edge_data2.travel_mode);
 
                 ++original_edges_counter;
 
@@ -717,15 +721,6 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
 
     const EdgeData &data1 = m_node_based_graph->GetEdgeData(edge1);
     const EdgeData &data2 = m_node_based_graph->GetEdgeData(edge2);
-
-    if (!data1.contraFlow && data2.contraFlow)
-    {
-        return TurnInstruction::EnterAgainstAllowedDirection;
-    }
-    if (data1.contraFlow && !data2.contraFlow)
-    {
-        return TurnInstruction::LeaveAgainstAllowedDirection;
-    }
 
     // roundabouts need to be handled explicitely
     if (data1.roundabout && data2.roundabout)

@@ -77,6 +77,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     ShM<NodeID, true>::vector m_via_node_list;
     ShM<unsigned, true>::vector m_name_ID_list;
     ShM<TurnInstruction, true>::vector m_turn_instruction_list;
+    ShM<TravelMode, true>::vector m_travel_mode_list;
     ShM<char, true>::vector m_names_char_list;
     ShM<unsigned, true>::vector m_name_begin_indices;
     ShM<bool, true>::vector m_egde_is_compressed;
@@ -344,6 +345,11 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const final
     {
         return m_turn_instruction_list.at(id);
+    }
+
+    TravelMode GetTravelModeForEdgeID(const unsigned id) const
+    {
+        return m_travel_mode_list.at(id);
     }
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,

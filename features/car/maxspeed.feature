@@ -38,14 +38,14 @@ OSRM will use 4/5 of the projected free-flow speed.
         Given a grid size of 100 meters
 
         Then routability should be
-            | highway | maxspeed | maxspeed:forward | maxspeed:backward | forw        | backw        |
-            | primary |          |                  |                   | 51 km/h     | 51 km/h      |
-            | primary | 60       |                  |                   | 48 km/h     | 48 km/h      |
-            | primary |          | 60               |                   | 48 km/h     | 65 km/h      |
-            | primary |          |                  | 60                | 51 km/h     | 48 km/h      |
-            | primary | 15       | 60               |                   | 48 km/h     | 15 km/h +- 1 |
-            | primary | 15       |                  | 60                | 12 km/h +- 1| 48 km/h      |
-            | primary | 15       | 30               | 60                | 24 km/h     | 48 km/h      |
+            | highway | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
+            | primary |          |                  |                   | 51 km/h | 51 km/h |
+            | primary | 60       |                  |                   | 48 km/h | 48 km/h |
+            | primary |          | 60               |                   | 48 km/h | 51 km/h |
+            | primary |          |                  | 60                | 51 km/h | 48 km/h |
+            | primary | 15       | 60               |                   | 48 km/h | 12 km/h |
+            | primary | 15       |                  | 60                | 12 km/h | 48 km/h |
+            | primary | 15       | 30               | 60                | 24 km/h | 48 km/h |
 
     Scenario: Car - Maxspeed should not allow routing on unroutable ways
         Then routability should be

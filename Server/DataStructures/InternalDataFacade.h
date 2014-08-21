@@ -66,6 +66,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     ShM<NodeID, false>::vector m_via_node_list;
     ShM<unsigned, false>::vector m_name_ID_list;
     ShM<TurnInstruction, false>::vector m_turn_instruction_list;
+    ShM<TravelMode, false>::vector m_travel_mode_list;
     ShM<char, false>::vector m_names_char_list;
     ShM<bool, false>::vector m_egde_is_compressed;
     ShM<unsigned, false>::vector m_geometry_indices;
@@ -145,6 +146,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         m_via_node_list.resize(number_of_edges);
         m_name_ID_list.resize(number_of_edges);
         m_turn_instruction_list.resize(number_of_edges);
+        m_travel_mode_list.resize(number_of_edges);
         m_egde_is_compressed.resize(number_of_edges);
 
         unsigned compressed = 0;
@@ -156,6 +158,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             m_via_node_list[i] = current_edge_data.via_node;
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
+            m_travel_mode_list[i] = current_edge_data.travel_mode;
             m_egde_is_compressed[i] = current_edge_data.compressed_geometry;
             if (m_egde_is_compressed[i])
             {
@@ -354,6 +357,11 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const final
     {
         return m_turn_instruction_list.at(id);
+    }
+
+    TravelMode GetTravelModeForEdgeID(const unsigned id) const
+    {
+      return m_travel_mode_list.at(id);
     }
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
