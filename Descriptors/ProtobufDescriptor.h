@@ -45,7 +45,8 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
                                       const int &time,
                                       const std::string &lengthStr,
                                       const std::string &earthDirection,
-                                      const int &azimuth)
+                                      const int &azimuth,
+                                      const TravelMode travelMode)
     {
         protobufResponse::RouteInstructions routeInstructions;
         routeInstructions.set_instruction_id(id);
@@ -56,6 +57,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         routeInstructions.set_length_str(lengthStr);
         routeInstructions.set_earth_direction(earthDirection);
         routeInstructions.set_azimuth(azimuth);
+        routeInstructions.set_travel_mode(travelMode);
         route.add_route_instructions()->CopyFrom(routeInstructions);
 
     }
@@ -76,7 +78,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         {
             AddInstructionToRoute(route, i.instructionId, i.streetName, i.length, 
                                   i.position, i.time, i.lengthStr, i.earthDirection,
-                                  i.azimuth);
+                                  i.azimuth, i.travelMode);
         }
     }
 
