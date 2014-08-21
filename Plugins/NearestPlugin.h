@@ -104,10 +104,8 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
                 json_result.values["name"] = temp_string;
             }
         }
-        
         JSON::render(reply.content, json_result);
     }
-
 
   private:
     DataFacadeT *facade;
