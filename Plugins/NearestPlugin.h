@@ -75,7 +75,7 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
                 JSON::Array results;
                 
                 int vector_length = phantom_node_vector.size();
-                for (int i = 0; i < number_of_results && i < vector_length; i++)
+                for (const auto i : osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                 {
                     JSON::Array json_coordinate;
                     JSON::Object result;
