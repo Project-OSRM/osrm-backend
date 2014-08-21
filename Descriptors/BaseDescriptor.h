@@ -113,12 +113,13 @@ public:
     struct Instruction
     {
         Instruction() : instructionId(""), streetName(""), length(0),
-            position(0), time(0), lengthStr(""), earthDirection(""), azimuth(0)
+            position(0), time(0), lengthStr(""), earthDirection(""), azimuth(0),
+            travelMode(0)
             {}
         Instruction(const std::string &i, const std::string &s, const int l,
             const int p, const int t, const std::string &ls, const std::string &e,
-            const int a) : instructionId(i), streetName(s), length(l),
-            position(p), time(t), lengthStr(ls), earthDirection(e), azimuth(a)
+            const int a, TravelMode const tm) : instructionId(i), streetName(s), length(l),
+            position(p), time(t), lengthStr(ls), earthDirection(e), azimuth(a), travelMode(tm)
             {}
         std::string instructionId;
         std::string streetName;
@@ -128,6 +129,7 @@ public:
         std::string lengthStr;
         std::string earthDirection;
         int azimuth;
+        TravelMode travelMode;
     };
 
 
@@ -186,6 +188,7 @@ public:
                     const double bearing_value = (segment.bearing / 10.);
                     instruction.earthDirection = Azimuth::Get(bearing_value);
                     instruction.azimuth = static_cast<unsigned>(round(bearing_value));
+                    instruction.travelMode = segment.travel_mode;
 
                     route_segments_list.emplace_back(
                         segment.name_id, static_cast<int>(segment.length), static_cast<unsigned>(route_segments_list.size()));

@@ -273,6 +273,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             json_instruction_row.values.push_back(i.lengthStr);
             json_instruction_row.values.push_back(i.earthDirection);
             json_instruction_row.values.push_back(i.azimuth);
+            json_instruction_row.values.push_back(i.travelMode);
             json_instruction_array.values.push_back(json_instruction_row);
         }
 

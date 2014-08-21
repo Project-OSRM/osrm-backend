@@ -24,6 +24,7 @@ message RouteInstructions
     required string length_str = 6;
     required string earth_direction = 7;
     required int32 azimuth = 8;
+    optional int32 travel_mode = 9;
 }
 
 message Route
