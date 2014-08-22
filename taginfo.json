@@ -1,6 +1,6 @@
 {
     "data_format": 1,
-    "data_url": "https://https://raw.githubusercontent.com/Project-OSRM/osrm-backend/develop/taginfo.json",
+    "data_url": "https://raw.githubusercontent.com/Project-OSRM/osrm-backend/develop/taginfo.json",
     "project": {
         "name": "Open Source Routing Machine (car profile)",
         "description": "High-performance routing engine for shortest paths in road networks.",
