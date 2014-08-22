@@ -145,6 +145,13 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         m_coordinate_list = std::make_shared<ShM<FixedPointCoordinate, true>::vector>(
             coordinate_list_ptr, data_layout->num_entries[SharedDataLayout::COORDINATE_LIST]);
 
+        TravelMode *travel_mode_list_ptr = data_layout->GetBlockPtr<TravelMode>(
+            shared_memory, SharedDataLayout::TRAVEL_MODE);
+        typename ShM<TravelMode, true>::vector travel_mode_list(
+            travel_mode_list_ptr,
+            data_layout->num_entries[SharedDataLayout::TRAVEL_MODE]);
+        m_travel_mode_list.swap(travel_mode_list);
+
         TurnInstruction *turn_instruction_list_ptr = data_layout->GetBlockPtr<TurnInstruction>(
             shared_memory, SharedDataLayout::TURN_INSTRUCTION);
         typename ShM<TurnInstruction, true>::vector turn_instruction_list(
