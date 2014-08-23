@@ -89,13 +89,13 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
             if (SPECIAL_NODEID != phantom_node.forward_node_id)
             {
                 forward_heap.Insert(phantom_node.forward_node_id,
-                                    phantom_node.GetForwardWeightPlusOffset(),
+                                    (forward ? -1 : 1) * phantom_node.GetForwardWeightPlusOffset(),
                                     phantom_node.forward_node_id);
             }
             if (SPECIAL_NODEID != phantom_node.reverse_node_id)
             {
                 forward_heap.Insert(phantom_node.reverse_node_id,
-                                    phantom_node.GetReverseWeightPlusOffset(),
+                                    (forward ? -1 : 1) * phantom_node.GetReverseWeightPlusOffset(),
                                     phantom_node.reverse_node_id);
             }
         }
@@ -130,13 +130,13 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
             if (SPECIAL_NODEID != phantom_node.forward_node_id)
             {
                 backward_heap.Insert(phantom_node.forward_node_id,
-                                     phantom_node.GetForwardWeightPlusOffset(),
+                                     (forward ? 1 : -1) * phantom_node.GetForwardWeightPlusOffset(),
                                      phantom_node.forward_node_id);
             }
             if (SPECIAL_NODEID != phantom_node.reverse_node_id)
             {
                 backward_heap.Insert(phantom_node.reverse_node_id,
-                                     phantom_node.GetReverseWeightPlusOffset(),
+                                     (forward ? 1 : -1) * phantom_node.GetReverseWeightPlusOffset(),
                                      phantom_node.reverse_node_id);
             }
         }
@@ -195,14 +195,15 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
             super::UnpackPath(packed_path, { *target_phantom_it, *source_phantom_it }, unpacked_path);
         }
 
-        EdgeWeight duration = 0;
         std::vector<FixedPointCoordinate> coordinates;
-        coordinates.reserve(unpacked_path.size());
+        coordinates.reserve(unpacked_path.size() + 2);
+
+        coordinates.emplace_back(forward ? source_phantom_it->location : target_phantom_it->location);
         for (const auto &path_data : unpacked_path)
         {
             coordinates.emplace_back(super::facade->GetCoordinateOfNode(path_data.node));
-            duration += path_data.segment_duration;
         }
+        coordinates.emplace_back(forward ? target_phantom_it->location : source_phantom_it->location);
 
         double distance = 0.0;
         for (int i = 1; i < coordinates.size(); ++i)
@@ -210,7 +211,7 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
            distance += FixedPointCoordinate::ApproximateEuclideanDistance(coordinates[i - 1], coordinates[i]);
         }
 
-        return std::make_pair(round(duration / 10.), distance);
+        return std::make_pair(round(local_upper_bound / 10.), distance);
     }
 };
 
