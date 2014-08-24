@@ -108,9 +108,6 @@ DouglasPeucker::DouglasPeucker()
 
 void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level)
 {
-    // check if input data is invalid
-    BOOST_ASSERT_MSG(begin != end, "geometry invalid");
-
     unsigned size = std::distance(begin, end);
     if (size < 2)
     {
