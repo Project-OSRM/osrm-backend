@@ -12,26 +12,28 @@
     "tags": [
         {
             "key": "highway",
-            "description": "type of road"
+            "description": "Type of road."
         },
         {
             "key": "service",
-            "description": "looking for parking_aisles"
+            "value": "parking_aisle",
+            "description": ""
         },
         {
             "key": "oneway"
         },
         {
             "key": "area",
-            "description": "Area=yes is ignored by default"
+            "value": "yes", 
+            "description": "Roads with area=yes are ignored by default."
         },
         {
             "key": "impassable",
-            "description": "this is used by HOT"
+            "description": "This is used by HOT."
         },
         {
             "key": "status",
-            "description": "this is used by HOT"
+            "description": "This is used by HOT."
         },
         {
             "key": "access"
