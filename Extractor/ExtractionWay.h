@@ -41,19 +41,13 @@ struct ExtractionWay
 
     inline void Clear()
     {
-        id = SPECIAL_NODEID;
-        nameID = INVALID_NAMEID;
-        path.clear();
-        keyVals.Clear();
         forward_speed = -1;
         backward_speed = -1;
         duration = -1;
-        access = true;
         roundabout = false;
-        isAccessRestricted = false;
-        ignoreInGrid = false;
-        forward_travel_mode = TRAVEL_MODE_DEFAULT;
-        backward_travel_mode = TRAVEL_MODE_DEFAULT;
+        is_access_restricted = false;
+        ignore_in_grid = false;
+        name.clear();
     }
 
     enum Directions
@@ -61,9 +55,9 @@ struct ExtractionWay
       oneway,
       bidirectional,
       opposite };
-    
+
     // These accessor methods exists to support the depreciated "way.direction" access
-    // in LUA. Since the direction attribute was removed from ExtractionWay, the 
+    // in LUA. Since the direction attribute was removed from ExtractionWay, the
     // accessors translate to/from the mode attributes.
     inline void set_direction(const Directions m)
     {
@@ -111,18 +105,13 @@ struct ExtractionWay
     inline void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
     inline const TravelMode get_backward_mode() const { return backward_travel_mode; }
 
-    unsigned id;
-    unsigned nameID;
     double forward_speed;
     double backward_speed;
     double duration;
     std::string name;
-    bool access;
     bool roundabout;
-    bool isAccessRestricted;
-    bool ignoreInGrid;
-    std::vector<NodeID> path;
-    HashTable<std::string, std::string> keyVals;
+    bool is_access_restricted;
+    bool ignore_in_grid;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
 };
