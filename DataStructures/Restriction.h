@@ -77,5 +77,56 @@ struct TurnRestriction
     }
 };
 
+struct InputRestrictionContainer
+{
+    // EdgeID fromWay;
+    // EdgeID toWay;
+    // NodeID via_node;
+    TurnRestriction restriction;
+
+    InputRestrictionContainer(EdgeID fromWay, EdgeID toWay, EdgeID vw)
+    {
+        restriction.from.way = fromWay;
+        restriction.to.way = toWay;
+        restriction.via.way = vw;
+    }
+    explicit InputRestrictionContainer(bool is_only = false)
+    {
+        restriction.from.way = SPECIAL_EDGEID;
+        restriction.to.way = SPECIAL_EDGEID;
+        restriction.via.node = SPECIAL_NODEID;
+        restriction.flags.is_only = is_only;
+    }
+
+    static InputRestrictionContainer min_value() { return InputRestrictionContainer(0, 0, 0); }
+    static InputRestrictionContainer max_value()
+    {
+        return InputRestrictionContainer(SPECIAL_EDGEID, SPECIAL_EDGEID, SPECIAL_EDGEID);
+    }
+};
+
+struct CmpRestrictionContainerByFrom
+{
+    typedef InputRestrictionContainer value_type;
+    inline bool operator()(const InputRestrictionContainer &a,
+                           const InputRestrictionContainer &b) const
+    {
+        return a.restriction.from.way < b.restriction.from.way;
+    }
+    inline value_type max_value() const { return InputRestrictionContainer::max_value(); }
+    inline value_type min_value() const { return InputRestrictionContainer::min_value(); }
+};
+
+struct CmpRestrictionContainerByTo
+{
+    typedef InputRestrictionContainer value_type;
+    inline bool operator()(const InputRestrictionContainer &a,
+                           const InputRestrictionContainer &b) const
+    {
+        return a.restriction.to.way < b.restriction.to.way;
+    }
+    value_type max_value() const { return InputRestrictionContainer::max_value(); }
+    value_type min_value() const { return InputRestrictionContainer::min_value(); }
+};
 
 #endif // RESTRICTION_H
