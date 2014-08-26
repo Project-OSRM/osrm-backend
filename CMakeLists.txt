@@ -239,9 +239,9 @@ else()
 endif()
 include_directories(${LUA_INCLUDE_DIR})
 
-find_package(LibXml2 REQUIRED)
-include_directories(${LIBXML2_INCLUDE_DIR})
-target_link_libraries(osrm-extract ${LIBXML2_LIBRARIES})
+find_package(EXPAT REQUIRED)
+include_directories(${EXPAT_INCLUDE_DIRS})
+target_link_libraries(osrm-extract ${EXPAT_LIBRARIES})
 
 find_package( STXXL REQUIRED )
 include_directories(${STXXL_INCLUDE_DIR})
