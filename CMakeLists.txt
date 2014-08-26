@@ -31,6 +31,7 @@ OPTION(WITH_TOOLS "Build OSRM tools" OFF)
 OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
+include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
