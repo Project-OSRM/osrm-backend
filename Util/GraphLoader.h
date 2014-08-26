@@ -99,29 +99,29 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     SimpleLogger().Write() << " and " << m << " edges ";
     for (TurnRestriction &current_restriction : restriction_list)
     {
-        auto internal_id_iter = ext_to_int_id_map.find(current_restriction.fromNode);
+        auto internal_id_iter = ext_to_int_id_map.find(current_restriction.from.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
             SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
             continue;
         }
-        current_restriction.fromNode = internal_id_iter->second;
+        current_restriction.from.node = internal_id_iter->second;
 
-        internal_id_iter = ext_to_int_id_map.find(current_restriction.viaNode);
+        internal_id_iter = ext_to_int_id_map.find(current_restriction.via.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
             SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
             continue;
         }
-        current_restriction.viaNode = internal_id_iter->second;
+        current_restriction.via.node = internal_id_iter->second;
 
-        internal_id_iter = ext_to_int_id_map.find(current_restriction.toNode);
+        internal_id_iter = ext_to_int_id_map.find(current_restriction.to.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
             SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
             continue;
         }
-        current_restriction.toNode = internal_id_iter->second;
+        current_restriction.to.node = internal_id_iter->second;
     }
 
     edge_list.reserve(m);
