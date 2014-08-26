@@ -28,15 +28,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_CALLBACKS_H
 #define EXTRACTOR_CALLBACKS_H
 
+#include "ExtractionWay.h"
 #include "../typedefs.h"
 
-#include <unordered_map>
+#include <boost/optional.hpp>
+
+#include <osmium/osm.hpp>
+
 #include <string>
+#include <unordered_map>
 
 struct ExternalMemoryNode;
 class ExtractionContainers;
-struct ExtractionWay;
 struct InputRestrictionContainer;
+struct ExtractionNode;
 
 class ExtractorCallbacks
 {
@@ -51,13 +56,13 @@ class ExtractorCallbacks
                                 std::unordered_map<std::string, NodeID> &string_map);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessNode(const ExternalMemoryNode &node);
+    void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);
 
     // warning: caller needs to take care of synchronization!
-    bool ProcessRestriction(const InputRestrictionContainer &restriction);
+    void ProcessRestriction(const boost::optional<InputRestrictionContainer> &restriction);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessWay(ExtractionWay &way);
+    void ProcessWay(const osmium::Way &current_way, ExtractionWay &result_way);
 };
 
 #endif /* EXTRACTOR_CALLBACKS_H */
