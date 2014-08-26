@@ -119,8 +119,8 @@ class TarjanSCC
         TIMER_START(SCC_LOAD);
         for (const TurnRestriction &restriction : irs)
         {
-            std::pair<NodeID, NodeID> restriction_source = {restriction.fromNode,
-                                                            restriction.viaNode};
+            std::pair<NodeID, NodeID> restriction_source = {restriction.from.node,
+                                                            restriction.via.node};
             unsigned index = 0;
             const auto restriction_iterator = m_restriction_map.find(restriction_source);
             if (restriction_iterator == m_restriction_map.end())
@@ -137,7 +137,7 @@ class TarjanSCC
                 {
                     continue;
                 }
-                else if (restriction.flags.isOnly)
+                else if (restriction.flags.is_only)
                 {
                     // We are going to insert an is_only_*-restriction. There can be only one.
                     m_restriction_bucket_list.at(index).clear();
@@ -145,7 +145,7 @@ class TarjanSCC
             }
 
             m_restriction_bucket_list.at(index)
-                .emplace_back(restriction.toNode, restriction.flags.isOnly);
+                .emplace_back(restriction.to.node, restriction.flags.is_only);
         }
 
         barrier_node_list.insert(bn.begin(), bn.end());
