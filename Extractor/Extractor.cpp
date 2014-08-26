@@ -161,6 +161,7 @@ void Extractor::GenerateOutputFilesNames()
 {
     output_file_name = input_path.string();
     restriction_file_name = input_path.string();
+    timestamp_file_name = input_path.string();
     std::string::size_type pos = output_file_name.find(".osm.bz2");
     if (pos == std::string::npos)
     {
@@ -309,24 +310,24 @@ int Extractor::Run(int argc, char *argv[])
                 case osmium::item_type::node:
                     ++number_of_nodes;
                     result_node.Clear();
-                    luabind::call_function<void>(
-                        lua_state,
-                        "node_function",
-                        boost::cref(static_cast<osmium::Node &>(entity)),
-                        boost::ref(result_node));
-                    extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
-                                                     result_node);
+                    // luabind::call_function<void>(
+                    //     lua_state,
+                    //     "node_function",
+                    //     boost::cref(static_cast<osmium::Node &>(entity)),
+                    //     boost::ref(result_node));
+                    // extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
+                    //                                  result_node);
                     break;
                 case osmium::item_type::way:
                     ++number_of_ways;
                     result_way.Clear();
-                    luabind::call_function<void>(
-                        lua_state,
-                        "way_function",
-                        boost::cref(static_cast<osmium::Way &>(entity)),
-                        boost::ref(result_way));
-                    extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity),
-                                                    result_way);
+                    // luabind::call_function<void>(
+                    //     lua_state,
+                    //     "way_function",
+                    //     boost::cref(static_cast<osmium::Way &>(entity)),
+                    //     boost::ref(result_way));
+                    // extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity),
+                    //                                 result_way);
                     break;
                 case osmium::item_type::relation:
                     ++number_of_relations;
@@ -341,6 +342,8 @@ int Extractor::Run(int argc, char *argv[])
         }
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
+        SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, " << number_of_ways << " ways, and " << number_of_relations << " relations";
+
         extractor_callbacks.reset();
 
         if (extraction_containers.all_edges_list.empty())
