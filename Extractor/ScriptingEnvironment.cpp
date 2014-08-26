@@ -55,8 +55,6 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 
     typedef double (osmium::Location::* location_member_ptr_type)() const;
 
-
-
     luabind::open(lua_state);
     // open utility libraries string library;
     luaL_openlibs(lua_state);
