@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
+if( CURRENT_CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
   message(FATAL_ERROR "In-source builds are not allowed.
 Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
 This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
@@ -11,7 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
 
@@ -30,25 +30,25 @@ endif()
 OPTION(WITH_TOOLS "Build OSRM tools" OFF)
 OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 
-include_directories(${CMAKE_SOURCE_DIR}/Include/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/Include/)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.cpp.alwaysbuild
-  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.cpp.alwaysbuild
+  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/Util/FingerPrint.cpp.in
   COMMENT "Configuring FingerPrint.cpp"
   VERBATIM)
 
-add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp)
+add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Util/FingerPrint.cpp)
 add_custom_target(tests DEPENDS datastructure-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
 
 configure_file(
-  ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
-  ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Util/GitDescription.cpp.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/Util/GitDescription.cpp
 )
 file(GLOB ExtractorGlob Extractor/*.cpp)
 file(GLOB ImporterGlob DataStructures/Import*.cpp)
@@ -338,7 +338,7 @@ foreach (lib ${Boost_LIBRARIES})
   set(BOOST_LIBRARY_LISTING "${BOOST_LIBRARY_LISTING} -l${BOOST_LIBRARY_NAME}")
 endforeach ()
 
-configure_file(${CMAKE_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
 
 if(BUILD_DEBIAN_PACKAGE)
