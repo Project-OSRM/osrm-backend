@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class T>
 auto get_value_by_key(T const& object, const char *key) -> decltype(object.get_value_by_key(key))
 {
-    return object.get_value_by_key(key);
+    return object.get_value_by_key(key, "");
 }
 
 ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
