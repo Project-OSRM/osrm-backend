@@ -42,7 +42,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-ScriptingEnvironment::ScriptingEnvironment() {}
+// wrapper method as luabind doesn't automatically overload funcs w/ default parameters
+template<class T>
+auto get_value_by_key(T const& object, const char *key) -> decltype(object.get_value_by_key(key))
+{
+    return object.get_value_by_key(key);
+}
+
 ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
 : file_name(file_name)
 {
@@ -51,8 +57,6 @@ ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
 
 void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 {
-    using namespace osmium;
-
     typedef double (osmium::Location::* location_member_ptr_type)() const;
 
     luabind::open(lua_state);
@@ -76,7 +80,8 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 
         luabind::class_<osmium::Node>("Node")
         // .def<node_member_ptr_type>("tags", &osmium::Node::tags)
-        .def("get_value_by_key", &osmium::Node::get_value_by_key),
+        .def("get_value_by_key", &osmium::Node::get_value_by_key)
+        .def("get_value_by_key", &get_value_by_key<osmium::Node>),
 
         luabind::class_<ExtractionNode>("ResultNode")
         .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
@@ -84,7 +89,7 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 
         luabind::class_<ExtractionWay>("ResultWay")
         // .def(luabind::constructor<>())
-        .def_readwrite("speed", &ExtractionWay::forward_speed)
+        .def_readwrite("forward_speed", &ExtractionWay::forward_speed)
         .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
         .def_readwrite("name", &ExtractionWay::name)
         .def_readwrite("roundabout", &ExtractionWay::roundabout)
@@ -101,6 +106,7 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
         ],
         luabind::class_<osmium::Way>("Way")
         .def("get_value_by_key", &osmium::Way::get_value_by_key)
+        .def("get_value_by_key", &get_value_by_key<osmium::Way>)
     ];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))
