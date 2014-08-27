@@ -48,6 +48,8 @@ struct ExtractionWay
         is_access_restricted = false;
         ignore_in_grid = false;
         name.clear();
+        forward_travel_mode = TRAVEL_MODE_DEFAULT;
+        backward_travel_mode = TRAVEL_MODE_DEFAULT;
     }
 
     enum Directions
