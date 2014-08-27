@@ -144,8 +144,8 @@ local mode_ferry = 2
 
 local function find_access_tag(source, access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
-    local access_tag = source:get_value_by_key(v, "")
-    if "" ~= access_tag then
+    local access_tag = source:get_value_by_key(v)
+    if access_tag and "" ~= access_tag then
       return access_tag
     end
   end
