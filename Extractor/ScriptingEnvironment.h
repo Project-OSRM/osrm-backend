@@ -37,7 +37,7 @@ struct lua_State;
 class ScriptingEnvironment
 {
   public:
-    ScriptingEnvironment();
+    ScriptingEnvironment() = delete;
     explicit ScriptingEnvironment(const char *file_name);
 
     lua_State *getLuaState();
