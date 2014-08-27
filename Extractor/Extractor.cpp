@@ -302,7 +302,8 @@ int Extractor::Run(int argc, char *argv[])
         ExtractionNode result_node;
         ExtractionWay result_way;
 
-        while (osmium::memory::Buffer buffer = reader.read()) {
+        while (osmium::memory::Buffer buffer = reader.read())
+        {
             for (osmium::OSMEntity &entity : buffer)
             {
                 switch (entity.type())
@@ -310,24 +311,24 @@ int Extractor::Run(int argc, char *argv[])
                 case osmium::item_type::node:
                     ++number_of_nodes;
                     result_node.Clear();
-                    // luabind::call_function<void>(
-                    //     lua_state,
-                    //     "node_function",
-                    //     boost::cref(static_cast<osmium::Node &>(entity)),
-                    //     boost::ref(result_node));
-                    // extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
-                    //                                  result_node);
+                    luabind::call_function<void>(
+                        lua_state,
+                        "node_function",
+                        boost::cref(static_cast<osmium::Node &>(entity)),
+                        boost::ref(result_node));
+                    extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
+                                                     result_node);
                     break;
                 case osmium::item_type::way:
                     ++number_of_ways;
                     result_way.Clear();
-                    // luabind::call_function<void>(
-                    //     lua_state,
-                    //     "way_function",
-                    //     boost::cref(static_cast<osmium::Way &>(entity)),
-                    //     boost::ref(result_way));
-                    // extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity),
-                    //                                 result_way);
+                    luabind::call_function<void>(
+                        lua_state,
+                        "way_function",
+                        boost::cref(static_cast<osmium::Way &>(entity)),
+                        boost::ref(result_way));
+                    extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity),
+                                                    result_way);
                     break;
                 case osmium::item_type::relation:
                     ++number_of_relations;
