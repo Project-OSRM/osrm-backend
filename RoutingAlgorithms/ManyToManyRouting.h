@@ -39,7 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
-template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterface<DataFacadeT>
+template <class DataFacadeT,
+          bool single_source,
+          bool single_target> class ManyToManyRouting : public BasicRoutingInterface<DataFacadeT>
 {
     typedef BasicRoutingInterface<DataFacadeT> super;
     typedef SearchEngineData::QueryHeap QueryHeap;
@@ -106,6 +108,12 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
             {
                 BackwardRoutingStep(target_id, query_heap, search_space_with_buckets);
             }
+
+            if (single_target)
+            {
+                break;
+            }
+
             ++target_id;
         }
 
@@ -139,6 +147,11 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
                                    query_heap,
                                    search_space_with_buckets,
                                    result_table);
+            }
+
+            if (single_source)
+            {
+                break;
             }
 
             ++source_id;

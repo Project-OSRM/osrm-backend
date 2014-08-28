@@ -47,7 +47,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
+template <class DataFacadeT,
+          bool single_source,
+          bool single_target> class DistanceTablePlugin : public BasePlugin
 {
   private:
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
@@ -62,13 +64,13 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
 
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    std::shared_ptr<std::vector<EdgeWeight>> HandleRequest(
+        const RouteParameters &route_parameters, unsigned &calctime_in_us)
     {
         // check number of parameters
         if (2 > route_parameters.coordinates.size())
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return nullptr;
         }
 
         RawRouteData raw_route;
@@ -76,13 +78,11 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
 
         if (std::any_of(begin(route_parameters.coordinates),
                         end(route_parameters.coordinates),
-                        [&](FixedPointCoordinate coordinate)
-                        {
-                return !coordinate.isValid();
-            }))
+                        [&](FixedPointCoordinate coordinate) {
+                            return !coordinate.isValid();
+                        }))
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return nullptr;
         }
 
         for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
@@ -91,8 +91,7 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         }
 
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
-        unsigned max_locations =
-            std::min(100u, static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
+        unsigned max_locations = raw_route.raw_via_node_coordinates.size();
         PhantomNodeArray phantom_node_vector(max_locations);
         for (unsigned i = 0; i < max_locations; ++i)
         {
@@ -115,10 +114,32 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
             BOOST_ASSERT(phantom_node_vector[i].front().isValid(facade->GetNumberOfNodes()));
         }
 
-        // TIMER_START(distance_table);
-        std::shared_ptr<std::vector<EdgeWeight>> result_table =
-            search_engine_ptr->distance_table(phantom_node_vector);
-        // TIMER_STOP(distance_table);
+        TIMER_START(distance_table);
+        std::shared_ptr<std::vector<EdgeWeight>> result_table;
+
+        if (single_source)
+        {
+            result_table = search_engine_ptr->distance_table_single_source(phantom_node_vector);
+        }
+        else if (single_target)
+        {
+            result_table = search_engine_ptr->distance_table_single_target(phantom_node_vector);
+        }
+        else
+        {
+            result_table = search_engine_ptr->distance_table(phantom_node_vector);
+        }
+
+        TIMER_STOP(distance_table);
+        calctime_in_us = TIMER_USEC(distance_table);
+
+        return result_table;
+    }
+
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    {
+        unsigned calctime_in_us = 0;
+        auto result_table = HandleRequest(route_parameters, calctime_in_us);
 
         if (!result_table)
         {
@@ -127,7 +148,7 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         }
         JSON::Object json_object;
         JSON::Array json_array;
-        const unsigned number_of_locations = static_cast<unsigned>(phantom_node_vector.size());
+        const unsigned number_of_locations = route_parameters.coordinates.size();
         for (unsigned row = 0; row < number_of_locations; ++row)
         {
             JSON::Array json_row;

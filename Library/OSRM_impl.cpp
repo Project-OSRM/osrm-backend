@@ -71,7 +71,6 @@ OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memo
     }
 
     // The following plugins handle all requests.
-    RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new HelloWorldPlugin());
     RegisterPlugin(new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new MultiTargetPlugin<BaseDataFacade<QueryEdge::EdgeData>, true>(query_data_facade));

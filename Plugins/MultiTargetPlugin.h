@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/ObjectToBase64.h"
 
 #include "../DataStructures/SearchEngine.h"
+#include "../Util/TimingUtil.h"
 
 
 template <class DataFacadeT, bool forward> class MultiTargetPlugin : public BasePlugin
@@ -45,7 +46,8 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin : public Base
 
     virtual ~MultiTargetPlugin() {}
 
-    std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> HandleRequest(const RouteParameters &route_parameters)
+    std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> HandleRequest(const RouteParameters &route_parameters,
+                                                                              unsigned &calctime_in_us)
     {
         // check number of parameters
         if (2 > route_parameters.coordinates.size())
@@ -93,19 +95,27 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin : public Base
             BOOST_ASSERT(phantom_node_vector[i].front().isValid(facade->GetNumberOfNodes()));
         }
 
+        std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> ret;
+
+        TIMER_START(multi_target);
         if (forward)
         {
-            return search_engine_ptr->multi_target(phantom_node_vector);
+            ret = search_engine_ptr->multi_target(phantom_node_vector);
         }
         else
         {
-            return search_engine_ptr->multi_source(phantom_node_vector);
+            ret = search_engine_ptr->multi_source(phantom_node_vector);
         }
+        TIMER_STOP(multi_target);
+        calctime_in_us = TIMER_USEC(multi_target);
+
+        return ret;
     }
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
-        std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> result_table = HandleRequest(route_parameters);
+        unsigned calctime_in_ms = 0;
+        auto result_table = HandleRequest(route_parameters, calctime_in_ms);
 
         if (!result_table)
         {

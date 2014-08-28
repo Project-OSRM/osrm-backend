@@ -45,13 +45,18 @@ template <class DataFacadeT> class SearchEngine
   public:
     ShortestPathRouting<DataFacadeT> shortest_path;
     AlternativeRouting<DataFacadeT> alternative_path;
-    ManyToManyRouting<DataFacadeT> distance_table;
+    ManyToManyRouting<DataFacadeT, false, false> distance_table;
+    ManyToManyRouting<DataFacadeT, true, false> distance_table_single_source;
+    ManyToManyRouting<DataFacadeT, false, true> distance_table_single_target;
     MultiTargetRouting<DataFacadeT, true> multi_target;
     MultiTargetRouting<DataFacadeT, false> multi_source;
 
     explicit SearchEngine(DataFacadeT *facade)
         : facade(facade), shortest_path(facade, engine_working_data),
-          alternative_path(facade, engine_working_data), distance_table(facade, engine_working_data),
+          alternative_path(facade, engine_working_data),
+          distance_table(facade, engine_working_data),
+          distance_table_single_source(facade, engine_working_data),
+          distance_table_single_target(facade, engine_working_data),
           multi_target(facade, engine_working_data),
           multi_source(facade, engine_working_data)
     {
