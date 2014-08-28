@@ -51,14 +51,13 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 void ExtractorCallbacks::ProcessNode(const osmium::Node &osm_input_node,
                                      const ExtractionNode &result_node)
 {
-    // TODO: use in-place c'tion
-    ExternalMemoryNode node;
-    node.bollard = result_node.barrier;
-    node.trafficLight = result_node.traffic_lights;
-    node.lat = osm_input_node.location().lat() * COORDINATE_PRECISION;
-    node.lon = osm_input_node.location().lon() * COORDINATE_PRECISION;
-    node.node_id = osm_input_node.id();
-    external_memory.all_nodes_list.push_back(node);
+    external_memory.all_nodes_list.push_back({
+        static_cast<int>(osm_input_node.location().lat() * COORDINATE_PRECISION),
+        static_cast<int>(osm_input_node.location().lon() * COORDINATE_PRECISION),
+        static_cast<NodeID>(osm_input_node.id()),
+        result_node.barrier,
+        result_node.traffic_lights
+    });
 }
 
 void ExtractorCallbacks::ProcessRestriction(
