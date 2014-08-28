@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
-#include "../ThirdParty/variant/variant.hpp"
 #include "../Util/floating_point.hpp"
 #include "../Util/MercatorUtil.h"
 #include "../Util/OSRMException.h"
@@ -53,6 +52,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
+
+#include <variant/variant.hpp>
 
 #include <algorithm>
 #include <array>
