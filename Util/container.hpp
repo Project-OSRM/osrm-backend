@@ -41,13 +41,13 @@ template <typename T> void sort_unique_resize(std::vector<T> &vector)
     vector.resize(number_of_unique_elements);
 }
 
-// template <typename T> void sort_unique_resize_shrink_vector(std::vector<T> &vector)
+// template <typename T> inline void sort_unique_resize_shrink_vector(std::vector<T> &vector)
 // {
 //     sort_unique_resize(vector);
 //     vector.shrink_to_fit();
 // }
 
-// template <typename T> void remove_consecutive_duplicates_from_vector(std::vector<T> &vector)
+// template <typename T> inline void remove_consecutive_duplicates_from_vector(std::vector<T> &vector)
 // {
 //     const auto number_of_unique_elements = std::unique(vector.begin(), vector.end()) - vector.begin();
 //     vector.resize(number_of_unique_elements);

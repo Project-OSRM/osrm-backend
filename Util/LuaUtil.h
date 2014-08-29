@@ -43,7 +43,7 @@ extern "C" {
 template <typename T> void LUA_print(T output) { std::cout << "[LUA] " << output << std::endl; }
 
 // Check if the lua function <name> is defined
-bool lua_function_exists(lua_State *lua_state, const char *name)
+inline bool lua_function_exists(lua_State *lua_state, const char *name)
 {
     luabind::object globals_table = luabind::globals(lua_state);
     luabind::object lua_function = globals_table[name];
@@ -53,7 +53,7 @@ bool lua_function_exists(lua_State *lua_state, const char *name)
 // Add the folder contain the script to the lua load path, so script can easily require() other lua
 // scripts inside that folder, or subfolders.
 // See http://lua-users.org/wiki/PackagePath for details on the package.path syntax.
-void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_name)
+inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_name)
 {
     const boost::filesystem::path profile_path(file_name);
     std::string folder = profile_path.parent_path().string();

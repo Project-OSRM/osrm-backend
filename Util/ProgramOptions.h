@@ -144,14 +144,14 @@ inline void populate_base_path(ServerPaths &server_paths)
 }
 
 // generate boost::program_options object for the routing part
-unsigned GenerateServerProgramOptions(const int argc,
-                                      const char *argv[],
-                                      ServerPaths &paths,
-                                      std::string &ip_address,
-                                      int &ip_port,
-                                      int &requested_num_threads,
-                                      bool &use_shared_memory,
-                                      bool &trial)
+inline unsigned GenerateServerProgramOptions(const int argc,
+                                             const char *argv[],
+                                             ServerPaths &paths,
+                                             std::string &ip_address,
+                                             int &ip_port,
+                                             int &requested_num_threads,
+                                             bool &use_shared_memory,
+                                             bool &trial)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");

@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 // support old capitalized option names by down-casing them with a regex replace
-std::string ReadIniFileAndLowerContents(const boost::filesystem::path &path)
+inline std::string ReadIniFileAndLowerContents(const boost::filesystem::path &path)
 {
     boost::filesystem::fstream config_stream(path);
     std::string ini_file_content((std::istreambuf_iterator<char>(config_stream)),

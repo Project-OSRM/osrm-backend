@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
 // work with negative values to prevent overflowing when taking -value
-template <int length, int precision> static char *printInt(char *buffer, int value)
+template <int length, int precision> static inline char *printInt(char *buffer, int value)
 {
     bool minus = true;
     if (value > 0)
@@ -76,7 +76,7 @@ inline void replaceAll(std::string &s, const std::string &sub, const std::string
     boost::replace_all(s, sub, other);
 }
 
-std::string EscapeJSONString(const std::string &input)
+inline std::string EscapeJSONString(const std::string &input)
 {
     std::string output;
     output.reserve(input.size());
@@ -120,7 +120,7 @@ static std::string originals[] = {"&", "\"", "<", ">", "'", "[", "]", "\\"};
 static std::string entities[] = {
     "&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;"};
 
-std::size_t URIDecode(const std::string &input, std::string &output)
+inline std::size_t URIDecode(const std::string &input, std::string &output)
 {
     auto src_iter = input.begin();
     output.resize(input.size() + 1);
@@ -144,7 +144,7 @@ std::size_t URIDecode(const std::string &input, std::string &output)
     return decoded_length;
 }
 
-std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
+inline std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
 
 // TODO: remove after switch to libosmium
 inline bool StringStartsWith(const std::string &input, const std::string &prefix)
@@ -152,7 +152,7 @@ inline bool StringStartsWith(const std::string &input, const std::string &prefix
     return boost::starts_with(input, prefix);
 }
 
-std::string GetRandomString()
+inline std::string GetRandomString()
 {
     std::string s;
     s.resize(128);
