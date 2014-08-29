@@ -89,12 +89,12 @@ void RestrictionParser::ReadRestrictionExceptions()
     }
 }
 
-boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::Relation &relation) const
+mapbox::util::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::Relation &relation) const
 {
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
     {
-        return boost::optional<InputRestrictionContainer>();
+        return mapbox::util::optional<InputRestrictionContainer>();
     }
 
     osmium::tags::KeyPrefixFilter filter(false);
@@ -108,7 +108,7 @@ boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::R
     // if it's a restriction, continue;
     if (std::distance(fi_begin, fi_end) == 0)
     {
-        return boost::optional<InputRestrictionContainer>();
+        return mapbox::util::optional<InputRestrictionContainer>();
     }
 
     // check if the restriction should be ignored
@@ -117,7 +117,7 @@ boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::R
     {
         if (ShouldIgnoreRestriction(except))
         {
-            return boost::optional<InputRestrictionContainer>();
+            return mapbox::util::optional<InputRestrictionContainer>();
         }
     }
 
@@ -198,7 +198,7 @@ boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::R
     //                        << restriction_container.restriction.via.node << "->" << restriction_container.restriction.to.node
     //                        << ">";
 
-    return boost::optional<InputRestrictionContainer>(restriction_container);
+    return mapbox::util::optional<InputRestrictionContainer>(restriction_container);
 }
 
 bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const

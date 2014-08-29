@@ -30,12 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../DataStructures/Restriction.h"
 
-#include <boost/optional.hpp>
-
 #include <osmium/osm.hpp>
 #include <osmium/tags/regex_filter.hpp>
 
-
+#include <variant/optional.hpp>
 
 #include <string>
 #include <vector>
@@ -48,7 +46,7 @@ class RestrictionParser
   public:
     RestrictionParser(ScriptingEnvironment &scripting_environment);
 
-    boost::optional<InputRestrictionContainer> TryParse(osmium::Relation& relation) const;
+    mapbox::util::optional<InputRestrictionContainer> TryParse(osmium::Relation& relation) const;
 
     void ReadUseRestrictionsSetting();
     void ReadRestrictionExceptions();

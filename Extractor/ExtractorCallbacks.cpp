@@ -61,13 +61,12 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &osm_input_node,
 }
 
 void ExtractorCallbacks::ProcessRestriction(
-    const boost::optional<InputRestrictionContainer> &restriction)
+    const mapbox::util::optional<InputRestrictionContainer> &restriction)
 {
-    if (!restriction.is_initialized())
+    if (restriction)
     {
-        return;
+        external_memory.restrictions_list.push_back(restriction.get());
     }
-    external_memory.restrictions_list.push_back(restriction.get());
 }
 /** warning: caller needs to take care of synchronization! */
 void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, ExtractionWay &parsed_way)

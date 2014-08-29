@@ -31,9 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractionWay.h"
 #include "../typedefs.h"
 
-#include <boost/optional.hpp>
-
 #include <osmium/osm.hpp>
+
+#include <variant/optional.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -59,7 +59,7 @@ class ExtractorCallbacks
     void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessRestriction(const boost::optional<InputRestrictionContainer> &restriction);
+    void ProcessRestriction(const mapbox::util::optional<InputRestrictionContainer> &restriction);
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, ExtractionWay &result_way);
