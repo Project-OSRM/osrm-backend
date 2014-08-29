@@ -35,9 +35,7 @@ ExternalMemoryNode::ExternalMemoryNode(
 {
 }
 
-ExternalMemoryNode::ExternalMemoryNode() : bollard(false), trafficLight(false)
-{
-}
+ExternalMemoryNode::ExternalMemoryNode() : bollard(false), trafficLight(false) {}
 
 ExternalMemoryNode ExternalMemoryNode::min_value()
 {
@@ -53,9 +51,18 @@ ExternalMemoryNode ExternalMemoryNode::max_value()
                               false);
 }
 
-bool ExternalMemoryNodeSTXXLCompare::operator()(const ExternalMemoryNode &left, const ExternalMemoryNode &right) const
+bool ExternalMemoryNodeSTXXLCompare::operator()(const ExternalMemoryNode &left,
+                                                const ExternalMemoryNode &right) const
 {
     return left.node_id < right.node_id;
 }
-ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::max_value() { return ExternalMemoryNode::max_value(); }
-ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::min_value() { return ExternalMemoryNode::min_value(); }
+
+ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::max_value()
+{
+    return ExternalMemoryNode::max_value();
+}
+
+ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::min_value()
+{
+    return ExternalMemoryNode::min_value();
+}
