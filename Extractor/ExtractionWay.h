@@ -39,7 +39,7 @@ struct ExtractionWay
 {
     ExtractionWay() { Clear(); }
 
-    inline void Clear()
+    void Clear()
     {
         forward_speed = -1;
         backward_speed = -1;
@@ -61,7 +61,7 @@ struct ExtractionWay
     // These accessor methods exists to support the depreciated "way.direction" access
     // in LUA. Since the direction attribute was removed from ExtractionWay, the
     // accessors translate to/from the mode attributes.
-    inline void set_direction(const Directions m)
+    void set_direction(const Directions m)
     {
         if (Directions::oneway == m)
         {
@@ -80,7 +80,7 @@ struct ExtractionWay
         }
     }
 
-    inline const Directions get_direction() const
+    const Directions get_direction() const
     {
         if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
         {
@@ -102,10 +102,10 @@ struct ExtractionWay
 
     // These accessors exists because it's not possible to take the address of a bitfield,
     // and LUA therefore cannot read/write the mode attributes directly.
-    inline void set_forward_mode(const TravelMode m) { forward_travel_mode = m; }
-    inline const TravelMode get_forward_mode() const { return forward_travel_mode; }
-    inline void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
-    inline const TravelMode get_backward_mode() const { return backward_travel_mode; }
+    void set_forward_mode(const TravelMode m) { forward_travel_mode = m; }
+    const TravelMode get_forward_mode() const { return forward_travel_mode; }
+    void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
+    const TravelMode get_backward_mode() const { return backward_travel_mode; }
 
     double forward_speed;
     double backward_speed;
