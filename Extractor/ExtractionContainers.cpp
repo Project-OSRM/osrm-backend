@@ -27,10 +27,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ExtractionContainers.h"
 #include "ExtractionWay.h"
+
+#include "../DataStructures/NodeID.h"
+#include "../DataStructures/RangeTable.h"
+
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../Util/TimingUtil.h"
-#include "../DataStructures/RangeTable.h"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -92,8 +95,10 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         std::cout << "[extractor] Sorting used ways         ... " << std::flush;
         TIMER_START(sort_ways);
-        stxxl::sort(
-            way_start_end_id_list.begin(), way_start_end_id_list.end(), CmpWayByID(), stxxl_memory);
+        stxxl::sort(way_start_end_id_list.begin(),
+                    way_start_end_id_list.end(),
+                    FirstAndLastSegmentOfWayStxxlCompare(),
+                    stxxl_memory);
         TIMER_STOP(sort_ways);
         std::cout << "ok, after " << TIMER_SEC(sort_ways) << "s" << std::endl;
 

@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EXTRACTIONCONTAINERS_H_
 
 #include "InternalExtractorEdge.h"
-#include "ExtractorStructs.h"
+#include "FirstAndLastSegmentOfWay.h"
 #include "../DataStructures/ExternalMemoryNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../Util/FingerPrint.h"
@@ -49,7 +49,7 @@ class ExtractionContainers
     using  STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
     using  STXXLStringVector = stxxl::vector<std::string>;
     using  STXXLRestrictionsVector = stxxl::vector<InputRestrictionContainer>;
-    using  STXXLWayIDStartEndVector = stxxl::vector<WayIDStartAndEndEdge>;
+    using  STXXLWayIDStartEndVector = stxxl::vector<FirstAndLastSegmentOfWay>;
 
     STXXLNodeIDVector used_node_id_list;
     STXXLNodeVector all_nodes_list;
