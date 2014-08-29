@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-struct ExternalMemoryNode : NodeInfo
+struct ExternalMemoryNode : QueryNode
 {
     ExternalMemoryNode(int lat, int lon, NodeID id, bool barrier, bool traffic_light);
 

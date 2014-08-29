@@ -57,7 +57,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                      std::vector<EdgeT> &edge_list,
                                      std::vector<NodeID> &barrier_node_list,
                                      std::vector<NodeID> &traffic_light_node_list,
-                                     std::vector<NodeInfo> *int_to_ext_node_id_map,
+                                     std::vector<QueryNode> *int_to_ext_node_id_map,
                                      std::vector<TurnRestriction> &restriction_list)
 {
     const FingerPrint fingerprint_orig;

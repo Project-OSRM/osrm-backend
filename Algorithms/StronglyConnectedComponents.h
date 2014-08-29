@@ -99,7 +99,7 @@ class TarjanSCC
     using EmanatingRestrictionsVector = std::vector<RestrictionTarget>;
     using RestrictionMap = std::unordered_map<RestrictionSource, unsigned>;
 
-    std::vector<NodeInfo> m_coordinate_list;
+    std::vector<QueryNode> m_coordinate_list;
     std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     std::shared_ptr<TarjanDynamicGraph> m_node_based_graph;
     std::unordered_set<NodeID> barrier_node_list;
@@ -113,7 +113,7 @@ class TarjanSCC
               std::vector<NodeID> &bn,
               std::vector<NodeID> &tl,
               std::vector<TurnRestriction> &irs,
-              std::vector<NodeInfo> &nI)
+              std::vector<QueryNode> &nI)
         : m_coordinate_list(nI), m_restriction_counter(irs.size())
     {
         TIMER_START(SCC_LOAD);

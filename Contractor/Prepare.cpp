@@ -554,7 +554,7 @@ void Prepare::WriteNodeMapping()
     if (size_of_mapping > 0)
     {
         node_stream.write((char *)&(internal_to_external_node_map[0]),
-                          size_of_mapping * sizeof(NodeInfo));
+                          size_of_mapping * sizeof(QueryNode));
     }
     node_stream.close();
     internal_to_external_node_map.clear();

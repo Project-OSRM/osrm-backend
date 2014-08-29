@@ -481,10 +481,10 @@ int main(const int argc, const char *argv[])
             shared_layout_ptr->GetBlockPtr<FixedPointCoordinate, true>(
                 shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
 
-        NodeInfo current_node;
+        QueryNode current_node;
         for (unsigned i = 0; i < coordinate_list_size; ++i)
         {
-            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
+            nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
             coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon);
         }
         nodes_input_stream.close();

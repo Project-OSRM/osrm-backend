@@ -63,7 +63,7 @@ class EdgeBasedGraphFactory
                                    std::unique_ptr<RestrictionMap> restricion_map,
                                    std::vector<NodeID> &barrier_node_list,
                                    std::vector<NodeID> &traffic_light_node_list,
-                                   std::vector<NodeInfo> &m_node_info_list,
+                                   std::vector<QueryNode> &m_node_info_list,
                                    SpeedProfileProperties &speed_profile);
 
     void Run(const std::string &original_edge_data_filename,
@@ -97,7 +97,7 @@ class EdgeBasedGraphFactory
 
     unsigned m_number_of_edge_based_nodes;
 
-    std::vector<NodeInfo> m_node_info_list;
+    std::vector<QueryNode> m_node_info_list;
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 

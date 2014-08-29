@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ExternalMemoryNode::ExternalMemoryNode(
     int lat, int lon, unsigned int node_id, bool barrier, bool traffic_lights)
-    : NodeInfo(lat, lon, node_id), barrier(barrier), traffic_lights(traffic_lights)
+    : QueryNode(lat, lon, node_id), barrier(barrier), traffic_lights(traffic_lights)
 {
 }
 
