@@ -30,12 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 
 ExternalMemoryNode::ExternalMemoryNode(
-    int lat, int lon, unsigned int node_id, bool bollard, bool traffic_light)
-    : NodeInfo(lat, lon, node_id), bollard(bollard), trafficLight(traffic_light)
+    int lat, int lon, unsigned int node_id, bool barrier, bool traffic_lights)
+    : NodeInfo(lat, lon, node_id), barrier(barrier), traffic_lights(traffic_lights)
 {
 }
 
-ExternalMemoryNode::ExternalMemoryNode() : bollard(false), trafficLight(false) {}
+ExternalMemoryNode::ExternalMemoryNode() : barrier(false), traffic_lights(false) {}
 
 ExternalMemoryNode ExternalMemoryNode::min_value()
 {

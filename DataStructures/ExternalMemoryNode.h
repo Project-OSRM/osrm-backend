@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct ExternalMemoryNode : NodeInfo
 {
-    ExternalMemoryNode(int lat, int lon, NodeID id, bool bollard, bool traffic_light);
+    ExternalMemoryNode(int lat, int lon, NodeID id, bool barrier, bool traffic_light);
 
     ExternalMemoryNode();
 
@@ -42,8 +42,8 @@ struct ExternalMemoryNode : NodeInfo
 
     static ExternalMemoryNode max_value();
 
-    bool bollard;
-    bool trafficLight;
+    bool barrier;
+    bool traffic_lights;
 };
 
 struct ExternalMemoryNodeSTXXLCompare

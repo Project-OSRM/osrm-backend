@@ -82,11 +82,11 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&current_node, sizeof(ExternalMemoryNode));
         int_to_ext_node_id_map->emplace_back(current_node.lat, current_node.lon, current_node.node_id);
         ext_to_int_id_map.emplace(current_node.node_id, i);
-        if (current_node.bollard)
+        if (current_node.barrier)
         {
             barrier_node_list.emplace_back(i);
         }
-        if (current_node.trafficLight)
+        if (current_node.traffic_lights)
         {
             traffic_light_node_list.emplace_back(i);
         }
