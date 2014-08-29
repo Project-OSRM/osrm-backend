@@ -164,6 +164,8 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
             return std::make_pair(INVALID_EDGE_WEIGHT, 0);
         }
 
+        return std::make_pair(round(local_upper_bound / 10.), 0);
+        /*
         // Calculate exact distance in km.
         std::vector<NodeID> packed_path;
         super::RetrievePackedPathFromHeap(forward_heap, backward_heap, middle, packed_path);
@@ -212,6 +214,7 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
         }
 
         return std::make_pair(round(local_upper_bound / 10.), distance);
+        */
     }
 };
 
