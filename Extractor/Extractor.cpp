@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractionNode.h"
 #include "ExtractionWay.h"
 #include "ExtractorCallbacks.h"
+#include "ExtractorOptions.h"
 #include "RestrictionParser.h"
 #include "ScriptingEnvironment.h"
 
@@ -42,13 +43,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/make_unique.hpp"
 #include "../typedefs.h"
 
-#include <boost/program_options.hpp>
-
 #include <luabind/luabind.hpp>
 
-#include <tbb/task_scheduler_init.h>
-
 #include <osmium/io/any_input.hpp>
+
+#include <tbb/task_scheduler_init.h>
 
 #include <cstdlib>
 
@@ -58,11 +57,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <thread>
 #include <unordered_map>
 
-Extractor::Extractor() : requested_num_threads(0), file_has_pbf_format(false)
+namespace
 {
-}
-
-namespace {
 int lua_error_callback(lua_State *L) // This is so I can use my own function as an
 // exception handler, pcall_log()
 {
@@ -73,199 +69,66 @@ int lua_error_callback(lua_State *L) // This is so I can use my own function as 
 }
 }
 
-bool Extractor::ParseArguments(int argc, char *argv[])
-{
-    // declare a group of options that will be allowed only on command line
-    boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "config,c",
-        boost::program_options::value<boost::filesystem::path>(&config_file_path)
-            ->default_value("extractor.ini"),
-        "Path to a configuration file.");
-
-    // declare a group of options that will be allowed both on command line and in config file
-    boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()("profile,p",
-                                 boost::program_options::value<boost::filesystem::path>(
-                                     &profile_path)->default_value("profile.lua"),
-                                 "Path to LUA routing profile")(
-        "threads,t",
-        boost::program_options::value<unsigned int>(&requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
-        "Number of threads to use");
-
-    // hidden options, will be allowed both on command line and in config file, but will not be
-    // shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<boost::filesystem::path>(&input_path),
-        "Input file in .osm, .osm.bz2 or .osm.pbf format");
-
-    // positional option
-    boost::program_options::positional_options_description positional_options;
-    positional_options.add("input", 1);
-
-    // combine above options for parsing
-    boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
-
-    boost::program_options::options_description config_file_options;
-    config_file_options.add(config_options).add(hidden_options);
-
-    boost::program_options::options_description visible_options(
-        boost::filesystem::basename(argv[0]) + " <input.osm/.osm.bz2/.osm.pbf> [options]");
-    visible_options.add(generic_options).add(config_options);
-
-    // parse command line options
-    boost::program_options::variables_map option_variables;
-    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                      .options(cmdline_options)
-                                      .positional(positional_options)
-                                      .run(),
-                                  option_variables);
-
-    if (option_variables.count("version"))
-    {
-        SimpleLogger().Write() << g_GIT_DESCRIPTION;
-        return false;
-    }
-
-    if (option_variables.count("help"))
-    {
-        SimpleLogger().Write() << visible_options;
-        return false;
-    }
-
-    boost::program_options::notify(option_variables);
-
-    // parse config file
-    if (boost::filesystem::is_regular_file(config_file_path))
-    {
-        SimpleLogger().Write() << "Reading options from: " << config_file_path.string();
-        std::string ini_file_contents = ReadIniFileAndLowerContents(config_file_path);
-        std::stringstream config_stream(ini_file_contents);
-        boost::program_options::store(parse_config_file(config_stream, config_file_options),
-                                      option_variables);
-        boost::program_options::notify(option_variables);
-    }
-
-    if (!option_variables.count("input"))
-    {
-        SimpleLogger().Write() << visible_options;
-        return false;
-    }
-
-    return true;
-}
-
-void Extractor::GenerateOutputFilesNames()
-{
-    output_file_name = input_path.string();
-    restriction_file_name = input_path.string();
-    timestamp_file_name = input_path.string();
-    std::string::size_type pos = output_file_name.find(".osm.bz2");
-    if (pos == std::string::npos)
-    {
-        pos = output_file_name.find(".osm.pbf");
-        if (pos != std::string::npos)
-        {
-            file_has_pbf_format = true;
-        }
-        else
-        {
-            pos = output_file_name.find(".osm.xml");
-        }
-    }
-    if (pos == std::string::npos)
-    {
-        pos = output_file_name.find(".pbf");
-        if (pos != std::string::npos)
-        {
-            file_has_pbf_format = true;
-        }
-    }
-    if (pos == std::string::npos)
-    {
-        pos = output_file_name.find(".osm");
-        if (pos == std::string::npos)
-        {
-            output_file_name.append(".osrm");
-            restriction_file_name.append(".osrm.restrictions");
-            timestamp_file_name.append(".osrm.timestamp");
-        }
-        else
-        {
-            output_file_name.replace(pos, 5, ".osrm");
-            restriction_file_name.replace(pos, 5, ".osrm.restrictions");
-            timestamp_file_name.replace(pos, 5, ".osrm.timestamp");
-        }
-    }
-    else
-    {
-        output_file_name.replace(pos, 8, ".osrm");
-        restriction_file_name.replace(pos, 8, ".osrm.restrictions");
-        timestamp_file_name.replace(pos, 8, ".osrm.timestamp");
-    }
-}
-
 int Extractor::Run(int argc, char *argv[])
 {
+    ExtractorConfig extractor_config;
+
     try
     {
         LogPolicy::GetInstance().Unmute();
-
         TIMER_START(extracting);
 
-        if (!ParseArguments(argc, argv))
+        if (!ExtractorOptions::ParseArguments(argc, argv, extractor_config))
+        {
             return 0;
+        }
+        ExtractorOptions::GenerateOutputFilesNames(extractor_config);
 
-        if (1 > requested_num_threads)
+        if (1 > extractor_config.requested_num_threads)
         {
             SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
             return 1;
         }
 
-        if (!boost::filesystem::is_regular_file(input_path))
+        if (!boost::filesystem::is_regular_file(extractor_config.input_path))
         {
-            SimpleLogger().Write(logWARNING) << "Input file " << input_path.string()
-                                             << " not found!";
+            SimpleLogger().Write(logWARNING)
+                << "Input file " << extractor_config.input_path.string() << " not found!";
             return 1;
         }
 
-        if (!boost::filesystem::is_regular_file(profile_path))
+        if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
         {
-            SimpleLogger().Write(logWARNING) << "Profile " << profile_path.string()
+            SimpleLogger().Write(logWARNING) << "Profile " << extractor_config.profile_path.string()
                                              << " not found!";
             return 1;
         }
 
         const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
 
-        SimpleLogger().Write() << "Input file: " << input_path.filename().string();
-        SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
-        SimpleLogger().Write() << "Threads: " << requested_num_threads;
-        if (recommended_num_threads != requested_num_threads)
+        SimpleLogger().Write() << "Input file: " << extractor_config.input_path.filename().string();
+        SimpleLogger().Write() << "Profile: " << extractor_config.profile_path.filename().string();
+        SimpleLogger().Write() << "Threads: " << extractor_config.requested_num_threads;
+        if (recommended_num_threads != extractor_config.requested_num_threads)
         {
             SimpleLogger().Write(logWARNING) << "The recommended number of threads is "
                                              << recommended_num_threads
                                              << "! This setting may have performance side-effects.";
         }
 
-        tbb::task_scheduler_init init(requested_num_threads);
+        tbb::task_scheduler_init init(extractor_config.requested_num_threads);
 
         /*** Setup Scripting Environment ***/
-        ScriptingEnvironment scripting_environment(profile_path.string().c_str());
-
-        GenerateOutputFilesNames();
+        ScriptingEnvironment scripting_environment(extractor_config.profile_path.string().c_str());
 
         std::unordered_map<std::string, NodeID> string_map;
         ExtractionContainers extraction_containers;
 
         string_map[""] = 0;
-        auto extractor_callbacks = osrm::make_unique<ExtractorCallbacks>(extraction_containers, string_map);
+        auto extractor_callbacks =
+            osrm::make_unique<ExtractorCallbacks>(extraction_containers, string_map);
 
-        osmium::io::File infile(input_path.string());
+        osmium::io::File infile(extractor_config.input_path.string());
         osmium::io::Reader reader(infile);
         osmium::io::Header header = reader.header();
 
@@ -292,7 +155,7 @@ int Extractor::Run(int argc, char *argv[])
         }
         SimpleLogger().Write() << "timestamp: " << timestamp;
 
-        boost::filesystem::ofstream timestamp_out(timestamp_file_name);
+        boost::filesystem::ofstream timestamp_out(extractor_config.timestamp_file_name);
         timestamp_out.write(timestamp.c_str(), timestamp.length());
         timestamp_out.close();
 
@@ -313,24 +176,21 @@ int Extractor::Run(int argc, char *argv[])
                 case osmium::item_type::node:
                     ++number_of_nodes;
                     result_node.Clear();
-                    luabind::call_function<void>(
-                        lua_state,
-                        "node_function",
-                        boost::cref(static_cast<osmium::Node &>(entity)),
-                        boost::ref(result_node));
+                    luabind::call_function<void>(lua_state,
+                                                 "node_function",
+                                                 boost::cref(static_cast<osmium::Node &>(entity)),
+                                                 boost::ref(result_node));
                     extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
                                                      result_node);
                     break;
                 case osmium::item_type::way:
                     ++number_of_ways;
                     result_way.Clear();
-                    luabind::call_function<void>(
-                        lua_state,
-                        "way_function",
-                        boost::cref(static_cast<osmium::Way &>(entity)),
-                        boost::ref(result_way));
-                    extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity),
-                                                    result_way);
+                    luabind::call_function<void>(lua_state,
+                                                 "way_function",
+                                                 boost::cref(static_cast<osmium::Way &>(entity)),
+                                                 boost::ref(result_way));
+                    extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity), result_way);
                     break;
                 case osmium::item_type::relation:
                     ++number_of_relations;
@@ -345,7 +205,9 @@ int Extractor::Run(int argc, char *argv[])
         }
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
-        SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, " << number_of_ways << " ways, and " << number_of_relations << " relations";
+        SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, "
+                               << number_of_ways << " ways, and " << number_of_relations
+                               << " relations";
 
         extractor_callbacks.reset();
 
@@ -355,12 +217,14 @@ int Extractor::Run(int argc, char *argv[])
             return 1;
         }
 
-        extraction_containers.PrepareData(output_file_name, restriction_file_name);
+        extraction_containers.PrepareData(extractor_config.output_file_name,
+                                          extractor_config.restriction_file_name);
 
         TIMER_STOP(extracting);
         SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: "
-                               << "./osrm-prepare " << output_file_name << std::endl;
+                               << "./osrm-prepare " << extractor_config.output_file_name
+                               << std::endl;
     }
     catch (boost::program_options::too_many_positional_options_error &)
     {
