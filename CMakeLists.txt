@@ -52,7 +52,7 @@ configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
 )
 file(GLOB ExtractorGlob Extractor/*.cpp)
-file(GLOB ImporterGlob DataStructures/Import*.cpp)
+file(GLOB ImporterGlob DataStructures/ImportEdge.cpp DataStructures/ExternalMemoryNode.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT Util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT DataStructures/phantom_node.cpp)
