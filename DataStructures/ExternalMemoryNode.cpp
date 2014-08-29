@@ -52,3 +52,10 @@ ExternalMemoryNode ExternalMemoryNode::max_value()
                               false,
                               false);
 }
+
+bool ExternalMemoryNodeSTXXLCompare::operator()(const ExternalMemoryNode &left, const ExternalMemoryNode &right) const
+{
+    return left.node_id < right.node_id;
+}
+ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::max_value() { return ExternalMemoryNode::max_value(); }
+ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::min_value() { return ExternalMemoryNode::min_value(); }

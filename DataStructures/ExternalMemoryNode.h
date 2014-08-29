@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef IMPORTNODE_H_
-#define IMPORTNODE_H_
+#ifndef EXTERNAL_MEMORY_NODE_H__
+#define EXTERNAL_MEMORY_NODE_H__
 
 #include "QueryNode.h"
 
@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct ExternalMemoryNode : NodeInfo
 {
-    ExternalMemoryNode(int lat, int lon, unsigned int id, bool bollard, bool traffic_light);
+    ExternalMemoryNode(int lat, int lon, NodeID id, bool bollard, bool traffic_light);
 
     ExternalMemoryNode();
 
@@ -46,4 +46,12 @@ struct ExternalMemoryNode : NodeInfo
     bool trafficLight;
 };
 
-#endif /* IMPORTNODE_H_ */
+struct ExternalMemoryNodeSTXXLCompare
+{
+    using value_type = ExternalMemoryNode;
+    bool operator()(const ExternalMemoryNode &left, const ExternalMemoryNode &right) const;
+    value_type max_value();
+    value_type min_value();
+};
+
+#endif /* EXTERNAL_MEMORY_NODE_H__ */

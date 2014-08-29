@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "InternalExtractorEdge.h"
 #include "ExtractorStructs.h"
+#include "../DataStructures/ExternalMemoryNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../Util/FingerPrint.h"
 

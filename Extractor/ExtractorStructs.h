@@ -89,15 +89,4 @@ struct Cmp
     value_type min_value() { return 0x0; }
 };
 
-struct CmpNodeByID
-{
-    using value_type = ExternalMemoryNode;
-    bool operator()(const ExternalMemoryNode &left, const ExternalMemoryNode &right) const
-    {
-        return left.node_id < right.node_id;
-    }
-    value_type max_value() { return ExternalMemoryNode::max_value(); }
-    value_type min_value() { return ExternalMemoryNode::min_value(); }
-};
-
 #endif /* EXTRACTORSTRUCTS_H_ */

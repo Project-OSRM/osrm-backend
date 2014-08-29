@@ -82,7 +82,10 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
         TIMER_START(sorting_nodes);
-        stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), CmpNodeByID(), stxxl_memory);
+        stxxl::sort(all_nodes_list.begin(),
+                    all_nodes_list.end(),
+                    ExternalMemoryNodeSTXXLCompare(),
+                    stxxl_memory);
         TIMER_STOP(sorting_nodes);
         std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
 
