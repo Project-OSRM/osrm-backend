@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GRAPHLOADER_H
 
 #include "OSRMException.h"
-#include "../DataStructures/ImportNode.h"
+#include "../DataStructures/ExternalMemoryNode.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"

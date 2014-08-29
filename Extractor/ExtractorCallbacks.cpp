@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractionNode.h"
 #include "ExtractionWay.h"
 
+#include "../DataStructures/ExternalMemoryNode.h"
 #include "../DataStructures/Restriction.h"
-#include "../DataStructures/ImportNode.h"
 #include "../Util/container.hpp"
 #include "../Util/simple_logger.hpp"
 

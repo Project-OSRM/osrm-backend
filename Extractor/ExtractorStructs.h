@@ -28,22 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTORSTRUCTS_H_
 #define EXTRACTORSTRUCTS_H_
 
-#include "../DataStructures/HashTable.h"
-#include "../DataStructures/ImportNode.h"
+#include "../DataStructures/ExternalMemoryNode.h"
 #include "../typedefs.h"
 
 #include <limits>
 #include <string>
-
-struct ExtractorRelation
-{
-    ExtractorRelation() : type(unknown) {}
-    enum
-    { unknown = 0,
-      ferry,
-      turnRestriction } type;
-    HashTable<std::string, std::string> keyVals;
-};
 
 struct WayIDStartAndEndEdge
 {

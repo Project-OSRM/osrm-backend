@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTION_WAY_H
 #define EXTRACTION_WAY_H
 
-#include "../DataStructures/HashTable.h"
 #include "../DataStructures/TravelMode.h"
 #include "../typedefs.h"
 

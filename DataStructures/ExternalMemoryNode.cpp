@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "ImportNode.h"
+#include "ExternalMemoryNode.h"
 
 #include <limits>
 
@@ -51,14 +51,4 @@ ExternalMemoryNode ExternalMemoryNode::max_value()
                               std::numeric_limits<unsigned>::max(),
                               false,
                               false);
-}
-
-void ImportNode::Clear()
-{
-    keyVals.Clear();
-    lat = 0;
-    lon = 0;
-    node_id = 0;
-    bollard = false;
-    trafficLight = false;
 }

@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define IMPORTNODE_H_
 
 #include "QueryNode.h"
-#include "../DataStructures/HashTable.h"
 
 #include <string>
 
@@ -45,13 +44,6 @@ struct ExternalMemoryNode : NodeInfo
 
     bool bollard;
     bool trafficLight;
-};
-
-struct ImportNode : public ExternalMemoryNode
-{
-    HashTable<std::string, std::string> keyVals;
-
-    inline void Clear();
 };
 
 #endif /* IMPORTNODE_H_ */
