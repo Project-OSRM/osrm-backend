@@ -62,6 +62,7 @@ Extractor::Extractor() : requested_num_threads(0), file_has_pbf_format(false)
 {
 }
 
+namespace {
 int lua_error_callback(lua_State *L) // This is so I can use my own function as an
 // exception handler, pcall_log()
 {
@@ -69,6 +70,7 @@ int lua_error_callback(lua_State *L) // This is so I can use my own function as 
     std::ostringstream error_stream;
     error_stream << error_msg;
     throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
+}
 }
 
 bool Extractor::ParseArguments(int argc, char *argv[])
