@@ -43,7 +43,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 // generate boost::program_options object for the routing part
+<<<<<<< HEAD
 bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &paths)
+=======
+bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &paths, bool & springclean)
+>>>>>>> remove implicitly defined inline keywords from header-implemented functions in Util/ headers
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");

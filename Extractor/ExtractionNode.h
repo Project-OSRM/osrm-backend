@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTION_NODE_H__
-#define EXTRACTION_NODE_H__
+#ifndef EXTRACTION_NODE_H
+#define EXTRACTION_NODE_H
 
 struct ExtractionNode
 {
@@ -38,5 +38,4 @@ struct ExtractionNode
     bool traffic_lights;
     bool barrier;
 };
-
-#endif
+#endif // EXTRACTION_NODE_H

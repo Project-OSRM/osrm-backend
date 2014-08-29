@@ -25,25 +25,48 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INI_FILE_UTIL_H
-#define INI_FILE_UTIL_H
+#ifndef RANGE_HPP_
+#define RANGE_HPP_
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/regex.hpp>
-
-#include <regex>
-#include <string>
-
-// support old capitalized option names by down-casing them with a regex replace
-std::string ReadIniFileAndLowerContents(const boost::filesystem::path &path)
+namespace osrm
 {
-    boost::filesystem::fstream config_stream(path);
-    std::string ini_file_content((std::istreambuf_iterator<char>(config_stream)),
-                          std::istreambuf_iterator<char>());
-    boost::regex regex( "^([^=]*)" ); //match from start of line to '='
-    std::string format( "\\L$1\\E" ); //replace with downcased substring
-    return boost::regex_replace( ini_file_content, regex, format );
+namespace util
+{
+template <typename Iterator> class Range
+{
+  public:
+    Range(Iterator begin, Iterator end) : begin_(begin), end_(end) {}
+
+    Iterator begin() const { return begin_; }
+    Iterator end() const { return end_; }
+
+  private:
+    Iterator begin_;
+    Iterator end_;
+};
+
+// Convenience functions for template parameter inference,
+// akin to std::make_pair.
+
+template <typename Iterator> Range<Iterator> range(Iterator begin, Iterator end)
+{
+    return Range<Iterator>(begin, end);
 }
 
-#endif // INI_FILE_UTIL_H
+template <typename Reversable>
+Range<typename Reversable::reverse_iterator> reverse(Reversable *reversable)
+{
+    return Range<typename Reversable::reverse_iterator>(reversable->rbegin(), reversable->rend());
+}
+
+template <typename ConstReversable>
+Range<typename ConstReversable::const_reverse_iterator>
+const_reverse(const ConstReversable *const_reversable)
+{
+    return Range<typename ConstReversable::const_reverse_iterator>(const_reversable->crbegin(),
+                                                                   const_reversable->crend());
+}
+}
+}
+
+#endif // RANGE_HPP_
