@@ -80,7 +80,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     ShM<TravelMode, true>::vector m_travel_mode_list;
     ShM<char, true>::vector m_names_char_list;
     ShM<unsigned, true>::vector m_name_begin_indices;
-    ShM<bool, true>::vector m_egde_is_compressed;
+    ShM<bool, true>::vector m_edge_is_compressed;
     ShM<unsigned, true>::vector m_geometry_indices;
     ShM<unsigned, true>::vector m_geometry_list;
 
@@ -200,10 +200,10 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     {
         unsigned *geometries_compressed_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, SharedDataLayout::GEOMETRIES_INDICATORS);
-        typename ShM<bool, true>::vector egde_is_compressed(
+        typename ShM<bool, true>::vector edge_is_compressed(
             geometries_compressed_ptr,
             data_layout->num_entries[SharedDataLayout::GEOMETRIES_INDICATORS]);
-        m_egde_is_compressed.swap(egde_is_compressed);
+        m_edge_is_compressed.swap(edge_is_compressed);
 
         unsigned *geometries_index_ptr =
             data_layout->GetBlockPtr<unsigned>(shared_memory, SharedDataLayout::GEOMETRIES_INDEX);
@@ -330,7 +330,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     virtual bool EdgeIsCompressed(const unsigned id) const final
     {
-        return m_egde_is_compressed.at(id);
+        return m_edge_is_compressed.at(id);
     }
 
     virtual void GetUncompressedGeometry(const unsigned id,

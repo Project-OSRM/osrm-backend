@@ -68,7 +68,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     ShM<TurnInstruction, false>::vector m_turn_instruction_list;
     ShM<TravelMode, false>::vector m_travel_mode_list;
     ShM<char, false>::vector m_names_char_list;
-    ShM<bool, false>::vector m_egde_is_compressed;
+    ShM<bool, false>::vector m_edge_is_compressed;
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
 
@@ -147,7 +147,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         m_name_ID_list.resize(number_of_edges);
         m_turn_instruction_list.resize(number_of_edges);
         m_travel_mode_list.resize(number_of_edges);
-        m_egde_is_compressed.resize(number_of_edges);
+        m_edge_is_compressed.resize(number_of_edges);
 
         unsigned compressed = 0;
 
@@ -159,8 +159,8 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
             m_travel_mode_list[i] = current_edge_data.travel_mode;
-            m_egde_is_compressed[i] = current_edge_data.compressed_geometry;
-            if (m_egde_is_compressed[i])
+            m_edge_is_compressed[i] = current_edge_data.compressed_geometry;
+            if (m_edge_is_compressed[i])
             {
                 ++compressed;
             }
@@ -291,7 +291,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         SimpleLogger().Write() << "loading graph data";
         AssertPathExists(hsgr_path);
         LoadGraph(hsgr_path);
-        SimpleLogger().Write() << "loading egde information";
+        SimpleLogger().Write() << "loading edge information";
         AssertPathExists(nodes_data_path);
         AssertPathExists(edges_data_path);
         LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
@@ -352,7 +352,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         return m_coordinate_list->at(id);
     };
 
-    bool EdgeIsCompressed(const unsigned id) const { return m_egde_is_compressed.at(id); }
+    bool EdgeIsCompressed(const unsigned id) const { return m_edge_is_compressed.at(id); }
 
     TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const final
     {
