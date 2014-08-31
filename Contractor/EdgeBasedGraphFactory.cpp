@@ -438,7 +438,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
 }
 
 /**
- * Writes the id of the edge in the edge expanded graph (into the egde in the node based graph)
+ * Writes the id of the edge in the edge expanded graph (into the edge in the node based graph)
  */
 void EdgeBasedGraphFactory::RenumberEdges()
 {
