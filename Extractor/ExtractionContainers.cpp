@@ -119,39 +119,39 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         while (way_start_and_end_iterator != way_start_end_id_list.end() &&
                restrictions_iterator != restrictions_list.end())
         {
-            if (way_start_and_end_iterator->wayID < restrictions_iterator->restriction.from.way)
+            if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.from.way)
             {
                 ++way_start_and_end_iterator;
                 continue;
             }
 
-            if (way_start_and_end_iterator->wayID > restrictions_iterator->restriction.from.way)
+            if (way_start_and_end_iterator->way_id > restrictions_iterator->restriction.from.way)
             {
                 ++restrictions_iterator;
                 continue;
             }
 
-            BOOST_ASSERT(way_start_and_end_iterator->wayID == restrictions_iterator->restriction.from.way);
+            BOOST_ASSERT(way_start_and_end_iterator->way_id == restrictions_iterator->restriction.from.way);
             const NodeID via_node_id = restrictions_iterator->restriction.via.node;
 
-            if (way_start_and_end_iterator->firstStart == via_node_id)
+            if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
                 restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->firstTarget;
+                    way_start_and_end_iterator->first_segment_source_id;
             }
-            else if (way_start_and_end_iterator->firstTarget == via_node_id)
+            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
                 restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->firstStart;
+                    way_start_and_end_iterator->first_segment_source_id;
             }
-            else if (way_start_and_end_iterator->lastStart == via_node_id)
+            else if (way_start_and_end_iterator->last_segment_source_id == via_node_id)
             {
                 restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->lastTarget;
+                    way_start_and_end_iterator->last_segment_target_id;
             }
-            else if (way_start_and_end_iterator->lastTarget == via_node_id)
+            else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
             {
-                restrictions_iterator->restriction.from.node = way_start_and_end_iterator->lastStart;
+                restrictions_iterator->restriction.from.node = way_start_and_end_iterator->last_segment_source_id;
             }
             ++restrictions_iterator;
         }
@@ -176,32 +176,32 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         while (way_start_and_end_iterator != way_start_end_id_list.end() &&
                restrictions_iterator != restrictions_list.end())
         {
-            if (way_start_and_end_iterator->wayID < restrictions_iterator->restriction.to.way)
+            if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.to.way)
             {
                 ++way_start_and_end_iterator;
                 continue;
             }
-            if (way_start_and_end_iterator->wayID > restrictions_iterator->restriction.to.way)
+            if (way_start_and_end_iterator->way_id > restrictions_iterator->restriction.to.way)
             {
                 ++restrictions_iterator;
                 continue;
             }
             NodeID via_node_id = restrictions_iterator->restriction.via.node;
-            if (way_start_and_end_iterator->lastStart == via_node_id)
+            if (way_start_and_end_iterator->last_segment_source_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->lastTarget;
+                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->last_segment_target_id;
             }
-            else if (way_start_and_end_iterator->lastTarget == via_node_id)
+            else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->lastStart;
+                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->last_segment_source_id;
             }
-            else if (way_start_and_end_iterator->firstStart == via_node_id)
+            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->firstTarget;
+                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_source_id;
             }
-            else if (way_start_and_end_iterator->firstTarget == via_node_id)
+            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->firstStart;
+                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_source_id;
             }
 
             if (std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.from.node &&

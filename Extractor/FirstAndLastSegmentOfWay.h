@@ -36,37 +36,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct FirstAndLastSegmentOfWay
 {
-    EdgeID wayID;
-    NodeID firstStart;
-    NodeID firstTarget;
-    NodeID lastStart;
-    NodeID lastTarget;
+    EdgeID way_id;
+    NodeID first_segment_source_id;
+    NodeID first_segment_target_id;
+    NodeID last_segment_source_id;
+    NodeID last_segment_target_id;
     FirstAndLastSegmentOfWay()
-        : wayID(std::numeric_limits<unsigned>::max()), firstStart(std::numeric_limits<unsigned>::max()), firstTarget(std::numeric_limits<unsigned>::max()), lastStart(std::numeric_limits<unsigned>::max()),
-          lastTarget(std::numeric_limits<unsigned>::max())
+        : way_id(std::numeric_limits<EdgeID>::max()),
+          first_segment_source_id(std::numeric_limits<NodeID>::max()),
+          first_segment_target_id(std::numeric_limits<NodeID>::max()),
+          last_segment_source_id(std::numeric_limits<NodeID>::max()),
+          last_segment_target_id(std::numeric_limits<NodeID>::max())
     {
     }
 
-    FirstAndLastSegmentOfWay(unsigned w, NodeID fs, NodeID ft, NodeID ls, NodeID lt)
-        : wayID(w), firstStart(fs), firstTarget(ft), lastStart(ls), lastTarget(lt)
+    FirstAndLastSegmentOfWay(EdgeID w, NodeID fs, NodeID ft, NodeID ls, NodeID lt)
+        : way_id(w), first_segment_source_id(fs), first_segment_target_id(ft),
+          last_segment_source_id(ls), last_segment_target_id(lt)
     {
     }
 
     static FirstAndLastSegmentOfWay min_value()
     {
-        return FirstAndLastSegmentOfWay((std::numeric_limits<unsigned>::min)(),
-                                    (std::numeric_limits<unsigned>::min)(),
-                                    (std::numeric_limits<unsigned>::min)(),
-                                    (std::numeric_limits<unsigned>::min)(),
-                                    (std::numeric_limits<unsigned>::min)());
+        return {std::numeric_limits<EdgeID>::min(),
+                std::numeric_limits<NodeID>::min(),
+                std::numeric_limits<NodeID>::min(),
+                std::numeric_limits<NodeID>::min(),
+                std::numeric_limits<NodeID>::min()};
     }
     static FirstAndLastSegmentOfWay max_value()
     {
-        return FirstAndLastSegmentOfWay((std::numeric_limits<unsigned>::max)(),
-                                    (std::numeric_limits<unsigned>::max)(),
-                                    (std::numeric_limits<unsigned>::max)(),
-                                    (std::numeric_limits<unsigned>::max)(),
-                                    (std::numeric_limits<unsigned>::max)());
+        return {std::numeric_limits<EdgeID>::max(),
+                std::numeric_limits<NodeID>::max(),
+                std::numeric_limits<NodeID>::max(),
+                std::numeric_limits<NodeID>::max(),
+                std::numeric_limits<NodeID>::max()};
     }
 };
 
@@ -75,7 +79,7 @@ struct FirstAndLastSegmentOfWayStxxlCompare
     using value_type = FirstAndLastSegmentOfWay;
     bool operator()(const FirstAndLastSegmentOfWay &a, const FirstAndLastSegmentOfWay &b) const
     {
-        return a.wayID < b.wayID;
+        return a.way_id < b.way_id;
     }
     value_type max_value() { return FirstAndLastSegmentOfWay::max_value(); }
     value_type min_value() { return FirstAndLastSegmentOfWay::min_value(); }
