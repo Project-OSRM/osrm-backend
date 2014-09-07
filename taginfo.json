@@ -12,19 +12,22 @@
     "tags": [
         {
             "key": "highway",
-            "description": "Type of road."
+            "description": "Type of road.",
+            "object_types": [ "way" ]
         },
         {
             "key": "service",
             "value": "parking_aisle",
-            "description": ""
+            "object_types": [ "way" ]
         },
         {
-            "key": "oneway"
+            "key": "oneway",
+            "object_types": [ "way" ]
         },
         {
             "key": "area",
-            "value": "yes", 
+            "value": "yes",
+            "object_types": [ "way" ],
             "description": "Roads with area=yes are ignored by default."
         },
         {
@@ -36,38 +39,46 @@
             "description": "This is used by HOT."
         },
         {
-            "key": "access"
+            "key": "access",
+            "object_types": [ "way" ]
         },
         {
             "key": "barrier"
         },
         {
-            "key": "maxspeed"
+            "key": "maxspeed",
+            "object_types": [ "way" ]
         },
         {
-            "key": "maxspeed:forward"
+            "key": "maxspeed:forward",
+            "object_types": [ "way" ]
         },
         {
-            "key": "maxspeed:backward"
+            "key": "maxspeed:backward",
+            "object_types": [ "way" ]
         },
         {
             "key": "duration"
         },
         {
             "key": "name",
+            "object_types": [ "way" ],
             "description": "Name of road for navigation instructions."
         },
         {
             "key": "ref",
+            "object_types": [ "way" ],
             "description": "Ref of road for navigation instructions, overrides name."
         },
         {
             "key": "junction",
+            "object_types": [ "way" ],
             "value": "roundabout"
         },
         {
             "key": "type",
-            "value": "restriction"
+            "value": "restriction",
+            "object_types": [ "relation" ]
         }
     ]
 }
