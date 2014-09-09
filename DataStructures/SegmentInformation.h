@@ -73,6 +73,8 @@ struct SegmentInformation
           necessary(turn_instruction != TurnInstruction::NoTurn), is_via_location(false)
     {
     }
+
+    SegmentInformation() = default;
 };
 
 #endif /* SEGMENT_INFORMATION_H */
