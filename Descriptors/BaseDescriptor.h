@@ -28,12 +28,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASE_DESCRIPTOR_H
 #define BASE_DESCRIPTOR_H
 
+#include "../typedefs.h"
+
+#include "DescriptionFactory.h"
+#include "../Algorithms/ObjectToBase64.h"
+#include "../Algorithms/ExtractRouteNames.h"
+#include "../DataStructures/Range.h"
+#include "../DataStructures/SegmentInformation.h"
+#include "../DataStructures/TurnInstructions.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
-#include "../typedefs.h"
+#include "../Util/Azimuth.h"
+#include "../Util/StringUtil.h"
+#include "../Util/TimingUtil.h"
 
 #include <osrm/Reply.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -50,12 +61,164 @@ struct DescriptorConfig
 
 template <class DataFacadeT> class BaseDescriptor
 {
-  public:
-    BaseDescriptor() {}
-    // Maybe someone can explain the pure virtual destructor thing to me (dennis)
+public:
+    DataFacadeT *facade;
+    DescriptorConfig config;
+    DescriptionFactory description_factory, alternate_description_factory;
+    FixedPointCoordinate current;
+    unsigned entered_restricted_area_count;
+    struct RoundAbout
+    {
+        RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
+        int start_index;
+        unsigned name_id;
+        int leave_at_exit;
+    } round_about;
+
+    struct Segment
+    {
+        Segment() : name_id(INVALID_NAMEID), length(-1), position(0) {}
+        Segment(unsigned n, int l, unsigned p) : name_id(n), length(l), position(p) {}
+        unsigned name_id;
+        int length;
+        unsigned position;
+    };
+    std::vector<Segment> shortest_path_segments, alternative_path_segments;
+    ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
+
+    BaseDescriptor(DataFacadeT *facade) : facade(facade), entered_restricted_area_count(0) {}
+
+    void SetConfig(const DescriptorConfig &c) { config = c; }
+
+    unsigned DescribeLeg(const std::vector<PathData> &route_leg,
+                         const PhantomNodes &leg_phantoms,
+                         const bool target_traversed_in_reverse,
+                         const bool is_via_leg)
+    {
+        unsigned added_element_count = 0;
+        // Get all the coordinates for the computed route
+        FixedPointCoordinate current_coordinate;
+        for (const PathData &path_data : route_leg)
+        {
+            current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+            description_factory.AppendSegment(current_coordinate, path_data);
+            ++added_element_count;
+        }
+        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
+        ++added_element_count;
+        BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
+        return added_element_count;
+    }
+
+    struct Instruction
+    {
+        Instruction() : instructionId(""), streetName(""), length(0),
+            position(0), time(0), lengthStr(""), earthDirection(""), azimuth(0),
+            travelMode(0)
+            {}
+        Instruction(const std::string &i, const std::string &s, const int l,
+            const int p, const int t, const std::string &ls, const std::string &e,
+            const int a, TravelMode const tm) : instructionId(i), streetName(s), length(l),
+            position(p), time(t), lengthStr(ls), earthDirection(e), azimuth(a), travelMode(tm)
+            {}
+        std::string instructionId;
+        std::string streetName;
+        int length;
+        int position;
+        int time;
+        std::string lengthStr;
+        std::string earthDirection;
+        int azimuth;
+        TravelMode travelMode;
+    };
+
+
+
+    inline void BuildTextualDescription(DescriptionFactory &description_factory,
+                                        std::vector<Instruction> &instructions,
+                                        const int route_length,
+                                        std::vector<Segment> &route_segments_list)
+    {
+        // Segment information has following format:
+        //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]
+        unsigned necessary_segments_running_index = 0;
+        round_about.leave_at_exit = 0;
+        round_about.name_id = 0;
+        std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
+
+        // Fetch data from Factory and generate a string from it.
+        Instruction instruction;
+
+        for (const SegmentInformation &segment : description_factory.path_description)
+        {
+            TurnInstruction current_instruction = segment.turn_instruction;
+            entered_restricted_area_count += (current_instruction != segment.turn_instruction);
+            if (TurnInstructionsClass::TurnIsNecessary(current_instruction))
+            {
+                if (TurnInstruction::EnterRoundAbout == current_instruction)
+                {
+                    round_about.name_id = segment.name_id;
+                    round_about.start_index = necessary_segments_running_index;
+                }
+                else
+                {
+                    std::string current_turn_instruction;
+                    if (TurnInstruction::LeaveRoundAbout == current_instruction)
+                    {
+                        temp_instruction =
+                            IntToString(as_integer(TurnInstruction::EnterRoundAbout));
+                        current_turn_instruction += temp_instruction;
+                        current_turn_instruction += "-";
+                        temp_instruction = IntToString(round_about.leave_at_exit + 1);
+                        current_turn_instruction += temp_instruction;
+                        round_about.leave_at_exit = 0;
+                    }
+                    else
+                    {
+                        temp_instruction = IntToString(as_integer(current_instruction));
+                        current_turn_instruction += temp_instruction;
+                    }
+
+                    instruction.instructionId = current_turn_instruction;
+                    instruction.streetName = facade->GetEscapedNameForNameID(segment.name_id);
+                    instruction.length = std::round(segment.length);
+                    instruction.position = necessary_segments_running_index;
+                    instruction.time = round(segment.duration / 10);
+                    instruction.lengthStr = UintToString(static_cast<int>(segment.length)) + "m";
+                    const double bearing_value = (segment.bearing / 10.);
+                    instruction.earthDirection = Azimuth::Get(bearing_value);
+                    instruction.azimuth = static_cast<unsigned>(round(bearing_value));
+                    instruction.travelMode = segment.travel_mode;
+
+                    route_segments_list.emplace_back(
+                        segment.name_id, static_cast<int>(segment.length), static_cast<unsigned>(route_segments_list.size()));
+                    instructions.push_back(instruction);
+                }
+            }
+            else if (TurnInstruction::StayOnRoundAbout == current_instruction)
+            {
+                ++round_about.leave_at_exit;
+            }
+            if (segment.necessary)
+            {
+                ++necessary_segments_running_index;
+            }
+        }
+
+        temp_instruction = IntToString(as_integer(TurnInstruction::ReachedYourDestination));
+        instruction.instructionId = temp_instruction;
+        instruction.streetName = "";
+        instruction.length = 0;
+        instruction.position = necessary_segments_running_index - 1;
+        instruction.time = 0;
+        instruction.lengthStr = "0m";
+        instruction.earthDirection = Azimuth::Get(0.0);
+        instruction.azimuth = 0.;
+        instructions.push_back(instruction);
+    }
+
     virtual ~BaseDescriptor() {}
     virtual void Run(const RawRouteData &raw_route, http::Reply &reply) = 0;
-    virtual void SetConfig(const DescriptorConfig &config) = 0;
 };
 
 #endif // BASE_DESCRIPTOR_H

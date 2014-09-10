@@ -81,6 +81,8 @@ class DescriptionFactory
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
     void SetEndSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse, const bool is_via_location = false);
+    std::string AppendEncodedPolylineStringEncoded();
+    std::vector<std::string> AppendEncodedPolylineStringUnencoded();
     JSON::Value AppendEncodedPolylineString(const bool return_encoded);
     std::vector<unsigned> const & GetViaIndices() const;
 

@@ -11,6 +11,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 
+
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/Descriptors/*.proto")
+PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
+add_library(messages STATIC ${ProtoSources} ${ProtoHeaders})
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
@@ -52,7 +59,9 @@ configure_file(
 )
 file(GLOB ExtractorGlob Extractor/*.cpp)
 file(GLOB ImporterGlob DataStructures/Import*.cpp)
-add_library(IMPORT STATIC ${ImporterGlob})
+
+include_directories(${CMAKE_BINARY_DIR})
+add_library(IMPORT STATIC ${ImporterGlob} ${ProtoHeaders})
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources})
 
@@ -200,7 +209,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(OSRM ${Boost_LIBRARIES} COORDLIB)
 target_link_libraries(osrm-extract ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB IMPORT)
 target_link_libraries(osrm-prepare ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB IMPORT)
-target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM FINGERPRINT GITDESCRIPTION)
+target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM FINGERPRINT GITDESCRIPTION messages)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
 target_link_libraries(datastructure-tests ${Boost_LIBRARIES} COORDLIB)
 target_link_libraries(rtree-bench ${Boost_LIBRARIES} COORDLIB)
@@ -270,6 +279,9 @@ find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${PROTOBUF_LIBRARY})
 target_link_libraries(osrm-prepare ${PROTOBUF_LIBRARY})
+target_link_libraries(osrm-routed ${PROTOBUF_LIBRARY})
+
+
 
 find_package(BZip2 REQUIRED)
 include_directories(${BZIP_INCLUDE_DIRS})

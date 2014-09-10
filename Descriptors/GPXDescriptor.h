@@ -57,9 +57,9 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
     }
 
   public:
-    GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
+    GPXDescriptor(DataFacadeT *facade) : BaseDescriptor<DataFacadeT>(facade) {}
 
-    void SetConfig(const DescriptorConfig &c) final { config = c; }
+    void SetConfig(const DescriptorConfig &c) { config = c; }
 
     // TODO: reorder parameters
     void Run(const RawRouteData &raw_route, http::Reply &reply) final

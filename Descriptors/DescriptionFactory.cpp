@@ -109,6 +109,17 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.travel_mode);
 }
 
+std::string DescriptionFactory::AppendEncodedPolylineStringEncoded()
+{
+    return polyline_compressor.printEncodedStr(path_description);
+}
+
+std::vector<std::string> DescriptionFactory::AppendEncodedPolylineStringUnencoded()
+{
+    return polyline_compressor.printUnencodedStr(path_description);
+}
+
+
 JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)
 {
     if (return_encoded)
