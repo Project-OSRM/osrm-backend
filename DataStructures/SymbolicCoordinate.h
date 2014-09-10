@@ -20,16 +20,17 @@
  * For PathSchematization this scaling is not really important (hence the name *symbolic* coordinate),
  * but it makes it easier to define size independent lengths.
  */
+static const unsigned INVALID_IDX = std::numeric_limits<unsigned>::max();
+
 struct SymbolicCoordinate
 {
     typedef double ScalarT;
-    static const unsigned INVALID_IDX = std::numeric_limits<unsigned>::max();
 
     SymbolicCoordinate()
     : x(0)
     , y(0)
-    , original_idx(std::numeric_limits<unsigned>::max())
-    , interval_id(std::numeric_limits<unsigned>::max())
+    , original_idx(INVALID_IDX)
+    , interval_id(INVALID_IDX)
     {
     }
 
