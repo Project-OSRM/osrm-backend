@@ -16,9 +16,9 @@ constexpr int32_t WORLD_MAX_LAT = 90*COORDINATE_PRECISION;
 constexpr int32_t WORLD_MIN_LON = -180*COORDINATE_PRECISION;
 constexpr int32_t WORLD_MAX_LON = 180*COORDINATE_PRECISION;
 
-typedef EdgeBasedNode RTreeLeaf;
-typedef std::shared_ptr<std::vector<FixedPointCoordinate>> FixedPointCoordinateListPtr;
-typedef StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false> BenchStaticRTree;
+using RTreeLeaf = EdgeBasedNode;
+using FixedPointCoordinateListPtr = std::shared_ptr<std::vector<FixedPointCoordinate>>;
+using BenchStaticRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>;
 
 FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path& nodes_file)
 {

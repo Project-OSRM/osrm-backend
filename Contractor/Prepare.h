@@ -18,9 +18,9 @@
 class Prepare
 {
   public:
-    typedef QueryEdge::EdgeData EdgeData;
-    typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
-    typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
+    using EdgeData = QueryEdge::EdgeData;
+    using InputEdge = DynamicGraph<EdgeData>::InputEdge;
+    using StaticEdge = StaticGraph<EdgeData>::InputEdge;
 
     explicit Prepare();
     Prepare(const Prepare &) = delete;

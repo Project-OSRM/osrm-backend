@@ -44,9 +44,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-typedef BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf RTreeLeaf;
-typedef StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;
-typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
+using RTreeLeaf = BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf;
+using RTreeNode = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode;
+using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -267,6 +267,8 @@ int main(const int argc, const char *argv[])
                                                 number_of_original_edges);
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_ID_LIST,
                                                   number_of_original_edges);
+        shared_layout_ptr->SetBlockSize<TravelMode>(SharedDataLayout::TRAVEL_MODE,
+                                                    number_of_original_edges);
         shared_layout_ptr->SetBlockSize<TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
                                                          number_of_original_edges);
         // note: there are 32 geometry indicators in one unsigned block
@@ -426,6 +428,10 @@ int main(const int argc, const char *argv[])
         unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
             shared_memory_ptr, SharedDataLayout::NAME_ID_LIST);
 
+        TravelMode *travel_mode_ptr =
+            shared_layout_ptr->GetBlockPtr<TravelMode, true>(
+                shared_memory_ptr, SharedDataLayout::TRAVEL_MODE);
+
         TurnInstruction *turn_instructions_ptr =
             shared_layout_ptr->GetBlockPtr<TurnInstruction, true>(
                 shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
@@ -439,6 +445,7 @@ int main(const int argc, const char *argv[])
             edges_input_stream.read((char *)&(current_edge_data), sizeof(OriginalEdgeData));
             via_node_ptr[i] = current_edge_data.via_node;
             name_id_ptr[i] = current_edge_data.name_id;
+            travel_mode_ptr[i] = current_edge_data.travel_mode;
             turn_instructions_ptr[i] = current_edge_data.turn_instruction;
 
             const unsigned bucket = i / 32;

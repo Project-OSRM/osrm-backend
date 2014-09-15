@@ -6,7 +6,7 @@ require 'sys/proctable'
 
 BUILD_FOLDER = 'build'
 DATA_FOLDER = 'sandbox'
-PROFILE = 'examples/postgis'
+PROFILE = 'bicycle'
 OSRM_PORT = 5000
 PROFILES_FOLDER = '../profiles'
 

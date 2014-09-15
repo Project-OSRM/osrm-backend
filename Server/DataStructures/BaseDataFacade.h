@@ -62,9 +62,9 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual NodeID GetTarget(const EdgeID e) const = 0;
 
-    virtual EdgeDataT &GetEdgeData(const EdgeID e) = 0;
+    // virtual EdgeDataT &GetEdgeData(const EdgeID e) = 0;
 
-    // virtual const EdgeDataT &GetEdgeData( const EdgeID e ) const = 0;
+    virtual const EdgeDataT &GetEdgeData(const EdgeID e) const = 0;
 
     virtual EdgeID BeginEdges(const NodeID n) const = 0;
 
@@ -92,6 +92,8 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
 
+    virtual TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
+
     virtual bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                                     FixedPointCoordinate &result,
                                                     const unsigned zoom_level = 18) = 0;
@@ -100,10 +102,11 @@ template <class EdgeDataT> class BaseDataFacade
                                               PhantomNode &resulting_phantom_node,
                                               const unsigned zoom_level) = 0;
 
-    virtual bool IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                              std::vector<PhantomNode> &resulting_phantom_node_vector,
-                                              const unsigned zoom_level,
-                                              const unsigned number_of_results) = 0;
+    virtual bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            std::vector<PhantomNode> &resulting_phantom_node_vector,
+                                            const unsigned zoom_level,
+                                            const unsigned number_of_results) = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 

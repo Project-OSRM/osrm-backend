@@ -13,23 +13,22 @@ struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
         : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID),
-          nameID(std::numeric_limits<unsigned>::max()), type(std::numeric_limits<short>::max()),
+          nameID(std::numeric_limits<unsigned>::max()),
           isAccessRestricted(false), shortcut(false), forward(false), backward(false),
-          roundabout(false), ignore_in_grid(false), contraFlow(false)
+          roundabout(false), ignore_in_grid(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
     int distance;
     unsigned edgeBasedNodeID;
     unsigned nameID;
-    short type;
     bool isAccessRestricted : 1;
     bool shortcut : 1;
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;
     bool ignore_in_grid : 1;
-    bool contraFlow : 1;
+    TravelMode travel_mode : 4;
 
     void SwapDirectionFlags()
     {
@@ -42,7 +41,7 @@ struct NodeBasedEdgeData
     {
         return (forward == other.forward) && (backward == other.backward) &&
                (nameID == other.nameID) && (ignore_in_grid == other.ignore_in_grid) &&
-               (contraFlow == other.contraFlow);
+               (travel_mode == other.travel_mode);
     }
 };
 
@@ -52,8 +51,8 @@ struct SimpleEdgeData
     EdgeWeight capacity;
 };
 
-typedef DynamicGraph<NodeBasedEdgeData> NodeBasedDynamicGraph;
-typedef DynamicGraph<SimpleEdgeData> SimpleNodeBasedDynamicGraph;
+using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
+using SimpleNodeBasedDynamicGraph = DynamicGraph<SimpleEdgeData>;
 
 // Factory method to create NodeBasedDynamicGraph from ImportEdges
 inline std::shared_ptr<NodeBasedDynamicGraph>
@@ -91,9 +90,9 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         edge.data.roundabout = import_edge.roundabout;
         edge.data.ignore_in_grid = import_edge.in_tiny_cc;
         edge.data.nameID = import_edge.name_id;
-        edge.data.type = import_edge.type;
         edge.data.isAccessRestricted = import_edge.access_restricted;
-        edge.data.contraFlow = import_edge.contra_flow;
+        edge.data.travel_mode = import_edge.travel_mode;
+
         edges_list.push_back(edge);
 
         if (!import_edge.is_split)

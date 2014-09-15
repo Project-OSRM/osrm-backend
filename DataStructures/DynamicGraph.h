@@ -43,10 +43,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename EdgeDataT> class DynamicGraph
 {
   public:
-    typedef EdgeDataT EdgeData;
-    typedef unsigned NodeIterator;
-    typedef unsigned EdgeIterator;
-    typedef osrm::range<EdgeIterator> EdgeRange;
+    using EdgeData = EdgeDataT;
+    using NodeIterator = unsigned;
+    using EdgeIterator = unsigned;
+    using EdgeRange = osrm::range<EdgeIterator>;
 
     class InputEdge
     {

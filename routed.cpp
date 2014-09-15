@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Library/OSRM.h"
-#include "Server/ServerFactory.h"
+#include "Server/Server.h"
 #include "Util/GitDescription.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
@@ -131,8 +131,8 @@ int main(int argc, const char *argv[])
 #endif
 
         OSRM osrm_lib(server_paths, use_shared_memory);
-        Server *routing_server =
-            ServerFactory::CreateServer(ip_address, ip_port, requested_thread_num);
+        auto routing_server =
+            Server::CreateServer(ip_address, ip_port, requested_thread_num);
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
@@ -181,7 +181,7 @@ int main(int argc, const char *argv[])
         }
 
         SimpleLogger().Write() << "freeing objects";
-        delete routing_server;
+        routing_server.reset();
         SimpleLogger().Write() << "shutdown completed";
     }
     catch (const std::exception &e)

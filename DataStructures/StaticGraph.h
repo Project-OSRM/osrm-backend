@@ -46,10 +46,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
   public:
-    typedef NodeID NodeIterator;
-    typedef NodeID EdgeIterator;
-    typedef EdgeDataT EdgeData;
-    typedef osrm::range<EdgeIterator> EdgeRange;
+    using NodeIterator = NodeID;
+    using EdgeIterator = NodeID;
+    using EdgeData = EdgeDataT;
+    using EdgeRange = osrm::range<EdgeIterator>;
 
     class InputEdge
     {

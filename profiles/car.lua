@@ -48,6 +48,11 @@ local max = math.max
 
 local speed_reduction = 0.8
 
+--modes
+local mode_normal = 1
+local mode_ferry = 2
+
+
 local function find_access_tag(source,access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
     local has_tag = source.tags:Holds(v)
@@ -169,8 +174,10 @@ function way_function (way)
     if durationIsValid(duration) then
       way.duration = max( parseDuration(duration), 1 );
     end
-    way.direction = Way.bidirectional
-    way.speed = route_speed
+    way.forward_mode = mode_ferry
+    way.backward_mode = mode_ferry
+    way.forward_speed = route_speed
+    way.backward_speed = route_speed
   end
 
   -- leave early of this way is not accessible
@@ -178,30 +185,34 @@ function way_function (way)
     return
   end
 
-  if way.speed == -1 then
+  if way.forward_speed == -1 then
     local highway_speed = speed_profile[highway]
     local max_speed = parse_maxspeed( way.tags:Find("maxspeed") )
     -- Set the avg speed on the way if it is accessible by road class
     if highway_speed then
       if max_speed > highway_speed then
-        way.speed = max_speed
+        way.forward_speed = max_speed
+        way.backward_speed = max_speed
         -- max_speed = math.huge
       else
-        way.speed = highway_speed
+        way.forward_speed = highway_speed
+        way.backward_speed = highway_speed
       end
     else
       -- Set the avg speed on ways that are marked accessible
       if access_tag_whitelist[access] then
-        way.speed = speed_profile["default"]
+        way.forward_speed = speed_profile["default"]
+        way.backward_speed = speed_profile["default"]
       end
     end
     if 0 == max_speed then
       max_speed = math.huge
     end
-    way.speed = min(way.speed, max_speed)
+    way.forward_speed = min(way.forward_speed, max_speed)
+    way.backward_speed = min(way.backward_speed, max_speed)
   end
 
-  if -1 == way.speed then
+  if -1 == way.forward_speed and -1 == way.backward_speed then
     return
   end
 
@@ -237,17 +248,16 @@ function way_function (way)
   end
 
   -- Set direction according to tags on way
-  way.direction = Way.bidirectional
   if obey_oneway  then
     if oneway == "-1" then
-      way.direction = Way.opposite
+      way.forward_mode = 0
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
-      way.direction = Way.oneway
+      way.backward_mode = 0
     end
   end
 
@@ -255,10 +265,10 @@ function way_function (way)
   local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
   local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
   if maxspeed_forward > 0 then
-    if Way.bidirectional == way.direction then
-      way.backward_speed = way.speed
+    if 0 ~= way.forward_mode and 0 ~= way.backward_mode then
+      way.backward_speed = way.forward_speed
     end
-    way.speed = maxspeed_forward
+    way.forward_speed = maxspeed_forward
   end
   if maxspeed_backward > 0 then
     way.backward_speed = maxspeed_backward
@@ -268,14 +278,12 @@ function way_function (way)
   if ignore_in_grid[highway] then
     way.ignore_in_grid = true
   end
-  way.type = 1
 
   -- scale speeds to get better avg driving times
-  way.speed = way.speed * speed_reduction
-  if maxspeed_backward > 0 then
+  way.forward_speed = way.forward_speed * speed_reduction
+  if way.backward_speed > 0 then
     way.backward_speed = way.backward_speed*speed_reduction
   end
-  return
 end
 
 -- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT

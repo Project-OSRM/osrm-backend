@@ -92,12 +92,11 @@ class Contractor
         ContractorHeapData(short h, bool t) : hop(h), target(t) {}
     };
 
-    typedef DynamicGraph<ContractorEdgeData> ContractorGraph;
-    //    typedef BinaryHeap< NodeID, NodeID, int, ContractorHeapData, ArrayStorage<NodeID, NodeID>
-    //    > ContractorHeap;
-    typedef BinaryHeap<NodeID, NodeID, int, ContractorHeapData, XORFastHashStorage<NodeID, NodeID>>
-    ContractorHeap;
-    typedef ContractorGraph::InputEdge ContractorEdge;
+    using ContractorGraph = DynamicGraph<ContractorEdgeData>;
+    //    using ContractorHeap = BinaryHeap<NodeID, NodeID, int, ContractorHeapData, ArrayStorage<NodeID, NodeID>
+    //    >;
+    using ContractorHeap = BinaryHeap<NodeID, NodeID, int, ContractorHeapData, XORFastHashStorage<NodeID, NodeID>>;
+    using ContractorEdge = ContractorGraph::InputEdge;
 
     struct ContractorThreadData
     {
@@ -151,7 +150,7 @@ class Contractor
         }
 
         int number_of_nodes;
-        typedef tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>> EnumerableThreadData;
+        using EnumerableThreadData = tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>>;
         EnumerableThreadData data;
     };
 

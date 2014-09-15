@@ -93,7 +93,7 @@ class EdgeBasedGraphFactory
     } speed_profile;
 
   private:
-    typedef NodeBasedDynamicGraph::EdgeData EdgeData;
+    using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
     unsigned m_number_of_edge_based_nodes;
 

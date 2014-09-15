@@ -43,9 +43,9 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
   public:
     explicit NearestPlugin(DataFacadeT *facade) : facade(facade), descriptor_string("nearest") {}
 
-    const std::string GetDescriptor() const { return descriptor_string; }
+    const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().isValid())

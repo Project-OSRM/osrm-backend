@@ -126,11 +126,10 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
 
     edge_list.reserve(m);
     EdgeWeight weight;
-    short type;
     NodeID nameID;
     int length;
-    bool is_roundabout, ignore_in_grid, is_access_restricted, is_contra_flow, is_split;
-
+    bool is_roundabout, ignore_in_grid, is_access_restricted, is_split;
+    TravelMode travel_mode;
     for (EdgeID i = 0; i < m; ++i)
     {
         input_stream.read((char *)&source, sizeof(unsigned));
@@ -138,12 +137,11 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&length, sizeof(int));
         input_stream.read((char *)&dir, sizeof(short));
         input_stream.read((char *)&weight, sizeof(int));
-        input_stream.read((char *)&type, sizeof(short));
         input_stream.read((char *)&nameID, sizeof(unsigned));
         input_stream.read((char *)&is_roundabout, sizeof(bool));
         input_stream.read((char *)&ignore_in_grid, sizeof(bool));
         input_stream.read((char *)&is_access_restricted, sizeof(bool));
-        input_stream.read((char *)&is_contra_flow, sizeof(bool));
+        input_stream.read((char *)&travel_mode, sizeof(TravelMode));
         input_stream.read((char *)&is_split, sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
@@ -160,8 +158,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         {
             forward = false;
         }
-
-        BOOST_ASSERT(type >= 0);
 
         // translate the external NodeIDs to internal IDs
         auto internal_id_iter = ext_to_int_id_map.find(source);
@@ -196,11 +192,10 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                weight,
                                forward,
                                backward,
-                               type,
                                is_roundabout,
                                ignore_in_grid,
                                is_access_restricted,
-                               is_contra_flow,
+                               travel_mode,
                                is_split);
     }
 
@@ -303,10 +298,10 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
 
     edge_list.reserve(m);
     EdgeWeight weight;
-    short type;
     NodeID nameID;
     int length;
-    bool is_roundabout, ignore_in_grid, is_access_restricted, is_contra_flow, is_split;
+    bool is_roundabout, ignore_in_grid, is_access_restricted, is_split;
+    TravelMode travel_mode;
 
     for (EdgeID i = 0; i < m; ++i)
     {
@@ -315,19 +310,16 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&length, sizeof(int));
         input_stream.read((char *)&dir, sizeof(short));
         input_stream.read((char *)&weight, sizeof(int));
-        input_stream.read((char *)&type, sizeof(short));
         input_stream.read((char *)&nameID, sizeof(unsigned));
         input_stream.read((char *)&is_roundabout, sizeof(bool));
         input_stream.read((char *)&ignore_in_grid, sizeof(bool));
         input_stream.read((char *)&is_access_restricted, sizeof(bool));
-        input_stream.read((char *)&is_contra_flow, sizeof(bool));
+        input_stream.read((char *)&travel_mode, sizeof(TravelMode));
         input_stream.read((char *)&is_split, sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
         BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
         BOOST_ASSERT_MSG(0 <= dir && dir <= 2, "loaded bogus direction");
-
-        BOOST_ASSERT(type >= 0);
 
         // translate the external NodeIDs to internal IDs
         auto internal_id_iter = ext_to_int_id_map.find(source);

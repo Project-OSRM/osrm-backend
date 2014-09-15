@@ -148,9 +148,9 @@ template <> class SharedMemoryWrapper<bool>
 
 template <typename DataT, bool UseSharedMemory> struct ShM
 {
-    typedef typename std::conditional<UseSharedMemory,
+    using vector = typename std::conditional<UseSharedMemory,
                                       SharedMemoryWrapper<DataT>,
-                                      std::vector<DataT>>::type vector;
+                                      std::vector<DataT>>::type;
 };
 
 #endif // SHARED_MEMORY_VECTOR_WRAPPER_H

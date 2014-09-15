@@ -38,8 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <vector>
 
-typedef QueryEdge::EdgeData EdgeData;
-typedef StaticGraph<EdgeData> QueryGraph;
+using EdgeData = QueryEdge::EdgeData;
+using QueryGraph = StaticGraph<EdgeData>;
 
 int main(int argc, char *argv[])
 {

@@ -39,13 +39,12 @@ template <class DataFacadeT> class LocatePlugin : public BasePlugin
 {
   public:
     explicit LocatePlugin(DataFacadeT *facade) : descriptor_string("locate"), facade(facade) {}
-    const std::string GetDescriptor() const { return descriptor_string; }
+    const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() ||
-            !route_parameters.coordinates.front().isValid())
+        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().isValid())
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
@@ -63,8 +62,8 @@ template <class DataFacadeT> class LocatePlugin : public BasePlugin
             reply.status = http::Reply::ok;
             json_result.values["status"] = 0;
             JSON::Array json_coordinate;
-            json_coordinate.values.push_back(result.lat/COORDINATE_PRECISION);
-            json_coordinate.values.push_back(result.lon/COORDINATE_PRECISION);
+            json_coordinate.values.push_back(result.lat / COORDINATE_PRECISION);
+            json_coordinate.values.push_back(result.lon / COORDINATE_PRECISION);
             json_result.values["mapped_coordinate"] = json_coordinate;
         }
 

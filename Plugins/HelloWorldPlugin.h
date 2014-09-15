@@ -42,9 +42,9 @@ class HelloWorldPlugin : public BasePlugin
   public:
     HelloWorldPlugin() : descriptor_string("hello") {}
     virtual ~HelloWorldPlugin() {}
-    const std::string GetDescriptor() const { return descriptor_string; }
+    const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply) final
     {
         reply.status = http::Reply::ok;
 
@@ -60,9 +60,11 @@ class HelloWorldPlugin : public BasePlugin
         json_result.values["instructions"] = (routeParameters.print_instructions ? "yes" : "no");
         json_result.values["geometry"] = (routeParameters.geometry ? "yes" : "no");
         json_result.values["compression"] = (routeParameters.compression ? "yes" : "no");
-        json_result.values["output_format"] = (!routeParameters.output_format.empty() ? "yes" : "no");
+        json_result.values["output_format"] =
+            (!routeParameters.output_format.empty() ? "yes" : "no");
 
-        json_result.values["jsonp_parameter"] = (!routeParameters.jsonp_parameter.empty() ? "yes" : "no");
+        json_result.values["jsonp_parameter"] =
+            (!routeParameters.jsonp_parameter.empty() ? "yes" : "no");
         json_result.values["language"] = (!routeParameters.language.empty() ? "yes" : "no");
 
         temp_string = UintToString(static_cast<unsigned>(routeParameters.coordinates.size()));

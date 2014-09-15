@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef __RESTRICTION_MAP_H__
-#define __RESTRICTION_MAP_H__
+#ifndef RESTRICTION_MAP_H__
+#define RESTRICTION_MAP_H__
 
 #include <memory>
 
@@ -110,8 +110,8 @@ class RestrictionMap
 
   private:
     bool IsSourceNode(const NodeID node) const;
-    typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
-    typedef NodeBasedDynamicGraph::EdgeData EdgeData;
+    using EmanatingRestrictionsVector = std::vector<RestrictionTarget>;
+    using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
     std::size_t m_count;
     std::shared_ptr<NodeBasedDynamicGraph> m_graph;

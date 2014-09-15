@@ -365,6 +365,6 @@ template <class LockFileT = OSRMLockFile> class SharedMemoryFactory_tmpl
     SharedMemoryFactory_tmpl(const SharedMemoryFactory_tmpl &) = delete;
 };
 
-typedef SharedMemoryFactory_tmpl<> SharedMemoryFactory;
+using SharedMemoryFactory = SharedMemoryFactory_tmpl<>;
 
 #endif /* SHARED_MEMORY_POINTER_FACTORY_H */
