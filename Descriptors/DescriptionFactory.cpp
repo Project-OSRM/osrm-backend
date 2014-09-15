@@ -109,7 +109,7 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.travel_mode);
 }
 
-JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)
+JSON::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
 {
     if (return_encoded)
     {

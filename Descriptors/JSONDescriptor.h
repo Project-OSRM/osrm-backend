@@ -137,7 +137,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         if (config.geometry)
         {
             JSON::Value route_geometry =
-                description_factory.AppendEncodedPolylineString(config.encode_geometry);
+                description_factory.AppendGeometryString(config.encode_geometry);
             json_result.values["route_geometry"] = route_geometry;
         }
         if (config.instructions)
@@ -213,8 +213,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             if (config.geometry)
             {
                 JSON::Value alternate_geometry_string =
-                    alternate_description_factory.AppendEncodedPolylineString(
-                        config.encode_geometry);
+                    alternate_description_factory.AppendGeometryString(config.encode_geometry);
                 JSON::Array json_alternate_geometries_array;
                 json_alternate_geometries_array.values.push_back(alternate_geometry_string);
                 json_result.values["alternative_geometries"] = json_alternate_geometries_array;
