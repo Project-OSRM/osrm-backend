@@ -101,7 +101,7 @@ class FixedPointNumber
     // cast to floating point type T, return value
     template <typename T,
               typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr>
-    explicit operator T() const noexcept
+    explicit operator const T() const noexcept
     {
         // casts to external type (signed or unsigned) and then to float
         return static_cast<T>(static_cast<state_signage>(m_fixed_point_state)) / PRECISION;
@@ -116,10 +116,21 @@ class FixedPointNumber
     }
 
     // compare, ie. sort fixed-point numbers
-    void operator<(const FixedPointNumber &other) const noexcept
+    bool operator<(const FixedPointNumber &other) const noexcept
     {
         return m_fixed_point_state < other.m_fixed_point_state;
     }
+
+    // equality, ie. sort fixed-point numbers
+    bool operator==(const FixedPointNumber &other) const noexcept
+    {
+        return m_fixed_point_state == other.m_fixed_point_state;
+    }
+
+    bool operator!=(const FixedPointNumber &other) const { return !(*this == other); }
+    bool operator>(const FixedPointNumber &other) const { return other < *this; }
+    bool operator<=(const FixedPointNumber &other) const { return !(other < *this); }
+    bool operator>=(const FixedPointNumber &other) const { return !(*this < other); }
 
     // arithmetic operators
     FixedPointNumber operator+(const FixedPointNumber &other) const noexcept
@@ -170,7 +181,10 @@ class FixedPointNumber
         temp *= other.m_fixed_point_state;
 
         // rounding!
-        temp = temp + ((temp & 1 << (FractionalBitSize - 1)) << 1);
+        if (!truncate_results)
+        {
+            temp = temp + ((temp & 1 << (FractionalBitSize - 1)) << 1);
+        }
         temp >>= FractionalBitSize;
         this->m_fixed_point_state = static_cast<decltype(m_fixed_point_state)>(temp);
         return *this;
