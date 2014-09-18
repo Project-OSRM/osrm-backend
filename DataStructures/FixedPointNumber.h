@@ -40,7 +40,10 @@ namespace osrm
 {
 
 // implements an binary based fixed point number type
-template <unsigned FractionalBitSize, bool is_unsigned = false, bool truncate_results = false>
+template <unsigned FractionalBitSize,
+          bool use_64_bits = false,
+          bool is_unsigned = false,
+          bool truncate_results = false>
 class FixedPointNumber
 {
     static_assert(FractionalBitSize > 0, "FractionalBitSize must be greater than 0");
@@ -98,7 +101,7 @@ class FixedPointNumber
     // cast to floating point type T, return value
     template <typename T,
               typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr>
-    operator T() const noexcept
+    explicit operator T() const noexcept
     {
         // casts to external type (signed or unsigned) and then to float
         return static_cast<T>(static_cast<state_signage>(m_fixed_point_state)) / PRECISION;
@@ -106,7 +109,7 @@ class FixedPointNumber
 
     // warn about cast to integral type T, its disabled for good reason
     template <typename T, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr>
-    operator T() const
+    explicit operator T() const
     {
         static_assert(std::is_integral<T>::value,
                       "casts to integral types have been disabled on purpose");
