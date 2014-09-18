@@ -51,13 +51,13 @@ class FixedPointNumber
 
     constexpr static const int32_t PRECISION = 1 << FractionalBitSize;
 
-    int32_t m_fixed_point_state;
+    typename std::conditional<use_64_bits, int64_t, int32_t>::type m_fixed_point_state;
 
     // state signage encapsulates whether the state should either represent a
     // signed or an unsigned floating point number
     using state_signage =
         typename std::conditional<is_unsigned,
-                                  std::make_unsigned<decltype(m_fixed_point_state)>::type,
+                                  typename std::make_unsigned<decltype(m_fixed_point_state)>::type,
                                   decltype(m_fixed_point_state)>::type;
 
   public:
