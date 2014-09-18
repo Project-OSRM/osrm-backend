@@ -49,9 +49,8 @@ class FixedPointNumber
     static_assert(FractionalBitSize > 0, "FractionalBitSize must be greater than 0");
     static_assert(FractionalBitSize <= 32, "FractionalBitSize must at most 32");
 
-    constexpr static const int32_t PRECISION = 1 << FractionalBitSize;
-
     typename std::conditional<use_64_bits, int64_t, int32_t>::type m_fixed_point_state;
+    constexpr static const decltype(m_fixed_point_state) PRECISION = 1 << FractionalBitSize;
 
     // state signage encapsulates whether the state should either represent a
     // signed or an unsigned floating point number
@@ -65,13 +64,14 @@ class FixedPointNumber
 
     // the type is either initialized with a floating point value or an
     // integral state. Anything else will throw at compile-time.
-    template <class T> FixedPointNumber(const T &&input) noexcept
+    template <class T>
+    constexpr FixedPointNumber(const T &&input) noexcept
+        : m_fixed_point_state(static_cast<decltype(m_fixed_point_state)>(
+              std::round(std::forward<const T>(input) * PRECISION)))
     {
         static_assert(
             std::is_floating_point<T>::value || std::is_integral<T>::value,
             "FixedPointNumber needs to be initialized with floating point or integral value");
-        m_fixed_point_state =
-            static_cast<int32_t>(std::round(std::forward<const T>(input) * PRECISION));
     }
 
     // get max value
@@ -160,7 +160,7 @@ class FixedPointNumber
         }
         temp >>= FractionalBitSize;
         FixedPointNumber tmp;
-        tmp.m_fixed_point_state = static_cast<int32_t>(temp);
+        tmp.m_fixed_point_state = static_cast<decltype(m_fixed_point_state)>(temp);
         return tmp;
     }
 
@@ -172,7 +172,7 @@ class FixedPointNumber
         // rounding!
         temp = temp + ((temp & 1 << (FractionalBitSize - 1)) << 1);
         temp >>= FractionalBitSize;
-        this->m_fixed_point_state = static_cast<int32_t>(temp);
+        this->m_fixed_point_state = static_cast<decltype(m_fixed_point_state)>(temp);
         return *this;
     }
 
@@ -182,7 +182,7 @@ class FixedPointNumber
         temp <<= FractionalBitSize;
         temp /= static_cast<int64_t>(other.m_fixed_point_state);
         FixedPointNumber tmp;
-        tmp.m_fixed_point_state = static_cast<int32_t>(temp);
+        tmp.m_fixed_point_state = static_cast<decltype(m_fixed_point_state)>(temp);
         return tmp;
     }
 
@@ -192,7 +192,7 @@ class FixedPointNumber
         temp <<= FractionalBitSize;
         temp /= static_cast<int64_t>(other.m_fixed_point_state);
         FixedPointNumber tmp;
-        this->m_fixed_point_state = static_cast<int32_t>(temp);
+        this->m_fixed_point_state = static_cast<decltype(m_fixed_point_state)>(temp);
         return *this;
     }
 };
