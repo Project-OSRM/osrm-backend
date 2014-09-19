@@ -225,18 +225,6 @@ target_link_libraries(datastructure-tests ${TBB_LIBRARIES})
 target_link_libraries(rtree-bench ${TBB_LIBRARIES})
 include_directories(${TBB_INCLUDE_DIR})
 
-find_package(Lua52)
-if(NOT LUA52_FOUND)
-  find_package(Lua51 REQUIRED)
-  if(NOT APPLE)
-    find_package(LuaJIT 5.1)
-  endif()
-else()
-  if(NOT APPLE)
-    find_package(LuaJIT 5.2)
-  endif()
-endif()
-
 find_package( Luabind REQUIRED )
 include(check_luabind)
 
