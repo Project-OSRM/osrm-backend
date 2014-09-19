@@ -238,6 +238,8 @@ else()
 endif()
 
 find_package( Luabind REQUIRED )
+include(check_luabind)
+
 include_directories(${LUABIND_INCLUDE_DIR})
 target_link_libraries(osrm-extract ${LUABIND_LIBRARY})
 target_link_libraries(osrm-prepare ${LUABIND_LIBRARY})
