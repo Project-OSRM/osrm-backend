@@ -41,11 +41,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 
+namespace {
+int lua_error_callback(lua_State *L)
+{
+    luabind::object error_msg(luabind::from_stack(L, -1));
+    std::ostringstream error_stream;
+    error_stream << error_msg;
+    throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
+}
+}
+
 RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment)
     : lua_state(scripting_environment.getLuaState()), use_turn_restrictions(true)
 {
     ReadUseRestrictionsSetting();
-    ReadRestrictionExceptions();
+
+    if (use_turn_restrictions)
+    {
+        ReadRestrictionExceptions();
+    }
 }
 
 void RestrictionParser::ReadUseRestrictionsSetting()
@@ -72,6 +86,7 @@ void RestrictionParser::ReadRestrictionExceptions()
 {
     if (lua_function_exists(lua_state, "get_exceptions"))
     {
+        luabind::set_pcall_callback(&lua_error_callback);
         // get list of turn restriction exceptions
         luabind::call_function<void>(
             lua_state, "get_exceptions", boost::ref(restriction_exceptions));
