@@ -40,6 +40,7 @@ struct ExtractionWay
 
     void Clear()
     {
+        id = -1;
         forward_speed = -1;
         backward_speed = -1;
         duration = -1;
@@ -106,6 +107,7 @@ struct ExtractionWay
     void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
     const TravelMode get_backward_mode() const { return backward_travel_mode; }
 
+    int64_t id;
     double forward_speed;
     double backward_speed;
     double duration;
