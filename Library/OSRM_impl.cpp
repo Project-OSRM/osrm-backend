@@ -45,6 +45,7 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "../Server/DataStructures/InternalDataFacade.h"
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
+#include "../Util/make_unique.hpp"
 #include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
@@ -155,11 +156,11 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
 // proxy code for compilation firewall
 
 OSRM::OSRM(const ServerPaths &paths, const bool use_shared_memory)
-    : OSRM_pimpl_(new OSRM_impl(paths, use_shared_memory))
+    : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(paths, use_shared_memory))
 {
 }
 
-OSRM::~OSRM() { delete OSRM_pimpl_; }
+OSRM::~OSRM() { OSRM_pimpl_.reset(); }
 
 void OSRM::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
 {
