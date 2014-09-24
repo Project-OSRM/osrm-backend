@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
-template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterface<DataFacadeT>
+template <class DataFacadeT> class ManyToManyRouting final : public BasicRoutingInterface<DataFacadeT>
 {
     using super = BasicRoutingInterface<DataFacadeT>;
     using QueryHeap = SearchEngineData::QueryHeap;

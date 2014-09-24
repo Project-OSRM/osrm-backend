@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/SearchEngineData.h"
 #include "../typedefs.h"
 
-template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInterface<DataFacadeT>
+template <class DataFacadeT> class ShortestPathRouting final : public BasicRoutingInterface<DataFacadeT>
 {
     using super = BasicRoutingInterface<DataFacadeT>;
     using QueryHeap = SearchEngineData::QueryHeap;
