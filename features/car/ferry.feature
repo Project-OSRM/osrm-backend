@@ -36,10 +36,12 @@ Feature: Car - Handle ferry routes
         And the ways
             | nodes | highway | route | duration |
             | abc   | primary |       |          |
-            | cde   |         | ferry | 06:15    |
+            | cde   |         | ferry | 00:01:00 |
             | efg   | primary |       |          |
 
         When I route I should get
-            | from | to | route       | modes | speed  |
-            | a    | g  | abc,cde,efg | 1,2,1 | 6 km/h |
-            | b    | f  | abc,cde,efg | 1,2,1 | 6 km/h |
+            | from | to | route       | modes | speed   |
+            | a    | g  | abc,cde,efg | 1,2,1 | 24 km/h |
+            | b    | f  | abc,cde,efg | 1,2,1 | 19 km/h |
+            | c    | e  | cde         | 2     | 12 km/h |
+            | e    | c  | cde         | 2     | 12 km/h |
