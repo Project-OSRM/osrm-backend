@@ -63,8 +63,8 @@ bool ExtractorCallbacks::ProcessRestriction(const InputRestrictionContainer &res
 /** warning: caller needs to take care of synchronization! */
 void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
 {
-    if (((0 >= parsed_way.forward_speed) || 
-            (TRAVEL_MODE_INACCESSIBLE == parsed_way.forward_travel_mode)) && 
+    if (((0 >= parsed_way.forward_speed) ||
+            (TRAVEL_MODE_INACCESSIBLE == parsed_way.forward_travel_mode)) &&
         ((0 >= parsed_way.backward_speed) ||
             (TRAVEL_MODE_INACCESSIBLE == parsed_way.backward_travel_mode)) &&
         (0 >= parsed_way.duration))
@@ -89,6 +89,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         // TODO: iterate all way segments and set duration corresponding to the length of each
         // segment
         parsed_way.forward_speed = parsed_way.duration / (parsed_way.path.size() - 1);
+        parsed_way.backward_speed = parsed_way.duration / (parsed_way.path.size() - 1);
     }
 
     if (std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.forward_speed))
@@ -155,6 +156,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
     { // Only true if the way should be split
         BOOST_ASSERT(parsed_way.backward_travel_mode>0);
         std::reverse(parsed_way.path.begin(), parsed_way.path.end());
+
         for (std::vector<NodeID>::size_type n = 0; n < parsed_way.path.size() - 1; ++n)
         {
             external_memory.all_edges_list.push_back(

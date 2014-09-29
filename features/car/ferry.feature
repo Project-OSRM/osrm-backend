@@ -26,3 +26,20 @@ Feature: Car - Handle ferry routes
             | c    | e  | cde         | 2     |
             | c    | f  | cde,efg     | 2,1   |
             | c    | g  | cde,efg     | 2,1   |
+
+    Scenario: Car - Properly handle durations
+        Given the node map
+            | a | b | c |   |   |
+            |   |   | d |   |   |
+            |   |   | e | f | g |
+
+        And the ways
+            | nodes | highway | route | duration |
+            | abc   | primary |       |          |
+            | cde   |         | ferry | 06:15    |
+            | efg   | primary |       |          |
+
+        When I route I should get
+            | from | to | route       | modes | speed  |
+            | a    | g  | abc,cde,efg | 1,2,1 | 6 km/h |
+            | b    | f  | abc,cde,efg | 1,2,1 | 6 km/h |
