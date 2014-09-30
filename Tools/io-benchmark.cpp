@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
             fseek(fd, 0, SEEK_SET);
 #endif
 #ifdef __linux__
-            lseek(f, 0, SEEK_SET);
+            lseek(file_desc, 0, SEEK_SET);
 #endif
             // make 1000 random access, time each I/O seperately
             unsigned number_of_blocks = (number_of_elements * sizeof(unsigned) - 1) / 4096;
@@ -217,8 +217,8 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef __linux__
-                int ret1 = lseek(f, current_offset, SEEK_SET);
-                int ret2 = read(f, (char *)single_block, 4096);
+                int ret1 = lseek(file_desc, current_offset, SEEK_SET);
+                int ret2 = read(file_desc, (char *)single_block, 4096);
 #endif
                 TIMER_STOP(random_access);
                 if (((off_t)-1) == ret1)
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
             fseek(fd, 0, SEEK_SET);
 #endif
 #ifdef __linux__
-            lseek(f, 0, SEEK_SET);
+            lseek(file_desc, 0, SEEK_SET);
 #endif
 
             // read every 100th block
@@ -277,9 +277,9 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef __linux__
-                int ret1 = lseek(f, current_offset, SEEK_SET);
+                int ret1 = lseek(file_desc, current_offset, SEEK_SET);
 
-                int ret2 = read(f, (char *)single_block, 4096);
+                int ret2 = read(file_desc, (char *)single_block, 4096);
 #endif
                 TIMER_STOP(read_every_100);
                 if (((off_t)-1) == ret1)
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 // free(single_block);
 #endif
 #ifdef __linux__
-            close(f);
+            close(file_desc);
 #endif
             // Do statistics
             SimpleLogger().Write(logDEBUG) << "running sequential I/O statistics";
