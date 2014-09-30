@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
 
-        Percent p(m_query_graph->GetNumberOfNodes());
+        Percent progress(m_query_graph->GetNumberOfNodes());
         for (const auto node_u : osrm::irange(0u, m_query_graph->GetNumberOfNodes()))
         {
             for (const auto eid : m_query_graph->GetAdjacentEdgeRange(node_u))
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
                     return 1;
                 }
             }
-            p.printIncrement();
+            progress.printStatus(node_u);
         }
         m_query_graph.reset();
         SimpleLogger().Write() << "Data file " << argv[0] << " appears to be OK";
