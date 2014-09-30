@@ -264,18 +264,21 @@ RequestParser::consume(Request &req, char input, http::CompressionType *compress
         return false;
     default: // expecting_newline_3:
         return (input == '\n');
-    // default:
-    //     return false;
+        // default:
+        //     return false;
     }
 }
 
-inline bool RequestParser::isChar(int c) { return c >= 0 && c <= 127; }
+inline bool RequestParser::isChar(int character) { return character >= 0 && character <= 127; }
 
-inline bool RequestParser::isCTL(int c) { return (c >= 0 && c <= 31) || (c == 127); }
-
-inline bool RequestParser::isTSpecial(int c)
+inline bool RequestParser::isCTL(int character)
 {
-    switch (c)
+    return (character >= 0 && character <= 31) || (character == 127);
+}
+
+inline bool RequestParser::isTSpecial(int character)
+{
+    switch (character)
     {
     case '(':
     case ')':
@@ -302,5 +305,5 @@ inline bool RequestParser::isTSpecial(int c)
     }
 }
 
-inline bool RequestParser::isDigit(int c) { return c >= '0' && c <= '9'; }
+inline bool RequestParser::isDigit(int character) { return character >= '0' && character <= '9'; }
 }
