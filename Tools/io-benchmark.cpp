@@ -118,20 +118,20 @@ int main(int argc, char *argv[])
             fclose(fd);
 #endif
 #ifdef __linux__
-            int f =
+            int file_desc =
                 open(test_path.string().c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_SYNC, S_IRWXU);
-            if (-1 == f)
+            if (-1 == file_desc)
             {
                 throw OSRMException("Could not open random data file");
             }
             TIMER_START(write_1gb);
-            int ret = write(f, random_array, number_of_elements * sizeof(unsigned));
+            int ret = write(file_desc, random_array, number_of_elements * sizeof(unsigned));
             if (0 > ret)
             {
                 throw OSRMException("could not write random data file");
             }
             TIMER_STOP(write_1gb);
-            close(f);
+            close(file_desc);
 #endif
             delete[] random_array;
             SimpleLogger().Write(logDEBUG) << "writing raw 1GB took " << TIMER_SEC(write_1gb)
@@ -164,8 +164,8 @@ int main(int argc, char *argv[])
 #ifdef __linux__
             char *single_block = (char *)memalign(512, 1024 * sizeof(unsigned));
 
-            int f = open(test_path.string().c_str(), O_RDONLY | O_DIRECT | O_SYNC);
-            if (-1 == f)
+            int file_desc = open(test_path.string().c_str(), O_RDONLY | O_DIRECT | O_SYNC);
+            if (-1 == file_desc)
             {
                 SimpleLogger().Write(logDEBUG) << "opened, error: " << strerror(errno);
                 return -1;
@@ -179,11 +179,11 @@ int main(int argc, char *argv[])
             fd = fopen(test_path.string().c_str(), "r");
 #endif
 #ifdef __linux__
-            int ret = read(f, raw_array, number_of_elements * sizeof(unsigned));
+            int ret = read(file_desc, raw_array, number_of_elements * sizeof(unsigned));
             SimpleLogger().Write(logDEBUG) << "read " << ret
                                            << " bytes, error: " << strerror(errno);
-            close(f);
-            f = open(test_path.string().c_str(), O_RDONLY | O_DIRECT | O_SYNC);
+            close(file_desc);
+            file_desc = open(test_path.string().c_str(), O_RDONLY | O_DIRECT | O_SYNC);
             SimpleLogger().Write(logDEBUG) << "opened, error: " << strerror(errno);
 #endif
             TIMER_STOP(read_1gb);
