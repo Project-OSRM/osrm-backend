@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
     return 0;
 #else
 
-
     if (1 == argc)
     {
         SimpleLogger().Write(logWARNING) << "usage: " << argv[0] << " /path/on/device";
@@ -137,8 +136,7 @@ int main(int argc, char *argv[])
             SimpleLogger().Write(logDEBUG) << "writing raw 1GB took " << TIMER_SEC(write_1gb)
                                            << "s";
             SimpleLogger().Write() << "raw write performance: " << std::setprecision(5)
-                                   << std::fixed << 1024 * 1024 / TIMER_SEC(write_1gb)
-                                   << "MB/sec";
+                                   << std::fixed << 1024 * 1024 / TIMER_SEC(write_1gb) << "MB/sec";
 
             SimpleLogger().Write(logDEBUG)
                 << "finished creation of random data. Flush disk cache now!";
@@ -188,8 +186,7 @@ int main(int argc, char *argv[])
 #endif
             TIMER_STOP(read_1gb);
 
-            SimpleLogger().Write(logDEBUG) << "reading raw 1GB took " << TIMER_SEC(read_1gb)
-                                           << "s";
+            SimpleLogger().Write(logDEBUG) << "reading raw 1GB took " << TIMER_SEC(read_1gb) << "s";
             SimpleLogger().Write() << "raw read performance: " << std::setprecision(5) << std::fixed
                                    << 1024 * 1024 / TIMER_SEC(read_1gb) << "MB/sec";
 
@@ -224,7 +221,7 @@ int main(int argc, char *argv[])
                 int ret2 = read(f, (char *)single_block, 4096);
 #endif
                 TIMER_STOP(random_access);
-                if (((off_t) - 1) == ret1)
+                if (((off_t)-1) == ret1)
                 {
                     SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
                     SimpleLogger().Write(logWARNING) << "seek error " << strerror(errno);
@@ -285,7 +282,7 @@ int main(int argc, char *argv[])
                 int ret2 = read(f, (char *)single_block, 4096);
 #endif
                 TIMER_STOP(read_every_100);
-                if (((off_t) - 1) == ret1)
+                if (((off_t)-1) == ret1)
                 {
                     SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
                     SimpleLogger().Write(logWARNING) << "seek error " << strerror(errno);
