@@ -61,17 +61,17 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         //     req.agent << ( 0 == req.agent.length() ? "- " :" ") << request;
 
         time_t ltime;
-        struct tm *Tm;
+        struct tm *time_stamp;
 
         ltime = time(nullptr);
-        Tm = localtime(&ltime);
+        time_stamp = localtime(&ltime);
 
         // log timestamp
-        SimpleLogger().Write() << (Tm->tm_mday < 10 ? "0" : "") << Tm->tm_mday << "-"
-                               << (Tm->tm_mon + 1 < 10 ? "0" : "") << (Tm->tm_mon + 1) << "-"
-                               << 1900 + Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "")
-                               << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "") << Tm->tm_min
-                               << ":" << (Tm->tm_sec < 10 ? "0" : "") << Tm->tm_sec << " "
+        SimpleLogger().Write() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
+                               << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
+                               << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
+                               << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "") << time_stamp->tm_min
+                               << ":" << (time_stamp->tm_sec < 10 ? "0" : "") << time_stamp->tm_sec << " "
                                << req.endpoint.to_string() << " " << req.referrer
                                << (0 == req.referrer.length() ? "- " : " ") << req.agent
                                << (0 == req.agent.length() ? "- " : " ") << request;
