@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef MAKE_UNIQUE_H__
-#define MAKE_UNIQUE_H__
+#ifndef MAKE_UNIQUE_H_
+#define MAKE_UNIQUE_H_
 
 #include <cstdlib>
 #include <memory>
@@ -53,4 +53,5 @@ template <class T> std::unique_ptr<T> make_unique(std::size_t Size)
 template <class T, class... Types>
 typename std::enable_if<std::extent<T>::value != 0, void>::type make_unique(Types &&...) = delete;
 }
-#endif
+
+#endif //MAKE_UNIQUE_H_
