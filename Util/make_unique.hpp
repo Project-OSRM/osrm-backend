@@ -44,7 +44,7 @@ template <class T, class... Types> std::unique_ptr<T> make_unique(Types &&... Ar
 }
 
 // make_unique<T[]>
-template <class T> std::unique_ptr<T> make_unique(std::size_t Size)
+template <class T> std::unique_ptr<T[]> make_unique(std::size_t Size)
 {
     return (std::unique_ptr<T>(new T[Size]()));
 }
