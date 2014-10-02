@@ -24,8 +24,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef __NUMERIC_UTIL_H__
-#define __NUMERIC_UTIL_H__
+#ifndef NUMERIC_UTIL_H_
+#define NUMERIC_UTIL_H_
 
 #include <cstdlib>
 
@@ -36,4 +36,4 @@ template <typename FloatT> inline bool EpsilonCompare(const FloatT d1, const Flo
     return (std::abs(d1 - d2) < std::numeric_limits<FloatT>::epsilon());
 }
 
-#endif
+#endif // NUMERIC_UTIL_H_
