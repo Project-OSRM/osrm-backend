@@ -57,7 +57,7 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
     }
 
   public:
-    GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
+    explicit GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
 
     void SetConfig(const DescriptorConfig &c) final { config = c; }
 

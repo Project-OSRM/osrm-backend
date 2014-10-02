@@ -70,7 +70,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
     ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
 
   public:
-    JSONDescriptor(DataFacadeT *facade) : facade(facade), entered_restricted_area_count(0) {}
+    explicit JSONDescriptor(DataFacadeT *facade) : facade(facade), entered_restricted_area_count(0) {}
 
     void SetConfig(const DescriptorConfig &c) final { config = c; }
 
