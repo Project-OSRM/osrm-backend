@@ -91,7 +91,7 @@ struct Array
 
 struct Renderer : mapbox::util::static_visitor<>
 {
-    Renderer(std::ostream &_out) : out(_out) {}
+    explicit Renderer(std::ostream &_out) : out(_out) {}
 
     void operator()(const String &string) const { out << "\"" << string.value << "\""; }
 
@@ -145,7 +145,7 @@ struct Renderer : mapbox::util::static_visitor<>
 
 struct ArrayRenderer : mapbox::util::static_visitor<>
 {
-    ArrayRenderer(std::vector<char> &_out) : out(_out) {}
+    explicit ArrayRenderer(std::vector<char> &_out) : out(_out) {}
 
     void operator()(const String &string) const {
         out.push_back('\"');
