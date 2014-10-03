@@ -103,7 +103,7 @@ class Contractor
         ContractorHeap heap;
         std::vector<ContractorEdge> inserted_edges;
         std::vector<NodeID> neighbours;
-        ContractorThreadData(NodeID nodes) : heap(nodes) {}
+        explicit ContractorThreadData(NodeID nodes) : heap(nodes) {}
     };
 
     struct NodePriorityData
@@ -135,7 +135,7 @@ class Contractor
 
     struct ThreadDataContainer
     {
-        ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes)  {}
+        explicit ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes)  {}
 
         inline ContractorThreadData* getThreadData()
         {
