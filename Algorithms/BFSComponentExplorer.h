@@ -1,5 +1,5 @@
-#ifndef __BFS_COMPONENT_EXPLORER_H__
-#define __BFS_COMPONENT_EXPLORER_H__
+#ifndef BFS_COMPONENT_EXPLORER_H_
+#define BFS_COMPONENT_EXPLORER_H_
 
 #include "../typedefs.h"
 #include "../DataStructures/DynamicGraph.h"
@@ -145,4 +145,4 @@ template <typename GraphT> class BFSComponentExplorer
     const std::unordered_set<NodeID> &m_barrier_nodes;
 };
 
-#endif
+#endif // BFS_COMPONENT_EXPLORER_H_
