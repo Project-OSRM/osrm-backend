@@ -2,7 +2,6 @@
 #define BFS_COMPONENT_EXPLORER_H_
 
 #include "../typedefs.h"
-#include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/RestrictionMap.h"
 
 #include <queue>
