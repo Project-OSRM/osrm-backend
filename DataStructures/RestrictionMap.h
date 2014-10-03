@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RESTRICTION_MAP_H__
-#define RESTRICTION_MAP_H__
+#ifndef RESTRICTION_MAP_H_
+#define RESTRICTION_MAP_H_
 
 #include <memory>
 
@@ -123,4 +123,4 @@ class RestrictionMap
     std::unordered_set<NodeID> m_no_turn_via_node_set;
 };
 
-#endif
+#endif //RESTRICTION_MAP_H_
