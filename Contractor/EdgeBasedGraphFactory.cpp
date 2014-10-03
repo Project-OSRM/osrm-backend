@@ -44,11 +44,11 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::unique_ptr<RestrictionMap> restriction_map,
     std::vector<NodeID> &barrier_node_list,
     std::vector<NodeID> &traffic_light_node_list,
-    std::vector<NodeInfo> &m_node_info_list,
+    std::vector<NodeInfo> &node_info_list,
     SpeedProfileProperties &speed_profile)
     : speed_profile(speed_profile),
       m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
-      m_node_info_list(m_node_info_list), m_node_based_graph(node_based_graph),
+      m_node_info_list(node_info_list), m_node_based_graph(node_based_graph),
       m_restriction_map(std::move(restriction_map)), max_id(0)
 {
 
