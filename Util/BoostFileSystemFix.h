@@ -121,7 +121,7 @@ portable_canonical(const boost::filesystem::path &relative_path,
 inline path temp_directory_path()
 {
     char *buffer;
-    buffer = tmpnam(NULL);
+    buffer = tmpnam(nullptr);
 
     return path(buffer);
 }
