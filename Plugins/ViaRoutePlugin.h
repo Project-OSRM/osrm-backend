@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 
 #include "../Algorithms/ObjectToBase64.h"
-
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
@@ -99,7 +98,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
             {
-                DecodeObjectFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
+                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
                 if (phantom_node_vector[i].isValid(facade->GetNumberOfNodes()))
                 {
                     continue;

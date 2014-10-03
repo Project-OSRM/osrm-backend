@@ -283,10 +283,10 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         std::string hint;
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
         {
-            EncodeObjectToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
+            ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
             json_location_hint_array.values.push_back(hint);
         }
-        EncodeObjectToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
+        ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
         json_location_hint_array.values.push_back(hint);
         json_hint_object.values["locations"] = json_location_hint_array;
         json_result.values["hint_data"] = json_hint_object;

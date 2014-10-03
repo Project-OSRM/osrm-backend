@@ -100,7 +100,7 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
                 !route_parameters.hints[i].empty())
             {
                 PhantomNode current_phantom_node;
-                DecodeObjectFromBase64(route_parameters.hints[i], current_phantom_node);
+                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.isValid(facade->GetNumberOfNodes()))
                 {
                     phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
