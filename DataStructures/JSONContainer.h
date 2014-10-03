@@ -25,7 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-// based on https://svn.apache.org/repos/asf/mesos/tags/release-0.9.0-incubating-RC0/src/common/json.hpp
+// based on
+// https://svn.apache.org/repos/asf/mesos/tags/release-0.9.0-incubating-RC0/src/common/json.hpp
 
 #ifndef JSON_CONTAINER_H
 #define JSON_CONTAINER_H
@@ -72,12 +73,12 @@ struct Null
 };
 
 using Value = mapbox::util::variant<String,
-                       Number,
-                       mapbox::util::recursive_wrapper<Object>,
-                       mapbox::util::recursive_wrapper<Array>,
-                       True,
-                       False,
-                       Null>;
+                                    Number,
+                                    mapbox::util::recursive_wrapper<Object>,
+                                    mapbox::util::recursive_wrapper<Array>,
+                                    True,
+                                    False,
+                                    Null>;
 
 struct Object
 {
@@ -147,7 +148,8 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
 {
     explicit ArrayRenderer(std::vector<char> &_out) : out(_out) {}
 
-    void operator()(const String &string) const {
+    void operator()(const String &string) const
+    {
         out.push_back('\"');
         out.insert(out.end(), string.value.begin(), string.value.end());
         out.push_back('\"');
@@ -195,17 +197,20 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
         out.push_back(']');
     }
 
-    void operator()(const True &) const {
+    void operator()(const True &) const
+    {
         const std::string temp("true");
         out.insert(out.end(), temp.begin(), temp.end());
     }
 
-    void operator()(const False &) const {
+    void operator()(const False &) const
+    {
         const std::string temp("false");
         out.insert(out.end(), temp.begin(), temp.end());
     }
 
-    void operator()(const Null &) const {
+    void operator()(const Null &) const
+    {
         const std::string temp("null");
         out.insert(out.end(), temp.begin(), temp.end());
     }
