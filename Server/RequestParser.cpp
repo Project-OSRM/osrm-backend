@@ -25,8 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "Http/Request.h"
 #include "RequestParser.h"
+
+#include "Http/Request.h"
 
 namespace http
 {

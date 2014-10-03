@@ -25,8 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "APIGrammar.h"
 #include "RequestHandler.h"
+
+#include "APIGrammar.h"
 #include "Http/Request.h"
 
 #include "../DataStructures/JSONContainer.h"
