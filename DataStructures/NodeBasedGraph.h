@@ -1,5 +1,5 @@
-#ifndef __NODE_BASED_GRAPH_H__
-#define __NODE_BASED_GRAPH_H__
+#ifndef NODE_BASED_GRAPH_H_
+#define NODE_BASED_GRAPH_H_
 
 #include "DynamicGraph.h"
 #include "ImportEdge.h"
@@ -241,4 +241,4 @@ SimpleNodeBasedDynamicGraphFromEdges(int number_of_nodes, std::vector<SimpleEdge
     return graph;
 }
 
-#endif // __NODE_BASED_GRAPH_H__
+#endif // NODE_BASED_GRAPH_H_
