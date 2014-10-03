@@ -1,5 +1,5 @@
-#ifndef __RANGE_TABLE_H__
-#define __RANGE_TABLE_H__
+#ifndef RANGE_TABLE_H_
+#define RANGE_TABLE_H_
 
 #include "Range.h"
 #include "SharedMemoryFactory.h"
@@ -228,4 +228,4 @@ std::istream& operator>>(std::istream &in, RangeTable<BLOCK_SIZE, USE_SHARED_MEM
     return in;
 }
 
-#endif
+#endif //RANGE_TABLE_H_
