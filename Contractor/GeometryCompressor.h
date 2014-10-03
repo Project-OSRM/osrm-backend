@@ -25,15 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#ifndef GEOMETRY_COMPRESSOR_H
+#define GEOMETRY_COMPRESSOR_H
+
 #include "../typedefs.h"
 
 #include <unordered_map>
 
 #include <string>
 #include <vector>
-
-#ifndef GEOMETRY_COMPRESSOR_H
-#define GEOMETRY_COMPRESSOR_H
 
 class GeometryCompressor
 {
