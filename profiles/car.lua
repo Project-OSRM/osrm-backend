@@ -32,6 +32,36 @@ speed_profile = {
   ["default"] = 10
 }
 
+-- http://wiki.openstreetmap.org/wiki/Speed_limits
+maxspeed_table_default = {
+  ["urban"] = 50,
+  ["rural"] = 90,
+  ["trunk"] = 110,
+  ["motorway"] = 130
+}
+
+-- List only exceptions
+maxspeed_table = {
+  ["de:living_street"] = 7,
+  ["ru:living_street"] = 20,
+  ["ru:urban"] = 60,
+  ["ua:urban"] = 60,
+  ["at:rural"] = 100,
+  ["de:rural"] = 100,
+  ["at:trunk"] = 100,
+  ["cz:trunk"] = 0,
+  ["ro:trunk"] = 100,
+  ["cz:motorway"] = 0,
+  ["de:motorway"] = 0,
+  ["ru:motorway"] = 110,
+  ["gb:nsl_single"] = (60*1609)/1000,
+  ["gb:nsl_dual"] = (70*1609)/1000,
+  ["gb:motorway"] = (70*1609)/1000,
+  ["uk:nsl_single"] = (60*1609)/1000,
+  ["uk:nsl_dual"] = (70*1609)/1000,
+  ["uk:motorway"] = (70*1609)/1000
+}
+
 traffic_signal_penalty          = 2
 
 -- End of globals
@@ -74,11 +104,21 @@ local function parse_maxspeed(source)
     return 0
   end
   local n = tonumber(source:match("%d*"))
-  if not n then
-    n = 0
-  end
-  if string.match(source, "mph") or string.match(source, "mp/h") then
-    n = (n*1609)/1000;
+  if n then
+    if string.match(source, "mph") or string.match(source, "mp/h") then
+      n = (n*1609)/1000;
+    end
+  else
+    -- parse maxspeed like FR:urban
+    source = string.lower(source)
+    n = maxspeed_table[source]
+    if not n then
+      local highway_type = string.match(source, "%a%a:(%a+)")
+      n = maxspeed_table_default[highway_type]
+      if not n then
+        n = 0
+      end
+    end
   end
   return n
 end
