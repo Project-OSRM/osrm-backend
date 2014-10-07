@@ -32,15 +32,17 @@ speed_profile = {
   ["default"] = 10
 }
 
--- surface/trackype/smoothness speeds was estimated from
--- looking the the photos at the relevant wiki pages
-surface_speeds = {
-  ["asphalt"] = 400,
 
-  ["concrete"] = 200,
-  ["concrete:plates"] = 200,
-  ["concrete:lanes"] = 200,
-  ["paved"] = 200,
+-- surface/trackype/smoothness
+-- values were estimated from looking at the photos at the relevant wiki pages
+
+-- max speed for surfaces
+surface_speeds = {
+  ["asphalt"] = nil,    -- nil mean no limit. removing the line has the same effect 
+  ["concrete"] = nil,
+  ["concrete:plates"] = nil,
+  ["concrete:lanes"] = nil,
+  ["paved"] = nil,
 
   ["cement"] = 80,
   ["compacted"] = 80,
@@ -63,8 +65,8 @@ surface_speeds = {
 
   ["cobblestone"] = 30,
   ["clay"] = 30,
-  ["earth"] = 20,
 
+  ["earth"] = 20,
   ["stone"] = 20,
   ["rocky"] = 20,
   ["sand"] = 20,
@@ -72,6 +74,7 @@ surface_speeds = {
   ["mud"] = 10
 }
 
+-- max speed for tracktypes
 tracktype_speeds = {
   ["grade1"] =  60,
   ["grade2"] =  40,
@@ -80,6 +83,7 @@ tracktype_speeds = {
   ["grade5"] =  20
 }
 
+-- max speed for smoothnesses
 smoothness_speeds = {
   ["intermediate"]    =  80,
   ["bad"]             =  40,
