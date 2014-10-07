@@ -32,6 +32,67 @@ speed_profile = {
   ["default"] = 10
 }
 
+
+-- surface/trackype/smoothness
+-- values were estimated from looking at the photos at the relevant wiki pages
+
+-- max speed for surfaces
+surface_speeds = {
+  ["asphalt"] = nil,    -- nil mean no limit. removing the line has the same effect 
+  ["concrete"] = nil,
+  ["concrete:plates"] = nil,
+  ["concrete:lanes"] = nil,
+  ["paved"] = nil,
+
+  ["cement"] = 80,
+  ["compacted"] = 80,
+  ["fine_gravel"] = 80,
+  
+  ["paving_stones"] = 60,
+  ["metal"] = 60,
+  ["bricks"] = 60,
+
+  ["grass"] = 40,
+  ["wood"] = 40,
+  ["sett"] = 40,
+  ["grass_paver"] = 40,
+  ["gravel"] = 40,
+  ["unpaved"] = 40,
+  ["ground"] = 40,
+  ["dirt"] = 40,
+  ["pebblestone"] = 40,
+  ["tartan"] = 40,
+
+  ["cobblestone"] = 30,
+  ["clay"] = 30,
+
+  ["earth"] = 20,
+  ["stone"] = 20,
+  ["rocky"] = 20,
+  ["sand"] = 20,
+
+  ["mud"] = 10
+}
+
+-- max speed for tracktypes
+tracktype_speeds = {
+  ["grade1"] =  60,
+  ["grade2"] =  40,
+  ["grade3"] =  30,
+  ["grade4"] =  25,
+  ["grade5"] =  20
+}
+
+-- max speed for smoothnesses
+smoothness_speeds = {
+  ["intermediate"]    =  80,
+  ["bad"]             =  40,
+  ["very_bad"]        =  20,
+  ["horrible"]        =  10,
+  ["very_horrible"]   =  5,
+  ["impassable"]      =  0
+}
+
 -- http://wiki.openstreetmap.org/wiki/Speed_limits
 maxspeed_table_default = {
   ["urban"] = 50,
@@ -64,7 +125,6 @@ maxspeed_table = {
 
 traffic_signal_penalty          = 2
 
--- End of globals
 local take_minimum_of_speeds    = false
 local obey_oneway               = true
 local obey_bollards             = true
@@ -254,6 +314,24 @@ function way_function (way)
 
   if -1 == way.forward_speed and -1 == way.backward_speed then
     return
+  end
+
+  -- reduce speed on bad surfaces
+  local surface = way.tags:Find("surface")
+  local tracktype = way.tags:Find("tracktype")
+  local smoothness = way.tags:Find("smoothness")
+
+  if surface and surface_speeds[surface] then
+    way.forward_speed = math.min(surface_speeds[surface], way.forward_speed)
+    way.backward_speed = math.min(surface_speeds[surface], way.backward_speed)
+  end
+  if tracktype and tracktype_speeds[tracktype] then
+    way.forward_speed = math.min(tracktype_speeds[tracktype], way.forward_speed)
+    way.backward_speed = math.min(tracktype_speeds[tracktype], way.backward_speed)
+  end
+  if smoothness and smoothness_speeds[smoothness] then
+    way.forward_speed = math.min(smoothness_speeds[smoothness], way.forward_speed)
+    way.backward_speed = math.min(smoothness_speeds[smoothness], way.backward_speed)
   end
 
   -- parse the remaining tags
