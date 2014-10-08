@@ -82,27 +82,26 @@ auto as_integer(Enumeration const value)
     return static_cast<typename std::underlying_type<Enumeration>::type>(value);
 }
 
-static inline std::string IntToString(const int value)
+template<typename Number>
+static inline typename std::enable_if<std::is_integral<Number>::value, std::string>::type IntegralToString(const Number value)
 {
     std::string output;
     std::back_insert_iterator<std::string> sink(output);
-    boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
-    return output;
-}
 
-static inline std::string UintToString(const unsigned value)
-{
-    std::string output;
-    std::back_insert_iterator<std::string> sink(output);
-    boost::spirit::karma::generate(sink, boost::spirit::karma::uint_, value);
-    return output;
-}
+    if (8 == sizeof(Number))
+    {
+        boost::spirit::karma::generate(sink, boost::spirit::karma::long_long, value);
+    }
 
-static inline void int64ToString(const int64_t value, std::string &output)
-{
-    output.clear();
-    std::back_insert_iterator<std::string> sink(output);
-    boost::spirit::karma::generate(sink, boost::spirit::karma::long_long, value);
+    if (std::is_signed<Number>::value)
+    {
+        boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
+    }
+    else
+    {
+        boost::spirit::karma::generate(sink, boost::spirit::karma::uint_, value);
+    }
+    return output;
 }
 
 static inline int StringToInt(const std::string &input)

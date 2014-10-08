@@ -62,7 +62,7 @@ class Server
         : thread_pool_size(thread_pool_size), acceptor(io_service),
           new_connection(new http::Connection(io_service, request_handler)), request_handler()
     {
-        const std::string port_string = IntToString(port);
+        const std::string port_string = IntegralToString(port);
 
         boost::asio::ip::tcp::resolver resolver(io_service);
         boost::asio::ip::tcp::resolver::query query(address, port_string);
@@ -76,9 +76,6 @@ class Server
             new_connection->socket(),
             boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
     }
-
-    // Server() = delete;
-    // Server(const Server &) = delete;
 
     void Run()
     {
