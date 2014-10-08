@@ -76,14 +76,14 @@ template <int length, int precision> static inline char *printInt(char *buffer, 
 
 // convert scoped enums to integers
 template <typename Enumeration>
-auto as_integer(Enumeration const value)
-    -> typename std::underlying_type<Enumeration>::type
+auto as_integer(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
 {
     return static_cast<typename std::underlying_type<Enumeration>::type>(value);
 }
 
-template<typename Number>
-static inline typename std::enable_if<std::is_integral<Number>::value, std::string>::type IntegralToString(const Number value)
+template <typename Number>
+static inline typename std::enable_if<std::is_integral<Number>::value, std::string>::type
+IntegralToString(const Number value)
 {
     std::string output;
     std::back_insert_iterator<std::string> sink(output);
@@ -92,14 +92,16 @@ static inline typename std::enable_if<std::is_integral<Number>::value, std::stri
     {
         boost::spirit::karma::generate(sink, boost::spirit::karma::long_long, value);
     }
-
-    if (std::is_signed<Number>::value)
-    {
-        boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
-    }
     else
     {
-        boost::spirit::karma::generate(sink, boost::spirit::karma::uint_, value);
+        if (std::is_signed<Number>::value)
+        {
+            boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
+        }
+        else
+        {
+            boost::spirit::karma::generate(sink, boost::spirit::karma::uint_, value);
+        }
     }
     return output;
 }
@@ -178,25 +180,22 @@ static inline double StringToDouble(const char *p)
     return r;
 }
 
-template <typename T>
-struct scientific_policy : boost::spirit::karma::real_policies<T>
+template <typename T> struct scientific_policy : boost::spirit::karma::real_policies<T>
 {
     //  we want the numbers always to be in fixed format
     static int floatfield(T n) { return boost::spirit::karma::real_policies<T>::fmtflags::fixed; }
     static unsigned int precision(T) { return 6; }
 };
-typedef
-boost::spirit::karma::real_generator<double, scientific_policy<double> >
-science_type;
+typedef boost::spirit::karma::real_generator<double, scientific_policy<double>> science_type;
 
 static inline std::string FixedDoubleToString(const double value)
 {
     std::string output;
     std::back_insert_iterator<std::string> sink(output);
     boost::spirit::karma::generate(sink, science_type(), value);
-    if (output.size() >= 2 && output[output.size()-2] == '.' && output[output.size()-1] == '0')
+    if (output.size() >= 2 && output[output.size() - 2] == '.' && output[output.size() - 1] == '0')
     {
-        output.resize(output.size()-2);
+        output.resize(output.size() - 2);
     }
     return output;
 }
@@ -264,8 +263,8 @@ inline std::string EscapeJSONString(const std::string &input)
 }
 
 static std::string originals[] = {"&", "\"", "<", ">", "'", "[", "]", "\\"};
-static std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;",
-                                 "&#39;", "&91;",   "&93;", " &#92;"};
+static std::string entities[] = {
+    "&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;"};
 
 inline std::size_t URIDecode(const std::string &input, std::string &output)
 {
