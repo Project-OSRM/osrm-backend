@@ -176,7 +176,7 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
                                                 current_edge_target_coordinate_id,
                                                 forward_data.nameID,
                                                 forward_geometry[i].second,
-                                                reverse_geometry[i].second,
+                                                reverse_geometry[geometry_size - 1 - i].second,
                                                 forward_dist_prefix_sum[i],
                                                 reverse_dist_prefix_sum[i],
                                                 m_geometry_compressor.GetPositionForID(e1),
