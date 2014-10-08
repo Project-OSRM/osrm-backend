@@ -46,7 +46,7 @@ class OSRM
     std::unique_ptr<OSRM_impl> OSRM_pimpl_;
 
   public:
-    explicit OSRM(const ServerPaths &paths, const bool use_shared_memory = false);
+    explicit OSRM(ServerPaths paths, const bool use_shared_memory = false);
     ~OSRM();
     void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
 };

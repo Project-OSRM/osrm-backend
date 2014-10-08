@@ -48,7 +48,7 @@ class OSRM_impl
     using PluginMap = std::unordered_map<std::string, BasePlugin *>;
 
   public:
-    OSRM_impl(const ServerPaths &paths, const bool use_shared_memory);
+    OSRM_impl(ServerPaths paths, const bool use_shared_memory);
     OSRM_impl(const OSRM_impl &) = delete;
     virtual ~OSRM_impl();
     void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
@@ -56,7 +56,6 @@ class OSRM_impl
   private:
     void RegisterPlugin(BasePlugin *plugin);
     PluginMap plugin_map;
-    ServerPaths server_paths;
     bool use_shared_memory;
     SharedBarriers *barrier;
     // base class pointer to the objects

@@ -58,8 +58,7 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(const ServerPaths &paths, const bool use_shared_memory)
-    : server_paths(paths)
+OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory)
 {
     if (use_shared_memory)
     {
@@ -158,7 +157,7 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
 
 // proxy code for compilation firewall
 
-OSRM::OSRM(const ServerPaths &paths, const bool use_shared_memory)
+OSRM::OSRM(ServerPaths paths, const bool use_shared_memory)
     : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(paths, use_shared_memory))
 {
 }
