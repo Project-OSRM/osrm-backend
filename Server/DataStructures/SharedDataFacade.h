@@ -55,8 +55,9 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     typedef typename RangeTable<16, true>::BlockT NameIndexBlock;
     typedef typename QueryGraph::InputEdge InputEdge;
     typedef typename super::RTreeLeaf RTreeLeaf;
-    typedef typename StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode
-    RTreeNode;
+    using SharedRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>;
+    using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
+    using RTreeNode = typename SharedRTree::TreeNode;
 
     SharedDataLayout *data_layout;
     char *shared_memory;
@@ -84,8 +85,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     ShM<unsigned, true>::vector m_geometry_indices;
     ShM<unsigned, true>::vector m_geometry_list;
 
-    boost::thread_specific_ptr<
-        StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>> m_static_rtree;
+    boost::thread_specific_ptr<std::pair<unsigned, std::shared_ptr<SharedRTree>>> m_static_rtree;
     boost::filesystem::path file_index_path;
 
     std::shared_ptr<RangeTable<16, true>> m_name_table;
@@ -113,12 +113,12 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
         RTreeNode *tree_ptr =
             data_layout->GetBlockPtr<RTreeNode>(shared_memory, SharedDataLayout::R_SEARCH_TREE);
-        m_static_rtree.reset(
-            new StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>(
+        m_static_rtree.reset(new TimeStampedRTreePair(CURRENT_TIMESTAMP,
+            std::make_shared<SharedRTree>(
                 tree_ptr,
                 data_layout->num_entries[SharedDataLayout::R_SEARCH_TREE],
                 file_index_path,
-                m_coordinate_list));
+                m_coordinate_list)));
     }
 
     void LoadGraph()
@@ -225,7 +225,6 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     {
         data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
                                  CURRENT_REGIONS, sizeof(SharedDataTimestamp), false, false)->Ptr();
-
         CURRENT_LAYOUT = LAYOUT_NONE;
         CURRENT_DATA = DATA_NONE;
         CURRENT_TIMESTAMP = 0;
@@ -363,12 +362,12 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
                                             FixedPointCoordinate &result,
                                             const unsigned zoom_level = 18) final
     {
-        if (!m_static_rtree.get())
+        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
             LoadRTree();
         }
 
-        return m_static_rtree->LocateClosestEndPointForCoordinate(
+        return m_static_rtree->second->LocateClosestEndPointForCoordinate(
             input_coordinate, result, zoom_level);
     }
 
@@ -376,12 +375,12 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
                                       PhantomNode &resulting_phantom_node,
                                       const unsigned zoom_level) final
     {
-        if (!m_static_rtree.get())
+        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
             LoadRTree();
         }
 
-        return m_static_rtree->FindPhantomNodeForCoordinate(
+        return m_static_rtree->second->FindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node, zoom_level);
     }
 
@@ -391,12 +390,12 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
                                             const unsigned zoom_level,
                                             const unsigned number_of_results) final
     {
-        if (!m_static_rtree.get())
+        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
             LoadRTree();
         }
 
-        return m_static_rtree->IncrementalFindPhantomNodeForCoordinate(
+        return m_static_rtree->second->IncrementalFindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node_vector, zoom_level, number_of_results);
     }
 
