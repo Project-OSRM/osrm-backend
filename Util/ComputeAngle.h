@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
 template <class CoordinateT>
-inline static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT &A,
+static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT &A,
                                                                const CoordinateT &C,
                                                                const CoordinateT &B)
 {
@@ -46,10 +46,10 @@ inline static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT
     const double v2x = (B.lon - C.lon) / COORDINATE_PRECISION;
     const double v2y = lat2y(B.lat / COORDINATE_PRECISION) - lat2y(C.lat / COORDINATE_PRECISION);
 
-    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180 / M_PI;
-    while (angle < 0)
+    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / M_PI;
+    while (angle < 0.)
     {
-        angle += 360;
+        angle += 360.;
     }
     return angle;
 }

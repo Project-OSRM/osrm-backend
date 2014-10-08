@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-template <typename FloatT> inline bool EpsilonCompare(const FloatT d1, const FloatT d2)
+template <typename FloatT> bool EpsilonCompare(const FloatT d1, const FloatT d2)
 {
     return (std::abs(d1 - d2) < std::numeric_limits<FloatT>::epsilon());
 }

@@ -51,7 +51,7 @@ namespace filesystem
 // exists. The validate() function must be defined in the same namespace
 // as the target type, (boost::filesystem::path in this case), otherwise
 // it is not called
-// inline void validate(
+// void validate(
 //     boost::any & v,
 //     const std::vector<std::string> & values,
 //     boost::filesystem::path *,
@@ -71,7 +71,7 @@ namespace filesystem
 
 // adapted from:
 // http://stackoverflow.com/questions/1746136/how-do-i-normalize-a-pathname-using-boostfilesystem
-inline boost::filesystem::path
+boost::filesystem::path
 portable_canonical(const boost::filesystem::path &relative_path,
                    const boost::filesystem::path &current_path = boost::filesystem::current_path())
 {
@@ -118,7 +118,7 @@ portable_canonical(const boost::filesystem::path &relative_path,
 
 #if BOOST_FILESYSTEM_VERSION < 3
 
-inline path temp_directory_path()
+path temp_directory_path()
 {
     char *buffer;
     buffer = tmpnam(nullptr);
@@ -126,7 +126,7 @@ inline path temp_directory_path()
     return path(buffer);
 }
 
-inline path unique_path(const path &) { return temp_directory_path(); }
+path unique_path(const path &) { return temp_directory_path(); }
 
 #endif
 }
@@ -136,7 +136,7 @@ inline path unique_path(const path &) { return temp_directory_path(); }
 #define BOOST_FILESYSTEM_VERSION 3
 #endif
 
-inline void AssertPathExists(const boost::filesystem::path &path)
+void AssertPathExists(const boost::filesystem::path &path)
 {
     if (!boost::filesystem::is_regular_file(path))
     {
