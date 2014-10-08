@@ -58,11 +58,11 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory) : use_shared_memory(use_shared_memory)
+OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory)
 {
     if (use_shared_memory)
     {
-        barrier = new SharedBarriers();
+        barrier = osrm::make_unique<SharedBarriers>();
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
     }
     else
@@ -88,10 +88,6 @@ OSRM_impl::~OSRM_impl()
     {
         delete plugin_pointer.second;
     }
-    if (use_shared_memory)
-    {
-        delete barrier;
-    }
 }
 
 void OSRM_impl::RegisterPlugin(BasePlugin *plugin)
@@ -111,7 +107,7 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
     if (plugin_map.end() != iter)
     {
         reply.status = http::Reply::ok;
-        if (use_shared_memory)
+        if (barrier)
         {
             // lock update pending
             boost::interprocess::scoped_lock<boost::interprocess::named_mutex> pending_lock(
@@ -132,7 +128,7 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
         }
 
         iter->second->HandleRequest(route_parameters, reply);
-        if (use_shared_memory)
+        if (barrier)
         {
             // lock query
             boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(

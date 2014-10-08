@@ -36,6 +36,7 @@ struct RouteParameters;
 
 #include "../DataStructures/QueryEdge.h"
 
+#include <memory>
 #include <unordered_map>
 #include <string>
 
@@ -56,8 +57,8 @@ class OSRM_impl
   private:
     void RegisterPlugin(BasePlugin *plugin);
     PluginMap plugin_map;
-    bool use_shared_memory;
-    SharedBarriers *barrier;
+    // will only be initialized if shared memory is used
+    std::unique_ptr<SharedBarriers> barrier;
     // base class pointer to the objects
     BaseDataFacade<QueryEdge::EdgeData> *query_data_facade;
 };
