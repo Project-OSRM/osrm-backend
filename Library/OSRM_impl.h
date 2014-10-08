@@ -56,6 +56,7 @@ class OSRM_impl
   private:
     void RegisterPlugin(BasePlugin *plugin);
     PluginMap plugin_map;
+    ServerPaths server_paths;
     bool use_shared_memory;
     SharedBarriers *barrier;
     // base class pointer to the objects

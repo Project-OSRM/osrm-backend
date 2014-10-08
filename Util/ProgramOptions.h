@@ -45,6 +45,109 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
+inline void populate_base_path(ServerPaths & server_paths)
+{
+    // populate the server_path object
+    auto path_iterator = server_paths.find("base");
+    BOOST_ASSERT(server_paths.end() != path_iterator);
+    std::string base_string = path_iterator->second.string();
+    SimpleLogger().Write() << "populating base path: " << base_string;
+
+    path_iterator = server_paths.find("hsgrdata");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".hsgr";
+    }
+    else
+    {
+        throw OSRMException(base_string + ".hsgr not found");
+    }
+
+    path_iterator = server_paths.find("nodesdata");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".nodes";
+    }
+    else
+    {
+        throw OSRMException(base_string + ".nodes not found");
+    }
+
+    path_iterator = server_paths.find("edgesdata");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".edges";
+    }
+    else
+    {
+        throw OSRMException(base_string + ".edges not found");
+    }
+
+    path_iterator = server_paths.find("geometries");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".geometry";
+    }
+    else
+    {
+        throw OSRMException(base_string + ".geometry not found");
+    }
+
+    path_iterator = server_paths.find("ramindex");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".ramIndex";
+    }
+    else
+    {
+        throw OSRMException(base_string + ".ramIndex not found");
+    }
+
+    path_iterator = server_paths.find("fileindex");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".fileIndex";
+    }
+    else
+    {
+        throw OSRMException(base_string + ".fileIndex not found");
+    }
+
+    path_iterator = server_paths.find("namesdata");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".names";
+    }
+    else
+    {
+        throw OSRMException(base_string + ".namesIndex not found");
+    }
+
+    path_iterator = server_paths.find("timestamp");
+    if (path_iterator != server_paths.end() &&
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        path_iterator->second = base_string + ".timestamp";
+    }
+
+    SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
+    SimpleLogger().Write(logDEBUG) << "Nodes file:\t" << server_paths["nodesdata"];
+    SimpleLogger().Write(logDEBUG) << "Edges file:\t" << server_paths["edgesdata"];
+    SimpleLogger().Write(logDEBUG) << "Geometry file:\t" << server_paths["geometries"];
+    SimpleLogger().Write(logDEBUG) << "RAM file:\t" << server_paths["ramindex"];
+    SimpleLogger().Write(logDEBUG) << "Index file:\t" << server_paths["fileindex"];
+    SimpleLogger().Write(logDEBUG) << "Names file:\t" << server_paths["namesdata"];
+    SimpleLogger().Write(logDEBUG) << "Timestamp file:\t" << server_paths["timestamp"];
+}
+
+
 // generate boost::program_options object for the routing part
 inline unsigned GenerateServerProgramOptions(const int argc,
                                              const char *argv[],
@@ -169,94 +272,6 @@ inline unsigned GenerateServerProgramOptions(const int argc,
 
     if (!use_shared_memory && option_variables.count("base"))
     {
-        path_iterator = paths.find("base");
-        BOOST_ASSERT(paths.end() != path_iterator);
-        std::string base_string = path_iterator->second.string();
-
-        path_iterator = paths.find("hsgrdata");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".hsgr";
-        }
-        else
-        {
-            throw OSRMException(base_string + ".hsgr not found");
-        }
-
-        path_iterator = paths.find("nodesdata");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".nodes";
-        }
-        else
-        {
-            throw OSRMException(base_string + ".nodes not found");
-        }
-
-        path_iterator = paths.find("edgesdata");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".edges";
-        }
-        else
-        {
-            throw OSRMException(base_string + ".edges not found");
-        }
-
-        path_iterator = paths.find("geometries");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".geometry";
-        }
-        else
-        {
-            throw OSRMException(base_string + ".geometry not found");
-        }
-
-        path_iterator = paths.find("ramindex");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".ramIndex";
-        }
-        else
-        {
-            throw OSRMException(base_string + ".ramIndex not found");
-        }
-
-        path_iterator = paths.find("fileindex");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".fileIndex";
-        }
-        else
-        {
-            throw OSRMException(base_string + ".fileIndex not found");
-        }
-
-        path_iterator = paths.find("namesdata");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".names";
-        }
-        else
-        {
-            throw OSRMException(base_string + ".namesIndex not found");
-        }
-
-        path_iterator = paths.find("timestamp");
-        if (path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            path_iterator->second = base_string + ".timestamp";
-        }
-
         return INIT_OK_START_ENGINE;
     }
     if (use_shared_memory && !option_variables.count("base"))

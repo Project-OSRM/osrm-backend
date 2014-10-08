@@ -46,6 +46,7 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
 #include "../Util/make_unique.hpp"
+#include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
@@ -57,8 +58,8 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memory)
-    : use_shared_memory(use_shared_memory)
+OSRM_impl::OSRM_impl(const ServerPaths &paths, const bool use_shared_memory)
+    : server_paths(paths)
 {
     if (use_shared_memory)
     {
@@ -67,6 +68,8 @@ OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memo
     }
     else
     {
+        // populate base path
+        populate_base_path(server_paths);
         query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(server_paths);
     }
 
