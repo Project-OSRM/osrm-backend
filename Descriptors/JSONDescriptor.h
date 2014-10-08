@@ -330,16 +330,16 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                     if (TurnInstruction::LeaveRoundAbout == current_instruction)
                     {
                         temp_instruction =
-                            IntegralToString(as_integer(TurnInstruction::EnterRoundAbout));
+                            cast::integral_to_string(cast::enum_to_underlying(TurnInstruction::EnterRoundAbout));
                         current_turn_instruction += temp_instruction;
                         current_turn_instruction += "-";
-                        temp_instruction = IntegralToString(round_about.leave_at_exit + 1);
+                        temp_instruction = cast::integral_to_string(round_about.leave_at_exit + 1);
                         current_turn_instruction += temp_instruction;
                         round_about.leave_at_exit = 0;
                     }
                     else
                     {
-                        temp_instruction = IntegralToString(as_integer(current_instruction));
+                        temp_instruction = cast::integral_to_string(cast::enum_to_underlying(current_instruction));
                         current_turn_instruction += temp_instruction;
                     }
                     json_instruction_row.values.push_back(current_turn_instruction);
@@ -350,7 +350,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                     json_instruction_row.values.push_back(necessary_segments_running_index);
                     json_instruction_row.values.push_back(round(segment.duration / 10));
                     json_instruction_row.values.push_back(
-                        IntegralToString(static_cast<unsigned>(segment.length)) + "m");
+                        cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
                     const double bearing_value = (segment.bearing / 10.);
                     json_instruction_row.values.push_back(Azimuth::Get(bearing_value));
                     json_instruction_row.values.push_back(
@@ -375,7 +375,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         }
 
         JSON::Array json_last_instruction_row;
-        temp_instruction = IntegralToString(as_integer(TurnInstruction::ReachedYourDestination));
+        temp_instruction = cast::integral_to_string(cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
         json_last_instruction_row.values.push_back(temp_instruction);
         json_last_instruction_row.values.push_back("");
         json_last_instruction_row.values.push_back(0);

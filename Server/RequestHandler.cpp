@@ -88,11 +88,11 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             reply.content.clear();
-            const unsigned position = static_cast<unsigned>(std::distance(request.begin(), iter));
+            const auto position = std::distance(request.begin(), iter);
             JSON::Object json_result;
             json_result.values["status"] = 400;
             std::string message = "Query string malformed close to position ";
-            message += IntegralToString(position);
+            message += cast::integral_to_string(position);
             json_result.values["status_message"] = message;
             JSON::render(reply.content, json_result);
             return;
@@ -113,7 +113,7 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         }
 
         // set headers
-        reply.headers.emplace_back("Content-Length", IntegralToString(reply.content.size()));
+        reply.headers.emplace_back("Content-Length", cast::integral_to_string(reply.content.size()));
         if ("gpx" == route_parameters.output_format)
         { // gpx file
             reply.headers.emplace_back("Content-Type", "application/gpx+xml; charset=UTF-8");

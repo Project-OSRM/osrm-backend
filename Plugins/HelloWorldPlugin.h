@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasePlugin.h"
 #include "../DataStructures/JSONContainer.h"
-#include "../Util/StringUtil.h"
+#include "../Util/cast.hpp"
 
 #include <string>
 
@@ -52,10 +52,10 @@ class HelloWorldPlugin : public BasePlugin
         std::string temp_string;
         json_result.values["title"] = "Hello World";
 
-        temp_string = IntegralToString(routeParameters.zoom_level);
+        temp_string = cast::integral_to_string(routeParameters.zoom_level);
         json_result.values["zoom_level"] = temp_string;
 
-        temp_string = IntegralToString(routeParameters.check_sum);
+        temp_string = cast::integral_to_string(routeParameters.check_sum);
         json_result.values["check_sum"] = temp_string;
         json_result.values["instructions"] = (routeParameters.print_instructions ? "yes" : "no");
         json_result.values["geometry"] = (routeParameters.geometry ? "yes" : "no");
@@ -67,7 +67,7 @@ class HelloWorldPlugin : public BasePlugin
             (!routeParameters.jsonp_parameter.empty() ? "yes" : "no");
         json_result.values["language"] = (!routeParameters.language.empty() ? "yes" : "no");
 
-        temp_string = IntegralToString(routeParameters.coordinates.size());
+        temp_string = cast::integral_to_string(routeParameters.coordinates.size());
         json_result.values["location_count"] = temp_string;
 
         JSON::Array json_locations;
@@ -79,7 +79,7 @@ class HelloWorldPlugin : public BasePlugin
 
             json_coordinates.values.push_back(coordinate.lat / COORDINATE_PRECISION);
             json_coordinates.values.push_back(coordinate.lon / COORDINATE_PRECISION);
-            json_location.values[IntegralToString(counter)] = json_coordinates;
+            json_location.values[cast::integral_to_string(counter)] = json_coordinates;
             json_locations.values.push_back(json_location);
             ++counter;
         }

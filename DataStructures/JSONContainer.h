@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JSON_CONTAINER_H
 
 #include "../ThirdParty/variant/variant.hpp"
-#include "../Util/StringUtil.h"
+#include "../Util/cast.hpp"
 
 #include <iostream>
 #include <vector>
@@ -157,7 +157,7 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
 
     void operator()(const Number &number) const
     {
-        const std::string number_string = FixedDoubleToString(number.value);
+        const std::string number_string = cast::double_fixed_to_string(number.value);
         out.insert(out.end(), number_string.begin(), number_string.end());
     }
 

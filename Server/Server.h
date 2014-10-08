@@ -31,9 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Connection.h"
 #include "RequestHandler.h"
 
+#include "../Util/cast.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/SimpleLogger.h"
-#include "../Util/StringUtil.h"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -60,9 +60,9 @@ class Server
 
     explicit Server(const std::string &address, const int port, const unsigned thread_pool_size)
         : thread_pool_size(thread_pool_size), acceptor(io_service),
-          new_connection(new http::Connection(io_service, request_handler)), request_handler()
+          new_connection(std::make_shared<http::Connection>(io_service, request_handler)), request_handler()
     {
-        const std::string port_string = IntegralToString(port);
+        const std::string port_string = cast::integral_to_string(port);
 
         boost::asio::ip::tcp::resolver resolver(io_service);
         boost::asio::ip::tcp::resolver::query query(address, port_string);
@@ -86,9 +86,9 @@ class Server
                 boost::bind(&boost::asio::io_service::run, &io_service));
             threads.push_back(thread);
         }
-        for (unsigned i = 0; i < threads.size(); ++i)
+        for (auto thread : threads)
         {
-            threads[i]->join();
+            thread->join();
         }
     }
 
@@ -102,7 +102,7 @@ class Server
         if (!e)
         {
             new_connection->start();
-            new_connection.reset(new http::Connection(io_service, request_handler));
+            new_connection = std::make_shared<http::Connection>(io_service, request_handler);
             acceptor.async_accept(
                 new_connection->socket(),
                 boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
