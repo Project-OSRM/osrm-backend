@@ -34,8 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "XMLParser.h"
 
 #include "../Util/GitDescription.h"
+#include "../Util/IniFileUtil.h"
 #include "../Util/OSRMException.h"
-#include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
