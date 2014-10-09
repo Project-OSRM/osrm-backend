@@ -18,7 +18,6 @@ def request_path path, waypoints=[], options={}
   uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
   @query = uri.to_s
   Timeout.timeout(OSRM_TIMEOUT) do
-    log_time "Net::HTTP.get_response #{uri}"
     Net::HTTP.get_response uri
   end
 rescue Errno::ECONNREFUSED => e
@@ -31,7 +30,6 @@ def request_url path
   uri = URI.parse"#{HOST}/#{path}"
   @query = uri.to_s
   Timeout.timeout(OSRM_TIMEOUT) do
-    log_time "Net::HTTP.get_response #{uri}"
     Net::HTTP.get_response uri
   end
 rescue Errno::ECONNREFUSED => e

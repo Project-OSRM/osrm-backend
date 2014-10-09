@@ -1,4 +1,4 @@
-@routing @datastore
+@routing @datastore @testbot
 Feature: Temporary tests related to osrm-datastore
 
     Background:

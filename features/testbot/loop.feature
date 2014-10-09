@@ -1,4 +1,4 @@
-@routing @726
+@routing @726 @testbot
 Feature: Avoid weird loops caused by rounding errors
 
     Background:

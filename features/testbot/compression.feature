@@ -1,4 +1,4 @@
-@routing @graph
+@routing @graph @testbot
 Feature: Geometry Compression
 
     Background:

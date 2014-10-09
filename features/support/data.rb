@@ -21,7 +21,7 @@ def input_format
 end
 
 def sanitized_scenario_title
-  @sanitized_scenario_title ||= @scenario_title.gsub /[^0-9A-Za-z.\-]/, '_'
+  @sanitized_scenario_title ||= @scenario_title.to_s.gsub /[^0-9A-Za-z.\-]/, '_'
 end
 
 def set_grid_size meters

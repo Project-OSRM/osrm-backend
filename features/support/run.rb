@@ -11,7 +11,8 @@ def run_bin bin, options
       opt.gsub! "{profile}", "#{PROFILES_PATH}/#{@profile}.lua" 
     end
 
-    @stdout = `#{QQ}#{BIN_PATH}/#{bin}#{EXE}#{QQ} #{opt} 2>error.log`
+    cmd = "#{QQ}#{BIN_PATH}/#{bin}#{EXE}#{QQ} #{opt} 2>error.log"
+    @stdout = `#{cmd}`
     @stderr = File.read 'error.log'
     @exit_code = $?.exitstatus
   end
