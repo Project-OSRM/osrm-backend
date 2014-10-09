@@ -45,96 +45,92 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
-inline void populate_base_path(ServerPaths & server_paths)
+inline void populate_base_path(ServerPaths &server_paths)
 {
     // populate the server_path object
     auto path_iterator = server_paths.find("base");
-    BOOST_ASSERT(server_paths.end() != path_iterator);
-    std::string base_string = path_iterator->second.string();
-    SimpleLogger().Write() << "populating base path: " << base_string;
 
+    // if a base path has been set, we populate it.
+    if (path_iterator != server_paths.end())
+    {
+        const std::string base_string = path_iterator->second.string();
+        SimpleLogger().Write() << "populating base path: " << base_string;
+
+        server_paths["hsgrdata"] = base_string + ".hsgr";
+        BOOST_ASSERT(server_paths.find("hsgrdata") != server_paths.end());
+        server_paths["nodesdata"] = base_string + ".nodes";
+        BOOST_ASSERT(server_paths.find("nodesdata") != server_paths.end());
+        server_paths["edgesdata"] = base_string + ".edges";
+        BOOST_ASSERT(server_paths.find("edgesdata") != server_paths.end());
+        server_paths["geometries"] = base_string + ".geometry";
+        BOOST_ASSERT(server_paths.find("geometries") != server_paths.end());
+        server_paths["ramindex"] = base_string + ".ramIndex";
+        BOOST_ASSERT(server_paths.find("ramindex") != server_paths.end());
+        server_paths["fileindex"] = base_string + ".fileIndex";
+        BOOST_ASSERT(server_paths.find("fileindex") != server_paths.end());
+        server_paths["namesdata"] = base_string + ".names";
+        BOOST_ASSERT(server_paths.find("namesdata") != server_paths.end());
+        server_paths["timestamp"] = base_string + ".timestamp";
+        BOOST_ASSERT(server_paths.find("timestamp") != server_paths.end());
+    }
+
+    // check if files are give and whether they exist at all
     path_iterator = server_paths.find("hsgrdata");
-    if (path_iterator != server_paths.end() &&
+    if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        path_iterator->second = base_string + ".hsgr";
-    }
-    else
-    {
-        throw OSRMException(base_string + ".hsgr not found");
+        if (path_iterator == server_paths.end())
+        {
+            SimpleLogger().Write() << "hsgrdata unset";
+        }
+        if (!boost::filesystem::is_regular_file(path_iterator->second))
+        {
+            SimpleLogger().Write() << "not a regular file";
+        }
+
+        throw OSRMException(".hsgr not found: " + path_iterator->second.string());
     }
 
     path_iterator = server_paths.find("nodesdata");
-    if (path_iterator != server_paths.end() &&
+    if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        path_iterator->second = base_string + ".nodes";
-    }
-    else
-    {
-        throw OSRMException(base_string + ".nodes not found");
+        throw OSRMException(".nodes not found");
     }
 
     path_iterator = server_paths.find("edgesdata");
-    if (path_iterator != server_paths.end() &&
+    if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        path_iterator->second = base_string + ".edges";
-    }
-    else
-    {
-        throw OSRMException(base_string + ".edges not found");
+        throw OSRMException(".edges not found");
     }
 
     path_iterator = server_paths.find("geometries");
-    if (path_iterator != server_paths.end() &&
+    if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        path_iterator->second = base_string + ".geometry";
-    }
-    else
-    {
-        throw OSRMException(base_string + ".geometry not found");
+        throw OSRMException(".geometry not found");
     }
 
     path_iterator = server_paths.find("ramindex");
-    if (path_iterator != server_paths.end() &&
+    if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        path_iterator->second = base_string + ".ramIndex";
-    }
-    else
-    {
-        throw OSRMException(base_string + ".ramIndex not found");
+        throw OSRMException(".ramIndex not found");
     }
 
     path_iterator = server_paths.find("fileindex");
-    if (path_iterator != server_paths.end() &&
+    if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        path_iterator->second = base_string + ".fileIndex";
-    }
-    else
-    {
-        throw OSRMException(base_string + ".fileIndex not found");
+        throw OSRMException(".fileIndex not found");
     }
 
     path_iterator = server_paths.find("namesdata");
-    if (path_iterator != server_paths.end() &&
+    if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        path_iterator->second = base_string + ".names";
-    }
-    else
-    {
-        throw OSRMException(base_string + ".namesIndex not found");
-    }
-
-    path_iterator = server_paths.find("timestamp");
-    if (path_iterator != server_paths.end() &&
-        !boost::filesystem::is_regular_file(path_iterator->second))
-    {
-        path_iterator->second = base_string + ".timestamp";
+        throw OSRMException(".namesIndex not found");
     }
 
     SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
@@ -147,7 +143,6 @@ inline void populate_base_path(ServerPaths & server_paths)
     SimpleLogger().Write(logDEBUG) << "Timestamp file:\t" << server_paths["timestamp"];
 }
 
-
 // generate boost::program_options object for the routing part
 inline unsigned GenerateServerProgramOptions(const int argc,
                                              const char *argv[],
@@ -158,7 +153,6 @@ inline unsigned GenerateServerProgramOptions(const int argc,
                                              bool &use_shared_memory,
                                              bool &trial)
 {
-
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
