@@ -304,7 +304,7 @@ int main(const int argc, const char *argv[])
         // load graph edge size
         unsigned number_of_graph_edges = 0;
         hsgr_input_stream.read((char *)&number_of_graph_edges, sizeof(unsigned));
-        BOOST_ASSERT_MSG(0 != number_of_graph_edges, "number of graph edges is zero");
+        // BOOST_ASSERT_MSG(0 != number_of_graph_edges, "number of graph edges is zero");
         shared_layout_ptr->SetBlockSize<QueryGraph::EdgeArrayEntry>(
             SharedDataLayout::GRAPH_EDGE_LIST, number_of_graph_edges);
 
@@ -362,7 +362,6 @@ int main(const int argc, const char *argv[])
         geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_LIST,
                                                   number_of_compressed_geometries);
-
         // allocate shared memory block
         SimpleLogger().Write() << "allocating shared memory of "
                                << shared_layout_ptr->GetSizeOfLayout() << " bytes";
