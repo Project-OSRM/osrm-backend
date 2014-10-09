@@ -1,4 +1,4 @@
-@routed @options @files
+@routed @options @files @todo
 Feature: osrm-routed command line options: files
 # Normally when launching osrm-routed, it will keep running as a server until it's shut down.
 # For testing program options, the --trial option is used, which causes osrm-routed to quit
@@ -6,6 +6,11 @@ Feature: osrm-routed command line options: files
 # 
 # The {base} part of the options to osrm-routed will be expanded to the actual base path of
 # the preprocessed file.
+
+# TODO
+# Since we're not using osmr-datastore for all testing, osrm-routed is kept running.
+# This means this test fails because osrm-routed is already running.
+# It probably needs to be rewritten to first quit osrm-routed.
 
     Background:
         Given the profile "testbot"
