@@ -258,16 +258,16 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     BOOST_ASSERT(query_location.isValid());
 
     // initialize values
-    const float x = lat2y(query_location.lat / COORDINATE_PRECISION);
-    const float y = query_location.lon / COORDINATE_PRECISION;
-    const float a = lat2y(segment_source.lat / COORDINATE_PRECISION);
-    const float b = segment_source.lon / COORDINATE_PRECISION;
-    const float c = lat2y(segment_target.lat / COORDINATE_PRECISION);
-    const float d = segment_target.lon / COORDINATE_PRECISION;
-    float p, q /*,mX*/, nY;
-    if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
+    const double x = lat2y(query_location.lat / COORDINATE_PRECISION);
+    const double y = query_location.lon / COORDINATE_PRECISION;
+    const double a = lat2y(segment_source.lat / COORDINATE_PRECISION);
+    const double b = segment_source.lon / COORDINATE_PRECISION;
+    const double c = lat2y(segment_target.lat / COORDINATE_PRECISION);
+    const double d = segment_target.lon / COORDINATE_PRECISION;
+    double p, q /*,mX*/, nY;
+    if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
     {
-        const float m = (d - b) / (c - a); // slope
+        const double m = (d - b) / (c - a); // slope
         // Projection of (x,y) on line joining (a,b) and (c,d)
         p = ((x + (m * y)) + (m * m * a - m * b)) / (1.f + m * m);
         q = b + m * (p - a);
@@ -293,11 +293,11 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     {
         ratio = (segment_target == query_location ? 1.f : 0.f);
     }
-    else if (std::abs(ratio) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio) <= std::numeric_limits<double>::epsilon())
     {
-        ratio = 0.;
+        ratio = 0.f;
     }
-    else if (std::abs(ratio - 1.f) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio - 1.f) <= std::numeric_limits<double>::epsilon())
     {
         ratio = 1.f;
     }
@@ -308,7 +308,7 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     {
         nearest_location = segment_source;
     }
-    else if (ratio >= 1.)
+    else if (ratio >= 1.f)
     {
         nearest_location = segment_target;
     }
