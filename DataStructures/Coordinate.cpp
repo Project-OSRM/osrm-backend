@@ -184,7 +184,8 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
     bool inverse_ratio = false;
 
     // straight line segment on equator
-    if (std::abs(c) < std::numeric_limits<float>::epsilon() && std::abs(a) < std::numeric_limits<float>::epsilon())
+    if (std::abs(c) < std::numeric_limits<float>::epsilon() &&
+        std::abs(a) < std::numeric_limits<float>::epsilon())
     {
         ratio = (q - b) / (d - b);
     }
@@ -228,7 +229,7 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
         ratio = 1.0f - ratio;
     }
 
-    //compute the nearest location
+    // compute the nearest location
     FixedPointCoordinate nearest_location;
     BOOST_ASSERT(!std::isnan(ratio));
     if (ratio <= 0.f)
@@ -366,7 +367,8 @@ void FixedPointCoordinate::Output(std::ostream &out) const
 float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &first_coordinate,
                                        const FixedPointCoordinate &second_coordinate)
 {
-    const float lon_diff = second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
+    const float lon_diff =
+        second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
     const float lon_delta = DegreeToRadian(lon_diff);
     const float lat1 = DegreeToRadian(first_coordinate.lat / COORDINATE_PRECISION);
     const float lat2 = DegreeToRadian(second_coordinate.lat / COORDINATE_PRECISION);
@@ -408,9 +410,15 @@ float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
     return result;
 }
 
-float FixedPointCoordinate::DegreeToRadian(const float degree) { return degree * (static_cast<float>(M_PI) / 180.f); }
+float FixedPointCoordinate::DegreeToRadian(const float degree)
+{
+    return degree * (static_cast<float>(M_PI) / 180.f);
+}
 
-float FixedPointCoordinate::RadianToDegree(const float radian) { return radian * (180.f * static_cast<float>(M_1_PI)); }
+float FixedPointCoordinate::RadianToDegree(const float radian)
+{
+    return radian * (180.f * static_cast<float>(M_1_PI));
+}
 
 // This distance computation does integer arithmetic only and is a lot faster than
 // the other distance function which are numerically correct('ish).
