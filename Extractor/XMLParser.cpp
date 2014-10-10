@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/InputReaderFactory.h"
 #include "../DataStructures/Restriction.h"
 #include "../Util/cast.hpp"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 

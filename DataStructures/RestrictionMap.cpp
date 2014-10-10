@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RestrictionMap.h"
 #include "NodeBasedGraph.h"
 
-#include "../Util/SimpleLogger.h"
-
 bool RestrictionMap::IsViaNode(const NodeID node) const
 {
     return m_no_turn_via_node_set.find(node) != m_no_turn_via_node_set.end();

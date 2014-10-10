@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "GitDescription.h"
 #include "IniFileUtil.h"
 #include "OSRMException.h"
-#include "SimpleLogger.h"
+#include "simple_logger.hpp"
 
 #include <osrm/ServerPaths.h>
 

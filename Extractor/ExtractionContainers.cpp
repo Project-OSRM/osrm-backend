@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractionContainers.h"
 #include "ExtractionWay.h"
 #include "../Util/OSRMException.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #include "../Util/TimingUtil.h"
 #include "../DataStructures/RangeTable.h"
 

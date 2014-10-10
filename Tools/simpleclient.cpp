@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Library/OSRM.h"
 #include "../Util/GitDescription.h"
 #include "../Util/ProgramOptions.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 
 #include <osrm/Reply.h>
 #include <osrm/RouteParameters.h>

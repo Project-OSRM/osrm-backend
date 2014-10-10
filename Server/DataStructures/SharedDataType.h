@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SHARED_DATA_TYPE_H_
 
 #include "../../Util/OSRMException.h"
-#include "../../Util/SimpleLogger.h"
+#include "../../Util/simple_logger.hpp"
 
 #include <cstdint>
 

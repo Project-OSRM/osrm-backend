@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/Coordinate.h>
 #include "../Util/MercatorUtil.h"
 #ifndef NDEBUG
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #endif
 #include "../Util/StringUtil.h"
 

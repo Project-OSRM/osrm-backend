@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Server/DataStructures/SharedBarriers.h"
 #include "Util/BoostFileSystemFix.h"
 #include "Util/DataStoreOptions.h"
-#include "Util/SimpleLogger.h"
+#include "Util/simple_logger.hpp"
 #include "Util/FingerPrint.h"
 #include "typedefs.h"
 

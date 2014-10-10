@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/Range.h"
 #include "../DataStructures/XORFastHash.h"
 #include "../DataStructures/XORFastHashStorage.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"

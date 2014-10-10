@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Server/Server.h"
 #include "Util/GitDescription.h"
 #include "Util/ProgramOptions.h"
-#include "Util/SimpleLogger.h"
+#include "Util/simple_logger.hpp"
 #include "Util/FingerPrint.h"
 
 #ifdef __linux__

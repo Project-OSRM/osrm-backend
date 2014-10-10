@@ -2,7 +2,6 @@
 #define EDGE_BASED_NODE_H
 
 #include "../DataStructures/TravelMode.h"
-#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>

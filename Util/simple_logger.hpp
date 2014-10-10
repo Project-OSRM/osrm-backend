@@ -25,28 +25,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/GitDescription.h"
-#include "../Util/simple_logger.hpp"
-#include "../Server/DataStructures/SharedBarriers.h"
+#ifndef SIMPLE_LOGGER_HPP
+#define SIMPLE_LOGGER_HPP
 
-#include <iostream>
+#include <atomic>
+#include <sstream>
 
-int main()
+enum LogLevel
 {
-    LogPolicy::GetInstance().Unmute();
-    try
-    {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
-                               << "compiled at " << __DATE__ << ", " __TIME__;
-        SimpleLogger().Write() << "Releasing all locks";
-        SharedBarriers barrier;
-        barrier.pending_update_mutex.unlock();
-        barrier.query_mutex.unlock();
-        barrier.update_mutex.unlock();
-    }
-    catch (const std::exception &e)
-    {
-        SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
-    }
-    return 0;
-}
+    logINFO,
+    logWARNING,
+    logDEBUG
+};
+
+class LogPolicy
+{
+  public:
+    void Unmute();
+
+    void Mute();
+
+    bool IsMute() const;
+
+    static LogPolicy &GetInstance();
+
+    LogPolicy(const LogPolicy &) = delete;
+
+  private:
+    LogPolicy() : m_is_mute(true) {}
+    std::atomic<bool> m_is_mute;
+};
+
+class SimpleLogger
+{
+  public:
+    SimpleLogger();
+
+    virtual ~SimpleLogger();
+    std::mutex &get_mutex();
+    std::ostringstream &Write(LogLevel l = logINFO);
+
+  private:
+    LogLevel level;
+    std::ostringstream os;
+};
+
+#endif /* SIMPLE_LOGGER_HPP */

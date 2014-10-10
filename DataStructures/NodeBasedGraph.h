@@ -3,7 +3,7 @@
 
 #include "DynamicGraph.h"
 #include "ImportEdge.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 
 #include <tbb/parallel_sort.h>
 

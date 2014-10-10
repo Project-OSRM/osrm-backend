@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/cast.hpp"
 #include "../Util/make_unique.hpp"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>

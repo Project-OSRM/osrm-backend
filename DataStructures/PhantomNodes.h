@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 #include "../DataStructures/TravelMode.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #include "../typedefs.h"
 
 #include <vector>
@@ -82,7 +82,7 @@ struct PhantomNode
     unsigned short fwd_segment_position;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
-    
+
     int GetForwardWeightPlusOffset() const
     {
         if (SPECIAL_NODEID == forward_node_id)

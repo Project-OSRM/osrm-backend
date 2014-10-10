@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/GitDescription.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/OSRMException.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"

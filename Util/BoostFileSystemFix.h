@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BOOST_FILE_SYSTEM_FIX_H
 
 #include "OSRMException.h"
-#include "SimpleLogger.h"
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
@@ -60,8 +59,6 @@ namespace filesystem
 //     boost::program_options::validators::check_first_occurrence(v);
 //     const std::string & input_string =
 //         boost::program_options::validators::get_single_string(values);
-//     // SimpleLogger().Write() << "validator called for " << input_string;
-//     // SimpleLogger().Write() << "validator called for " << input_string;
 //     if(boost::filesystem::is_regular_file(input_string)) {
 //         v = boost::any(boost::filesystem::path(input_string));
 //     } else {

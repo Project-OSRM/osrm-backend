@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
-#include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 

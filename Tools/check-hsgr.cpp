@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/Range.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

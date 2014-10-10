@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #include "../Util/FingerPrint.h"
 #include "../typedefs.h"
 

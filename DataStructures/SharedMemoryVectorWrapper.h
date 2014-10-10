@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_MEMORY_VECTOR_WRAPPER_H
 #define SHARED_MEMORY_VECTOR_WRAPPER_H
 
-#include "../Util/SimpleLogger.h"
-
 #include <boost/assert.hpp>
 
 #include <algorithm>

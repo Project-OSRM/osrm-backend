@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/Range.h"
 #include "../Util/compute_angle.hpp"
 #include "../Util/LuaUtil.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 #include "../Util/TimingUtil.h"
 
 #include <boost/assert.hpp>

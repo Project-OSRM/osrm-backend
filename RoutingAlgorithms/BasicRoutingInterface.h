@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SearchEngineData.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../Util/SimpleLogger.h"
+// #include "../Util/simple_logger.hpp.h"
 
 #include <boost/assert.hpp>
 

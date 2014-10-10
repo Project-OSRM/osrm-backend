@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Percent.h"
 #include "Range.h"
 #include "SharedMemoryVectorWrapper.h"
-#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>

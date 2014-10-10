@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
 #include "../../Util/ProgramOptions.h"
-#include "../../Util/SimpleLogger.h"
+#include "../../Util/simple_logger.hpp"
 
 #include <osrm/Coordinate.h>
 
