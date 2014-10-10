@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasicRoutingInterface.h"
 #include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngineData.h"
+#include "../Util/container.hpp"
 
 #include <boost/assert.hpp>
 
@@ -172,7 +173,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
             return;
         }
 
-        sort_unique_resize(via_node_candidate_list);
+        osrm::sort_unique_resize(via_node_candidate_list);
 
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;

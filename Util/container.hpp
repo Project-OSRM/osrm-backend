@@ -25,12 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef CONTAINERUTILS_H_
-#define CONTAINERUTILS_H_
+#ifndef CONTAINER_HPP_
+#define CONTAINER_HPP_
 
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
+namespace osrm
+{
 template <typename T> void sort_unique_resize(std::vector<T> &vector)
 {
     std::sort(vector.begin(), vector.end());
@@ -58,15 +61,15 @@ Function for_each_pair(ForwardIterator begin, ForwardIterator end, Function func
         return function;
     }
 
-    ForwardIterator next = begin;
-    ++next;
+    auto next = begin;
+    next = std::next(next);
 
     while (next != end)
     {
         function(*begin, *next);
-        ++begin; ++next;
+        std::next(begin); std::next(next);
     }
     return function;
 }
-
-#endif /* CONTAINERUTILS_H_ */
+}
+#endif /* CONTAINER_HPP_ */
