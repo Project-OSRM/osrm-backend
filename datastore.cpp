@@ -90,17 +90,6 @@ void delete_region(const SharedDataType region)
     }
 }
 
-// find all existing shmem regions and remove them.
-void springclean()
-{
-    SimpleLogger().Write() << "spring-cleaning all shared memory regions";
-    delete_region(DATA_1);
-    delete_region(LAYOUT_1);
-    delete_region(DATA_2);
-    delete_region(LAYOUT_2);
-    delete_region(CURRENT_REGIONS);
-}
-
 int main(const int argc, const char *argv[])
 {
     LogPolicy::GetInstance().Unmute();
@@ -138,14 +127,8 @@ int main(const int argc, const char *argv[])
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
         ServerPaths server_paths;
-        bool should_springclean = false;
-        if (!GenerateDataStoreOptions(argc, argv, server_paths, should_springclean))
+        if (!GenerateDataStoreOptions(argc, argv, server_paths))
         {
-            return 0;
-        }
-        if (should_springclean)
-        {
-            springclean();
             return 0;
         }
 
