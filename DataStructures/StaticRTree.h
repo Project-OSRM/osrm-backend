@@ -36,8 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SharedMemoryVectorWrapper.h"
 
 #include "../ThirdParty/variant/variant.hpp"
+#include "../Util/floating_point.hpp"
 #include "../Util/MercatorUtil.h"
-#include "../Util/NumericUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
@@ -788,7 +788,7 @@ class StaticRTree
                 BOOST_ASSERT(0. <= current_perpendicular_distance);
 
                 if ((current_perpendicular_distance < current_min_dist) &&
-                    !EpsilonCompare(current_perpendicular_distance, current_min_dist))
+                    !osrm::epsilon_compare(current_perpendicular_distance, current_min_dist))
                 {
                     // store phantom node in result vector
                     result_phantom_node_vector.emplace_back(
@@ -967,7 +967,7 @@ class StaticRTree
                 BOOST_ASSERT(0. <= current_perpendicular_distance);
 
                 if ((current_perpendicular_distance < current_min_dist) &&
-                    !EpsilonCompare(current_perpendicular_distance, current_min_dist))
+                    !osrm::epsilon_compare(current_perpendicular_distance, current_min_dist))
                 {
                     // store phantom node in result vector
                     result_phantom_node_vector.emplace_back(
@@ -1067,7 +1067,7 @@ class StaticRTree
                         BOOST_ASSERT(0. <= current_perpendicular_distance);
 
                         if ((current_perpendicular_distance < min_dist) &&
-                            !EpsilonCompare(current_perpendicular_distance, min_dist))
+                            !osrm::epsilon_compare(current_perpendicular_distance, min_dist))
                         { // found a new minimum
                             min_dist = current_perpendicular_distance;
                             result_phantom_node = {current_edge.forward_edge_based_node_id,
