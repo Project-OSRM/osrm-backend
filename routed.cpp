@@ -108,20 +108,10 @@ int main(int argc, const char *argv[])
         {
             SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
         }
-        else
-        {
-            SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
-            SimpleLogger().Write(logDEBUG) << "Nodes file:\t" << server_paths["nodesdata"];
-            SimpleLogger().Write(logDEBUG) << "Edges file:\t" << server_paths["edgesdata"];
-            SimpleLogger().Write(logDEBUG) << "Geometry file:\t" << server_paths["geometries"];
-            SimpleLogger().Write(logDEBUG) << "RAM file:\t" << server_paths["ramindex"];
-            SimpleLogger().Write(logDEBUG) << "Index file:\t" << server_paths["fileindex"];
-            SimpleLogger().Write(logDEBUG) << "Names file:\t" << server_paths["namesdata"];
-            SimpleLogger().Write(logDEBUG) << "Timestamp file:\t" << server_paths["timestamp"];
-            SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
-            SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
-            SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
-        }
+
+        SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
+        SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
+        SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
 #ifndef _WIN32
         int sig = 0;
         sigset_t new_mask;
