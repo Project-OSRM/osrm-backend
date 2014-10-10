@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/BFSComponentExplorer.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/Range.h"
-#include "../Util/ComputeAngle.h"
+#include "../Util/compute_angle.hpp"
 #include "../Util/LuaUtil.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
@@ -630,8 +630,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 {
                     distance += speed_profile.traffic_signal_penalty;
                 }
-                const double angle = GetAngleBetweenThreeFixedPointCoordinates(
-                m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
+                const double angle = ComputeAngle::OfThreeFixedPointCoordinates(
+                    m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
                 const int turn_penalty = GetTurnPenalty(angle, lua_state);
                 TurnInstruction turn_instruction = AnalyzeTurn(u, v, w, angle);
                 if (turn_instruction == TurnInstruction::UTurn)
