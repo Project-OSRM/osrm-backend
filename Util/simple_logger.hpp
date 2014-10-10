@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SIMPLE_LOGGER_HPP
 
 #include <atomic>
+#include <mutex>
 #include <sstream>
 
 enum LogLevel
