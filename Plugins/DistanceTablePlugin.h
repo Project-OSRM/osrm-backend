@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
+template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 {
   private:
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;

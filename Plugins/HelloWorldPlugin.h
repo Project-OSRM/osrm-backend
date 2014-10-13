@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-class HelloWorldPlugin : public BasePlugin
+class HelloWorldPlugin final : public BasePlugin
 {
   private:
     std::string temp_string;

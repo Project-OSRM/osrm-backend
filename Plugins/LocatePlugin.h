@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 // locates the nearest node in the road network for a given coordinate.
-template <class DataFacadeT> class LocatePlugin : public BasePlugin
+template <class DataFacadeT> class LocatePlugin final : public BasePlugin
 {
   public:
     explicit LocatePlugin(DataFacadeT *facade) : descriptor_string("locate"), facade(facade) {}

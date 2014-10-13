@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
+template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 {
   private:
     std::unordered_map<std::string, unsigned> descriptor_table;

@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-template <class DataFacadeT> class TimestampPlugin : public BasePlugin
+template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
 {
   public:
     explicit TimestampPlugin(const DataFacadeT *facade)

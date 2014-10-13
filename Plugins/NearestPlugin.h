@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
 
-template <class DataFacadeT> class NearestPlugin : public BasePlugin
+template <class DataFacadeT> class NearestPlugin final : public BasePlugin
 {
   public:
     explicit NearestPlugin(DataFacadeT *facade) : facade(facade), descriptor_string("nearest") {}
@@ -59,7 +59,7 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
                                                         phantom_node_vector,
                                                         route_parameters.zoom_level,
                                                         number_of_results);
-        
+
         JSON::Object json_result;
         if (phantom_node_vector.empty() || !phantom_node_vector.front().isValid())
         {
@@ -69,11 +69,11 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
         {
             reply.status = http::Reply::ok;
             json_result.values["status"] = 0;
-            
+
             if (number_of_results > 1)
             {
                 JSON::Array results;
-                
+
                 int vector_length = phantom_node_vector.size();
                 for (const auto i : osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                 {
