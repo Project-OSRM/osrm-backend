@@ -67,7 +67,7 @@ Function for_each_pair(ForwardIterator begin, ForwardIterator end, Function func
     while (next != end)
     {
         function(*begin, *next);
-        std::next(begin); std::next(next);
+        begin = std::next(begin); next = std::next(next);
     }
     return function;
 }
