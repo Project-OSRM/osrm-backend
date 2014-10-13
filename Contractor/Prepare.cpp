@@ -172,7 +172,7 @@ int Prepare::Process(int argc, char *argv[])
 
     BuildRTree(node_based_edge_list);
 
-    IteratorbasedCRC32 crc32;
+    RangebasedCRC32 crc32;
     if (crc32.using_hardware())
     {
         SimpleLogger().Write() << "using hardware based CRC32 computation";
@@ -182,11 +182,10 @@ int Prepare::Process(int argc, char *argv[])
         SimpleLogger().Write() << "using software based CRC32 computation";
     }
 
-    const unsigned node_based_edge_list_CRC32 =
-        crc32(node_based_edge_list.begin(), node_based_edge_list.end());
+    const unsigned crc32_value = crc32(node_based_edge_list);
     node_based_edge_list.clear();
     node_based_edge_list.shrink_to_fit();
-    SimpleLogger().Write() << "CRC32: " << node_based_edge_list_CRC32;
+    SimpleLogger().Write() << "CRC32: " << crc32_value;
 
     WriteNodeMapping();
 
@@ -264,7 +263,7 @@ int Prepare::Process(int argc, char *argv[])
 
     const unsigned node_array_size = node_array.size();
     // serialize crc32, aka checksum
-    hsgr_output_stream.write((char *)&node_based_edge_list_CRC32, sizeof(unsigned));
+    hsgr_output_stream.write((char *)&crc32_value, sizeof(unsigned));
     // serialize number of nodes
     hsgr_output_stream.write((char *)&node_array_size, sizeof(unsigned));
     // serialize number of edges

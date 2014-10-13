@@ -129,4 +129,18 @@ class IteratorbasedCRC32
     bool use_hardware_implementation;
 };
 
+struct RangebasedCRC32
+{
+    template<typename Iteratable>
+    unsigned operator()(const Iteratable &iterable)
+    {
+        return crc32(std::begin(iterable), std::end(iterable));
+    }
+
+    bool using_hardware() const { return crc32.using_hardware(); }
+
+  private:
+    IteratorbasedCRC32 crc32;
+};
+
 #endif /* ITERATOR_BASED_CRC32_H */

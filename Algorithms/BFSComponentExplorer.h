@@ -12,10 +12,10 @@
 template <typename GraphT> class BFSComponentExplorer
 {
   public:
-    BFSComponentExplorer(const GraphT &dynamicGraph,
+    BFSComponentExplorer(const GraphT &dynamic_graph,
                          const RestrictionMap &restrictions,
                          const std::unordered_set<NodeID> &barrier_nodes)
-        : m_graph(dynamicGraph), m_restriction_map(restrictions), m_barrier_nodes(barrier_nodes)
+        : m_graph(dynamic_graph), m_restriction_map(restrictions), m_barrier_nodes(barrier_nodes)
     {
         BOOST_ASSERT(m_graph.GetNumberOfNodes() > 0);
     }
@@ -23,14 +23,14 @@ template <typename GraphT> class BFSComponentExplorer
     /*!
      * Returns the size of the component that the node belongs to.
      */
-    inline unsigned int GetComponentSize(NodeID node)
+    unsigned int GetComponentSize(const NodeID node) const
     {
         BOOST_ASSERT(node < m_component_index_list.size());
 
         return m_component_index_size[m_component_index_list[node]];
     }
 
-    inline unsigned int GetNumberOfComponents() { return m_component_index_size.size(); }
+    unsigned int GetNumberOfComponents() { return m_component_index_size.size(); }
 
     /*!
      * Computes the component sizes.
@@ -67,7 +67,7 @@ template <typename GraphT> class BFSComponentExplorer
     /*!
      * Explores the current component that starts at node using BFS.
      */
-    inline unsigned ExploreComponent(std::queue<std::pair<NodeID, NodeID>> &bfs_queue,
+    unsigned ExploreComponent(std::queue<std::pair<NodeID, NodeID>> &bfs_queue,
                                      NodeID node,
                                      unsigned current_component)
     {
