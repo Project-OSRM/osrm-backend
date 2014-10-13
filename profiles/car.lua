@@ -302,21 +302,21 @@ function way_function (way, result)
   end
 
   -- reduce speed on bad surfaces
-  local surface = way.tags:Find("surface")
-  local tracktype = way.tags:Find("tracktype")
-  local smoothness = way.tags:Find("smoothness")
+  local surface = way:get_value_by_key("surface")
+  local tracktype = way:get_value_by_key("tracktype")
+  local smoothness = way:get_value_by_key("smoothness")
 
   if surface and surface_speeds[surface] then
-    way.forward_speed = math.min(surface_speeds[surface], way.forward_speed)
-    way.backward_speed = math.min(surface_speeds[surface], way.backward_speed)
+    result.forward_speed = math.min(surface_speeds[surface], result.forward_speed)
+    result.backward_speed = math.min(surface_speeds[surface], result.backward_speed)
   end
   if tracktype and tracktype_speeds[tracktype] then
-    way.forward_speed = math.min(tracktype_speeds[tracktype], way.forward_speed)
-    way.backward_speed = math.min(tracktype_speeds[tracktype], way.backward_speed)
+    result.forward_speed = math.min(tracktype_speeds[tracktype], result.forward_speed)
+    result.backward_speed = math.min(tracktype_speeds[tracktype], result.backward_speed)
   end
   if smoothness and smoothness_speeds[smoothness] then
-    way.forward_speed = math.min(smoothness_speeds[smoothness], way.forward_speed)
-    way.backward_speed = math.min(smoothness_speeds[smoothness], way.backward_speed)
+    result.forward_speed = math.min(smoothness_speeds[smoothness], result.forward_speed)
+    result.backward_speed = math.min(smoothness_speeds[smoothness], result.backward_speed)
   end
 
   -- parse the remaining tags
