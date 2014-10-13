@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/GitDescription.h"
 #include "../Util/IniFileUtil.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>

@@ -178,100 +178,35 @@ int Extractor::Run(int argc, char *argv[])
 
         RestrictionParser restriction_parser(scripting_environment);
 
-        // move to header
-        std::atomic_bool parsing_done {false};
-        std::atomic_bool loading_done {false};
+        // // move to header
+        // std::atomic_bool parsing_done {false};
+        // std::atomic_bool loading_done {false};
 
-        ConcurrentQueue<std::shared_ptr<osmium::memory::Buffer>> parse_queue(128);
-        ConcurrentQueue<std::shared_ptr<ResultBuffer>> result_queue(128);
+        // ConcurrentQueue<std::shared_ptr<osmium::memory::Buffer>> parse_queue(128);
+        // ConcurrentQueue<std::shared_ptr<ResultBuffer>> result_queue(128);
 
-        std::thread loading_thread([&]{
-            while (osmium::memory::Buffer buffer = reader.read())
-            {
-                parse_queue.push(std::make_shared<osmium::memory::Buffer>(std::move(buffer)));
-            }
-            loading_done = true;
-        });
+        // std::thread loading_thread([&]{
+        //     while (osmium::memory::Buffer buffer = reader.read())
+        //     {
+        //         parse_queue.push(std::make_shared<osmium::memory::Buffer>(std::move(buffer)));
+        //     }
+        //     loading_done = true;
+        // });
 
-        // parsing threads
-        while (!loading_done || !parse_queue.empty())
-        {
-            std::shared_ptr<osmium::memory::Buffer> current_buffer;
-            if (!parse_queue.try_pop(current_buffer))
-            {
-                continue;
-            }
+        // // parsing threads
+        // while (!loading_done || !parse_queue.empty())
+        // {
+        //     std::shared_ptr<osmium::memory::Buffer> current_buffer;
+        //     if (!parse_queue.try_pop(current_buffer))
+        //     {
+        //         continue;
+        //     }
 
             ExtractionNode result_node;
             ExtractionWay result_way;
 
-            std::shared_ptr<ResultBuffer> result_buffer = std::make_shared<ResultBuffer>();;
-            for (osmium::OSMEntity &entity : *current_buffer)
-            {
-                switch (entity.type())
-                {
-                case osmium::item_type::node:
-                    ++number_of_nodes;
-                    result_node.Clear();
-                    luabind::call_function<void>(lua_state,
-                                                 "node_function",
-                                                 boost::cref(static_cast<osmium::Node &>(entity)),
-                                                 boost::ref(result_node));
-                    result_buffer->nodes.emplace_back(osmium::NodeRef{static_cast<osmium::Node &>(entity).id(), static_cast<osmium::Node &>(entity).location()}, result_node);
-                    break;
-                case osmium::item_type::way:
-                    ++number_of_ways;
-                    result_way.Clear();
-                    luabind::call_function<void>(lua_state,
-                                                 "way_function",
-                                                 boost::cref(static_cast<osmium::Way &>(entity)),
-                                                 boost::ref(result_way));
-                    result_way.id = static_cast<osmium::Way &>(entity).id();
-                    result_buffer->ways.emplace_back(osmium::WayNodeList{static_cast<osmium::Way &>(entity).nodes()}, result_way);
-                    break;
-                case osmium::item_type::relation:
-                    ++number_of_relations;
-                    result_buffer->restrictions.emplace_back(restriction_parser.TryParse(static_cast<osmium::Relation &>(entity)));
-                    break;
-                default:
-                    ++number_of_others;
-                    break;
-                }
-            }
-            result_queue.push(result_buffer);
-            parsing_done = true;
-        }
-
-        while (!parsing_done || !result_queue.empty())
-        {
-            std::shared_ptr<ResultBuffer> current_buffer;
-            if (!result_queue.try_pop(current_buffer))
-            {
-                for (const auto &node : current_buffer->nodes)
-                {
-                    extractor_callbacks->ProcessNode(node.first,
-                                                     node.second);
-                }
-                for (auto &way : current_buffer->ways)
-                {
-                    extractor_callbacks->ProcessWay(way.first,
-                                                    way.second);
-                }
-                for (const auto &restriction : current_buffer->restrictions)
-                {
-                    extractor_callbacks->ProcessRestriction(restriction);
-                }
-
-            }
-        }
-
-        loading_thread.join();
-
-        // TODO: join parser threads
-
-        // while (osmium::memory::Buffer buffer = reader.read())
-        // {
-        //     for (osmium::OSMEntity &entity : buffer)
+        //     std::shared_ptr<ResultBuffer> result_buffer = std::make_shared<ResultBuffer>();;
+        //     for (osmium::OSMEntity &entity : *current_buffer)
         //     {
         //         switch (entity.type())
         //         {
@@ -282,8 +217,7 @@ int Extractor::Run(int argc, char *argv[])
         //                                          "node_function",
         //                                          boost::cref(static_cast<osmium::Node &>(entity)),
         //                                          boost::ref(result_node));
-        //             extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
-        //                                              result_node);
+        //             result_buffer->nodes.emplace_back(osmium::NodeRef{static_cast<osmium::Node &>(entity).id(), static_cast<osmium::Node &>(entity).location()}, result_node);
         //             break;
         //         case osmium::item_type::way:
         //             ++number_of_ways;
@@ -292,19 +226,85 @@ int Extractor::Run(int argc, char *argv[])
         //                                          "way_function",
         //                                          boost::cref(static_cast<osmium::Way &>(entity)),
         //                                          boost::ref(result_way));
-        //             extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity), result_way);
+        //             result_way.id = static_cast<osmium::Way &>(entity).id();
+        //             result_buffer->ways.emplace_back(std::move(static_cast<osmium::Way &>(entity).nodes()), result_way);
         //             break;
         //         case osmium::item_type::relation:
         //             ++number_of_relations;
-        //             extractor_callbacks->ProcessRestriction(
-        //                 restriction_parser.TryParse(static_cast<osmium::Relation &>(entity)));
+        //             result_buffer->restrictions.emplace_back(restriction_parser.TryParse(static_cast<osmium::Relation &>(entity)));
         //             break;
         //         default:
         //             ++number_of_others;
         //             break;
         //         }
         //     }
+        //     result_queue.push(result_buffer);
+        //     parsing_done = true;
         // }
+
+        // while (!parsing_done || !result_queue.empty())
+        // {
+        //     std::shared_ptr<ResultBuffer> current_buffer;
+        //     if (!result_queue.try_pop(current_buffer))
+        //     {
+        //         for (const auto &node : current_buffer->nodes)
+        //         {
+        //             extractor_callbacks->ProcessNode(node.first,
+        //                                              node.second);
+        //         }
+        //         for (auto &way : current_buffer->ways)
+        //         {
+        //             extractor_callbacks->ProcessWay(way.first,
+        //                                             way.second);
+        //         }
+        //         for (const auto &restriction : current_buffer->restrictions)
+        //         {
+        //             extractor_callbacks->ProcessRestriction(restriction);
+        //         }
+
+        //     }
+        // }
+
+        // loading_thread.join();
+
+        // // TODO: join parser threads
+
+        while (osmium::memory::Buffer buffer = reader.read())
+        {
+            for (osmium::OSMEntity &entity : buffer)
+            {
+                switch (entity.type())
+                {
+                case osmium::item_type::node:
+                    ++number_of_nodes;
+                    result_node.Clear();
+                    luabind::call_function<void>(lua_state,
+                                                 "node_function",
+                                                 boost::cref(static_cast<osmium::Node &>(entity)),
+                                                 boost::ref(result_node));
+                    extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
+                                                     result_node);
+                    break;
+                case osmium::item_type::way:
+                    ++number_of_ways;
+                    result_way.Clear();
+                    luabind::call_function<void>(lua_state,
+                                                 "way_function",
+                                                 boost::cref(static_cast<osmium::Way &>(entity)),
+                                                 boost::ref(result_way));
+                    extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity), result_way);
+                    break;
+                case osmium::item_type::relation:
+                    ++number_of_relations;
+                    extractor_callbacks->ProcessRestriction(
+                        restriction_parser.TryParse(static_cast<osmium::Relation &>(entity)));
+                    break;
+                default:
+                    ++number_of_others;
+                    break;
+                }
+            }
+        }
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
         SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, "
@@ -327,11 +327,6 @@ int Extractor::Run(int argc, char *argv[])
         SimpleLogger().Write() << "To prepare the data for routing, run: "
                                << "./osrm-prepare " << extractor_config.output_file_name
                                << std::endl;
-    }
-    catch (boost::program_options::too_many_positional_options_error &)
-    {
-        SimpleLogger().Write(logWARNING) << "Only one input file can be specified";
-        return 1;
     }
     catch (std::exception &e)
     {
