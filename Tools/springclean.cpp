@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../DataStructures/SharedMemoryFactory.h"
 #include "../Server/DataStructures/SharedDataType.h"
+#include "../Util/GitDescription.h"
 #include "../Util/simple_logger.hpp"
 
 void delete_region(const SharedDataType region)
@@ -74,18 +75,28 @@ void springclean()
 int main()
 {
     LogPolicy::GetInstance().Unmute();
-    SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
-    SimpleLogger().Write() << "----------------------";
-    SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
-    SimpleLogger().Write() << "By typing 'Y' you acknowledge that you know what your are doing.";
-    SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated by osrm-datastore? [type 'Y' to confirm]";
-
-    const auto c = getchar();
-    if (c != 'Y')
+    try
     {
-        SimpleLogger().Write() << "aborted.";
-        return 0;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
+                               << "compiled at " << __DATE__ << ", " __TIME__ << "\n\n";
+        SimpleLogger().Write() << "Releasing all locks";
+        SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
+        SimpleLogger().Write() << "----------------------";
+        SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
+        SimpleLogger().Write() << "By typing 'Y' you acknowledge that you know what your are doing.";
+        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated by osrm-datastore? [type 'Y' to confirm]";
+
+        const auto c = getchar();
+        if (c != 'Y')
+        {
+            SimpleLogger().Write() << "aborted.";
+            return 0;
+        }
+        springclean();
     }
-    springclean();
+    catch (const std::exception &e)
+    {
+        SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
+    }
     return 0;
 }

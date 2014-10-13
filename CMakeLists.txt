@@ -286,7 +286,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   endif()
   add_executable(osrm-check-hsgr Tools/check-hsgr.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER>)
   target_link_libraries(osrm-check-hsgr ${Boost_LIBRARIES})
-  add_executable(osrm-springclean Tools/springclean.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER>)
+  add_executable(osrm-springclean Tools/springclean.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:GITDESCRIPTION>)
   target_link_libraries(osrm-springclean ${Boost_LIBRARIES})
 
   install(TARGETS osrm-cli DESTINATION bin)
