@@ -102,7 +102,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         TIMER_STOP(sort_ways);
         std::cout << "ok, after " << TIMER_SEC(sort_ways) << "s" << std::endl;
 
-        std::cout << "[extractor] Sorting restrictions. by from... " << std::flush;
+        std::cout << "[extractor] Sorting " << restrictions_list.size() << " restrictions. by from... " << std::flush;
         TIMER_START(sort_restrictions);
         stxxl::sort(restrictions_list.begin(),
                     restrictions_list.end(),

@@ -66,6 +66,10 @@ void ExtractorCallbacks::ProcessRestriction(
     if (restriction)
     {
         external_memory.restrictions_list.push_back(restriction.get());
+        SimpleLogger().Write() << "from: " << restriction.get().restriction.from.node <<
+                                  ",via: " << restriction.get().restriction.via.node <<
+                                  ", to: " << restriction.get().restriction.to.node <<
+                                  ", only: " << (restriction.get().restriction.flags.is_only ? "y" : "n");
     }
 }
 /** warning: caller needs to take care of synchronization! */
@@ -85,9 +89,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return;
     }
 
-    if (std::numeric_limits<decltype(parsed_way.id)>::max() == parsed_way.id)
+    if (std::numeric_limits<decltype(input_way.id())>::max() == input_way.id())
     {
-        SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << parsed_way.id
+        SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << input_way.id()
                                        << " of size " << input_way.nodes().size();
         return;
     }
@@ -101,7 +105,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     if (std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.forward_speed))
     {
-        SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << parsed_way.id;
+        SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << input_way.id();
         return;
     }
 
@@ -165,7 +169,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     // The following information is needed to identify start and end segments of restrictions
     external_memory.way_start_end_id_list.push_back(
-        {(EdgeID)parsed_way.id,
+        {(EdgeID)input_way.id(),
          (NodeID)input_way.nodes()[0].ref(),
          (NodeID)input_way.nodes()[1].ref(),
          (NodeID)input_way.nodes()[input_way.nodes().size() - 2].ref(),
@@ -210,7 +214,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         }
 
         external_memory.way_start_end_id_list.push_back(
-            {(EdgeID)parsed_way.id,
+            {(EdgeID)input_way.id(),
              (NodeID)input_way.nodes()[1].ref(),
              (NodeID)input_way.nodes()[0].ref(),
              (NodeID)input_way.nodes().back().ref(),
