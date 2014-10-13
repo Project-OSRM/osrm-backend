@@ -45,23 +45,28 @@ class OSRMLoader
   end
 
   def self.osrm_up?
-    if @@pid
-      s = `ps -o state -p #{@@pid}`.split[1].to_s.strip
-      up = (s =~ /^[DRST]/) != nil
-      up
-    else
-      false
+      if @@pid
+      begin
+        if Process.waitpid(@@pid, Process::WNOHANG) then
+           false
+        else
+           true
+        end
+      rescue Errno::ESRCH, Errno::ECHILD
+        false
+      end
     end
   end
 
   def self.osrm_up
     return if self.osrm_up?
     @@pid = Process.spawn("#{BIN_PATH}/osrm-routed --sharedmemory=1 --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+    Process.detach(@@pid)    # avoid zombie processes
   end
 
   def self.osrm_down
     if @@pid
-      Process.kill 'TERM', @@pid
+      Process.kill TERMSIGNAL, @@pid
       self.wait_for_shutdown
     end
   end
