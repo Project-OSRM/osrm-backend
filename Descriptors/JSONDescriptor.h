@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 
-template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFacadeT>
+template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<DataFacadeT>
 {
   private:
     DataFacadeT *facade;

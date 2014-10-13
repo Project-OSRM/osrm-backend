@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDescriptor.h"
 
-template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFacadeT>
+template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<DataFacadeT>
 {
   private:
     DescriptorConfig config;
