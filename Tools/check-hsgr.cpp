@@ -24,13 +24,13 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/Range.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
 #include "../Util/simple_logger.hpp"
+#include "../Util/OSRMException.h"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -56,20 +56,17 @@ int main(int argc, char *argv[])
 
         std::vector<QueryGraph::NodeArrayEntry> node_list;
         std::vector<QueryGraph::EdgeArrayEntry> edge_list;
-
         SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 
         unsigned m_check_sum = 0;
         unsigned m_number_of_nodes =
             readHSGRFromStream(hsgr_path, node_list, edge_list, &m_check_sum);
-        SimpleLogger().Write() << "announced " << m_number_of_nodes
+        SimpleLogger().Write() << "expecting " << m_number_of_nodes
                                << " nodes, checksum: " << m_check_sum;
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
-        // BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
         SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
                                << " edges";
-        std::shared_ptr<QueryGraph> m_query_graph =
-            std::make_shared<QueryGraph>(node_list, edge_list);
+        auto m_query_graph = std::make_shared<QueryGraph>(node_list, edge_list);
 
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
@@ -88,20 +85,18 @@ int main(int argc, char *argv[])
                 const EdgeID edge_id_1 = m_query_graph->FindEdgeInEitherDirection(node_u, data.id);
                 if (SPECIAL_EDGEID == edge_id_1)
                 {
-                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge ("
-                                                     << node_u << "," << data.id << "," << node_v
-                                                     << "), eid: " << eid;
-                    BOOST_ASSERT(false);
-                    return 1;
+                    throw OSRMException("cannot find first segment of edge (" +
+                                        std::to_string(node_u) + "," + std::to_string(data.id) +
+                                        "," + std::to_string(node_v) + "), eid: " +
+                                        std::to_string(eid));
                 }
                 const EdgeID edge_id_2 = m_query_graph->FindEdgeInEitherDirection(data.id, node_v);
                 if (SPECIAL_EDGEID == edge_id_2)
                 {
-                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge ("
-                                                     << node_u << "," << data.id << "," << node_v
-                                                     << "), eid: " << eid;
-                    BOOST_ASSERT(false);
-                    return 1;
+                    throw OSRMException("cannot find second segment of edge (" +
+                                        std::to_string(node_u) + "," + std::to_string(data.id) +
+                                        "," + std::to_string(node_v) + "), eid: " +
+                                        std::to_string(eid));
                 }
             }
             progress.printStatus(node_u);
