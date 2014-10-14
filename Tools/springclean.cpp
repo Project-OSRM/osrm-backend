@@ -83,11 +83,12 @@ int main()
         SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
         SimpleLogger().Write() << "----------------------";
         SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
-        SimpleLogger().Write() << "By typing 'Y' you acknowledge that you know what your are doing.";
-        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated by osrm-datastore? [type 'Y' to confirm]";
+        SimpleLogger().Write() << "Type 'Y' to acknowledge that you know what your are doing.";
+        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated " <<
+                                  "by osrm-datastore? [type 'Y' to confirm]";
 
-        const auto c = getchar();
-        if (c != 'Y')
+        const auto letter = getchar();
+        if (letter != 'Y')
         {
             SimpleLogger().Write() << "aborted.";
             return 0;
