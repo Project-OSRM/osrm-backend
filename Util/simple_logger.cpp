@@ -87,9 +87,6 @@ std::ostringstream &SimpleLogger::Write(LogLevel l)
         os << "[";
         switch (level)
         {
-        case logINFO:
-            os << "info";
-            break;
         case logWARNING:
             os << "warn";
             break;
@@ -98,14 +95,16 @@ std::ostringstream &SimpleLogger::Write(LogLevel l)
             os << "debug";
 #endif
             break;
-        default:
-            throw OSRMException("unkown logging state");
+        default: //logINFO:
+            os << "info";
             break;
         }
         os << "] ";
     }
-    catch (...)
+    catch (const std::exception &e)
     {
+        // encapsulate in OSRMException
+        throw OSRMException(std::string(e.what()) + ", getting ostringstream");
     }
     return os;
 }
@@ -118,9 +117,6 @@ SimpleLogger::~SimpleLogger()
         const bool is_terminal = (0 != isatty(fileno(stdout)) ? true : false);
         switch (level)
         {
-        case logINFO:
-            std::cout << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
-            break;
         case logWARNING:
             std::cerr << (is_terminal ? RED : "") << os.str() << (is_terminal ? COL_RESET : "")
                       << std::endl;
@@ -131,8 +127,8 @@ SimpleLogger::~SimpleLogger()
                       << std::endl;
 #endif
             break;
-        default:
-            throw OSRMException("unkown logging state");
+        default: //logINFO:
+            std::cout << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
             break;
         }
     }
