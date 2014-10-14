@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "simple_logger.hpp"
 
+#include "OSRMException.h"
+
 #include <boost/assert.hpp>
 
 #include <cstdio>
@@ -97,7 +99,7 @@ std::ostringstream &SimpleLogger::Write(LogLevel l)
 #endif
             break;
         default:
-            BOOST_ASSERT_MSG(false, "should not happen");
+            throw OSRMException("unkown logging state");
             break;
         }
         os << "] ";
@@ -130,7 +132,7 @@ SimpleLogger::~SimpleLogger()
 #endif
             break;
         default:
-            BOOST_ASSERT_MSG(false, "should not happen");
+            throw OSRMException("unkown logging state");
             break;
         }
     }
