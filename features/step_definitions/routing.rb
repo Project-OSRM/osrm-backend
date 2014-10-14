@@ -1,7 +1,7 @@
 When /^I route I should get$/ do |table|
   reprocess
   actual = []
-  OSRMLoader.load("#{@osm_file}.osrm") do
+  OSRMLoader.load(self,"#{@osm_file}.osrm") do
     table.hashes.each_with_index do |row,ri|
       if row['request']
         got = {'request' => row['request'] }

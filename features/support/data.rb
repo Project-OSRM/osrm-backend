@@ -11,6 +11,7 @@ class Location
   end
 end
 
+
 def set_input_format format
   raise '*** Input format must be eiter "osm" or "pbf"' unless ['pbf','osm'].include? format.to_s
   @input_format = format.to_s
