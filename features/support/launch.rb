@@ -69,7 +69,7 @@ class OSRMLoader
 
     def wait_for_shutdown
       while osrm_up?
-        sleep 0.1
+        sleep 0.01
       end
     end
   end
@@ -90,7 +90,7 @@ class OSRMLoader
     end
 
     def osrm_up
-      return if osrm_up?
+      return if @@pid
       @@pid = Process.spawn("#{BIN_PATH}/osrm-routed #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
       Process.detach(@@pid)    # avoid zombie processes
     end
