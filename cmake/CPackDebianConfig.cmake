@@ -32,7 +32,7 @@ SET(CPACK_DEBIAN_PACKAGE_MAINTAINER  "Dennis Luxen <info@project-osrm.org>")
 SET(CPACK_DEBIAN_PACKAGE_PRIORITY    "optional")
 SET(CPACK_DEBIAN_PACKAGE_SECTION     "devel")
 SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Source Routing Machine (OSRM) is a high-performance routing engine.
-It combines sophisticated routing algorithms with the open and free data of the OpenStreetMap."
+  It combines sophisticated routing algorithms with the open and free data of the OpenStreetMap."
 )
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS     "libc6-dev, libprotobuf-dev, libosmpbf-dev, libbz2-1.0, libstxxl1, libxml2, libzip2, liblua5.1-0, libtbb2, libboost-all-dev")
 
