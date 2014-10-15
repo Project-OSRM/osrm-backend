@@ -44,14 +44,14 @@ using QueryGraph = StaticGraph<EdgeData>;
 int main(int argc, char *argv[])
 {
     LogPolicy::GetInstance().Unmute();
-    if (argc != 2)
-    {
-        SimpleLogger().Write(logWARNING) << "usage: " << argv[0] << " <file.hsgr>";
-        return 1;
-    }
-
     try
     {
+        if (argc != 2)
+        {
+            SimpleLogger().Write(logWARNING) << "usage: " << argv[0] << " <file.hsgr>";
+            return 1;
+        }
+
         boost::filesystem::path hsgr_path(argv[1]);
 
         std::vector<QueryGraph::NodeArrayEntry> node_list;

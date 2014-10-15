@@ -71,31 +71,31 @@ void RunStatistics(std::vector<double> &timings_vector, Statistics &stats)
 int main(int argc, char *argv[])
 {
     LogPolicy::GetInstance().Unmute();
-
-    SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
-                           << "compiled at " << __DATE__ << ", " __TIME__;
-
-#ifdef __FreeBSD__
-    SimpleLogger().Write() << "Not supported on FreeBSD";
-    return 0;
-#endif
-#ifdef WIN32
-    SimpleLogger().Write() << "Not supported on Windows";
-    return 0;
-#else
-
-    if (1 == argc)
-    {
-        SimpleLogger().Write(logWARNING) << "usage: " << argv[0] << " /path/on/device";
-        return -1;
-    }
-
-    boost::filesystem::path test_path = boost::filesystem::path(argv[1]);
-    test_path /= "osrm.tst";
-    SimpleLogger().Write(logDEBUG) << "temporary file: " << test_path.string();
-
+    boost::filesystem::path test_path;
     try
     {
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
+                               << "compiled at " << __DATE__ << ", " __TIME__;
+
+#ifdef __FreeBSD__
+        SimpleLogger().Write() << "Not supported on FreeBSD";
+        return 0;
+#endif
+#ifdef WIN32
+        SimpleLogger().Write() << "Not supported on Windows";
+        return 0;
+#else
+
+        if (1 == argc)
+        {
+            SimpleLogger().Write(logWARNING) << "usage: " << argv[0] << " /path/on/device";
+            return -1;
+        }
+
+        test_path = boost::filesystem::path(argv[1]);
+        test_path /= "osrm.tst";
+        SimpleLogger().Write(logDEBUG) << "temporary file: " << test_path.string();
+
         // create files for testing
         if (2 == argc)
         {

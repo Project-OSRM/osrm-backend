@@ -95,17 +95,16 @@ int main(const int argc, const char *argv[])
     LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
 
-#ifdef __linux__
-    // try to disable swapping on Linux
-    const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
-    if (-1 == mlockall(lock_flags))
-    {
-        SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
-    }
-#endif
-
     try
     {
+#ifdef __linux__
+        // try to disable swapping on Linux
+        const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
+        if (-1 == mlockall(lock_flags))
+        {
+            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
+        }
+#endif
         try
         {
             boost::interprocess::scoped_lock<boost::interprocess::named_mutex> pending_lock(

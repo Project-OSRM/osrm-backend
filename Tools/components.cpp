@@ -44,16 +44,16 @@ std::vector<NodeID> trafficlight_ID_list;
 
 int main(int argc, char *argv[])
 {
-    // enable logging
     LogPolicy::GetInstance().Unmute();
-    if (argc < 3)
-    {
-        SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0] << " <osrm> <osrm.restrictions>";
-        return -1;
-    }
-
     try
     {
+        // enable logging
+        if (argc < 3)
+        {
+            SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0] << " <osrm> <osrm.restrictions>";
+            return -1;
+        }
+
         SimpleLogger().Write() << "Using restrictions from file: " << argv[2];
         std::ifstream restriction_ifstream(argv[2], std::ios::binary);
         const FingerPrint fingerprint_orig;
