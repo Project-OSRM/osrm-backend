@@ -32,6 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // this is largely inspired by boost's hash combine as can be found in
 // "The C++ Standard Library" 2nd Edition. Nicolai M. Josuttis. 2012.
+
+namespace {
+
 template<typename T>
 void hash_combine(std::size_t &seed, const T& val)
 {
@@ -52,11 +55,12 @@ void hash_val(std::size_t &seed, const T& val, const Types& ... args)
 }
 
 template<typename ... Types>
-std::size_t hash_val( const Types&... args)
+std::size_t hash_val(const Types&... args)
 {
     std::size_t seed = 0;
     hash_val(seed, args...);
     return seed;
+}
 }
 
 namespace std
