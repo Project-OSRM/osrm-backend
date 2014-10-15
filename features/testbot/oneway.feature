@@ -6,11 +6,12 @@ Feature: Testbot - oneways
 
     Scenario: Routing on a oneway roundabout
         Given the node map
-        |   |   |   | v |   |   |
-        |   |   | d | c |   |   |
-        | x | e |   |   | b |   |
+        |   |   |   |   | v |   |
+        | x |   | d | c |   |   |
+        |   | e |   |   | b |   |
         |   | f |   |   | a |   |
-        |   |   | g | h |   |   |
+        |   |   | g | h |   | y |
+        |   | z |   |   |   |   |
 
         And the ways
             | nodes | oneway |
@@ -23,6 +24,8 @@ Feature: Testbot - oneways
             | gh    | yes    |
             | ha    | yes    |
             | vx    | yes    |
+            | vy    | yes    |
+            | yz    | yes    |
             | xe    | yes    |
 
         When I route I should get

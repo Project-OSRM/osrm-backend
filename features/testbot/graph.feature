@@ -1,4 +1,4 @@
-@routing @graph
+@routing @graph @testbot
 Feature: Basic Routing
 #Test the input data descibed on https://github.com/DennisOSRM/Project-OSRM/wiki/Graph-representation
 

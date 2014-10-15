@@ -11,6 +11,7 @@ class Location
   end
 end
 
+
 def set_input_format format
   raise '*** Input format must be eiter "osm" or "pbf"' unless ['pbf','osm'].include? format.to_s
   @input_format = format.to_s
@@ -21,7 +22,7 @@ def input_format
 end
 
 def sanitized_scenario_title
-  @sanitized_scenario_title ||= @scenario_title.gsub /[^0-9A-Za-z.\-]/, '_'
+  @sanitized_scenario_title ||= @scenario_title.to_s.gsub /[^0-9A-Za-z.\-]/, '_'
 end
 
 def set_grid_size meters
@@ -225,13 +226,17 @@ def convert_osm_to_pbf
 end
 
 def extracted?
-  File.exist?("#{@osm_file}.osrm") &&
-  File.exist?("#{@osm_file}.osrm.names") &&
-  File.exist?("#{@osm_file}.osrm.restrictions")
+  Dir.chdir TEST_FOLDER do
+    File.exist?("#{@osm_file}.osrm") &&
+    File.exist?("#{@osm_file}.osrm.names") &&
+    File.exist?("#{@osm_file}.osrm.restrictions")
+  end
 end
 
 def prepared?
-  File.exist?("#{@osm_file}.osrm.hsgr")
+  Dir.chdir TEST_FOLDER do
+    File.exist?("#{@osm_file}.osrm.hsgr")
+  end
 end
 
 def write_timestamp
