@@ -195,7 +195,8 @@ int Prepare::Process(int argc, char *argv[])
      */
 
     SimpleLogger().Write() << "initializing contractor";
-    auto contractor = osrm::make_unique<Contractor>(number_of_edge_based_nodes, edge_based_edge_list);
+    auto contractor =
+        osrm::make_unique<Contractor>(number_of_edge_based_nodes, edge_based_edge_list);
 
     TIMER_START(contraction);
     contractor->Run();
@@ -491,11 +492,12 @@ Prepare::SetupScriptingEnvironment(lua_State *lua_state,
 /**
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
-std::size_t Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
-                                     NodeID number_of_node_based_nodes,
-                                     std::vector<EdgeBasedNode> &node_based_edge_list,
-                                     DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
-                                     EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile)
+std::size_t
+Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
+                                NodeID number_of_node_based_nodes,
+                                std::vector<EdgeBasedNode> &node_based_edge_list,
+                                DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+                                EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile)
 {
     SimpleLogger().Write() << "Generating edge-expanded graph representation";
     std::shared_ptr<NodeBasedDynamicGraph> node_based_graph =
@@ -521,7 +523,8 @@ std::size_t Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
     traffic_light_list.clear();
     traffic_light_list.shrink_to_fit();
 
-    const std::size_t number_of_edge_based_nodes = edge_based_graph_factory->GetNumberOfEdgeBasedNodes();
+    const std::size_t number_of_edge_based_nodes =
+        edge_based_graph_factory->GetNumberOfEdgeBasedNodes();
 
     BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
 #ifndef WIN32
