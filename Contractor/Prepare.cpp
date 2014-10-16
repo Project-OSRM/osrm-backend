@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/GitDescription.h"
 #include "../Util/LuaUtil.h"
+#include "../Util/make_unique.hpp"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
@@ -194,7 +195,7 @@ int Prepare::Process(int argc, char *argv[])
      */
 
     SimpleLogger().Write() << "initializing contractor";
-    Contractor *contractor = new Contractor(number_of_edge_based_nodes, edge_based_edge_list);
+    auto contractor = osrm::make_unique<Contractor>(number_of_edge_based_nodes, edge_based_edge_list);
 
     TIMER_START(contraction);
     contractor->Run();
@@ -204,7 +205,7 @@ int Prepare::Process(int argc, char *argv[])
 
     DeallocatingVector<QueryEdge> contracted_edge_list;
     contractor->GetEdges(contracted_edge_list);
-    delete contractor;
+    contractor.reset();
 
     /***
      * Sorting contracted edges in a way that the static query graph can read some in in-place.
