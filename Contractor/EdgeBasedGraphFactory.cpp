@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 
 #include <fstream>
+#include <iomanip>
 #include <limits>
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
@@ -630,10 +631,22 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 {
                     distance += speed_profile.traffic_signal_penalty;
                 }
-                const double angle = ComputeAngle::OfThreeFixedPointCoordinates(
-                    m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
-                const int turn_penalty = GetTurnPenalty(angle, lua_state);
-                TurnInstruction turn_instruction = AnalyzeTurn(u, v, w, angle);
+
+                // unpack last node of first segment if packed
+                auto first_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e1) ?
+                                        m_geometry_compressor.GetLastNodeIDOfBucket(e1) :
+                                        u)];
+
+                // unpack first node of second segment if packed
+                auto third_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e2) ?
+                                        m_geometry_compressor.GetFirstNodeIDOfBucket(e2) :
+                                        w)];
+
+                const double turn_angle = ComputeAngle::OfThreeFixedPointCoordinates(
+                    first_coordinate, m_node_info_list[v], third_coordinate);
+
+                const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);
+                TurnInstruction turn_instruction = AnalyzeTurn(u, v, w, turn_angle);
                 if (turn_instruction == TurnInstruction::UTurn)
                 {
                     distance += speed_profile.u_turn_penalty;
