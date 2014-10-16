@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
+#include "../Util/make_unique.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
@@ -52,12 +53,12 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 {
   private:
     std::unordered_map<std::string, unsigned> descriptor_table;
-    std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
+    std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
   public:
     explicit ViaRoutePlugin(DataFacadeT *facade) : descriptor_string("viaroute"), facade(facade)
     {
-        search_engine_ptr = std::make_shared<SearchEngine<DataFacadeT>>(facade);
+        search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
 
         descriptor_table.emplace("json", 0);
         descriptor_table.emplace("gpx", 1);

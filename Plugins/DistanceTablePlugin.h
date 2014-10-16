@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
+#include "../Util/make_unique.hpp"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 
@@ -49,12 +50,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 {
   private:
-    std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
+    std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
   public:
     explicit DistanceTablePlugin(DataFacadeT *facade) : descriptor_string("table"), facade(facade)
     {
-        search_engine_ptr = std::make_shared<SearchEngine<DataFacadeT>>(facade);
+        search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
 
     virtual ~DistanceTablePlugin() {}
