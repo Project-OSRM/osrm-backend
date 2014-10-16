@@ -633,12 +633,12 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 }
 
                 // unpack last node of first segment if packed
-                auto first_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e1) ?
+                const auto first_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e1) ?
                                         m_geometry_compressor.GetLastNodeIDOfBucket(e1) :
                                         u)];
 
                 // unpack first node of second segment if packed
-                auto third_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e2) ?
+                const auto third_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e2) ?
                                         m_geometry_compressor.GetFirstNodeIDOfBucket(e2) :
                                         w)];
 
