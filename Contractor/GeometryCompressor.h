@@ -54,6 +54,8 @@ class GeometryCompressor
     unsigned GetPositionForID(const EdgeID edge_id) const;
     const std::vector<GeometryCompressor::CompressedNode> &
     GetBucketReference(const EdgeID edge_id) const;
+    NodeID GetFirstNodeIDOfBucket(const EdgeID edge_id) const;
+    NodeID GetLastNodeIDOfBucket(const EdgeID edge_id) const;
 
   private:
     void IncreaseFreeList();

@@ -225,3 +225,17 @@ GeometryCompressor::GetBucketReference(const EdgeID edge_id) const
     const unsigned index = m_edge_id_to_list_index_map.at(edge_id);
     return m_compressed_geometries.at(index);
 }
+
+    NodeID GeometryCompressor::GetFirstNodeIDOfBucket(const EdgeID edge_id) const
+    {
+        const auto &bucket = GetBucketReference(edge_id);
+        BOOST_ASSERT(bucket.size() >= 2);
+        return bucket[1].first;
+    }
+    NodeID GeometryCompressor::GetLastNodeIDOfBucket(const EdgeID edge_id) const
+    {
+        const auto &bucket = GetBucketReference(edge_id);
+        BOOST_ASSERT(bucket.size() >= 2);
+        return bucket[bucket.size()-2].first;
+    }
+
