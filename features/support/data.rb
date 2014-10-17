@@ -275,16 +275,17 @@ def extract_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Extracting #{osm_file}.osm...", :preprocess
-    begin
-     FileUtils.cp "#{osm_file}.osm#{'.pbf' if pbf?}", "#{extracted_file}.osm#{'.pbf' if pbf?}"   
-    rescue Exception => e
-      raise FileError.new nil, "failed to copy data file from #{osm_file}.osm#{'.pbf' if pbf?} to #{extracted_file}.osm#{'.pbf' if pbf?}."
-    end
-    unless system "#{BIN_PATH}/osrm-extract #{extracted_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
-    log '', :preprocess
+    begin
+      ["osrm","osrm.names","osrm.restrictions"].each do |file|
+        File.rename "#{osm_file}.#{file}", "#{extracted_file}.#{file}"
+      end
+    rescue Exception => e
+      raise FileError.new nil, "failed to rename data file after extracting."
+    end
   end
 end
 
@@ -293,17 +294,23 @@ def prepare_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Preparing #{extracted_file}.osm...", :preprocess
-    begin
-     FileUtils.cp "#{extracted_file}.osm#{'.pbf' if pbf?}", "#{prepared_file}.osm#{'.pbf' if pbf?}"   
-     FileUtils.cp "#{extracted_file}.osrm", "#{prepared_file}.osrm"   
-     FileUtils.cp "#{extracted_file}.osrm.names", "#{prepared_file}.osrm.names"   
-     FileUtils.cp "#{extracted_file}.osrm.restrictions", "#{prepared_file}.osrm.restrictions"   
-    rescue Exception => e
-      raise FileError.new nil, "failed to copy data file."
-    end
-    unless system "#{BIN_PATH}/osrm-prepare #{prepared_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{BIN_PATH}/osrm-prepare #{extracted_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
+    end
+    begin
+      ["osrm.hsgr","osrm.fileIndex","osrm.geometry","osrm.nodes","osrm.ramIndex"].each do |file|
+        File.rename "#{extracted_file}.#{file}", "#{prepared_file}.#{file}"
+      end
+    rescue Exception => e
+      raise FileError.new nil, "failed to rename data file after preparing."
+    end
+    begin
+      ["osrm.names","osrm.edges","osrm.restrictions"].each do |file|
+        FileUtils.cp "#{extracted_file}.#{file}", "#{prepared_file}.#{file}"
+      end
+    rescue Exception => e
+      raise FileError.new nil, "failed to copy data file after preparing."
     end
     log '', :preprocess
   end
