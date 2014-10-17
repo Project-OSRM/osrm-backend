@@ -181,3 +181,10 @@ end
 desc "Stop, reprocess and restart."
 task :update => [:down,:process,:up] do
 end
+
+
+desc "Remove test cache files."
+task :sweep do
+  system "rm test/cache/*"
+end
+
