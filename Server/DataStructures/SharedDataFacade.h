@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/ProgramOptions.h"
+#include "../../Util/make_unique.hpp"
 #include "../../Util/simple_logger.hpp"
 
 #include <algorithm>
@@ -68,9 +69,9 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     unsigned CURRENT_TIMESTAMP;
 
     unsigned m_check_sum;
-    std::shared_ptr<QueryGraph> m_query_graph;
-    std::shared_ptr<SharedMemory> m_layout_memory;
-    std::shared_ptr<SharedMemory> m_large_memory;
+    std::unique_ptr<QueryGraph> m_query_graph;
+    std::unique_ptr<SharedMemory> m_layout_memory;
+    std::unique_ptr<SharedMemory> m_large_memory;
     std::string m_timestamp;
 
     std::shared_ptr<ShM<FixedPointCoordinate, true>::vector> m_coordinate_list;
@@ -113,7 +114,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         RTreeNode *tree_ptr =
             data_layout->GetBlockPtr<RTreeNode>(shared_memory, SharedDataLayout::R_SEARCH_TREE);
         m_static_rtree.reset(new TimeStampedRTreePair(CURRENT_TIMESTAMP,
-            std::make_shared<SharedRTree>(
+            osrm::make_unique<SharedRTree>(
                 tree_ptr,
                 data_layout->num_entries[SharedDataLayout::R_SEARCH_TREE],
                 file_index_path,
@@ -140,7 +141,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
         FixedPointCoordinate *coordinate_list_ptr = data_layout->GetBlockPtr<FixedPointCoordinate>(
             shared_memory, SharedDataLayout::COORDINATE_LIST);
-        m_coordinate_list = std::make_shared<ShM<FixedPointCoordinate, true>::vector>(
+        m_coordinate_list = osrm::make_unique<ShM<FixedPointCoordinate, true>::vector>(
             coordinate_list_ptr, data_layout->num_entries[SharedDataLayout::COORDINATE_LIST]);
 
         TravelMode *travel_mode_list_ptr = data_layout->GetBlockPtr<TravelMode>(
@@ -188,7 +189,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             data_layout->GetBlockPtr<char>(shared_memory, SharedDataLayout::NAME_CHAR_LIST);
         typename ShM<char, true>::vector names_char_list(
             names_list_ptr, data_layout->num_entries[SharedDataLayout::NAME_CHAR_LIST]);
-        m_name_table = std::make_shared<RangeTable<16, true>>(
+        m_name_table = osrm::make_unique<RangeTable<16, true>>(
             name_offsets, name_blocks, names_char_list.size());
 
         m_names_char_list.swap(names_char_list);
