@@ -4,8 +4,8 @@ Feature: osrm-routed command line options: files
 # For testing program options, the --trial option is used, which causes osrm-routed to quit
 # immediately after initialization. This makes testing easier and faster.
 # 
-# The {base} part of the options to osrm-routed will be expanded to the actual base path of
-# the preprocessed file.
+# The {prepared_base} part of the options to osrm-routed will be expanded to the actual base path of
+# the prepared input file.
 
 # TODO
 # Since we're not using osmr-datastore for all testing, osrm-routed is kept running.
@@ -22,7 +22,7 @@ Feature: osrm-routed command line options: files
         And the data has been prepared
 
     Scenario: osrm-routed - Passing base file
-        When I run "osrm-routed {base}.osrm --trial"
+        When I run "osrm-routed {prepared_base}.osrm --trial"
         Then stdout should contain /^\[info\] starting up engines/
         And stdout should contain /\d{1,2}\.\d{1,2}\.\d{1,2}/
         And stdout should contain /compiled at/
