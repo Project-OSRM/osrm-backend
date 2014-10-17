@@ -3,8 +3,8 @@ def run_bin bin, options
     opt = options.dup
     
     if opt.include? '{base}'
-      raise "*** {base} is missing" unless @osm_file
-      opt.gsub! "{base}", "#{@osm_file}" 
+      raise "*** {base} is missing" unless prepared_file
+      opt.gsub! "{base}", "#{prepared_file}" 
     end
 
     if opt.include? '{profile}'
