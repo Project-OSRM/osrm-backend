@@ -224,7 +224,6 @@ end
 def write_osm
   Dir.mkdir DATA_FOLDER unless File.exist? DATA_FOLDER
   unless File.exist?("#{osm_file}.osm")
-    puts "write osm data"
     File.open( "#{osm_file}.osm", 'w') {|f| f.write(osm_str) }
   end
 end
@@ -271,7 +270,6 @@ def write_input_data
 end
 
 def extract_data
-  puts "extract"
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Extracting #{osm_file}.osm...", :preprocess
@@ -290,7 +288,6 @@ def extract_data
 end
 
 def prepare_data
-  puts "prepare"
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Preparing #{extracted_file}.osm...", :preprocess
@@ -317,17 +314,6 @@ def prepare_data
 end
 
 def reprocess
-  if false
-    puts fingerprint_osm
-    puts fingerprint_extract
-    puts fingerprint_prepare
-    puts fingerprint_route
-    
-    puts osm_file
-    puts extracted_file
-    puts prepared_file
-  end
-
   write_input_data
   extract_data unless extracted?
   prepare_data unless prepared?

@@ -51,8 +51,6 @@ def log_fail expected,got,attempts
   log "Got:      #{got}"
   log
   ['route','forw','backw'].each do |direction|
-    p attempts
-    p direction
     if attempts[direction]
       attempts[direction]
       log "Direction: #{direction}"
