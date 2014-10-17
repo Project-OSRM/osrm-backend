@@ -159,11 +159,11 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
                                                    const FixedPointCoordinate &point)
 {
     // initialize values
-    const float x_value = lat2y(point.lat / COORDINATE_PRECISION);
+    const float x_value = static_cast<float>(lat2y(point.lat / COORDINATE_PRECISION));
     const float y_value = point.lon / COORDINATE_PRECISION;
-    float a = lat2y(source_coordinate.lat / COORDINATE_PRECISION);
+    float a = static_cast<float>(lat2y(source_coordinate.lat / COORDINATE_PRECISION));
     float b = source_coordinate.lon / COORDINATE_PRECISION;
-    float c = lat2y(target_coordinate.lat / COORDINATE_PRECISION);
+    float c = static_cast<float>(lat2y(target_coordinate.lat / COORDINATE_PRECISION));
     float d = target_coordinate.lon / COORDINATE_PRECISION;
     float p, q;
     if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
@@ -429,11 +429,11 @@ int FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
     const FixedPointCoordinate &segment_target)
 {
     // initialize values
-    const float x = lat2y(input_point.lat / COORDINATE_PRECISION);
+    const float x = static_cast<float>(lat2y(input_point.lat / COORDINATE_PRECISION));
     const float y = input_point.lon / COORDINATE_PRECISION;
-    const float a = lat2y(segment_source.lat / COORDINATE_PRECISION);
+    const float a = static_cast<float>(lat2y(segment_source.lat / COORDINATE_PRECISION));
     const float b = segment_source.lon / COORDINATE_PRECISION;
-    const float c = lat2y(segment_target.lat / COORDINATE_PRECISION);
+    const float c = static_cast<float>(lat2y(segment_target.lat / COORDINATE_PRECISION));
     const float d = segment_target.lon / COORDINATE_PRECISION;
 
     float p, q;

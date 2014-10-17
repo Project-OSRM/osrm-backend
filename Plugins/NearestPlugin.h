@@ -53,7 +53,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
-        int number_of_results = route_parameters.num_results;
+        int number_of_results = static_cast<int>(route_parameters.num_results);
         std::vector<PhantomNode> phantom_node_vector;
         facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates.front(),
                                                         phantom_node_vector,
