@@ -164,7 +164,7 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
     edges_list.resize(edge_count);
     SimpleLogger().Write() << "merged " << edges_list.size() - edge_count << " edges out of " << edges_list.size();
 
-    auto graph = std::make_shared<NodeBasedDynamicGraph>(number_of_nodes, edges_list);
+    auto graph = std::make_shared<NodeBasedDynamicGraph>(static_cast<NodeBasedDynamicGraph::NodeIterator>(number_of_nodes), edges_list);
     return graph;
 }
 

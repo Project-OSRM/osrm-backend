@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 #include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/Range.h"
 
 #include <string>
 
@@ -53,12 +54,12 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
-        int number_of_results = static_cast<int>(route_parameters.num_results);
+        auto number_of_results = static_cast<std::size_t>(route_parameters.num_results);
         std::vector<PhantomNode> phantom_node_vector;
         facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates.front(),
                                                         phantom_node_vector,
                                                         route_parameters.zoom_level,
-                                                        number_of_results);
+                                                        static_cast<int>(number_of_results));
 
         JSON::Object json_result;
         if (phantom_node_vector.empty() || !phantom_node_vector.front().isValid())
@@ -74,7 +75,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
             {
                 JSON::Array results;
 
-                int vector_length = phantom_node_vector.size();
+                auto vector_length = phantom_node_vector.size();
                 for (const auto i : osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                 {
                     JSON::Array json_coordinate;
