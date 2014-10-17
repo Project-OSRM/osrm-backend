@@ -68,7 +68,6 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     unsigned CURRENT_TIMESTAMP;
 
     unsigned m_check_sum;
-    unsigned m_number_of_nodes;
     std::shared_ptr<QueryGraph> m_query_graph;
     std::shared_ptr<SharedMemory> m_layout_memory;
     std::shared_ptr<SharedMemory> m_large_memory;
@@ -123,7 +122,6 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     void LoadGraph()
     {
-        m_number_of_nodes = data_layout->num_entries[SharedDataLayout::GRAPH_NODE_LIST];
         GraphNode *graph_nodes_ptr =
             data_layout->GetBlockPtr<GraphNode>(shared_memory, SharedDataLayout::GRAPH_NODE_LIST);
 
