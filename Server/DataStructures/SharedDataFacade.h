@@ -190,7 +190,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         typename ShM<char, true>::vector names_char_list(
             names_list_ptr, data_layout->num_entries[SharedDataLayout::NAME_CHAR_LIST]);
         m_name_table = osrm::make_unique<RangeTable<16, true>>(
-            name_offsets, name_blocks, names_char_list.size());
+            name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
 
         m_names_char_list.swap(names_char_list);
     }
