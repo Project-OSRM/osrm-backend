@@ -82,7 +82,7 @@ set(
 )
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(FINGERPRINT OBJECT Util/FingerPrint.cpp)
-add_library(OSRM ${OSRMSources} Util/GitDescription.cpp Util/FingerPrint.cpp $<TARGET_OBJECTS:COORDINATE>)
+add_library(OSRM ${OSRMSources} Util/GitDescription.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE>)
 add_library(GITDESCRIPTION OBJECT Util/GitDescription.cpp)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 
