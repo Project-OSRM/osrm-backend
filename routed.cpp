@@ -101,8 +101,7 @@ int main(int argc, const char *argv[])
             SimpleLogger().Write(logWARNING) << argv[0] << " could not be locked to RAM";
         }
 #endif
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
-                               << "compiled at " << __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
         if (use_shared_memory)
         {

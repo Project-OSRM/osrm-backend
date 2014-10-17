@@ -36,8 +36,7 @@ int main()
     LogPolicy::GetInstance().Unmute();
     try
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
-                               << "compiled at " << __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
         SimpleLogger().Write() << "Releasing all locks";
         SharedBarriers barrier;
         barrier.pending_update_mutex.unlock();

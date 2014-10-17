@@ -77,8 +77,7 @@ int main()
     LogPolicy::GetInstance().Unmute();
     try
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
-                               << "compiled at " << __DATE__ << ", " __TIME__ << "\n\n";
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << "\n\n";
         SimpleLogger().Write() << "Releasing all locks";
         SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
         SimpleLogger().Write() << "----------------------";

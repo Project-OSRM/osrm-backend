@@ -74,8 +74,7 @@ int main(int argc, char *argv[])
     boost::filesystem::path test_path;
     try
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
-                               << "compiled at " << __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
 #ifdef __FreeBSD__
         SimpleLogger().Write() << "Not supported on FreeBSD";
