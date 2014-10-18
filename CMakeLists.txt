@@ -137,7 +137,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # using GCC
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -fPIC")
   if (WIN32) # using mingw
-    add_definitions(-DM_PI=3.141592653589793238462643383) # define M_PI
+    add_definitions(-D_USE_MATH_DEFINES) # define M_PI, M_1_PI etc.
     add_definitions(-DWIN32)
     SET(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
   endif()
