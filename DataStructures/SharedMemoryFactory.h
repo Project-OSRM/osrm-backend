@@ -286,7 +286,6 @@ class SharedMemory : boost::noncopyable
   private:
     static void build_key(int id, char *key)
     {
-        OSRMLockFile lock_file;
         sprintf(key, "%s.%d", "osrm.lock", id);
     }
 
