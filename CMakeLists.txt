@@ -117,7 +117,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
 
     # Since gcc 4.9 the LTO format is non-standart ('slim'), so we need to use the build-in tools
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
-        NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0")
+        NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0" AND NOT MINGW)
       message(STATUS "Using gcc specific binutils for LTO.")
       set(CMAKE_AR     "/usr/bin/gcc-ar")
       set(CMAKE_RANLIB "/usr/bin/gcc-ranlib")
