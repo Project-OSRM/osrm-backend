@@ -196,12 +196,14 @@ class SharedMemory
 };
 #else
 // Windows - specific code
-class SharedMemory : boost::noncopyable
+class SharedMemory
 {
+    SharedMemory(const SharedMemory&) = delete;
     // Remove shared memory on destruction
-    class shm_remove : boost::noncopyable
+    class shm_remove
     {
       private:
+        shm_remove(const shm_remove&) = delete;
         char *m_shmid;
         bool m_initialized;
 
