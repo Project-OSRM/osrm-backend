@@ -890,7 +890,7 @@ class StaticRTree
 
             if (current_query_node.RepresentsTreeNode())
             {
-                const TreeNode & current_tree_node = boost::get<TreeNode>(current_query_node.node);
+                const TreeNode & current_tree_node = current_query_node.node.template get<TreeNode>();
                 if (current_tree_node.child_is_on_disk)
                 {
                     LeafNode current_leaf_node;
@@ -939,7 +939,7 @@ class StaticRTree
             {
                 ++inspected_segments;
                 // inspecting an actual road segment
-                const EdgeDataT & current_segment = boost::get<EdgeDataT>(current_query_node.node);
+                const EdgeDataT & current_segment = current_query_node.node.template get<EdgeDataT>();
 
                 // don't collect too many results from small components
                 if (number_of_results_found_in_big_cc == number_of_results && !current_segment.is_in_tiny_cc)

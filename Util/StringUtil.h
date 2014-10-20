@@ -146,6 +146,7 @@ inline std::size_t URIDecode(const std::string &input, std::string &output)
 
 inline std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
 
+// TODO: remove after switch to libosmium
 inline bool StringStartsWith(const std::string &input, const std::string &prefix)
 {
     return boost::starts_with(input, prefix);

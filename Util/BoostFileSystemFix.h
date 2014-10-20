@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OSRMException.h"
 
-#include <boost/any.hpp>
+// #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
+// #include <boost/program_options.hpp>
 
 // This is one big workaround for latest boost renaming woes.
 
