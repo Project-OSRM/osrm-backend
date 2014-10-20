@@ -65,6 +65,7 @@ add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TA
 file(GLOB ServerGlob Server/*.cpp)
 file(GLOB DescriptorGlob Descriptors/*.cpp)
 file(GLOB DatastructureGlob DataStructures/SearchEngineData.cpp DataStructures/RouteParameters.cpp)
+list(REMOVE_ITEM DatastructureGlob DataStructures/Coordinate.cpp)
 file(GLOB CoordinateGlob DataStructures/Coordinate.cpp)
 file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB HttpGlob Server/Http/*.cpp)
@@ -82,8 +83,8 @@ set(
 )
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(FINGERPRINT OBJECT Util/FingerPrint.cpp)
-add_library(OSRM ${OSRMSources} Util/GitDescription.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE>)
 add_library(GITDESCRIPTION OBJECT Util/GitDescription.cpp)
+add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 
 add_executable(osrm-routed routed.cpp ${ServerGlob} $<TARGET_OBJECTS:LOGGER>)
