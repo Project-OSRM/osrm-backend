@@ -84,10 +84,10 @@ set(
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(FINGERPRINT OBJECT Util/FingerPrint.cpp)
 add_library(GITDESCRIPTION OBJECT Util/GitDescription.cpp)
-add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE>)
+add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 
-add_executable(osrm-routed routed.cpp ${ServerGlob} $<TARGET_OBJECTS:LOGGER>)
+add_executable(osrm-routed routed.cpp ${ServerGlob})
 add_executable(osrm-datastore datastore.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER>)
 
 # Unit tests
