@@ -72,15 +72,15 @@ int main(int argc, char *argv[])
         {
             throw OSRMException("Could not access <osrm-restrictions> files");
         }
-        uint32_t usable_restriction_count = 0;
-        restriction_ifstream.read((char *)&usable_restriction_count, sizeof(uint32_t));
-        restrictions_vector.resize(usable_restriction_count);
+        uint32_t usable_restrictions = 0;
+        restriction_ifstream.read((char *)&usable_restrictions, sizeof(uint32_t));
+        restrictions_vector.resize(usable_restrictions);
 
         // load restrictions
-        if (usable_restriction_count > 0)
+        if (usable_restrictions > 0)
         {
             restriction_ifstream.read((char *)&(restrictions_vector[0]),
-                                      usable_restriction_count * sizeof(TurnRestriction));
+                                      usable_restrictions * sizeof(TurnRestriction));
         }
         restriction_ifstream.close();
 
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
                                                                      restrictions_vector);
         input_stream.close();
 
-        BOOST_ASSERT_MSG(restrictions_vector.size() == usable_restriction_count,
+        BOOST_ASSERT_MSG(restrictions_vector.size() == usable_restrictions,
                          "size of restrictions_vector changed");
 
         SimpleLogger().Write() << restrictions_vector.size() << " restrictions, "
