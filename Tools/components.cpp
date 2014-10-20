@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
         // enable logging
         if (argc < 3)
         {
-            SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0] << " <osrm> <osrm.restrictions>";
+            SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0]
+                                             << " <osrm> <osrm.restrictions>";
             return -1;
         }
 
@@ -76,10 +77,10 @@ int main(int argc, char *argv[])
         restrictions_vector.resize(usable_restriction_count);
 
         // load restrictions
-        if (usable_restriction_count>0)
+        if (usable_restriction_count > 0)
         {
             restriction_ifstream.read((char *)&(restrictions_vector[0]),
-                                 usable_restriction_count * sizeof(TurnRestriction));
+                                      usable_restriction_count * sizeof(TurnRestriction));
         }
         restriction_ifstream.close();
 
@@ -109,13 +110,12 @@ int main(int argc, char *argv[])
         // Building an edge-expanded graph from node-based input an turn
         // restrictions
         SimpleLogger().Write() << "Starting SCC graph traversal";
-        std::shared_ptr<TarjanSCC> tarjan =
-            std::make_shared<TarjanSCC>(number_of_nodes,
-                                        edge_list,
-                                        bollard_ID_list,
-                                        trafficlight_ID_list,
-                                        restrictions_vector,
-                                        coordinate_list);
+        std::shared_ptr<TarjanSCC> tarjan = std::make_shared<TarjanSCC>(number_of_nodes,
+                                                                        edge_list,
+                                                                        bollard_ID_list,
+                                                                        trafficlight_ID_list,
+                                                                        restrictions_vector,
+                                                                        coordinate_list);
         edge_list.clear();
         edge_list.shrink_to_fit();
 
