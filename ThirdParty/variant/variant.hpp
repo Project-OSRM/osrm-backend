@@ -555,7 +555,7 @@ public:
     template <typename T>
     VARIANT_INLINE variant<Types...>& operator=(T && rhs) noexcept
     {
-        variant<Types...> temp(std::move(rhs));
+        variant<Types...> temp(std::forward<T>(rhs));
         swap(*this, temp);
         return *this;
     }
