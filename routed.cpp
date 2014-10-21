@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/GitDescription.h"
 #include "Util/ProgramOptions.h"
 #include "Util/simple_logger.hpp"
-#include "Util/FingerPrint.h"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -41,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <signal.h>
 
 #include <chrono>
-#include <functional>
 #include <future>
 #include <iostream>
 #include <thread>
