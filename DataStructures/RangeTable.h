@@ -133,7 +133,7 @@ public:
         sum_lengths = lengths_prefix_sum;
     }
 
-    inline RangeT GetRange(const unsigned id) const
+    RangeT GetRange(const unsigned id) const
     {
         BOOST_ASSERT(id < block_offsets.size() + diff_blocks.size() * BLOCK_SIZE);
         // internal_idx 0 is implicitly stored in block_offsets[block_idx]
@@ -170,7 +170,7 @@ public:
     }
 private:
 
-    inline unsigned PrefixSumAtIndex(int index, const BlockT& block) const;
+    unsigned PrefixSumAtIndex(int index, const BlockT& block) const;
 
     // contains offset for each differential block
     OffsetContainerT block_offsets;

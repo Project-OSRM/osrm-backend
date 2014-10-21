@@ -137,7 +137,7 @@ class Contractor
     {
         explicit ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes)  {}
 
-        inline ContractorThreadData* getThreadData()
+        ContractorThreadData* getThreadData()
         {
             bool exists = false;
             auto& ref = data.local(exists);
@@ -551,7 +551,7 @@ class Contractor
         thread_data_list.data.clear();
     }
 
-    template <class Edge> inline void GetEdges(DeallocatingVector<Edge> &edges)
+    template <class Edge> void GetEdges(DeallocatingVector<Edge> &edges)
     {
         Percent p(contractor_graph->GetNumberOfNodes());
         SimpleLogger().Write() << "Getting edges of minimized graph";
@@ -607,7 +607,7 @@ class Contractor
     }
 
   private:
-    inline void Dijkstra(const int max_distance,
+    void Dijkstra(const int max_distance,
                          const unsigned number_of_targets,
                          const int maxNodes,
                          ContractorThreadData *const data,
@@ -673,7 +673,7 @@ class Contractor
         }
     }
 
-    inline float EvaluateNodePriority(ContractorThreadData *const data,
+    float EvaluateNodePriority(ContractorThreadData *const data,
                                       NodePriorityData *const node_data,
                                       const NodeID node)
     {
@@ -700,7 +700,7 @@ class Contractor
     }
 
     template <bool RUNSIMULATION>
-    inline bool
+    bool
     ContractNode(ContractorThreadData *data, const NodeID node, ContractionStats *stats = nullptr)
     {
         ContractorHeap &heap = data->heap;
@@ -829,7 +829,7 @@ class Contractor
         return true;
     }
 
-    inline void DeleteIncomingEdges(ContractorThreadData *data, const NodeID node)
+    void DeleteIncomingEdges(ContractorThreadData *data, const NodeID node)
     {
         std::vector<NodeID> &neighbours = data->neighbours;
         neighbours.clear();
@@ -853,7 +853,7 @@ class Contractor
         }
     }
 
-    inline bool UpdateNodeNeighbours(std::vector<float> &priorities,
+    bool UpdateNodeNeighbours(std::vector<float> &priorities,
                                      std::vector<NodePriorityData> &node_data,
                                      ContractorThreadData *const data,
                                      const NodeID node)
@@ -884,7 +884,7 @@ class Contractor
         return true;
     }
 
-    inline bool IsNodeIndependent(
+    bool IsNodeIndependent(
         const std::vector<float> &priorities,
         ContractorThreadData *const data,
         NodeID node) const
@@ -949,7 +949,7 @@ class Contractor
     }
 
     // This bias function takes up 22 assembly instructions in total on X86
-    inline bool bias(const NodeID a, const NodeID b) const
+    bool bias(const NodeID a, const NodeID b) const
     {
         const unsigned short hasha = fast_hash(a);
         const unsigned short hashb = fast_hash(b);

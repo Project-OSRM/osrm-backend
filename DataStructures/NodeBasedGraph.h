@@ -54,8 +54,9 @@ struct SimpleEdgeData
 using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 using SimpleNodeBasedDynamicGraph = DynamicGraph<SimpleEdgeData>;
 
+namespace {
 // Factory method to create NodeBasedDynamicGraph from ImportEdges
-inline std::shared_ptr<NodeBasedDynamicGraph>
+std::shared_ptr<NodeBasedDynamicGraph>
 NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge> &input_edge_list)
 {
     static_assert(sizeof(NodeBasedEdgeData) == 16, "changing node based edge data size changes memory consumption");
@@ -169,7 +170,7 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
 }
 
 template<class SimpleEdgeT>
-inline std::shared_ptr<SimpleNodeBasedDynamicGraph>
+std::shared_ptr<SimpleNodeBasedDynamicGraph>
 SimpleNodeBasedDynamicGraphFromEdges(int number_of_nodes, std::vector<SimpleEdgeT> &input_edge_list)
 {
     static_assert(sizeof(NodeBasedEdgeData) == 16, "changing node based edge data size changes memory consumption");
@@ -239,6 +240,7 @@ SimpleNodeBasedDynamicGraphFromEdges(int number_of_nodes, std::vector<SimpleEdge
 
     auto graph = std::make_shared<SimpleNodeBasedDynamicGraph>(number_of_nodes, edges_list);
     return graph;
+}
 }
 
 #endif // NODE_BASED_GRAPH_H_

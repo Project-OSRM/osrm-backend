@@ -108,7 +108,7 @@ class IteratorbasedCRC32
         return crc;
     }
 
-    inline unsigned cpuid() const
+    unsigned cpuid() const
     {
         unsigned eax = 0, ebx = 0, ecx = 0, edx = 0;
         // on X64 this calls hardware cpuid(.) instr. otherwise a dummy impl.
@@ -117,7 +117,7 @@ class IteratorbasedCRC32
     }
 
 #if defined(__MINGW64__) || defined(_MSC_VER)
-    inline void
+    void
     __get_cpuid(int param, unsigned *eax, unsigned *ebx, unsigned *ecx, unsigned *edx) const
     {
         *ecx = 0;

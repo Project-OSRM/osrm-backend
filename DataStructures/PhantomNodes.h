@@ -156,14 +156,17 @@ struct PhantomNodes
     PhantomNode target_phantom;
 };
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn)
+namespace 
 {
-    out << "source_coord: " << pn.source_phantom.location        << "\n";
-    out << "target_coord: " << pn.target_phantom.location        << std::endl;
+
+std::ostream& operator<<(std::ostream &out, const PhantomNodes &pn)
+{
+    out << "source_coord: " << pn.source_phantom.location << "\n";
+    out << "target_coord: " << pn.target_phantom.location << std::endl;
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn)
+std::ostream& operator<<(std::ostream &out, const PhantomNode &pn)
 {
     out <<  "node1: " << pn.forward_node_id      << ", " <<
             "node2: " << pn.reverse_node_id      << ", " <<
@@ -177,5 +180,6 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn)
             "loc: "   << pn.location;
     return out;
 }
+} // anonymous namespace to guard against duplicate symbols
 
 #endif // PHANTOM_NODES_H

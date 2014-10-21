@@ -42,8 +42,8 @@ class HilbertCode
     HilbertCode(const HilbertCode &) = delete;
 
   private:
-    inline uint64_t BitInterleaving(const uint32_t a, const uint32_t b) const;
-    inline void TransposeCoordinate(uint32_t *X) const;
+    uint64_t BitInterleaving(const uint32_t a, const uint32_t b) const;
+    void TransposeCoordinate(uint32_t *X) const;
 };
 
 #endif /* HILBERTVALUE_H_ */

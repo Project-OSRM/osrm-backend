@@ -48,7 +48,7 @@ struct RestrictionSource
     {
     }
 
-    friend inline bool operator==(const RestrictionSource &lhs, const RestrictionSource &rhs)
+    friend bool operator==(const RestrictionSource &lhs, const RestrictionSource &rhs)
     {
         return (lhs.start_node == rhs.start_node && lhs.via_node == rhs.via_node);
     }
@@ -63,7 +63,7 @@ struct RestrictionTarget
     {
     }
 
-    friend inline bool operator==(const RestrictionTarget &lhs, const RestrictionTarget &rhs)
+    friend bool operator==(const RestrictionTarget &lhs, const RestrictionTarget &rhs)
     {
         return (lhs.target_node == rhs.target_node && lhs.is_only == rhs.is_only);
     }

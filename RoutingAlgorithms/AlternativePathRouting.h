@@ -370,7 +370,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
 
   private:
     // unpack alternate <s,..,v,..,t> by exploring search spaces from v
-    inline void RetrievePackedAlternatePath(const QueryHeap &forward_heap1,
+    void RetrievePackedAlternatePath(const QueryHeap &forward_heap1,
                                             const QueryHeap &reverse_heap1,
                                             const QueryHeap &forward_heap2,
                                             const QueryHeap &reverse_heap2,
@@ -394,7 +394,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
     // compute and unpack <s,..,v> and <v,..,t> by exploring search spaces
     // from v and intersecting against queues. only half-searches have to be
     // done at this stage
-    inline void ComputeLengthAndSharingOfViaPath(const NodeID via_node,
+    void ComputeLengthAndSharingOfViaPath(const NodeID via_node,
                                                  int *real_length_of_via_path,
                                                  int *sharing_of_via_path,
                                                  const std::vector<NodeID> &packed_shortest_path,
@@ -551,7 +551,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         // variable
     }
 
-    // inline int approximateAmountOfSharing(
+    // int approximateAmountOfSharing(
     //     const NodeID alternate_path_middle_node_id,
     //     QueryHeap & forward_heap,
     //     QueryHeap & reverse_heap,
@@ -598,7 +598,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
 
     // todo: reorder parameters
     template <bool is_forward_directed>
-    inline void AlternativeRoutingStep(QueryHeap &forward_heap,
+    void AlternativeRoutingStep(QueryHeap &forward_heap,
                                        QueryHeap &reverse_heap,
                                        NodeID *middle_node,
                                        int *upper_bound_to_shortest_path_distance,
@@ -674,7 +674,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
     }
 
     // conduct T-Test
-    inline bool ViaNodeCandidatePassesTTest(QueryHeap &existing_forward_heap,
+    bool ViaNodeCandidatePassesTTest(QueryHeap &existing_forward_heap,
                                             QueryHeap &existing_reverse_heap,
                                             QueryHeap &new_forward_heap,
                                             QueryHeap &new_reverse_heap,

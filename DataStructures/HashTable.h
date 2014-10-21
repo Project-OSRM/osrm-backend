@@ -40,17 +40,17 @@ class HashTable
   public:
     HashTable() {}
 
-    inline void Add(Key const &key, Value const &value)
+    void Add(Key const &key, Value const &value)
     {
         table.emplace_back(std::move(key), std::move(value));
     }
 
-    inline void Clear()
+    void Clear()
     {
         table.clear();
     }
 
-    inline const Value Find(Key const &key) const
+    const Value Find(Key const &key) const
     {
         for (const auto &key_val_pair : table)
         {
@@ -62,7 +62,7 @@ class HashTable
         return Value();
     }
 
-    inline const bool Holds(Key const &key) const
+    const bool Holds(Key const &key) const
     {
         for (const auto &key_val_pair : table)
         {

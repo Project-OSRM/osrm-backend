@@ -37,7 +37,7 @@ template <typename Data> class ConcurrentQueue
   public:
     explicit ConcurrentQueue(const size_t max_size) : m_internal_queue(max_size) {}
 
-    inline void push(const Data &data)
+    void push(const Data &data)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_not_full.wait(lock,
@@ -47,9 +47,9 @@ template <typename Data> class ConcurrentQueue
         m_not_empty.notify_one();
     }
 
-    inline bool empty() const { return m_internal_queue.empty(); }
+    bool empty() const { return m_internal_queue.empty(); }
 
-    inline void wait_and_pop(Data &popped_value)
+    void wait_and_pop(Data &popped_value)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_not_empty.wait(lock,
@@ -60,7 +60,7 @@ template <typename Data> class ConcurrentQueue
         m_not_full.notify_one();
     }
 
-    inline bool try_pop(Data &popped_value)
+    bool try_pop(Data &popped_value)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (m_internal_queue.empty())

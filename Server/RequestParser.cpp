@@ -270,14 +270,14 @@ RequestParser::consume(Request &req, char input, http::CompressionType *compress
     }
 }
 
-inline bool RequestParser::isChar(int character) { return character >= 0 && character <= 127; }
+bool RequestParser::isChar(int character) { return character >= 0 && character <= 127; }
 
-inline bool RequestParser::isCTL(int character)
+bool RequestParser::isCTL(int character)
 {
     return (character >= 0 && character <= 31) || (character == 127);
 }
 
-inline bool RequestParser::isTSpecial(int character)
+bool RequestParser::isTSpecial(int character)
 {
     switch (character)
     {
@@ -306,5 +306,5 @@ inline bool RequestParser::isTSpecial(int character)
     }
 }
 
-inline bool RequestParser::isDigit(int character) { return character >= '0' && character <= '9'; }
+bool RequestParser::isDigit(int character) { return character >= '0' && character <= '9'; }
 }

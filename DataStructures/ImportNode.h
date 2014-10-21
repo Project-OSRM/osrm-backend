@@ -51,7 +51,7 @@ struct ImportNode : public ExternalMemoryNode
 {
     HashTable<std::string, std::string> keyVals;
 
-    inline void Clear();
+    void Clear();
 };
 
 #endif /* IMPORTNODE_H_ */

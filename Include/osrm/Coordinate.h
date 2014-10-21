@@ -102,10 +102,12 @@ struct FixedPointCoordinate
     static float RadianToDegree(const float radian);
 };
 
-inline std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate const &coordinate)
+namespace
+{
+std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate const &coordinate)
 {
     coordinate.Output(out_stream);
     return out_stream;
 }
-
+} // anonymous namespace to guard against duplicate symbols
 #endif /* FIXED_POINT_COORDINATE_H_ */

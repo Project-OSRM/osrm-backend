@@ -68,7 +68,7 @@ class XORFastHash
         std::random_shuffle(table2.begin(), table2.end());
     }
 
-    inline unsigned short operator()(const unsigned originalValue) const
+    unsigned short operator()(const unsigned originalValue) const
     {
         unsigned short lsb = ((originalValue)&0xffff);
         unsigned short msb = (((originalValue) >> 16) & 0xffff);
