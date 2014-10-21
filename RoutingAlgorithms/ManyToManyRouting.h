@@ -204,7 +204,7 @@ template <class DataFacadeT> class ManyToManyRouting final : public BasicRouting
     }
 
     template <bool forward_direction>
-    void
+    inline void
     RelaxOutgoingEdges(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap) const
     {
         for (auto edge : super::facade->GetAdjacentEdgeRange(node))
@@ -237,7 +237,7 @@ template <class DataFacadeT> class ManyToManyRouting final : public BasicRouting
 
     // Stalling
     template <bool forward_direction>
-    bool StallAtNode(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap)
+    inline bool StallAtNode(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap)
         const
     {
         for (auto edge : super::facade->GetAdjacentEdgeRange(node))

@@ -51,13 +51,13 @@ class RequestParser
   private:
     boost::tribool consume(Request &req, char input, CompressionType *compressionType);
 
-    bool isChar(int c);
+    inline bool isChar(int c);
 
-    bool isCTL(int c);
+    inline bool isCTL(int c);
 
-    bool isTSpecial(int c);
+    inline bool isTSpecial(int c);
 
-    bool isDigit(int c);
+    inline bool isDigit(int c);
 
     enum state
     { method_start,

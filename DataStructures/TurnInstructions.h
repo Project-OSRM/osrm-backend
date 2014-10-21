@@ -44,7 +44,7 @@ struct TurnInstructionsClass
     TurnInstructionsClass() = delete;
     TurnInstructionsClass(const TurnInstructionsClass&) = delete;
 
-    static TurnInstruction GetTurnDirectionOfInstruction(const double angle)
+    static inline TurnInstruction GetTurnDirectionOfInstruction(const double angle)
     {
         if (angle >= 23 && angle < 67)
         {
@@ -77,7 +77,7 @@ struct TurnInstructionsClass
         return TurnInstruction::UTurn;
     }
 
-    static bool TurnIsNecessary(const TurnInstruction turn_instruction)
+    static inline bool TurnIsNecessary(const TurnInstruction turn_instruction)
     {
         if (TurnInstruction::NoTurn == turn_instruction || TurnInstruction::StayOnRoundAbout == turn_instruction)
         {

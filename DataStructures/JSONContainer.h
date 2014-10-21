@@ -219,20 +219,18 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
     std::vector<char> &out;
 };
 
-namespace
-{
-void render(std::ostream &out, const Object &object)
+inline void render(std::ostream &out, const Object &object)
 {
     Value value = object;
     mapbox::util::apply_visitor(Renderer(out), value);
 }
 
-void render(std::vector<char> &out, const Object &object)
+inline void render(std::vector<char> &out, const Object &object)
 {
     Value value = object;
     mapbox::util::apply_visitor(ArrayRenderer(out), value);
 }
-} // anonymous namespace to guard against duplicate symbols
+
 } // namespace JSON
 
 #endif // JSON_CONTAINER_H

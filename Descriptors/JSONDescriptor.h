@@ -299,10 +299,10 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
     }
 
     // TODO: reorder parameters
-    void BuildTextualDescription(DescriptionFactory &description_factory,
-                                 JSON::Array &json_instruction_array,
-                                 const int route_length,
-                                 std::vector<Segment> &route_segments_list)
+    inline void BuildTextualDescription(DescriptionFactory &description_factory,
+                                        JSON::Array &json_instruction_array,
+                                        const int route_length,
+                                        std::vector<Segment> &route_segments_list)
     {
         // Segment information has following format:
         //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]

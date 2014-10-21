@@ -102,19 +102,19 @@ struct InputRestrictionContainer
 struct CmpRestrictionContainerByFrom
 {
     using value_type = InputRestrictionContainer;
-    bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b)
+    inline bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b)
         const
     {
         return a.fromWay < b.fromWay;
     }
-    value_type max_value() const { return InputRestrictionContainer::max_value(); }
-    value_type min_value() const { return InputRestrictionContainer::min_value(); }
+    inline value_type max_value() const { return InputRestrictionContainer::max_value(); }
+    inline value_type min_value() const { return InputRestrictionContainer::min_value(); }
 };
 
 struct CmpRestrictionContainerByTo
 {
     using value_type = InputRestrictionContainer;
-    bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b)
+    inline bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b)
         const
     {
         return a.toWay < b.toWay;

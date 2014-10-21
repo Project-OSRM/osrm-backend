@@ -111,13 +111,13 @@ struct SharedDataLayout
     }
 
     template<typename T>
-    void SetBlockSize(BlockID bid, uint64_t entries)
+    inline void SetBlockSize(BlockID bid, uint64_t entries)
     {
         num_entries[bid] = entries;
         entry_size[bid] = sizeof(T);
     }
 
-    uint64_t GetBlockSize(BlockID bid) const
+    inline uint64_t GetBlockSize(BlockID bid) const
     {
         // special encoding
         if (bid == GEOMETRIES_INDICATORS)
@@ -128,12 +128,12 @@ struct SharedDataLayout
         return num_entries[bid] * entry_size[bid];
     }
 
-    uint64_t GetSizeOfLayout() const
+    inline uint64_t GetSizeOfLayout() const
     {
         return GetBlockOffset(NUM_BLOCKS) + NUM_BLOCKS*2*sizeof(CANARY);
     }
 
-    uint64_t GetBlockOffset(BlockID bid) const
+    inline uint64_t GetBlockOffset(BlockID bid) const
     {
         uint64_t result = sizeof(CANARY);
         for (auto i = 0; i < bid; i++)
@@ -144,7 +144,7 @@ struct SharedDataLayout
     }
 
     template<typename T, bool WRITE_CANARY=false>
-    T* GetBlockPtr(char* shared_memory, BlockID bid)
+    inline T* GetBlockPtr(char* shared_memory, BlockID bid)
     {
         T* ptr = (T*)(shared_memory + GetBlockOffset(bid));
         if (WRITE_CANARY)

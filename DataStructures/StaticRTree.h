@@ -77,7 +77,7 @@ class StaticRTree
         int32_t min_lon, max_lon;
         int32_t min_lat, max_lat;
 
-        void InitializeMBRectangle(const std::array<EdgeDataT, LEAF_NODE_SIZE> &objects,
+        inline void InitializeMBRectangle(const std::array<EdgeDataT, LEAF_NODE_SIZE> &objects,
                                           const uint32_t element_count,
                                           const std::vector<NodeInfo> &coordinate_list)
         {
@@ -103,7 +103,7 @@ class StaticRTree
             BOOST_ASSERT(max_lon != std::numeric_limits<int>::min());
         }
 
-        void MergeBoundingBoxes(const RectangleInt2D &other)
+        inline void MergeBoundingBoxes(const RectangleInt2D &other)
         {
             min_lon = std::min(min_lon, other.min_lon);
             max_lon = std::max(max_lon, other.max_lon);
@@ -115,7 +115,7 @@ class StaticRTree
             BOOST_ASSERT(max_lon != std::numeric_limits<int>::min());
         }
 
-        FixedPointCoordinate Centroid() const
+        inline FixedPointCoordinate Centroid() const
         {
             FixedPointCoordinate centroid;
             // The coordinates of the midpoints are given by:
@@ -125,7 +125,7 @@ class StaticRTree
             return centroid;
         }
 
-        bool Intersects(const RectangleInt2D &other) const
+        inline bool Intersects(const RectangleInt2D &other) const
         {
             FixedPointCoordinate upper_left(other.max_lat, other.min_lon);
             FixedPointCoordinate upper_right(other.max_lat, other.max_lon);
@@ -136,7 +136,7 @@ class StaticRTree
                     Contains(lower_left));
         }
 
-        float GetMinDist(const FixedPointCoordinate &location) const
+        inline float GetMinDist(const FixedPointCoordinate &location) const
         {
             const bool is_contained = Contains(location);
             if (is_contained)
@@ -205,7 +205,7 @@ class StaticRTree
             return min_dist;
         }
 
-        float GetMinMaxDist(const FixedPointCoordinate &location) const
+        inline float GetMinMaxDist(const FixedPointCoordinate &location) const
         {
             float min_max_dist = std::numeric_limits<float>::max();
             // Get minmax distance to each of the four sides
@@ -238,14 +238,14 @@ class StaticRTree
             return min_max_dist;
         }
 
-        bool Contains(const FixedPointCoordinate &location) const
+        inline bool Contains(const FixedPointCoordinate &location) const
         {
             const bool lats_contained = (location.lat >= min_lat) && (location.lat <= max_lat);
             const bool lons_contained = (location.lon >= min_lon) && (location.lon <= max_lon);
             return lats_contained && lons_contained;
         }
 
-        friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
+        inline friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
         {
             out << rect.min_lat / COORDINATE_PRECISION << "," << rect.min_lon / COORDINATE_PRECISION
                 << " " << rect.max_lat / COORDINATE_PRECISION << ","
@@ -278,7 +278,7 @@ class StaticRTree
         uint64_t m_hilbert_value;
         uint32_t m_array_index;
 
-        bool operator<(const WrappedInputElement &other) const
+        inline bool operator<(const WrappedInputElement &other) const
         {
             return m_hilbert_value < other.m_hilbert_value;
         }
@@ -300,7 +300,7 @@ class StaticRTree
         QueryCandidate() : min_dist(std::numeric_limits<float>::max()), node_id(UINT_MAX) {}
         float min_dist;
         uint32_t node_id;
-        bool operator<(const QueryCandidate &other) const
+        inline bool operator<(const QueryCandidate &other) const
         {
             // Attn: this is reversed order. std::pq is a max pq!
             return other.min_dist < min_dist;
@@ -317,7 +317,7 @@ class StaticRTree
 
         IncrementalQueryCandidate() : min_dist(std::numeric_limits<float>::max()) {}
 
-        bool operator<(const IncrementalQueryCandidate &other) const
+        inline bool operator<(const IncrementalQueryCandidate &other) const
         {
             // Attn: this is reversed order. std::pq is a max pq!
             return other.min_dist < min_dist;
@@ -1110,7 +1110,7 @@ class StaticRTree
 
   private:
 
-    void SetForwardAndReverseWeightsOnPhantomNode(const EdgeDataT & nearest_edge,
+    inline void SetForwardAndReverseWeightsOnPhantomNode(const EdgeDataT & nearest_edge,
                                                          PhantomNode &result_phantom_node) const
     {
         const float distance_1 = FixedPointCoordinate::ApproximateEuclideanDistance(
@@ -1130,7 +1130,7 @@ class StaticRTree
     }
 
     // fixup locations if too close to inputs
-    void FixUpRoundingIssue(const FixedPointCoordinate &input_coordinate,
+    inline void FixUpRoundingIssue(const FixedPointCoordinate &input_coordinate,
                                   PhantomNode &result_phantom_node) const
     {
             if (1 == std::abs(input_coordinate.lon - result_phantom_node.location.lon))
@@ -1144,7 +1144,7 @@ class StaticRTree
     }
 
     template <class QueueT>
-    float ExploreTreeNode(const TreeNode &parent,
+    inline float ExploreTreeNode(const TreeNode &parent,
                                  const FixedPointCoordinate &input_coordinate,
                                  const float min_dist,
                                  const float min_max_dist,
@@ -1173,7 +1173,7 @@ class StaticRTree
         return new_min_max_dist;
     }
 
-    void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode &result_node)
+    inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode &result_node)
     {
         if (!leaves_stream.is_open())
         {
@@ -1192,10 +1192,10 @@ class StaticRTree
         BOOST_ASSERT_MSG(leaves_stream.good(), "Reading from leaf file failed.");
     }
 
-    bool EdgesAreEquivalent(const FixedPointCoordinate &a,
-                            const FixedPointCoordinate &b,
-                            const FixedPointCoordinate &c,
-                            const FixedPointCoordinate &d) const
+    inline bool EdgesAreEquivalent(const FixedPointCoordinate &a,
+                                   const FixedPointCoordinate &b,
+                                   const FixedPointCoordinate &c,
+                                   const FixedPointCoordinate &d) const
     {
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
     }

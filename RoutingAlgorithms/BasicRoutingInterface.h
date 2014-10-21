@@ -58,7 +58,7 @@ template <class DataFacadeT> class BasicRoutingInterface
     explicit BasicRoutingInterface(DataFacadeT *facade) : facade(facade) {}
     virtual ~BasicRoutingInterface() {};
 
-    void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
+    inline void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
                             SearchEngineData::QueryHeap &reverse_heap,
                             NodeID *middle_node_id,
                             int *upper_bound,
@@ -145,7 +145,7 @@ template <class DataFacadeT> class BasicRoutingInterface
         }
     }
 
-    void UnpackPath(const std::vector<NodeID> &packed_path,
+    inline void UnpackPath(const std::vector<NodeID> &packed_path,
                            const PhantomNodes &phantom_node_pair,
                            std::vector<PathData> &unpacked_path) const
     {
@@ -330,7 +330,7 @@ template <class DataFacadeT> class BasicRoutingInterface
         }
     }
 
-    void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const
+    inline void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const
     {
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
         recursion_stack.emplace(s, t);
@@ -386,7 +386,7 @@ template <class DataFacadeT> class BasicRoutingInterface
         unpacked_path.emplace_back(t);
     }
 
-    void RetrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,
+    inline void RetrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,
                                            const SearchEngineData::QueryHeap &reverse_heap,
                                            const NodeID middle_node_id,
                                            std::vector<NodeID> &packed_path) const
@@ -397,7 +397,7 @@ template <class DataFacadeT> class BasicRoutingInterface
         RetrievePackedPathFromSingleHeap(reverse_heap, middle_node_id, packed_path);
     }
 
-    void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
+    inline void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
                                                  const NodeID middle_node_id,
                                                  std::vector<NodeID> &packed_path) const
     {
