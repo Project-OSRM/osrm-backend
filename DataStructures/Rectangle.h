@@ -1,14 +1,22 @@
 #ifndef RECTANGLE_H
 #define RECTANGLE_H
 
-// TODO: Make template type
+#include <boost/assert.hpp>
+
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+
+// TODO: Make template type, add tests
 struct RectangleInt2D
 {
-    RectangleInt2D() : min_lon(INT_MAX), max_lon(INT_MIN), min_lat(INT_MAX), max_lat(INT_MIN) {}
+    RectangleInt2D() : min_lon(std::numeric_limits<int32_t>::max()),
+                       max_lon(std::numeric_limits<int32_t>::min()),
+                       min_lat(std::numeric_limits<int32_t>::max()),
+                       max_lat(std::numeric_limits<int32_t>::min()) {}
 
     int32_t min_lon, max_lon;
     int32_t min_lat, max_lat;
-
 
     inline void MergeBoundingBoxes(const RectangleInt2D &other)
     {
@@ -16,10 +24,10 @@ struct RectangleInt2D
         max_lon = std::max(max_lon, other.max_lon);
         min_lat = std::min(min_lat, other.min_lat);
         max_lat = std::max(max_lat, other.max_lat);
-        BOOST_ASSERT(min_lat != std::numeric_limits<int>::min());
-        BOOST_ASSERT(min_lon != std::numeric_limits<int>::min());
-        BOOST_ASSERT(max_lat != std::numeric_limits<int>::min());
-        BOOST_ASSERT(max_lon != std::numeric_limits<int>::min());
+        BOOST_ASSERT(min_lat != std::numeric_limits<int32_t>::min());
+        BOOST_ASSERT(min_lon != std::numeric_limits<int32_t>::min());
+        BOOST_ASSERT(max_lat != std::numeric_limits<int32_t>::min());
+        BOOST_ASSERT(max_lon != std::numeric_limits<int32_t>::min());
     }
 
     inline FixedPointCoordinate Centroid() const
