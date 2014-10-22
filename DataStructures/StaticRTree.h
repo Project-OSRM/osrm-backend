@@ -32,9 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HilbertValue.h"
 #include "PhantomNodes.h"
 #include "QueryNode.h"
+#include "Rectangle.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
-#include "Rectangle.h"
 
 #include "../ThirdParty/variant/variant.hpp"
 #include "../Util/floating_point.hpp"
