@@ -71,5 +71,12 @@ Function for_each_pair(ForwardIterator begin, ForwardIterator end, Function func
     }
     return function;
 }
+
+template <class ContainerT, typename Function>
+Function for_each_pair(ContainerT &container, Function function)
+{
+    return for_each_pair(std::begin(container), std::end(container), function);
+}
+
 }
 #endif /* CONTAINER_HPP_ */
