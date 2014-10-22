@@ -278,7 +278,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         }
 
         JSON::Object json_hint_object;
-        json_hint_object.values["checksum"] = raw_route.check_sum;
+        json_hint_object.values["checksum"] = facade->GetCheckSum();
         JSON::Array json_location_hint_array;
         std::string hint;
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))

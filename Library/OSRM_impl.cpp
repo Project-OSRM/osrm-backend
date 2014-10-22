@@ -34,6 +34,7 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <osrm/RouteParameters.h>
 #include <osrm/ServerPaths.h>
 
+#include "../DataStructures/QueryEdge.h"
 #include "../Plugins/BasePlugin.h"
 #include "../Plugins/DistanceTablePlugin.h"
 #include "../Plugins/HelloWorldPlugin.h"

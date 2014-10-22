@@ -108,6 +108,11 @@ template <class EdgeDataT> class BaseDataFacade
                                             const unsigned zoom_level,
                                             const unsigned number_of_results) = 0;
 
+    virtual bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node,
+                                            const unsigned zoom_leve) = 0;
+
     virtual unsigned GetCheckSum() const = 0;
 
     virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const = 0;

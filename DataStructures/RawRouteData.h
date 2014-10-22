@@ -68,12 +68,10 @@ struct RawRouteData
     std::vector<std::vector<PathData>> unpacked_path_segments;
     std::vector<PathData> unpacked_alternative;
     std::vector<PhantomNodes> segment_end_coordinates;
-    std::vector<FixedPointCoordinate> raw_via_node_coordinates;
     std::vector<bool> source_traversed_in_reverse;
     std::vector<bool> target_traversed_in_reverse;
     std::vector<bool> alt_source_traversed_in_reverse;
     std::vector<bool> alt_target_traversed_in_reverse;
-    unsigned check_sum;
     int shortest_path_length;
     int alternative_path_length;
 
@@ -82,8 +80,7 @@ struct RawRouteData
         return (leg != unpacked_path_segments.size() - 1);
     }
 
-    RawRouteData()
-        : check_sum(SPECIAL_NODEID),
+    RawRouteData() :
           shortest_path_length(INVALID_EDGE_WEIGHT),
           alternative_path_length(INVALID_EDGE_WEIGHT)
     {

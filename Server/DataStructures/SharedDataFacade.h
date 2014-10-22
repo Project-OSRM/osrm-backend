@@ -385,6 +385,24 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node,
+                                            const unsigned zoom_level) final
+    {
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate, 
+                                                              resulting_phantom_node_vector, 
+                                                              zoom_level, 
+                                                              1);
+        if (result)
+        {
+            BOOST_ASSERT(!resulting_phantom_node_vector.empty());
+            resulting_phantom_node = resulting_phantom_node_vector.front();
+        }
+        return result;
+    }
+
+    bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
                                             const unsigned zoom_level,
                                             const unsigned number_of_results) final
