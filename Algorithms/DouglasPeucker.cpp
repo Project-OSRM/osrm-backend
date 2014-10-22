@@ -106,6 +106,11 @@ DouglasPeucker::DouglasPeucker()
 {
 }
 
+void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
+{
+    Run(std::begin(input_geometry), std::end(input_geometry), zoom_level);
+}
+
 void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level)
 {
     unsigned size = std::distance(begin, end);

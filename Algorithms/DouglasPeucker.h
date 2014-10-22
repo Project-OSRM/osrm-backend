@@ -55,6 +55,7 @@ class DouglasPeucker
   public:
     DouglasPeucker();
     void Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level);
+    void Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level);
 };
 
 #endif /* DOUGLASPEUCKER_H_ */
