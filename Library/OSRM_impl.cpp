@@ -35,7 +35,6 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <osrm/ServerPaths.h>
 
 #include "../DataStructures/QueryEdge.h"
-#include "../Plugins/BasePlugin.h"
 #include "../Plugins/DistanceTablePlugin.h"
 #include "../Plugins/HelloWorldPlugin.h"
 #include "../Plugins/LocatePlugin.h"
@@ -47,7 +46,6 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
 #include "../Util/make_unique.hpp"
-#include "../Util/ProgramOptions.h"
 #include "../Util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
