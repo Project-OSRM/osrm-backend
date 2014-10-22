@@ -28,15 +28,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TIMINGUTIL_H
 #define TIMINGUTIL_H
 
-#include <chrono>
 #include <atomic>
+#include <chrono>
+#include <cstdint>
 #include <mutex>
 #include <unordered_map>
 
 struct GlobalTimer
 {
     GlobalTimer() : time(0) {}
-    std::atomic<long unsigned> time;
+    std::atomic<uint64_t> time;
 };
 
 class GlobalTimerFactory

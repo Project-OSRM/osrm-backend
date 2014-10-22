@@ -56,7 +56,7 @@ struct RectangleInt2D
         const bool is_contained = Contains(location);
         if (is_contained)
         {
-            return 0.;
+            return 0.0f;
         }
 
         enum Direction
