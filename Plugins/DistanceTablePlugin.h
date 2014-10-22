@@ -92,7 +92,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
         unsigned max_locations =
-            std::min(100u, static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
+            std::min(static_cast<unsigned>(DISTANCE_TABLE_PLUGIN_MAX_LOCATIONS), static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
         PhantomNodeArray phantom_node_vector(max_locations);
         for (unsigned i = 0; i < max_locations; ++i)
         {
