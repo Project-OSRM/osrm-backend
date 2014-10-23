@@ -46,6 +46,7 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
 #include "../Util/make_unique.hpp"
+#include "../Util/ProgramOptions.h"
 #include "../Util/simple_logger.hpp"
 
 #include <boost/assert.hpp>

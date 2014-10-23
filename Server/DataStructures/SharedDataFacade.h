@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
-#include "../../Util/ProgramOptions.h"
 #include "../../Util/make_unique.hpp"
 #include "../../Util/simple_logger.hpp"
 
@@ -389,9 +388,9 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
                                             const unsigned zoom_level) final
     {
         std::vector<PhantomNode> resulting_phantom_node_vector;
-        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate, 
-                                                              resulting_phantom_node_vector, 
-                                                              zoom_level, 
+        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
+                                                              resulting_phantom_node_vector,
+                                                              zoom_level,
                                                               1);
         if (result)
         {
