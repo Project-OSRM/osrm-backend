@@ -50,31 +50,33 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         queries.emplace_back(FixedPointCoordinate(lat_udist(mt_rand), lon_udist(mt_rand)));
     }
 
-    const unsigned num_results = 5;
-    std::cout << "#### IncrementalFindPhantomNodeForCoordinate : " << num_results
-              << " phantom nodes"
-              << "\n";
-
-    TIMER_START(query_phantom);
-    std::vector<PhantomNode> resulting_phantom_node_vector;
-    for (const auto &q : queries)
     {
-        resulting_phantom_node_vector.clear();
-        rtree.IncrementalFindPhantomNodeForCoordinate(
-            q, resulting_phantom_node_vector, 3, num_results);
-        resulting_phantom_node_vector.clear();
-        rtree.IncrementalFindPhantomNodeForCoordinate(
-            q, resulting_phantom_node_vector, 17, num_results);
+        const unsigned num_results = 5;
+        std::cout << "#### IncrementalFindPhantomNodeForCoordinate : " << num_results
+                  << " phantom nodes"
+                  << "\n";
+
+        TIMER_START(query_phantom);
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        for (const auto &q : queries)
+        {
+            resulting_phantom_node_vector.clear();
+            rtree.IncrementalFindPhantomNodeForCoordinate(
+                q, resulting_phantom_node_vector, 3, num_results);
+            resulting_phantom_node_vector.clear();
+            rtree.IncrementalFindPhantomNodeForCoordinate(
+                q, resulting_phantom_node_vector, 17, num_results);
+        }
+        TIMER_STOP(query_phantom);
+
+        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries << " queries."
+                  << "\n";
+        std::cout << TIMER_MSEC(query_phantom) / ((double)num_queries) << " msec/query."
+                  << "\n";
+
+        std::cout << "#### LocateClosestEndPointForCoordinate"
+                  << "\n";
     }
-    TIMER_STOP(query_phantom);
-
-    std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries << " queries."
-              << "\n";
-    std::cout << TIMER_MSEC(query_phantom) / ((double)num_queries) << " msec/query."
-              << "\n";
-
-    std::cout << "#### LocateClosestEndPointForCoordinate"
-              << "\n";
 
     TIMER_START(query_endpoint);
     FixedPointCoordinate result;
@@ -105,6 +107,36 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
               << "\n";
     std::cout << TIMER_MSEC(query_phantomnode) / ((double)num_queries) << " msec/query."
               << "\n";
+
+
+    {
+        const unsigned num_results = 1;
+        std::cout << "#### IncrementalFindPhantomNodeForCoordinate : " << num_results
+                  << " phantom nodes"
+                  << "\n";
+
+        TIMER_START(query_phantom);
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        for (const auto &q : queries)
+        {
+            resulting_phantom_node_vector.clear();
+            rtree.IncrementalFindPhantomNodeForCoordinate(
+                q, resulting_phantom_node_vector, 3, num_results);
+            resulting_phantom_node_vector.clear();
+            rtree.IncrementalFindPhantomNodeForCoordinate(
+                q, resulting_phantom_node_vector, 17, num_results);
+        }
+        TIMER_STOP(query_phantom);
+
+        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries << " queries."
+                  << "\n";
+        std::cout << TIMER_MSEC(query_phantom) / ((double)num_queries) << " msec/query."
+                  << "\n";
+
+        std::cout << "#### LocateClosestEndPointForCoordinate"
+                  << "\n";
+    }
+
 }
 
 int main(int argc, char **argv)
