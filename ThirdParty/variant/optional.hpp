@@ -33,15 +33,6 @@ template <typename T> class optional
 
     optional(T const &v) { variant_ = v; }
 
-    optional &operator=(optional other)
-    { // note: argument passed by value!
-        if (this != &other)
-        {
-            swap(other);
-        }
-        return *this;
-    }
-
     explicit operator bool() const noexcept { return variant_.template is<T>(); }
 
     T const &get() const { return variant_.template get<T>(); }
