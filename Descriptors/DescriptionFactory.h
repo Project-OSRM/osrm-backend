@@ -190,7 +190,7 @@ class DescriptionFactory
         }
 
         // Generalize poly line
-        polyline_generalizer.Run(path_description, zoomLevel);
+        polyline_generalizer.Run(path_description.begin(), path_description.end(), zoomLevel);
 
         // fix what needs to be fixed else
         unsigned necessary_pieces = 0; // a running index that counts the necessary pieces
