@@ -69,7 +69,8 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         }
         TIMER_STOP(query_phantom);
 
-        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries << " queries."
+        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries
+                  << " queries."
                   << "\n";
         std::cout << TIMER_MSEC(query_phantom) / ((double)num_queries) << " msec/query."
                   << "\n";
@@ -108,7 +109,6 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
     std::cout << TIMER_MSEC(query_phantomnode) / ((double)num_queries) << " msec/query."
               << "\n";
 
-
     {
         const unsigned num_results = 1;
         std::cout << "#### IncrementalFindPhantomNodeForCoordinate : " << num_results
@@ -128,7 +128,8 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         }
         TIMER_STOP(query_phantom);
 
-        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries << " queries."
+        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries
+                  << " queries."
                   << "\n";
         std::cout << TIMER_MSEC(query_phantom) / ((double)num_queries) << " msec/query."
                   << "\n";
@@ -136,7 +137,6 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         std::cout << "#### LocateClosestEndPointForCoordinate"
                   << "\n";
     }
-
 }
 
 int main(int argc, char **argv)
