@@ -55,6 +55,8 @@ class DescriptionFactory
 
     std::vector<unsigned> via_indices;
 
+    double entire_length;
+
   public:
     struct RouteSummary
     {
@@ -72,8 +74,6 @@ class DescriptionFactory
         }
     } summary;
 
-    double entireLength;
-
     // I know, declaring this public is considered bad. I'm lazy
     std::vector<SegmentInformation> path_description;
     DescriptionFactory();
@@ -85,6 +85,11 @@ class DescriptionFactory
                        const bool is_via_location = false);
     JSON::Value AppendGeometryString(const bool return_encoded);
     std::vector<unsigned> const &GetViaIndices() const;
+
+    double get_entire_length() const
+    {
+        return entire_length;
+    }
 
     template <class DataFacadeT> void Run(const DataFacadeT *facade, const unsigned zoomLevel)
     {
@@ -152,7 +157,7 @@ class DescriptionFactory
 
         for (unsigned i = 1; i < path_description.size(); ++i)
         {
-            entireLength += path_description[i].length;
+            entire_length += path_description[i].length;
             segment_length += path_description[i].length;
             segment_duration += path_description[i].duration;
             path_description[segment_start_index].length = segment_length;

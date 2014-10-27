@@ -149,7 +149,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                                     shortest_path_segments);
             json_result.values["route_instructions"] = json_route_instructions;
         }
-        description_factory.BuildRouteSummary(description_factory.entireLength,
+        description_factory.BuildRouteSummary(description_factory.get_entire_length(),
                                               raw_route.shortest_path_length);
         JSON::Object json_route_summary;
         json_route_summary.values["total_distance"] = description_factory.summary.distance;
@@ -231,7 +231,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                 json_result.values["alternative_instructions"] = json_alt_instructions;
             }
             alternate_description_factory.BuildRouteSummary(
-                alternate_description_factory.entireLength, raw_route.alternative_path_length);
+                alternate_description_factory.get_entire_length(), raw_route.alternative_path_length);
 
             JSON::Object json_alternate_route_summary;
             JSON::Array json_alternate_route_summary_array;

@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 
-DescriptionFactory::DescriptionFactory() : entireLength(0) { via_indices.push_back(0); }
+DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }
 
 std::vector<unsigned> const &DescriptionFactory::GetViaIndices() const { return via_indices; }
 
