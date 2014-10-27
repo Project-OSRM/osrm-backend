@@ -38,7 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 
-namespace {
+namespace
+{
 struct CoordinatePairCalculator
 {
     CoordinatePairCalculator() = delete;
@@ -83,25 +84,26 @@ struct CoordinatePairCalculator
 }
 
 DouglasPeucker::DouglasPeucker()
-    : douglas_peucker_thresholds({512440, // z0
-                                  256720, // z1
-                                  122560, // z2
-                                  56780,  // z3
-                                  28800,  // z4
-                                  14400,  // z5
-                                  7200,   // z6
-                                  3200,   // z7
-                                  2400,   // z8
-                                  1000,   // z9
-                                  600,    // z10
-                                  120,    // z11
-                                  60,     // z12
-                                  45,     // z13
-                                  36,     // z14
-                                  20,     // z15
-                                  8,      // z16
-                                  6,      // z17
-                                  4       // z18
+    : douglas_peucker_thresholds({
+          512440, // z0
+          256720, // z1
+          122560, // z2
+          56780,  // z3
+          28800,  // z4
+          14400,  // z5
+          7200,   // z6
+          3200,   // z7
+          2400,   // z8
+          1000,   // z9
+          600,    // z10
+          120,    // z11
+          60,     // z12
+          45,     // z13
+          36,     // z14
+          20,     // z15
+          8,      // z16
+          6,      // z17
+          4       // z18
       })
 {
 }
