@@ -43,18 +43,15 @@ struct SegmentInformation;
 
 class DouglasPeucker
 {
-  public:
-    using RandomAccessIt = std::vector<SegmentInformation>::iterator;
   private:
     std::vector<int> douglas_peucker_thresholds;
 
-    using GeometryRange = std::pair<RandomAccessIt, RandomAccessIt>;
+    using GeometryRange = std::pair<unsigned, unsigned>;
     // Stack to simulate the recursion
     std::stack<GeometryRange> recursion_stack;
 
   public:
     DouglasPeucker();
-    void Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level);
     void Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level);
 };
 

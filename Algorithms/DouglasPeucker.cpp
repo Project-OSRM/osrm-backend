@@ -108,38 +108,35 @@ DouglasPeucker::DouglasPeucker()
 
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
-    Run(std::begin(input_geometry), std::end(input_geometry), zoom_level);
-}
+    // check if input data is invalid
+    BOOST_ASSERT_MSG(!input_geometry.empty(), "geometry invalid");
 
-void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level)
-{
-    unsigned size = std::distance(begin, end);
-    if (size < 2)
+    if (input_geometry.size() < 2)
     {
         return;
     }
 
-    begin->necessary = true;
-    std::prev(end)->necessary = true;
+    input_geometry.front().necessary = true;
+    input_geometry.back().necessary = true;
 
     {
         BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
-        RandomAccessIt left_border = begin;
-        RandomAccessIt right_border = std::next(begin);
+        unsigned left_border = 0;
+        unsigned right_border = 1;
         // Sweep over array and identify those ranges that need to be checked
         do
         {
             // traverse list until new border element found
-            if (right_border->necessary)
+            if (input_geometry[right_border].necessary)
             {
                 // sanity checks
-                BOOST_ASSERT(left_border->necessary);
-                BOOST_ASSERT(right_border->necessary);
+                BOOST_ASSERT(input_geometry[left_border].necessary);
+                BOOST_ASSERT(input_geometry[right_border].necessary);
                 recursion_stack.emplace(left_border, right_border);
                 left_border = right_border;
             }
             ++right_border;
-        } while (right_border != end);
+        } while (right_border < input_geometry.size());
     }
 
     // mark locations as 'necessary' by divide-and-conquer
@@ -149,23 +146,24 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
         const GeometryRange pair = recursion_stack.top();
         recursion_stack.pop();
         // sanity checks
-        BOOST_ASSERT_MSG(pair.first->necessary, "left border mus be necessary");
-        BOOST_ASSERT_MSG(pair.second->necessary, "right border must be necessary");
-        BOOST_ASSERT_MSG(std::distance(pair.second, end) > 0, "right border outside of geometry");
-        BOOST_ASSERT_MSG(std::distance(pair.first, pair.second) >= 0, "left border on the wrong side");
+        BOOST_ASSERT_MSG(input_geometry[pair.first].necessary, "left border mus be necessary");
+        BOOST_ASSERT_MSG(input_geometry[pair.second].necessary, "right border must be necessary");
+        BOOST_ASSERT_MSG(pair.second < input_geometry.size(), "right border outside of geometry");
+        BOOST_ASSERT_MSG(pair.first < pair.second, "left border on the wrong side");
 
         int max_int_distance = 0;
-        auto farthest_entry_it = pair.second;
-        const CoordinatePairCalculator dist_calc(pair.first->location, pair.second->location);
+        unsigned farthest_entry_index = pair.second;
+        const CoordinatePairCalculator dist_calc(input_geometry[pair.first].location,
+                                                 input_geometry[pair.second].location);
 
         // sweep over range to find the maximum
-        for (auto it = std::next(pair.first); it != pair.second; ++it)
+        for (const auto i : osrm::irange(pair.first + 1, pair.second))
         {
-            const int distance = dist_calc(it->location);
+            const int distance = dist_calc(input_geometry[i].location);
             // found new feasible maximum?
             if (distance > max_int_distance && distance > douglas_peucker_thresholds[zoom_level])
             {
-                farthest_entry_it = it;
+                farthest_entry_index = i;
                 max_int_distance = distance;
             }
         }
@@ -174,14 +172,14 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
         if (max_int_distance > douglas_peucker_thresholds[zoom_level])
         {
             //  mark idx as necessary
-            farthest_entry_it->necessary = true;
-            if (1 < std::distance(pair.first, farthest_entry_it))
+            input_geometry[farthest_entry_index].necessary = true;
+            if (1 < (farthest_entry_index - pair.first))
             {
-                recursion_stack.emplace(pair.first, farthest_entry_it);
+                recursion_stack.emplace(pair.first, farthest_entry_index);
             }
-            if (1 < std::distance(pair.second, farthest_entry_it))
+            if (1 < (pair.second - farthest_entry_index))
             {
-                recursion_stack.emplace(farthest_entry_it, pair.second);
+                recursion_stack.emplace(farthest_entry_index, pair.second);
             }
         }
     }
