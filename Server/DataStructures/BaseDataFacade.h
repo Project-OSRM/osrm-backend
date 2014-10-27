@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../../DataStructures/EdgeBasedNode.h"
 #include "../../DataStructures/ImportNode.h"
-#include "../../DataStructures/PhantomNodes.h"
+#include "../../DataStructures/phantom_node.hpp"
 #include "../../DataStructures/Range.h"
 #include "../../DataStructures/TurnInstructions.h"
 #include "../../Util/OSRMException.h"

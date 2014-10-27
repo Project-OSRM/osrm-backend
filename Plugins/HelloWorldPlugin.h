@@ -77,8 +77,8 @@ class HelloWorldPlugin final : public BasePlugin
             JSON::Object json_location;
             JSON::Array json_coordinates;
 
-            json_coordinates.values.push_back(coordinate.lat / COORDINATE_PRECISION);
-            json_coordinates.values.push_back(coordinate.lon / COORDINATE_PRECISION);
+            json_coordinates.values.push_back(static_cast<double>(coordinate.lat / COORDINATE_PRECISION));
+            json_coordinates.values.push_back(static_cast<double>(coordinate.lon / COORDINATE_PRECISION));
             json_location.values[cast::integral_to_string(counter)] = json_coordinates;
             json_locations.values.push_back(json_location);
             ++counter;

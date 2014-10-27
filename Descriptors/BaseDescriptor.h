@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASE_DESCRIPTOR_H
 #define BASE_DESCRIPTOR_H
 
-#include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/phantom_node.hpp"
 #include "../DataStructures/RawRouteData.h"
 #include "../typedefs.h"
 
@@ -44,14 +44,14 @@ struct DescriptorTable : public std::unordered_map<std::string, unsigned>
     unsigned get_id(const std::string &key)
     {
         auto iter = find(key);
-        if (iter != end()) 
+        if (iter != end())
         {
             return iter->second;
-        } 
+        }
         return 0;
     }
 };
- 
+
 
 struct DescriptorConfig
 {
@@ -60,9 +60,9 @@ struct DescriptorConfig
     }
 
     template<class OtherT>
-    DescriptorConfig(const OtherT &other) : instructions(other.print_instructions), 
-                                            geometry(other.geometry), 
-                                            encode_geometry(other.compression), 
+    DescriptorConfig(const OtherT &other) : instructions(other.print_instructions),
+                                            geometry(other.geometry),
+                                            encode_geometry(other.compression),
                                             zoom_level(other.zoom_level) { }
     bool instructions;
     bool geometry;

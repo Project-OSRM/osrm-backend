@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../Algorithms/PolylineCompressor.h"
-#include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"

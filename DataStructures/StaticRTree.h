@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
-#include "PhantomNodes.h"
+#include "phantom_node.hpp"
 #include "QueryNode.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"

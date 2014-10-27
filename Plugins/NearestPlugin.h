@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasePlugin.h"
 #include "../DataStructures/JSONContainer.h"
-#include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/phantom_node.hpp"
 #include "../DataStructures/Range.h"
 
 #include <string>
