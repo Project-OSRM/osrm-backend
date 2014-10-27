@@ -82,30 +82,6 @@ struct CoordinatePairCalculator
 };
 }
 
-DouglasPeucker::DouglasPeucker()
-    : douglas_peucker_thresholds({512440, // z0
-                                  256720, // z1
-                                  122560, // z2
-                                  56780,  // z3
-                                  28800,  // z4
-                                  14400,  // z5
-                                  7200,   // z6
-                                  3200,   // z7
-                                  2400,   // z8
-                                  1000,   // z9
-                                  600,    // z10
-                                  120,    // z11
-                                  60,     // z12
-                                  45,     // z13
-                                  36,     // z14
-                                  20,     // z15
-                                  8,      // z16
-                                  6,      // z17
-                                  4       // z18
-      })
-{
-}
-
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
     Run(std::begin(input_geometry), std::end(input_geometry), zoom_level);
@@ -163,15 +139,16 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
         {
             const int distance = dist_calc(it->location);
             // found new feasible maximum?
-            if (distance > max_int_distance && distance > douglas_peucker_thresholds[zoom_level])
+            if (distance > max_int_distance && distance > DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
             {
                 farthest_entry_it = it;
                 max_int_distance = distance;
             }
         }
 
+
         // check if maximum violates a zoom level dependent threshold
-        if (max_int_distance > douglas_peucker_thresholds[zoom_level])
+        if (max_int_distance > DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
         {
             //  mark idx as necessary
             farthest_entry_it->necessary = true;
