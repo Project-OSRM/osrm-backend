@@ -1121,11 +1121,11 @@ class StaticRTree
 
         if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
         {
-            result_phantom_node.forward_weight *= ratio;
+            result_phantom_node.forward_weight *= static_cast<decltype(result_phantom_node.forward_weight)>(ratio);
         }
         if (SPECIAL_NODEID != result_phantom_node.reverse_node_id)
         {
-            result_phantom_node.reverse_weight *= (1.f - ratio);
+            result_phantom_node.reverse_weight *= static_cast<decltype(result_phantom_node.reverse_weight)>(1.f - ratio);
         }
     }
 
