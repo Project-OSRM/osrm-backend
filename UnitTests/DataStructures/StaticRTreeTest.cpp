@@ -74,7 +74,7 @@ class LinearSearchNN
         }
 
         result_coordinate = min_coord;
-        return result_coordinate.isValid();
+        return result_coordinate.is_valid();
     }
 
     bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
@@ -116,7 +116,7 @@ class LinearSearchNN
             }
         }
 
-        if (result_phantom_node.location.isValid())
+        if (result_phantom_node.location.is_valid())
         {
             // Hack to fix rounding errors and wandering via nodes.
             if (1 == std::abs(input_coordinate.lon - result_phantom_node.location.lon))
@@ -144,7 +144,7 @@ class LinearSearchNN
             }
         }
 
-        return result_phantom_node.location.isValid();
+        return result_phantom_node.location.is_valid();
     }
 
   private:

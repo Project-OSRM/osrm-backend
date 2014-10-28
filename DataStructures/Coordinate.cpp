@@ -72,7 +72,7 @@ bool FixedPointCoordinate::isSet() const
 {
     return (std::numeric_limits<int>::min() != lat) && (std::numeric_limits<int>::min() != lon);
 }
-bool FixedPointCoordinate::isValid() const
+bool FixedPointCoordinate::is_valid() const
 {
     if (lat > 90 * COORDINATE_PRECISION || lat < -90 * COORDINATE_PRECISION ||
         lon > 180 * COORDINATE_PRECISION || lon < -180 * COORDINATE_PRECISION)
@@ -246,7 +246,7 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
 
-    BOOST_ASSERT(nearest_location.isValid());
+    BOOST_ASSERT(nearest_location.is_valid());
     return FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
 }
 
@@ -256,7 +256,7 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
                                                          FixedPointCoordinate &nearest_location,
                                                          float &ratio)
 {
-    BOOST_ASSERT(query_location.isValid());
+    BOOST_ASSERT(query_location.is_valid());
 
     // initialize values
     const double x = lat2y(query_location.lat / COORDINATE_PRECISION);
@@ -319,7 +319,7 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
         nearest_location.lat = static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
-    BOOST_ASSERT(nearest_location.isValid());
+    BOOST_ASSERT(nearest_location.is_valid());
 
     const float approximate_distance =
         FixedPointCoordinate::ApproximateEuclideanDistance(query_location, nearest_location);

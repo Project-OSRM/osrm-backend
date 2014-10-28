@@ -49,7 +49,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().isValid())
+        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
@@ -62,7 +62,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                                                         static_cast<int>(number_of_results));
 
         JSON::Object json_result;
-        if (phantom_node_vector.empty() || !phantom_node_vector.front().isValid())
+        if (phantom_node_vector.empty() || !phantom_node_vector.front().is_valid())
         {
             json_result.values["status"] = 207;
         }

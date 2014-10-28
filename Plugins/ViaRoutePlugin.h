@@ -86,7 +86,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 !route_parameters.hints[i].empty())
             {
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
-                if (phantom_node_vector[i].isValid(facade->GetNumberOfNodes()))
+                if (phantom_node_vector[i].is_valid(facade->GetNumberOfNodes()))
                 {
                     continue;
                 }
@@ -103,7 +103,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         };
         osrm::for_each_pair(phantom_node_vector, build_phantom_pairs);
 
-        if (route_parameters.alternate_route && 
+        if (route_parameters.alternate_route &&
             1 == raw_route.segment_end_coordinates.size())
         {
             search_engine_ptr->alternative_path(

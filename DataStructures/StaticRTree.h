@@ -640,7 +640,7 @@ class StaticRTree
                 }
             }
         }
-        return result_coordinate.isValid();
+        return result_coordinate.is_valid();
     }
 
     // implementation of the Hjaltason/Samet query [3], a BFS traversal of the tree
@@ -1097,7 +1097,7 @@ class StaticRTree
             }
         }
 
-        if (result_phantom_node.location.isValid())
+        if (result_phantom_node.location.is_valid())
         {
             // Hack to fix rounding errors and wandering via nodes.
             FixUpRoundingIssue(input_coordinate, result_phantom_node);
@@ -1105,7 +1105,7 @@ class StaticRTree
             // set forward and reverse weights on the phantom node
             SetForwardAndReverseWeightsOnPhantomNode(nearest_edge, result_phantom_node);
         }
-        return result_phantom_node.location.isValid();
+        return result_phantom_node.location.is_valid();
     }
 
   private:
@@ -1121,11 +1121,11 @@ class StaticRTree
 
         if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
         {
-            result_phantom_node.forward_weight *= static_cast<decltype(result_phantom_node.forward_weight)>(ratio);
+            result_phantom_node.forward_weight *= ratio;
         }
         if (SPECIAL_NODEID != result_phantom_node.reverse_node_id)
         {
-            result_phantom_node.reverse_weight *= static_cast<decltype(result_phantom_node.reverse_weight)>(1.f - ratio);
+            result_phantom_node.reverse_weight *= (1.f - ratio);
         }
     }
 

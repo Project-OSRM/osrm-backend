@@ -81,7 +81,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             {
                 PhantomNode current_phantom_node;
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
-                if (current_phantom_node.isValid(facade->GetNumberOfNodes()))
+                if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
                     phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
                     continue;
@@ -92,7 +92,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                                                             route_parameters.zoom_level,
                                                             1);
 
-            BOOST_ASSERT(phantom_node_vector[i].front().isValid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
 
         // TIMER_START(distance_table);

@@ -78,37 +78,37 @@ int PhantomNode::GetReverseWeightPlusOffset() const
     return reverse_offset + reverse_weight;
 }
 
-bool PhantomNode::isBidirected() const
+bool PhantomNode::is_bidirected() const
 {
     return (forward_node_id != SPECIAL_NODEID) &&
            (reverse_node_id != SPECIAL_NODEID);
 }
 
-bool PhantomNode::IsCompressed() const
+bool PhantomNode::is_compressed() const
 {
     return (forward_offset != 0) || (reverse_offset != 0);
 }
 
-bool PhantomNode::isValid(const unsigned numberOfNodes) const
+bool PhantomNode::is_valid(const unsigned number_of_nodes) const
 {
     return
-        location.isValid() &&
+        location.is_valid() &&
         (
-            (forward_node_id < numberOfNodes) ||
-            (reverse_node_id < numberOfNodes)
+            (forward_node_id < number_of_nodes) ||
+            (reverse_node_id < number_of_nodes)
         ) &&
         (
             (forward_weight != INVALID_EDGE_WEIGHT) ||
             (reverse_weight != INVALID_EDGE_WEIGHT)
         ) &&
-        (name_id != std::numeric_limits<unsigned>::max()
+        (name_id != INVALID_NAMEID
     );
 }
 
-bool PhantomNode::isValid() const
+bool PhantomNode::is_valid() const
 {
-    return location.isValid() &&
-           (name_id != std::numeric_limits<unsigned>::max());
+    return location.is_valid() &&
+           (name_id != INVALID_NAMEID);
 }
 
 bool PhantomNode::operator==(const PhantomNode & other) const

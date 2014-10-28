@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 #include "../DataStructures/TravelMode.h"
-#include "../Util/simple_logger.hpp"
 #include "../typedefs.h"
 
+#include <iostream>
 #include <vector>
 
 struct PhantomNode
@@ -62,13 +62,13 @@ struct PhantomNode
 
     int GetReverseWeightPlusOffset() const;
 
-    bool isBidirected() const;
+    bool is_bidirected() const;
 
-    bool IsCompressed() const;
+    bool is_compressed() const;
 
-    bool isValid(const unsigned numberOfNodes) const;
+    bool is_valid(const unsigned numberOfNodes) const;
 
-    bool isValid() const;
+    bool is_valid() const;
 
     bool operator==(const PhantomNode & other) const;
 };

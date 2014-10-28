@@ -45,12 +45,12 @@ class BasePlugin
     virtual void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply) = 0;
     virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> coordinates) const final
     {
-        if (2 > coordinates.size() || 
+        if (2 > coordinates.size() ||
             std::any_of(std::begin(coordinates),
                         std::end(coordinates),
                         [](const FixedPointCoordinate &coordinate)
                         {
-                return !coordinate.isValid();
+                return !coordinate.is_valid();
             }))
         {
             return false;
