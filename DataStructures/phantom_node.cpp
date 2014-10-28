@@ -66,8 +66,7 @@ int PhantomNode::GetForwardWeightPlusOffset() const
     {
         return 0;
     }
-    const int result = (forward_offset + forward_weight);
-    return result;
+    return forward_offset + forward_weight;
 }
 
 int PhantomNode::GetReverseWeightPlusOffset() const
@@ -76,8 +75,7 @@ int PhantomNode::GetReverseWeightPlusOffset() const
     {
         return 0;
     }
-    const int result = (reverse_offset + reverse_weight);
-    return result;
+    return reverse_offset + reverse_weight;
 }
 
 bool PhantomNode::isBidirected() const
