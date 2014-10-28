@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/Coordinate.h>
 
 #include "../typedefs.h"
-#include "../Algorithms/PolylineCompressor.h"
+#include "../Algorithms/polyline_formatter.hpp"
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
@@ -112,9 +112,9 @@ JSON::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
 {
     if (return_encoded)
     {
-        return polyline_compressor.printEncodedString(path_description);
+        return PolylineFormatter().printEncodedString(path_description);
     }
-    return polyline_compressor.printUnencodedString(path_description);
+    return PolylineFormatter().printUnencodedString(path_description);
 }
 
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)

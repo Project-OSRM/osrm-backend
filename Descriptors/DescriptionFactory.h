@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DESCRIPTIONFACTORY_H_
 
 #include "../Algorithms/DouglasPeucker.h"
-#include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/phantom_node.hpp"
+#include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../typedefs.h"
@@ -47,7 +47,6 @@ struct PathData;
 class DescriptionFactory
 {
     DouglasPeucker polyline_generalizer;
-    PolylineCompressor polyline_compressor;
     PhantomNode start_phantom, target_phantom;
 
     double DegreeToRadian(const double degree) const;
