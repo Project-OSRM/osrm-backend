@@ -245,16 +245,16 @@ public:
             return mirrorDirection(d/2, angle);
         }
 
-        if (monoticity & MONOTONE_DECREASING_X)
-        {
-            // mirror on y axis which always maps to d
-            return mirrorDirection(d, angle);
-        }
-
         if (monoticity & MONOTONE_DECREASING_Y)
         {
             unsigned yinc_angle = mirrorDirection(d, angle);
             return mirrorDirection(d/2, yinc_angle);
+        }
+
+        if (monoticity & MONOTONE_DECREASING_X)
+        {
+            // mirror on y axis which always maps to d
+            return mirrorDirection(d, angle);
         }
 
         BOOST_ASSERT(monoticity != MONOTONE_INVALID);

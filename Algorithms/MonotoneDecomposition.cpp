@@ -132,15 +132,12 @@ void transformFromXMonotoneIncreasing(SubPath& subpath)
                         return sym;
                    });
 
-    if (subpath.monoticity & MONOTONE_DECREASING_X)
+    if (subpath.monoticity & MONOTONE_DECREASING_Y)
     {
-        return;
-    }
-
-    BOOST_ASSERT(subpath.monoticity & MONOTONE_DECREASING_Y);
-    for (unsigned i = 0; i < subpath.nodes.size(); i++)
-    {
-        std::swap(subpath.nodes[i].y, subpath.nodes[i].x);
+        for (unsigned i = 0; i < subpath.nodes.size(); i++)
+        {
+            std::swap(subpath.nodes[i].y, subpath.nodes[i].x);
+        }
     }
 }
 
