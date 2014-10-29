@@ -48,10 +48,20 @@ DEALINGS IN THE SOFTWARE.
 
 #include <boost/version.hpp>
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wmissing-noreturn"
+# pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 #if BOOST_VERSION >= 104800
 # include <boost/regex/pending/unicode_iterator.hpp>
 #else
 # include <boost_unicode_iterator.hpp>
+#endif
+
+#ifdef __clang__
+# pragma clang diagnostic pop
 #endif
 
 #include <osmium/handler.hpp>
@@ -95,10 +105,13 @@ namespace osmium {
 
                 template <typename... TArgs>
                 void output_formatted(const char* format, TArgs&&... args) {
+#ifndef NDEBUG
+                    int len =
+#endif
 #ifndef _MSC_VER
-                    int len = snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
+                    snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
 #else
-                    int len = _snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
+                    _snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
 #endif
                     assert(len > 0 && static_cast<size_t>(len) < tmp_buffer_size);
                     m_out += m_tmp_buffer;
@@ -269,7 +282,7 @@ namespace osmium {
                 }
 
                 void write_buffer(osmium::memory::Buffer&& buffer) override final {
-                    OPLOutputBlock output_block(std::move(buffer));
+                    osmium::thread::SharedPtrWrapper<OPLOutputBlock> output_block(std::move(buffer));
                     m_output_queue.push(osmium::thread::Pool::instance().submit(std::move(output_block)));
                     while (m_output_queue.size() > 10) {
                         std::this_thread::sleep_for(std::chrono::milliseconds(100)); // XXX
@@ -287,10 +300,13 @@ namespace osmium {
 
             namespace {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
                 const bool registered_opl_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::opl,
                     [](const osmium::io::File& file, data_queue_type& output_queue) {
                         return new osmium::io::detail::OPLOutputFormat(file, output_queue);
                 });
+#pragma GCC diagnostic pop
 
             } // anonymous namespace
 

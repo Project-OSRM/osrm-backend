@@ -64,7 +64,7 @@ namespace osmium {
 
             public:
 
-                explicit SegmentList(bool debug) :
+                explicit SegmentList(bool debug) noexcept :
                     m_debug(debug) {
                 }
 
@@ -77,21 +77,21 @@ namespace osmium {
                 SegmentList& operator=(SegmentList&& other) = delete;
 
                 /// The number of segments in the list.
-                size_t size() const {
+                size_t size() const noexcept {
                     return m_segments.size();
                 }
 
-                bool empty() const {
+                bool empty() const noexcept {
                     return m_segments.empty();
                 }
 
                 typedef slist_type::const_iterator const_iterator;
 
-                const_iterator begin() const {
+                const_iterator begin() const noexcept {
                     return m_segments.begin();
                 }
 
-                const_iterator end() const {
+                const_iterator end() const noexcept {
                     return m_segments.end();
                 }
 
@@ -99,7 +99,7 @@ namespace osmium {
                  * Enable or disable debug output to stderr. This is for Osmium
                  * developers only.
                  */
-                void enable_debug_output(bool debug=true) {
+                void enable_debug_output(bool debug=true) noexcept {
                     m_debug = debug;
                 }
 

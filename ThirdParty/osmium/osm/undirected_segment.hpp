@@ -71,19 +71,19 @@ namespace osmium {
      * segment. The first() location is checked first() and only if they have the
      * same first() location the second() location is taken into account.
      */
-    inline bool operator<(const UndirectedSegment& lhs, const UndirectedSegment& rhs) {
+    inline bool operator<(const UndirectedSegment& lhs, const UndirectedSegment& rhs) noexcept {
         return (lhs.first() == rhs.first() && lhs.second() < rhs.second()) || lhs.first() < rhs.first();
     }
 
-    inline bool operator>(const UndirectedSegment& lhs, const UndirectedSegment& rhs) {
+    inline bool operator>(const UndirectedSegment& lhs, const UndirectedSegment& rhs) noexcept {
         return rhs < lhs;
     }
 
-    inline bool operator<=(const UndirectedSegment& lhs, const UndirectedSegment& rhs) {
+    inline bool operator<=(const UndirectedSegment& lhs, const UndirectedSegment& rhs) noexcept {
         return ! (rhs < lhs);
     }
 
-    inline bool operator>=(const UndirectedSegment& lhs, const UndirectedSegment& rhs) {
+    inline bool operator>=(const UndirectedSegment& lhs, const UndirectedSegment& rhs) noexcept {
         return ! (lhs < rhs);
     }
 

@@ -41,14 +41,15 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <system_error>
 #include <thread>
-#ifndef _WIN32
-#include <sys/wait.h>
-#endif
-#ifndef _MSC_VER
-#include <unistd.h>
-#else
-#endif
 #include <utility>
+
+#ifndef _WIN32
+# include <sys/wait.h>
+#endif
+
+#ifndef _MSC_VER
+# include <unistd.h>
+#endif
 
 #include <osmium/io/compression.hpp>
 #include <osmium/io/detail/input_format.hpp>
@@ -95,7 +96,7 @@ namespace osmium {
              *
              * @param command Command to execute in the child.
              * @param filename Filename to give to command as argument.
-             * @return File descriptor of pipe in the parent.
+             * @returns File descriptor of pipe in the parent.
              * @throws std::system_error if a system call fails.
              */
             static int execute(const std::string& command, const std::string& filename, int* childpid) {
@@ -140,7 +141,7 @@ namespace osmium {
              * are opened by executing the "curl" program (which must be installed)
              * and reading from its output.
              *
-             * @return File descriptor of open file or pipe.
+             * @returns File descriptor of open file or pipe.
              * @throws std::system_error if a system call fails.
              */
             static int open_input_file_or_url(const std::string& filename, int* childpid) {
@@ -173,7 +174,9 @@ namespace osmium {
                 m_input_done(false),
                 m_childpid(0),
                 m_input_queue(),
-                m_decompressor(osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), open_input_file_or_url(m_file.filename(), &m_childpid))),
+                m_decompressor(m_file.buffer() ?
+                    osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), m_file.buffer(), m_file.buffer_size()) :
+                    osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), open_input_file_or_url(m_file.filename(), &m_childpid))),
                 m_read_task(m_input_queue, m_decompressor.get(), m_input_done),
                 m_input(osmium::io::detail::InputFormatFactory::instance().create_input(m_file, m_read_which_entities, m_input_queue)) {
             }
@@ -190,7 +193,11 @@ namespace osmium {
             Reader& operator=(const Reader&) = delete;
 
             ~Reader() {
-                close();
+                try {
+                    close();
+                }
+                catch (...) {
+                }
             }
 
             /**
@@ -233,7 +240,10 @@ namespace osmium {
 
             /**
              * Reads the next buffer from the input. An invalid buffer signals
-             * end-of-file. Do not call read() after the end-of-file.
+             * end-of-file. After end-of-file all read() calls will return an
+             * invalid buffer. An invalid buffer is also always returned if
+             * osmium::osm_entity_bits::nothing was set when the Reader was
+             * constructed.
              *
              * @returns Buffer.
              * @throws Some form of std::runtime_error if there is an error.
@@ -243,12 +253,25 @@ namespace osmium {
                 // it in this (the main) thread.
                 m_read_task.check_for_exception();
 
-                if (m_read_which_entities == osmium::osm_entity_bits::nothing) {
+                if (m_read_which_entities == osmium::osm_entity_bits::nothing || m_input_done) {
                     // If the caller didn't want anything but the header, it will
                     // always get an empty buffer here.
                     return osmium::memory::Buffer();
                 }
-                return m_input->read();
+
+                osmium::memory::Buffer buffer = m_input->read();
+                if (!buffer) {
+                    m_input_done = true;
+                }
+                return buffer;
+            }
+
+            /**
+             * Has the end of file been reached? This is set after the last
+             * data has been read. It is also set by calling close().
+             */
+            bool eof() {
+                return m_input_done;
             }
 
         }; // class Reader

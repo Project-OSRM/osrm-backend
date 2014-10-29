@@ -68,8 +68,7 @@ namespace osmium {
             void reserve(size_t new_capacity) {
                 if (new_capacity > this->capacity()) {
                     osmium::detail::typed_mmap<T>::unmap(this->data(), this->capacity());
-                    osmium::detail::typed_mmap<T>::grow_file(new_capacity, this->m_fd);
-                    osmium::detail::typed_mmap<T>::map(new_capacity, this->m_fd);
+                    this->data(osmium::detail::typed_mmap<T>::grow_and_map(new_capacity, this->m_fd));
                     this->m_capacity = new_capacity;
                 }
             }

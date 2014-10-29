@@ -46,7 +46,7 @@ namespace osmium {
                 virtual void call() = 0;
                 virtual ~impl_base() {
                 }
-            };
+            }; // struct impl_base
 
             std::unique_ptr<impl_base> impl;
 
@@ -61,7 +61,7 @@ namespace osmium {
                 void call() {
                     m_functor();
                 }
-            };
+            }; // struct impl_type
 
         public:
 

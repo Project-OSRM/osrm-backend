@@ -69,9 +69,15 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/types.hpp>
 #include <osmium/thread/queue.hpp>
 #include <osmium/thread/checked_task.hpp>
+#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
+    /**
+     * Exception thrown when the XML parser failed. The exception contains
+     * information about the place where the error happened and the type of
+     * error.
+     */
     struct xml_error : public io_error {
 
         unsigned long line;
@@ -120,6 +126,8 @@ namespace osmium {
              * Once the header is fully parsed this exception will be thrown if
              * the caller is not interested in anything else except the header.
              * It will break off the parsing at this point.
+             *
+             * This exception is never seen by user code, it is caught internally.
              */
             class ParserIsDone : std::exception {
             };
@@ -140,7 +148,7 @@ namespace osmium {
                     ignored_relation,
                     ignored_changeset,
                     in_object
-                };
+                }; // enum class context
 
                 context m_context;
                 context m_last_context;
@@ -168,13 +176,80 @@ namespace osmium {
                 osmium::thread::Queue<osmium::memory::Buffer>& m_queue;
                 std::promise<osmium::io::Header>& m_header_promise;
 
-                bool m_promise_fulfilled;
-
                 osmium::osm_entity_bits::type m_read_types;
 
                 size_t m_max_queue_size;
 
                 std::atomic<bool>& m_done;
+
+                /**
+                 * A C++ wrapper for the Expat parser that makes sure no memory is leaked.
+                 */
+                template <class T>
+                class ExpatXMLParser {
+
+                    XML_Parser m_parser;
+
+                    static void XMLCALL start_element_wrapper(void* data, const XML_Char* element, const XML_Char** attrs) {
+                        static_cast<XMLParser*>(data)->start_element(element, attrs);
+                    }
+
+                    static void XMLCALL end_element_wrapper(void* data, const XML_Char* element) {
+                        static_cast<XMLParser*>(data)->end_element(element);
+                    }
+
+                public:
+
+                    ExpatXMLParser(T* callback_object) :
+                        m_parser(XML_ParserCreate(nullptr)) {
+                        if (!m_parser) {
+                            throw osmium::io_error("Internal error: Can not create parser");
+                        }
+                        XML_SetUserData(m_parser, callback_object);
+                        XML_SetElementHandler(m_parser, start_element_wrapper, end_element_wrapper);
+                    }
+
+                    ExpatXMLParser(const ExpatXMLParser&) = delete;
+                    ExpatXMLParser(ExpatXMLParser&&) = delete;
+
+                    ExpatXMLParser& operator=(const ExpatXMLParser&) = delete;
+                    ExpatXMLParser& operator=(ExpatXMLParser&&) = delete;
+
+                    ~ExpatXMLParser() {
+                        XML_ParserFree(m_parser);
+                    }
+
+                    void operator()(const std::string& data, bool last) {
+                        if (XML_Parse(m_parser, data.data(), static_cast_with_assert<int>(data.size()), last) == XML_STATUS_ERROR) {
+                            throw osmium::xml_error(m_parser);
+                        }
+                    }
+
+                }; // class ExpatXMLParser
+
+                /**
+                 * A helper class that makes sure a promise is kept. It stores
+                 * a reference to some piece of data and to a promise and, on
+                 * destruction, sets the value of the promise from the data.
+                 */
+                template <class T>
+                class PromiseKeeper {
+
+                    T& m_data;
+                    std::promise<T>& m_promise;
+
+                public:
+
+                    PromiseKeeper(T& data, std::promise<T>& promise) :
+                        m_data(data),
+                        m_promise(promise) {
+                    }
+
+                    ~PromiseKeeper() {
+                        m_promise.set_value(m_data);
+                    }
+
+                }; // class PromiseKeeper
 
             public:
 
@@ -194,7 +269,6 @@ namespace osmium {
                     m_input_queue(input_queue),
                     m_queue(queue),
                     m_header_promise(header_promise),
-                    m_promise_fulfilled(false),
                     m_read_types(read_types),
                     m_max_queue_size(100),
                     m_done(done) {
@@ -222,7 +296,6 @@ namespace osmium {
                     m_input_queue(other.m_input_queue),
                     m_queue(other.m_queue),
                     m_header_promise(other.m_header_promise),
-                    m_promise_fulfilled(false),
                     m_read_types(other.m_read_types),
                     m_max_queue_size(100),
                     m_done(other.m_done) {
@@ -237,75 +310,54 @@ namespace osmium {
                 ~XMLParser() = default;
 
                 bool operator()() {
-                    XML_Parser parser = XML_ParserCreate(nullptr);
-                    if (!parser) {
-                        throw osmium::io_error("Internal error: Can not create parser");
-                    }
-
-                    XML_SetUserData(parser, this);
-
-                    XML_SetElementHandler(parser, start_element_wrapper, end_element_wrapper);
-
-                    try {
-                        int done;
-                        do {
-                            std::string data;
-                            m_input_queue.wait_and_pop(data);
-                            done = data.empty();
-                            try {
-                                if (XML_Parse(parser, data.data(), data.size(), done) == XML_STATUS_ERROR) {
-                                    throw osmium::xml_error(parser);
-                                }
-                            } catch (ParserIsDone&) {
-                                throw;
-                            } catch (...) {
-                                m_queue.push(osmium::memory::Buffer()); // empty buffer to signify eof
-                                if (!m_promise_fulfilled) {
-                                    m_promise_fulfilled = true;
-                                    m_header_promise.set_value(m_header);
-                                }
-                                throw;
-                            }
-                        } while (!done && !m_done);
-                        header_is_done(); // make sure we'll always fulfill the promise
-                        if (m_buffer.committed() > 0) {
-                            m_queue.push(std::move(m_buffer));
+                    ExpatXMLParser<XMLParser> parser(this);
+                    PromiseKeeper<osmium::io::Header> promise_keeper(m_header, m_header_promise);
+                    bool last;
+                    do {
+                        std::string data;
+                        m_input_queue.wait_and_pop(data);
+                        last = data.empty();
+                        try {
+                            parser(data, last);
+                        } catch (ParserIsDone&) {
+                            return true;
+                        } catch (...) {
+                            m_queue.push(osmium::memory::Buffer()); // empty buffer to signify eof
+                            throw;
                         }
-                        m_queue.push(osmium::memory::Buffer()); // empty buffer to signify eof
-                    } catch (ParserIsDone&) {
-                        // intentionally left blank
+                    } while (!last && !m_done);
+                    if (m_buffer.committed() > 0) {
+                        m_queue.push(std::move(m_buffer));
                     }
-                    XML_ParserFree(parser);
+                    m_queue.push(osmium::memory::Buffer()); // empty buffer to signify eof
                     return true;
                 }
 
             private:
-
-                static void XMLCALL start_element_wrapper(void* data, const XML_Char* element, const XML_Char** attrs) {
-                    static_cast<XMLParser*>(data)->start_element(element, attrs);
-                }
-
-                static void XMLCALL end_element_wrapper(void* data, const XML_Char* element) {
-                    static_cast<XMLParser*>(data)->end_element(element);
-                }
 
                 const char* init_object(osmium::OSMObject& object, const XML_Char** attrs) {
                     static const char* empty = "";
                     const char* user = empty;
 
                     if (m_in_delete_section) {
-                        object.visible(false);
+                        object.set_visible(false);
                     }
+
+                    osmium::Location location;
                     for (int count = 0; attrs[count]; count += 2) {
                         if (!strcmp(attrs[count], "lon")) {
-                            static_cast<osmium::Node&>(object).location().lon(std::atof(attrs[count+1])); // XXX doesn't detect garbage after the number
+                            location.set_lon(std::atof(attrs[count+1])); // XXX doesn't detect garbage after the number
                         } else if (!strcmp(attrs[count], "lat")) {
-                            static_cast<osmium::Node&>(object).location().lat(std::atof(attrs[count+1])); // XXX doesn't detect garbage after the number
+                            location.set_lat(std::atof(attrs[count+1])); // XXX doesn't detect garbage after the number
                         } else if (!strcmp(attrs[count], "user")) {
                             user = attrs[count+1];
                         } else {
                             object.set_attribute(attrs[count], attrs[count+1]);
                         }
+                    }
+
+                    if (location && object.type() == osmium::item_type::node) {
+                        static_cast<osmium::Node&>(object).set_location(location);
                     }
 
                     return user;
@@ -320,13 +372,13 @@ namespace osmium {
                     osmium::Location max;
                     for (int count = 0; attrs[count]; count += 2) {
                         if (!strcmp(attrs[count], "min_lon")) {
-                            min.lon(atof(attrs[count+1]));
+                            min.set_lon(atof(attrs[count+1]));
                         } else if (!strcmp(attrs[count], "min_lat")) {
-                            min.lat(atof(attrs[count+1]));
+                            min.set_lat(atof(attrs[count+1]));
                         } else if (!strcmp(attrs[count], "max_lon")) {
-                            max.lon(atof(attrs[count+1]));
+                            max.set_lon(atof(attrs[count+1]));
                         } else if (!strcmp(attrs[count], "max_lat")) {
-                            max.lat(atof(attrs[count+1]));
+                            max.set_lat(atof(attrs[count+1]));
                         } else if (!strcmp(attrs[count], "user")) {
                             user = attrs[count+1];
                         } else {
@@ -350,8 +402,7 @@ namespace osmium {
                         for (int count = 0; attrs[count]; count += 2) {
                             if (attrs[count][0] == 'k' && attrs[count][1] == 0) {
                                 key = attrs[count+1];
-                            }
-                            if (attrs[count][0] == 'v' && attrs[count][1] == 0) {
+                            } else if (attrs[count][0] == 'v' && attrs[count][1] == 0) {
                                 value = attrs[count+1];
                             }
                         }
@@ -363,12 +414,8 @@ namespace osmium {
                 }
 
                 void header_is_done() {
-                    if (!m_promise_fulfilled) {
-                        m_header_promise.set_value(m_header);
-                        m_promise_fulfilled = true;
-                        if (m_read_types == osmium::osm_entity_bits::nothing) {
-                            throw ParserIsDone();
-                        }
+                    if (m_read_types == osmium::osm_entity_bits::nothing) {
+                        throw ParserIsDone();
                     }
                 }
 
@@ -377,7 +424,7 @@ namespace osmium {
                         case context::root:
                             if (!strcmp(element, "osm") || !strcmp(element, "osmChange")) {
                                 if (!strcmp(element, "osmChange")) {
-                                    m_header.has_multiple_object_versions(true);
+                                    m_header.set_has_multiple_object_versions(true);
                                 }
                                 for (int count = 0; attrs[count]; count += 2) {
                                     if (!strcmp(attrs[count], "version")) {
@@ -438,13 +485,13 @@ namespace osmium {
                                 osmium::Location max;
                                 for (int count = 0; attrs[count]; count += 2) {
                                     if (!strcmp(attrs[count], "minlon")) {
-                                        min.lon(atof(attrs[count+1]));
+                                        min.set_lon(atof(attrs[count+1]));
                                     } else if (!strcmp(attrs[count], "minlat")) {
-                                        min.lat(atof(attrs[count+1]));
+                                        min.set_lat(atof(attrs[count+1]));
                                     } else if (!strcmp(attrs[count], "maxlon")) {
-                                        max.lon(atof(attrs[count+1]));
+                                        max.set_lon(atof(attrs[count+1]));
                                     } else if (!strcmp(attrs[count], "maxlat")) {
-                                        max.lat(atof(attrs[count+1]));
+                                        max.set_lat(atof(attrs[count+1]));
                                     }
                                 }
                                 osmium::Box box;
@@ -610,7 +657,7 @@ namespace osmium {
                     }
                 }
 
-            }; // XMLParser
+            }; // class XMLParser
 
             class XMLInputFormat : public osmium::io::detail::InputFormat {
 
@@ -639,7 +686,11 @@ namespace osmium {
                 }
 
                 ~XMLInputFormat() {
-                    m_done = true;
+                    try {
+                        close();
+                    } catch (...) {
+                        // ignore any exceptions at this point because destructor should not throw
+                    }
                 }
 
                 virtual osmium::io::Header header() override final {
@@ -655,6 +706,11 @@ namespace osmium {
 
                     m_parser_task.check_for_exception();
                     return buffer;
+                }
+
+                void close() {
+                    m_done = true;
+                    m_parser_task.close();
                 }
 
             }; // class XMLInputFormat

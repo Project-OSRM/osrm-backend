@@ -51,27 +51,27 @@ namespace osmium {
             bool operator()(const TKey& rule_key, const char* tag_key) {
                 return rule_key == tag_key;
             }
-        };
+        }; // struct match_key
 
         struct match_key_prefix {
             bool operator()(const std::string& rule_key, const char* tag_key) {
                 return rule_key.compare(0, std::string::npos, tag_key, 0, rule_key.size()) == 0;
             }
-        };
+        }; // struct match_key_prefix
 
         template <class TValue>
         struct match_value {
             bool operator()(const TValue& rule_value, const char* tag_value) {
                 return rule_value == tag_value;
             }
-        };
+        }; // struct match_value
 
         template <>
         struct match_value<void> {
             bool operator()(const bool, const char*) {
                 return true;
             }
-        };
+        }; // struct match_value<void>
 
         template <class TKey, class TValue=void, class TKeyComp=match_key<TKey>, class TValueComp=match_value<TValue>>
         class Filter {
@@ -99,7 +99,7 @@ namespace osmium {
                     result(r) {
                 }
 
-            };
+            }; // struct Rule
 
             std::vector<Rule> m_rules;
             bool m_default_result;
@@ -135,7 +135,7 @@ namespace osmium {
                 return m_default_result;
             }
 
-        }; // Filter
+        }; // class Filter
 
         typedef Filter<std::string, std::string> KeyValueFilter;
         typedef Filter<std::string> KeyFilter;

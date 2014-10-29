@@ -54,11 +54,11 @@ namespace osmium {
 
         static constexpr osmium::item_type itemtype = TItemType;
 
-        NodeRefList():
+        NodeRefList() noexcept :
             osmium::memory::Item(sizeof(NodeRefList), TItemType) {
         }
 
-        bool empty() const {
+        bool empty() const noexcept {
             return sizeof(NodeRefList) == byte_size();
         }
 
@@ -68,7 +68,7 @@ namespace osmium {
         }
 
         const NodeRef& operator[](size_t n) const {
-            const NodeRef* node_ref = &*(this->cbegin());
+            const NodeRef* node_ref = &*(cbegin());
             return node_ref[n];
         }
 
@@ -121,11 +121,11 @@ namespace osmium {
         }
 
         const_reverse_iterator crbegin() const {
-            return const_reverse_iterator(this->cend());
+            return const_reverse_iterator(cend());
         }
 
         const_reverse_iterator crend() const {
-            return const_reverse_iterator(this->cbegin());
+            return const_reverse_iterator(cbegin());
         }
 
     }; // class NodeRefList

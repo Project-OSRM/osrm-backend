@@ -38,9 +38,12 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdint>
 #include <cstring>
 #include <new>
+#include <type_traits>
 
 #include <osmium/memory/buffer.hpp>
 #include <osmium/memory/item.hpp>
+#include <osmium/osm/types.hpp>
+#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
@@ -63,7 +66,7 @@ namespace osmium {
 
         protected:
 
-            explicit Builder(osmium::memory::Buffer& buffer, Builder* parent, size_t size) :
+            explicit Builder(osmium::memory::Buffer& buffer, Builder* parent, osmium::memory::item_size_type size) :
                 m_buffer(buffer),
                 m_parent(parent),
                 m_item_offset(buffer.written()) {
@@ -96,7 +99,7 @@ namespace osmium {
              *
              */
             void add_padding(bool self=false) {
-                size_t padding = osmium::memory::align_bytes - (size() % osmium::memory::align_bytes);
+                auto padding = osmium::memory::align_bytes - (size() % osmium::memory::align_bytes);
                 if (padding != osmium::memory::align_bytes) {
                     std::memset(m_buffer.reserve_space(padding), 0, padding);
                     if (self) {
@@ -115,7 +118,7 @@ namespace osmium {
                 }
             }
 
-            uint32_t size() const {
+            uint32_t size() const noexcept {
                 return item().byte_size();
             }
 
@@ -135,39 +138,77 @@ namespace osmium {
             }
 
             /**
-             * Append \0-terminated string to buffer.
+             * Append data to buffer.
+             *
+             * @param data Pointer to data.
+             * @param length Length of data in bytes. If data is a
+             *               \0-terminated string, length must contain the
+             *               \0 byte.
              */
-            size_t append(const char* str) {
-                size_t length = std::strlen(str) + 1;
-                std::memcpy(m_buffer.reserve_space(length), str, length);
+            osmium::memory::item_size_type append(const char* data, const osmium::memory::item_size_type length) {
+                std::memcpy(m_buffer.reserve_space(length), data, length);
                 return length;
             }
 
+            /**
+             * Append \0-terminated string to buffer.
+             */
+            osmium::memory::item_size_type append(const char* str) {
+                return append(str, static_cast<osmium::memory::item_size_type>(std::strlen(str) + 1));
+            }
+
             /// Return the buffer this builder is using.
-            osmium::memory::Buffer& buffer() {
+            osmium::memory::Buffer& buffer() noexcept {
                 return m_buffer;
             }
 
         }; // class Builder
 
-        template <class T>
+        template <class TItem>
         class ObjectBuilder : public Builder {
+
+            static_assert(std::is_base_of<osmium::memory::Item, TItem>::value,
+                "ObjectBuilder can only build objects derived from osmium::memory::Item");
 
         public:
 
             explicit ObjectBuilder(osmium::memory::Buffer& buffer, Builder* parent=nullptr) :
-                Builder(buffer, parent, sizeof(T)) {
-                new (&item()) T();
+                Builder(buffer, parent, sizeof(TItem)) {
+                new (&item()) TItem();
             }
 
-            T& object() {
-                return static_cast<T&>(item());
+            TItem& object() noexcept {
+                return static_cast<TItem&>(item());
             }
 
-            void add_user(const char* user) {
-                object().user_size(std::strlen(user) + 1);
-                add_size(append(user));
+            /**
+             * Add user name to buffer.
+             *
+             * @param user Pointer to user name.
+             * @param length Length of user name including \0 byte.
+             */
+            void add_user(const char* user, const string_size_type length) {
+                object().set_user_size(length);
+                add_size(append(user, length));
                 add_padding(true);
+            }
+
+            /**
+             * Add user name to buffer.
+             *
+             * @param user Pointer to \0-terminated user name.
+             */
+            void add_user(const char* user) {
+                add_user(user, static_cast_with_assert<string_size_type>(std::strlen(user) + 1));
+            }
+
+            /**
+             * Add user name to buffer.
+             *
+             * @param user User name.
+             */
+            void add_user(const std::string& user) {
+                add_user(user.data(), static_cast_with_assert<string_size_type>(user.size() + 1));
             }
 
         }; // class ObjectBuilder

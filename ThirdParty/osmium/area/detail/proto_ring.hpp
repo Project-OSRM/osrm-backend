@@ -70,7 +70,7 @@ namespace osmium {
 
             public:
 
-                explicit ProtoRing(const NodeRefSegment& segment) :
+                explicit ProtoRing(const NodeRefSegment& segment) noexcept :
                     m_segments() {
                     add_segment_back(segment);
                 }
@@ -80,19 +80,19 @@ namespace osmium {
                     std::copy(sbegin, send, m_segments.begin());
                 }
 
-                bool outer() const {
+                bool outer() const noexcept {
                     return m_outer;
                 }
 
-                void set_inner() {
+                void set_inner() noexcept {
                     m_outer = false;
                 }
 
-                segments_type& segments() {
+                segments_type& segments() noexcept {
                     return m_segments;
                 }
 
-                const segments_type& segments() const {
+                const segments_type& segments() const noexcept {
                     return m_segments;
                 }
 

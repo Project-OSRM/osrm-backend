@@ -34,14 +34,16 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <map>
-#include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <osmpbf/osmpbf.h>
+
+#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
@@ -83,12 +85,14 @@ namespace osmium {
                  * IDs means less used space in the resulting file.
                  */
                 struct string_info {
+
                     /// number of occurrences of this string
                     uint16_t count;
 
                     /// an intermediate-id
                     string_id_type interim_id;
-                };
+
+                }; // struct string_info
 
                 /**
                  * Interim StringTable, storing all strings that should be written to
@@ -123,8 +127,7 @@ namespace osmium {
                     string_info& info = m_strings[string];
                     if (info.interim_id == 0) {
                         ++m_size;
-                        assert(m_size < std::numeric_limits<string_id_type>::max());
-                        info.interim_id = static_cast<string_id_type>(m_size);
+                        info.interim_id = static_cast_with_assert<string_id_type>(m_size);
                     } else {
                         info.count++;
                     }
@@ -174,6 +177,11 @@ namespace osmium {
                  */
                 string_id_type map_string_id(const string_id_type interim_id) const {
                     return m_id2id_map[interim_id];
+                }
+
+                template <typename T>
+                string_id_type map_string_id(const T interim_id) const {
+                    return map_string_id(static_cast_with_assert<string_id_type>(interim_id));
                 }
 
                 /**

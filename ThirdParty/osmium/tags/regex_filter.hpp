@@ -47,7 +47,7 @@ namespace osmium {
             bool operator()(const std::regex& rule_value, const char* tag_value) {
                 return std::regex_match(tag_value, rule_value);
             }
-        };
+        }; // struct match_value<std::regex>
 
         typedef Filter<std::string, std::regex> RegexFilter;
 

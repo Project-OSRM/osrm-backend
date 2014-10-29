@@ -33,19 +33,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
 #include <iosfwd>
-#include <limits>
 #include <stdexcept>
 #include <string>
 
 #include <iostream>
 
 #include <osmium/util/compatibility.hpp>
+#include <osmium/util/double.hpp>
 
 namespace osmium {
 
@@ -86,7 +83,7 @@ namespace osmium {
 
     public:
 
-        /// this value is used for a coordinate to mark it as undefined
+        // this value is used for a coordinate to mark it as undefined
         // MSVC doesn't declare std::numeric_limits<int32_t>::max() as
         // constexpr, so we hard code this for the time being.
         // static constexpr int32_t undefined_coordinate = std::numeric_limits<int32_t>::max();
@@ -105,7 +102,7 @@ namespace osmium {
         /**
          * Create undefined Location.
          */
-        explicit constexpr Location() :
+        explicit constexpr Location() noexcept :
             m_x(undefined_coordinate),
             m_y(undefined_coordinate) {
         }
@@ -115,7 +112,7 @@ namespace osmium {
          * Note that these coordinates are coordinate_precision
          * times larger than the real coordinates.
          */
-        constexpr Location(const int32_t x, const int32_t y) :
+        constexpr Location(const int32_t x, const int32_t y) noexcept :
             m_x(x),
             m_y(y) {
         }
@@ -125,7 +122,7 @@ namespace osmium {
          * Note that these coordinates are coordinate_precision
          * times larger than the real coordinates.
          */
-        constexpr Location(const int64_t x, const int64_t y) :
+        constexpr Location(const int64_t x, const int64_t y) noexcept :
             m_x(static_cast<int32_t>(x)),
             m_y(static_cast<int32_t>(y)) {
         }
@@ -171,12 +168,12 @@ namespace osmium {
             return m_y;
         }
 
-        Location& x(const int32_t x) noexcept {
+        Location& set_x(const int32_t x) noexcept {
             m_x = x;
             return *this;
         }
 
-        Location& y(const int32_t y) noexcept {
+        Location& set_y(const int32_t y) noexcept {
             m_y = y;
             return *this;
         }
@@ -219,44 +216,21 @@ namespace osmium {
             return fix_to_double(m_y);
         }
 
-        Location& lon(double lon) noexcept {
+        Location& set_lon(double lon) noexcept {
             m_x = double_to_fix(lon);
             return *this;
         }
 
-        Location& lat(double lat) noexcept {
+        Location& set_lat(double lat) noexcept {
             m_y = double_to_fix(lat);
             return *this;
         }
 
-        static constexpr int coordinate_length =
-            1 + /* sign */
-            3 + /* before . */
-            1 + /* . */
-            7 + /* after . */
-            1; /*  null byte */
-
-        template <typename T>
-        static T coordinate2string(T iterator, double value) {
-            char buffer[coordinate_length];
-
-#ifndef _MSC_VER
-            int len = snprintf(buffer, coordinate_length, "%.7f", value);
-#else
-            int len = _snprintf(buffer, coordinate_length, "%.7f", value);
-#endif
-            assert(len > 0 && len < coordinate_length);
-            while (buffer[len-1] == '0') --len;
-            if (buffer[len-1] == '.') --len;
-
-            return std::copy_n(buffer, len, iterator);
-        }
-
         template <typename T>
         T as_string(T iterator, const char separator) const {
-            iterator = coordinate2string(iterator, lon());
+            iterator = osmium::util::double2string(iterator, lon(), 7);
             *iterator++ = separator;
-            return coordinate2string(iterator, lat());
+            return osmium::util::double2string(iterator, lat(), 7);
         }
 
     }; // class Location
@@ -268,7 +242,7 @@ namespace osmium {
         return lhs.x() == rhs.x() && lhs.y() == rhs.y();
     }
 
-    inline OSMIUM_CONSTEXPR bool operator!=(const Location& lhs, const Location& rhs) {
+    inline OSMIUM_CONSTEXPR bool operator!=(const Location& lhs, const Location& rhs) noexcept {
         return ! (lhs == rhs);
     }
 
@@ -281,15 +255,15 @@ namespace osmium {
         return (lhs.x() == rhs.x() && lhs.y() < rhs.y()) || lhs.x() < rhs.x();
     }
 
-    inline OSMIUM_CONSTEXPR bool operator>(const Location& lhs, const Location& rhs) {
+    inline OSMIUM_CONSTEXPR bool operator>(const Location& lhs, const Location& rhs) noexcept {
         return rhs < lhs;
     }
 
-    inline OSMIUM_CONSTEXPR bool operator<=(const Location& lhs, const Location& rhs) {
+    inline OSMIUM_CONSTEXPR bool operator<=(const Location& lhs, const Location& rhs) noexcept {
         return ! (rhs < lhs);
     }
 
-    inline OSMIUM_CONSTEXPR bool operator>=(const Location& lhs, const Location& rhs) {
+    inline OSMIUM_CONSTEXPR bool operator>=(const Location& lhs, const Location& rhs) noexcept {
         return ! (lhs < rhs);
     }
 

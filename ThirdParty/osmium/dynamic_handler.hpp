@@ -142,7 +142,7 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
                     flush_dispatch(m_handler, 0);
                 }
 
-            }; // HandlerWrapper
+            }; // class HandlerWrapper
 
         } // namespace detail
 
@@ -186,7 +186,7 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
                 m_impl->flush();
             }
 
-        }; // DynamicHandler
+        }; // class DynamicHandler
 
     } // namspace handler
 

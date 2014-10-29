@@ -50,15 +50,22 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     /**
+     * Exception thrown by the osmium::memory::Buffer class when somebody tries
+     * to write data into a buffer and it doesn't fit. Buffers with internal
+     * memory management will not throw this exception, but increase their size.
+     */
+    struct buffer_is_full : public std::runtime_error {
+
+        buffer_is_full() :
+            std::runtime_error("Osmium buffer is full") {
+        }
+
+    }; // struct buffer_is_full
+
+    /**
      * @brief Memory management of items in buffers and iterators over this data.
      */
     namespace memory {
-
-        /**
-         * Exception thrown by the Buffer class when somebody tries to write data
-         * into the buffer and it doesn't fit.
-         */
-        class BufferIsFull : public std::exception {};
 
         /**
          * A memory area for storing OSM objects and other items. Each item stored
@@ -80,7 +87,7 @@ namespace osmium {
          * create a Buffer object and have it manage the memory internally. It will
          * dynamically allocate memory and free it again after use.
          *
-         * By default, if a buffer gets full it will throw a BufferIsFull exception.
+         * By default, if a buffer gets full it will throw a buffer_is_full exception.
          * You can use the set_full_callback() method to set a callback functor
          * which will be called instead of throwing an exception.
          */
@@ -91,7 +98,7 @@ namespace osmium {
             enum class auto_grow : bool {
                 yes = true,
                 no  = false
-            };
+            }; // enum class auto_grow
 
         private:
 
@@ -112,7 +119,7 @@ namespace osmium {
              * buffer, ie an empty hull of a buffer that has no actual memory
              * associated with it. It can be used to signify end-of-input.
              */
-            Buffer() :
+            Buffer() noexcept :
                 m_memory(),
                 m_data(nullptr),
                 m_capacity(0),
@@ -126,7 +133,7 @@ namespace osmium {
              *
              * @param data A pointer to some already initialized data.
              * @param size The size of the initialized data.
-             * @exception std::invalid_argument When the size isn't a multiple of the alignment.
+             * @throws std::invalid_argument When the size isn't a multiple of the alignment.
              */
             explicit Buffer(unsigned char* data, size_t size) :
                 m_memory(),
@@ -146,7 +153,7 @@ namespace osmium {
              * @param data A pointer to some (possibly initialized) data.
              * @param capacity The size of the memory for this buffer.
              * @param committed The size of the initialized data. If this is 0, the buffer startes out empty.
-             * @exception std::invalid_argument When the capacity or committed isn't a multiple of the alignment.
+             * @throws std::invalid_argument When the capacity or committed isn't a multiple of the alignment.
              */
             explicit Buffer(unsigned char* data, size_t capacity, size_t committed) :
                 m_memory(),
@@ -193,21 +200,21 @@ namespace osmium {
             /**
              * Return a pointer to data inside the buffer.
              */
-            unsigned char* data() const {
+            unsigned char* data() const noexcept {
                 return m_data;
             }
 
             /**
              * Returns the capacity of the buffer, ie how many bytes it can contain.
              */
-            size_t capacity() const {
+            size_t capacity() const noexcept {
                 return m_capacity;
             }
 
             /**
              * Returns the number of bytes already filled in this buffer.
              */
-            size_t committed() const {
+            size_t committed() const noexcept {
                 return m_committed;
             }
 
@@ -215,7 +222,7 @@ namespace osmium {
              * Returns the number of bytes currently filled in this buffer that
              * are not yet committed.
              */
-            size_t written() const {
+            size_t written() const noexcept {
                 return m_written;
             }
 
@@ -223,13 +230,13 @@ namespace osmium {
              * This tests if the current state of the buffer is aligned
              * properly. Can be used for asserts.
              */
-            bool is_aligned() const {
+            bool is_aligned() const noexcept {
                 return (m_written % align_bytes == 0) && (m_committed % align_bytes == 0);
             }
 
             /**
              * Set functor to be called whenever the buffer is full
-             * instead of throwing BufferIsFull.
+             * instead of throwing buffer_is_full.
              */
             void set_full_callback(std::function<void(Buffer&)> full) {
                 m_full = full;
@@ -260,7 +267,7 @@ namespace osmium {
             /**
              * Mark currently written bytes in the buffer as committed.
              *
-             * @return Last number of committed bytes before this commit.
+             * @returns Last number of committed bytes before this commit.
              */
             size_t commit() {
                 assert(is_aligned());
@@ -280,7 +287,7 @@ namespace osmium {
             /**
              * Clear the buffer.
              *
-             * @return Number of bytes in the buffer before it was cleared.
+             * @returns Number of bytes in the buffer before it was cleared.
              */
             size_t clear() {
                 const size_t committed = m_committed;
@@ -293,7 +300,7 @@ namespace osmium {
              * Get the data in the buffer at the given offset.
              *
              * @tparam T Type we want to the data to be interpreted as.
-             * @return Reference of given type pointing to the data in the buffer.
+             * @returns Reference of given type pointing to the data in the buffer.
              */
             template <class T>
             T& get(const size_t offset) const {
@@ -317,13 +324,13 @@ namespace osmium {
              * * If no callback is defined and this buffer uses internal
              *   memory management, the buffers capacity is grown, so that
              *   the new data will fit.
-             * * Else the BufferIsFull exception is thrown.
+             * * Else the buffer_is_full exception is thrown.
              *
              * @param size Number of bytes to reserve.
-             * @return Pointer to reserved space. Note that this pointer is
+             * @returns Pointer to reserved space. Note that this pointer is
              *         only guaranteed to be valid until the next call to
              *         reserve_space().
-             * @throw BufferIsFull Might be thrown if the buffer is full.
+             * @throws osmium::buffer_is_full Might be thrown if the buffer is full.
              */
             unsigned char* reserve_space(const size_t size) {
                 if (m_written + size > m_capacity) {
@@ -337,7 +344,7 @@ namespace osmium {
                         }
                         grow(new_capacity);
                     } else {
-                        throw BufferIsFull();
+                        throw osmium::buffer_is_full();
                     }
                 }
                 unsigned char* data = &m_data[m_written];
@@ -354,7 +361,7 @@ namespace osmium {
              *
              * @tparam T Class of the item to be copied.
              * @param item Reference to the item to be copied.
-             * @return Reference to newly copied data in the buffer.
+             * @returns Reference to newly copied data in the buffer.
              */
             template <class T>
             T& add_item(const T& item) {
@@ -483,6 +490,10 @@ namespace osmium {
              */
             template <class TCallbackClass>
             void purge_removed(TCallbackClass* callback) {
+                if (begin() == end()) {
+                    return;
+                }
+
                 iterator it_write = begin();
 
                 iterator next;
@@ -490,29 +501,29 @@ namespace osmium {
                     next = std::next(it_read);
                     if (!it_read->removed()) {
                         if (it_read != it_write) {
-                            assert(it_read->data() >= data());
-                            assert(it_write->data() >= data());
-                            size_t old_offset = static_cast<size_t>(it_read->data() - data());
-                            size_t new_offset = static_cast<size_t>(it_write->data() - data());
+                            assert(it_read.data() >= data());
+                            assert(it_write.data() >= data());
+                            size_t old_offset = static_cast<size_t>(it_read.data() - data());
+                            size_t new_offset = static_cast<size_t>(it_write.data() - data());
                             callback->moving_in_buffer(old_offset, new_offset);
-                            std::memmove(it_write->data(), it_read->data(), it_read->padded_size());
+                            std::memmove(it_write.data(), it_read.data(), it_read->padded_size());
                         }
-                        ++it_write;
+                        it_write.advance_once();
                     }
                 }
 
-                assert(it_write->data() >= data());
-                m_written = static_cast<size_t>(it_write->data() - data());
+                assert(it_write.data() >= data());
+                m_written = static_cast<size_t>(it_write.data() - data());
                 m_committed = m_written;
             }
 
         }; // class Buffer
 
-        inline bool operator==(const Buffer& lhs, const Buffer& rhs) {
+        inline bool operator==(const Buffer& lhs, const Buffer& rhs) noexcept {
             return lhs.data() == rhs.data() && lhs.capacity() == rhs.capacity() && lhs.committed() == rhs.committed();
         }
 
-        inline bool operator!=(const Buffer& lhs, const Buffer& rhs) {
+        inline bool operator!=(const Buffer& lhs, const Buffer& rhs) noexcept {
             return ! (lhs == rhs);
         }
 

@@ -46,22 +46,22 @@ namespace osmium {
 
         namespace detail {
 
-            constexpr double EARTH_RADIUS_FOR_EPSG3857 = 6378137.0;
+            constexpr double earth_radius_for_epsg3857 = 6378137.0;
 
             constexpr inline double lon_to_x(double lon) {
-                return EARTH_RADIUS_FOR_EPSG3857 * deg_to_rad(lon);
+                return earth_radius_for_epsg3857 * deg_to_rad(lon);
             }
 
             inline double lat_to_y(double lat) { // not constexpr because math functions aren't
-                return EARTH_RADIUS_FOR_EPSG3857 * std::log(std::tan(osmium::geom::PI/4 + deg_to_rad(lat)/2));
+                return earth_radius_for_epsg3857 * std::log(std::tan(osmium::geom::PI/4 + deg_to_rad(lat)/2));
             }
 
             constexpr inline double x_to_lon(double x) {
-                return rad_to_deg(x) / EARTH_RADIUS_FOR_EPSG3857;
+                return rad_to_deg(x) / earth_radius_for_epsg3857;
             }
 
             inline double y_to_lat(double y) { // not constexpr because math functions aren't
-                return rad_to_deg(2 * std::atan(std::exp(y / EARTH_RADIUS_FOR_EPSG3857)) - osmium::geom::PI/2);
+                return rad_to_deg(2 * std::atan(std::exp(y / earth_radius_for_epsg3857)) - osmium::geom::PI/2);
             }
 
         } // namespace detail
@@ -92,7 +92,7 @@ namespace osmium {
                 return Coordinates {detail::lon_to_x(location.lon()), detail::lat_to_y(location.lat())};
             }
 
-            int epsg() const {
+            int epsg() const noexcept {
                 return 3857;
             }
 

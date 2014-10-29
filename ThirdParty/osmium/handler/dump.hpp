@@ -60,55 +60,55 @@ namespace osmium {
 
         class Dump : public osmium::handler::Handler {
 
-            std::ostream& m_out;
+            std::ostream* m_out;
             bool m_with_size;
             std::string m_prefix;
 
             void print_title(const char* title, const osmium::memory::Item& item) {
-                m_out << m_prefix
-                      << title
-                      << ":";
+                *m_out << m_prefix
+                       << title
+                       << ":";
 
                 if (m_with_size) {
-                    m_out << " ["
-                          << item.byte_size()
-                          << "]";
+                    *m_out << " ["
+                           << item.byte_size()
+                           << "]";
                 }
 
-                m_out << "\n";
+                *m_out << "\n";
             }
 
             void print_meta(const osmium::OSMObject& object) {
-                m_out << m_prefix
-                      << "  id="
-                      << object.id()
-                      << "\n";
-                m_out << m_prefix
-                      << "  version="
-                      << object.version()
-                      << "\n";
-                m_out << m_prefix
-                      << "  uid="
-                      << object.uid()
-                      << "\n";
-                m_out << m_prefix
-                      << "  user=|"
-                      << object.user()
-                      << "|\n";
-                m_out << m_prefix
-                      << "  changeset="
-                      << object.changeset()
-                      << "\n";
-                m_out << m_prefix
-                      << "  timestamp="
-                      << object.timestamp().to_iso()
-                      << "\n";
-                m_out << m_prefix
-                      << "  visible="
-                      << (object.visible() ? "yes" : "no")
-                      << "\n";
+                *m_out << m_prefix
+                       << "  id="
+                       << object.id()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  version="
+                       << object.version()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  uid="
+                       << object.uid()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  user=|"
+                       << object.user()
+                       << "|\n";
+                *m_out << m_prefix
+                       << "  changeset="
+                       << object.changeset()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  timestamp="
+                       << object.timestamp().to_iso()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  visible="
+                       << (object.visible() ? "yes" : "no")
+                       << "\n";
 
-                Dump dump(m_out, m_with_size, m_prefix + "  ");
+                Dump dump(*m_out, m_with_size, m_prefix + "  ");
                 osmium::apply(object.cbegin(), object.cend(), dump);
             }
 
@@ -116,28 +116,28 @@ namespace osmium {
                 const osmium::Location& location = node.location();
 
                 if (location) {
-                    m_out << m_prefix
-                          << "  lon="
-                          << std::fixed
-                          << std::setprecision(7)
-                          << location.lon_without_check()
-                          << "\n";
-                    m_out << m_prefix
-                          << "  lat="
-                          << location.lat_without_check()
-                          << "\n";
+                    *m_out << m_prefix
+                           << "  lon="
+                           << std::fixed
+                           << std::setprecision(7)
+                           << location.lon_without_check()
+                           << "\n";
+                    *m_out << m_prefix
+                           << "  lat="
+                           << location.lat_without_check()
+                           << "\n";
                 } else {
-                    m_out << m_prefix
-                          << "  lon=\n"
-                          << m_prefix
-                          << "  lat=\n";
+                    *m_out << m_prefix
+                           << "  lon=\n"
+                           << m_prefix
+                           << "  lat=\n";
                 }
             }
 
         public:
 
             explicit Dump(std::ostream& out, bool with_size=true, const std::string& prefix="") :
-                m_out(out),
+                m_out(&out),
                 m_with_size(with_size),
                 m_prefix(prefix) {
             }
@@ -145,43 +145,43 @@ namespace osmium {
             void tag_list(const osmium::TagList& tags) {
                 print_title("TAGS", tags);
                 for (const auto& tag : tags) {
-                    m_out << m_prefix
-                          << "  k=|"
-                          << tag.key()
-                          << "| v=|"
-                          << tag.value()
-                          << "|"
-                          << "\n";
+                    *m_out << m_prefix
+                           << "  k=|"
+                           << tag.key()
+                           << "| v=|"
+                           << tag.value()
+                           << "|"
+                           << "\n";
                 }
             }
 
             void way_node_list(const osmium::WayNodeList& wnl) {
                 print_title("NODES", wnl);
                 for (const auto& node_ref : wnl) {
-                    m_out << m_prefix
-                          << "  ref="
-                          << node_ref.ref();
+                    *m_out << m_prefix
+                           << "  ref="
+                           << node_ref.ref();
                     if (node_ref.location()) {
-                        m_out << " pos="
-                              << node_ref.location();
+                        *m_out << " pos="
+                               << node_ref.location();
                     }
-                    m_out << "\n";
+                    *m_out << "\n";
                 }
             }
 
             void relation_member_list(const osmium::RelationMemberList& rml) {
                 print_title("MEMBERS", rml);
                 for (const auto& member : rml) {
-                    m_out << m_prefix
-                          << "  type="
-                          << item_type_to_name(member.type())
-                          << " ref="
-                          << member.ref()
-                          << " role=|"
-                          << member.role()
-                          << "|\n";
+                    *m_out << m_prefix
+                           << "  type="
+                           << item_type_to_name(member.type())
+                           << " ref="
+                           << member.ref()
+                           << " role=|"
+                           << member.role()
+                           << "|\n";
                     if (member.full_member()) {
-                        Dump dump(m_out, m_with_size, m_prefix + "  | ");
+                        Dump dump(*m_out, m_with_size, m_prefix + "  | ");
                         osmium::apply_item(member.get_object(), dump);
                     }
                 }
@@ -190,28 +190,28 @@ namespace osmium {
             void outer_ring(const osmium::OuterRing& ring) {
                 print_title("OUTER RING", ring);
                 for (const auto& node_ref : ring) {
-                    m_out << m_prefix
-                          << "  ref="
-                          << node_ref.ref();
+                    *m_out << m_prefix
+                           << "  ref="
+                           << node_ref.ref();
                     if (node_ref.location()) {
-                        m_out << " pos="
-                              << node_ref.location();
+                        *m_out << " pos="
+                               << node_ref.location();
                     }
-                    m_out << "\n";
+                    *m_out << "\n";
                 }
             }
 
             void inner_ring(const osmium::InnerRing& ring) {
                 print_title("INNER RING", ring);
                 for (const auto& node_ref : ring) {
-                    m_out << m_prefix
-                          << "  ref="
-                          << node_ref.ref();
+                    *m_out << m_prefix
+                           << "  ref="
+                           << node_ref.ref();
                     if (node_ref.location()) {
-                        m_out << " pos="
-                              << node_ref.location();
+                        *m_out << " pos="
+                               << node_ref.location();
                     }
-                    m_out << "\n";
+                    *m_out << "\n";
                 }
             }
 
@@ -238,50 +238,50 @@ namespace osmium {
 
             void changeset(const osmium::Changeset& changeset) {
                 print_title("CHANGESET", changeset);
-                m_out << m_prefix
-                      << "  id="
-                      << changeset.id()
-                      << "\n";
-                m_out << m_prefix
-                      << "  num_changes="
-                      << changeset.num_changes()
-                      << "\n";
-                m_out << m_prefix
-                      << "  uid="
-                      << changeset.uid()
-                      << "\n";
-                m_out << m_prefix
-                      << "  user=|"
-                      << changeset.user()
-                      << "|\n";
-                m_out << m_prefix
-                      << "  created_at="
-                      << changeset.created_at().to_iso()
-                      << "\n";
-                m_out << m_prefix
-                      << "  closed_at="
-                      << changeset.closed_at().to_iso()
-                      << "\n";
-                m_out << m_prefix
-                      << "  bounds=";
+                *m_out << m_prefix
+                       << "  id="
+                       << changeset.id()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  num_changes="
+                       << changeset.num_changes()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  uid="
+                       << changeset.uid()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  user=|"
+                       << changeset.user()
+                       << "|\n";
+                *m_out << m_prefix
+                       << "  created_at="
+                       << changeset.created_at().to_iso()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  closed_at="
+                       << changeset.closed_at().to_iso()
+                       << "\n";
+                *m_out << m_prefix
+                       << "  bounds=";
 
                 if (changeset.bounds()) {
-                    m_out << '('
-                          << changeset.bounds().bottom_left().lon_without_check()
-                          << ','
-                          << changeset.bounds().bottom_left().lat_without_check()
-                          << ','
-                          << changeset.bounds().top_right().lon_without_check()
-                          << ','
-                          << changeset.bounds().top_right().lat_without_check()
-                          << ')';
+                    *m_out << '('
+                           << changeset.bounds().bottom_left().lon_without_check()
+                           << ','
+                           << changeset.bounds().bottom_left().lat_without_check()
+                           << ','
+                           << changeset.bounds().top_right().lon_without_check()
+                           << ','
+                           << changeset.bounds().top_right().lat_without_check()
+                           << ')';
                 } else {
-                    m_out << "(undefined)";
+                    *m_out << "(undefined)";
                 }
 
-                m_out << "\n";
+                *m_out << "\n";
 
-                Dump dump(m_out, m_with_size, m_prefix + "  ");
+                Dump dump(*m_out, m_with_size, m_prefix + "  ");
                 osmium::apply(changeset.cbegin(), changeset.cend(), dump);
             }
 

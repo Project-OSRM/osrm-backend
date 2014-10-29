@@ -73,7 +73,7 @@ namespace osmium {
         typedef boost::indirect_iterator<std::vector<osmium::OSMObject*>::iterator, osmium::OSMObject> iterator;
         typedef boost::indirect_iterator<std::vector<osmium::OSMObject*>::const_iterator, const osmium::OSMObject> const_iterator;
 
-        ObjectPointerCollection() :
+        ObjectPointerCollection() noexcept :
             m_objects() {
         }
 

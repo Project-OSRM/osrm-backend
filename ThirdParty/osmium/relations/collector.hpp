@@ -103,7 +103,7 @@ namespace osmium {
 
             public:
 
-                HandlerPass1(TCollector& collector) :
+                HandlerPass1(TCollector& collector) noexcept :
                     m_collector(collector) {
                 }
 
@@ -146,23 +146,25 @@ namespace osmium {
                     auto& mmv = m_collector.member_meta(object.type());
                     auto range = std::equal_range(mmv.begin(), mmv.end(), MemberMeta(object.id()));
 
-                    if (range.first == range.second) {
+                    if (osmium::relations::count_not_removed(range.first, range.second) == 0) {
                         // nothing found
                         return false;
                     }
 
                     {
-                        const size_t member_offset = m_collector.members_buffer().committed();
                         m_collector.members_buffer().add_item(object);
-                        m_collector.members_buffer().commit();
+                        const size_t member_offset = m_collector.members_buffer().commit();
 
                         for (auto it = range.first; it != range.second; ++it) {
-                            it->buffer_offset(member_offset);
+                            it->set_buffer_offset(member_offset);
                         }
                     }
 
                     for (auto it = range.first; it != range.second; ++it) {
                         MemberMeta& member_meta = *it;
+                        if (member_meta.removed()) {
+                            break;
+                        }
                         assert(member_meta.member_id() == object.id());
                         assert(member_meta.relation_pos() < m_collector.m_relations.size());
                         RelationMeta& relation_meta = m_collector.m_relations[member_meta.relation_pos()];
@@ -178,12 +180,17 @@ namespace osmium {
                         }
                     }
 
+                    // Remove MemberMetas that were marked as removed.
+                    mmv.erase(std::remove_if(mmv.begin(), mmv.end(), [](MemberMeta& mm) {
+                        return mm.removed();
+                    }), mmv.end());
+
                     return true;
                 }
 
             public:
 
-                HandlerPass2(TCollector& collector) :
+                HandlerPass2(TCollector& collector) noexcept :
                     m_collector(collector),
                     m_want_types((TNodes?1:0) + (TWays?1:0) + (TRelations?1:0)) {
                 }
@@ -484,7 +491,7 @@ namespace osmium {
                 auto range = std::equal_range(mmv.begin(), mmv.end(), osmium::relations::MemberMeta(object.id()));
                 for (auto it = range.first; it != range.second; ++it) {
                     assert(it->buffer_offset() == old_offset);
-                    it->buffer_offset(new_offset);
+                    it->set_buffer_offset(new_offset);
                 }
             }
 

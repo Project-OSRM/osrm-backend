@@ -49,6 +49,7 @@ namespace osmium {
             class GeoJSONFactoryImpl {
 
                 std::string m_str;
+                int m_precision;
 
             public:
 
@@ -58,14 +59,16 @@ namespace osmium {
                 typedef std::string multipolygon_type;
                 typedef std::string ring_type;
 
-                GeoJSONFactoryImpl() = default;
+                GeoJSONFactoryImpl(int precision = 7) :
+                    m_precision(precision) {
+                }
 
                 /* Point */
 
                 // { "type": "Point", "coordinates": [100.0, 0.0] }
                 point_type make_point(const osmium::geom::Coordinates& xy) const {
                     std::string str {"{\"type\":\"Point\",\"coordinates\":"};
-                    xy.append_to_string(str, '[', ',', ']');
+                    xy.append_to_string(str, '[', ',', ']', m_precision);
                     str += "}";
                     return str;
                 }
@@ -78,7 +81,7 @@ namespace osmium {
                 }
 
                 void linestring_add_location(const osmium::geom::Coordinates& xy) {
-                    xy.append_to_string(m_str, '[', ',', ']');
+                    xy.append_to_string(m_str, '[', ',', ']', m_precision);
                     m_str += ',';
                 }
 
@@ -124,7 +127,7 @@ namespace osmium {
                 }
 
                 void multipolygon_add_location(const osmium::geom::Coordinates& xy) {
-                    xy.append_to_string(m_str, '[', ',', ']');
+                    xy.append_to_string(m_str, '[', ',', ']', m_precision);
                     m_str += ',';
                 }
 

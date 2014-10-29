@@ -50,7 +50,7 @@ namespace osmium {
              * Compress data using zlib.
              *
              * @param input Data to compress.
-             * @return Compressed data.
+             * @returns Compressed data.
              */
             inline std::string zlib_compress(const std::string& input) {
                 unsigned long output_size = ::compressBound(input.size());
@@ -74,7 +74,7 @@ namespace osmium {
              *
              * @param input Compressed input data.
              * @param raw_size Size of uncompressed data.
-             * @return Uncompressed data.
+             * @returns Uncompressed data.
              */
             inline std::string zlib_uncompress(const std::string& input, unsigned long raw_size) {
                 std::string output(raw_size, '\0');

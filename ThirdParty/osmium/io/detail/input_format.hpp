@@ -76,7 +76,7 @@ namespace osmium {
                     m_file(file),
                     m_read_which_entities(read_which_entities),
                     m_input_queue(input_queue) {
-                    m_header.has_multiple_object_versions(m_file.has_multiple_object_versions());
+                    m_header.set_has_multiple_object_versions(m_file.has_multiple_object_versions());
                 }
 
                 InputFormat(const InputFormat&) = delete;

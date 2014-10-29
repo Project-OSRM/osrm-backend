@@ -89,7 +89,7 @@ namespace osmium {
             }
 
             // end iterator
-            InputIterator() :
+            InputIterator() noexcept :
                 m_source(nullptr) {
             }
 
@@ -110,13 +110,13 @@ namespace osmium {
                 return tmp;
             }
 
-            bool operator==(const InputIterator& rhs) const {
+            bool operator==(const InputIterator& rhs) const noexcept {
                 return m_source == rhs.m_source &&
                        m_buffer == rhs.m_buffer &&
                        m_iter == rhs.m_iter;
             }
 
-            bool operator!=(const InputIterator& rhs) const {
+            bool operator!=(const InputIterator& rhs) const noexcept {
                 return !(*this == rhs);
             }
 

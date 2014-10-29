@@ -38,59 +38,50 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 
 #include <osmium/osm/location.hpp>
+#include <osmium/util/double.hpp>
 
 namespace osmium {
 
     namespace geom {
-
-        namespace detail {
-
-            /**
-             * Append double to string, removing superfluous '0' characters at
-             * the end. The decimal dot will also be removed if necessary.
-             */
-            inline void double2string(std::string& s, double value) {
-                s += std::to_string(value);
-
-                size_t len = s.size()-1;
-                while (s[len] == '0') --len;
-                if (s[len] == '.') --len;
-
-                s.resize(len+1);
-            }
-
-        } // namespace detail
 
         struct Coordinates {
 
             double x;
             double y;
 
-            explicit Coordinates(double cx, double cy) : x(cx), y(cy) {
+            explicit Coordinates(double cx, double cy) noexcept : x(cx), y(cy) {
             }
 
             Coordinates(const osmium::Location& location) : x(location.lon()), y(location.lat()) {
             }
 
-            void append_to_string(std::string& s, const char infix) const {
-                osmium::geom::detail::double2string(s, x);
+            void append_to_string(std::string& s, const char infix, int precision) const {
+                osmium::util::double2string(s, x, precision);
                 s += infix;
-                osmium::geom::detail::double2string(s, y);
+                osmium::util::double2string(s, y, precision);
             }
 
-            void append_to_string(std::string& s, const char prefix, const char infix, const char suffix) const {
+            void append_to_string(std::string& s, const char prefix, const char infix, const char suffix, int precision) const {
                 s += prefix;
-                append_to_string(s, infix);
+                append_to_string(s, infix, precision);
                 s += suffix;
             }
 
         }; // struct coordinates
 
-        inline bool operator==(const Coordinates& lhs, const Coordinates& rhs) {
+        /**
+         * Compare whether two Coordinates are identical. Might not give the
+         * right result if the coordinates have been the result of some
+         * calculation that introduced rounding errors.
+         */
+        inline bool operator==(const Coordinates& lhs, const Coordinates& rhs) noexcept {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
             return lhs.x == rhs.x && lhs.y == rhs.y;
+#pragma GCC diagnostic pop
         }
 
-        inline bool operator!=(const Coordinates& lhs, const Coordinates& rhs) {
+        inline bool operator!=(const Coordinates& lhs, const Coordinates& rhs) noexcept {
             return ! operator==(lhs, rhs);
         }
 

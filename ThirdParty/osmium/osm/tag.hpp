@@ -76,7 +76,7 @@ namespace osmium {
 
         static constexpr item_type collection_type = item_type::tag_list;
 
-        const char* key() const {
+        const char* key() const noexcept {
             return reinterpret_cast<const char*>(data());
         }
 

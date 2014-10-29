@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
@@ -67,8 +68,25 @@ namespace osmium {
                 add_padding();
             }
 
+            /**
+             * Add tag to buffer.
+             *
+             * @param key Tag key.
+             * @param value Tag value.
+             */
             void add_tag(const char* key, const char* value) {
                 add_size(append(key) + append(value));
+            }
+
+            /**
+             * Add tag to buffer.
+             *
+             * @param key Tag key.
+             * @param value Tag value.
+             */
+            void add_tag(const std::string& key, const std::string& value) {
+                add_size(append(key.data(),   static_cast_with_assert<string_size_type>(key.size()   + 1)) +
+                         append(value.data(), static_cast_with_assert<string_size_type>(value.size() + 1)));
             }
 
         }; // class TagListBuilder
@@ -103,12 +121,40 @@ namespace osmium {
 
         class RelationMemberListBuilder : public ObjectBuilder<RelationMemberList> {
 
-            void add_role(osmium::RelationMember* member, const char* role) {
-                size_t length = std::strlen(role) + 1;
-                assert(length < std::numeric_limits<string_size_type>::max());
-                member->set_role_size(static_cast<string_size_type>(length));
-                add_size(append(role));
+            /**
+             * Add role to buffer.
+             *
+             * @param member Relation member object where the length of the role
+             *               will be set.
+             * @param role The role.
+             * @param length Length of role string including \0 termination.
+             */
+            void add_role(osmium::RelationMember& member, const char* role, const string_size_type length) {
+                member.set_role_size(length);
+                add_size(append(role, length));
                 add_padding(true);
+            }
+
+            /**
+             * Add role to buffer.
+             *
+             * @param member Relation member object where the length of the role
+             *               will be set.
+             * @param role \0-terminated role.
+             */
+            void add_role(osmium::RelationMember& member, const char* role) {
+                add_role(member, role, static_cast_with_assert<string_size_type>(std::strlen(role) + 1));
+            }
+
+            /**
+             * Add role to buffer.
+             *
+             * @param member Relation member object where the length of the role
+             *               will be set.
+             * @param role Role.
+             */
+            void add_role(osmium::RelationMember& member, const std::string& role) {
+                add_role(member, role.data(), static_cast_with_assert<string_size_type>(role.size() + 1));
             }
 
         public:
@@ -121,11 +167,41 @@ namespace osmium {
                 add_padding();
             }
 
+            /**
+             * Add a member to the relation.
+             *
+             * @param type The type (node, way, or relation).
+             * @param ref The ID of the member.
+             * @param role The role of the member.
+             * @param full_member Optional pointer to the member object. If it
+             *                    is available a copy will be added to the
+             *                    relation.
+             */
             void add_member(osmium::item_type type, object_id_type ref, const char* role, const osmium::OSMObject* full_member = nullptr) {
                 osmium::RelationMember* member = reserve_space_for<osmium::RelationMember>();
                 new (member) osmium::RelationMember(ref, type, full_member != nullptr);
                 add_size(sizeof(RelationMember));
-                add_role(member, role);
+                add_role(*member, role);
+                if (full_member) {
+                    add_item(full_member);
+                }
+            }
+
+            /**
+             * Add a member to the relation.
+             *
+             * @param type The type (node, way, or relation).
+             * @param ref The ID of the member.
+             * @param role The role of the member.
+             * @param full_member Optional pointer to the member object. If it
+             *                    is available a copy will be added to the
+             *                    relation.
+             */
+            void add_member(osmium::item_type type, object_id_type ref, const std::string& role, const osmium::OSMObject* full_member = nullptr) {
+                osmium::RelationMember* member = reserve_space_for<osmium::RelationMember>();
+                new (member) osmium::RelationMember(ref, type, full_member != nullptr);
+                add_size(sizeof(RelationMember));
+                add_role(*member, role);
                 if (full_member) {
                     add_item(full_member);
                 }
@@ -186,12 +262,12 @@ namespace osmium {
              */
             void initialize_from_object(const osmium::OSMObject& source) {
                 osmium::Area& area = object();
-                area.id(osmium::object_id_to_area_id(source.id(), source.type()));
-                area.version(source.version());
-                area.changeset(source.changeset());
-                area.timestamp(source.timestamp());
-                area.visible(source.visible());
-                area.uid(source.uid());
+                area.set_id(osmium::object_id_to_area_id(source.id(), source.type()));
+                area.set_version(source.version());
+                area.set_changeset(source.changeset());
+                area.set_timestamp(source.timestamp());
+                area.set_visible(source.visible());
+                area.set_uid(source.uid());
 
                 add_user(source.user());
             }

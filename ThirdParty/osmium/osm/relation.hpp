@@ -93,7 +93,7 @@ namespace osmium {
             }
         }
 
-        void set_role_size(string_size_type size) {
+        void set_role_size(string_size_type size) noexcept {
             m_role_size = size;
         }
 
@@ -101,34 +101,34 @@ namespace osmium {
 
         static constexpr item_type collection_type = item_type::relation_member_list;
 
-        RelationMember(const object_id_type ref=0, const item_type type=item_type(), const bool full=false) :
+        RelationMember(const object_id_type ref=0, const item_type type=item_type(), const bool full=false) noexcept :
             m_ref(ref),
             m_type(type),
             m_flags(full ? 1 : 0) {
         }
 
-        object_id_type ref() const {
+        object_id_type ref() const noexcept {
             return m_ref;
         }
 
-        RelationMember& ref(object_id_type ref) {
+        RelationMember& ref(object_id_type ref) noexcept {
             m_ref = ref;
             return *this;
         }
 
-        unsigned_object_id_type positive_ref() const {
+        unsigned_object_id_type positive_ref() const noexcept {
             return static_cast<unsigned_object_id_type>(std::abs(m_ref));
         }
 
-        item_type type() const {
+        item_type type() const noexcept {
             return m_type;
         }
 
-        bool full_member() const {
+        bool full_member() const noexcept {
             return m_flags == 1;
         }
 
-        const char* role() const {
+        const char* role() const noexcept {
             return reinterpret_cast<const char*>(data() + sizeof(RelationMember));
         }
 
@@ -164,7 +164,7 @@ namespace osmium {
 
         friend class osmium::builder::ObjectBuilder<osmium::Relation>;
 
-        Relation() :
+        Relation() noexcept :
             OSMObject(sizeof(Relation), osmium::item_type::relation) {
         }
 
@@ -173,11 +173,11 @@ namespace osmium {
         static constexpr osmium::item_type itemtype = osmium::item_type::relation;
 
         RelationMemberList& members() {
-            return subitem_of_type<RelationMemberList>();
+            return osmium::detail::subitem_of_type<RelationMemberList>(begin(), end());
         }
 
         const RelationMemberList& members() const {
-            return subitem_of_type<const RelationMemberList>();
+            return osmium::detail::subitem_of_type<const RelationMemberList>(cbegin(), cend());
         }
 
     }; // class Relation

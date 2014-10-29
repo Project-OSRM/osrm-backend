@@ -68,20 +68,20 @@ namespace osmium {
 
         }; // enum type
 
-        inline type operator|(const type lhs, const type rhs) {
+        inline type operator|(const type lhs, const type rhs) noexcept {
             return static_cast<type>(static_cast<int>(lhs) | static_cast<int> (rhs));
         }
 
-        inline type& operator|=(type& lhs, const type rhs) {
+        inline type& operator|=(type& lhs, const type rhs) noexcept {
             lhs = lhs | rhs;
             return lhs;
         }
 
-        inline type operator&(const type lhs, const type rhs) {
+        inline type operator&(const type lhs, const type rhs) noexcept {
             return static_cast<type>(static_cast<int>(lhs) & static_cast<int> (rhs));
         }
 
-        inline type operator&=(type& lhs, const type rhs) {
+        inline type operator&=(type& lhs, const type rhs) noexcept {
             lhs = lhs & rhs;
             return lhs;
         }

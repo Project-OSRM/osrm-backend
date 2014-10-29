@@ -130,7 +130,7 @@ namespace osmium {
                     // intentionally left blank
                 }
 
-                void dump_as_list(const int fd) const {
+                void dump_as_list(const int fd) const override final {
                     std::vector<element_type> v;
                     for (const auto& element : m_elements) {
                         v.emplace_back(element.first, element.second);

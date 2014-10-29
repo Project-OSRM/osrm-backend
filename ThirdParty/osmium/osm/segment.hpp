@@ -51,7 +51,7 @@ namespace osmium {
 
     public:
 
-        explicit constexpr Segment(const osmium::Location& location1, const osmium::Location& location2) :
+        explicit constexpr Segment(const osmium::Location& location1, const osmium::Location& location2) noexcept :
             m_first(location1),
             m_second(location2) {
         }
@@ -65,12 +65,12 @@ namespace osmium {
         ~Segment() = default;
 
         /// Return first Location of Segment.
-        OSMIUM_CONSTEXPR osmium::Location first() const {
+        OSMIUM_CONSTEXPR osmium::Location first() const noexcept {
             return m_first;
         }
 
         /// Return second Location of Segment.
-        OSMIUM_CONSTEXPR osmium::Location second() const {
+        OSMIUM_CONSTEXPR osmium::Location second() const noexcept {
             return m_second;
         }
 
@@ -84,11 +84,11 @@ namespace osmium {
     }; // class Segment
 
     /// Segments are equal if both their locations are equal
-    inline OSMIUM_CONSTEXPR bool operator==(const Segment& lhs, const Segment& rhs) {
+    inline OSMIUM_CONSTEXPR bool operator==(const Segment& lhs, const Segment& rhs) noexcept {
         return lhs.first() == rhs.first() && lhs.second() == rhs.second();
     }
 
-    inline OSMIUM_CONSTEXPR bool operator!=(const Segment& lhs, const Segment& rhs) {
+    inline OSMIUM_CONSTEXPR bool operator!=(const Segment& lhs, const Segment& rhs) noexcept {
         return ! (lhs == rhs);
     }
 

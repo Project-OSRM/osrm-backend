@@ -152,15 +152,26 @@ namespace osmium {
                 }
             }
 
+            struct MPFilter : public osmium::tags::KeyFilter {
+
+                MPFilter() : osmium::tags::KeyFilter(true) {
+                    add(false, "type");
+                    add(false, "created_by");
+                    add(false, "source");
+                    add(false, "note");
+                    add(false, "test:id");
+                    add(false, "test:section");
+                }
+
+            }; // struct MPFilter
+
+            static MPFilter& filter() {
+                static MPFilter filter;
+                return filter;
+            }
+
             void add_tags_to_area(osmium::builder::AreaBuilder& builder, const osmium::Relation& relation) const {
-                osmium::tags::KeyFilter filter(true);
-                filter.add(false, "type").add(false, "created_by").add(false, "source").add(false, "note");
-                filter.add(false, "test:id").add(false, "test:section");
-
-                osmium::tags::KeyFilter::iterator fi_begin(filter, relation.tags().begin(), relation.tags().end());
-                osmium::tags::KeyFilter::iterator fi_end(filter, relation.tags().end(), relation.tags().end());
-
-                auto count = std::distance(fi_begin, fi_end);
+                auto count = std::count_if(relation.tags().begin(), relation.tags().end(), filter());
 
                 if (debug()) {
                     std::cerr << "  found " << count << " tags on relation (without ignored ones)\n";
@@ -728,33 +739,38 @@ namespace osmium {
 
                 const osmium::TagList& area_tags = out_buffer.get<osmium::Area>(area_offset).tags(); // tags of the area we just built
 
+                // Find all closed ways that are inner rings and check their
+                // tags. If they are not the same as the tags of the area we
+                // just built, add them to a list and later build areas for
+                // them, too.
+                std::vector<const osmium::Way*> ways_that_should_be_areas;
                 if (m_inner_outer_mismatches == 0) {
                     auto memit = relation.members().begin();
                     for (size_t offset : members) {
                         if (!std::strcmp(memit->role(), "inner")) {
                             const osmium::Way& way = in_buffer.get<const osmium::Way>(offset);
                             if (way.is_closed() && way.tags().size() > 0) {
-                                osmium::tags::KeyFilter filter(true);
-                                filter.add(false, "created_by").add(false, "source").add(false, "note");
-                                filter.add(false, "test:id").add(false, "test:section");
-
-                                osmium::tags::KeyFilter::iterator fi_begin(filter, way.tags().begin(), way.tags().end());
-                                osmium::tags::KeyFilter::iterator fi_end(filter, way.tags().end(), way.tags().end());
-
-                                auto d = std::distance(fi_begin, fi_end);
+                                auto d = std::count_if(way.tags().begin(), way.tags().end(), filter());
                                 if (d > 0) {
-                                    osmium::tags::KeyFilter::iterator area_fi_begin(filter, area_tags.begin(), area_tags.end());
-                                    osmium::tags::KeyFilter::iterator area_fi_end(filter, area_tags.end(), area_tags.end());
+                                    osmium::tags::KeyFilter::iterator way_fi_begin(filter(), way.tags().begin(), way.tags().end());
+                                    osmium::tags::KeyFilter::iterator way_fi_end(filter(), way.tags().end(), way.tags().end());
+                                    osmium::tags::KeyFilter::iterator area_fi_begin(filter(), area_tags.begin(), area_tags.end());
+                                    osmium::tags::KeyFilter::iterator area_fi_end(filter(), area_tags.end(), area_tags.end());
 
-                                    if (!std::equal(fi_begin, fi_end, area_fi_begin) || d != std::distance(area_fi_begin, area_fi_end)) {
-                                        Assembler assembler(m_config);
-                                        assembler(way, out_buffer);
+                                    if (!std::equal(way_fi_begin, way_fi_end, area_fi_begin) || d != std::distance(area_fi_begin, area_fi_end)) {
+                                        ways_that_should_be_areas.push_back(&way);
                                     }
                                 }
                             }
                         }
                         ++memit;
                     }
+                }
+
+                // Now build areas for all ways found in the last step.
+                for (const osmium::Way* way : ways_that_should_be_areas) {
+                    Assembler assembler(m_config);
+                    assembler(*way, out_buffer);
                 }
             }
 

@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmpbf/osmpbf.h>
 
 // needed for htonl and ntohl
-#ifndef WIN32
+#ifndef _WIN32
 # include <netinet/in.h>
 #else
 # include <winsock2.h>
@@ -50,6 +50,9 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
+// avoid g++ false positive
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
     inline item_type osmpbf_membertype_to_item_type(const OSMPBF::Relation::MemberType mt) {
         switch (mt) {
             case OSMPBF::Relation::NODE:
@@ -60,6 +63,7 @@ namespace osmium {
                 return item_type::relation;
         }
     }
+#pragma GCC diagnostic pop
 
     inline OSMPBF::Relation::MemberType item_type_to_osmpbf_membertype(const item_type type) {
         switch (type) {

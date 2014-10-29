@@ -52,11 +52,11 @@ namespace osmium {
         // align datastructures to this many bytes
         constexpr item_size_type align_bytes = 8;
 
-        inline size_t padded_length(size_t length) {
+        inline size_t padded_length(size_t length) noexcept {
             return (length + align_bytes - 1) & ~(align_bytes - 1);
         }
 
-        inline item_size_type padded_length(item_size_type length) {
+        inline item_size_type padded_length(item_size_type length) noexcept {
             return (length + align_bytes - 1) & ~(align_bytes - 1);
         }
 
@@ -85,15 +85,15 @@ namespace osmium {
 
             public:
 
-                unsigned char* data() {
+                unsigned char* data() noexcept {
                     return reinterpret_cast<unsigned char*>(this);
                 }
 
-                const unsigned char* data() const {
+                const unsigned char* data() const noexcept {
                     return reinterpret_cast<const unsigned char*>(this);
                 }
 
-            };
+            }; // class ItemHelper
 
         } // namespace detail
 
@@ -112,22 +112,14 @@ namespace osmium {
 
             friend class osmium::builder::Builder;
 
-            unsigned char* next() {
-                return data() + padded_size();
-            }
-
-            const unsigned char* next() const {
-                return data() + padded_size();
-            }
-
-            Item& add_size(const item_size_type size) {
+            Item& add_size(const item_size_type size) noexcept {
                 m_size += size;
                 return *this;
             }
 
         protected:
 
-            explicit Item(item_size_type size=0, item_type type=item_type()) :
+            explicit Item(item_size_type size=0, item_type type=item_type()) noexcept :
                 m_size(size),
                 m_type(type),
                 m_removed(false) {
@@ -139,14 +131,22 @@ namespace osmium {
             Item& operator=(const Item&) = delete;
             Item& operator=(Item&&) = delete;
 
-            Item& type(const item_type item_type) {
+            Item& set_type(const item_type item_type) noexcept {
                 m_type = item_type;
                 return *this;
             }
 
         public:
 
-            item_size_type byte_size() const {
+            unsigned char* next() noexcept {
+                return data() + padded_size();
+            }
+
+            const unsigned char* next() const noexcept {
+                return data() + padded_size();
+            }
+
+            item_size_type byte_size() const noexcept {
                 return m_size;
             }
 
@@ -154,15 +154,15 @@ namespace osmium {
                 return padded_length(m_size);
             }
 
-            item_type type() const {
+            item_type type() const noexcept {
                 return m_type;
             }
 
-            bool removed() const {
+            bool removed() const noexcept {
                 return m_removed;
             }
 
-            void removed(bool removed) {
+            void set_removed(bool removed) noexcept {
                 m_removed = removed;
             }
 

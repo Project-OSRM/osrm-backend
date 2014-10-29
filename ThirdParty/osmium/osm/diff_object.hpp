@@ -54,13 +54,13 @@ namespace osmium {
 
     public:
 
-        DiffObject() :
+        DiffObject() noexcept :
             m_prev(nullptr),
             m_curr(nullptr),
             m_next(nullptr) {
         }
 
-        explicit DiffObject(osmium::OSMObject& prev, osmium::OSMObject& curr, osmium::OSMObject& next) :
+        explicit DiffObject(osmium::OSMObject& prev, osmium::OSMObject& curr, osmium::OSMObject& next) noexcept :
             m_prev(&prev),
             m_curr(&curr),
             m_next(&next) {
@@ -72,47 +72,47 @@ namespace osmium {
         DiffObject(DiffObject&& other) = default;
         DiffObject& operator=(DiffObject&& other) = default;
 
-        const osmium::OSMObject& prev() const {
+        const osmium::OSMObject& prev() const noexcept {
             return *m_prev;
         }
 
-        const osmium::OSMObject& curr() const {
+        const osmium::OSMObject& curr() const noexcept {
             return *m_curr;
         }
 
-        const osmium::OSMObject& next() const {
+        const osmium::OSMObject& next() const noexcept {
             return *m_next;
         }
 
-        bool first() const {
+        bool first() const noexcept {
             return m_prev == m_curr;
         }
 
-        bool last() const {
+        bool last() const noexcept {
             return m_curr == m_next;
         }
 
-        osmium::item_type type() const {
+        osmium::item_type type() const noexcept {
             return m_curr->type();
         }
 
-        osmium::object_id_type id() const {
+        osmium::object_id_type id() const noexcept {
             return m_curr->id();
         }
 
-        osmium::object_version_type version() const {
+        osmium::object_version_type version() const noexcept {
             return m_curr->version();
         }
 
-        osmium::changeset_id_type changeset() const {
+        osmium::changeset_id_type changeset() const noexcept {
             return m_curr->changeset();
         }
 
-        const osmium::Timestamp start_time() const {
+        const osmium::Timestamp start_time() const noexcept {
             return m_curr->timestamp();
         }
 
-        const osmium::Timestamp end_time() const {
+        const osmium::Timestamp end_time() const noexcept {
             return last() ? osmium::Timestamp() : m_next->timestamp();
         }
 
@@ -123,7 +123,7 @@ namespace osmium {
 
     public:
 
-        DiffObjectDerived(T& prev, T& curr, T& next) :
+        DiffObjectDerived(T& prev, T& curr, T& next) noexcept :
             DiffObject(prev, curr, next) {
         }
 
@@ -133,15 +133,15 @@ namespace osmium {
         DiffObjectDerived(DiffObjectDerived&& other) = default;
         DiffObjectDerived& operator=(DiffObjectDerived&& other) = default;
 
-        const T& prev() const {
+        const T& prev() const noexcept {
             return *static_cast<const T*>(m_prev);
         }
 
-        const T& curr() const {
+        const T& curr() const noexcept {
             return *static_cast<const T*>(m_curr);
         }
 
-        const T& next() const {
+        const T& next() const noexcept {
             return *static_cast<const T*>(m_next);
         }
 

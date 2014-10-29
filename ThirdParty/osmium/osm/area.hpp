@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
 #include <cstdlib>
 #include <utility>
 
@@ -123,7 +124,7 @@ namespace osmium {
          * Was this area created from a way? (In contrast to areas
          * created from a relation and their members.)
          */
-        bool from_way() const {
+        bool from_way() const noexcept {
             return (positive_id() & 0x1) == 0;
         }
 
@@ -148,7 +149,19 @@ namespace osmium {
                     case osmium::item_type::inner_ring:
                         ++counter.second;
                         break;
-                    default:
+                    case osmium::item_type::tag_list:
+                        // ignore tags
+                        break;
+                    case osmium::item_type::undefined:
+                    case osmium::item_type::node:
+                    case osmium::item_type::way:
+                    case osmium::item_type::relation:
+                    case osmium::item_type::area:
+                    case osmium::item_type::changeset:
+                    case osmium::item_type::way_node_list:
+                    case osmium::item_type::relation_member_list:
+                    case osmium::item_type::relation_member_list_with_full_members:
+                        assert(false && "Children of Area can only be outer/inner_ring and tag_list.");
                         break;
                 }
             }
@@ -161,6 +174,14 @@ namespace osmium {
          */
         bool is_multipolygon() const {
             return num_rings().first > 1;
+        }
+
+        osmium::memory::ItemIterator<const osmium::InnerRing> inner_ring_cbegin(const osmium::memory::ItemIterator<const osmium::OuterRing>& it) const {
+            return it.cast<const osmium::InnerRing>();
+        }
+
+        osmium::memory::ItemIterator<const osmium::InnerRing> inner_ring_cend(const osmium::memory::ItemIterator<const osmium::OuterRing>& it) const {
+            return std::next(it).cast<const osmium::InnerRing>();
         }
 
     }; // class Area

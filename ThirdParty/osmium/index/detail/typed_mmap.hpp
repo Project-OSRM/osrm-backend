@@ -38,24 +38,26 @@ DEALINGS IN THE SOFTWARE.
 #include <stdexcept>
 #include <system_error>
 
-#ifndef WIN32
+#include <sys/stat.h>
+
+#ifndef _WIN32
 # include <sys/mman.h>
 #else
 # include <mmap_for_windows.hpp>
 #endif
 
-#include <sys/stat.h>
-
-#ifdef _MSC_VER
-# define ftruncate _chsize
-#else
+#ifndef _MSC_VER
 # include <unistd.h>
+#else
+# define ftruncate _chsize
 #endif
 
 // for bsd systems
 #ifndef MAP_ANONYMOUS
 # define MAP_ANONYMOUS MAP_ANON
 #endif
+
+#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
@@ -89,8 +91,8 @@ namespace osmium {
              * Note that no constructor is called for any of the objects in this memory!
              *
              * @param size Number of objects of type T that should fit into this memory
-             * @return Pointer to mapped memory
-             * @exception std::system_error If mmap(2) failed
+             * @returns Pointer to mapped memory
+             * @throws std::system_error If mmap(2) failed
              */
             static T* map(size_t size) {
                 void* addr = ::mmap(nullptr, sizeof(T) * size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -113,8 +115,8 @@ namespace osmium {
              * @param size Number of objects of type T that should fit into this memory
              * @param fd File descriptor
              * @param write True if data should be writable
-             * @return Pointer to mapped memory
-             * @exception std::system_error If mmap(2) failed
+             * @returns Pointer to mapped memory
+             * @throws std::system_error If mmap(2) failed
              */
             static T* map(size_t size, int fd, bool write = false) {
                 int prot = PROT_READ;
@@ -141,7 +143,7 @@ namespace osmium {
              * @param data Pointer to current mapping (as returned by typed_mmap())
              * @param old_size Number of objects currently stored in this memory
              * @param new_size Number of objects we want to have space for
-             * @exception std::system_error If mremap(2) call failed
+             * @throws std::system_error If mremap(2) call failed
              */
             static T* remap(T* data, size_t old_size, size_t new_size) {
                 void* addr = ::mremap(reinterpret_cast<void*>(data), sizeof(T) * old_size, sizeof(T) * new_size, MREMAP_MAYMOVE);
@@ -162,7 +164,7 @@ namespace osmium {
              *
              * @param data Pointer to the data
              * @param size Number of objects of type T stored
-             * @exception std::system_error If munmap(2) call failed
+             * @throws std::system_error If munmap(2) call failed
              */
             static void unmap(T* data, size_t size) {
                 if (::munmap(reinterpret_cast<void*>(data), sizeof(T) * size) != 0) {
@@ -174,19 +176,19 @@ namespace osmium {
              * Get number of objects of type T that would fit into a file.
              *
              * @param fd File descriptor
-             * @return Number of objects of type T in this file
-             * @exception std::system_error If fstat(2) call failed
-             * @exception std::length_error If size of the file isn't a multiple of sizeof(T)
+             * @returns Number of objects of type T in this file
+             * @throws std::system_error If fstat(2) call failed
+             * @throws std::length_error If size of the file isn't a multiple of sizeof(T)
              */
             static size_t file_size(int fd) {
                 struct stat s;
                 if (fstat(fd, &s) < 0) {
                     throw std::system_error(errno, std::system_category(), "fstat failed");
                 }
-                if (s.st_size % sizeof(T) != 0) {
+                if (static_cast<size_t>(s.st_size) % sizeof(T) != 0) {
                     throw std::length_error("file size has to be multiple of object size");
                 }
-                return s.st_size / sizeof(T);
+                return static_cast<size_t>(s.st_size) / sizeof(T);
             }
 
             /**
@@ -196,11 +198,11 @@ namespace osmium {
              *
              * @param new_size Number of objects of type T that should fit into this file
              * @param fd File descriptor
-             * @exception std::system_error If ftruncate(2) call failed
+             * @throws std::system_error If ftruncate(2) call failed
              */
             static void grow_file(size_t new_size, int fd) {
                 if (file_size(fd) < new_size) {
-                    if (::ftruncate(fd, sizeof(T) * new_size) < 0) {
+                    if (::ftruncate(fd, static_cast_with_assert<off_t>(sizeof(T) * new_size)) < 0) {
                         throw std::system_error(errno, std::system_category(), "ftruncate failed");
                     }
                 }
@@ -211,7 +213,7 @@ namespace osmium {
              *
              * @param size Number of objects of type T that should fit into this file
              * @param fd File descriptor
-             * @exception Errors thrown by grow_file() or map()
+             * @throws Errors thrown by grow_file() or map()
              */
             static T* grow_and_map(size_t size, int fd) {
                 grow_file(size, fd);

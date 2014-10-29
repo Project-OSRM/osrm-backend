@@ -54,38 +54,38 @@ namespace osmium {
             size_t m_relation_offset;
 
             /**
-             * The number of members still needed before the relation is complete.
-             * This will be set to the number of members we are interested in and
-             * then count down for every member we find. When it is 0, the relation
-             * is complete.
+             * The number of members still needed before the relation is
+             * complete. This will be set to the number of members we are
+             * interested in and then count down for every member we find.
+             * When it is 0, the relation is complete.
              */
             int m_need_members = 0;
 
         public:
 
             /**
-             * Initialize an empty RelationMeta. This is needed to zero out relations
-             * that have been completed.
+             * Initialize an empty RelationMeta. This is needed to zero out
+             * relations that have been completed.
              */
-            RelationMeta() :
+            RelationMeta() noexcept :
                 m_relation_offset(0) {
             }
 
-            explicit RelationMeta(size_t relation_offset) :
+            explicit RelationMeta(size_t relation_offset) noexcept :
                 m_relation_offset(relation_offset) {
             }
 
             /**
              * Get offset of relation in buffer.
              */
-            size_t relation_offset() const {
+            size_t relation_offset() const noexcept {
                 return m_relation_offset;
             }
 
             /**
              * Increment the m_need_members counter.
              */
-            void increment_need_members() {
+            void increment_need_members() noexcept {
                 ++m_need_members;
             }
 
@@ -100,7 +100,7 @@ namespace osmium {
             /**
              * Returns true if all members for this relation are available.
              */
-            bool has_all_members() const {
+            bool has_all_members() const noexcept {
                 return m_need_members == 0;
             }
 
@@ -121,7 +121,7 @@ namespace osmium {
             typedef bool result_type;
 
             /**
-             * @return true if this relation is complete, false otherwise.
+             * @returns true if this relation is complete, false otherwise.
              */
             bool operator()(RelationMeta& relation_info) const {
                 return relation_info.has_all_members();

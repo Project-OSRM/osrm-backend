@@ -74,7 +74,7 @@ namespace osmium {
              * @param object_type The type of the object.
              * @param object_id The ID of the object.
              */
-            void set_object(osmium::item_type object_type, osmium::object_id_type object_id) {
+            void set_object(osmium::item_type object_type, osmium::object_id_type object_id) noexcept {
                 m_object_type = object_type;
                 m_object_id = object_id;
             }

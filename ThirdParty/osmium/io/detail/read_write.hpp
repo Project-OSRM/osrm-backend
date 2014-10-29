@@ -37,13 +37,12 @@ DEALINGS IN THE SOFTWARE.
 #include <cstddef>
 #include <fcntl.h>
 #include <string>
-//#include <sys/stat.h>
-//#include <sys/types.h>
 #include <system_error>
+
 #ifndef _MSC_VER
-#include <unistd.h>
+# include <unistd.h>
 #else
-#include <io.h>
+# include <io.h>
 typedef int ssize_t;
 #endif
 
@@ -61,11 +60,11 @@ namespace osmium {
             /**
              * Open file for writing. If the file exists, it is truncated, if
              * not, it is created. If the file name is empty or "-", no file
-             * is open and the stdout file descriptor (1) is returned.
+             * is opened and the stdout file descriptor (1) is returned.
              *
              * @param filename Name of file to be opened.
              * @param allow_overwrite If the file exists, should it be overwritten?
-             * @return File descriptor of open file.
+             * @returns File descriptor of open file.
              * @throws system_error if the file can't be opened.
              */
             inline int open_for_writing(const std::string& filename, osmium::io::overwrite allow_overwrite = osmium::io::overwrite::no) {
@@ -78,7 +77,7 @@ namespace osmium {
                     } else {
                         flags |= O_EXCL;
                     }
-#ifdef WIN32
+#ifdef _WIN32
                     flags |= O_BINARY;
 #endif
                     int fd = ::open(filename.c_str(), flags, 0666);
@@ -91,9 +90,10 @@ namespace osmium {
 
             /**
              * Open file for reading. If the file name is empty or "-", no file
-             * is open and the stdin file descriptor (0) is returned.
+             * is opened and the stdin file descriptor (0) is returned.
              *
-             * @return File descriptor of open file.
+             * @param filename Name of file to be opened.
+             * @returns File descriptor of open file.
              * @throws system_error if the file can't be opened.
              */
             inline int open_for_reading(const std::string& filename) {
@@ -101,7 +101,7 @@ namespace osmium {
                     return 0; // stdin
                 } else {
                     int flags = O_RDONLY;
-#ifdef WIN32
+#ifdef _WIN32
                     flags |= O_BINARY;
 #endif
                     int fd = ::open(filename.c_str(), flags);
@@ -113,38 +113,14 @@ namespace osmium {
             }
 
             /**
-             * Reads the given number of bytes into the input buffer.
-             * This is basically just a wrapper around read(2).
-             *
-             * @param fd File descriptor.
-             * @param input_buffer Buffer with data of at least size.
-             * @param size Number of bytes to be read.
-             * @return True when read was successful, false on EOF.
-             * @exception std::system_error On error.
-             */
-            inline bool reliable_read(const int fd, unsigned char* input_buffer, const size_t size) {
-                size_t offset = 0;
-                while (offset < size) {
-                    ssize_t length = ::read(fd, input_buffer + offset, size - offset);
-                    if (length < 0) {
-                        throw std::system_error(errno, std::system_category(), "Read failed");
-                    }
-                    if (length == 0) {
-                        return false;
-                    }
-                    offset += static_cast<size_t>(length);
-                }
-                return true;
-            }
-
-            /**
              * Writes the given number of bytes from the output_buffer to the file descriptor.
-             * This is just a wrapper around write(2).
+             * This is just a wrapper around write(2), because write(2) can write less than
+             * the given number of bytes.
              *
              * @param fd File descriptor.
-             * @param output_buffer Buffer where data is written. Must be at least size bytes long.
-             * @param size Number of bytes to be read.
-             * @exception std::system_error On error.
+             * @param output_buffer Buffer with data to be written. Must be at least size bytes long.
+             * @param size Number of bytes to write.
+             * @throws std::system_error On error.
              */
             inline void reliable_write(const int fd, const unsigned char* output_buffer, const size_t size) {
                 size_t offset = 0;
@@ -157,6 +133,16 @@ namespace osmium {
                 } while (offset < size);
             }
 
+            /**
+             * Writes the given number of bytes from the output_buffer to the file descriptor.
+             * This is just a wrapper around write(2), because write(2) can write less than
+             * the given number of bytes.
+             *
+             * @param fd File descriptor.
+             * @param output_buffer Buffer with data to be written. Must be at least size bytes long.
+             * @param size Number of bytes to write.
+             * @throws std::system_error On error.
+             */
             inline void reliable_write(const int fd, const char* output_buffer, const size_t size) {
                 reliable_write(fd, reinterpret_cast<const unsigned char*>(output_buffer), size);
             }

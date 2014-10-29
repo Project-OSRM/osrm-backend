@@ -178,13 +178,13 @@ namespace osmium {
 
                         // if this is the last time this object was needed
                         // then mark it as removed
-                        if (range.first + 1 == range.second) {
-                            this->get_member(range.first->buffer_offset()).removed(true);
+                        if (osmium::relations::count_not_removed(range.first, range.second) == 1) {
+                            this->get_member(range.first->buffer_offset()).set_removed(true);
                         }
 
                         for (auto it = range.first; it != range.second; ++it) {
-                            if (relation.id() == this->get_relation(it->relation_pos()).id()) {
-                                mmv.erase(it);
+                            if (!it->removed() && relation.id() == this->get_relation(it->relation_pos()).id()) {
+                                it->remove();
                                 break;
                             }
                         }

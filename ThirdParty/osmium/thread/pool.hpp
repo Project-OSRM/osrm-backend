@@ -173,6 +173,30 @@ namespace osmium {
 
         }; // class Pool
 
+        /**
+         * Wrapper for classes that can't be copied but need to be copyable for
+         * putting them in the pool.
+         */
+        template <class TWrapped>
+        class SharedPtrWrapper {
+
+            std::shared_ptr<TWrapped> m_task;
+
+        public:
+
+            typedef typename std::result_of<TWrapped()>::type result_type;
+
+            template <typename... TArgs>
+            SharedPtrWrapper(TArgs&&... args) :
+                m_task(std::make_shared<TWrapped>(std::forward<TArgs>(args)...)) {
+            }
+
+            result_type operator()() {
+                return m_task->operator()();
+            }
+
+        }; // class SharedPtrWrapper
+
     } // namespace thread
 
 } // namespace osmium

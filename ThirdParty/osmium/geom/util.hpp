@@ -38,6 +38,10 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
+    /**
+     * Exception thrown when a projection object can not be initialized or the
+     * projection of some coordinates can not be calculated.
+     */
     struct projection_error : public std::runtime_error {
 
         projection_error(const std::string& what) :
@@ -55,12 +59,12 @@ namespace osmium {
         constexpr double PI = 3.14159265358979323846;
 
         /// Convert angle from degrees to radians.
-        inline constexpr double deg_to_rad(double degree) {
+        inline constexpr double deg_to_rad(double degree) noexcept {
             return degree * (PI / 180.0);
         }
 
         /// Convert angle from radians to degrees.
-        inline constexpr double rad_to_deg(double radians) {
+        inline constexpr double rad_to_deg(double radians) noexcept {
             return radians * (180.0 / PI);
         }
 

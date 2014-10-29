@@ -76,12 +76,12 @@ namespace osmium {
                     std::get<N>(handlers).flush();
                     call_flush<N+1, SIZE, THandlers>()(handlers);
                 }
-            };
+            }; // struct call_flush
 
             template <int SIZE, class THandlers>
             struct call_flush<SIZE, SIZE, THandlers> {
                 void operator()(THandlers&) {}
-            };
+            }; // struct call_flush
 
             OSMIUM_CHAIN_HANDLER_CALL(node, Node)
             OSMIUM_CHAIN_HANDLER_CALL(way, Way)

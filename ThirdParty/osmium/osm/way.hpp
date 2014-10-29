@@ -65,18 +65,18 @@ namespace osmium {
 
         friend class osmium::builder::ObjectBuilder<osmium::Way>;
 
-        Way() :
+        Way() noexcept :
             OSMObject(sizeof(Way), osmium::item_type::way) {
         }
 
     public:
 
         WayNodeList& nodes() {
-            return subitem_of_type<WayNodeList>();
+            return osmium::detail::subitem_of_type<WayNodeList>(begin(), end());
         }
 
         const WayNodeList& nodes() const {
-            return subitem_of_type<const WayNodeList>();
+            return osmium::detail::subitem_of_type<const WayNodeList>(cbegin(), cend());
         }
 
         /**
@@ -86,7 +86,7 @@ namespace osmium {
         void update_node_location(const NodeRef& new_node_ref) {
             for (auto& node_ref : nodes()) {
                 if (node_ref.ref() == new_node_ref.ref()) {
-                    node_ref.location(new_node_ref.location());
+                    node_ref.set_location(new_node_ref.location());
                 }
             }
         }

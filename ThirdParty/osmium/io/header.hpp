@@ -73,15 +73,15 @@ namespace osmium {
 
             ~Header() = default;
 
-            std::vector<osmium::Box>& boxes() {
+            std::vector<osmium::Box>& boxes() noexcept {
                 return m_boxes;
             }
 
-            const std::vector<osmium::Box>& boxes() const {
+            const std::vector<osmium::Box>& boxes() const noexcept {
                 return m_boxes;
             }
 
-            Header& boxes(const std::vector<osmium::Box>& boxes) {
+            Header& boxes(const std::vector<osmium::Box>& boxes) noexcept {
                 m_boxes = boxes;
                 return *this;
             }
@@ -104,12 +104,12 @@ namespace osmium {
                 return *this;
             }
 
-            bool has_multiple_object_versions() const {
+            bool has_multiple_object_versions() const noexcept {
                 return m_has_multiple_object_versions;
             }
 
-            Header& has_multiple_object_versions(bool h) {
-                m_has_multiple_object_versions = h;
+            Header& set_has_multiple_object_versions(bool value) noexcept {
+                m_has_multiple_object_versions = value;
                 return *this;
             }
 

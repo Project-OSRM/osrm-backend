@@ -56,7 +56,7 @@ namespace osmium {
 
     }; // enum class item_type
 
-    inline item_type char_to_item_type(const char c) {
+    inline item_type char_to_item_type(const char c) noexcept {
         switch (c) {
             case 'X':
                 return item_type::undefined;
@@ -87,7 +87,10 @@ namespace osmium {
         }
     }
 
-    inline char item_type_to_char(const item_type type) {
+// avoid g++ false positive
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+    inline char item_type_to_char(const item_type type) noexcept {
         switch (type) {
             case item_type::undefined:
                 return 'X';
@@ -116,7 +119,7 @@ namespace osmium {
         }
     }
 
-    inline const char* item_type_to_name(const item_type type) {
+    inline const char* item_type_to_name(const item_type type) noexcept {
         switch (type) {
             case item_type::undefined:
                 return "undefined";
@@ -144,12 +147,19 @@ namespace osmium {
                 return "inner_ring";
         }
     }
+#pragma GCC diagnostic pop
 
     template <typename TChar, typename TTraits>
     inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const item_type item_type) {
         return out << item_type_to_char(item_type);
     }
 
+    /**
+     * This exception is thrown when a visitor encounters an unknown item type.
+     * Under usual circumstance this should not happen. If it does happen, it
+     * probably means the buffer contains different kinds of objects than were
+     * expected or that there is some kind of data corruption.
+     */
     struct unknown_type : public std::runtime_error {
 
         unknown_type() :

@@ -54,7 +54,7 @@ namespace osmium {
          * Create undefined Box. Use the extend() function
          * to add actual bounds.
          */
-        constexpr Box() :
+        constexpr Box() noexcept :
             m_bottom_left(),
             m_top_right() {
         }
@@ -83,16 +83,16 @@ namespace osmium {
             if (location) {
                 if (m_bottom_left) {
                     if (location.x() < m_bottom_left.x()) {
-                        m_bottom_left.x(location.x());
+                        m_bottom_left.set_x(location.x());
                     }
                     if (location.x() > m_top_right.x()) {
-                        m_top_right.x(location.x());
+                        m_top_right.set_x(location.x());
                     }
                     if (location.y() < m_bottom_left.y()) {
-                        m_bottom_left.y(location.y());
+                        m_bottom_left.set_y(location.y());
                     }
                     if (location.y() > m_top_right.y()) {
-                        m_top_right.y(location.y());
+                        m_top_right.set_y(location.y());
                     }
                 } else {
                     m_bottom_left = location;

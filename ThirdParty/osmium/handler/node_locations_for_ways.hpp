@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <type_traits>
+
 #include <osmium/handler.hpp>
 #include <osmium/index/index.hpp>
 #include <osmium/index/map/dummy.hpp>
@@ -58,6 +60,12 @@ namespace osmium {
          */
         template <class TStoragePosIDs, class TStorageNegIDs = dummy_type>
         class NodeLocationsForWays : public osmium::handler::Handler {
+
+            static_assert(std::is_base_of<osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>, TStoragePosIDs>::value,
+                "Index class must be derived from osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>");
+
+            static_assert(std::is_base_of<osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>, TStorageNegIDs>::value,
+                "Index class must be derived from osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>");
 
             /// Object that handles the actual storage of the node locations (with positive IDs).
             TStoragePosIDs& m_storage_pos;
@@ -100,9 +108,9 @@ namespace osmium {
                 m_must_sort = true;
                 const osmium::object_id_type id = node.id();
                 if (id >= 0) {
-                    m_storage_pos.set(id, node.location());
+                    m_storage_pos.set(static_cast<osmium::unsigned_object_id_type>( id), node.location());
                 } else {
-                    m_storage_neg.set(-id, node.location());
+                    m_storage_neg.set(static_cast<osmium::unsigned_object_id_type>(-id), node.location());
                 }
             }
 
@@ -110,7 +118,11 @@ namespace osmium {
              * Get location of node with given id.
              */
             osmium::Location get_node_location(const osmium::object_id_type id) const {
-                return id >= 0 ? m_storage_pos.get(id) : m_storage_neg.get(-id);
+                if (id >= 0) {
+                    return m_storage_pos.get(static_cast<osmium::unsigned_object_id_type>( id));
+                } else {
+                    return m_storage_neg.get(static_cast<osmium::unsigned_object_id_type>(-id));
+                }
             }
 
             /**
@@ -126,7 +138,7 @@ namespace osmium {
                 bool error = false;
                 for (auto& node_ref : way.nodes()) {
                     try {
-                        node_ref.location(get_node_location(node_ref.ref()));
+                        node_ref.set_location(get_node_location(node_ref.ref()));
                         if (!node_ref.location()) {
                             error = true;
                         }
@@ -135,8 +147,18 @@ namespace osmium {
                     }
                 }
                 if (error && !m_ignore_errors) {
-                    throw osmium::not_found("not found");
+                    throw osmium::not_found("location for one or more nodes not found in node location index");
                 }
+            }
+
+            /**
+             * Call clear on the location indexes. Makes the
+             * NodeLocationsForWays handler unusable. Used to explicitly free
+             * memory if thats needed.
+             */
+            void clear() {
+                m_storage_pos.clear();
+                m_storage_neg.clear();
             }
 
         }; // class NodeLocationsForWays

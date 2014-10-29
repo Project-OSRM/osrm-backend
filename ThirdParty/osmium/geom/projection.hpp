@@ -57,7 +57,7 @@ namespace osmium {
                 void operator()(void* crs) {
                     pj_free(crs);
                 }
-            };
+            }; // struct ProjCRSDeleter
 
             std::unique_ptr<void, ProjCRSDeleter> m_crs;
 
@@ -142,7 +142,7 @@ namespace osmium {
                 }
             }
 
-            int epsg() const {
+            int epsg() const noexcept {
                 return m_epsg;
             }
 

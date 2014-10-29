@@ -94,7 +94,7 @@ namespace osmium {
                     m_elements.clear();
                 }
 
-                void dump_as_list(const int fd) const {
+                void dump_as_list(const int fd) const override final {
                     typedef typename std::map<TId, TValue>::value_type t;
                     std::vector<t> v;
                     std::copy(m_elements.begin(), m_elements.end(), std::back_inserter(v));

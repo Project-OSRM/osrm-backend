@@ -96,10 +96,13 @@ namespace osmium {
                 void oprintf(std::string& out, const char* format, T value) {
                     char buffer[tmp_buffer_size+1];
                     size_t max_size = sizeof(buffer)/sizeof(char);
+#ifndef NDEBUG
+                    int len =
+#endif
 #ifndef _MSC_VER
-                    int len = snprintf(buffer, max_size, format, value);
+                    snprintf(buffer, max_size, format, value);
 #else
-                    int len = _snprintf(buffer, max_size, format, value);
+                    _snprintf(buffer, max_size, format, value);
 #endif
                     assert(len > 0 && static_cast<size_t>(len) < max_size);
                     out += buffer;
@@ -115,7 +118,7 @@ namespace osmium {
                     op_create = 1,
                     op_modify = 2,
                     op_delete = 3
-                };
+                }; // enum class operation
 
                 osmium::memory::Buffer m_input_buffer;
 
@@ -257,9 +260,9 @@ namespace osmium {
 
                     if (node.location()) {
                         m_out += " lat=\"";
-                        osmium::Location::coordinate2string(std::back_inserter(m_out), node.location().lat_without_check());
+                        osmium::util::double2string(std::back_inserter(m_out), node.location().lat_without_check(), 7);
                         m_out += "\" lon=\"";
-                        osmium::Location::coordinate2string(std::back_inserter(m_out), node.location().lon_without_check());
+                        osmium::util::double2string(std::back_inserter(m_out), node.location().lon_without_check(), 7);
                         m_out += "\"";
                     }
 
@@ -402,7 +405,7 @@ namespace osmium {
                 }
 
                 void write_buffer(osmium::memory::Buffer&& buffer) override final {
-                    XMLOutputBlock output_block(std::move(buffer), m_write_visible_flag, m_file.is_true("xml_change_format"));
+                    osmium::thread::SharedPtrWrapper<XMLOutputBlock> output_block(std::move(buffer), m_write_visible_flag, m_file.is_true("xml_change_format"));
                     m_output_queue.push(osmium::thread::Pool::instance().submit(std::move(output_block)));
                     while (m_output_queue.size() > 10) {
                         std::this_thread::sleep_for(std::chrono::milliseconds(100)); // XXX

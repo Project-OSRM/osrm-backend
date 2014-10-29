@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -49,6 +50,10 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
+    /**
+     * Exception thrown when an invalid geometry is encountered. An example
+     * would be a linestring with less than two points.
+     */
     struct geometry_error : public std::runtime_error {
 
         geometry_error(const std::string& what) :
@@ -72,7 +77,7 @@ namespace osmium {
         enum class use_nodes : bool {
             unique = true, ///< Remove consecutive nodes with same location.
             all    = false ///< Use all nodes.
-        };
+        }; // enum class use_nodes
 
         /**
          * Which direction the linestring created from a way
@@ -81,7 +86,7 @@ namespace osmium {
         enum class direction : bool {
             backward = true, ///< Linestring has reverse direction.
             forward  = false ///< Linestring has same direction as way.
-        };
+        }; // enum class direction
 
         /**
          * This pseudo projection just returns its WGS84 input unchanged.
@@ -95,7 +100,7 @@ namespace osmium {
                 return Coordinates{location.lon(), location.lat()};
             }
 
-            int epsg() const {
+            int epsg() const noexcept {
                 return 4326;
             }
 
@@ -178,6 +183,10 @@ namespace osmium {
 
             /* LineString */
 
+            void linestring_start() {
+                m_impl.linestring_start();
+            }
+
             template <class TIter>
             size_t fill_linestring(TIter it, TIter end) {
                 size_t num_points = 0;
@@ -201,8 +210,12 @@ namespace osmium {
                 return num_points;
             }
 
+            linestring_type linestring_finish(size_t num_points) {
+                return m_impl.linestring_finish(num_points);
+            }
+
             linestring_type create_linestring(const osmium::WayNodeList& wnl, use_nodes un=use_nodes::unique, direction dir=direction::forward) {
-                m_impl.linestring_start();
+                linestring_start();
                 size_t num_points = 0;
 
                 if (un == use_nodes::unique) {
@@ -227,14 +240,47 @@ namespace osmium {
                 }
 
                 if (num_points < 2) {
-                    throw geometry_error("not enough points for linestring");
+                    throw osmium::geometry_error("not enough points for linestring");
                 }
 
-                return m_impl.linestring_finish(num_points);
+                return linestring_finish(num_points);
             }
 
             linestring_type create_linestring(const osmium::Way& way, use_nodes un=use_nodes::unique, direction dir=direction::forward) {
                 return create_linestring(way.nodes(), un, dir);
+            }
+
+            /* Polygon */
+
+            void polygon_start() {
+                m_impl.polygon_start();
+            }
+
+            template <class TIter>
+            size_t fill_polygon(TIter it, TIter end) {
+                size_t num_points = 0;
+                for (; it != end; ++it, ++num_points) {
+                    m_impl.polygon_add_location(m_projection(it->location()));
+                }
+                return num_points;
+            }
+
+            template <class TIter>
+            size_t fill_polygon_unique(TIter it, TIter end) {
+                size_t num_points = 0;
+                osmium::Location last_location;
+                for (; it != end; ++it) {
+                    if (last_location != it->location()) {
+                        last_location = it->location();
+                        m_impl.polygon_add_location(m_projection(last_location));
+                        ++num_points;
+                    }
+                }
+                return num_points;
+            }
+
+            polygon_type polygon_finish(size_t num_points) {
+                return m_impl.polygon_finish(num_points);
             }
 
             /* MultiPolygon */
@@ -266,7 +312,7 @@ namespace osmium {
 
                 // if there are no rings, this area is invalid
                 if (num_rings == 0) {
-                    throw geometry_error("invalid area");
+                    throw osmium::geometry_error("invalid area");
                 }
 
                 m_impl.multipolygon_polygon_finish();

@@ -38,8 +38,18 @@ DEALINGS IN THE SOFTWARE.
 #include <cstring>
 #include <string>
 
+// Windows is only available for little endian architectures
+// http://stackoverflow.com/questions/6449468/can-i-safely-assume-that-windows-installations-will-always-be-little-endian
+#if !defined(_WIN32) && !defined(__APPLE__)
+# include <endian.h>
+#else
+# define __LITTLE_ENDIAN 1234
+# define __BYTE_ORDER __LITTLE_ENDIAN
+#endif
+
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/factory.hpp>
+#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
@@ -48,12 +58,12 @@ namespace osmium {
         enum class wkb_type : bool {
             wkb  = false,
             ewkb = true
-        };
+        }; // enum class wkb_type
 
         enum class out_type : bool {
             binary = false,
             hex    = true
-        };
+        }; // enum class out_type
 
         namespace detail {
 
@@ -99,7 +109,7 @@ namespace osmium {
 
                     // SRID-presence flag (EWKB)
                     wkbSRID                = 0x20000000
-                };
+                }; // enum wkbGeometryType
 
                 /**
                 * Byte order marker in WKB geometry.
@@ -107,7 +117,7 @@ namespace osmium {
                 enum class wkb_byte_order_type : uint8_t {
                     XDR = 0,         // Big Endian
                     NDR = 1          // Little Endian
-                };
+                }; // enum class wkb_byte_order_type
 
                 std::string m_data;
                 uint32_t m_points {0};
@@ -122,7 +132,11 @@ namespace osmium {
                 size_t m_ring_size_offset = 0;
 
                 size_t header(std::string& str, wkbGeometryType type, bool add_length) const {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
                     str_push(str, wkb_byte_order_type::NDR);
+#else
+                    str_push(str, wkb_byte_order_type::XDR);
+#endif
                     if (m_wkb_type == wkb_type::ewkb) {
                         str_push(str, type | wkbSRID);
                         str_push(str, srid);
@@ -136,8 +150,9 @@ namespace osmium {
                     return offset;
                 }
 
-                void set_size(const size_t offset, const uint32_t size) {
-                    memcpy(&m_data[offset], &size, sizeof(uint32_t));
+                void set_size(const size_t offset, const size_t size) {
+                    const uint32_t s = static_cast_with_assert<uint32_t>(size);
+                    memcpy(&m_data[offset], &s, sizeof(uint32_t));
                 }
 
             public:
