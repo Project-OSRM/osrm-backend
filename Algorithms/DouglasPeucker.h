@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DOUGLASPEUCKER_H_
 
 #include <stack>
-#include <utility>
 #include <vector>
 #include <array>
 
@@ -41,27 +40,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Note: points may also be pre-selected*/
 
 struct SegmentInformation;
-static const std::array<int, 19> DOUGLAS_PEUCKER_THRESHOLDS = {
-                                  512440, // z0
-                                  256720, // z1
-                                  122560, // z2
-                                  56780,  // z3
-                                  28800,  // z4
-                                  14400,  // z5
-                                  7200,   // z6
-                                  3200,   // z7
-                                  2400,   // z8
-                                  1000,   // z9
-                                  600,    // z10
-                                  120,    // z11
-                                  60,     // z12
-                                  45,     // z13
-                                  36,     // z14
-                                  20,     // z15
-                                  8,      // z16
-                                  6,      // z17
-                                  4       // z18
-};
+
+static const std::array<int, 19> DOUGLAS_PEUCKER_THRESHOLDS {{
+    512440, // z0
+    256720, // z1
+    122560, // z2
+    56780,  // z3
+    28800,  // z4
+    14400,  // z5
+    7200,   // z6
+    3200,   // z7
+    2400,   // z8
+    1000,   // z9
+    600,    // z10
+    120,    // z11
+    60,     // z12
+    45,     // z13
+    36,     // z14
+    20,     // z15
+    8,      // z16
+    6,      // z17
+    4       // z18
+}};
 
 class DouglasPeucker
 {
