@@ -129,7 +129,8 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
         BOOST_ASSERT_MSG(pair.first->necessary, "left border must be necessary");
         BOOST_ASSERT_MSG(pair.second->necessary, "right border must be necessary");
         BOOST_ASSERT_MSG(std::distance(pair.second, end) > 0, "right border outside of geometry");
-        BOOST_ASSERT_MSG(std::distance(pair.first, pair.second) >= 0, "left border on the wrong side");
+        BOOST_ASSERT_MSG(std::distance(pair.first, pair.second) >= 0,
+                         "left border on the wrong side");
 
         int max_int_distance = 0;
         auto farthest_entry_it = pair.second;
@@ -146,7 +147,6 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
                 max_int_distance = distance;
             }
         }
-
 
         // check if maximum violates a zoom level dependent threshold
         if (max_int_distance > DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
