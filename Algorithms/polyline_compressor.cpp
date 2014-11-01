@@ -75,12 +75,12 @@ std::string PolylineCompressor::encode_number(int number_to_encode) const
 std::string
 PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &polyline) const
 {
-    std::string output;
-    std::vector<int> delta_numbers;
     if (polyline.empty())
     {
         return {};
     }
+
+    std::vector<int> delta_numbers;
     FixedPointCoordinate previous_coordinate = {0, 0};
     for (const auto &segment : polyline)
     {
