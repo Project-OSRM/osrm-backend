@@ -81,6 +81,7 @@ PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &po
     }
 
     std::vector<int> delta_numbers;
+    delta_numbers.reserve((polyline.size() - 1) * 2);
     FixedPointCoordinate previous_coordinate = {0, 0};
     for (const auto &segment : polyline)
     {
