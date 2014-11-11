@@ -86,7 +86,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                                                      COORDINATE_PRECISION);
                     result.values["mapped coordinate"] = json_coordinate;
                     std::string temp_string;
-                    facade->GetName(phantom_node_vector.front().name_id, temp_string);
+                    facade->GetName(phantom_node_vector.at(i).name_id, temp_string);
                     result.values["name"] = temp_string;
                     results.values.push_back(result);
                 }
