@@ -2,7 +2,6 @@ environment:
   matrix:
   - configuration: Debug
   - configuration: Release
-
 # branches to build
 branches:
   # whitelist
@@ -19,34 +18,45 @@ init:
 # clone directory
 clone_folder: c:\projects\osrm
 
+cache:
+  - c:\zips
+
 platform: x64
 
 install:
   # by default, all script lines are interpreted as batch
   - nuget install protobuf
-  - cd c:\projects\osrm
-  - curl -O http://build.project-osrm.org/libs_osrm_%Configuration%.7z
-  - 7z x libs_osrm_%Configuration%.7z | find ":"
+  - if NOT EXIST c:\zips (mkdir c:\zips)
+  - cd c:\zips
+  - curl -z libs_osrm_%Configuration%_test.7z -O http://build.project-osrm.org/libs_osrm_%Configuration%_test.7z
+  - mkdir c:\libs_osrm
+  - cd c:\libs_osrm
+  - 7z x c:\zips\libs_osrm_%Configuration%_test.7z | find ":"
 
 build_script:
-  - cd c:/projects/osrm
+  - cd c:\projects\osrm
   - mkdir build
   - cd build
   - echo Running cmake...
   - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
   - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
-  - SET P=c:/projects/osrm
+  - SET P=c:/libs_osrm
   - set TBB_INSTALL_DIR=%P%/tbb
   - set TBB_ARCH_PLATFORM=intel64/vc12
-  - cmake .. -G "Visual Studio 12 Win64" -DCMAKE_BUILD_TYPE=%Configuration% -DBZIP2_INCLUDE_DIR=%P%/libs/include -DBZIP2_LIBRARIES=%P%/libs/lib/libbz2.lib -DCMAKE_INSTALL_PREFIX=%P%/libs -DBOOST_ROOT=%P%/boost_min -DBoost_USE_STATIC_LIBS=ON -T CTP_Nov2013
+  - cmake .. -G "Visual Studio 12 Win64" -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_INSTALL_PREFIX=%P%/libs -DBOOST_ROOT=%P%/boost_min -DBoost_USE_STATIC_LIBS=ON -T CTP_Nov2013
   - msbuild /clp:Verbosity=minimal /nologo OSRM.sln
   - msbuild /clp:Verbosity=minimal /nologo tests.vcxproj
-  - if "%APPVEYOR_REPO_BRANCH%"=="develop" (7z a %P%/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip)
-  - set PATH=%PATH%;c:/projects/osrm/libs/bin
-  - cd c:/projects/osrm/build/%Configuration%
-  - datastructure-tests.exe
+  - copy %Configuration%\*.exe .
+  - if "%APPVEYOR_REPO_BRANCH%"=="develop" (7z a c:/projects/osrm/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip)
 
-test: off
+test_script:
+  - cd c:\projects\osrm
+  - set PATH=c:\libs_osrm\libs\bin;c:\libs_osrm\ruby\bin;%PATH%
+  - build\datastructure-tests.exe
+  - echo disk=c:\projects\osrm\stxxl,1000,wincall > test/stxxl.txt
+  - set OSRM_TIMEOUT=200
+  - set STXXLCFG=stxxl.txt
+  - if "%Configuration%"=="Debug" (cucumber -p verify features/testbot) else (cucumber -p verify)
 
 artifacts:
   - path: osrm_Debug.zip
