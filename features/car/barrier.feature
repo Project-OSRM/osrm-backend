@@ -10,7 +10,6 @@ Feature: Car - Barriers
             |                | x     |
             | bollard        |       |
             | gate           | x     |
-            | lift_gate      | x     |
             | cattle_grid    | x     |
             | border_control | x     |
             | toll_booth     | x     |
