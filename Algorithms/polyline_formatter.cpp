@@ -54,3 +54,26 @@ PolylineFormatter::printUnencodedString(const std::vector<SegmentInformation> &p
     }
     return json_geometry_array;
 }
+
+std::string PolylineFormatter::printEncodedStr(const std::vector<SegmentInformation> &polyline) const
+{
+    return PolylineCompressor().get_encoded_string(polyline);
+}
+
+std::vector<std::string> PolylineFormatter::printUnencodedStr(const std::vector<SegmentInformation> &polyline) const
+{
+    std::vector<std::string> output;
+    for (const auto &segment : polyline)
+    {
+        if (segment.necessary)
+        {
+            std::string tmp, res;
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lat, tmp);
+            res += (tmp + ",");
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lon, tmp);
+            res += tmp;
+            output.push_back(res);
+        }
+    }
+    return output;
+}

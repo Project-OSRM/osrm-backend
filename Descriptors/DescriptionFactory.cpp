@@ -108,14 +108,16 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.travel_mode);
 }
 
-JSON::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
+std::string DescriptionFactory::AppendEncodedPolylineStringEncoded()
 {
-    if (return_encoded)
-    {
-        return PolylineFormatter().printEncodedString(path_description);
-    }
-    return PolylineFormatter().printUnencodedString(path_description);
+    return PolylineFormatter().printEncodedStr(path_description);
 }
+
+std::vector<std::string> DescriptionFactory::AppendEncodedPolylineStringUnencoded()
+{
+    return PolylineFormatter().printUnencodedStr(path_description);
+}
+
 
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)
 {

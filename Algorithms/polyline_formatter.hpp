@@ -37,6 +37,16 @@ struct SegmentInformation;
 
 struct PolylineFormatter
 {
+  private:
+    void encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output) const;
+
+    void encodeNumber(int number_to_encode, std::string &output) const;
+
+  public:
+  	std::string printEncodedStr(const std::vector<SegmentInformation> &polyline) const;
+
+  	std::vector<std::string> printUnencodedStr(const std::vector<SegmentInformation> &polyline) const;
+
     JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
 
     JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
