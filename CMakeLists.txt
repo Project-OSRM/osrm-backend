@@ -248,6 +248,11 @@ target_link_libraries(OSRM ${STXXL_LIBRARY})
 target_link_libraries(osrm-extract ${STXXL_LIBRARY})
 target_link_libraries(osrm-prepare ${STXXL_LIBRARY})
 
+if(MINGW)
+  # STXXL needs OpenMP library
+  target_link_libraries(osrm-extract gomp)
+endif()
+
 find_package( OSMPBF REQUIRED )
 include_directories(${OSMPBF_INCLUDE_DIR})
 target_link_libraries(osrm-extract ${OSMPBF_LIBRARY})

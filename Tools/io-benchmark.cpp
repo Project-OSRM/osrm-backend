@@ -70,20 +70,21 @@ void RunStatistics(std::vector<double> &timings_vector, Statistics &stats)
 
 int main(int argc, char *argv[])
 {
-    LogPolicy::GetInstance().Unmute();
-    boost::filesystem::path test_path;
-    try
-    {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
 #ifdef __FreeBSD__
         SimpleLogger().Write() << "Not supported on FreeBSD";
         return 0;
 #endif
-#ifdef WIN32
+#ifdef _WIN32
         SimpleLogger().Write() << "Not supported on Windows";
         return 0;
 #else
+
+    LogPolicy::GetInstance().Unmute();
+    boost::filesystem::path test_path;
+    try
+    {
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
         if (1 == argc)
         {
