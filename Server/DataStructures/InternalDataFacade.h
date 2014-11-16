@@ -41,10 +41,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/RangeTable.h"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
-#include "../../Util/ProgramOptions.h"
 #include "../../Util/simple_logger.hpp"
 
 #include <osrm/Coordinate.h>
+#include <osrm/ServerPaths.h>
 
 template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<EdgeDataT>
 {
@@ -388,6 +388,24 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
         return m_static_rtree->FindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node, zoom_level);
+    }
+
+    bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node,
+                                            const unsigned zoom_level) final
+    {
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
+                                                              resulting_phantom_node_vector,
+                                                              zoom_level,
+                                                              1);
+        if (result)
+        {
+            BOOST_ASSERT(!resulting_phantom_node_vector.empty());
+            resulting_phantom_node = resulting_phantom_node_vector.front();
+        }
+        return result;
     }
 
     bool

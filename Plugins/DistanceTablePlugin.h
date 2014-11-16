@@ -64,55 +64,35 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
-        // check number of parameters
-        if (2 > route_parameters.coordinates.size())
+        if (!check_all_coordinates(route_parameters.coordinates))
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
 
-        RawRouteData raw_route;
-        raw_route.check_sum = facade->GetCheckSum();
-
-        if (std::any_of(begin(route_parameters.coordinates),
-                        end(route_parameters.coordinates),
-                        [&](FixedPointCoordinate coordinate)
-                        {
-                return !coordinate.isValid();
-            }))
-        {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
-        }
-
-        for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
-        {
-            raw_route.raw_via_node_coordinates.emplace_back(std::move(coordinate));
-        }
-
-        const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
+        const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
         unsigned max_locations =
-            std::min(100u, static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
+            std::min(100u, static_cast<unsigned>(route_parameters.coordinates.size()));
         PhantomNodeArray phantom_node_vector(max_locations);
-        for (unsigned i = 0; i < max_locations; ++i)
+        for (const auto i : osrm::irange(1u, max_locations))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
             {
                 PhantomNode current_phantom_node;
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
-                if (current_phantom_node.isValid(facade->GetNumberOfNodes()))
+                if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
                     phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
                     continue;
                 }
             }
-            facade->IncrementalFindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
+            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
                                                             phantom_node_vector[i],
                                                             route_parameters.zoom_level,
                                                             1);
 
-            BOOST_ASSERT(phantom_node_vector[i].front().isValid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
 
         // TIMER_START(distance_table);

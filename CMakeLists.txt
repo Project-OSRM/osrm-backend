@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.8)
 
-if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
 Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
 This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
@@ -41,7 +41,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.c
   VERBATIM)
 
 add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp)
-add_custom_target(tests DEPENDS datastructure-tests)
+add_custom_target(tests DEPENDS datastructure-tests algorithm-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
@@ -54,6 +54,7 @@ file(GLOB ExtractorGlob Extractor/*.cpp)
 file(GLOB ImporterGlob DataStructures/Import*.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT Util/simple_logger.cpp)
+add_library(PHANTOMNODE OBJECT DataStructures/phantom_node.cpp)
 
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
@@ -71,6 +72,7 @@ file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB HttpGlob Server/Http/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
 file(GLOB DataStructureTestsGlob UnitTests/DataStructures/*.cpp DataStructures/HilbertValue.cpp)
+file(GLOB AlgorithmTestsGlob UnitTests/Algorithms/*.cpp)
 
 set(
   OSRMSources
@@ -84,17 +86,18 @@ set(
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(FINGERPRINT OBJECT Util/FingerPrint.cpp)
 add_library(GITDESCRIPTION OBJECT Util/GitDescription.cpp)
-add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER>)
+add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 
 add_executable(osrm-routed routed.cpp ${ServerGlob})
 add_executable(osrm-datastore datastore.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER>)
 
 # Unit tests
-add_executable(datastructure-tests EXCLUDE_FROM_ALL UnitTests/datastructure_tests.cpp ${DataStructureTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER>)
+add_executable(datastructure-tests EXCLUDE_FROM_ALL UnitTests/datastructure_tests.cpp ${DataStructureTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
+add_executable(algorithm-tests EXCLUDE_FROM_ALL UnitTests/algorithm_tests.cpp ${AlgorithmTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 
 # Benchmarks
-add_executable(rtree-bench EXCLUDE_FROM_ALL Benchmarks/StaticRTreeBench.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER>)
+add_executable(rtree-bench EXCLUDE_FROM_ALL Benchmarks/StaticRTreeBench.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -194,6 +197,7 @@ target_link_libraries(osrm-prepare ${Boost_LIBRARIES})
 target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES})
 target_link_libraries(datastructure-tests ${Boost_LIBRARIES})
+target_link_libraries(algorithm-tests ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
 target_link_libraries(rtree-bench ${Boost_LIBRARIES})
 
 find_package(Threads REQUIRED)
@@ -202,6 +206,7 @@ target_link_libraries(osrm-datastore ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(osrm-prepare ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(OSRM ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(datastructure-tests ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(algorithm-tests ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(rtree-bench ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(TBB REQUIRED)
@@ -213,6 +218,7 @@ target_link_libraries(osrm-extract ${TBB_LIBRARIES})
 target_link_libraries(osrm-prepare ${TBB_LIBRARIES})
 target_link_libraries(osrm-routed ${TBB_LIBRARIES})
 target_link_libraries(datastructure-tests ${TBB_LIBRARIES})
+target_link_libraries(algorithm-tests ${TBB_LIBRARIES})
 target_link_libraries(rtree-bench ${TBB_LIBRARIES})
 include_directories(${TBB_INCLUDE_DIR})
 
@@ -241,6 +247,11 @@ include_directories(${STXXL_INCLUDE_DIR})
 target_link_libraries(OSRM ${STXXL_LIBRARY})
 target_link_libraries(osrm-extract ${STXXL_LIBRARY})
 target_link_libraries(osrm-prepare ${STXXL_LIBRARY})
+
+if(MINGW)
+  # STXXL needs OpenMP library
+  target_link_libraries(osrm-extract gomp)
+endif()
 
 find_package( OSMPBF REQUIRED )
 include_directories(${OSMPBF_INCLUDE_DIR})

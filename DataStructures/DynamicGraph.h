@@ -100,7 +100,7 @@ template <typename EdgeDataT> class DynamicGraph
             position += node_list[node].edges;
         }
         node_list.back().firstEdge = position;
-        edge_list.reserve((std::size_t)edge_list.size() * 1.1);
+        edge_list.reserve(static_cast<std::size_t>(edge_list.size() * 1.1));
         edge_list.resize(position);
         edge = 0;
         for (const auto node : osrm::irange(0u, number_of_nodes))
