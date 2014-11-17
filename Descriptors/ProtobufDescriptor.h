@@ -40,26 +40,18 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
     typedef BaseDescriptor<DataFacadeT> super;
 
     inline void AddInstructionToRoute(protobufResponse::Route &route,
-                                      const std::string &id,
-                                      const std::string &street_name,
-                                      const int &length,
-                                      const unsigned &position,
-                                      const int &time,
-                                      const std::string &length_string,
-                                      const std::string &bearing,
-                                      const int &azimuth,
-                                      const TravelMode travel_mode)
+                                      const typename super::Instruction &i)
     {
         protobufResponse::RouteInstructions route_instructions;
-        route_instructions.set_instruction_id(id);
-        route_instructions.set_street_name(street_name);
-        route_instructions.set_length(length);
-        route_instructions.set_position(position);
-        route_instructions.set_time(time);
-        route_instructions.set_length_str(length_string);
-        route_instructions.set_earth_direction(bearing);
-        route_instructions.set_azimuth(azimuth);
-        route_instructions.set_travel_mode(travel_mode);
+        route_instructions.set_instruction_id(i.instruction_id);
+        route_instructions.set_street_name(i.street_name);
+        route_instructions.set_length(i.length);
+        route_instructions.set_position(i.position);
+        route_instructions.set_time(i.time);
+        route_instructions.set_length_str(i.length_string);
+        route_instructions.set_earth_direction(i.bearing);
+        route_instructions.set_azimuth(i.azimuth);
+        route_instructions.set_travel_mode(i.travel_mode);
         route.add_route_instructions()->CopyFrom(route_instructions);
 
     }
@@ -78,9 +70,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
 
         for (const auto &i : instructions)
         {
-            AddInstructionToRoute(route, i.instruction_id, i.street_name, i.length,
-                                  i.position, i.time, i.length_string, i.bearing,
-                                  i.azimuth, i.travel_mode);
+            AddInstructionToRoute(route, i);
         }
     }
 
