@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/parallel_sort.h>
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined (_WIN32)
 #include <gdal.h>
 #include <ogrsf_frmts.h>
 #else
