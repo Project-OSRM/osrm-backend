@@ -31,29 +31,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 
 #include "../Algorithms/ObjectToBase64.h"
-#include "../DataStructures/QueryEdge.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
+#include "../Descriptors/protobuf_descriptor.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/StringUtil.h"
-#include "../Util/TimingUtil.h"
 
 #include <cstdlib>
 
 #include <algorithm>
 #include <memory>
-#include <unordered_map>
 #include <string>
 #include <vector>
 
 template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 {
   private:
-    std::unordered_map<std::string, unsigned> descriptor_table;
+    DescriptorTable descriptor_table;
+    std::string descriptor_string;
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
+    DataFacadeT *facade;
 
   public:
     explicit ViaRoutePlugin(DataFacadeT *facade) : descriptor_string("viaroute"), facade(facade)
@@ -62,7 +62,8 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         descriptor_table.emplace("json", 0);
         descriptor_table.emplace("gpx", 1);
-        // descriptor_table.emplace("geojson", 2);
+        descriptor_table.emplace("pb", 2);
+        // descriptor_table.emplace("geojson", 3);
     }
 
     virtual ~ViaRoutePlugin() {}
@@ -71,59 +72,44 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
-        // check number of parameters
-        if (2 > route_parameters.coordinates.size() ||
-            std::any_of(begin(route_parameters.coordinates),
-                        end(route_parameters.coordinates),
-                        [&](FixedPointCoordinate coordinate)
-                        {
-                return !coordinate.isValid();
-            }))
+        if (!check_all_coordinates(route_parameters.coordinates))
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
+        reply.status = http::Reply::ok;
 
-        RawRouteData raw_route;
-        raw_route.check_sum = facade->GetCheckSum();
-        for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
-        {
-            raw_route.raw_via_node_coordinates.emplace_back(coordinate);
-        }
+        std::vector<PhantomNode> phantom_node_vector(route_parameters.coordinates.size());
+        const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
-        std::vector<PhantomNode> phantom_node_vector(raw_route.raw_via_node_coordinates.size());
-        const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
-
-        for (unsigned i = 0; i < raw_route.raw_via_node_coordinates.size(); ++i)
+        for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
             {
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
-                if (phantom_node_vector[i].isValid(facade->GetNumberOfNodes()))
+                if (phantom_node_vector[i].is_valid(facade->GetNumberOfNodes()))
                 {
                     continue;
                 }
             }
-            facade->FindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
-                                                 phantom_node_vector[i],
-                                                 route_parameters.zoom_level);
+            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
+                                                            phantom_node_vector[i],
+                                                            route_parameters.zoom_level);
         }
 
-        PhantomNodes current_phantom_node_pair;
-        for (unsigned i = 0; i < phantom_node_vector.size() - 1; ++i)
+        RawRouteData raw_route;
+        auto build_phantom_pairs = [&raw_route] (const PhantomNode &first, const PhantomNode &second)
         {
-            current_phantom_node_pair.source_phantom = phantom_node_vector[i];
-            current_phantom_node_pair.target_phantom = phantom_node_vector[i + 1];
-            raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
-        }
+            raw_route.segment_end_coordinates.emplace_back(PhantomNodes{first, second});
+        };
+        osrm::for_each_pair(phantom_node_vector, build_phantom_pairs);
 
-        const bool is_alternate_requested = route_parameters.alternate_route;
-        const bool is_only_one_segment = (1 == raw_route.segment_end_coordinates.size());
-        if (is_alternate_requested && is_only_one_segment)
+        if (route_parameters.alternate_route &&
+            1 == raw_route.segment_end_coordinates.size())
         {
-            search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
-                                                raw_route);
+            search_engine_ptr->alternative_path(
+                raw_route.segment_end_coordinates.front(), raw_route);
         }
         else
         {
@@ -135,42 +121,27 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         {
             SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
         }
-        reply.status = http::Reply::ok;
 
-        DescriptorConfig descriptor_config;
-
-        auto iter = descriptor_table.find(route_parameters.output_format);
-        unsigned descriptor_type = (iter != descriptor_table.end() ? iter->second : 0);
-
-        descriptor_config.zoom_level = route_parameters.zoom_level;
-        descriptor_config.instructions = route_parameters.print_instructions;
-        descriptor_config.geometry = route_parameters.geometry;
-        descriptor_config.encode_geometry = route_parameters.compression;
-
-        std::shared_ptr<BaseDescriptor<DataFacadeT>> descriptor;
-        switch (descriptor_type)
+        std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+        switch (descriptor_table.get_id(route_parameters.output_format))
         {
-        // case 0:
-        //     descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
-        //     break;
         case 1:
-            descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>(facade);
+            descriptor = osrm::make_unique<GPXDescriptor<DataFacadeT>>(facade);
             break;
-        // case 2:
-        //      descriptor = std::make_shared<GEOJSONDescriptor<DataFacadeT>>();
+        case 2:
+            descriptor = osrm::make_unique<PBFDescriptor<DataFacadeT>>(facade);
+            break;
+        // case 3:
+        //      descriptor = osrm::make_unique<GEOJSONDescriptor<DataFacadeT>>();
         //      break;
         default:
-            descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>(facade);
+            descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
             break;
         }
 
-        descriptor->SetConfig(descriptor_config);
+        descriptor->SetConfig(route_parameters);
         descriptor->Run(raw_route, reply);
     }
-
-  private:
-    std::string descriptor_string;
-    DataFacadeT *facade;
 };
 
 #endif // VIA_ROUTE_PLUGIN_H

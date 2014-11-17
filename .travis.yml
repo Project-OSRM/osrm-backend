@@ -26,6 +26,7 @@ before_script:
 script:
  - make -j 2
  - make -j 2 tests
+ - ./datastructure-tests
  - cd ..
  - cucumber -p verify
 after_script:

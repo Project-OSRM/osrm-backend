@@ -30,13 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/Coordinate.h>
 
 #include "../typedefs.h"
-#include "../Algorithms/PolylineCompressor.h"
-#include "../DataStructures/PhantomNodes.h"
+#include "../Algorithms/polyline_formatter.hpp"
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 
-DescriptionFactory::DescriptionFactory() : entireLength(0) { via_indices.push_back(0); }
+DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }
 
 std::vector<unsigned> const &DescriptionFactory::GetViaIndices() const { return via_indices; }
 
@@ -109,14 +108,16 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.travel_mode);
 }
 
-JSON::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
+std::string DescriptionFactory::AppendEncodedPolylineStringEncoded()
 {
-    if (return_encoded)
-    {
-        return polyline_compressor.printEncodedString(path_description);
-    }
-    return polyline_compressor.printUnencodedString(path_description);
+    return PolylineFormatter().printEncodedStr(path_description);
 }
+
+std::vector<std::string> DescriptionFactory::AppendEncodedPolylineStringUnencoded()
+{
+    return PolylineFormatter().printUnencodedStr(path_description);
+}
+
 
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)
 {

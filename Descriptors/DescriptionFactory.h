@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DESCRIPTIONFACTORY_H_
 
 #include "../Algorithms/DouglasPeucker.h"
-#include "../Algorithms/PolylineCompressor.h"
-#include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/phantom_node.hpp"
+#include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../typedefs.h"
@@ -47,13 +47,14 @@ struct PathData;
 class DescriptionFactory
 {
     DouglasPeucker polyline_generalizer;
-    PolylineCompressor polyline_compressor;
     PhantomNode start_phantom, target_phantom;
 
     double DegreeToRadian(const double degree) const;
     double RadianToDegree(const double degree) const;
 
     std::vector<unsigned> via_indices;
+
+    double entire_length;
 
   public:
     struct RouteSummary
@@ -72,8 +73,6 @@ class DescriptionFactory
         }
     } summary;
 
-    double entireLength;
-
     // I know, declaring this public is considered bad. I'm lazy
     std::vector<SegmentInformation> path_description;
     DescriptionFactory();
@@ -83,8 +82,14 @@ class DescriptionFactory
     void SetEndSegment(const PhantomNode &start_phantom,
                        const bool traversed_in_reverse,
                        const bool is_via_location = false);
-    JSON::Value AppendGeometryString(const bool return_encoded);
     std::vector<unsigned> const &GetViaIndices() const;
+
+    double get_entire_length() const
+    {
+        return entire_length;
+    }
+    std::string AppendEncodedPolylineStringEncoded();
+    std::vector<std::string> AppendEncodedPolylineStringUnencoded();
 
     template <class DataFacadeT> void Run(const DataFacadeT *facade, const unsigned zoomLevel)
     {
@@ -152,7 +157,7 @@ class DescriptionFactory
 
         for (unsigned i = 1; i < path_description.size(); ++i)
         {
-            entireLength += path_description[i].length;
+            entire_length += path_description[i].length;
             segment_length += path_description[i].length;
             segment_duration += path_description[i].duration;
             path_description[segment_start_index].length = segment_length;
@@ -190,7 +195,7 @@ class DescriptionFactory
         }
 
         // Generalize poly line
-        polyline_generalizer.Run(path_description, zoomLevel);
+        polyline_generalizer.Run(path_description.begin(), path_description.end(), zoomLevel);
 
         // fix what needs to be fixed else
         unsigned necessary_pieces = 0; // a running index that counts the necessary pieces

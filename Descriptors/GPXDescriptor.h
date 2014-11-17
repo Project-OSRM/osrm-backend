@@ -33,9 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<DataFacadeT>
 {
   private:
+    typedef BaseDescriptor<DataFacadeT> super;
     DescriptorConfig config;
     FixedPointCoordinate current;
-    DataFacadeT *facade;
 
     void AddRoutePoint(const FixedPointCoordinate &coordinate, std::vector<char> &output)
     {
@@ -57,9 +57,9 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
     }
 
   public:
-    explicit GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
+    explicit GPXDescriptor(DataFacadeT *facade) : super(facade) {}
 
-    void SetConfig(const DescriptorConfig &c) final { config = c; }
+    void SetConfig(const DescriptorConfig &c) { config = c; }
 
     // TODO: reorder parameters
     void Run(const RawRouteData &raw_route, http::Reply &reply) final
@@ -87,7 +87,7 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
                 for (const PathData &path_data : path_data_vector)
                 {
                     const FixedPointCoordinate current_coordinate =
-                        facade->GetCoordinateOfNode(path_data.node);
+                        super::facade->GetCoordinateOfNode(path_data.node);
                     AddRoutePoint(current_coordinate, reply.content);
                 }
             }

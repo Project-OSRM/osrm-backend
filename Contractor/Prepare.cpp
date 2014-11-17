@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Contractor.h"
 
 #include "../Algorithms/IteratorBasedCRC32.h"
-#include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/Range.h"
 #include "../DataStructures/StaticRTree.h"
@@ -44,6 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
+
+#include "../Util/GraphLoader.h"
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>

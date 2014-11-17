@@ -56,7 +56,7 @@ struct String
 struct Number
 {
     Number() {}
-    Number(double value) : value(value) {}
+    Number(double value) : value(static_cast<double>(value)) {}
     double value;
 };
 

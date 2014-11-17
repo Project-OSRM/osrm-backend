@@ -44,7 +44,7 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().isValid())
+        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;

@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 #include "../DataStructures/TravelMode.h"
-#include "../Util/simple_logger.hpp"
 #include "../typedefs.h"
 
+#include <iostream>
 #include <vector>
 
 struct PhantomNode
@@ -41,34 +41,9 @@ struct PhantomNode
                 int forward_weight, int reverse_weight, int forward_offset, int reverse_offset,
                 unsigned packed_geometry_id, FixedPointCoordinate &location,
                 unsigned short fwd_segment_position,
-                TravelMode forward_travel_mode, TravelMode backward_travel_mode) :
-        forward_node_id(forward_node_id),
-        reverse_node_id(reverse_node_id),
-        name_id(name_id),
-        forward_weight(forward_weight),
-        reverse_weight(reverse_weight),
-        forward_offset(forward_offset),
-        reverse_offset(reverse_offset),
-        packed_geometry_id(packed_geometry_id),
-        location(location),
-        fwd_segment_position(fwd_segment_position),
-        forward_travel_mode(forward_travel_mode),
-        backward_travel_mode(backward_travel_mode)
-    { }
+                TravelMode forward_travel_mode, TravelMode backward_travel_mode);
 
-    PhantomNode() :
-        forward_node_id(SPECIAL_NODEID),
-        reverse_node_id(SPECIAL_NODEID),
-        name_id(std::numeric_limits<unsigned>::max()),
-        forward_weight(INVALID_EDGE_WEIGHT),
-        reverse_weight(INVALID_EDGE_WEIGHT),
-        forward_offset(0),
-        reverse_offset(0),
-        packed_geometry_id(SPECIAL_EDGEID),
-        fwd_segment_position(0),
-        forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
-        backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
-    { }
+    PhantomNode();
 
     NodeID forward_node_id;
     NodeID reverse_node_id;
@@ -83,63 +58,19 @@ struct PhantomNode
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
 
-    int GetForwardWeightPlusOffset() const
-    {
-        if (SPECIAL_NODEID == forward_node_id)
-        {
-            return 0;
-        }
-        const int result = (forward_offset + forward_weight);
-        return result;
-    }
+    int GetForwardWeightPlusOffset() const;
 
-    int GetReverseWeightPlusOffset() const
-    {
-        if (SPECIAL_NODEID == reverse_node_id)
-        {
-            return 0;
-        }
-        const int result = (reverse_offset + reverse_weight);
-        return result;
-    }
+    int GetReverseWeightPlusOffset() const;
 
-    bool isBidirected() const
-    {
-        return (forward_node_id != SPECIAL_NODEID) &&
-               (reverse_node_id != SPECIAL_NODEID);
-    }
+    bool is_bidirected() const;
 
-    bool IsCompressed() const
-    {
-        return (forward_offset != 0) || (reverse_offset != 0);
-    }
+    bool is_compressed() const;
 
-    bool isValid(const unsigned numberOfNodes) const
-    {
-        return
-            location.isValid() &&
-            (
-                (forward_node_id < numberOfNodes) ||
-                (reverse_node_id < numberOfNodes)
-            ) &&
-            (
-                (forward_weight != INVALID_EDGE_WEIGHT) ||
-                (reverse_weight != INVALID_EDGE_WEIGHT)
-            ) &&
-            (name_id != std::numeric_limits<unsigned>::max()
-        );
-    }
+    bool is_valid(const unsigned numberOfNodes) const;
 
-    bool isValid() const
-    {
-        return location.isValid() &&
-               (name_id != std::numeric_limits<unsigned>::max());
-    }
+    bool is_valid() const;
 
-    bool operator==(const PhantomNode & other) const
-    {
-        return location == other.location;
-    }
+    bool operator==(const PhantomNode & other) const;
 };
 
 using PhantomNodeArray = std::vector<std::vector<PhantomNode>>;

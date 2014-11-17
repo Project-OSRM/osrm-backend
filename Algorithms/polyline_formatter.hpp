@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef POLYLINECOMPRESSOR_H_
-#define POLYLINECOMPRESSOR_H_
+#ifndef POLYLINE_FORMATTER_H_
+#define POLYLINE_FORMATTER_H_
 
 struct SegmentInformation;
 
@@ -35,7 +35,7 @@ struct SegmentInformation;
 #include <string>
 #include <vector>
 
-class PolylineCompressor
+struct PolylineFormatter
 {
   private:
     void encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output) const;
@@ -43,9 +43,13 @@ class PolylineCompressor
     void encodeNumber(int number_to_encode, std::string &output) const;
 
   public:
+  	std::string printEncodedStr(const std::vector<SegmentInformation> &polyline) const;
+
+  	std::vector<std::string> printUnencodedStr(const std::vector<SegmentInformation> &polyline) const;
+
     JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
 
     JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
 };
 
-#endif /* POLYLINECOMPRESSOR_H_ */
+#endif /* POLYLINE_FORMATTER_H_ */

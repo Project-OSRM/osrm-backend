@@ -123,7 +123,7 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
             m_geometry_compressor.GetBucketReference(e2);
         BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
         BOOST_ASSERT(0 != forward_geometry.size());
-        const unsigned geometry_size = forward_geometry.size();
+        const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
         BOOST_ASSERT(geometry_size > 1);
 
         // reconstruct bidirectional edge with individual weights and put each into the NN index

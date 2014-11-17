@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPLUGIN_H_
 #define BASEPLUGIN_H_
 
-#include "../Util/StringUtil.h"
-
 #include <osrm/Coordinate.h>
 #include <osrm/Reply.h>
 #include <osrm/RouteParameters.h>
@@ -45,6 +43,20 @@ class BasePlugin
     virtual ~BasePlugin() {}
     virtual const std::string GetDescriptor() const = 0;
     virtual void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply) = 0;
+    virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> coordinates) const final
+    {
+        if (2 > coordinates.size() ||
+            std::any_of(std::begin(coordinates),
+                        std::end(coordinates),
+                        [](const FixedPointCoordinate &coordinate)
+                        {
+                return !coordinate.is_valid();
+            }))
+        {
+            return false;
+        }
+        return true;
+    }
 };
 
 #endif /* BASEPLUGIN_H_ */

@@ -288,7 +288,7 @@ template <class DataFacadeT> class ShortestPathRouting final : public BasicRouti
             BOOST_ASSERT(packed_legs2[current_leg].size() == temporary_packed_leg2.size());
 
             if (!allow_u_turn && (packed_legs1[current_leg].back() == packed_legs2[current_leg].back()) &&
-                phantom_node_pair.target_phantom.isBidirected())
+                phantom_node_pair.target_phantom.is_bidirected())
             {
                 const NodeID last_node_id = packed_legs2[current_leg].back();
                 search_from_1st_node &=

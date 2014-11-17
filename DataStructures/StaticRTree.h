@@ -30,8 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
-#include "PhantomNodes.h"
+#include "phantom_node.hpp"
 #include "QueryNode.h"
+#include "Rectangle.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
@@ -70,190 +71,6 @@ template <class EdgeDataT,
 class StaticRTree
 {
   public:
-    struct RectangleInt2D
-    {
-        RectangleInt2D() : min_lon(INT_MAX), max_lon(INT_MIN), min_lat(INT_MAX), max_lat(INT_MIN) {}
-
-        int32_t min_lon, max_lon;
-        int32_t min_lat, max_lat;
-
-        inline void InitializeMBRectangle(const std::array<EdgeDataT, LEAF_NODE_SIZE> &objects,
-                                          const uint32_t element_count,
-                                          const std::vector<NodeInfo> &coordinate_list)
-        {
-            for (uint32_t i = 0; i < element_count; ++i)
-            {
-                min_lon = std::min(min_lon,
-                                   std::min(coordinate_list.at(objects[i].u).lon,
-                                            coordinate_list.at(objects[i].v).lon));
-                max_lon = std::max(max_lon,
-                                   std::max(coordinate_list.at(objects[i].u).lon,
-                                            coordinate_list.at(objects[i].v).lon));
-
-                min_lat = std::min(min_lat,
-                                   std::min(coordinate_list.at(objects[i].u).lat,
-                                            coordinate_list.at(objects[i].v).lat));
-                max_lat = std::max(max_lat,
-                                   std::max(coordinate_list.at(objects[i].u).lat,
-                                            coordinate_list.at(objects[i].v).lat));
-            }
-            BOOST_ASSERT(min_lat != std::numeric_limits<int>::min());
-            BOOST_ASSERT(min_lon != std::numeric_limits<int>::min());
-            BOOST_ASSERT(max_lat != std::numeric_limits<int>::min());
-            BOOST_ASSERT(max_lon != std::numeric_limits<int>::min());
-        }
-
-        inline void MergeBoundingBoxes(const RectangleInt2D &other)
-        {
-            min_lon = std::min(min_lon, other.min_lon);
-            max_lon = std::max(max_lon, other.max_lon);
-            min_lat = std::min(min_lat, other.min_lat);
-            max_lat = std::max(max_lat, other.max_lat);
-            BOOST_ASSERT(min_lat != std::numeric_limits<int>::min());
-            BOOST_ASSERT(min_lon != std::numeric_limits<int>::min());
-            BOOST_ASSERT(max_lat != std::numeric_limits<int>::min());
-            BOOST_ASSERT(max_lon != std::numeric_limits<int>::min());
-        }
-
-        inline FixedPointCoordinate Centroid() const
-        {
-            FixedPointCoordinate centroid;
-            // The coordinates of the midpoints are given by:
-            // x = (x1 + x2) /2 and y = (y1 + y2) /2.
-            centroid.lon = (min_lon + max_lon) / 2;
-            centroid.lat = (min_lat + max_lat) / 2;
-            return centroid;
-        }
-
-        inline bool Intersects(const RectangleInt2D &other) const
-        {
-            FixedPointCoordinate upper_left(other.max_lat, other.min_lon);
-            FixedPointCoordinate upper_right(other.max_lat, other.max_lon);
-            FixedPointCoordinate lower_right(other.min_lat, other.max_lon);
-            FixedPointCoordinate lower_left(other.min_lat, other.min_lon);
-
-            return (Contains(upper_left) || Contains(upper_right) || Contains(lower_right) ||
-                    Contains(lower_left));
-        }
-
-        inline float GetMinDist(const FixedPointCoordinate &location) const
-        {
-            const bool is_contained = Contains(location);
-            if (is_contained)
-            {
-                return 0.;
-            }
-
-            enum Direction
-            {
-                INVALID    = 0,
-                NORTH      = 1,
-                SOUTH      = 2,
-                EAST       = 4,
-                NORTH_EAST = 5,
-                SOUTH_EAST = 6,
-                WEST       = 8,
-                NORTH_WEST = 9,
-                SOUTH_WEST = 10
-            };
-
-            Direction d = INVALID;
-            if (location.lat > max_lat)
-                d = (Direction) (d | NORTH);
-            else if (location.lat < min_lat)
-                d = (Direction) (d | SOUTH);
-            if (location.lon > max_lon)
-                d = (Direction) (d | EAST);
-            else if (location.lon < min_lon)
-                d = (Direction) (d | WEST);
-
-            BOOST_ASSERT(d != INVALID);
-
-            float min_dist = std::numeric_limits<float>::max();
-            switch (d)
-            {
-                case NORTH:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, location.lon));
-                    break;
-                case SOUTH:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, location.lon));
-                    break;
-                case WEST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, min_lon));
-                    break;
-                case EAST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, max_lon));
-                    break;
-                case NORTH_EAST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, max_lon));
-                    break;
-                case NORTH_WEST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, min_lon));
-                    break;
-                case SOUTH_EAST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, max_lon));
-                    break;
-                case SOUTH_WEST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, min_lon));
-                    break;
-                default:
-                    break;
-            }
-
-            BOOST_ASSERT(min_dist != std::numeric_limits<float>::max());
-
-            return min_dist;
-        }
-
-        inline float GetMinMaxDist(const FixedPointCoordinate &location) const
-        {
-            float min_max_dist = std::numeric_limits<float>::max();
-            // Get minmax distance to each of the four sides
-            const FixedPointCoordinate upper_left(max_lat, min_lon);
-            const FixedPointCoordinate upper_right(max_lat, max_lon);
-            const FixedPointCoordinate lower_right(min_lat, max_lon);
-            const FixedPointCoordinate lower_left(min_lat, min_lon);
-
-            min_max_dist = std::min(
-                min_max_dist,
-                std::max(
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left),
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right)));
-
-            min_max_dist = std::min(
-                min_max_dist,
-                std::max(
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right),
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right)));
-
-            min_max_dist = std::min(
-                min_max_dist,
-                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right),
-                         FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left)));
-
-            min_max_dist = std::min(
-                min_max_dist,
-                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left),
-                         FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left)));
-            return min_max_dist;
-        }
-
-        inline bool Contains(const FixedPointCoordinate &location) const
-        {
-            const bool lats_contained = (location.lat >= min_lat) && (location.lat <= max_lat);
-            const bool lons_contained = (location.lon >= min_lon) && (location.lon <= max_lon);
-            return lats_contained && lons_contained;
-        }
-
-        inline friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
-        {
-            out << rect.min_lat / COORDINATE_PRECISION << "," << rect.min_lon / COORDINATE_PRECISION
-                << " " << rect.max_lat / COORDINATE_PRECISION << ","
-                << rect.max_lon / COORDINATE_PRECISION;
-            return out;
-        }
-    };
-
     using RectangleT = RectangleInt2D;
 
     struct TreeNode
@@ -412,7 +229,7 @@ class StaticRTree
             }
 
             // generate tree node that resemble the objects in leaf and store it for next level
-            current_node.minimum_bounding_rectangle.InitializeMBRectangle(
+            InitializeMBRectangle(current_node.minimum_bounding_rectangle,
                 current_leaf.objects, current_leaf.object_count, coordinate_list);
             current_node.child_is_on_disk = true;
             current_node.children[0] = tree_nodes_in_level.size();
@@ -640,7 +457,7 @@ class StaticRTree
                 }
             }
         }
-        return result_coordinate.isValid();
+        return result_coordinate.is_valid();
     }
 
     // implementation of the Hjaltason/Samet query [3], a BFS traversal of the tree
@@ -655,13 +472,13 @@ class StaticRTree
         // SimpleLogger().Write(logDEBUG) << "searching for " << number_of_results << " results";
         std::vector<float> min_found_distances(number_of_results, std::numeric_limits<float>::max());
 
-        unsigned dequeues = 0;
-        unsigned inspected_mbrs = 0;
-        unsigned loaded_leafs = 0;
+        // unsigned dequeues = 0;
+        // unsigned inspected_mbrs = 0;
+        // unsigned loaded_leafs = 0;
         unsigned inspected_segments = 0;
-        unsigned pruned_elements = 0;
-        unsigned ignored_segments = 0;
-        unsigned ignored_mbrs = 0;
+        // unsigned pruned_elements = 0;
+        // unsigned ignored_segments = 0;
+        // unsigned ignored_mbrs = 0;
 
         unsigned number_of_results_found_in_big_cc = 0;
         unsigned number_of_results_found_in_tiny_cc = 0;
@@ -675,13 +492,13 @@ class StaticRTree
             const IncrementalQueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
 
-            ++dequeues;
+            // ++dequeues;
 
             const float current_min_dist = min_found_distances[number_of_results-1];
 
             if (current_query_node.min_dist > current_min_dist)
             {
-                ++pruned_elements;
+                // ++pruned_elements;
                 continue;
             }
 
@@ -690,7 +507,7 @@ class StaticRTree
                 const TreeNode & current_tree_node = current_query_node.node.template get<TreeNode>();
                 if (current_tree_node.child_is_on_disk)
                 {
-                    ++loaded_leafs;
+                    // ++loaded_leafs;
                     // SimpleLogger().Write(logDEBUG) << "loading leaf: " << current_tree_node.children[0] << " w/ mbr [" <<
                     //     current_tree_node.minimum_bounding_rectangle.min_lat/COORDINATE_PRECISION << "," <<
                     //     current_tree_node.minimum_bounding_rectangle.min_lon/COORDINATE_PRECISION << "," <<
@@ -715,16 +532,16 @@ class StaticRTree
                         {
                             traversal_queue.emplace(current_perpendicular_distance, current_edge);
                         }
-                        else
-                        {
-                            ++ignored_segments;
-                        }
+                        // else
+                        // {
+                        //     ++ignored_segments;
+                        // }
                     }
                     // SimpleLogger().Write(logDEBUG) << "added " << current_leaf_node.object_count << " roads into queue of " << traversal_queue.size();
                 }
                 else
                 {
-                    ++inspected_mbrs;
+                    // ++inspected_mbrs;
                     // explore inner node
                     // SimpleLogger().Write(logDEBUG) << "explore inner node w/ mbr [" <<
                     //     current_tree_node.minimum_bounding_rectangle.min_lat/COORDINATE_PRECISION << "," <<
@@ -748,10 +565,10 @@ class StaticRTree
                         {
                             traversal_queue.emplace(lower_bound_to_element, child_tree_node);
                         }
-                        else
-                        {
-                            ++ignored_mbrs;
-                        }
+                        // else
+                        // {
+                        //     ++ignored_mbrs;
+                        // }
                     }
                     // SimpleLogger().Write(logDEBUG) << "added " << current_tree_node.child_count << " mbrs into queue of " << traversal_queue.size();
                 }
@@ -1097,7 +914,7 @@ class StaticRTree
             }
         }
 
-        if (result_phantom_node.location.isValid())
+        if (result_phantom_node.location.is_valid())
         {
             // Hack to fix rounding errors and wandering via nodes.
             FixUpRoundingIssue(input_coordinate, result_phantom_node);
@@ -1105,7 +922,7 @@ class StaticRTree
             // set forward and reverse weights on the phantom node
             SetForwardAndReverseWeightsOnPhantomNode(nearest_edge, result_phantom_node);
         }
-        return result_phantom_node.location.isValid();
+        return result_phantom_node.location.is_valid();
     }
 
   private:
@@ -1198,6 +1015,33 @@ class StaticRTree
                                    const FixedPointCoordinate &d) const
     {
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
+    }
+
+    inline void InitializeMBRectangle(RectangleT& rectangle,
+                                      const std::array<EdgeDataT, LEAF_NODE_SIZE> &objects,
+                                      const uint32_t element_count,
+                                      const std::vector<NodeInfo> &coordinate_list)
+    {
+        for (uint32_t i = 0; i < element_count; ++i)
+        {
+            rectangle.min_lon = std::min(rectangle.min_lon,
+                               std::min(coordinate_list.at(objects[i].u).lon,
+                                        coordinate_list.at(objects[i].v).lon));
+            rectangle.max_lon = std::max(rectangle.max_lon,
+                               std::max(coordinate_list.at(objects[i].u).lon,
+                                        coordinate_list.at(objects[i].v).lon));
+
+            rectangle.min_lat = std::min(rectangle.min_lat,
+                               std::min(coordinate_list.at(objects[i].u).lat,
+                                        coordinate_list.at(objects[i].v).lat));
+            rectangle.max_lat = std::max(rectangle.max_lat,
+                               std::max(coordinate_list.at(objects[i].u).lat,
+                                        coordinate_list.at(objects[i].v).lat));
+        }
+        BOOST_ASSERT(rectangle.min_lat != std::numeric_limits<int>::min());
+        BOOST_ASSERT(rectangle.min_lon != std::numeric_limits<int>::min());
+        BOOST_ASSERT(rectangle.max_lat != std::numeric_limits<int>::min());
+        BOOST_ASSERT(rectangle.max_lon != std::numeric_limits<int>::min());
     }
 };
 
