@@ -32,25 +32,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/coordinate.hpp>
 
-osrm::json::String
-PolylineFormatter::printEncodedString(const std::vector<SegmentInformation> &polyline) const
+std::string PolylineFormatter::printEncodedStr(const std::vector<SegmentInformation> &polyline) const
 {
-    return osrm::json::String(PolylineCompressor().get_encoded_string(polyline));
+    return PolylineCompressor().get_encoded_string(polyline);
 }
 
-osrm::json::Array
-PolylineFormatter::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
+std::vector<std::string> PolylineFormatter::printUnencodedStr(const std::vector<SegmentInformation> &polyline) const
 {
-    osrm::json::Array json_geometry_array;
+    std::vector<std::string> output;
     for (const auto &segment : polyline)
     {
         if (segment.necessary)
         {
-            osrm::json::Array json_coordinate;
-            json_coordinate.values.push_back(segment.location.lat / COORDINATE_PRECISION);
-            json_coordinate.values.push_back(segment.location.lon / COORDINATE_PRECISION);
-            json_geometry_array.values.push_back(json_coordinate);
+            std::string tmp, res;
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lat, tmp);
+            res += (tmp + ",");
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lon, tmp);
+            res += tmp;
+            output.push_back(res);
         }
     }
-    return json_geometry_array;
+    return output;
 }
