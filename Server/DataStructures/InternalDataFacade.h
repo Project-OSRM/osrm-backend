@@ -103,7 +103,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
     {
-        typename ShM<typename QueryGraph::NodeArrayEntry, false>::vector node_list;
+        typename RangeTable<16, false> node_idx;
         typename ShM<typename QueryGraph::EdgeArrayEntry, false>::vector edge_list;
 
         SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
