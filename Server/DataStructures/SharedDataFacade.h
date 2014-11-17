@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
-#include "../../Util/ProgramOptions.h"
 #include "../../Util/make_unique.hpp"
 #include "../../Util/simple_logger.hpp"
 
@@ -276,7 +275,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             SimpleLogger().Write() << "number of geometries: " << m_coordinate_list->size();
             for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
             {
-                if (!GetCoordinateOfNode(i).isValid())
+                if (!GetCoordinateOfNode(i).is_valid())
                 {
                     SimpleLogger().Write() << "coordinate " << i << " not valid";
                 }
@@ -381,6 +380,24 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
         return m_static_rtree->second->FindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node, zoom_level);
+    }
+
+    bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node,
+                                            const unsigned zoom_level) final
+    {
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
+                                                              resulting_phantom_node_vector,
+                                                              zoom_level,
+                                                              1);
+        if (result)
+        {
+            BOOST_ASSERT(!resulting_phantom_node_vector.empty());
+            resulting_phantom_node = resulting_phantom_node_vector.front();
+        }
+        return result;
     }
 
     bool

@@ -4,11 +4,11 @@
 #include "EdgeBasedGraphFactory.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/StaticGraph.h"
-#include "../Util/GraphLoader.h"
+class FingerPrint;
+struct EdgeBasedNode;
+struct lua_State;
 
 #include <boost/filesystem.hpp>
-
-#include <luabind/luabind.hpp>
 
 #include <vector>
 

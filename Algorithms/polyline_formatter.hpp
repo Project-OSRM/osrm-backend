@@ -25,56 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DOUGLASPEUCKER_H_
-#define DOUGLASPEUCKER_H_
-
-#include <stack>
-#include <vector>
-#include <array>
-
-/* This class object computes the bitvector of indicating generalized input
- * points according to the (Ramer-)Douglas-Peucker algorithm.
- *
- * Input is vector of pairs. Each pair consists of the point information and a
- * bit indicating if the points is present in the generalization.
- * Note: points may also be pre-selected*/
+#ifndef POLYLINE_FORMATTER_H_
+#define POLYLINE_FORMATTER_H_
 
 struct SegmentInformation;
 
-static const std::array<int, 19> DOUGLAS_PEUCKER_THRESHOLDS {{
-    512440, // z0
-    256720, // z1
-    122560, // z2
-    56780,  // z3
-    28800,  // z4
-    14400,  // z5
-    7200,   // z6
-    3200,   // z7
-    2400,   // z8
-    1000,   // z9
-    600,    // z10
-    120,    // z11
-    60,     // z12
-    45,     // z13
-    36,     // z14
-    20,     // z15
-    8,      // z16
-    6,      // z17
-    4       // z18
-}};
+#include "../DataStructures/JSONContainer.h"
 
-class DouglasPeucker
+#include <string>
+#include <vector>
+
+struct PolylineFormatter
 {
-  public:
-    using RandomAccessIt = std::vector<SegmentInformation>::iterator;
+    JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
 
-    using GeometryRange = std::pair<RandomAccessIt, RandomAccessIt>;
-    // Stack to simulate the recursion
-    std::stack<GeometryRange> recursion_stack;
-
-  public:
-    void Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level);
-    void Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level);
+    JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
 };
 
-#endif /* DOUGLASPEUCKER_H_ */
+#endif /* POLYLINE_FORMATTER_H_ */

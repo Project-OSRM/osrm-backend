@@ -32,8 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <type_traits>
 
+namespace
+{
 constexpr float COORDINATE_PRECISION = 1000000.f;
-
+}
 struct FixedPointCoordinate
 {
     int lat;
@@ -51,7 +53,7 @@ struct FixedPointCoordinate
 
     void Reset();
     bool isSet() const;
-    bool isValid() const;
+    bool is_valid() const;
     bool operator==(const FixedPointCoordinate &other) const;
 
     static double

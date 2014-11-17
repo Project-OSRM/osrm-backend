@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/Azimuth.h"
+#include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 
@@ -149,7 +150,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                                     shortest_path_segments);
             json_result.values["route_instructions"] = json_route_instructions;
         }
-        description_factory.BuildRouteSummary(description_factory.entireLength,
+        description_factory.BuildRouteSummary(description_factory.get_entire_length(),
                                               raw_route.shortest_path_length);
         JSON::Object json_route_summary;
         json_route_summary.values["total_distance"] = description_factory.summary.distance;
@@ -231,7 +232,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                 json_result.values["alternative_instructions"] = json_alt_instructions;
             }
             alternate_description_factory.BuildRouteSummary(
-                alternate_description_factory.entireLength, raw_route.alternative_path_length);
+                alternate_description_factory.get_entire_length(), raw_route.alternative_path_length);
 
             JSON::Object json_alternate_route_summary;
             JSON::Array json_alternate_route_summary_array;
@@ -278,7 +279,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         }
 
         JSON::Object json_hint_object;
-        json_hint_object.values["checksum"] = raw_route.check_sum;
+        json_hint_object.values["checksum"] = facade->GetCheckSum();
         JSON::Array json_location_hint_array;
         std::string hint;
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))

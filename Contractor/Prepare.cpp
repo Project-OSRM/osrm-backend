@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Contractor.h"
 
 #include "../Algorithms/IteratorBasedCRC32.h"
-#include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/Range.h"
 #include "../DataStructures/StaticRTree.h"
@@ -44,6 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
+
+#include "../Util/GraphLoader.h"
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>
@@ -393,6 +394,13 @@ bool Prepare::ParseArguments(int argc, char *argv[])
                                       .positional(positional_options)
                                       .run(),
                                   option_variables);
+
+    const auto& temp_config_path = option_variables["config"].as<boost::filesystem::path>();
+    if (boost::filesystem::is_regular_file(temp_config_path))
+    {
+        boost::program_options::store(boost::program_options::parse_config_file<char>(temp_config_path.c_str(), cmdline_options, true),
+                                      option_variables);
+    }
 
     if (option_variables.count("version"))
     {

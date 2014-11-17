@@ -25,27 +25,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef POLYLINECOMPRESSOR_H_
-#define POLYLINECOMPRESSOR_H_
+#include "polyline_formatter.hpp"
 
-struct SegmentInformation;
+#include "polyline_compressor.hpp"
+#include "../DataStructures/SegmentInformation.h"
 
-#include "../DataStructures/JSONContainer.h"
+#include <osrm/Coordinate.h>
 
-#include <string>
-#include <vector>
-
-class PolylineCompressor
+JSON::String
+PolylineFormatter::printEncodedString(const std::vector<SegmentInformation> &polyline) const
 {
-  private:
-    void encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output) const;
+    return JSON::String(PolylineCompressor().get_encoded_string(polyline));
+}
 
-    void encodeNumber(int number_to_encode, std::string &output) const;
-
-  public:
-    JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
-
-    JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
-};
-
-#endif /* POLYLINECOMPRESSOR_H_ */
+JSON::Array
+PolylineFormatter::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
+{
+    JSON::Array json_geometry_array;
+    for (const auto &segment : polyline)
+    {
+        if (segment.necessary)
+        {
+            JSON::Array json_coordinate;
+            json_coordinate.values.push_back(segment.location.lat / COORDINATE_PRECISION);
+            json_coordinate.values.push_back(segment.location.lon / COORDINATE_PRECISION);
+            json_geometry_array.values.push_back(json_coordinate);
+        }
+    }
+    return json_geometry_array;
+}
