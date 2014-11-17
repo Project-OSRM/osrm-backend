@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
-#include "../Descriptors/ProtobufDescriptor.h"
+#include "../Descriptors/protobuf_descriptor.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/simple_logger.hpp"
 
