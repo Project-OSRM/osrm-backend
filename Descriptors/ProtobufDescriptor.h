@@ -25,7 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-
 #ifndef PROTOBUF_DESCRIPTOR_H
 #define PROTOBUF_DESCRIPTOR_H
 
@@ -53,20 +52,16 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         route_instructions.set_azimuth(i.azimuth);
         route_instructions.set_travel_mode(i.travel_mode);
         route.add_route_instructions()->CopyFrom(route_instructions);
-
     }
 
     inline void BuildTextualDescription(const int route_length,
                                         DescriptionFactory &description_factory,
                                         std::vector<typename super::Segment> &route_segments_list,
-                                        protobufResponse::Route &route
-                                        )
+                                        protobufResponse::Route &route)
     {
         std::vector<typename super::Instruction> instructions;
-        super::BuildTextualDescription(description_factory,
-                                       instructions,
-                                       route_length,
-                                       route_segments_list);
+        super::BuildTextualDescription(
+            description_factory, instructions, route_length, route_segments_list);
 
         for (const auto &i : instructions)
         {
@@ -75,8 +70,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
     }
 
   public:
-    PBFDescriptor(DataFacadeT *facade) : super(facade)
-    {}
+    PBFDescriptor(DataFacadeT *facade) : super(facade) {}
 
     void Run(const RawRouteData &raw_route, http::Reply &reply)
     {
@@ -111,10 +105,10 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
 #ifndef NDEBUG
             const int added_segments =
 #endif
-            super::DescribeLeg(raw_route.unpacked_path_segments[i],
-                        raw_route.segment_end_coordinates[i],
-                        raw_route.target_traversed_in_reverse[i],
-                        raw_route.is_via_leg(i));
+                super::DescribeLeg(raw_route.unpacked_path_segments[i],
+                                   raw_route.segment_end_coordinates[i],
+                                   raw_route.target_traversed_in_reverse[i],
+                                   raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
 
@@ -141,38 +135,37 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
 
         route_summary.set_total_distance(super::description_factory.summary.distance);
         route_summary.set_total_time(super::description_factory.summary.duration);
-        route_summary.set_start_point(super::facade->GetEscapedNameForNameID(super::description_factory.summary.source_name_id));
-        route_summary.set_end_point(super::facade->GetEscapedNameForNameID(super::description_factory.summary.target_name_id));
+        route_summary.set_start_point(super::facade->GetEscapedNameForNameID(
+            super::description_factory.summary.source_name_id));
+        route_summary.set_end_point(super::facade->GetEscapedNameForNameID(
+            super::description_factory.summary.target_name_id));
         main_route.mutable_route_summary()->CopyFrom(route_summary);
 
         BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
 
         protobufResponse::Point point;
         point.set_lat(raw_route.segment_end_coordinates.front().source_phantom.location.lat /
-                                             COORDINATE_PRECISION);
+                      COORDINATE_PRECISION);
         point.set_lon(raw_route.segment_end_coordinates.front().source_phantom.location.lon /
-                                             COORDINATE_PRECISION);
+                      COORDINATE_PRECISION);
         main_route.add_via_points()->CopyFrom(point);
-
 
         for (const PhantomNodes &nodes : raw_route.segment_end_coordinates)
         {
-            point.set_lat(nodes.target_phantom.location.lat /
-                                             COORDINATE_PRECISION);
-            point.set_lon(nodes.target_phantom.location.lon /
-                                             COORDINATE_PRECISION);
+            point.set_lat(nodes.target_phantom.location.lat / COORDINATE_PRECISION);
+            point.set_lon(nodes.target_phantom.location.lon / COORDINATE_PRECISION);
             main_route.add_via_points()->CopyFrom(point);
         }
 
-        std::vector<unsigned> const &shortest_leg_end_indices = super::description_factory.GetViaIndices();
-        for (unsigned v : shortest_leg_end_indices)
+        const std::vector<unsigned> &shortest_leg_end_indices =
+            super::description_factory.GetViaIndices();
+        for (const auto v : shortest_leg_end_indices)
         {
             main_route.add_via_indices(v);
         }
 
-        RouteNames route_names =
-            super::GenerateRouteNames(super::shortest_path_segments,
-                super::alternative_path_segments, super::facade);
+        RouteNames route_names = super::GenerateRouteNames(
+            super::shortest_path_segments, super::alternative_path_segments, super::facade);
 
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
@@ -187,13 +180,16 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
                 super::current = super::facade->GetCoordinateOfNode(path_data.node);
                 super::alternate_description_factory.AppendSegment(super::current, path_data);
             }
-            super::alternate_description_factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom, raw_route.alt_source_traversed_in_reverse.back());
+            super::alternate_description_factory.SetEndSegment(
+                raw_route.segment_end_coordinates.back().target_phantom,
+                raw_route.alt_source_traversed_in_reverse.back());
             super::alternate_description_factory.Run(super::facade, super::config.zoom_level);
 
             if (super::config.geometry)
             {
                 std::string alternateGeometry;
-                alternateGeometry = super::alternate_description_factory.AppendEncodedPolylineStringEncoded();
+                alternateGeometry =
+                    super::alternate_description_factory.AppendEncodedPolylineStringEncoded();
                 alternative_route.set_route_geometry(alternateGeometry);
             }
             // Generate instructions for each alternative (simulated here)
@@ -206,21 +202,24 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             }
 
             super::alternate_description_factory.BuildRouteSummary(
-                super::alternate_description_factory.get_entire_length(), raw_route.alternative_path_length);
+                super::alternate_description_factory.get_entire_length(),
+                raw_route.alternative_path_length);
 
             protobufResponse::RouteSummary alternative_routeSummary;
 
-            alternative_routeSummary.set_total_distance(super::alternate_description_factory.summary.distance);
-            alternative_routeSummary.set_total_time(super::alternate_description_factory.summary.duration);
+            alternative_routeSummary.set_total_distance(
+                super::alternate_description_factory.summary.distance);
+            alternative_routeSummary.set_total_time(
+                super::alternate_description_factory.summary.duration);
             alternative_routeSummary.set_start_point(super::facade->GetEscapedNameForNameID(
                 super::alternate_description_factory.summary.source_name_id));
             alternative_routeSummary.set_end_point(super::facade->GetEscapedNameForNameID(
                 super::alternate_description_factory.summary.target_name_id));
             alternative_route.mutable_route_summary()->CopyFrom(route_summary);
 
-            std::vector<unsigned> const &alternate_leg_end_indices =
+            const std::vector<unsigned> &alternate_leg_end_indices =
                 super::alternate_description_factory.GetViaIndices();
-            for (unsigned v : alternate_leg_end_indices)
+            for (const auto v : alternate_leg_end_indices)
             {
                 alternative_route.add_via_indices(v);
             }
@@ -255,4 +254,3 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
     }
 };
 #endif // PROTOBUF_DESCRIPTOR_H
-
