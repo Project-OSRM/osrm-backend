@@ -13,6 +13,10 @@ include(FindPackageHandleStandardArgs)
 
 
 find_package(Protobuf REQUIRED)
+if(PROTOBUF_PROTOC_EXECUTABLE STREQUAL "PROTOBUF_PROTOC_EXECUTABLE-NOTFOUND")
+  message(SEND_ERROR "protoc executable not found! Missing protobuf-compiler package?")
+endif()
+
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/Descriptors/*.proto")
 PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
