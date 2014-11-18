@@ -395,6 +395,13 @@ bool Prepare::ParseArguments(int argc, char *argv[])
                                       .run(),
                                   option_variables);
 
+    const auto& temp_config_path = option_variables["config"].as<boost::filesystem::path>();
+    if (boost::filesystem::is_regular_file(temp_config_path))
+    {
+        boost::program_options::store(boost::program_options::parse_config_file<char>(temp_config_path.string().c_str(), cmdline_options, true),
+                                      option_variables);
+    }
+
     if (option_variables.count("version"))
     {
         SimpleLogger().Write() << g_GIT_DESCRIPTION;
