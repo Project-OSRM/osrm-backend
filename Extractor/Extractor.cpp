@@ -182,6 +182,9 @@ int Extractor::Run(int argc, char *argv[])
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> resulting_ways;
         tbb::concurrent_vector<mapbox::util::optional<InputRestrictionContainer>> resulting_restrictions;
 
+        // setup restriction parser
+        RestrictionParser restriction_parser(scripting_environment.getLuaState());
+
         while (osmium::memory::Buffer buffer = reader.read())
         {
             // create a vector of iterators into the buffer
@@ -210,7 +213,6 @@ int Extractor::Run(int argc, char *argv[])
 
                 ExtractionNode result_node;
                 ExtractionWay result_way;
-                // RestrictionParser restriction_parser(scripting_environment);
 
                 switch (entity->type())
                 {
@@ -222,8 +224,6 @@ int Extractor::Run(int argc, char *argv[])
                                                  boost::cref(static_cast<osmium::Node &>(*entity)),
                                                  boost::ref(result_node));
                     resulting_nodes.emplace_back(x, result_node);
-                    // extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(*entity),
-                    //                                  result_node);
                     break;
                 case osmium::item_type::way:
                     ++number_of_ways;
@@ -233,12 +233,10 @@ int Extractor::Run(int argc, char *argv[])
                                                  boost::cref(static_cast<osmium::Way &>(*entity)),
                                                  boost::ref(result_way));
                     resulting_ways.emplace_back(x, result_way);
-                    // extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(*entity), result_way);
                     break;
                 case osmium::item_type::relation:
                     ++number_of_relations;
-                    // resulting_restrictions.emplace_back(restriction_parser.TryParse(static_cast<osmium::Relation &>(*entity)));
-                    // extractor_callbacks->ProcessRestriction(restriction_parser.TryParse(static_cast<osmium::Relation &>(*entity)));
+                    resulting_restrictions.emplace_back(restriction_parser.TryParse(scripting_environment.getLuaState(), static_cast<osmium::Relation &>(*entity)));
                     break;
                 default:
                     ++number_of_others;

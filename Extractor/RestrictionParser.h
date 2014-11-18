@@ -51,7 +51,7 @@ class RestrictionParser
   private:
     void ReadUseRestrictionsSetting(lua_State *lua_state);
     void ReadRestrictionExceptions(lua_State *lua_state);
-    bool ShouldIgnoreRestriction(lua_State *lua_state, const std::string &except_tag_string) const;
+    bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
 
     // lua_State *lua_state;
     std::vector<std::string> restriction_exceptions;
