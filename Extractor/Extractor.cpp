@@ -122,15 +122,19 @@ int Extractor::Run(int argc, char *argv[])
         // {
         //     SimpleLogger().Write(logWARNING) << "The recommended number of threads is "
         //                                      << recommended_num_threads
-        //                                      << "! This setting may have performance side-effects.";
+        //                                      << "! This setting may have performance
+        //                                      side-effects.";
         // }
 
-        auto number_of_threads = std::max(1,
-            std::min(static_cast<int>(recommended_num_threads), static_cast<int>(extractor_config.requested_num_threads)) );
+        auto number_of_threads =
+            std::max(1,
+                     std::min(static_cast<int>(recommended_num_threads),
+                              static_cast<int>(extractor_config.requested_num_threads)));
 
         tbb::task_scheduler_init init(number_of_threads);
 
-        SimpleLogger().Write() << "requested_num_threads: " << extractor_config.requested_num_threads;
+        SimpleLogger().Write() << "requested_num_threads: "
+                               << extractor_config.requested_num_threads;
         SimpleLogger().Write() << "number_of_threads: " << number_of_threads;
 
         // setup scripting environment
@@ -180,7 +184,8 @@ int Extractor::Run(int argc, char *argv[])
         // initialize vectors holding parsed objects
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> resulting_nodes;
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> resulting_ways;
-        tbb::concurrent_vector<mapbox::util::optional<InputRestrictionContainer>> resulting_restrictions;
+        tbb::concurrent_vector<mapbox::util::optional<InputRestrictionContainer>>
+            resulting_restrictions;
 
         // setup restriction parser
         RestrictionParser restriction_parser(scripting_environment.getLuaState());
@@ -190,7 +195,7 @@ int Extractor::Run(int argc, char *argv[])
             // create a vector of iterators into the buffer
             std::vector<osmium::memory::Buffer::iterator> elements;
             osmium::memory::Buffer::iterator iter = std::begin(buffer);
-            while(iter != std::end(buffer))
+            while (iter != std::end(buffer))
             {
                 elements.push_back(iter);
                 iter = std::next(iter);
@@ -205,57 +210,60 @@ int Extractor::Run(int argc, char *argv[])
 
             // parse OSM entities in parallel, store in resulting vectors
             tbb::parallel_for(tbb::blocked_range<std::size_t>(0, elements.size()),
-                [&](const tbb::blocked_range<std::size_t>& range)
+                              [&](const tbb::blocked_range<std::size_t> &range)
+                              {
+                for (auto x = range.begin(); x != range.end(); ++x)
                 {
-            for (auto x = range.begin(); x != range.end(); ++x)
-            {
-                auto entity = elements[x];
+                    auto entity = elements[x];
 
-                ExtractionNode result_node;
-                ExtractionWay result_way;
+                    ExtractionNode result_node;
+                    ExtractionWay result_way;
 
-                switch (entity->type())
-                {
-                case osmium::item_type::node:
-                    ++number_of_nodes;
-                    result_node.Clear();
-                    luabind::call_function<void>(scripting_environment.getLuaState(),
-                                                 "node_function",
-                                                 boost::cref(static_cast<osmium::Node &>(*entity)),
-                                                 boost::ref(result_node));
-                    resulting_nodes.emplace_back(x, result_node);
-                    break;
-                case osmium::item_type::way:
-                    ++number_of_ways;
-                    result_way.Clear();
-                    luabind::call_function<void>(scripting_environment.getLuaState(),
-                                                 "way_function",
-                                                 boost::cref(static_cast<osmium::Way &>(*entity)),
-                                                 boost::ref(result_way));
-                    resulting_ways.emplace_back(x, result_way);
-                    break;
-                case osmium::item_type::relation:
-                    ++number_of_relations;
-                    resulting_restrictions.emplace_back(restriction_parser.TryParse(scripting_environment.getLuaState(), static_cast<osmium::Relation &>(*entity)));
-                    break;
-                default:
-                    ++number_of_others;
-                    break;
+                    switch (entity->type())
+                    {
+                    case osmium::item_type::node:
+                        ++number_of_nodes;
+                        result_node.Clear();
+                        luabind::call_function<void>(
+                            scripting_environment.getLuaState(),
+                            "node_function",
+                            boost::cref(static_cast<osmium::Node &>(*entity)),
+                            boost::ref(result_node));
+                        resulting_nodes.emplace_back(x, result_node);
+                        break;
+                    case osmium::item_type::way:
+                        ++number_of_ways;
+                        result_way.Clear();
+                        luabind::call_function<void>(
+                            scripting_environment.getLuaState(),
+                            "way_function",
+                            boost::cref(static_cast<osmium::Way &>(*entity)),
+                            boost::ref(result_way));
+                        resulting_ways.emplace_back(x, result_way);
+                        break;
+                    case osmium::item_type::relation:
+                        ++number_of_relations;
+                        resulting_restrictions.emplace_back(
+                            restriction_parser.TryParse(scripting_environment.getLuaState(),
+                                                        static_cast<osmium::Relation &>(*entity)));
+                        break;
+                    default:
+                        ++number_of_others;
+                        break;
+                    }
                 }
-            }
-                            }
-            );
+            });
 
             // put parsed objects thru extractor callbacks
             for (const auto &result : resulting_nodes)
             {
-                extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(*(elements[result.first])),
-                                                 result.second);
+                extractor_callbacks->ProcessNode(
+                    static_cast<osmium::Node &>(*(elements[result.first])), result.second);
             }
             for (const auto &result : resulting_ways)
             {
-                extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(*(elements[result.first])),
-                                                 result.second);
+                extractor_callbacks->ProcessWay(
+                    static_cast<osmium::Way &>(*(elements[result.first])), result.second);
             }
             for (const auto &result : resulting_restrictions)
             {
