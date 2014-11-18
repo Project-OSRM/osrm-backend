@@ -44,16 +44,16 @@ class ScriptingEnvironment;
 class RestrictionParser
 {
   public:
-    RestrictionParser(ScriptingEnvironment &scripting_environment);
+    // RestrictionParser(ScriptingEnvironment &scripting_environment);
+    RestrictionParser(lua_State *lua_state);
+    mapbox::util::optional<InputRestrictionContainer> TryParse(lua_State *lua_state, osmium::Relation& relation) const;
 
-    mapbox::util::optional<InputRestrictionContainer> TryParse(osmium::Relation& relation) const;
-
-    void ReadUseRestrictionsSetting();
-    void ReadRestrictionExceptions();
   private:
-    bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
+    void ReadUseRestrictionsSetting(lua_State *lua_state);
+    void ReadRestrictionExceptions(lua_State *lua_state);
+    bool ShouldIgnoreRestriction(lua_State *lua_state, const std::string &except_tag_string) const;
 
-    lua_State *lua_state;
+    // lua_State *lua_state;
     std::vector<std::string> restriction_exceptions;
     bool use_turn_restrictions;
 };

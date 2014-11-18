@@ -66,10 +66,10 @@ void ExtractorCallbacks::ProcessRestriction(
     if (restriction)
     {
         external_memory.restrictions_list.push_back(restriction.get());
-        SimpleLogger().Write() << "from: " << restriction.get().restriction.from.node <<
-                                  ",via: " << restriction.get().restriction.via.node <<
-                                  ", to: " << restriction.get().restriction.to.node <<
-                                  ", only: " << (restriction.get().restriction.flags.is_only ? "y" : "n");
+        // SimpleLogger().Write() << "from: " << restriction.get().restriction.from.node <<
+        //                           ",via: " << restriction.get().restriction.via.node <<
+        //                           ", to: " << restriction.get().restriction.to.node <<
+        //                           ", only: " << (restriction.get().restriction.flags.is_only ? "y" : "n");
     }
 }
 /** warning: caller needs to take care of synchronization! */

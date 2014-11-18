@@ -51,18 +51,18 @@ int lua_error_callback(lua_State *L)
 }
 }
 
-RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment)
-    : lua_state(scripting_environment.getLuaState()), use_turn_restrictions(true)
+RestrictionParser::RestrictionParser(lua_State *lua_state)
+    : /*lua_state(scripting_environment.getLuaState()),*/ use_turn_restrictions(true)
 {
-    ReadUseRestrictionsSetting();
+    ReadUseRestrictionsSetting(lua_state);
 
     if (use_turn_restrictions)
     {
-        ReadRestrictionExceptions();
+        ReadRestrictionExceptions(lua_state);
     }
 }
 
-void RestrictionParser::ReadUseRestrictionsSetting()
+void RestrictionParser::ReadUseRestrictionsSetting(lua_State *lua_state)
 {
     if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n"))
     {
@@ -82,7 +82,7 @@ void RestrictionParser::ReadUseRestrictionsSetting()
     }
 }
 
-void RestrictionParser::ReadRestrictionExceptions()
+void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
 {
     if (lua_function_exists(lua_state, "get_exceptions"))
     {
@@ -104,7 +104,7 @@ void RestrictionParser::ReadRestrictionExceptions()
     }
 }
 
-mapbox::util::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::Relation &relation) const
+mapbox::util::optional<InputRestrictionContainer> RestrictionParser::TryParse(lua_State *lua_state, osmium::Relation &relation) const
 {
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
