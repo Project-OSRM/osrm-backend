@@ -179,7 +179,6 @@ function way_function (way, result)
   -- access
   local access = Access.find_access_tag(way, access_tags_hierachy)
   if access and access_tag_blacklist[access] then
-    io.write("skipping " .. access .. "\n")
     return
   end
 
