@@ -101,17 +101,12 @@ int Extractor::Run(int argc, char *argv[])
         }
 
         const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
+        const auto number_of_threads = std::min(recommended_num_threads, extractor_config.requested_num_threads);
+        tbb::task_scheduler_init init(number_of_threads);
 
         SimpleLogger().Write() << "Input file: " << extractor_config.input_path.filename().string();
         SimpleLogger().Write() << "Profile: " << extractor_config.profile_path.filename().string();
-        SimpleLogger().Write() << "Threads: " << extractor_config.requested_num_threads;
-
-        auto number_of_threads =
-            std::max(1,
-                     std::min(static_cast<int>(recommended_num_threads),
-                              static_cast<int>(extractor_config.requested_num_threads)));
-
-        tbb::task_scheduler_init init(number_of_threads);
+        SimpleLogger().Write() << "Threads: " << number_of_threads;
 
         // setup scripting environment
         ScriptingEnvironment scripting_environment(extractor_config.profile_path.string().c_str());
@@ -245,7 +240,7 @@ int Extractor::Run(int argc, char *argv[])
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
         SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, "
                                << number_of_ways << " ways, and " << number_of_relations
-                               << " relations";
+                               << " relations, and " << number_of_others << " unknown entities";
 
         extractor_callbacks.reset();
 
@@ -257,7 +252,6 @@ int Extractor::Run(int argc, char *argv[])
 
         extraction_containers.PrepareData(extractor_config.output_file_name,
                                           extractor_config.restriction_file_name);
-
         TIMER_STOP(extracting);
         SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: "
