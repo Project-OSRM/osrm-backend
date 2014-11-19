@@ -213,7 +213,7 @@ int Extractor::Run(int argc, char *argv[])
                             "node_function",
                             boost::cref(static_cast<osmium::Node &>(*entity)),
                             boost::ref(result_node));
-                        resulting_nodes.emplace_back(x, result_node);
+                        resulting_nodes.push_back(std::make_pair(x, result_node));
                         break;
                     case osmium::item_type::way:
                         ++number_of_ways;
@@ -223,11 +223,11 @@ int Extractor::Run(int argc, char *argv[])
                             "way_function",
                             boost::cref(static_cast<osmium::Way &>(*entity)),
                             boost::ref(result_way));
-                        resulting_ways.emplace_back(x, result_way);
+                        resulting_ways.push_back(std::make_pair(x, result_way));
                         break;
                     case osmium::item_type::relation:
                         ++number_of_relations;
-                        resulting_restrictions.emplace_back(
+                        resulting_restrictions.push_back(
                             restriction_parser.TryParse(scripting_environment.getLuaState(),
                                                         static_cast<osmium::Relation &>(*entity)));
                         break;
