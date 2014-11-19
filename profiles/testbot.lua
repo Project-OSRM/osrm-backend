@@ -49,7 +49,6 @@ function node_function (node, result)
   local traffic_signal = node:get_value_by_key("highway")
 
   if traffic_signal and traffic_signal == "traffic_signals" then
-    io.write("traffic_signal\n")
     result.traffic_lights = true;
     -- TODO: a way to set the penalty value
   end

@@ -138,7 +138,6 @@ function node_function (node, result)
 	-- parse access and barrier tags
 	if access and access ~= "" then
 		if access_tag_blacklist[access] then
-      io.write("node access: " .. access .. "\n")
 			result.barrier = true
 		else
 			result.barrier = false
@@ -147,7 +146,6 @@ function node_function (node, result)
 		if barrier_whitelist[barrier] then
 			result.barrier = false
 		else
-      io.write("barrier access: " .. barrier .. "\n")
 			result.barrier = true
 		end
 	end
