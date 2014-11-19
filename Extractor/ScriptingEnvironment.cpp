@@ -48,7 +48,17 @@ auto get_value_by_key(T const& object, const char *key) -> decltype(object.get_v
 {
     return object.get_value_by_key(key, "");
 }
+
+int lua_error_callback(lua_State *L) // This is so I can use my own function as an
+// exception handler, pcall_log()
+{
+    luabind::object error_msg(luabind::from_stack(L, -1));
+    std::ostringstream error_stream;
+    error_stream << error_msg;
+    throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
 }
+}
+
 
 ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
 : file_name(file_name)
@@ -129,6 +139,7 @@ lua_State *ScriptingEnvironment::getLuaState()
         ref = state;
         initLuaState(ref.get());
     }
+    luabind::set_pcall_callback(&lua_error_callback);
 
     return ref.get();
 }

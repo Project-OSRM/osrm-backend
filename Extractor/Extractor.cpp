@@ -65,19 +65,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
-namespace
-{
-
-int lua_error_callback(lua_State *L) // This is so I can use my own function as an
-// exception handler, pcall_log()
-{
-    luabind::object error_msg(luabind::from_stack(L, -1));
-    std::ostringstream error_stream;
-    error_stream << error_msg;
-    throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
-}
-}
-
 int Extractor::Run(int argc, char *argv[])
 {
     ExtractorConfig extractor_config;
@@ -177,9 +164,6 @@ int Extractor::Run(int argc, char *argv[])
         boost::filesystem::ofstream timestamp_out(extractor_config.timestamp_file_name);
         timestamp_out.write(timestamp.c_str(), timestamp.length());
         timestamp_out.close();
-
-        // lua_State *lua_state = scripting_environment.getLuaState();
-        luabind::set_pcall_callback(&lua_error_callback);
 
         // initialize vectors holding parsed objects
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> resulting_nodes;
