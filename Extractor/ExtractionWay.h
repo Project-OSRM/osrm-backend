@@ -36,9 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct ExtractionWay
 {
-    ExtractionWay() { Clear(); }
+    ExtractionWay() { clear(); }
 
-    void Clear()
+    void clear()
     {
         forward_speed = -1;
         backward_speed = -1;

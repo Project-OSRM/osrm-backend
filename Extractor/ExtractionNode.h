@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct ExtractionNode
 {
     ExtractionNode() : traffic_lights(false), barrier(false) { }
-    void Clear()
+    void clear()
     {
         traffic_lights = barrier = false;
     }

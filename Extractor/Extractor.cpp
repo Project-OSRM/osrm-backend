@@ -105,13 +105,6 @@ int Extractor::Run(int argc, char *argv[])
         SimpleLogger().Write() << "Input file: " << extractor_config.input_path.filename().string();
         SimpleLogger().Write() << "Profile: " << extractor_config.profile_path.filename().string();
         SimpleLogger().Write() << "Threads: " << extractor_config.requested_num_threads;
-        // if (recommended_num_threads != extractor_config.requested_num_threads)
-        // {
-        //     SimpleLogger().Write(logWARNING) << "The recommended number of threads is "
-        //                                      << recommended_num_threads
-        //                                      << "! This setting may have performance
-        //                                      side-effects.";
-        // }
 
         auto number_of_threads =
             std::max(1,
@@ -120,22 +113,18 @@ int Extractor::Run(int argc, char *argv[])
 
         tbb::task_scheduler_init init(number_of_threads);
 
-        SimpleLogger().Write() << "requested_num_threads: "
-                               << extractor_config.requested_num_threads;
-        SimpleLogger().Write() << "number_of_threads: " << number_of_threads;
-
         // setup scripting environment
         ScriptingEnvironment scripting_environment(extractor_config.profile_path.string().c_str());
 
         std::unordered_map<std::string, NodeID> string_map;
-        ExtractionContainers extraction_containers;
-
         string_map[""] = 0;
+
+        ExtractionContainers extraction_containers;
         auto extractor_callbacks =
             osrm::make_unique<ExtractorCallbacks>(extraction_containers, string_map);
 
-        osmium::io::File infile(extractor_config.input_path.string());
-        osmium::io::Reader reader(infile);
+        osmium::io::File input_file(extractor_config.input_path.string());
+        osmium::io::Reader reader(input_file);
         osmium::io::Header header = reader.header();
 
         unsigned number_of_nodes = 0;
@@ -177,11 +166,11 @@ int Extractor::Run(int argc, char *argv[])
         while (osmium::memory::Buffer buffer = reader.read())
         {
             // create a vector of iterators into the buffer
-            std::vector<osmium::memory::Buffer::iterator> elements;
+            std::vector<osmium::memory::Buffer::iterator> osm_elements;
             osmium::memory::Buffer::iterator iter = std::begin(buffer);
             while (iter != std::end(buffer))
             {
-                elements.push_back(iter);
+                osm_elements.push_back(iter);
                 iter = std::next(iter);
             }
 
@@ -190,15 +179,13 @@ int Extractor::Run(int argc, char *argv[])
             resulting_ways.clear();
             resulting_restrictions.clear();
 
-            // SimpleLogger().Write(logDEBUG) << "elements count: " << elements.size();
-
             // parse OSM entities in parallel, store in resulting vectors
-            tbb::parallel_for(tbb::blocked_range<std::size_t>(0, elements.size()),
+            tbb::parallel_for(tbb::blocked_range<std::size_t>(0, osm_elements.size()),
                               [&](const tbb::blocked_range<std::size_t> &range)
                               {
                 for (auto x = range.begin(); x != range.end(); ++x)
                 {
-                    auto entity = elements[x];
+                    auto entity = osm_elements[x];
 
                     ExtractionNode result_node;
                     ExtractionWay result_way;
@@ -207,7 +194,7 @@ int Extractor::Run(int argc, char *argv[])
                     {
                     case osmium::item_type::node:
                         ++number_of_nodes;
-                        result_node.Clear();
+                        result_node.clear();
                         luabind::call_function<void>(
                             scripting_environment.getLuaState(),
                             "node_function",
@@ -217,7 +204,7 @@ int Extractor::Run(int argc, char *argv[])
                         break;
                     case osmium::item_type::way:
                         ++number_of_ways;
-                        result_way.Clear();
+                        result_way.clear();
                         luabind::call_function<void>(
                             scripting_environment.getLuaState(),
                             "way_function",
@@ -242,12 +229,12 @@ int Extractor::Run(int argc, char *argv[])
             for (const auto &result : resulting_nodes)
             {
                 extractor_callbacks->ProcessNode(
-                    static_cast<osmium::Node &>(*(elements[result.first])), result.second);
+                    static_cast<osmium::Node &>(*(osm_elements[result.first])), result.second);
             }
             for (const auto &result : resulting_ways)
             {
                 extractor_callbacks->ProcessWay(
-                    static_cast<osmium::Way &>(*(elements[result.first])), result.second);
+                    static_cast<osmium::Way &>(*(osm_elements[result.first])), result.second);
             }
             for (const auto &result : resulting_restrictions)
             {
