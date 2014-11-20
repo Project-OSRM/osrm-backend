@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TIMESTAMP_PLUGIN_H
 #define TIMESTAMP_PLUGIN_H
 
-#include "../DataStructures/JSONContainer.h"
 #include "BasePlugin.h"
+#include "../DataStructures/JSONContainer.h"
+#include "../Util/json_renderer.hpp"
 
 #include <string>
 

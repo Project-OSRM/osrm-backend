@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../DataStructures/JSONContainer.h"
 #include "../Library/OSRM.h"
+#include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"

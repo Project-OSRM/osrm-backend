@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 #include "../DataStructures/JSONContainer.h"
 #include "../Util/cast.hpp"
+#include "../Util/json_renderer.hpp"
 
 #include <string>
 
