@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Contractor.h"
 
-#include "../Algorithms/IteratorBasedCRC32.h"
+#include "../Algorithms/crc32_processor.hpp"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/Range.h"
 #include "../DataStructures/StaticRTree.h"
