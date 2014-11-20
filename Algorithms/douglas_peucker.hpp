@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DOUGLASPEUCKER_H_
-#define DOUGLASPEUCKER_H_
+#ifndef DOUGLAS_PEUCKER_HPP_
+#define DOUGLAS_PEUCKER_HPP_
 
 #include <stack>
 #include <vector>
@@ -77,4 +77,4 @@ class DouglasPeucker
     void Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level);
 };
 
-#endif /* DOUGLASPEUCKER_H_ */
+#endif /* DOUGLAS_PEUCKER_HPP_ */

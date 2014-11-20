@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "DouglasPeucker.h"
+#include "douglas_peucker.hpp"
 
 #include "../DataStructures/Range.h"
 #include "../DataStructures/SegmentInformation.h"
