@@ -74,16 +74,16 @@ SimpleLogger::SimpleLogger() : level(logINFO) {}
 
 std::mutex &SimpleLogger::get_mutex()
 {
-    static std::mutex m;
-    return m;
+    static std::mutex mtx;
+    return mtx;
 }
 
-std::ostringstream &SimpleLogger::Write(LogLevel l)
+std::ostringstream &SimpleLogger::Write(LogLevel lvl)
 {
     std::lock_guard<std::mutex> lock(get_mutex());
     try
     {
-        level = l;
+        level = lvl;
         os << "[";
         switch (level)
         {
