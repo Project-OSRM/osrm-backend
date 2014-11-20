@@ -194,8 +194,6 @@ RestrictionParser::TryParse(osmium::Relation &relation) const
         case osmium::item_type::relation:
             // not yet supported, but who knows what the future holds...
             continue;
-            BOOST_ASSERT(false);
-
             break;
         default:
             BOOST_ASSERT(false);
