@@ -46,7 +46,8 @@ class RestrictionParser
   public:
     // RestrictionParser(ScriptingEnvironment &scripting_environment);
     RestrictionParser(lua_State *lua_state);
-    mapbox::util::optional<InputRestrictionContainer> TryParse(lua_State *lua_state, osmium::Relation& relation) const;
+    mapbox::util::optional<InputRestrictionContainer> TryParse(lua_State *lua_state,
+                                                               osmium::Relation &relation) const;
 
   private:
     void ReadUseRestrictionsSetting(lua_State *lua_state);

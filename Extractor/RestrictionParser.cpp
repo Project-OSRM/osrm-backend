@@ -41,7 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 
-namespace {
+namespace
+{
 int lua_error_callback(lua_State *L)
 {
     luabind::object error_msg(luabind::from_stack(L, -1));
@@ -104,7 +105,8 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
     }
 }
 
-mapbox::util::optional<InputRestrictionContainer> RestrictionParser::TryParse(lua_State *lua_state, osmium::Relation &relation) const
+mapbox::util::optional<InputRestrictionContainer>
+RestrictionParser::TryParse(lua_State *lua_state, osmium::Relation &relation) const
 {
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
@@ -210,7 +212,8 @@ mapbox::util::optional<InputRestrictionContainer> RestrictionParser::TryParse(lu
     // SimpleLogger().Write() << (restriction_container.restriction.flags.is_only ? "only" : "no")
     //                        << "-restriction "
     //                        << "<" << restriction_container.restriction.from.node << "->"
-    //                        << restriction_container.restriction.via.node << "->" << restriction_container.restriction.to.node
+    //                        << restriction_container.restriction.via.node << "->" <<
+    //                        restriction_container.restriction.to.node
     //                        << ">";
 
     return mapbox::util::optional<InputRestrictionContainer>(restriction_container);
