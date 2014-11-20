@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_H
 #define JSON_CONTAINER_H
 
-#include "../ThirdParty/variant/variant.hpp"
+#include <variant/variant.hpp>
 #include "../Util/cast.hpp"
 
 #include <iostream>
