@@ -41,10 +41,10 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
     // a pair of starting edge and a list of all end nodes
     for (auto &restriction : restriction_list)
     {
-        m_restriction_start_nodes.insert(restriction.fromNode);
-        m_no_turn_via_node_set.insert(restriction.viaNode);
+        m_restriction_start_nodes.insert(restriction.from.node);
+        m_no_turn_via_node_set.insert(restriction.via.node);
 
-        RestrictionSource restriction_source = {restriction.fromNode, restriction.viaNode};
+        RestrictionSource restriction_source = {restriction.from.node, restriction.via.node};
 
         unsigned index;
         auto restriction_iter = m_restriction_map.find(restriction_source);
@@ -62,7 +62,7 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
             {
                 continue;
             }
-            else if (restriction.flags.isOnly)
+            else if (restriction.flags.is_only)
             {
                 // We are going to insert an is_only_*-restriction. There can be only one.
                 m_count -= m_restriction_bucket_list.at(index).size();
@@ -71,7 +71,7 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
         }
         ++m_count;
         m_restriction_bucket_list.at(index)
-            .emplace_back(restriction.toNode, restriction.flags.isOnly);
+            .emplace_back(restriction.to.node, restriction.flags.is_only);
     }
 }
 

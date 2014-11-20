@@ -181,7 +181,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         {
             int lat = lat_udist(g);
             int lon = lon_udist(g);
-            nodes.emplace_back(NodeInfo(lat, lon, i));
+            nodes.emplace_back(QueryNode(lat, lon, i));
             coords->emplace_back(FixedPointCoordinate(lat, lon));
         }
 
@@ -204,7 +204,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         }
     }
 
-    std::vector<NodeInfo> nodes;
+    std::vector<QueryNode> nodes;
     std::shared_ptr<std::vector<FixedPointCoordinate>> coords;
     std::vector<TestData> edges;
 };
@@ -221,7 +221,7 @@ struct GraphFixture
             FixedPointCoordinate c(input_coords[i].first * COORDINATE_PRECISION,
                                    input_coords[i].second * COORDINATE_PRECISION);
             coords->emplace_back(c);
-            nodes.emplace_back(NodeInfo(c.lat, c.lon, i));
+            nodes.emplace_back(QueryNode(c.lat, c.lon, i));
         }
 
         for (const auto &pair : input_edges)
@@ -233,7 +233,7 @@ struct GraphFixture
         }
     }
 
-    std::vector<NodeInfo> nodes;
+    std::vector<QueryNode> nodes;
     std::shared_ptr<std::vector<FixedPointCoordinate>> coords;
     std::vector<TestData> edges;
 };
@@ -316,7 +316,7 @@ void build_rtree(const std::string &prefix,
     boost::filesystem::ofstream node_stream(coords_path, std::ios::binary);
     const unsigned num_nodes = fixture->nodes.size();
     node_stream.write((char *)&num_nodes, sizeof(unsigned));
-    node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(NodeInfo));
+    node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(QueryNode));
     node_stream.close();
 
     RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->nodes);

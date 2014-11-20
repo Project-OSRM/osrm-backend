@@ -28,16 +28,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ScriptingEnvironment.h"
 
 #include "ExtractionHelperFunctions.h"
+#include "ExtractionNode.h"
 #include "ExtractionWay.h"
-#include "../DataStructures/ImportNode.h"
+#include "../DataStructures/ExternalMemoryNode.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../typedefs.h"
 
-#include <sstream>
+#include <luabind/tag_function.hpp>
 
-ScriptingEnvironment::ScriptingEnvironment() {}
+#include <osmium/osm.hpp>
+
+#include <sstream>
+namespace {
+// wrapper method as luabind doesn't automatically overload funcs w/ default parameters
+template<class T>
+auto get_value_by_key(T const& object, const char *key) -> decltype(object.get_value_by_key(key))
+{
+    return object.get_value_by_key(key, "");
+}
+
+int lua_error_callback(lua_State *L) // This is so I can use my own function as an
+// exception handler, pcall_log()
+{
+    luabind::object error_msg(luabind::from_stack(L, -1));
+    std::ostringstream error_stream;
+    error_stream << error_msg;
+    throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
+}
+}
+
+
 ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
 : file_name(file_name)
 {
@@ -46,6 +68,8 @@ ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
 
 void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 {
+    typedef double (osmium::Location::* location_member_ptr_type)() const;
+
     luabind::open(lua_state);
     // open utility libraries string library;
     luaL_openlibs(lua_state);
@@ -58,33 +82,31 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
         luabind::def("durationIsValid", durationIsValid),
         luabind::def("parseDuration", parseDuration),
 
-        luabind::class_<HashTable<std::string, std::string>>("keyVals")
-        .def("Add", &HashTable<std::string, std::string>::Add)
-        .def("Find", &HashTable<std::string, std::string>::Find)
-        .def("Holds", &HashTable<std::string, std::string>::Holds),
+        luabind::class_<std::vector<std::string>>("vector")
+        .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(&std::vector<std::string>::push_back)),
 
-        luabind::class_<ImportNode>("Node")
-        // .def(luabind::constructor<>())
-        .def_readwrite("lat", &ImportNode::lat)
-        .def_readwrite("lon", &ImportNode::lon)
-        .def_readonly("id", &ImportNode::node_id)
-        .def_readwrite("bollard", &ImportNode::bollard)
-        .def_readwrite("traffic_light", &ImportNode::trafficLight)
-        .def_readwrite("tags", &ImportNode::keyVals),
+        luabind::class_<osmium::Location>("Location")
+        .def<location_member_ptr_type>("lat", &osmium::Location::lat)
+        .def<location_member_ptr_type>("lon", &osmium::Location::lon),
 
-       luabind::class_<ExtractionWay>("Way")
+        luabind::class_<osmium::Node>("Node")
+        // .def<node_member_ptr_type>("tags", &osmium::Node::tags)
+        .def("get_value_by_key", &osmium::Node::get_value_by_key)
+        .def("get_value_by_key", &get_value_by_key<osmium::Node>),
+
+        luabind::class_<ExtractionNode>("ResultNode")
+        .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
+        .def_readwrite("barrier", &ExtractionNode::barrier),
+
+        luabind::class_<ExtractionWay>("ResultWay")
         // .def(luabind::constructor<>())
-        .def_readonly("id", &ExtractionWay::id)
-        .def_readwrite("name", &ExtractionWay::name)
         .def_readwrite("forward_speed", &ExtractionWay::forward_speed)
         .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
-        .def_readwrite("duration", &ExtractionWay::duration)
-        .def_readwrite("access", &ExtractionWay::access)
+        .def_readwrite("name", &ExtractionWay::name)
         .def_readwrite("roundabout", &ExtractionWay::roundabout)
-        .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
-        .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
-        .def_readwrite("tags", &ExtractionWay::keyVals)
-        .property("direction", &ExtractionWay::get_direction, &ExtractionWay::set_direction)
+        .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
+        .def_readwrite("ignore_in_index", &ExtractionWay::ignore_in_grid)
+        .def_readwrite("duration", &ExtractionWay::duration)
         .property("forward_mode", &ExtractionWay::get_forward_mode, &ExtractionWay::set_forward_mode)
         .property("backward_mode", &ExtractionWay::get_backward_mode, &ExtractionWay::set_backward_mode)
         .enum_("constants")[
@@ -93,8 +115,9 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
             luabind::value("bidirectional", 2),
             luabind::value("opposite", 3)
         ],
-        luabind::class_<std::vector<std::string>>("vector")
-        .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(&std::vector<std::string>::push_back))
+        luabind::class_<osmium::Way>("Way")
+        .def("get_value_by_key", &osmium::Way::get_value_by_key)
+        .def("get_value_by_key", &get_value_by_key<osmium::Way>)
     ];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))
@@ -116,6 +139,7 @@ lua_State *ScriptingEnvironment::getLuaState()
         ref = state;
         initLuaState(ref.get());
     }
+    luabind::set_pcall_callback(&lua_error_callback);
 
     return ref.get();
 }

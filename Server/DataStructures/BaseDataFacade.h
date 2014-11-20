@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Exposes all data access interfaces to the algorithms via base class ptr
 
 #include "../../DataStructures/EdgeBasedNode.h"
-#include "../../DataStructures/ImportNode.h"
+#include "../../DataStructures/ExternalMemoryNode.h"
 #include "../../DataStructures/phantom_node.hpp"
 #include "../../DataStructures/Range.h"
 #include "../../DataStructures/TurnInstructions.h"

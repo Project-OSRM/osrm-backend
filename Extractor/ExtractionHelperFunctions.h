@@ -41,7 +41,7 @@ namespace qi = boost::spirit::qi;
 
 // TODO: Move into LUA
 
-inline bool durationIsValid(const std::string &s)
+bool durationIsValid(const std::string &s)
 {
     boost::regex e(
         "((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",
@@ -53,7 +53,7 @@ inline bool durationIsValid(const std::string &s)
     return matched;
 }
 
-inline unsigned parseDuration(const std::string &s)
+unsigned parseDuration(const std::string &s)
 {
     unsigned hours = 0;
     unsigned minutes = 0;

@@ -42,7 +42,7 @@ class Prepare
     void BuildRTree(std::vector<EdgeBasedNode> &node_based_edge_list);
 
   private:
-    std::vector<NodeInfo> internal_to_external_node_map;
+    std::vector<QueryNode> internal_to_external_node_map;
     std::vector<TurnRestriction> restriction_list;
     std::vector<NodeID> barrier_node_list;
     std::vector<NodeID> traffic_light_list;

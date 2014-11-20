@@ -31,6 +31,7 @@ OPTION(WITH_TOOLS "Build OSRM tools" OFF)
 OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
+include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -51,7 +52,7 @@ configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
 )
 file(GLOB ExtractorGlob Extractor/*.cpp)
-file(GLOB ImporterGlob DataStructures/Import*.cpp)
+file(GLOB ImporterGlob DataStructures/ImportEdge.cpp DataStructures/ExternalMemoryNode.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT Util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT DataStructures/phantom_node.cpp)
@@ -155,6 +156,9 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
   add_definitions(-D_USE_MATH_DEFINES) # define M_PI
   add_definitions(-D_WIN32_WINNT=0x0501)
+  add_definitions(-DXML_STATIC)
+  find_library(ws2_32_LIBRARY_PATH ws2_32)
+  target_link_libraries(osrm-extract wsock32 ws2_32)
 endif()
 
 # Activate C++11
@@ -238,9 +242,9 @@ else()
 endif()
 include_directories(${LUA_INCLUDE_DIR})
 
-find_package(LibXml2 REQUIRED)
-include_directories(${LIBXML2_INCLUDE_DIR})
-target_link_libraries(osrm-extract ${LIBXML2_LIBRARIES})
+find_package(EXPAT REQUIRED)
+include_directories(${EXPAT_INCLUDE_DIRS})
+target_link_libraries(osrm-extract ${EXPAT_LIBRARIES})
 
 find_package( STXXL REQUIRED )
 include_directories(${STXXL_INCLUDE_DIR})

@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-std::vector<NodeInfo> coordinate_list;
+std::vector<QueryNode> coordinate_list;
 std::vector<TurnRestriction> restrictions_vector;
 std::vector<NodeID> bollard_ID_list;
 std::vector<NodeID> trafficlight_ID_list;

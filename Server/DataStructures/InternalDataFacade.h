@@ -126,14 +126,14 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     {
         boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
-        NodeInfo current_node;
+        QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list =
             std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
-            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
+            nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
             m_coordinate_list->at(i) = FixedPointCoordinate(current_node.lat, current_node.lon);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);

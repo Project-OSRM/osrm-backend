@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GRAPHLOADER_H
 
 #include "OSRMException.h"
-#include "../DataStructures/ImportNode.h"
+#include "../DataStructures/ExternalMemoryNode.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
@@ -57,7 +57,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                      std::vector<EdgeT> &edge_list,
                                      std::vector<NodeID> &barrier_node_list,
                                      std::vector<NodeID> &traffic_light_node_list,
-                                     std::vector<NodeInfo> *int_to_ext_node_id_map,
+                                     std::vector<QueryNode> *int_to_ext_node_id_map,
                                      std::vector<TurnRestriction> &restriction_list)
 {
     const FingerPrint fingerprint_orig;
@@ -82,11 +82,11 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&current_node, sizeof(ExternalMemoryNode));
         int_to_ext_node_id_map->emplace_back(current_node.lat, current_node.lon, current_node.node_id);
         ext_to_int_id_map.emplace(current_node.node_id, i);
-        if (current_node.bollard)
+        if (current_node.barrier)
         {
             barrier_node_list.emplace_back(i);
         }
-        if (current_node.trafficLight)
+        if (current_node.traffic_lights)
         {
             traffic_light_node_list.emplace_back(i);
         }
@@ -99,29 +99,29 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     SimpleLogger().Write() << " and " << m << " edges ";
     for (TurnRestriction &current_restriction : restriction_list)
     {
-        auto internal_id_iter = ext_to_int_id_map.find(current_restriction.fromNode);
+        auto internal_id_iter = ext_to_int_id_map.find(current_restriction.from.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
             SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
             continue;
         }
-        current_restriction.fromNode = internal_id_iter->second;
+        current_restriction.from.node = internal_id_iter->second;
 
-        internal_id_iter = ext_to_int_id_map.find(current_restriction.viaNode);
+        internal_id_iter = ext_to_int_id_map.find(current_restriction.via.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
             SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
             continue;
         }
-        current_restriction.viaNode = internal_id_iter->second;
+        current_restriction.via.node = internal_id_iter->second;
 
-        internal_id_iter = ext_to_int_id_map.find(current_restriction.toNode);
+        internal_id_iter = ext_to_int_id_map.find(current_restriction.to.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
             SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
             continue;
         }
-        current_restriction.toNode = internal_id_iter->second;
+        current_restriction.to.node = internal_id_iter->second;
     }
 
     edge_list.reserve(m);
