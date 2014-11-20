@@ -197,6 +197,7 @@ RestrictionParser::TryParse(osmium::Relation &relation) const
             break;
         default:
             BOOST_ASSERT(false);
+            break;
         }
     }
 
