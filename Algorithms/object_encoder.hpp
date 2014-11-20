@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OBJECT_TO_BASE64_H_
-#define OBJECT_TO_BASE64_H_
+#ifndef OBJECT_ENCODER_HPP
+#define OBJECT_ENCODER_HPP
 
 #include "../Util/StringUtil.h"
 
@@ -91,4 +91,4 @@ struct ObjectEncoder
     }
 };
 
-#endif /* OBJECT_TO_BASE64_H_ */
+#endif /* OBJECT_ENCODER_HPP */
