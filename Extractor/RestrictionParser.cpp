@@ -63,7 +63,8 @@ RestrictionParser::RestrictionParser(lua_State *lua_state)
 
 void RestrictionParser::ReadUseRestrictionsSetting(lua_State *lua_state)
 {
-    if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n") && lua_isboolean(lua_state, -1))
+    if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n") &&
+        lua_isboolean(lua_state, -1))
     {
         use_turn_restrictions = lua_toboolean(lua_state, -1);
     }
@@ -125,12 +126,9 @@ RestrictionParser::TryParse(osmium::Relation &relation) const
 
     // check if the restriction should be ignored
     const char *except = relation.get_value_by_key("except");
-    if (except != nullptr)
+    if (except != nullptr && ShouldIgnoreRestriction(except))
     {
-        if (ShouldIgnoreRestriction(except))
-        {
-            return mapbox::util::optional<InputRestrictionContainer>();
-        }
+        return mapbox::util::optional<InputRestrictionContainer>();
     }
 
     bool is_only_restriction = false;
