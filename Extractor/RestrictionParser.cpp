@@ -39,13 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/ref.hpp>
 #include <boost/regex.hpp>
 
-#include <cstring>
-
 namespace
 {
-int lua_error_callback(lua_State *L)
+int lua_error_callback(lua_State *lua_state)
 {
-    luabind::object error_msg(luabind::from_stack(L, -1));
+    luabind::object error_msg(luabind::from_stack(lua_state, -1));
     std::ostringstream error_stream;
     error_stream << error_msg;
     throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
@@ -106,7 +104,7 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
 }
 
 mapbox::util::optional<InputRestrictionContainer>
-RestrictionParser::TryParse(lua_State *lua_state, osmium::Relation &relation) const
+RestrictionParser::TryParse(osmium::Relation &relation) const
 {
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)

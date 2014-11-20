@@ -210,8 +210,7 @@ int Extractor::Run(int argc, char *argv[])
                     case osmium::item_type::relation:
                         ++number_of_relations;
                         resulting_restrictions.push_back(
-                            restriction_parser.TryParse(scripting_environment.getLuaState(),
-                                                        static_cast<osmium::Relation &>(*entity)));
+                            restriction_parser.TryParse(static_cast<osmium::Relation &>(*entity)));
                         break;
                     default:
                         ++number_of_others;
