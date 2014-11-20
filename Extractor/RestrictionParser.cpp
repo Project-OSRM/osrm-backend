@@ -63,12 +63,9 @@ RestrictionParser::RestrictionParser(lua_State *lua_state)
 
 void RestrictionParser::ReadUseRestrictionsSetting(lua_State *lua_state)
 {
-    if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n"))
+    if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n") && lua_isboolean(lua_state, -1))
     {
-        if (lua_isboolean(lua_state, -1))
-        {
-            use_turn_restrictions = lua_toboolean(lua_state, -1);
-        }
+        use_turn_restrictions = lua_toboolean(lua_state, -1);
     }
 
     if (use_turn_restrictions)
