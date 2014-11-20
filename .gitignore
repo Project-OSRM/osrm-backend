@@ -81,6 +81,7 @@ stxxl.errlog
 /osrm-unlock-all
 /osrm-cli
 /osrm-check-hsgr
+/osrm-springclean
 /nohup.out
 
 # Sandbox folder #
