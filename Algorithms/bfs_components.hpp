@@ -1,5 +1,5 @@
-#ifndef BFS_COMPONENT_EXPLORER_H_
-#define BFS_COMPONENT_EXPLORER_H_
+#ifndef BFS_COMPONENTS_HPP_
+#define BFS_COMPONENTS_HPP_
 
 #include "../typedefs.h"
 #include "../DataStructures/RestrictionMap.h"
@@ -144,4 +144,4 @@ template <typename GraphT> class BFSComponentExplorer
     const std::unordered_set<NodeID> &m_barrier_nodes;
 };
 
-#endif // BFS_COMPONENT_EXPLORER_H_
+#endif // BFS_COMPONENTS_HPP_
