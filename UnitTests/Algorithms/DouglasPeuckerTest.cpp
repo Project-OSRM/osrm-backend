@@ -1,4 +1,4 @@
-#include "../../Algorithms/DouglasPeucker.h"
+#include "../../Algorithms/douglas_peucker.hpp"
 #include "../../DataStructures/SegmentInformation.h"
 #include "../../Include/osrm/Coordinate.h"
 
