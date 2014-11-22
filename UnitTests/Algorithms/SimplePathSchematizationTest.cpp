@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "../../Algorithms/SimplePathSchematization.h"
+#include "../../Algorithms/simple_path_schematization.hpp"
 
 BOOST_AUTO_TEST_SUITE(path_schematization)
 

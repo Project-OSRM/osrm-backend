@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasePlugin.h"
 
-#include "../Algorithms/ObjectToBase64.h"
-#include "../Algorithms/SimplePathSchematization.h"
+#include "../Algorithms/object_encoder.hpp"
+#include "../Algorithms/simple_path_schematization.hpp"
 #include "../Algorithms/polyline_compressor.hpp"
 
 #include "../DataStructures/QueryEdge.h"

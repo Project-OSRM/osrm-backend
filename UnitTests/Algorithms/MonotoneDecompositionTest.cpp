@@ -8,7 +8,7 @@
 
 #include "../../DataStructures/SymbolicCoordinate.h"
 #include "../../DataStructures/SubPath.h"
-#include "../../Algorithms/MonotoneDecomposition.h"
+#include "../../Algorithms/monotone_decomposition.hpp"
 #include "TestUtils.h"
 
 BOOST_AUTO_TEST_SUITE(monotone_decomposition)

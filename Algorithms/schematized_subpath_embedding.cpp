@@ -1,4 +1,4 @@
-#include "SchematizedSubpathEmbedding.h"
+#include "schematized_subpath_embedding.hpp"
 
 #include "../DataStructures/SymbolicCoordinate.h"
 #include "../DataStructures/SchematizedPlane.h"

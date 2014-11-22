@@ -1,4 +1,4 @@
-#include "MinCostSchematization.h"
+#include "min_cost_schematization.hpp"
 
 #include "../Util/MercatorUtil.h"
 #include "../Util/TimingUtil.h"

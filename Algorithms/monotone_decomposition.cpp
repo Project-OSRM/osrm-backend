@@ -2,7 +2,7 @@
 #include "../DataStructures/SymbolicCoordinate.h"
 #include "../DataStructures/SubPath.h"
 
-#include "MonotoneDecomposition.h"
+#include "monotone_decomposition.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/irange.hpp>

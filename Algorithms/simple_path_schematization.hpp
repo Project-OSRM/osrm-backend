@@ -7,9 +7,9 @@
 #include "../DataStructures/SymbolicCoordinate.h"
 #include "../DataStructures/SchematizedPlane.h"
 
-#include "MinCostSchematization.h"
-#include "SchematizedSubpathEmbedding.h"
-#include "MonotoneDecomposition.h"
+#include "min_cost_schematization.hpp"
+#include "schematized_subpath_embedding.hpp"
+#include "monotone_decomposition.hpp"
 
 #include <osrm/Coordinate.h>
 

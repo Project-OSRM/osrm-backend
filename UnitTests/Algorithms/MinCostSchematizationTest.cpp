@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include "../../Algorithms/MinCostSchematization.h"
+#include "../../Algorithms/min_cost_schematization.hpp"
 #include "TestUtils.h"
 
 BOOST_AUTO_TEST_SUITE(min_cost_schematization)
