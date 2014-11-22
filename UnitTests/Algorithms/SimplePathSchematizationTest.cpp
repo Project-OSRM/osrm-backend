@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_CASE(integrated_schematization)
         BOOST_CHECK_EQUAL(correct_info[i].name_id, schematized_info[i].name_id);
         BOOST_CHECK_LE(std::fabs(correct_info[i].location.lat/COORDINATE_PRECISION
                                - schematized_info[i].location.lat/COORDINATE_PRECISION),
-                       std::numeric_limits<float>::epsilon()*10);
+                       std::numeric_limits<float>::epsilon()*100);
         BOOST_CHECK_LE(std::fabs(correct_info[i].location.lon/COORDINATE_PRECISION
                                - schematized_info[i].location.lon/COORDINATE_PRECISION),
-                       std::numeric_limits<float>::epsilon()*10);
+                       std::numeric_limits<float>::epsilon()*100);
     }
 }
 

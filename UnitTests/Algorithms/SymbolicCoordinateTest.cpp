@@ -40,7 +40,11 @@ BOOST_AUTO_TEST_CASE(symbolic_test)
 
     for (unsigned i = 0; i < symbolic_path.size(); i++)
     {
-        BOOST_CHECK_EQUAL(fixed_path[i], transformSymbolicToFixed(symbolic_path[i], scaling, origin));
+        auto transformed = transformSymbolicToFixed(symbolic_path[i], scaling, origin);
+        BOOST_CHECK_LE(fixed_path[i].lat - transformed.lat,
+                       COORDINATE_PRECISION * std::numeric_limits<float>::epsilon() * 100);
+        BOOST_CHECK_LE(fixed_path[i].lon - transformed.lon,
+                       COORDINATE_PRECISION * std::numeric_limits<float>::epsilon() * 100);
     }
 
 }

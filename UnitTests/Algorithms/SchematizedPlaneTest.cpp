@@ -59,7 +59,8 @@ BOOST_AUTO_TEST_CASE(monotone_direction_transform)
     BOOST_CHECK_EQUAL(plane.fromXMonotoneDirection(2, MONOTONE_INCREASING_Y), 0);
     BOOST_CHECK_EQUAL(plane.fromXMonotoneDirection(2, MONOTONE_DECREASING_Y), 0);
     BOOST_CHECK_EQUAL(plane.fromXMonotoneDirection(1, MONOTONE_DECREASING_Y), 7);
-    BOOST_CHECK_EQUAL(plane.fromXMonotoneDirection(6, static_cast<PathMonotiticy>(MONOTONE_DECREASING_Y | MONOTONE_DECREASING_X)), 2);
+    BOOST_CHECK_EQUAL(plane.fromXMonotoneDirection(6, static_cast<PathMonotiticy>(MONOTONE_DECREASING_Y | MONOTONE_DECREASING_X)), 6);
+    BOOST_CHECK_EQUAL(plane.fromXMonotoneDirection(7, static_cast<PathMonotiticy>(MONOTONE_DECREASING_Y | MONOTONE_DECREASING_X)), 5);
 }
 
 BOOST_AUTO_TEST_CASE(prefered_direction)
