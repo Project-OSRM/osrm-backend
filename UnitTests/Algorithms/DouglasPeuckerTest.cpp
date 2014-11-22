@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(all_necessary_test)
         getTestInfo(5, 15, true)
     };
     DouglasPeucker dp;
-    for (unsigned z = 0; z < 20; z++)
+    for (unsigned z = 0; z < DOUGLAS_PEUCKER_THRESHOLDS.size(); z++)
     {
         dp.Run(info, z);
         for (const auto& i : info)
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(all_necessary_test)
 BOOST_AUTO_TEST_CASE(remove_second_node_test)
 {
     DouglasPeucker dp;
-    for (unsigned z = 0; z < 19; z++)
+    for (unsigned z = 0; z < DOUGLAS_PEUCKER_THRESHOLDS.size(); z++)
     {
         /*
          *   x--x
@@ -68,9 +68,8 @@ BOOST_AUTO_TEST_CASE(remove_second_node_test)
             getTestInfo(5  * COORDINATE_PRECISION + DOUGLAS_PEUCKER_THRESHOLDS[z],
                         15 * COORDINATE_PRECISION, true),
         };
-        std::cout << "Threshold: " << DOUGLAS_PEUCKER_THRESHOLDS[z] << std::endl;
+        BOOST_TEST_MESSAGE("Threshold (" << z << "): " << DOUGLAS_PEUCKER_THRESHOLDS[z]);
         dp.Run(info, z);
-        std::cout << "z: " << z << std::endl;
         BOOST_CHECK_EQUAL(info[0].necessary, true);
         BOOST_CHECK_EQUAL(info[1].necessary, false);
         BOOST_CHECK_EQUAL(info[2].necessary, true);
