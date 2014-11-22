@@ -6,6 +6,8 @@
 #include <boost/assert.hpp>
 #include <boost/range/irange.hpp>
 
+#include <numeric>
+
 MinCostSchematization::MinCostSchematization(const SchematizedPlane& plane)
 : plane(plane)
 {
