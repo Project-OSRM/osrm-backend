@@ -81,19 +81,23 @@ void transformToXMonotoneIncreasing(SubPath& subpath)
         return;
     }
 
-    // make x-monotone: swap x and y (mirror on (0,0)->(1,1))
-    if (subpath.monoticity & MONOTONE_INCREASING_Y || subpath.monoticity & MONOTONE_DECREASING_Y)
-    {
-        for (unsigned i = 0; i < subpath.nodes.size(); i++)
-        {
-            std::swap(subpath.nodes[i].y, subpath.nodes[i].x);
-        }
-    }
 
-    // we are now x-monotone increasing
-    if (subpath.monoticity & MONOTONE_INCREASING_Y)
+    if ((subpath.monoticity & MONOTONE_DECREASING_X) == 0)
     {
-        return;
+        // make x-monotone: swap x and y (mirror on (0,0)->(1,1))
+        if (subpath.monoticity & MONOTONE_INCREASING_Y || subpath.monoticity & MONOTONE_DECREASING_Y)
+        {
+            for (unsigned i = 0; i < subpath.nodes.size(); i++)
+            {
+                std::swap(subpath.nodes[i].y, subpath.nodes[i].x);
+            }
+        }
+
+        // we are now x-monotone increasing
+        if (subpath.monoticity & MONOTONE_INCREASING_Y)
+        {
+            return;
+        }
     }
 
     // at this point we are always x-monotone descreasing: Mirror on y-Axis
@@ -115,7 +119,7 @@ void transformFromXMonotoneIncreasing(SubPath& subpath)
     }
 
     // make y-monotone again
-    if (subpath.monoticity & MONOTONE_INCREASING_Y)
+    if ((subpath.monoticity & MONOTONE_DECREASING_X) == 0 && subpath.monoticity & MONOTONE_INCREASING_Y)
     {
         for (unsigned i = 0; i < subpath.nodes.size(); i++)
         {
@@ -131,6 +135,11 @@ void transformFromXMonotoneIncreasing(SubPath& subpath)
                         sym.x *= -1;
                         return sym;
                    });
+
+    if (subpath.monoticity & MONOTONE_DECREASING_X)
+    {
+        return;
+    }
 
     if (subpath.monoticity & MONOTONE_DECREASING_Y)
     {

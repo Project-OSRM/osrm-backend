@@ -239,6 +239,12 @@ public:
             return angle;
         }
 
+        if (monoticity & MONOTONE_DECREASING_X)
+        {
+            // mirror on y axis which always maps to d
+            return mirrorDirection(d, angle);
+        }
+
         if (monoticity & MONOTONE_INCREASING_Y)
         {
             // mirror on axis going through (0, 0) and (1, 1) which always maps to d/2
@@ -249,12 +255,6 @@ public:
         {
             unsigned yinc_angle = mirrorDirection(d, angle);
             return mirrorDirection(d/2, yinc_angle);
-        }
-
-        if (monoticity & MONOTONE_DECREASING_X)
-        {
-            // mirror on y axis which always maps to d
-            return mirrorDirection(d, angle);
         }
 
         BOOST_ASSERT(monoticity != MONOTONE_INVALID);
