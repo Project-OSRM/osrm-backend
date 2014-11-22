@@ -100,7 +100,7 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
     std::prev(end)->necessary = true;
 
     {
-        BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
+        BOOST_ASSERT_MSG(zoom_level < DOUGLAS_PEUCKER_THRESHOLDS.size(), "unsupported zoom level");
         RandomAccessIt left_border = begin;
         RandomAccessIt right_border = std::next(begin);
         // Sweep over array and identify those ranges that need to be checked
