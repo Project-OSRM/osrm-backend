@@ -8,6 +8,8 @@
 
 #include <boost/assert.hpp>
 
+#include <numeric>
+
 SchematizedSubPathEmbedding::SchematizedSubPathEmbedding(const SchematizedPlane& plane)
 : plane(plane)
 {
