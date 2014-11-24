@@ -197,9 +197,9 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
             }
             else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_source_id;
+                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_target_id;
             }
-            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
+            else if (way_start_and_end_iterator->first_segment_target_id == via_node_id)
             {
                 restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_source_id;
             }
