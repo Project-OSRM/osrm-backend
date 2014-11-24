@@ -29,31 +29,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GPX_DESCRIPTOR_H
 
 #include "BaseDescriptor.h"
+#include "../DataStructures/JSONContainer.h"
+#include "../Util/xml_renderer.hpp"
+
+#include <iostream>
 
 template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<DataFacadeT>
 {
   private:
     DescriptorConfig config;
-    FixedPointCoordinate current;
     DataFacadeT *facade;
 
-    void AddRoutePoint(const FixedPointCoordinate &coordinate, std::vector<char> &output)
+    void AddRoutePoint(const FixedPointCoordinate &coordinate, JSON::Array &json_result)
     {
-        const std::string route_point_head = "<rtept lat=\"";
-        const std::string route_point_middle = " lon=\"";
-        const std::string route_point_tail = "\"></rtept>";
+        JSON::Object json_lat;
+        JSON::Object json_lon;
+        JSON::Array json_row;
 
         std::string tmp;
 
         FixedPointCoordinate::convertInternalLatLonToString(coordinate.lat, tmp);
-        output.insert(output.end(), route_point_head.begin(), route_point_head.end());
-        output.insert(output.end(), tmp.begin(), tmp.end());
-        output.push_back('\"');
+        json_lat.values["_lat"] = tmp;
 
         FixedPointCoordinate::convertInternalLatLonToString(coordinate.lon, tmp);
-        output.insert(output.end(), route_point_middle.begin(), route_point_middle.end());
-        output.insert(output.end(), tmp.begin(), tmp.end());
-        output.insert(output.end(), route_point_tail.begin(), route_point_tail.end());
+        json_lon.values["_lon"] = tmp;
+
+        json_row.values.push_back(json_lat);
+        json_row.values.push_back(json_lon);
+        JSON::Object entry;
+        entry.values["rtept"] = json_row;
+        json_result.values.push_back(entry);
     }
 
   public:
@@ -61,26 +66,13 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
 
     void SetConfig(const DescriptorConfig &c) final { config = c; }
 
-    // TODO: reorder parameters
     void Run(const RawRouteData &raw_route, http::Reply &reply) final
     {
-        std::string header("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                           "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
-                           "xmlns=\"http://www.topografix.com/GPX/1/1\" "
-                           "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                           "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
-                           "\">"
-                           "<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
-                           " OpenStreetMap contributors (ODbL)</license></copyright>"
-                           "</metadata>"
-                           "<rte>");
-        reply.content.insert(reply.content.end(), header.begin(), header.end());
-        const bool found_route = (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT) &&
-                                 (!raw_route.unpacked_path_segments.front().empty());
-        if (found_route)
+        JSON::Array json_result;
+        if (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT)
         {
             AddRoutePoint(raw_route.segment_end_coordinates.front().source_phantom.location,
-                          reply.content);
+                          json_result);
 
             for (const std::vector<PathData> &path_data_vector : raw_route.unpacked_path_segments)
             {
@@ -88,14 +80,13 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
                 {
                     const FixedPointCoordinate current_coordinate =
                         facade->GetCoordinateOfNode(path_data.node);
-                    AddRoutePoint(current_coordinate, reply.content);
+                    AddRoutePoint(current_coordinate, json_result);
                 }
             }
             AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location,
-                          reply.content);
+                          json_result);
         }
-        std::string footer("</rte></gpx>");
-        reply.content.insert(reply.content.end(), footer.begin(), footer.end());
+        JSON::gpx_render(reply.content, json_result);
     }
 };
 #endif // GPX_DESCRIPTOR_H
