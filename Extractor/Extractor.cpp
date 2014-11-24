@@ -189,7 +189,6 @@ int Extractor::Run(int argc, char *argv[])
                     {
                     case osmium::item_type::node:
                         ++number_of_nodes;
-                        result_node.clear();
                         luabind::call_function<void>(
                             scripting_environment.getLuaState(),
                             "node_function",
@@ -199,7 +198,6 @@ int Extractor::Run(int argc, char *argv[])
                         break;
                     case osmium::item_type::way:
                         ++number_of_ways;
-                        result_way.clear();
                         luabind::call_function<void>(
                             scripting_environment.getLuaState(),
                             "way_function",
