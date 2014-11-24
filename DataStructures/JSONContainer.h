@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JSON_CONTAINER_H
 
 #include <variant/variant.hpp>
-#include "../Util/cast.hpp"
 
 #include <iostream>
 #include <vector>
@@ -89,7 +88,6 @@ struct Array
 {
     std::vector<Value> values;
 };
-
 
 } // namespace JSON
 

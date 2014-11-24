@@ -35,6 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/TurnInstructions.h"
 #include "../typedefs.h"
 
+#include <boost/assert.hpp>
+
 #include <osrm/Coordinate.h>
 
 #include <limits>
