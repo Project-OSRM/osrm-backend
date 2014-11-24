@@ -40,6 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/make_unique.hpp"
 #include "../Util/simple_logger.hpp"
 
+#include <osrm/json_container.hpp>
+
 #include <cstdlib>
 
 #include <algorithm>

@@ -28,9 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPLUGIN_H_
 #define BASEPLUGIN_H_
 
-#include <osrm/Coordinate.h>
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
+// remove
+#include "../Server/Http/Reply.h"
+
+#include <osrm/coordinate.hpp>
+#include <osrm/route_parameters.hpp>
 
 #include <string>
 #include <vector>

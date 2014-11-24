@@ -33,11 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/json_container.hpp"
 #include "../data_structures/segment_information.hpp"
 #include "../data_structures/turn_instructions.hpp"
-#include "../typedefs.h"
 
 #include <boost/assert.hpp>
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
+#include <osrm/json_container.hpp>
 
 #include <cmath>
 

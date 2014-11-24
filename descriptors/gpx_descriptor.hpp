@@ -29,8 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GPX_DESCRIPTOR_HPP
 
 #include "descriptor_base.hpp"
-#include "../data_structures/json_container.hpp"
 #include "../Util/xml_renderer.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <iostream>
 

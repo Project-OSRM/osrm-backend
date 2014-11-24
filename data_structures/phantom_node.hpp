@@ -28,9 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PHANTOM_NODES_H
 #define PHANTOM_NODES_H
 
-#include <osrm/Coordinate.h>
-#include "../data_structures/travel_mode.hpp"
+#include "../DataStructures/TravelMode.h"
 #include "../typedefs.h"
+
+#include <osrm/coordinate.hpp>
 
 #include <iostream>
 #include <vector>

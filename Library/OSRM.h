@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_H
 #define OSRM_H
 
-#include <osrm/ServerPaths.h>
+#include <osrm/server_paths.hpp>
 
 #include <memory>
 

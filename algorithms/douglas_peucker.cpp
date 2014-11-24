@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/segment_information.hpp"
 #include "../Util/integer_range.hpp"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <boost/assert.hpp>
 

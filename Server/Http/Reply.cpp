@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <osrm/Reply.h>
+#include "Reply.h"
 
 #include "../../Util/cast.hpp"
 

@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/turn_instructions.hpp"
 #include "../typedefs.h"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <vector>
 

@@ -27,8 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "description_factory.hpp"
 
-#include <osrm/Coordinate.h>
-
 #include "../typedefs.h"
 #include "../algorithms/polyline_formatter.hpp"
 #include "../data_structures/raw_route_data.hpp"

@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/cast.hpp"
 #include "../Util/json_renderer.hpp"
 
+#include <osrm/json_container.hpp>
+
 #include <string>
 
 class HelloWorldPlugin final : public BasePlugin

@@ -29,7 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "TrigonometryTables.h"
 #include "../Util/MercatorUtil.h"
-#include <osrm/Coordinate.h>
+
+#include <osrm/coordinate.hpp>
 
 #include <cmath>
 

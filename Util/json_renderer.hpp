@@ -31,8 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_RENDERER_HPP
 #define JSON_RENDERER_HPP
 
-#include "../data_structures/json_container.hpp"
 #include "cast.hpp"
+
+#include <osrm/json_container.hpp>
 
 namespace JSON {
 

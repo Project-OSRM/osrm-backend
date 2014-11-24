@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/string_util.hpp"
 #include "../../typedefs.h"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <string>
 

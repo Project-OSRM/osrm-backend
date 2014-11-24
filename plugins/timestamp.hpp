@@ -30,8 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "plugin_base.hpp"
 
-#include "../data_structures/json_container.hpp"
 #include "../Util/json_renderer.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <string>
 

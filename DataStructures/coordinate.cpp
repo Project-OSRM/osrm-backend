@@ -25,7 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <osrm/Coordinate.h>
 #include "../Util/MercatorUtil.h"
 #ifndef NDEBUG
 #include "../Util/simple_logger.hpp"
@@ -33,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/string_util.hpp"
 
 #include <boost/assert.hpp>
+
+#include <osrm/coordinate.hpp>
 
 #ifndef NDEBUG
 #include <bitset>

@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/container.hpp"
 #include "../Util/simple_logger.hpp"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <limits>
 #include <string>

@@ -32,12 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/raw_route_data.hpp"
 #include "../typedefs.h"
 
-#include <osrm/Reply.h>
-
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 
 struct DescriptorTable : public std::unordered_map<std::string, unsigned>
 {

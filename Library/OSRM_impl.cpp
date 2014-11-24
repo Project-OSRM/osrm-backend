@@ -44,6 +44,8 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "../Server/DataStructures/InternalDataFacade.h"
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
+//TODO: remove
+#include "../Server/Http/Reply.h"
 #include "../Util/make_unique.hpp"
 #include "../Util/ProgramOptions.h"
 #include "../Util/simple_logger.hpp"
@@ -51,6 +53,9 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+
+#include <osrm/route_parameters.hpp>
+#include <osrm/server_paths.hpp>
 
 #include <algorithm>
 #include <fstream>

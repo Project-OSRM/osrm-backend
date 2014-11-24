@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef FIXED_POINT_COORDINATE_H_
-#define FIXED_POINT_COORDINATE_H_
+#ifndef COORDINATE_HPP_
+#define COORDINATE_HPP_
 
 #include <iosfwd> //for std::ostream
 #include <string>
@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace
 {
-constexpr float COORDINATE_PRECISION = 1000000.f;
+constexpr static const float COORDINATE_PRECISION = 1000000.f;
 }
 struct FixedPointCoordinate
 {
@@ -110,4 +110,4 @@ inline std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate c
     return out_stream;
 }
 
-#endif /* FIXED_POINT_COORDINATE_H_ */
+#endif /* COORDINATE_HPP_ */

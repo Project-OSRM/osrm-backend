@@ -28,17 +28,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RequestHandler.h"
 
 #include "APIGrammar.h"
+#include "Http/Reply.h"
 #include "Http/Request.h"
 
-#include "../data_structures/json_container.hpp"
 #include "../Library/OSRM.h"
 #include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/string_util.hpp"
 #include "../typedefs.h"
 
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
+#include <osrm/route_parameters.hpp>
+#include <osrm/json_container.hpp>
 
 #include <ctime>
 

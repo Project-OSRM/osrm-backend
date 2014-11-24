@@ -32,7 +32,7 @@ class BasePlugin;
 namespace http { class Reply; }
 struct RouteParameters;
 
-#include <osrm/ServerPaths.h>
+#include <osrm/server_paths.hpp>
 
 #include "../data_structures/query_edge.hpp"
 
