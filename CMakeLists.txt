@@ -322,6 +322,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
 endif()
 
 file(GLOB InstallGlob Include/osrm/*.hpp Library/OSRM.h)
+file(GLOB VariantGlob Include/variant/*.hpp)
 
 # Add RPATH info to executables so that when they are run after being installed
 # (i.e., from /usr/local/bin/) the linker can find library dependencies. For
@@ -332,6 +333,7 @@ set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 install(FILES ${InstallGlob} DESTINATION include/osrm)
+install(FILES ${VariantGlob} DESTINATION include/variant)
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-prepare DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
