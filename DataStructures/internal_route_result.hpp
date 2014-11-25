@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RAW_ROUTE_DATA_HPP
-#define RAW_ROUTE_DATA_HPP
+#ifndef RAW_ROUTE_DATA_H
+#define RAW_ROUTE_DATA_H
 
-#include "../data_structures/phantom_node.hpp"
-#include "../data_structures/travel_mode.hpp"
-#include "../data_structures/turn_instructions.hpp"
+#include "../DataStructures/phantom_node.hpp"
+#include "../DataStructures/TravelMode.h"
+#include "../DataStructures/TurnInstructions.h"
 #include "../typedefs.h"
 
 #include <osrm/coordinate.hpp>
@@ -63,7 +63,7 @@ struct PathData
     TravelMode travel_mode : 4;
 };
 
-struct RawRouteData
+struct InternalRouteResult
 {
     std::vector<std::vector<PathData>> unpacked_path_segments;
     std::vector<PathData> unpacked_alternative;
@@ -80,11 +80,11 @@ struct RawRouteData
         return (leg != unpacked_path_segments.size() - 1);
     }
 
-    RawRouteData() :
+    InternalRouteResult() :
           shortest_path_length(INVALID_EDGE_WEIGHT),
           alternative_path_length(INVALID_EDGE_WEIGHT)
     {
     }
 };
 
-#endif // RAW_ROUTE_DATA_HPP
+#endif // RAW_ROUTE_DATA_H

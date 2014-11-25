@@ -79,7 +79,7 @@ template <class DataFacadeT> class BaseDescriptor
     BaseDescriptor() {}
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() {}
-    virtual void Run(const RawRouteData &, JSON::Object &) = 0;
+    virtual void Run(const InternalRouteResult &, JSON::Object &) = 0;
     virtual void SetConfig(const DescriptorConfig &) = 0;
 };
 

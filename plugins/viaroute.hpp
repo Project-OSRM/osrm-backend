@@ -143,7 +143,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                           swap_phantom_from_big_cc_into_front);
         }
 
-        RawRouteData raw_route;
+        InternalRouteResult raw_route;
         auto build_phantom_pairs =
             [&raw_route](const phantom_node_pair &first_pair, const phantom_node_pair &second_pair)
         {

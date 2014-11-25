@@ -67,7 +67,7 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
 
     void SetConfig(const DescriptorConfig &c) final { config = c; }
 
-    void Run(const RawRouteData &raw_route, JSON::Object &json_result) final
+    void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) final
     {
         JSON::Array json_route;
         if (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT)

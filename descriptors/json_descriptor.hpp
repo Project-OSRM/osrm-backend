@@ -99,7 +99,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         return added_element_count;
     }
 
-    void Run(const RawRouteData &raw_route, JSON::Object &json_result) final
+    void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) final
     {
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {

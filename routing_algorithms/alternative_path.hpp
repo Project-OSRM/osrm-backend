@@ -78,7 +78,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
 
     virtual ~AlternativeRouting() {}
 
-    void operator()(const PhantomNodes &phantom_node_pair, RawRouteData &raw_route_data)
+    void operator()(const PhantomNodes &phantom_node_pair, InternalRouteResult &raw_route_data)
     {
         std::vector<NodeID> alternative_path;
         std::vector<NodeID> via_node_candidate_list;
