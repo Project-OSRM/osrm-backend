@@ -28,10 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPLUGIN_H_
 #define BASEPLUGIN_H_
 
-// remove
-#include "../Server/Http/Reply.h"
-
 #include <osrm/coordinate.hpp>
+#include <osrm/json_container.hpp>
 #include <osrm/route_parameters.hpp>
 
 #include <string>
@@ -44,8 +42,8 @@ class BasePlugin
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BasePlugin() {}
     virtual const std::string GetDescriptor() const = 0;
-    virtual void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply) = 0;
-    virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> coordinates) const final
+    virtual int HandleRequest(const RouteParameters &, JSON::Object &) = 0;
+    virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates) const final
     {
         if (2 > coordinates.size() ||
             std::any_of(std::begin(coordinates),

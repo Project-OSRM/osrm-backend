@@ -35,9 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class OSRM_impl;
 struct RouteParameters;
 
-namespace http
+namespace JSON
 {
-class Reply;
+struct Object;
 }
 
 class OSRM
@@ -48,7 +48,7 @@ class OSRM
   public:
     explicit OSRM(ServerPaths paths, const bool use_shared_memory = false);
     ~OSRM();
-    void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
+    int RunQuery(RouteParameters &route_parameters, JSON::Object &json_result);
 };
 
 #endif // OSRM_H

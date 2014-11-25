@@ -71,14 +71,12 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
-        reply.status = http::Reply::ok;
 
         std::vector<phantom_node_pair> phantom_node_pair_list(route_parameters.coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
@@ -185,7 +183,8 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         }
 
         descriptor->SetConfig(route_parameters);
-        descriptor->Run(raw_route, reply);
+        descriptor->Run(raw_route, json_result);
+        return 200;
     }
 };
 

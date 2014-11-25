@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -99,15 +99,14 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         return added_element_count;
     }
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply) final
+    void Run(const RawRouteData &raw_route, JSON::Object &json_result) final
     {
-        JSON::Object json_result;
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
             json_result.values["status"] = 207;
             json_result.values["status_message"] = "Cannot find route between points";
-            JSON::render(reply.content, json_result);
+            // JSON::render(reply.content, json_result);
             return;
         }
 
@@ -296,10 +295,10 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_result.values["hint_data"] = json_hint_object;
 
         // render the content to the output array
-        TIMER_START(route_render);
-        JSON::render(reply.content, json_result);
-        TIMER_STOP(route_render);
-        SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
+        // TIMER_START(route_render);
+        // JSON::render(reply.content, json_result);
+        // TIMER_STOP(route_render);
+        // SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
     }
 
     // TODO: reorder parameters
@@ -356,7 +355,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     json_instruction_row.values.push_back(
                         cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
                     const double bearing_value = (segment.bearing / 10.);
-                    json_instruction_row.values.push_back(Bearing::Get(bearing_value));
+                    json_instruction_row.values.push_back(Azimuth::Get(bearing_value));
                     json_instruction_row.values.push_back(
                         static_cast<unsigned>(round(bearing_value)));
                     json_instruction_row.values.push_back(segment.travel_mode);
@@ -386,10 +385,10 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
         json_last_instruction_row.values.push_back(0);
         json_last_instruction_row.values.push_back("0m");
-        json_last_instruction_row.values.push_back(Bearing::Get(0.0));
+        json_last_instruction_row.values.push_back(Azimuth::Get(0.0));
         json_last_instruction_row.values.push_back(0.);
         json_instruction_array.values.push_back(json_last_instruction_row);
     }
 };
 
-#endif /* JSON_DESCRIPTOR_HPP */
+#endif /* JSON_DESCRIPTOR_H_ */

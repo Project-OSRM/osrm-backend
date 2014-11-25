@@ -48,11 +48,8 @@ class HelloWorldPlugin final : public BasePlugin
     virtual ~HelloWorldPlugin() {}
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &routeParameters, JSON::Object &json_result) final
     {
-        reply.status = http::Reply::ok;
-
-        JSON::Object json_result;
         std::string temp_string;
         json_result.values["title"] = "Hello World";
 
@@ -98,8 +95,7 @@ class HelloWorldPlugin final : public BasePlugin
             ++counter;
         }
         json_result.values["hints"] = json_hints;
-
-        JSON::render(reply.content, json_result);
+        return 200;
     }
 
   private:

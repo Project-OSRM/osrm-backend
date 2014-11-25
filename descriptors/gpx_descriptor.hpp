@@ -41,7 +41,7 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
     DescriptorConfig config;
     DataFacadeT *facade;
 
-    void AddRoutePoint(const FixedPointCoordinate &coordinate, JSON::Array &json_result)
+    void AddRoutePoint(const FixedPointCoordinate &coordinate, JSON::Array &json_route)
     {
         JSON::Object json_lat;
         JSON::Object json_lon;
@@ -59,7 +59,7 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
         json_row.values.push_back(json_lon);
         JSON::Object entry;
         entry.values["rtept"] = json_row;
-        json_result.values.push_back(entry);
+        json_route.values.push_back(entry);
     }
 
   public:
@@ -67,13 +67,13 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
 
     void SetConfig(const DescriptorConfig &c) final { config = c; }
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply) final
+    void Run(const RawRouteData &raw_route, JSON::Object &json_result) final
     {
-        JSON::Array json_result;
+        JSON::Array json_route;
         if (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT)
         {
             AddRoutePoint(raw_route.segment_end_coordinates.front().source_phantom.location,
-                          json_result);
+                          json_route);
 
             for (const std::vector<PathData> &path_data_vector : raw_route.unpacked_path_segments)
             {
@@ -81,13 +81,14 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
                 {
                     const FixedPointCoordinate current_coordinate =
                         facade->GetCoordinateOfNode(path_data.node);
-                    AddRoutePoint(current_coordinate, json_result);
+                    AddRoutePoint(current_coordinate, json_route);
                 }
             }
             AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location,
-                          json_result);
+                          json_route);
         }
-        JSON::gpx_render(reply.content, json_result);
+        // JSON::gpx_render(reply.content, json_route);
+        json_result.values["route"] = json_route;
     }
 };
 #endif // GPX_DESCRIPTOR_HPP

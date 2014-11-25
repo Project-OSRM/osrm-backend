@@ -32,6 +32,7 @@ class BasePlugin;
 namespace http { class Reply; }
 struct RouteParameters;
 
+#include <osrm/json_container.hpp>
 #include <osrm/server_paths.hpp>
 
 #include "../data_structures/query_edge.hpp"
@@ -52,7 +53,7 @@ class OSRM_impl
     OSRM_impl(ServerPaths paths, const bool use_shared_memory);
     OSRM_impl(const OSRM_impl &) = delete;
     virtual ~OSRM_impl();
-    void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
+    int RunQuery(RouteParameters &route_parameters, JSON::Object &json_result);
 
   private:
     void RegisterPlugin(BasePlugin *plugin);

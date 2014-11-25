@@ -64,12 +64,11 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
@@ -103,11 +102,9 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
         if (!result_table)
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
 
-        JSON::Object json_object;
         JSON::Array json_array;
         const auto number_of_locations = phantom_node_vector.size();
         for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
@@ -118,8 +115,9 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
             json_array.values.push_back(json_row);
         }
-        json_object.values["distance_table"] = json_array;
-        JSON::render(reply.content, json_object);
+        json_result.values["distance_table"] = json_array;
+        // JSON::render(reply.content, json_object);
+        return 200;
     }
 
   private:

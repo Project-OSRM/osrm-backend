@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/raw_route_data.hpp"
 #include "../typedefs.h"
 
+#include <osrm/json_container.hpp>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -77,8 +79,8 @@ template <class DataFacadeT> class BaseDescriptor
     BaseDescriptor() {}
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() {}
-    virtual void Run(const RawRouteData &raw_route, http::Reply &reply) = 0;
-    virtual void SetConfig(const DescriptorConfig &config) = 0;
+    virtual void Run(const RawRouteData &, JSON::Object &) = 0;
+    virtual void SetConfig(const DescriptorConfig &) = 0;
 };
 
 #endif // DESCRIPTOR_BASE_HPP
