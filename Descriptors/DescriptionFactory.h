@@ -39,8 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
+#include <cmath>
+
 #include <limits>
-#include <numeric>
 #include <vector>
 
 struct PathData;
