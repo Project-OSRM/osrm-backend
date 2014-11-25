@@ -321,7 +321,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   install(TARGETS osrm-springclean DESTINATION bin)
 endif()
 
-file(GLOB InstallGlob Include/osrm/*.h Library/OSRM.h)
+file(GLOB InstallGlob Include/osrm/*.hpp Library/OSRM.h)
 
 # Add RPATH info to executables so that when they are run after being installed
 # (i.e., from /usr/local/bin/) the linker can find library dependencies. For
