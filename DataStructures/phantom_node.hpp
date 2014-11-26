@@ -89,8 +89,8 @@ struct PhantomNodes
 
 inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn)
 {
-    out << "source_coord: " << pn.source_phantom.location        << "\n";
-    out << "target_coord: " << pn.target_phantom.location        << std::endl;
+    out << "source_coord: " << pn.source_phantom.location << "\n";
+    out << "target_coord: " << pn.target_phantom.location << std::endl;
     return out;
 }
 

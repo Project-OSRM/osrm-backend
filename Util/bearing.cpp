@@ -25,49 +25,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef AZIMUTH_H
-#define AZIMUTH_H
+#include "bearing.hpp"
 
-#include <string>
-
-struct Azimuth
+std::string Bearing::Get(const double heading)
 {
-    static std::string Get(const double heading)
+    if (heading <= 202.5)
     {
-        if (heading <= 202.5)
+        if (heading >= 0. && heading <= 22.5)
         {
-            if (heading >= 0 && heading <= 22.5)
-            {
-                return "N";
-            }
-            if (heading > 22.5 && heading <= 67.5)
-            {
-                return "NE";
-            }
-            if (heading > 67.5 && heading <= 112.5)
-            {
-                return "E";
-            }
-            if (heading > 112.5 && heading <= 157.5)
-            {
-                return "SE";
-            }
-            return "S";
+            return "N";
         }
-        if (heading > 202.5 && heading <= 247.5)
+        if (heading > 22.5 && heading <= 67.5)
         {
-            return "SW";
+            return "NE";
         }
-        if (heading > 247.5 && heading <= 292.5)
+        if (heading > 67.5 && heading <= 112.5)
         {
-            return "W";
+            return "E";
         }
-        if (heading > 292.5 && heading <= 337.5)
+        if (heading > 112.5 && heading <= 157.5)
         {
-            return "NW";
+            return "SE";
         }
-        return "N";
+        return "S";
     }
-};
-
-#endif // AZIMUTH_H
+    if (heading > 202.5 && heading <= 247.5)
+    {
+        return "SW";
+    }
+    if (heading > 247.5 && heading <= 292.5)
+    {
+        return "W";
+    }
+    if (heading > 292.5 && heading <= 337.5)
+    {
+        return "NW";
+    }
+    return "N";
+}

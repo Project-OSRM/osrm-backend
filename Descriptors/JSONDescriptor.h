@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/Range.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../Util/Azimuth.h"
+#include "../Util/bearing.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
@@ -354,7 +354,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     json_instruction_row.values.push_back(
                         cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
                     const double bearing_value = (segment.bearing / 10.);
-                    json_instruction_row.values.push_back(Azimuth::Get(bearing_value));
+                    json_instruction_row.values.push_back(Bearing::Get(bearing_value));
                     json_instruction_row.values.push_back(
                         static_cast<unsigned>(round(bearing_value)));
                     json_instruction_row.values.push_back(segment.travel_mode);
@@ -384,7 +384,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
         json_last_instruction_row.values.push_back(0);
         json_last_instruction_row.values.push_back("0m");
-        json_last_instruction_row.values.push_back(Azimuth::Get(0.0));
+        json_last_instruction_row.values.push_back(Bearing::Get(0.0));
         json_last_instruction_row.values.push_back(0.);
         json_instruction_array.values.push_back(json_last_instruction_row);
     }
