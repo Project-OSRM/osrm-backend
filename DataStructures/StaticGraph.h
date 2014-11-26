@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Percent.h"
 #include "Range.h"
 #include "SharedMemoryVectorWrapper.h"
+#include "RangeTable.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
@@ -41,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <utility>
 #include <vector>
+
 
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
@@ -69,63 +71,62 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         }
     };
 
-    struct NodeArrayEntry
-    {
-        // index of the first edge
-        EdgeIterator first_edge;
-    };
-
     struct EdgeArrayEntry
     {
         NodeID target;
         EdgeDataT data;
     };
 
+    using NodeTable = RangeTable<16, UseSharedMemory>;
+
+    template<typename VectorT>
+    static void AdjacencyArrayFromEdges(const unsigned num_nodes, const VectorT &edges,
+                                 NodeTable &node_table,
+                                 std::vector<EdgeArrayEntry>& edge_array)
+    {
+        std::vector<EdgeIterator> node_degree_array(num_nodes);
+        edge_array.resize(edges.size());
+        EdgeIterator edge_id = 0;
+        for (const auto node_id : osrm::irange(0u, num_nodes))
+        {
+            EdgeIterator num_neightbours = 0;
+            while (edge_id < edges.size() && edges[edge_id].source == node_id)
+            {
+                ++num_neightbours;
+                ++edge_id;
+            }
+            node_degree_array[node_id] = num_neightbours;
+        }
+        edge_array.resize(edges.size());
+        edge_id = 0;
+        for (const auto num_neightbours : node_degree_array)
+        {
+            EdgeIterator end_interval = edge_id + num_neightbours;
+            while (edge_id < end_interval)
+            {
+                edge_array[edge_id].target = edges[edge_id].target;
+                edge_array[edge_id].data = edges[edge_id].data;
+                BOOST_ASSERT(edge_array[edge].data.distance > 0);
+                edge_id++;
+            }
+        }
+
+        node_table = NodeTable(node_degree_array);
+    }
+
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const
     {
-        return osrm::irange(BeginEdges(node), EndEdges(node));
+        return node_idx.GetRange(node);
     }
 
-    StaticGraph(const int nodes, std::vector<InputEdge> &graph)
-    {
-        tbb::parallel_sort(graph.begin(), graph.end());
-        number_of_nodes = nodes;
-        number_of_edges = (EdgeIterator)graph.size();
-        node_array.resize(number_of_nodes + 1);
-        EdgeIterator edge = 0;
-        EdgeIterator position = 0;
-        for (const auto node : osrm::irange(0u, number_of_nodes+1))
-        {
-            EdgeIterator last_edge = edge;
-            while (edge < number_of_edges && graph[edge].source == node)
-            {
-                ++edge;
-            }
-            node_array[node].first_edge = position; //=edge
-            position += edge - last_edge;           // remove
-        }
-        edge_array.resize(position); //(edge)
-        edge = 0;
-        for (const auto node : osrm::irange(0u, number_of_nodes))
-        {
-            EdgeIterator e = node_array[node + 1].first_edge;
-            for (EdgeIterator i = node_array[node].first_edge; i != e; ++i)
-            {
-                edge_array[i].target = graph[edge].target;
-                edge_array[i].data = graph[edge].data;
-                BOOST_ASSERT(edge_array[i].data.distance > 0);
-                edge++;
-            }
-        }
-    }
 
-    StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector &nodes,
+    StaticGraph(RangeTable<16, UseSharedMemory> &nodes,
                 typename ShM<EdgeArrayEntry, UseSharedMemory>::vector &edges)
     {
-        number_of_nodes = static_cast<decltype(number_of_nodes)>(nodes.size() - 1);
+        number_of_nodes = static_cast<decltype(number_of_nodes)>(node_idx.GetSum());
         number_of_edges = static_cast<decltype(number_of_edges)>(edges.size());
 
-        node_array.swap(nodes);
+        node_idx.swap(nodes);
         edge_array.swap(edges);
     }
 
@@ -133,7 +134,15 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
-    unsigned GetOutDegree(const NodeIterator n) const { return EndEdges(n) - BeginEdges(n); }
+    unsigned GetOutDegree(const NodeIterator n) const
+    {
+        osrm::range<unsigned> range = node_idx.GetRange(n);
+        if (range.begin() != range.end())
+        {
+            return range.back() - range.front() + 1;
+        }
+        return 0;
+    }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
     {
@@ -146,12 +155,12 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
     EdgeIterator BeginEdges(const NodeIterator n) const
     {
-        return EdgeIterator(node_array.at(n).first_edge);
+        return node_idx.GetRange(n).front();
     }
 
     EdgeIterator EndEdges(const NodeIterator n) const
     {
-        return EdgeIterator(node_array.at(n + 1).first_edge);
+        return node_idx.GetRange(n).back();
     }
 
     // searches for a specific edge
@@ -197,7 +206,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
-    typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array;
+    RangeTable<16, UseSharedMemory> node_idx;
     typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array;
 };
 

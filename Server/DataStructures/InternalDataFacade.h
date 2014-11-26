@@ -58,7 +58,6 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     InternalDataFacade() {}
 
     unsigned m_check_sum;
-    unsigned m_number_of_nodes;
     QueryGraph *m_query_graph;
     std::string m_timestamp;
 
@@ -103,20 +102,20 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
     {
-        typename ShM<typename QueryGraph::NodeArrayEntry, false>::vector node_list;
+        typename QueryGraph::NodeTable node_table;
         typename ShM<typename QueryGraph::EdgeArrayEntry, false>::vector edge_list;
 
         SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 
-        m_number_of_nodes = readHSGRFromStream(hsgr_path, node_list, edge_list, &m_check_sum);
+        readHSGRFromStream(hsgr_path, node_table, edge_list, &m_check_sum);
 
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
         // BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
-        SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
-                               << " edges";
-        m_query_graph = new QueryGraph(node_list, edge_list);
+        //SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
+        //                       << " edges";
+        m_query_graph = new QueryGraph(node_table, edge_list);
 
-        BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
+        //BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
         SimpleLogger().Write() << "Data checksum is " << m_check_sum;
     }

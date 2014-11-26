@@ -133,6 +133,17 @@ public:
         sum_lengths = lengths_prefix_sum;
     }
 
+    inline void swap(RangeTable<BLOCK_SIZE, USE_SHARED_MEMORY>& other)
+    {
+        block_offsets.swap(other.block_offsets);
+        diff_blocks.swap(other.diff_blocks);
+    }
+
+    inline unsigned GetSum() const
+    {
+        return sum_lengths;
+    }
+
     inline RangeT GetRange(const unsigned id) const
     {
         BOOST_ASSERT(id < block_offsets.size() + diff_blocks.size() * BLOCK_SIZE);

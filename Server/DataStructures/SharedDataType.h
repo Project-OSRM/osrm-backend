@@ -46,7 +46,9 @@ struct SharedDataLayout
         NAME_CHAR_LIST,
         NAME_ID_LIST,
         VIA_NODE_LIST,
-        GRAPH_NODE_LIST,
+        GRAPH_NODE_OFFSETS,
+        GRAPH_NODE_BLOCKS,
+        GRAPH_NODE_NUM,
         GRAPH_EDGE_LIST,
         COORDINATE_LIST,
         TURN_INSTRUCTION,
@@ -78,7 +80,6 @@ struct SharedDataLayout
         SimpleLogger().Write(logDEBUG) << "name_char_list_size:        " << num_entries[NAME_CHAR_LIST];
         SimpleLogger().Write(logDEBUG) << "name_id_list_size:          " << num_entries[NAME_ID_LIST];
         SimpleLogger().Write(logDEBUG) << "via_node_list_size:         " << num_entries[VIA_NODE_LIST];
-        SimpleLogger().Write(logDEBUG) << "graph_node_list_size:       " << num_entries[GRAPH_NODE_LIST];
         SimpleLogger().Write(logDEBUG) << "graph_edge_list_size:       " << num_entries[GRAPH_EDGE_LIST];
         SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << num_entries[TIMESTAMP];
         SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << num_entries[COORDINATE_LIST];
@@ -96,7 +97,8 @@ struct SharedDataLayout
         SimpleLogger().Write(logDEBUG) << "NAME_CHAR_LIST       " << ": " << GetBlockSize(NAME_CHAR_LIST       );
         SimpleLogger().Write(logDEBUG) << "NAME_ID_LIST         " << ": " << GetBlockSize(NAME_ID_LIST         );
         SimpleLogger().Write(logDEBUG) << "VIA_NODE_LIST        " << ": " << GetBlockSize(VIA_NODE_LIST        );
-        SimpleLogger().Write(logDEBUG) << "GRAPH_NODE_LIST      " << ": " << GetBlockSize(GRAPH_NODE_LIST      );
+        SimpleLogger().Write(logDEBUG) << "GRAPH_NODE_OFFSETS   " << ": " << GetBlockSize(GRAPH_NODE_OFFSETS   );
+        SimpleLogger().Write(logDEBUG) << "GRAPH_NODE_BLOCKS    " << ": " << GetBlockSize(GRAPH_NODE_BLOCKS    );
         SimpleLogger().Write(logDEBUG) << "GRAPH_EDGE_LIST      " << ": " << GetBlockSize(GRAPH_EDGE_LIST      );
         SimpleLogger().Write(logDEBUG) << "COORDINATE_LIST      " << ": " << GetBlockSize(COORDINATE_LIST      );
         SimpleLogger().Write(logDEBUG) << "TURN_INSTRUCTION     " << ": " << GetBlockSize(TURN_INSTRUCTION     );

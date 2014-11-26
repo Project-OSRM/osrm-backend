@@ -236,78 +236,46 @@ int Prepare::Process(int argc, char *argv[])
     SimpleLogger().Write(logDEBUG) << "input graph has " << number_of_edge_based_nodes << " nodes";
     SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
 
-    std::vector<StaticGraph<EdgeData>::NodeArrayEntry> node_array;
-    node_array.resize(number_of_edge_based_nodes + 1);
-
-    SimpleLogger().Write() << "Building node array";
-    StaticGraph<EdgeData>::EdgeIterator edge = 0;
-    StaticGraph<EdgeData>::EdgeIterator position = 0;
-    StaticGraph<EdgeData>::EdgeIterator last_edge = edge;
-
-    // initializing 'first_edge'-field of nodes:
-    for (const auto node : osrm::irange(0u, max_used_node_id))
-    {
-        last_edge = edge;
-        while ((edge < contracted_edge_count) && (contracted_edge_list[edge].source == node))
-        {
-            ++edge;
-        }
-        node_array[node].first_edge = position; //=edge
-        position += edge - last_edge;           // remove
-    }
-
-    for (const auto sentinel_counter : osrm::irange<unsigned>(max_used_node_id, node_array.size()))
-    {
-        // sentinel element, guarded against underflow
-        node_array[sentinel_counter].first_edge = contracted_edge_count;
-    }
+    StaticGraph<EdgeData>::NodeTable node_table;
+    std::vector<StaticGraph<EdgeData>::EdgeArrayEntry> edge_array;
+    StaticGraph<EdgeData>::AdjacencyArrayFromEdges(number_of_edge_based_nodes,
+                                                   contracted_edge_list,
+                                                   node_table,
+                                                   edge_array);
 
     SimpleLogger().Write() << "Serializing node array";
 
-    const unsigned node_array_size = node_array.size();
     // serialize crc32, aka checksum
     hsgr_output_stream.write((char *)&crc32_value, sizeof(unsigned));
-    // serialize number of nodes
-    hsgr_output_stream.write((char *)&node_array_size, sizeof(unsigned));
     // serialize number of edges
     hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(unsigned));
-    // serialize all nodes
-    if (node_array_size > 0)
-    {
-        hsgr_output_stream.write((char *)&node_array[0],
-                                 sizeof(StaticGraph<EdgeData>::NodeArrayEntry) * node_array_size);
-    }
+    // serialize node table
+    hsgr_output_stream << node_table;
+
     // serialize all edges
-
     SimpleLogger().Write() << "Building edge array";
-    edge = 0;
     int number_of_used_edges = 0;
-
-    StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
-    for (const auto edge : osrm::irange<std::size_t>(0, contracted_edge_list.size()))
+    for (const auto& edge : edge_array)
     {
         // no eigen loops
-        BOOST_ASSERT(contracted_edge_list[edge].source != contracted_edge_list[edge].target);
-        current_edge.target = contracted_edge_list[edge].target;
-        current_edge.data = contracted_edge_list[edge].data;
-
+        BOOST_ASSERT(edge.source != edge.target);
         // every target needs to be valid
-        BOOST_ASSERT(current_edge.target < max_used_node_id);
+        BOOST_ASSERT(edge.target < max_used_node_id);
 #ifndef NDEBUG
-        if (current_edge.data.distance <= 0)
+        if (edge.data.distance <= 0)
         {
-            SimpleLogger().Write(logWARNING) << "Edge: " << edge
-                                             << ",source: " << contracted_edge_list[edge].source
-                                             << ", target: " << contracted_edge_list[edge].target
-                                             << ", dist: " << current_edge.data.distance;
+            SimpleLogger().Write(logWARNING) << "Edge: "
+                                             << "source: " << edge.source
+                                             << ", target: " << edge.target
+                                             << ", dist: " << edge.data.distance;
 
             SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
-                                             << contracted_edge_list[edge].source << "/"
-                                             << node_array.size() - 1;
+                                             << edge.source << "/"
+                                             << number_of_edge_based_nodes - 1;
             return 1;
         }
 #endif
-        hsgr_output_stream.write((char *)&current_edge,
+        hsgr_output_stream.write((char *)&edge,
                                  sizeof(StaticGraph<EdgeData>::EdgeArrayEntry));
 
         ++number_of_used_edges;
@@ -326,7 +294,6 @@ int Prepare::Process(int argc, char *argv[])
                            << " nodes/sec and " << number_of_used_edges / TIMER_SEC(contraction)
                            << " edges/sec";
 
-    node_array.clear();
     SimpleLogger().Write() << "finished preprocessing";
 
     return 0;

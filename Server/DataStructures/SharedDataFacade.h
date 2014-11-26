@@ -50,9 +50,9 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     typedef EdgeDataT EdgeData;
     typedef BaseDataFacade<EdgeData> super;
     typedef StaticGraph<EdgeData, true> QueryGraph;
-    typedef typename StaticGraph<EdgeData, true>::NodeArrayEntry GraphNode;
     typedef typename StaticGraph<EdgeData, true>::EdgeArrayEntry GraphEdge;
     typedef typename RangeTable<16, true>::BlockT NameIndexBlock;
+    typedef typename RangeTable<16, true>::BlockT NodeIndexBlock;
     typedef typename QueryGraph::InputEdge InputEdge;
     typedef typename super::RTreeLeaf RTreeLeaf;
     using SharedRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>;
@@ -122,17 +122,24 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     void LoadGraph()
     {
-        GraphNode *graph_nodes_ptr =
-            data_layout->GetBlockPtr<GraphNode>(shared_memory, SharedDataLayout::GRAPH_NODE_LIST);
+        unsigned *num_ptr =
+            data_layout->GetBlockPtr<unsigned>(shared_memory, SharedDataLayout::GRAPH_NODE_NUM);
+        unsigned *offsets_ptr =
+            data_layout->GetBlockPtr<unsigned>(shared_memory, SharedDataLayout::GRAPH_NODE_OFFSETS);
+        NodeIndexBlock *blocks_ptr =
+            data_layout->GetBlockPtr<NodeIndexBlock>(shared_memory, SharedDataLayout::GRAPH_NODE_BLOCKS);
+        typename ShM<unsigned, true>::vector node_offsets(
+            offsets_ptr, data_layout->num_entries[SharedDataLayout::GRAPH_NODE_OFFSETS]);
+        typename ShM<NameIndexBlock, true>::vector node_blocks(
+            blocks_ptr, data_layout->num_entries[SharedDataLayout::GRAPH_NODE_BLOCKS]);
 
         GraphEdge *graph_edges_ptr =
             data_layout->GetBlockPtr<GraphEdge>(shared_memory, SharedDataLayout::GRAPH_EDGE_LIST);
 
-        typename ShM<GraphNode, true>::vector node_list(
-            graph_nodes_ptr, data_layout->num_entries[SharedDataLayout::GRAPH_NODE_LIST]);
         typename ShM<GraphEdge, true>::vector edge_list(
             graph_edges_ptr, data_layout->num_entries[SharedDataLayout::GRAPH_EDGE_LIST]);
-        m_query_graph.reset(new QueryGraph(node_list, edge_list));
+        typename QueryGraph::NodeTable node_table(node_offsets, node_blocks, *num_ptr);
+        m_query_graph.reset(new QueryGraph(node_table, edge_list));
     }
 
     void LoadNodeAndEdgeInformation()
