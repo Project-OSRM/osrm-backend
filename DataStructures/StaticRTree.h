@@ -1121,13 +1121,20 @@ class StaticRTree
             m_coordinate_list->at(nearest_edge.u), m_coordinate_list->at(nearest_edge.v));
         const float ratio = std::min(1.f, distance_1 / distance_2);
 
+        using TreeWeightType = decltype(result_phantom_node.forward_weight);
+        static_assert(std::is_same<decltype(result_phantom_node.forward_weight),
+                                   decltype(result_phantom_node.reverse_weight)>::value,
+            "forward and reverse weight type in tree must be the same");
+
         if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
         {
-            result_phantom_node.forward_weight *= ratio;
+            const auto new_weight = static_cast<TreeWeightType>(result_phantom_node.forward_weight * ratio);
+            result_phantom_node.forward_weight = new_weight;
         }
         if (SPECIAL_NODEID != result_phantom_node.reverse_node_id)
         {
-            result_phantom_node.reverse_weight *= (1.f - ratio);
+            const auto new_weight = static_cast<TreeWeightType>(result_phantom_node.reverse_weight * (1.f-ratio));
+            result_phantom_node.reverse_weight = new_weight;
         }
     }
 
