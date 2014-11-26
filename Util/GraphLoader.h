@@ -373,11 +373,11 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
 }
 
 
-template <typename NodeT, typename EdgeT>
-unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
-                            std::vector<NodeT> &node_list,
-                            std::vector<EdgeT> &edge_list,
-                            unsigned *check_sum)
+template <typename EdgeT>
+void readHSGRFromStream(const boost::filesystem::path &hsgr_file,
+                        typename StaticGraph<EdgeT>::NodeTable &node_table,
+                        std::vector<EdgeT> &edge_list,
+                        unsigned *check_sum)
 {
     if (!boost::filesystem::exists(hsgr_file))
     {
@@ -398,19 +398,14 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
                                             "Reprocess to get rid of this warning.";
     }
 
-    unsigned number_of_nodes = 0;
     unsigned number_of_edges = 0;
     hsgr_input_stream.read((char *)check_sum, sizeof(unsigned));
-    hsgr_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
-    BOOST_ASSERT_MSG(0 != number_of_nodes, "number of nodes is zero");
     hsgr_input_stream.read((char *)&number_of_edges, sizeof(unsigned));
 
-    SimpleLogger().Write() << "number_of_nodes: " << number_of_nodes
-                           << ", number_of_edges: " << number_of_edges;
-
     // BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
-    node_list.resize(number_of_nodes);
-    hsgr_input_stream.read((char *)&(node_list[0]), number_of_nodes * sizeof(NodeT));
+    hsgr_input_stream >> node_table;
+
+    SimpleLogger().Write() << "number_of_edges: " << number_of_edges;
 
     edge_list.resize(number_of_edges);
     if (number_of_edges > 0)
@@ -418,8 +413,6 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
         hsgr_input_stream.read((char *)&(edge_list[0]), number_of_edges * sizeof(EdgeT));
     }
     hsgr_input_stream.close();
-
-    return number_of_nodes;
 }
 
 #endif // GRAPHLOADER_H

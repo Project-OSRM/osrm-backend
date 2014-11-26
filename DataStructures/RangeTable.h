@@ -133,7 +133,7 @@ public:
         sum_lengths = lengths_prefix_sum;
     }
 
-    inline void swap(typename RangeT<BLOCK_SIZE, USE_SHARED_MEMORY>& other)
+    inline void swap(RangeTable<BLOCK_SIZE, USE_SHARED_MEMORY>& other)
     {
         block_offsets.swap(other.block_offsets);
         diff_blocks.swap(other.diff_blocks);
