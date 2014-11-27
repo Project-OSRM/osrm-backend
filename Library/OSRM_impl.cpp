@@ -57,7 +57,7 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory)
+OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory, const int max_locations_distance_table)
 {
     if (use_shared_memory)
     {
@@ -72,7 +72,7 @@ OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory)
     }
 
     // The following plugins handle all requests.
-    RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
+    RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade, max_locations_distance_table));
     RegisterPlugin(new HelloWorldPlugin());
     RegisterPlugin(new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
@@ -152,8 +152,8 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
 
 // proxy code for compilation firewall
 
-OSRM::OSRM(ServerPaths paths, const bool use_shared_memory)
-    : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(paths, use_shared_memory))
+OSRM::OSRM(ServerPaths paths, const bool use_shared_memory, const int max_locations_distance_table)
+    : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(paths, use_shared_memory, max_locations_distance_table))
 {
 }
 

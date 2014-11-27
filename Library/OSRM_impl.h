@@ -49,7 +49,7 @@ class OSRM_impl
     using PluginMap = std::unordered_map<std::string, BasePlugin *>;
 
   public:
-    OSRM_impl(ServerPaths paths, const bool use_shared_memory);
+    OSRM_impl(ServerPaths paths, const bool use_shared_memory, const int max_locations_distance_table);
     OSRM_impl(const OSRM_impl &) = delete;
     virtual ~OSRM_impl();
     void RunQuery(RouteParameters &route_parameters, http::Reply &reply);

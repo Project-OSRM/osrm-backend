@@ -151,7 +151,8 @@ inline unsigned GenerateServerProgramOptions(const int argc,
                                              int &ip_port,
                                              int &requested_num_threads,
                                              bool &use_shared_memory,
-                                             bool &trial)
+                                             bool &trial,
+                                             int &max_locations_distance_table)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -198,7 +199,10 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         "Number of threads to use")(
         "sharedmemory,s",
         boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
-        "Load data from shared memory");
+        "Load data from shared memory")(
+        "max_locations_distance_table",
+        boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
+        "Max locations supported in distance table query");
 
     // hidden options, will be allowed both on command line and in config
     // file, but will not be shown to the user
@@ -272,6 +276,11 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     {
         return INIT_OK_START_ENGINE;
     }
+    if (1 > max_locations_distance_table)
+    {
+        throw OSRMException("Max location for distance table must be a positive number");
+    }
+
     SimpleLogger().Write() << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
 }
