@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "douglas_peucker.hpp"
 
-#include "../DataStructures/SegmentInformation.h"
+#include "../DataStructures/segment_information.hpp"
 #include "../Util/integer_range.hpp"
 
 #include <osrm/Coordinate.h>
