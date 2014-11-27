@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LUA_UTIL_H
-#define LUA_UTIL_H
+#ifndef LUA_UTIL_HPP
+#define LUA_UTIL_HPP
 
 extern "C" {
 #include <lua.h>
@@ -63,4 +63,4 @@ inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_
     luaL_dostring(lua_state, lua_code.c_str());
 }
 
-#endif // LUA_UTIL_H
+#endif // LUA_UTIL_HPP

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractionNode.h"
 #include "ExtractionWay.h"
 #include "../DataStructures/ExternalMemoryNode.h"
-#include "../Util/LuaUtil.h"
+#include "../Util/lua_util.hpp"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../typedefs.h"
