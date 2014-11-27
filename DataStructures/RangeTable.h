@@ -1,7 +1,7 @@
 #ifndef RANGE_TABLE_H_
 #define RANGE_TABLE_H_
 
-#include "Range.h"
+#include "../Util/integer_range.hpp"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 

@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STATIC_GRAPH_H
 
 #include "Percent.h"
-#include "Range.h"
 #include "SharedMemoryVectorWrapper.h"
+#include "../Util/integer_range.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>

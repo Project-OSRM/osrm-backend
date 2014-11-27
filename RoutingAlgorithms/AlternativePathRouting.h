@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ALTERNATIVE_PATH_ROUTING_H
 
 #include "BasicRoutingInterface.h"
-#include "../DataStructures/Range.h"
+#include "../Util/integer_range.hpp"
 #include "../DataStructures/SearchEngineData.h"
 #include "../Util/container.hpp"
 

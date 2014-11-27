@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/QueryEdge.h"
-#include "../DataStructures/Range.h"
 #include "../DataStructures/StaticGraph.h"
+#include "../Util/integer_range.hpp"
 #include "../Util/GraphLoader.h"
 #include "../Util/simple_logger.hpp"
 #include "../Util/OSRMException.h"

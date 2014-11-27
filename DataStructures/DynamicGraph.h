@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DYNAMICGRAPH_H
 
 #include "DeallocatingVector.h"
-#include "Range.h"
+#include "../Util/integer_range.hpp"
 
 #include <boost/assert.hpp>
 

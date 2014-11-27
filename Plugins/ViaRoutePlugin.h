@@ -31,11 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 
 #include "../Algorithms/object_encoder.hpp"
-#include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
+#include "../Util/integer_range.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/simple_logger.hpp"

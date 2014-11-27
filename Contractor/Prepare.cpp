@@ -31,11 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Algorithms/crc32_processor.hpp"
 #include "../DataStructures/DeallocatingVector.h"
-#include "../DataStructures/Range.h"
 #include "../DataStructures/StaticRTree.h"
 #include "../DataStructures/RestrictionMap.h"
 
 #include "../Util/GitDescription.h"
+#include "../Util/integer_range.hpp"
 #include "../Util/LuaUtil.h"
 #include "../Util/make_unique.hpp"
 #include "../Util/OSRMException.h"

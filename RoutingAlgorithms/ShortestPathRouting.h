@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 
 #include "BasicRoutingInterface.h"
-#include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngineData.h"
+#include "../Util/integer_range.hpp"
 #include "../typedefs.h"
 
 template <class DataFacadeT> class ShortestPathRouting final : public BasicRoutingInterface<DataFacadeT>

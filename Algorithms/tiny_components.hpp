@@ -34,10 +34,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Percent.h"
-#include "../DataStructures/Range.h"
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/TurnInstructions.h"
 
+#include "../Util/integer_range.hpp"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../Util/StdHashExtensions.h"
