@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef CONTRACTOR_H
-#define CONTRACTOR_H
+#ifndef CONTRACTOR_HPP
+#define CONTRACTOR_HPP
 
 #include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
@@ -970,4 +970,4 @@ class Contractor
     XORFastHash fast_hash;
 };
 
-#endif // CONTRACTOR_H
+#endif // CONTRACTOR_HPP

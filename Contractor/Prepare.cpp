@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Prepare.h"
 
-#include "Contractor.h"
+#include "contractor.hpp"
 
 #include "../Algorithms/crc32_processor.hpp"
 #include "../DataStructures/DeallocatingVector.h"
