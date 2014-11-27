@@ -98,7 +98,7 @@ add_executable(datastructure-tests EXCLUDE_FROM_ALL UnitTests/datastructure_test
 add_executable(algorithm-tests EXCLUDE_FROM_ALL UnitTests/algorithm_tests.cpp ${AlgorithmTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 
 # Benchmarks
-add_executable(rtree-bench EXCLUDE_FROM_ALL Benchmarks/StaticRTreeBench.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
+add_executable(rtree-bench EXCLUDE_FROM_ALL Benchmarks/static_rtree.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
