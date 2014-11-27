@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/crc32_processor.hpp"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/StaticRTree.h"
-#include "../DataStructures/RestrictionMap.h"
+#include "../DataStructures/restriction_map.hpp"
 
 #include "../Util/GitDescription.h"
 #include "../Util/integer_range.hpp"

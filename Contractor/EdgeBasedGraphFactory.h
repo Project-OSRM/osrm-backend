@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../DataStructures/NodeBasedGraph.h"
-#include "../DataStructures/RestrictionMap.h"
+#include "../DataStructures/restriction_map.hpp"
 #include "GeometryCompressor.h"
 
 #include <algorithm>
