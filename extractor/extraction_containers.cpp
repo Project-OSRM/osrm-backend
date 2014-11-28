@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "ExtractionContainers.h"
-#include "ExtractionWay.h"
+#include "extraction_containers.hpp"
+#include "extraction_way.hpp"
 
 #include "../data_structures/node_id.hpp"
 #include "../data_structures/range_table.hpp"

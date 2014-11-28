@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTORSTRUCTS_H_
-#define EXTRACTORSTRUCTS_H_
+#ifndef FIRST_AND_LAST_SEGMENT_OF_WAY_HPP
+#define FIRST_AND_LAST_SEGMENT_OF_WAY_HPP
 
 #include "../data_structures/external_memory_node.hpp"
 #include "../typedefs.h"
@@ -85,4 +85,4 @@ struct FirstAndLastSegmentOfWayStxxlCompare
     value_type min_value() { return FirstAndLastSegmentOfWay::min_value(); }
 };
 
-#endif /* EXTRACTORSTRUCTS_H_ */
+#endif /* FIRST_AND_LAST_SEGMENT_OF_WAY_HPP */

@@ -25,11 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTIONCONTAINERS_H_
-#define EXTRACTIONCONTAINERS_H_
+#ifndef EXTRACTION_CONTAINERS_HPP
+#define EXTRACTION_CONTAINERS_HPP
 
-#include "InternalExtractorEdge.h"
-#include "FirstAndLastSegmentOfWay.h"
+#include "internal_extractor_edge.hpp"
+#include "first_and_last_segment_of_way.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
 #include "../Util/FingerPrint.h"
@@ -67,4 +67,4 @@ class ExtractionContainers
                      const std::string &restrictions_file_name);
 };
 
-#endif /* EXTRACTIONCONTAINERS_H_ */
+#endif /* EXTRACTION_CONTAINERS_HPP */

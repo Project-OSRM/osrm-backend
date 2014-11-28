@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTOR_CALLBACKS_H
-#define EXTRACTOR_CALLBACKS_H
+#ifndef EXTRACTOR_CALLBACKS_HPP
+#define EXTRACTOR_CALLBACKS_HPP
 
-#include "ExtractionWay.h"
+#include "extraction_way.hpp"
 #include "../typedefs.h"
 
 #include <osmium/osm.hpp>
@@ -65,4 +65,4 @@ class ExtractorCallbacks
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
 };
 
-#endif /* EXTRACTOR_CALLBACKS_H */
+#endif /* EXTRACTOR_CALLBACKS_HPP */

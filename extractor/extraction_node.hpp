@@ -25,37 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RESTRICTION_PARSER_H_
-#define RESTRICTION_PARSER_H_
+#ifndef EXTRACTION_NODE_HPP
+#define EXTRACTION_NODE_HPP
 
-#include "../data_structures/restriction.hpp"
-
-#include <osmium/osm.hpp>
-#include <osmium/tags/regex_filter.hpp>
-
-#include <variant/optional.hpp>
-
-#include <string>
-#include <vector>
-
-struct lua_State;
-class ScriptingEnvironment;
-
-class RestrictionParser
+struct ExtractionNode
 {
-  public:
-    // RestrictionParser(ScriptingEnvironment &scripting_environment);
-    RestrictionParser(lua_State *lua_state);
-    mapbox::util::optional<InputRestrictionContainer> TryParse(osmium::Relation &relation) const;
-
-  private:
-    void ReadUseRestrictionsSetting(lua_State *lua_state);
-    void ReadRestrictionExceptions(lua_State *lua_state);
-    bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
-
-    // lua_State *lua_state;
-    std::vector<std::string> restriction_exceptions;
-    bool use_turn_restrictions;
+    ExtractionNode() : traffic_lights(false), barrier(false) { }
+    void clear()
+    {
+        traffic_lights = barrier = false;
+    }
+    bool traffic_lights;
+    bool barrier;
 };
-
-#endif /* RESTRICTION_PARSER_H_ */
+#endif // EXTRACTION_NODE_HPP

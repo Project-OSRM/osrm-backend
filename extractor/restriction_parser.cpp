@@ -25,9 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "RestrictionParser.h"
-#include "ExtractionWay.h"
-#include "ScriptingEnvironment.h"
+#include "restriction_parser.hpp"
+#include "extraction_way.hpp"
+#include "scripting_environment.hpp"
 
 #include "../data_structures/external_memory_node.hpp"
 #include "../Util/lua_util.hpp"

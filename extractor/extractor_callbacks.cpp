@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "ExtractorCallbacks.h"
-#include "ExtractionContainers.h"
-#include "ExtractionNode.h"
-#include "ExtractionWay.h"
+#include "extractor_callbacks.hpp"
+#include "extraction_containers.hpp"
+#include "extraction_node.hpp"
+#include "extraction_way.hpp"
 
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"

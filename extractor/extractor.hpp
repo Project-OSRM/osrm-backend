@@ -1,5 +1,5 @@
-#ifndef EXTRACTOR_H_
-#define EXTRACTOR_H_
+#ifndef EXTRACTOR_HPP
+#define EXTRACTOR_HPP
 
 #include <string>
 
@@ -10,4 +10,4 @@ struct Extractor
 {
     int Run(int argc, char *argv[]);
 };
-#endif /* EXTRACTOR_H_ */
+#endif /* EXTRACTOR_HPP */

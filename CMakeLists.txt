@@ -51,13 +51,13 @@ configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
 )
-file(GLOB ExtractorGlob Extractor/*.cpp)
+file(GLOB ExtractorGlob extractor/*.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT Util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
 
-set(ExtractorSources extractor.cpp ${ExtractorGlob})
+set(ExtractorSources extract.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
 
 file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp data_structures/restriction_map.cpp Util/compute_angle.cpp)

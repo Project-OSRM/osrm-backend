@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INTERNAL_EXTRACTOR_EDGE_H
-#define INTERNAL_EXTRACTOR_EDGE_H
+#ifndef INTERNAL_EXTRACTOR_EDGE_HPP
+#define INTERNAL_EXTRACTOR_EDGE_HPP
 
 #include "../typedefs.h"
 #include "../data_structures/travel_mode.hpp"
@@ -115,4 +115,4 @@ struct CmpEdgeByTargetID
     value_type min_value() { return InternalExtractorEdge::min_value(); }
 };
 
-#endif // INTERNAL_EXTRACTOR_EDGE_H
+#endif // INTERNAL_EXTRACTOR_EDGE_HPP

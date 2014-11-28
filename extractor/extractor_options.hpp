@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,28 +25,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SCRIPTINGENVIRONMENT_H_
-#define SCRIPTINGENVIRONMENT_H_
+#ifndef EXTRACTOR_OPTIONS_HPP
+#define EXTRACTOR_OPTIONS_HPP
 
-#include <string>
-#include <memory>
-#include <tbb/enumerable_thread_specific.h>
+#include "extractor.hpp"
 
-struct lua_State;
-
-class ScriptingEnvironment
+struct ExtractorConfig
 {
-  public:
-    ScriptingEnvironment() = delete;
-    explicit ScriptingEnvironment(const char *file_name);
+    ExtractorConfig() noexcept : requested_num_threads(0) {}
+    unsigned requested_num_threads;
+    boost::filesystem::path config_file_path;
+    boost::filesystem::path input_path;
+    boost::filesystem::path profile_path;
 
-    lua_State *getLuaState();
-
-  private:
-    void initLuaState(lua_State* lua_state);
-
-    std::string file_name;
-    tbb::enumerable_thread_specific<std::shared_ptr<lua_State>> script_contexts;
+    std::string output_file_name;
+    std::string restriction_file_name;
+    std::string timestamp_file_name;
 };
 
-#endif /* SCRIPTINGENVIRONMENT_H_ */
+struct ExtractorOptions
+{
+    static bool ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config);
+
+    static void GenerateOutputFilesNames(ExtractorConfig &extractor_config);
+};
+
+#endif // EXTRACTOR_OPTIONS_HPP

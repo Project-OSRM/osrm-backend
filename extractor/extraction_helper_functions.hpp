@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTION_HELPER_FUNCTIONS_H
-#define EXTRACTION_HELPER_FUNCTIONS_H
+#ifndef EXTRACTION_HELPER_FUNCTIONS_HPP
+#define EXTRACTION_HELPER_FUNCTIONS_HPP
 
 #include "../Util/cast.hpp"
 
@@ -87,4 +87,4 @@ unsigned parseDuration(const std::string &s)
     return std::numeric_limits<unsigned>::max();
 }
 
-#endif // EXTRACTION_HELPER_FUNCTIONS_H_
+#endif // EXTRACTION_HELPER_FUNCTIONS_HPP

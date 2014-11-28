@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTION_WAY_H
-#define EXTRACTION_WAY_H
+#ifndef EXTRACTION_WAY_HPP
+#define EXTRACTION_WAY_HPP
 
 #include "../data_structures/travel_mode.hpp"
 #include "../typedefs.h"
@@ -117,4 +117,4 @@ struct ExtractionWay
     TravelMode backward_travel_mode : 4;
 };
 
-#endif // EXTRACTION_WAY_H
+#endif // EXTRACTION_WAY_HPP

@@ -25,11 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "ScriptingEnvironment.h"
+#include "scripting_environment.hpp"
 
-#include "ExtractionHelperFunctions.h"
-#include "ExtractionNode.h"
-#include "ExtractionWay.h"
+#include "extraction_helper_functions.hpp"
+#include "extraction_node.hpp"
+#include "extraction_way.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../Util/lua_util.hpp"
 #include "../Util/OSRMException.h"
