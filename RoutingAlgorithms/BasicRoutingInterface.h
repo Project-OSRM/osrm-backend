@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASIC_ROUTING_INTERFACE_H
 #define BASIC_ROUTING_INTERFACE_H
 
-#include "../DataStructures/RawRouteData.h"
-#include "../DataStructures/SearchEngineData.h"
-#include "../DataStructures/TurnInstructions.h"
+#include "../data_structures/raw_route_data.hpp"
+#include "../data_structures/search_engine_data.hpp"
+#include "../data_structures/turn_instructions.hpp"
 // #include "../Util/simple_logger.hpp.h"
 
 #include <boost/assert.hpp>

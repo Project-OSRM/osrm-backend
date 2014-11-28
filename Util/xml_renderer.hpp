@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef XML_RENDERER_HPP
 #define XML_RENDERER_HPP
 
-#include "../DataStructures/JSONContainer.h"
+#include "../data_structures/json_container.hpp"
 #include "cast.hpp"
 
 namespace JSON {

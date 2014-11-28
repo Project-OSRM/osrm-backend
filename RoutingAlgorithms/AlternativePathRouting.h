@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ALTERNATIVE_PATH_ROUTING_H
 
 #include "BasicRoutingInterface.h"
+#include "../data_structures/search_engine_data.hpp"
 #include "../Util/integer_range.hpp"
-#include "../DataStructures/SearchEngineData.h"
 #include "../Util/container.hpp"
 
 #include <boost/assert.hpp>

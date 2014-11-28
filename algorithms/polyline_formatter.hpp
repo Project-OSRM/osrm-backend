@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef POLYLINE_FORMATTER_H_
-#define POLYLINE_FORMATTER_H_
+#ifndef POLYLINE_FORMATTER_HPP
+#define POLYLINE_FORMATTER_HPP
 
 struct SegmentInformation;
 
-#include "../DataStructures/JSONContainer.h"
+#include "../data_structures/json_container.hpp"
 
 #include <string>
 #include <vector>
@@ -42,4 +42,4 @@ struct PolylineFormatter
     JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
 };
 
-#endif /* POLYLINE_FORMATTER_H_ */
+#endif /* POLYLINE_FORMATTER_HPP */

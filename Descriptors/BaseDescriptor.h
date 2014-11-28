@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASE_DESCRIPTOR_H
 #define BASE_DESCRIPTOR_H
 
-#include "../DataStructures/phantom_node.hpp"
-#include "../DataStructures/RawRouteData.h"
+#include "../data_structures/phantom_node.hpp"
+#include "../data_structures/raw_route_data.hpp"
 #include "../typedefs.h"
 
 #include <osrm/Reply.h>

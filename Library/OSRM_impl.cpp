@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -34,7 +34,6 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <osrm/RouteParameters.h>
 #include <osrm/ServerPaths.h>
 
-#include "../DataStructures/QueryEdge.h"
 #include "../Plugins/DistanceTablePlugin.h"
 #include "../Plugins/HelloWorldPlugin.h"
 #include "../Plugins/LocatePlugin.h"

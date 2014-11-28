@@ -31,9 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 
 #include "../algorithms/object_encoder.hpp"
-#include "../DataStructures/JSONContainer.h"
-#include "../DataStructures/QueryEdge.h"
-#include "../DataStructures/SearchEngine.h"
+#include "../data_structures/json_container.hpp"
+#include "../data_structures/query_edge.hpp"
+#include "../data_structures/search_engine.hpp"
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Util/json_renderer.hpp"
 #include "../Util/make_unique.hpp"

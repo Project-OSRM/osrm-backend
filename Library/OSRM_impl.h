@@ -34,7 +34,7 @@ struct RouteParameters;
 
 #include <osrm/ServerPaths.h>
 
-#include "../DataStructures/QueryEdge.h"
+#include "../data_structures/query_edge.hpp"
 
 #include <memory>
 #include <unordered_map>

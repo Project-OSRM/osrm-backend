@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "contractor.hpp"
 
 #include "../algorithms/crc32_processor.hpp"
-#include "../DataStructures/DeallocatingVector.h"
-#include "../DataStructures/StaticRTree.h"
-#include "../DataStructures/restriction_map.hpp"
+#include "../data_structures/deallocating_vector.hpp"
+#include "../data_structures/static_rtree.hpp"
+#include "../data_structures/restriction_map.hpp"
 
 #include "../Util/GitDescription.h"
 #include "../Util/integer_range.hpp"

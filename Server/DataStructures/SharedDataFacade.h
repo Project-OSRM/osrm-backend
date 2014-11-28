@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -33,9 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BaseDataFacade.h"
 #include "SharedDataType.h"
 
-#include "../../DataStructures/RangeTable.h"
-#include "../../DataStructures/StaticGraph.h"
-#include "../../DataStructures/StaticRTree.h"
+#include "../../data_structures/range_table.hpp"
+#include "../../data_structures/static_graph.hpp"
+#include "../../data_structures/static_rtree.hpp"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/make_unique.hpp"
 #include "../../Util/simple_logger.hpp"

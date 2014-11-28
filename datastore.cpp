@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,14 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "DataStructures/OriginalEdgeData.h"
-#include "DataStructures/RangeTable.h"
-#include "DataStructures/QueryEdge.h"
-#include "DataStructures/SharedMemoryFactory.h"
-#include "DataStructures/SharedMemoryVectorWrapper.h"
-#include "DataStructures/StaticGraph.h"
-#include "DataStructures/StaticRTree.h"
-#include "DataStructures/TurnInstructions.h"
+#include "data_structures/original_edge_data.hpp"
+#include "data_structures/range_table.hpp"
+#include "data_structures/query_edge.hpp"
+#include "data_structures/shared_memory_factory.hpp"
+#include "data_structures/shared_memory_vector_wrapper.hpp"
+#include "data_structures/static_graph.hpp"
+#include "data_structures/static_rtree.hpp"
+#include "data_structures/turn_instructions.hpp"
 #include "Server/DataStructures/BaseDataFacade.h"
 #include "Server/DataStructures/SharedDataType.h"
 #include "Server/DataStructures/SharedBarriers.h"

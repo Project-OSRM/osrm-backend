@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "edge_based_graph_factory.hpp"
 #include "../algorithms/bfs_components.hpp"
-#include "../DataStructures/Percent.h"
+#include "../data_structures/percent.hpp"
 #include "../Util/compute_angle.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/lua_util.hpp"

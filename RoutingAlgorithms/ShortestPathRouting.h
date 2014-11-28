@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 
 #include "BasicRoutingInterface.h"
-#include "../DataStructures/SearchEngineData.h"
+#include "../data_structures/search_engine_data.hpp"
 #include "../Util/integer_range.hpp"
 #include "../typedefs.h"
 

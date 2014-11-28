@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,17 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef STRONGLYCONNECTEDCOMPONENTS_H_
-#define STRONGLYCONNECTEDCOMPONENTS_H_
+#ifndef TINY_COMPONENTS_HPP
+#define TINY_COMPONENTS_HPP
 
 #include "../typedefs.h"
-#include "../DataStructures/DeallocatingVector.h"
-#include "../DataStructures/DynamicGraph.h"
-#include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/QueryNode.h"
-#include "../DataStructures/Percent.h"
-#include "../DataStructures/Restriction.h"
-#include "../DataStructures/TurnInstructions.h"
+#include "../data_structures/deallocating_vector.hpp"
+#include "../data_structures/dynamic_graph.hpp"
+#include "../data_structures/import_edge.hpp"
+#include "../data_structures/query_node.hpp"
+#include "../data_structures/percent.hpp"
+#include "../data_structures/restriction.hpp"
+#include "../data_structures/turn_instructions.hpp"
 
 #include "../Util/integer_range.hpp"
 #include "../Util/OSRMException.h"
@@ -456,4 +456,4 @@ class TarjanSCC
     }
 };
 
-#endif /* STRONGLYCONNECTEDCOMPONENTS_H_ */
+#endif /* TINY_COMPONENTS_HPP */

@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "polyline_formatter.hpp"
 
 #include "polyline_compressor.hpp"
-#include "../DataStructures/segment_information.hpp"
+#include "../data_structures/segment_information.hpp"
 
 #include <osrm/Coordinate.h>
 

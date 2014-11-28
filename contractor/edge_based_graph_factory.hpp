@@ -32,13 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "geometry_compressor.hpp"
 #include "../typedefs.h"
-#include "../DataStructures/DeallocatingVector.h"
-#include "../DataStructures/EdgeBasedNode.h"
-#include "../DataStructures/OriginalEdgeData.h"
-#include "../DataStructures/QueryNode.h"
-#include "../DataStructures/TurnInstructions.h"
-#include "../DataStructures/NodeBasedGraph.h"
-#include "../DataStructures/restriction_map.hpp"
+#include "../data_structures/deallocating_vector.hpp"
+#include "../data_structures/edge_based_node.hpp"
+#include "../data_structures/original_edge_data.hpp"
+#include "../data_structures/query_node.hpp"
+#include "../data_structures/turn_instructions.hpp"
+#include "../data_structures/node_based_graph.hpp"
+#include "../data_structures/restriction_map.hpp"
 
 #include <algorithm>
 #include <iosfwd>

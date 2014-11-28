@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MANY_TO_MANY_ROUTING_H
 
 #include "BasicRoutingInterface.h"
-#include "../DataStructures/SearchEngineData.h"
+#include "../data_structures/search_engine_data.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>

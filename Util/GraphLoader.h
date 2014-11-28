@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,10 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GRAPHLOADER_H
 
 #include "OSRMException.h"
-#include "../DataStructures/ExternalMemoryNode.h"
-#include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/QueryNode.h"
-#include "../DataStructures/Restriction.h"
+#include "../data_structures/external_memory_node.hpp"
+#include "../data_structures/import_edge.hpp"
+#include "../data_structures/query_node.hpp"
+#include "../data_structures/restriction.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/FingerPrint.h"
 #include "../typedefs.h"

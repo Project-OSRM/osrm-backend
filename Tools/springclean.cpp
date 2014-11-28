@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 
-#include "../DataStructures/SharedMemoryFactory.h"
+#include "../data_structures/shared_memory_factory.hpp"
 #include "../Server/DataStructures/SharedDataType.h"
 #include "../Util/GitDescription.h"
 #include "../Util/simple_logger.hpp"

@@ -33,15 +33,15 @@ OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
 include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.cpp.alwaysbuild
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/finger_print.cpp finger_print.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp.in
-  COMMENT "Configuring FingerPrint.cpp"
+    ${CMAKE_SOURCE_DIR}/Util/finger_print.cpp.in
+  COMMENT "Configuring finger_print.cpp"
   VERBATIM)
 
-add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp)
+add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/finger_print.cpp)
 add_custom_target(tests DEPENDS datastructure-tests algorithm-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
@@ -52,27 +52,27 @@ configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
 )
 file(GLOB ExtractorGlob Extractor/*.cpp)
-file(GLOB ImporterGlob DataStructures/ImportEdge.cpp DataStructures/ExternalMemoryNode.cpp)
+file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT Util/simple_logger.cpp)
-add_library(PHANTOMNODE OBJECT DataStructures/phantom_node.cpp)
+add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
 
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
 
-file(GLOB PrepareGlob contractor/*.cpp DataStructures/HilbertValue.cpp DataStructures/restriction_map.cpp Util/compute_angle.cpp)
+file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp data_structures/restriction_map.cpp Util/compute_angle.cpp)
 set(PrepareSources prepare.cpp ${PrepareGlob})
 add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
 
 file(GLOB ServerGlob Server/*.cpp)
 file(GLOB DescriptorGlob Descriptors/*.cpp)
-file(GLOB DatastructureGlob DataStructures/SearchEngineData.cpp DataStructures/RouteParameters.cpp Util/bearing.cpp)
-list(REMOVE_ITEM DatastructureGlob DataStructures/Coordinate.cpp)
-file(GLOB CoordinateGlob DataStructures/Coordinate.cpp)
+file(GLOB DatastructureGlob data_structures/search_engine_data.cpp data_structures/route_parameters.cpp Util/bearing.cpp)
+list(REMOVE_ITEM DatastructureGlob data_structures/Coordinate.cpp)
+file(GLOB CoordinateGlob data_structures/Coordinate.cpp)
 file(GLOB AlgorithmGlob algorithms/*.cpp)
 file(GLOB HttpGlob Server/Http/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
-file(GLOB DataStructureTestsGlob UnitTests/DataStructures/*.cpp DataStructures/HilbertValue.cpp)
+file(GLOB DataStructureTestsGlob UnitTests/data_structures/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB AlgorithmTestsGlob UnitTests/Algorithms/*.cpp)
 
 set(
@@ -85,7 +85,7 @@ set(
   ${HttpGlob}
 )
 add_library(COORDINATE OBJECT ${CoordinateGlob})
-add_library(FINGERPRINT OBJECT Util/FingerPrint.cpp)
+add_library(FINGERPRINT OBJECT Util/finger_print.cpp)
 add_library(GITDESCRIPTION OBJECT Util/GitDescription.cpp)
 add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)

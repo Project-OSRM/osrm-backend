@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BFS_COMPONENTS_HPP_
 
 #include "../typedefs.h"
-#include "../DataStructures/restriction_map.hpp"
+#include "../data_structures/restriction_map.hpp"
 
 #include <queue>
 #include <unordered_set>

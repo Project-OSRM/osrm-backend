@@ -28,13 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONTRACTOR_HPP
 #define CONTRACTOR_HPP
 
-#include "../DataStructures/BinaryHeap.h"
-#include "../DataStructures/DeallocatingVector.h"
-#include "../DataStructures/DynamicGraph.h"
-#include "../DataStructures/Percent.h"
-#include "../DataStructures/QueryEdge.h"
-#include "../DataStructures/XORFastHash.h"
-#include "../DataStructures/XORFastHashStorage.h"
+#include "../data_structures/binary_heap.hpp"
+#include "../data_structures/deallocating_vector.hpp"
+#include "../data_structures/dynamic_graph.hpp"
+#include "../data_structures/percent.hpp"
+#include "../data_structures/query_edge.hpp"
+#include "../data_structures/xor_fast_hash.hpp"
+#include "../data_structures/xor_fast_hash_storage.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 
 #include "../algorithms/object_encoder.hpp"
-#include "../DataStructures/SearchEngine.h"
+#include "../data_structures/search_engine.hpp"
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"

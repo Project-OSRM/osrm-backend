@@ -29,10 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DESCRIPTIONFACTORY_H_
 
 #include "../algorithms/douglas_peucker.hpp"
-#include "../DataStructures/phantom_node.hpp"
-#include "../DataStructures/JSONContainer.h"
-#include "../DataStructures/segment_information.hpp"
-#include "../DataStructures/TurnInstructions.h"
+#include "../data_structures/phantom_node.hpp"
+#include "../data_structures/json_container.hpp"
+#include "../data_structures/segment_information.hpp"
+#include "../data_structures/turn_instructions.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -24,9 +24,9 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "../DataStructures/Percent.h"
-#include "../DataStructures/QueryEdge.h"
-#include "../DataStructures/StaticGraph.h"
+#include "../data_structures/percent.hpp"
+#include "../data_structures/query_edge.hpp"
+#include "../data_structures/static_graph.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/GraphLoader.h"
 #include "../Util/simple_logger.hpp"

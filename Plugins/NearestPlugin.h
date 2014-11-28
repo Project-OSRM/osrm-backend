@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NEAREST_PLUGIN_H
 
 #include "BasePlugin.h"
-#include "../DataStructures/JSONContainer.h"
-#include "../DataStructures/phantom_node.hpp"
+#include "../data_structures/json_container.hpp"
+#include "../data_structures/phantom_node.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/json_renderer.hpp"
 
