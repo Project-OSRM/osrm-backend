@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DESCRIPTIONFACTORY_H_
-#define DESCRIPTIONFACTORY_H_
+#ifndef DESCRIPTION_FACTORY_HPP
+#define DESCRIPTION_FACTORY_HPP
 
 #include "../algorithms/douglas_peucker.hpp"
 #include "../data_structures/phantom_node.hpp"
@@ -223,4 +223,4 @@ class DescriptionFactory
     }
 };
 
-#endif /* DESCRIPTIONFACTORY_H_ */
+#endif /* DESCRIPTION_FACTORY_HPP */

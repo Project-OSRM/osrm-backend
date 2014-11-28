@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "DescriptionFactory.h"
+#include "description_factory.hpp"
 
 #include <osrm/Coordinate.h>
 

@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/json_container.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
-#include "../Descriptors/BaseDescriptor.h"
+#include "../descriptors/descriptor_base.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/StringUtil.h"

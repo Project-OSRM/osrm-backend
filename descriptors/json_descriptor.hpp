@@ -25,11 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef JSON_DESCRIPTOR_H_
-#define JSON_DESCRIPTOR_H_
+#ifndef JSON_DESCRIPTOR_HPP
+#define JSON_DESCRIPTOR_HPP
 
-#include "BaseDescriptor.h"
-#include "DescriptionFactory.h"
+#include "descriptor_base.hpp"
+#include "description_factory.hpp"
 #include "../algorithms/object_encoder.hpp"
 #include "../algorithms/route_name_extraction.hpp"
 #include "../data_structures/json_container.hpp"
@@ -390,4 +390,4 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
     }
 };
 
-#endif /* JSON_DESCRIPTOR_H_ */
+#endif /* JSON_DESCRIPTOR_HPP */

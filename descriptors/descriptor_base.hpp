@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASE_DESCRIPTOR_H
-#define BASE_DESCRIPTOR_H
+#ifndef DESCRIPTOR_BASE_HPP
+#define DESCRIPTOR_BASE_HPP
 
 #include "../data_structures/phantom_node.hpp"
 #include "../data_structures/raw_route_data.hpp"
@@ -80,4 +80,4 @@ template <class DataFacadeT> class BaseDescriptor
     virtual void SetConfig(const DescriptorConfig &config) = 0;
 };
 
-#endif // BASE_DESCRIPTOR_H
+#endif // DESCRIPTOR_BASE_HPP

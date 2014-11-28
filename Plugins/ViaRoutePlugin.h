@@ -32,9 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../algorithms/object_encoder.hpp"
 #include "../data_structures/search_engine.hpp"
-#include "../Descriptors/BaseDescriptor.h"
-#include "../Descriptors/GPXDescriptor.h"
-#include "../Descriptors/JSONDescriptor.h"
+#include "../descriptors/descriptor_base.hpp"
+#include "../descriptors/gpx_descriptor.hpp"
+#include "../descriptors/json_descriptor.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/make_unique.hpp"

@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef GPX_DESCRIPTOR_H
-#define GPX_DESCRIPTOR_H
+#ifndef GPX_DESCRIPTOR_HPP
+#define GPX_DESCRIPTOR_HPP
 
-#include "BaseDescriptor.h"
+#include "descriptor_base.hpp"
 #include "../data_structures/json_container.hpp"
 #include "../Util/xml_renderer.hpp"
 
@@ -89,4 +89,4 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
         JSON::gpx_render(reply.content, json_result);
     }
 };
-#endif // GPX_DESCRIPTOR_H
+#endif // GPX_DESCRIPTOR_HPP
