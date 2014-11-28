@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASIC_ROUTING_INTERFACE_H
-#define BASIC_ROUTING_INTERFACE_H
+#ifndef ROUTING_BASE_HPP
+#define ROUTING_BASE_HPP
 
 #include "../data_structures/raw_route_data.hpp"
 #include "../data_structures/search_engine_data.hpp"
@@ -410,4 +410,4 @@ template <class DataFacadeT> class BasicRoutingInterface
     }
 };
 
-#endif // BASIC_ROUTING_INTERFACE_H
+#endif // ROUTING_BASE_HPP

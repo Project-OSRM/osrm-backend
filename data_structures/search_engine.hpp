@@ -29,9 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SEARCH_ENGINE_HPP
 
 #include "search_engine_data.hpp"
-#include "../RoutingAlgorithms/AlternativePathRouting.h"
-#include "../RoutingAlgorithms/ManyToManyRouting.h"
-#include "../RoutingAlgorithms/ShortestPathRouting.h"
+#include "../routing_algorithms/alternative_path.hpp"
+#include "../routing_algorithms/many_to_many.hpp"
+#include "../routing_algorithms/shortest_path.hpp"
 
 #include <type_traits>
 

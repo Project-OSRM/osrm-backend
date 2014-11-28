@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SHORTEST_PATH_ROUTING_H
-#define SHORTEST_PATH_ROUTING_H
+#ifndef SHORTEST_PATH_HPP
+#define SHORTEST_PATH_HPP
 
 #include <boost/assert.hpp>
 
-#include "BasicRoutingInterface.h"
+#include "routing_base.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../Util/integer_range.hpp"
 #include "../typedefs.h"
@@ -332,4 +332,4 @@ template <class DataFacadeT> class ShortestPathRouting final : public BasicRouti
     }
 };
 
-#endif /* SHORTEST_PATH_ROUTING_H */
+#endif /* SHORTEST_PATH_HPP */

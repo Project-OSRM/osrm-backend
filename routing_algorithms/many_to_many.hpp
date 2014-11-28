@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef MANY_TO_MANY_ROUTING_H
-#define MANY_TO_MANY_ROUTING_H
+#ifndef MANY_TO_MANY_ROUTING_HPP
+#define MANY_TO_MANY_ROUTING_HPP
 
-#include "BasicRoutingInterface.h"
+#include "routing_base.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../typedefs.h"
 

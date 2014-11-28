@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ALTERNATIVE_PATH_ROUTING_H
-#define ALTERNATIVE_PATH_ROUTING_H
+#ifndef ALTERNATIVE_PATH_ROUTING_HPP
+#define ALTERNATIVE_PATH_ROUTING_HPP
 
-#include "BasicRoutingInterface.h"
+#include "routing_base.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/container.hpp"
@@ -901,4 +901,4 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
     }
 };
 
-#endif /* ALTERNATIVE_PATH_ROUTING_H */
+#endif /* ALTERNATIVE_PATH_ROUTING_HPP */
