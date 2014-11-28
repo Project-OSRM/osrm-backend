@@ -28,7 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef NEAREST_PLUGIN_H
 #define NEAREST_PLUGIN_H
 
-#include "BasePlugin.h"
+#include "plugin_base.hpp"
+
 #include "../data_structures/json_container.hpp"
 #include "../data_structures/phantom_node.hpp"
 #include "../Util/integer_range.hpp"

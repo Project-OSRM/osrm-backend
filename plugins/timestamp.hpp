@@ -25,55 +25,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LOCATE_PLUGIN_H
-#define LOCATE_PLUGIN_H
+#ifndef TIMESTAMP_PLUGIN_H
+#define TIMESTAMP_PLUGIN_H
 
-#include "BasePlugin.h"
+#include "plugin_base.hpp"
+
 #include "../data_structures/json_container.hpp"
 #include "../Util/json_renderer.hpp"
-#include "../Util/StringUtil.h"
 
 #include <string>
 
-// locates the nearest node in the road network for a given coordinate.
-template <class DataFacadeT> class LocatePlugin final : public BasePlugin
+template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
 {
   public:
-    explicit LocatePlugin(DataFacadeT *facade) : descriptor_string("locate"), facade(facade) {}
+    explicit TimestampPlugin(const DataFacadeT *facade)
+        : facade(facade), descriptor_string("timestamp")
+    {
+    }
     const std::string GetDescriptor() const final { return descriptor_string; }
-
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
-        // check number of parameters
-        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
-        {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
-        }
-
+        reply.status = http::Reply::ok;
         JSON::Object json_result;
-        FixedPointCoordinate result;
-        if (!facade->LocateClosestEndPointForCoordinate(route_parameters.coordinates.front(),
-                                                        result))
-        {
-            json_result.values["status"] = 207;
-        }
-        else
-        {
-            reply.status = http::Reply::ok;
-            json_result.values["status"] = 0;
-            JSON::Array json_coordinate;
-            json_coordinate.values.push_back(result.lat / COORDINATE_PRECISION);
-            json_coordinate.values.push_back(result.lon / COORDINATE_PRECISION);
-            json_result.values["mapped_coordinate"] = json_coordinate;
-        }
-
+        json_result.values["status"] = 0;
+        const std::string timestamp = facade->GetTimestamp();
+        json_result.values["timestamp"] = timestamp;
         JSON::render(reply.content, json_result);
     }
 
   private:
+    const DataFacadeT *facade;
     std::string descriptor_string;
-    DataFacadeT *facade;
 };
 
-#endif /* LOCATE_PLUGIN_H */
+#endif /* TIMESTAMP_PLUGIN_H */

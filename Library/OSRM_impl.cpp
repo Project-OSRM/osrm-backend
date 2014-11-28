@@ -34,12 +34,12 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <osrm/RouteParameters.h>
 #include <osrm/ServerPaths.h>
 
-#include "../Plugins/DistanceTablePlugin.h"
-#include "../Plugins/HelloWorldPlugin.h"
-#include "../Plugins/LocatePlugin.h"
-#include "../Plugins/NearestPlugin.h"
-#include "../Plugins/TimestampPlugin.h"
-#include "../Plugins/ViaRoutePlugin.h"
+#include "../plugins/distance_table.hpp"
+#include "../plugins/hello_world.hpp"
+#include "../plugins/locate.hpp"
+#include "../plugins/nearest.hpp"
+#include "../plugins/timestamp.hpp"
+#include "../plugins/viaroute.hpp"
 #include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Server/DataStructures/InternalDataFacade.h"
 #include "../Server/DataStructures/SharedBarriers.h"

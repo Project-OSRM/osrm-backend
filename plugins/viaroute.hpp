@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VIA_ROUTE_PLUGIN_H
 #define VIA_ROUTE_PLUGIN_H
 
-#include "BasePlugin.h"
+#include "plugin_base.hpp"
 
 #include "../algorithms/object_encoder.hpp"
 #include "../data_structures/search_engine.hpp"

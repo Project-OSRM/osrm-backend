@@ -28,7 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HELLO_WORLD_PLUGIN_H
 #define HELLO_WORLD_PLUGIN_H
 
-#include "BasePlugin.h"
+#include "plugin_base.hpp"
+
 #include "../data_structures/json_container.hpp"
 #include "../Util/cast.hpp"
 #include "../Util/json_renderer.hpp"

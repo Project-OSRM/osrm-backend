@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DISTANCE_TABLE_PLUGIN_H
 #define DISTANCE_TABLE_PLUGIN_H
 
-#include "BasePlugin.h"
+#include "plugin_base.hpp"
 
 #include "../algorithms/object_encoder.hpp"
 #include "../data_structures/json_container.hpp"
