@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTIONFACTORY_H_
 #define DESCRIPTIONFACTORY_H_
 
-#include "../Algorithms/douglas_peucker.hpp"
+#include "../algorithms/douglas_peucker.hpp"
 #include "../DataStructures/phantom_node.hpp"
 #include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/segment_information.hpp"

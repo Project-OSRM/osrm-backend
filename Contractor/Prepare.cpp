@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "contractor.hpp"
 
-#include "../Algorithms/crc32_processor.hpp"
+#include "../algorithms/crc32_processor.hpp"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/StaticRTree.h"
 #include "../DataStructures/restriction_map.hpp"

@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/Coordinate.h>
 
 #include "../typedefs.h"
-#include "../Algorithms/polyline_formatter.hpp"
+#include "../algorithms/polyline_formatter.hpp"
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/TurnInstructions.h"
 

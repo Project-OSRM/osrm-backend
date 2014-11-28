@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasePlugin.h"
 
-#include "../Algorithms/object_encoder.hpp"
+#include "../algorithms/object_encoder.hpp"
 #include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"

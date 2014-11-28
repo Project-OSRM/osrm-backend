@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDescriptor.h"
 #include "DescriptionFactory.h"
-#include "../Algorithms/object_encoder.hpp"
-#include "../Algorithms/route_name_extraction.hpp"
+#include "../algorithms/object_encoder.hpp"
+#include "../algorithms/route_name_extraction.hpp"
 #include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/segment_information.hpp"
 #include "../DataStructures/TurnInstructions.h"
