@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "EdgeBasedGraphFactory.h"
+#include "edge_based_graph_factory.hpp"
 #include "../algorithms/bfs_components.hpp"
 #include "../DataStructures/Percent.h"
 #include "../Util/compute_angle.hpp"

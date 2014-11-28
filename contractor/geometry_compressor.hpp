@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef GEOMETRY_COMPRESSOR_H
-#define GEOMETRY_COMPRESSOR_H
+#ifndef GEOMETRY_COMPRESSOR_HPP_
+#define GEOMETRY_COMPRESSOR_HPP_
 
 #include "../typedefs.h"
 
@@ -64,4 +64,4 @@ class GeometryCompressor
     std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
 };
 
-#endif // GEOMETRY_COMPRESSOR_H
+#endif // GEOMETRY_COMPRESSOR_HPP_

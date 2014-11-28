@@ -27,9 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //  This class constructs the edge-expanded routing graph
 
-#ifndef EDGEBASEDGRAPHFACTORY_H_
-#define EDGEBASEDGRAPHFACTORY_H_
+#ifndef EDGE_BASED_GRAPH_FACTORY_HPP_
+#define EDGE_BASED_GRAPH_FACTORY_HPP_
 
+#include "geometry_compressor.hpp"
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/EdgeBasedNode.h"
@@ -38,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/TurnInstructions.h"
 #include "../DataStructures/NodeBasedGraph.h"
 #include "../DataStructures/restriction_map.hpp"
-#include "GeometryCompressor.h"
 
 #include <algorithm>
 #include <iosfwd>
@@ -123,4 +123,4 @@ class EdgeBasedGraphFactory
     NodeID max_id;
 };
 
-#endif /* EDGEBASEDGRAPHFACTORY_H_ */
+#endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */

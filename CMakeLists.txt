@@ -60,7 +60,7 @@ add_library(PHANTOMNODE OBJECT DataStructures/phantom_node.cpp)
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
 
-file(GLOB PrepareGlob Contractor/*.cpp DataStructures/HilbertValue.cpp DataStructures/restriction_map.cpp Util/compute_angle.cpp)
+file(GLOB PrepareGlob contractor/*.cpp DataStructures/HilbertValue.cpp DataStructures/restriction_map.cpp Util/compute_angle.cpp)
 set(PrepareSources prepare.cpp ${PrepareGlob})
 add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
 

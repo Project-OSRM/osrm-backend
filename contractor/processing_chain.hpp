@@ -1,7 +1,7 @@
 #ifndef PREPARE_H
 #define PREPARE_H
 
-#include "EdgeBasedGraphFactory.h"
+#include "edge_based_graph_factory.hpp"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/StaticGraph.h"
 class FingerPrint;
