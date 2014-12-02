@@ -86,7 +86,7 @@ template <typename KeyT, typename ValueT> class LRUCache
             result = e.value;
 
             // move to front
-            itemsInCache.splice(positionMap.find(key)->second, itemsInCache, itemsInCache.begin());
+            itemsInCache.splice(itemsInCache.begin(), itemsInCache, positionMap.find(key)->second);
             positionMap.find(key)->second = itemsInCache.begin();
             return true;
         }
