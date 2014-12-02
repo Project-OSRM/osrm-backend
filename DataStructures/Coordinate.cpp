@@ -278,18 +278,40 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
         p = c;
         q = y;
     }
+
     nY = (d * p - c * q) / (a * d - b * c);
 
-    // discretize the result to coordinate precision. it's a hack!
-    if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
+    bool inverse_ratio = false;
+
+    // straight line segment on equator
+    if (std::abs(c) < std::numeric_limits<float>::epsilon() &&
+        std::abs(a) < std::numeric_limits<float>::epsilon())
     {
-        nY = 0.f;
+        ratio = (q - b) / (d - b);
+    }
+    else
+    {
+        if (std::abs(c) < std::numeric_limits<float>::epsilon())
+        {
+            // swap start/end
+            std::swap(a, c);
+            std::swap(b, d);
+            inverse_ratio = true;
+        }
+
+        nY = (d * p - c * q) / (a * d - b * c);
+        // discretize the result to coordinate precision. it's a hack!
+        if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
+        {
+            nY = 0.f;
+        }
+
+        // compute ratio
+        ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
+        // not calculate the explicit values of m an n as we
+        // are just interested in the ratio
     }
 
-    // compute ratio
-    ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
-    // not calculate the explicit values of m an n as we
-    // are just interested in the ratio
     if (std::isnan(ratio))
     {
         ratio = (segment_target == query_location ? 1.f : 0.f);
@@ -301,6 +323,11 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     else if (std::abs(ratio - 1.f) <= std::numeric_limits<double>::epsilon())
     {
         ratio = 1.f;
+    }
+
+    if (inverse_ratio)
+    {
+        ratio = 1.0f - ratio;
     }
 
     // compute nearest location
