@@ -284,14 +284,14 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     bool inverse_ratio = false;
 
     // straight line segment on equator
-    if (std::abs(c) < std::numeric_limits<float>::epsilon() &&
-        std::abs(a) < std::numeric_limits<float>::epsilon())
+    if (std::abs(c) < std::numeric_limits<double>::epsilon() &&
+        std::abs(a) < std::numeric_limits<double>::epsilon())
     {
         ratio = (q - b) / (d - b);
     }
     else
     {
-        if (std::abs(c) < std::numeric_limits<float>::epsilon())
+        if (std::abs(c) < std::numeric_limits<double>::epsilon())
         {
             // swap start/end
             std::swap(a, c);
