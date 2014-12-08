@@ -642,10 +642,6 @@ class StaticRTree
         return result_coordinate.is_valid();
     }
 
-    // implementation of the Hjaltason/Samet query [3], a BFS traversal of the tree
-    // - searches for k elements nearest elements
-    // - continues to find the k+1st element from a big component if k elements
-    //   come from tiny components
     bool IncrementalFindPhantomNodeForCoordinate(
         const FixedPointCoordinate &input_coordinate,
         std::vector<PhantomNode> &result_phantom_node_vector,
@@ -797,9 +793,17 @@ class StaticRTree
         return !result_phantom_node_vector.empty();
     }
 
+    /**
+     * Returns elements within max_distance.
+     * If the minium of elements could not be found in the search radius, widen
+     * it until the minimum can be satisfied.
+     * At the number of returned nodes is capped at the given maximum.
+     */
     bool IncrementalFindPhantomNodeForCoordinateWithDistance(
         const FixedPointCoordinate &input_coordinate,
         std::vector<std::pair<PhantomNode, double>> &result_phantom_node_vector,
+        const double max_distance,
+        const unsigned min_number_of_phantom_nodes,
         const unsigned max_number_of_phantom_nodes,
         const unsigned max_checked_elements = 4 * LEAF_NODE_SIZE)
     {
@@ -884,7 +888,7 @@ class StaticRTree
 
                 // continue searching for the first segment from a big component
                 if (number_of_elements_from_big_cc == 0 &&
-                    number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes &&
+                    number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes-1 &&
                     current_segment.is_in_tiny_cc())
                 {
                     continue;
@@ -899,6 +903,14 @@ class StaticRTree
                     m_coordinate_list->at(current_segment.u),
                     m_coordinate_list->at(current_segment.v), input_coordinate,
                     projected_coordinate, foot_point_coordinate_on_segment, current_ratio);
+
+                if (number_of_elements_from_big_cc > 0
+                && (number_of_elements_from_tiny_cc + number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes
+                || current_perpendicular_distance >= max_distance))
+                {
+                    traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
+                    continue;
+                }
 
                 // store phantom node in result vector
                 result_phantom_node_vector.emplace_back(
@@ -950,7 +962,6 @@ class StaticRTree
 
         return !result_phantom_node_vector.empty();
     }
-
 
     bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                       PhantomNode &result_phantom_node,
