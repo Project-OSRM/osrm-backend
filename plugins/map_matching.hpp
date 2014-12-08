@@ -1,5 +1,5 @@
-/*
-    open source routing machine
+    /*
+        open source routing machine
     Copyright (C) Dennis Luxen, others 2010
 
 This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../routing_algorithms/map_matching.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/string_util.hpp"
+#include "../descriptors/descriptor_base.hpp"
+#include "../descriptors/gpx_descriptor.hpp"
+#include "../descriptors/json_descriptor.hpp"
 
 #include <cstdlib>
 
@@ -40,11 +43,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 {
   private:
+    std::unordered_map<std::string, unsigned> descriptor_table;
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
   public:
     MapMatchingPlugin(DataFacadeT *facade) : descriptor_string("match"), facade(facade)
     {
+        descriptor_table.emplace("json", 0);
+        descriptor_table.emplace("gpx", 1);
+        // descriptor_table.emplace("geojson", 2);
+        //
         search_engine_ptr = std::make_shared<SearchEngine<DataFacadeT>>(facade);
     }
 
@@ -55,46 +63,97 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         // check number of parameters
-
-        SimpleLogger().Write() << "1";
         if (!check_all_coordinates(route_parameters.coordinates))
         {
             return 400;
         }
 
-        SimpleLogger().Write() << "2";
-
         InternalRouteResult raw_route;
         Matching::CandidateLists candidate_lists;
-        candidate_lists.resize(route_parameters.coordinates.size());
 
-        SimpleLogger().Write() << "3";
-        // fetch  10 candidates for each given coordinate
-        for (const auto current_coordinate : osrm::irange<std::size_t>(0, candidate_lists.size()))
+        double last_distance = coordinate_calculation::great_circle_distance(
+            route_parameters.coordinates[0],
+            route_parameters.coordinates[1]);
+        for (const auto current_coordinate : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
+            if (0 < current_coordinate)
+                last_distance = coordinate_calculation::great_circle_distance(
+                    route_parameters.coordinates[current_coordinate - 1],
+                    route_parameters.coordinates[current_coordinate]);
+
+            std::cout << "Searching: " << current_coordinate << std::endl;
+            std::vector<std::pair<PhantomNode, double>> candidates;
             if (!facade->IncrementalFindPhantomNodeForCoordinateWithDistance(
                     route_parameters.coordinates[current_coordinate],
-                    candidate_lists[current_coordinate],
-                    10))
+                    candidates,
+                    last_distance,
+                    5,
+                    20))
             {
-                return 400;
+                std::cout << "Nothing found for " << current_coordinate << std::endl;
+                continue;
             }
 
-            while (candidate_lists[current_coordinate].size() < 10)
-            {
-                // TODO: add dummy candidates, if any are missing
-                // TODO: add factory method to get an invalid PhantomNode/Distance pair
-            }
+            candidate_lists.push_back(candidates);
+
+            std::cout << current_coordinate << " (" << (last_distance / 2.0)  << ") : "
+                      << candidates.size() << std::endl;
+
+            BOOST_ASSERT(candidate_lists[current_coordinate].size() == 10);
         }
-        SimpleLogger().Write() << "4";
+
+        if (2 > candidate_lists.size())
+        {
+            return 400;
+        }
 
         // call the actual map matching
-        search_engine_ptr->map_matching(10, candidate_lists, route_parameters.coordinates, raw_route);
+        std::vector<PhantomNode> matched_nodes;
+        JSON::Object debug_info;
+        search_engine_ptr->map_matching(candidate_lists, route_parameters.coordinates, matched_nodes, debug_info);
 
-        if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
+        PhantomNodes current_phantom_node_pair;
+        for (unsigned i = 0; i < matched_nodes.size() - 1; ++i)
         {
-            SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
+            current_phantom_node_pair.source_phantom = matched_nodes[i];
+            current_phantom_node_pair.target_phantom = matched_nodes[i + 1];
+            raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
+
+        search_engine_ptr->shortest_path(
+            raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
+
+        DescriptorConfig descriptor_config;
+
+        auto iter = descriptor_table.find(route_parameters.output_format);
+        unsigned descriptor_type = (iter != descriptor_table.end() ? iter->second : 0);
+
+        descriptor_config.zoom_level = route_parameters.zoom_level;
+        descriptor_config.instructions = route_parameters.print_instructions;
+        descriptor_config.geometry = route_parameters.geometry;
+        descriptor_config.encode_geometry = route_parameters.compression;
+
+        std::shared_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+        switch (descriptor_type)
+        {
+        // case 0:
+        //     descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
+        //     break;
+        case 1:
+            descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>(facade);
+            break;
+        // case 2:
+        //      descriptor = std::make_shared<GEOJSONDescriptor<DataFacadeT>>();
+        //      break;
+        default:
+            descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>(facade);
+            break;
+        }
+
+        descriptor->SetConfig(descriptor_config);
+        descriptor->Run(raw_route, json_result);
+
+        json_result.values["debug"] = debug_info;
 
         return 200;
     }

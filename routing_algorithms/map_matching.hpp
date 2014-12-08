@@ -31,6 +31,38 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iomanip>
 #include <numeric>
 
+#include <fstream>
+
+template<typename T>
+T makeJSONSave(T d)
+{
+    if (std::isnan(d) || std::numeric_limits<T>::infinity() == d) {
+        return std::numeric_limits<T>::max();
+    }
+    if (-std::numeric_limits<T>::infinity() == d) {
+        return -std::numeric_limits<T>::max();
+    }
+
+    return d;
+}
+
+void appendToJSONArray(JSON::Array& a) { }
+
+template<typename T, typename... Args>
+void appendToJSONArray(JSON::Array& a, T value, Args... args)
+{
+    a.values.emplace_back(value);
+    appendToJSONArray(a, args...);
+}
+
+template<typename... Args>
+JSON::Array makeJSONArray(Args... args)
+{
+    JSON::Array a;
+    appendToJSONArray(a, args...);
+    return a;
+}
+
 namespace Matching
 {
 typedef std::vector<std::pair<PhantomNode, double>> CandidateList;
@@ -114,9 +146,9 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                     const std::vector<FixedPointCoordinate> coordinate_list) const
     {
         std::vector<double> d_t_list, median_select_d_t_list;
-        for (auto t = 1; t < timestamp_list.size(); ++t)
+        for (auto t = 1u; t < timestamp_list.size(); ++t)
         {
-            for (auto s = 0; s < state_size; ++s)
+            for (auto s = 0u; s < state_size; ++s)
             {
                 d_t_list.push_back(get_distance_difference(coordinate_list[t - 1],
                                                            coordinate_list[t],
@@ -141,7 +173,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                                    const PhantomNode &target_phantom) const
     {
         // great circle distance of two locations - median/avg dist table(candidate list1/2)
-        const EdgeWeight network_distance = get_network_distance(source_phantom, target_phantom);
+        const auto network_distance = get_network_distance(source_phantom, target_phantom);
         const auto great_circle_distance =
             coordinate_calculation::great_circle_distance(location1, location2);
 
@@ -152,7 +184,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
         return network_distance - great_circle_distance;
     }
 
-    EdgeWeight get_network_distance(const PhantomNode &source_phantom,
+    double get_network_distance(const PhantomNode &source_phantom,
                                     const PhantomNode &target_phantom) const
     {
         EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
@@ -208,7 +240,31 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                     reverse_heap, forward_heap, &middle_node, &upper_bound, edge_offset, false);
             }
         }
-        return upper_bound;
+
+        double distance = std::numeric_limits<double>::max();
+        if (upper_bound != INVALID_EDGE_WEIGHT)
+        {
+            std::vector<NodeID> packed_leg;
+            super::RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle_node, packed_leg);
+            std::vector<PathData> unpacked_path;
+            PhantomNodes nodes;
+            nodes.source_phantom = source_phantom;
+            nodes.target_phantom = target_phantom;
+            super::UnpackPath(packed_leg, nodes, unpacked_path);
+
+            FixedPointCoordinate previous_coordinate = source_phantom.location;
+            FixedPointCoordinate current_coordinate;
+            distance = 0;
+            for (const auto& p : unpacked_path)
+            {
+                current_coordinate = super::facade->GetCoordinateOfNode(p.node);
+                distance += coordinate_calculation::great_circle_distance(previous_coordinate, current_coordinate);
+                previous_coordinate = current_coordinate;
+            }
+            distance += coordinate_calculation::great_circle_distance(previous_coordinate, target_phantom.location);
+        }
+
+        return distance;
     }
 
   public:
@@ -217,97 +273,170 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
     {
     }
 
-    void operator()(const unsigned state_size,
-                    const Matching::CandidateLists &timestamp_list,
-                    const std::vector<FixedPointCoordinate> coordinate_list,
-                    InternalRouteResult &raw_route_data) const
+    // TODO optimize: a lot of copying that could probably be avoided
+    void expandCandidates(const Matching::CandidateLists &candidates_lists,
+                          Matching::CandidateLists &expanded_lists) const
     {
-        BOOST_ASSERT(state_size != std::numeric_limits<unsigned>::max());
-        BOOST_ASSERT(state_size != 0);
-        SimpleLogger().Write() << "matching starts with " << timestamp_list.size() << " locations";
-
-        SimpleLogger().Write() << "state_size: " << state_size;
-
-        std::vector<std::vector<double>> viterbi(state_size,
-                                                 std::vector<double>(timestamp_list.size() + 1, 0));
-        std::vector<std::vector<std::size_t>> parent(
-            state_size, std::vector<std::size_t>(timestamp_list.size() + 1, 0));
-
-        SimpleLogger().Write() << "a";
-
-        for (auto s = 0; s < state_size; ++s)
+        // expand list of PhantomNodes to be single-directional
+        expanded_lists.resize(candidates_lists.size());
+        for (const auto i : osrm::irange(0lu, candidates_lists.size()))
         {
-            SimpleLogger().Write() << "initializing s: " << s << "/" << state_size;
-            SimpleLogger().Write()
-                << " distance: " << timestamp_list[0][s].second << " at "
-                << timestamp_list[0][s].first.location << " prob " << std::setprecision(10)
-                << emission_probability(timestamp_list[0][s].second) << " logprob "
-                << log_probability(emission_probability(timestamp_list[0][s].second));
-            // TODO: implement
-            const double emission_pr = 0.;
-            viterbi[s][0] = emission_pr;
-            parent[s][0] = s;
-        }
-        SimpleLogger().Write() << "b";
-
-        // attention, this call is relatively expensive
-        const auto beta = get_beta(state_size, timestamp_list, coordinate_list);
-
-        for (auto t = 1; t < timestamp_list.size(); ++t)
-        {
-            // compute d_t for this timestamp and the next one
-            for (auto s = 0; s < state_size; ++s)
+            for (const auto& candidate : candidates_lists[i])
             {
-                for (auto s_prime = 0; s_prime < state_size; ++s_prime)
+                // bi-directional edge, split phantom node
+                if (candidate.first.forward_node_id != SPECIAL_NODEID && candidate.first.reverse_node_id != SPECIAL_NODEID)
                 {
-                    // how likely is candidate s_prime at time t to be emitted?
-                    const double emission_pr = emission_probability(timestamp_list[t][s_prime].second);
-
-                    // get distance diff between loc1/2 and locs/s_prime
-                    const auto d_t = get_distance_difference(coordinate_list[t-1],
-                                                             coordinate_list[t],
-                                                             timestamp_list[t-1][s].first,
-                                                             timestamp_list[t][s_prime].first);
-
-                    // plug probabilities together. TODO: change to addition for logprobs
-                    const double transition_pr = transition_probability(beta, d_t);
-                    const double new_value = viterbi[s][t] * emission_pr * transition_pr;
-                    if (new_value > viterbi[s_prime][t])
-                    {
-                        viterbi[s_prime][t] = new_value;
-                        parent[s_prime][t] = s;
-                    }
+                    PhantomNode forward_node(candidate.first);
+                    PhantomNode reverse_node(candidate.first);
+                    forward_node.reverse_node_id = SPECIAL_NODEID;
+                    reverse_node.forward_node_id = SPECIAL_NODEID;
+                    expanded_lists[i].emplace_back(forward_node, candidate.second);
+                    expanded_lists[i].emplace_back(reverse_node, candidate.second);
+                }
+                else
+                {
+                    expanded_lists[i].push_back(candidate);
                 }
             }
         }
-        SimpleLogger().Write() << "c";
-        SimpleLogger().Write() << "timestamps: " << timestamp_list.size();
-        const auto number_of_timestamps = timestamp_list.size();
-        const auto max_element_iter = std::max_element(viterbi[number_of_timestamps].begin(),
-                                                       viterbi[number_of_timestamps].end());
-        auto parent_index = std::distance(max_element_iter, viterbi[number_of_timestamps].begin());
+    }
+
+    void operator()(const Matching::CandidateLists &candidates_lists,
+                    const std::vector<FixedPointCoordinate> coordinate_list,
+                    std::vector<PhantomNode>& matched_nodes,
+                    JSON::Object& _debug_info) const
+    {
+        BOOST_ASSERT(candidates_lists.size() == coordinate_list.size());
+
+        Matching::CandidateLists timestamp_list;
+        expandCandidates(candidates_lists, timestamp_list);
+
+        BOOST_ASSERT(timestamp_list.size() > 0);
+
+        // TODO for the viterbi values we actually only need the current and last row
+        std::vector<std::vector<double>> viterbi;
+        std::vector<std::vector<std::size_t>> parents;
+        for (const auto& l : timestamp_list)
+        {
+            viterbi.emplace_back(l.size(), -std::numeric_limits<double>::infinity());
+            parents.emplace_back(l.size(), 0);
+        }
+
+        JSON::Array _debug_viterbi;
+        JSON::Array _debug_initial_viterbi;
+        for (auto s = 0u; s < viterbi[0].size(); ++s)
+        {
+            // this might need to be squared as pi_s is also defined as the emission
+            // probability in the paper.
+            viterbi[0][s] = log_probability(emission_probability(timestamp_list[0][s].second));
+            parents[0][s] = s;
+
+            _debug_initial_viterbi.values.push_back(makeJSONSave(viterbi[0][s]));
+        }
+        _debug_viterbi.values.push_back(_debug_initial_viterbi);
+
+        // attention, this call is relatively expensive
+        //const auto beta = get_beta(state_size, timestamp_list, coordinate_list);
+        const auto beta = 10.0;
+
+        JSON::Array _debug_timestamps;
+        for (auto t = 1u; t < timestamp_list.size(); ++t)
+        {
+            const auto& prev_viterbi = viterbi[t-1];
+            const auto& prev_timestamps_list = timestamp_list[t-1];
+            const auto& prev_coordinate = coordinate_list[t-1];
+
+            auto& current_viterbi = viterbi[t];
+            auto& current_parents = parents[t];
+            const auto& current_timestamps_list = timestamp_list[t];
+            const auto& current_coordinate = coordinate_list[t];
+
+            JSON::Array _debug_transition_rows;
+            // compute d_t for this timestamp and the next one
+            for (auto s = 0u; s < prev_viterbi.size(); ++s)
+            {
+
+                JSON::Array _debug_row;
+                for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
+                {
+
+                    // how likely is candidate s_prime at time t to be emitted?
+                    const double emission_pr = log_probability(emission_probability(timestamp_list[t][s_prime].second));
+
+                    // get distance diff between loc1/2 and locs/s_prime
+                    const auto d_t = get_distance_difference(prev_coordinate,
+                                                             current_coordinate,
+                                                             prev_timestamps_list[s].first,
+                                                             current_timestamps_list[s_prime].first);
+
+                    // plug probabilities together
+                    const double transition_pr = log_probability(transition_probability(d_t, beta));
+                    const double new_value = prev_viterbi[s] + emission_pr + transition_pr;
+
+                    JSON::Array _debug_element = makeJSONArray(
+                        makeJSONSave(prev_viterbi[s]),
+                        makeJSONSave(emission_pr),
+                        makeJSONSave(transition_pr),
+                        get_network_distance(prev_timestamps_list[s].first, current_timestamps_list[s_prime].first),
+                        coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate)
+                    );
+
+                    _debug_row.values.push_back(_debug_element);
+
+                    if (new_value > current_viterbi[s_prime])
+                    {
+                        current_viterbi[s_prime] = new_value;
+                        current_parents[s_prime] = s;
+                    }
+                }
+                _debug_transition_rows.values.push_back(_debug_row);
+            }
+            _debug_timestamps.values.push_back(_debug_transition_rows);
+
+            JSON::Array _debug_viterbi_col;
+            for (auto s_prime = 0u; s_prime < current_timestamps_list.size(); ++s_prime)
+            {
+                _debug_viterbi_col.values.push_back(makeJSONSave(current_viterbi[s_prime]));
+            }
+            _debug_viterbi.values.push_back(_debug_viterbi_col);
+        }
+
+        _debug_info.values["transitions"] = _debug_timestamps;
+        _debug_info.values["viterbi"] = _debug_viterbi;
+        _debug_info.values["beta"] = beta;
+
+        // loop through the columns, and only compare the last entry
+        auto max_element_iter = std::max_element(viterbi.back().begin(), viterbi.back().end());
+        auto parent_index = std::distance(viterbi.back().begin(), max_element_iter);
         std::deque<std::size_t> reconstructed_indices;
 
-        SimpleLogger().Write() << "d";
-
-        for (auto i = number_of_timestamps - 1; i > 0; --i)
+        for (auto i = timestamp_list.size() - 1u; i > 0u; --i)
         {
-            SimpleLogger().Write() << "[" << i << "] parent: " << parent_index ;
             reconstructed_indices.push_front(parent_index);
-            parent_index = parent[parent_index][i];
+            parent_index = parents[i][parent_index];
         }
-        SimpleLogger().Write() << "[0] parent: " << parent_index;
         reconstructed_indices.push_front(parent_index);
 
-        SimpleLogger().Write() << "e";
-
-        for (auto i = 0; i < reconstructed_indices.size(); ++i)
+        JSON::Array _debug_chosen_candidates;
+        matched_nodes.resize(reconstructed_indices.size());
+        for (auto i = 0u; i < reconstructed_indices.size(); ++i)
         {
             auto location_index = reconstructed_indices[i];
-            SimpleLogger().Write() << std::setprecision(8) << "location " << coordinate_list[i] << " to " << timestamp_list[i][location_index].first.location;
+            matched_nodes[i] = timestamp_list[i][location_index].first;
+            _debug_chosen_candidates.values.push_back(location_index);
         }
-
-        SimpleLogger().Write() << "f, done";
+        _debug_info.values["chosen_candidates"] = _debug_chosen_candidates;
+        JSON::Array _debug_expanded_candidates;
+        for (const auto& l : timestamp_list) {
+            JSON::Array _debug_expanded_candidates_col;
+            for (const auto& pair : l) {
+                const auto& coord = pair.first.location;
+                _debug_expanded_candidates_col.values.push_back(makeJSONArray(coord.lat / COORDINATE_PRECISION,
+                                                                              coord.lon / COORDINATE_PRECISION));
+            }
+            _debug_expanded_candidates.values.push_back(_debug_expanded_candidates_col);
+        }
+        _debug_info.values["expanded_candidates"] = _debug_expanded_candidates;
     }
 };
 
