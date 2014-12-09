@@ -142,14 +142,17 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting : public Bas
         }
 
         // Execute bidirectional Dijkstra shortest path search.
-        while (0 < (forward_heap.Size() + backward_heap.Size()))
+        bool forward_heap_finished = false;
+        while (0 < backward_heap.Size() || (0 < forward_heap.Size() && !forward_heap_finished))
         {
             bool forward_dir = forward ? true : false;
 
             if (0 < forward_heap.Size())
             {
-                super::RoutingStep(
-                    forward_heap, backward_heap, &middle, &local_upper_bound, 0, forward_dir);
+                forward_heap_finished =
+                    forward_heap_finished ||
+                    super::RoutingStep(forward_heap, backward_heap, &middle, &local_upper_bound, 0,
+                                       forward_dir, false);
             }
             if (0 < backward_heap.Size())
             {
