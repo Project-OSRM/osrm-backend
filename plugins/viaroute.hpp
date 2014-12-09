@@ -135,8 +135,10 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             break;
         }
 
+        JSON::Object result;
         descriptor->SetConfig(route_parameters);
-        descriptor->Run(raw_route, reply);
+        descriptor->Run(raw_route, result);
+        descriptor->Render(result, reply.content);
     }
 };
 
