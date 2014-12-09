@@ -34,18 +34,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/search_engine.hpp"
 
-
 template <class DataFacadeT, bool forward> class MultiTargetPlugin final : public BasePlugin
 {
   public:
     explicit MultiTargetPlugin(DataFacadeT *facade)
-        : facade(facade),
-          search_engine_ptr(std::make_shared<SearchEngine<DataFacadeT>>(facade))
-    {}
+        : facade(facade), search_engine_ptr(std::make_shared<SearchEngine<DataFacadeT>>(facade))
+    {
+    }
 
     virtual ~MultiTargetPlugin() {}
 
-    std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> HandleRequest(const RouteParameters &route_parameters)
+    std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>>
+    HandleRequest(const RouteParameters &route_parameters)
     {
         // check number of parameters
         if (2 > route_parameters.coordinates.size())
@@ -53,10 +53,11 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin final : publi
             return nullptr;
         }
 
-        if (std::any_of(begin(route_parameters.coordinates),
-                        end(route_parameters.coordinates),
+        if (std::any_of(begin(route_parameters.coordinates), end(route_parameters.coordinates),
                         [&](FixedPointCoordinate coordinate)
-                        { return !coordinate.is_valid(); }))
+                        {
+                return !coordinate.is_valid();
+            }))
         {
             return nullptr;
         }
@@ -78,8 +79,7 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin final : publi
             }
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
                                                             phantom_node_vector[i],
-                                                            route_parameters.zoom_level,
-                                                            1);
+                                                            route_parameters.zoom_level, 1);
 
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
@@ -96,7 +96,8 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin final : publi
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
-        std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> result_table = HandleRequest(route_parameters);
+        std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> result_table =
+            HandleRequest(route_parameters);
 
         if (!result_table)
         {
@@ -108,7 +109,7 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin final : publi
         JSON::Array json_array;
         for (unsigned column = 0; column < route_parameters.coordinates.size() - 1; ++column)
         {
-            auto routing_result = result_table->operator [](column);
+            auto routing_result = result_table->operator[](column);
 
             JSON::Object result;
             result.values["time_cost"] = routing_result.first;
@@ -119,15 +120,11 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin final : publi
         JSON::render(reply.content, json_object);
     }
 
-    const std::string GetDescriptor() const
-    {
-        return forward ? "multitarget" : "multisource";
-    }
+    const std::string GetDescriptor() const { return forward ? "multitarget" : "multisource"; }
 
-private:
-  DataFacadeT *facade;
-  std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
+  private:
+    DataFacadeT *facade;
+    std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 };
-
 
 #endif // MULTI_TARGET_PLUGIN_H

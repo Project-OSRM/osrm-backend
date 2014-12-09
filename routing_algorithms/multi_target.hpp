@@ -38,7 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <vector>
 
-template <class DataFacadeT, bool forward> class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
+template <class DataFacadeT, bool forward>
+class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
 {
     typedef BasicRoutingInterface<DataFacadeT> super;
     typedef SearchEngineData::QueryHeap QueryHeap;
@@ -52,8 +53,8 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting final : publ
 
     ~MultiTargetRouting() {}
 
-    std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>> operator()(const PhantomNodeArray &phantom_nodes_array)
-        const
+    std::shared_ptr<std::vector<std::pair<EdgeWeight, double>>>
+    operator()(const PhantomNodeArray &phantom_nodes_array) const
     {
         BOOST_ASSERT(phantom_nodes_array.size() >= 2);
 
@@ -66,9 +67,7 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting final : publ
         // which one is the source and which are the targets.
         const auto &source = phantom_nodes_array[0];
         std::vector<std::reference_wrapper<const std::vector<PhantomNode>>> targets(
-                std::next(begin(phantom_nodes_array)),
-                end(phantom_nodes_array)
-        );
+            std::next(begin(phantom_nodes_array)), end(phantom_nodes_array));
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -113,11 +112,10 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting final : publ
         return results;
     }
 
-    std::pair<EdgeWeight, double> FindShortestPath(
-            const std::vector<PhantomNode> &source,
-            const std::vector<PhantomNode> &target,
-            QueryHeap &forward_heap,
-            QueryHeap &backward_heap) const
+    std::pair<EdgeWeight, double> FindShortestPath(const std::vector<PhantomNode> &source,
+                                                   const std::vector<PhantomNode> &target,
+                                                   QueryHeap &forward_heap,
+                                                   QueryHeap &backward_heap) const
     {
         NodeID middle = UINT_MAX;
         int local_upper_bound = INT_MAX;
@@ -156,8 +154,8 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting final : publ
             }
             if (0 < backward_heap.Size())
             {
-                super::RoutingStep(
-                    backward_heap, forward_heap, &middle, &local_upper_bound, 0, !forward_dir);
+                super::RoutingStep(backward_heap, forward_heap, &middle, &local_upper_bound, 0,
+                                   !forward_dir);
             }
         }
 
@@ -176,14 +174,18 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting final : publ
             std::reverse(begin(packed_path), end(packed_path));
         }
 
-        auto source_phantom_it = std::find_if(begin(source), end(source), [&packed_path](PhantomNode const& node) {
-            return node.forward_node_id == packed_path[forward ? 0 : packed_path.size() - 1] ||
-                   node.reverse_node_id == packed_path[forward ? 0 : packed_path.size() - 1];
-        });
-        auto target_phantom_it = std::find_if(begin(target), end(target), [&packed_path](PhantomNode const& node) {
-            return node.forward_node_id == packed_path[forward ? packed_path.size() - 1 : 0] ||
-                   node.reverse_node_id == packed_path[forward ? packed_path.size() - 1 : 0];
-        });
+        auto source_phantom_it =
+            std::find_if(begin(source), end(source), [&packed_path](PhantomNode const &node)
+                         {
+                return node.forward_node_id == packed_path[forward ? 0 : packed_path.size() - 1] ||
+                       node.reverse_node_id == packed_path[forward ? 0 : packed_path.size() - 1];
+            });
+        auto target_phantom_it =
+            std::find_if(begin(target), end(target), [&packed_path](PhantomNode const &node)
+                         {
+                return node.forward_node_id == packed_path[forward ? packed_path.size() - 1 : 0] ||
+                       node.reverse_node_id == packed_path[forward ? packed_path.size() - 1 : 0];
+            });
 
         BOOST_ASSERT(source_phantom_it != end(source));
         BOOST_ASSERT(target_phantom_it != end(target));
@@ -191,27 +193,30 @@ template <class DataFacadeT, bool forward> class MultiTargetRouting final : publ
         std::vector<PathData> unpacked_path;
         if (forward)
         {
-            super::UnpackPath(packed_path, { *source_phantom_it, *target_phantom_it }, unpacked_path);
+            super::UnpackPath(packed_path, {*source_phantom_it, *target_phantom_it}, unpacked_path);
         }
         else
         {
-            super::UnpackPath(packed_path, { *target_phantom_it, *source_phantom_it }, unpacked_path);
+            super::UnpackPath(packed_path, {*target_phantom_it, *source_phantom_it}, unpacked_path);
         }
 
         std::vector<FixedPointCoordinate> coordinates;
         coordinates.reserve(unpacked_path.size() + 2);
 
-        coordinates.emplace_back(forward ? source_phantom_it->location : target_phantom_it->location);
+        coordinates.emplace_back(forward ? source_phantom_it->location
+                                         : target_phantom_it->location);
         for (const auto &path_data : unpacked_path)
         {
             coordinates.emplace_back(super::facade->GetCoordinateOfNode(path_data.node));
         }
-        coordinates.emplace_back(forward ? target_phantom_it->location : source_phantom_it->location);
+        coordinates.emplace_back(forward ? target_phantom_it->location
+                                         : source_phantom_it->location);
 
         double distance = 0.0;
         for (int i = 1; i < coordinates.size(); ++i)
         {
-           distance += FixedPointCoordinate::ApproximateEuclideanDistance(coordinates[i - 1], coordinates[i]);
+            distance += FixedPointCoordinate::ApproximateEuclideanDistance(coordinates[i - 1],
+                                                                           coordinates[i]);
         }
 
         return std::make_pair(round(local_upper_bound / 10.), distance);
