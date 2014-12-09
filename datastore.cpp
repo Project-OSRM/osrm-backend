@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,28 +25,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "DataStructures/OriginalEdgeData.h"
-#include "DataStructures/RangeTable.h"
-#include "DataStructures/QueryEdge.h"
-#include "DataStructures/SharedMemoryFactory.h"
-#include "DataStructures/SharedMemoryVectorWrapper.h"
-#include "DataStructures/StaticGraph.h"
-#include "DataStructures/StaticRTree.h"
-#include "DataStructures/TurnInstructions.h"
+#include "data_structures/original_edge_data.hpp"
+#include "data_structures/range_table.hpp"
+#include "data_structures/query_edge.hpp"
+#include "data_structures/shared_memory_factory.hpp"
+#include "data_structures/shared_memory_vector_wrapper.hpp"
+#include "data_structures/static_graph.hpp"
+#include "data_structures/static_rtree.hpp"
+#include "data_structures/turn_instructions.hpp"
 #include "Server/DataStructures/BaseDataFacade.h"
 #include "Server/DataStructures/SharedDataType.h"
 #include "Server/DataStructures/SharedBarriers.h"
 #include "Util/BoostFileSystemFix.h"
 #include "Util/DataStoreOptions.h"
-#include "Util/SimpleLogger.h"
+#include "Util/simple_logger.hpp"
 #include "Util/FingerPrint.h"
 #include "typedefs.h"
 
 #include <osrm/Coordinate.h>
 
-typedef BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf RTreeLeaf;
-typedef StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;
-typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
+using RTreeLeaf = BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf;
+using RTreeNode = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode;
+using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -90,33 +90,21 @@ void delete_region(const SharedDataType region)
     }
 }
 
-// find all existing shmem regions and remove them.
-void springclean()
-{
-    SimpleLogger().Write() << "spring-cleaning all shared memory regions";
-    delete_region(DATA_1);
-    delete_region(LAYOUT_1);
-    delete_region(DATA_2);
-    delete_region(LAYOUT_2);
-    delete_region(CURRENT_REGIONS);
-}
-
 int main(const int argc, const char *argv[])
 {
     LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
 
-#ifdef __linux__
-    // try to disable swapping on Linux
-    const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
-    if (-1 == mlockall(lock_flags))
-    {
-        SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
-    }
-#endif
-
     try
     {
+#ifdef __linux__
+        // try to disable swapping on Linux
+        const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
+        if (-1 == mlockall(lock_flags))
+        {
+            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
+        }
+#endif
         try
         {
             boost::interprocess::scoped_lock<boost::interprocess::named_mutex> pending_lock(
@@ -138,14 +126,8 @@ int main(const int argc, const char *argv[])
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
         ServerPaths server_paths;
-        bool should_springclean = false;
-        if (!GenerateDataStoreOptions(argc, argv, server_paths, should_springclean))
+        if (!GenerateDataStoreOptions(argc, argv, server_paths))
         {
-            return 0;
-        }
-        if (should_springclean)
-        {
-            springclean();
             return 0;
         }
 
@@ -267,6 +249,8 @@ int main(const int argc, const char *argv[])
                                                 number_of_original_edges);
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_ID_LIST,
                                                   number_of_original_edges);
+        shared_layout_ptr->SetBlockSize<TravelMode>(SharedDataLayout::TRAVEL_MODE,
+                                                    number_of_original_edges);
         shared_layout_ptr->SetBlockSize<TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
                                                          number_of_original_edges);
         // note: there are 32 geometry indicators in one unsigned block
@@ -302,7 +286,7 @@ int main(const int argc, const char *argv[])
         // load graph edge size
         unsigned number_of_graph_edges = 0;
         hsgr_input_stream.read((char *)&number_of_graph_edges, sizeof(unsigned));
-        BOOST_ASSERT_MSG(0 != number_of_graph_edges, "number of graph edges is zero");
+        // BOOST_ASSERT_MSG(0 != number_of_graph_edges, "number of graph edges is zero");
         shared_layout_ptr->SetBlockSize<QueryGraph::EdgeArrayEntry>(
             SharedDataLayout::GRAPH_EDGE_LIST, number_of_graph_edges);
 
@@ -360,7 +344,6 @@ int main(const int argc, const char *argv[])
         geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_LIST,
                                                   number_of_compressed_geometries);
-
         // allocate shared memory block
         SimpleLogger().Write() << "allocating shared memory of "
                                << shared_layout_ptr->GetSizeOfLayout() << " bytes";
@@ -426,6 +409,10 @@ int main(const int argc, const char *argv[])
         unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
             shared_memory_ptr, SharedDataLayout::NAME_ID_LIST);
 
+        TravelMode *travel_mode_ptr =
+            shared_layout_ptr->GetBlockPtr<TravelMode, true>(
+                shared_memory_ptr, SharedDataLayout::TRAVEL_MODE);
+
         TurnInstruction *turn_instructions_ptr =
             shared_layout_ptr->GetBlockPtr<TurnInstruction, true>(
                 shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
@@ -439,6 +426,7 @@ int main(const int argc, const char *argv[])
             edges_input_stream.read((char *)&(current_edge_data), sizeof(OriginalEdgeData));
             via_node_ptr[i] = current_edge_data.via_node;
             name_id_ptr[i] = current_edge_data.name_id;
+            travel_mode_ptr[i] = current_edge_data.travel_mode;
             turn_instructions_ptr[i] = current_edge_data.turn_instruction;
 
             const unsigned bucket = i / 32;
@@ -493,10 +481,10 @@ int main(const int argc, const char *argv[])
             shared_layout_ptr->GetBlockPtr<FixedPointCoordinate, true>(
                 shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
 
-        NodeInfo current_node;
+        QueryNode current_node;
         for (unsigned i = 0; i < coordinate_list_size; ++i)
         {
-            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
+            nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
             coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon);
         }
         nodes_input_stream.close();

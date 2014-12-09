@@ -32,19 +32,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDataFacade.h"
 
-#include "../../DataStructures/OriginalEdgeData.h"
-#include "../../DataStructures/QueryNode.h"
-#include "../../DataStructures/QueryEdge.h"
-#include "../../DataStructures/SharedMemoryVectorWrapper.h"
-#include "../../DataStructures/StaticGraph.h"
-#include "../../DataStructures/StaticRTree.h"
-#include "../../DataStructures/RangeTable.h"
+#include "../../data_structures/original_edge_data.hpp"
+#include "../../data_structures/query_node.hpp"
+#include "../../data_structures/query_edge.hpp"
+#include "../../data_structures/shared_memory_vector_wrapper.hpp"
+#include "../../data_structures/static_graph.hpp"
+#include "../../data_structures/static_rtree.hpp"
+#include "../../data_structures/range_table.hpp"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
-#include "../../Util/ProgramOptions.h"
-#include "../../Util/SimpleLogger.h"
+#include "../../Util/simple_logger.hpp"
 
 #include <osrm/Coordinate.h>
+#include <osrm/ServerPaths.h>
 
 template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<EdgeDataT>
 {
@@ -66,8 +66,9 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     ShM<NodeID, false>::vector m_via_node_list;
     ShM<unsigned, false>::vector m_name_ID_list;
     ShM<TurnInstruction, false>::vector m_turn_instruction_list;
+    ShM<TravelMode, false>::vector m_travel_mode_list;
     ShM<char, false>::vector m_names_char_list;
-    ShM<bool, false>::vector m_egde_is_compressed;
+    ShM<bool, false>::vector m_edge_is_compressed;
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
 
@@ -125,14 +126,14 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     {
         boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
-        NodeInfo current_node;
+        QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list =
             std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
-            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
+            nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
             m_coordinate_list->at(i) = FixedPointCoordinate(current_node.lat, current_node.lon);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
@@ -145,7 +146,8 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         m_via_node_list.resize(number_of_edges);
         m_name_ID_list.resize(number_of_edges);
         m_turn_instruction_list.resize(number_of_edges);
-        m_egde_is_compressed.resize(number_of_edges);
+        m_travel_mode_list.resize(number_of_edges);
+        m_edge_is_compressed.resize(number_of_edges);
 
         unsigned compressed = 0;
 
@@ -156,8 +158,9 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             m_via_node_list[i] = current_edge_data.via_node;
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
-            m_egde_is_compressed[i] = current_edge_data.compressed_geometry;
-            if (m_egde_is_compressed[i])
+            m_travel_mode_list[i] = current_edge_data.travel_mode;
+            m_edge_is_compressed[i] = current_edge_data.compressed_geometry;
+            if (m_edge_is_compressed[i])
             {
                 ++compressed;
             }
@@ -288,7 +291,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         SimpleLogger().Write() << "loading graph data";
         AssertPathExists(hsgr_path);
         LoadGraph(hsgr_path);
-        SimpleLogger().Write() << "loading egde information";
+        SimpleLogger().Write() << "loading edge information";
         AssertPathExists(nodes_data_path);
         AssertPathExists(edges_data_path);
         LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
@@ -349,11 +352,16 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         return m_coordinate_list->at(id);
     };
 
-    bool EdgeIsCompressed(const unsigned id) const { return m_egde_is_compressed.at(id); }
+    bool EdgeIsCompressed(const unsigned id) const { return m_edge_is_compressed.at(id); }
 
     TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const final
     {
         return m_turn_instruction_list.at(id);
+    }
+
+    TravelMode GetTravelModeForEdgeID(const unsigned id) const
+    {
+      return m_travel_mode_list.at(id);
     }
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
@@ -380,6 +388,24 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
         return m_static_rtree->FindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node, zoom_level);
+    }
+
+    bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node,
+                                            const unsigned zoom_level) final
+    {
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
+                                                              resulting_phantom_node_vector,
+                                                              zoom_level,
+                                                              1);
+        if (result)
+        {
+            BOOST_ASSERT(!resulting_phantom_node_vector.empty());
+            resulting_phantom_node = resulting_phantom_node_vector.front();
+        }
+        return result;
     }
 
     bool

@@ -1,4 +1,4 @@
-@routing @uturn @via
+@routing @uturn @via @testbot
 Feature: U-turns at via points
 
     Background:
