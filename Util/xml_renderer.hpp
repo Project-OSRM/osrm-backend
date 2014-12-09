@@ -127,12 +127,12 @@ inline void gpx_render(std::vector<char> &out, const JSONObject &object)
      "//www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topogr"
      "afix.com/GPX/1/1 gpx.xsd\"><metadata><copyright author=\"Project OSRM\"><lice"
      "nse>Data (c) OpenStreetMap contributors (ODbL)</license></copyright></metadat"
-     "a><rte>"};
+     "a>"};
     out.insert(out.end(), header.begin(), header.end());
 
     xml_render(out, object);
 
-    const std::string footer {"</rte></gpx>"};
+    const std::string footer {"</gpx>"};
     out.insert(out.end(), footer.begin(), footer.end());
 }
 } // namespace JSON
