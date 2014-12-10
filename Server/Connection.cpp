@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/bind.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/smart_ptr.hpp>
 
 #include <string>
 #include <vector>
@@ -74,14 +75,15 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
                               incoming_data_buffer.data() + bytes_transferred,
                               &compression_type);
 
+    // Header compression_header;
+    boost::shared_ptr<std::vector<char>> compressed_output(new std::vector<char>());
+
     // the request has been parsed
     if (result)
     {
         request.endpoint = TCP_socket.remote_endpoint().address();
         request_handler.handle_request(request, reply);
 
-        // Header compression_header;
-        std::vector<char> compressed_output;
         std::vector<boost::asio::const_buffer> output_buffer;
 
         // compress the result w/ gzip/deflate if requested
@@ -90,18 +92,18 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         case deflateRFC1951:
             // use deflate for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
-            CompressBufferCollection(reply.content, compression_type, compressed_output);
-            reply.SetSize(static_cast<unsigned>(compressed_output.size()));
+            CompressBufferCollection(reply.content, compression_type, *compressed_output);
+            reply.SetSize(static_cast<unsigned>(compressed_output->size()));
             output_buffer = reply.HeaderstoBuffers();
-            output_buffer.push_back(boost::asio::buffer(compressed_output));
+            output_buffer.push_back(boost::asio::buffer(*compressed_output));
             break;
         case gzipRFC1952:
             // use gzip for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
-            CompressBufferCollection(reply.content, compression_type, compressed_output);
-            reply.SetSize(static_cast<unsigned>(compressed_output.size()));
+            CompressBufferCollection(reply.content, compression_type, *compressed_output);
+            reply.SetSize(static_cast<unsigned>(compressed_output->size()));
             output_buffer = reply.HeaderstoBuffers();
-            output_buffer.push_back(boost::asio::buffer(compressed_output));
+            output_buffer.push_back(boost::asio::buffer(*compressed_output));
             break;
         case noCompression:
             // don't use any compression
@@ -114,7 +116,8 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
                                  output_buffer,
                                  strand.wrap(boost::bind(&Connection::handle_write,
                                                          this->shared_from_this(),
-                                                         boost::asio::placeholders::error)));
+                                                         boost::asio::placeholders::error,
+                                                         compressed_output)));
     }
     else if (!result)
     { // request is not parseable
@@ -124,7 +127,8 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
                                  reply.ToBuffers(),
                                  strand.wrap(boost::bind(&Connection::handle_write,
                                                          this->shared_from_this(),
-                                                         boost::asio::placeholders::error)));
+                                                         boost::asio::placeholders::error,
+                                                         compressed_output)));
     }
     else
     {
@@ -138,8 +142,8 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     }
 }
 
-/// Handle completion of a write operation.
-void Connection::handle_write(const boost::system::error_code &error)
+/// Handle completion of a write operation. Will allow  to delete buffer only when the operation is finished.
+void Connection::handle_write(const boost::system::error_code &error, boost::shared_ptr<std::vector<char>> buffer)
 {
     if (!error)
     {

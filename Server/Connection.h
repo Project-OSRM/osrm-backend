@@ -85,8 +85,8 @@ class Connection : public std::enable_shared_from_this<Connection>
     void handle_read(const boost::system::error_code &e, std::size_t bytes_transferred);
 
     /// Handle completion of a write operation.
-    void handle_write(const boost::system::error_code &e);
-
+    void handle_write(const boost::system::error_code &e, boost::shared_ptr<std::vector<char>> buffer);
+    void handle_write2(std::unique_ptr<int> a);
     void CompressBufferCollection(std::vector<char> uncompressed_data,
                                   CompressionType compression_type,
                                   std::vector<char> &compressed_data);
