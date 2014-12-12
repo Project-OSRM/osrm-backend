@@ -121,10 +121,10 @@ int Extractor::Run(int argc, char *argv[])
         osmium::io::Reader reader(input_file);
         osmium::io::Header header = reader.header();
 
-        unsigned number_of_nodes = 0;
-        unsigned number_of_ways = 0;
-        unsigned number_of_relations = 0;
-        unsigned number_of_others = 0;
+        std::atomic<unsigned> number_of_nodes {0};
+        std::atomic<unsigned> number_of_ways {0};
+        std::atomic<unsigned> number_of_relations {0};
+        std::atomic<unsigned> number_of_others {0};
 
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
@@ -234,9 +234,16 @@ int Extractor::Run(int argc, char *argv[])
         }
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
-        SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, "
-                               << number_of_ways << " ways, and " << number_of_relations
-                               << " relations, and " << number_of_others << " unknown entities";
+
+        unsigned nn = number_of_nodes;
+        unsigned nw = number_of_ways;
+        unsigned nr = number_of_relations;
+        unsigned no = number_of_others;
+        SimpleLogger().Write() << "Raw input contains "
+                               << nn << " nodes, "
+                               << nw << " ways, and "
+                               << nr << " relations, and "
+                               << no << " unknown entities";
 
         extractor_callbacks.reset();
 
