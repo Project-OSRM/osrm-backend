@@ -117,14 +117,14 @@ int Extractor::Run(int argc, char *argv[])
         auto extractor_callbacks =
             osrm::make_unique<ExtractorCallbacks>(extraction_containers, string_map);
 
-        osmium::io::File input_file(extractor_config.input_path.string());
+        const osmium::io::File input_file(extractor_config.input_path.string());
         osmium::io::Reader reader(input_file);
-        osmium::io::Header header = reader.header();
+        const osmium::io::Header header = reader.header();
 
-        unsigned number_of_nodes = 0;
-        unsigned number_of_ways = 0;
-        unsigned number_of_relations = 0;
-        unsigned number_of_others = 0;
+        std::atomic<unsigned> number_of_nodes {0};
+        std::atomic<unsigned> number_of_ways {0};
+        std::atomic<unsigned> number_of_relations {0};
+        std::atomic<unsigned> number_of_others {0};
 
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
@@ -155,17 +155,14 @@ int Extractor::Run(int argc, char *argv[])
             resulting_restrictions;
 
         // setup restriction parser
-        RestrictionParser restriction_parser(scripting_environment.getLuaState());
+        const RestrictionParser restriction_parser(scripting_environment.getLuaState());
 
-        while (osmium::memory::Buffer buffer = reader.read())
+        while (const osmium::memory::Buffer buffer = reader.read())
         {
             // create a vector of iterators into the buffer
-            std::vector<osmium::memory::Buffer::iterator> osm_elements;
-            osmium::memory::Buffer::iterator iter = std::begin(buffer);
-            while (iter != std::end(buffer))
-            {
+            std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
+            for (auto iter = std::begin(buffer); iter != std::end(buffer); ++iter) {
                 osm_elements.push_back(iter);
-                iter = std::next(iter);
             }
 
             // clear resulting vectors
@@ -179,7 +176,7 @@ int Extractor::Run(int argc, char *argv[])
                               {
                 for (auto x = range.begin(); x != range.end(); ++x)
                 {
-                    auto entity = osm_elements[x];
+                    const auto entity = osm_elements[x];
 
                     ExtractionNode result_node;
                     ExtractionWay result_way;
@@ -191,7 +188,7 @@ int Extractor::Run(int argc, char *argv[])
                         luabind::call_function<void>(
                             scripting_environment.getLuaState(),
                             "node_function",
-                            boost::cref(static_cast<osmium::Node &>(*entity)),
+                            boost::cref(static_cast<const osmium::Node &>(*entity)),
                             boost::ref(result_node));
                         resulting_nodes.push_back(std::make_pair(x, result_node));
                         break;
@@ -200,14 +197,14 @@ int Extractor::Run(int argc, char *argv[])
                         luabind::call_function<void>(
                             scripting_environment.getLuaState(),
                             "way_function",
-                            boost::cref(static_cast<osmium::Way &>(*entity)),
+                            boost::cref(static_cast<const osmium::Way &>(*entity)),
                             boost::ref(result_way));
                         resulting_ways.push_back(std::make_pair(x, result_way));
                         break;
                     case osmium::item_type::relation:
                         ++number_of_relations;
                         resulting_restrictions.push_back(
-                            restriction_parser.TryParse(static_cast<osmium::Relation &>(*entity)));
+                            restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity)));
                         break;
                     default:
                         ++number_of_others;
@@ -220,12 +217,12 @@ int Extractor::Run(int argc, char *argv[])
             for (const auto &result : resulting_nodes)
             {
                 extractor_callbacks->ProcessNode(
-                    static_cast<osmium::Node &>(*(osm_elements[result.first])), result.second);
+                    static_cast<const osmium::Node &>(*(osm_elements[result.first])), result.second);
             }
             for (const auto &result : resulting_ways)
             {
                 extractor_callbacks->ProcessWay(
-                    static_cast<osmium::Way &>(*(osm_elements[result.first])), result.second);
+                    static_cast<const osmium::Way &>(*(osm_elements[result.first])), result.second);
             }
             for (const auto &result : resulting_restrictions)
             {
@@ -234,9 +231,16 @@ int Extractor::Run(int argc, char *argv[])
         }
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
-        SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, "
-                               << number_of_ways << " ways, and " << number_of_relations
-                               << " relations, and " << number_of_others << " unknown entities";
+
+        unsigned nn = number_of_nodes;
+        unsigned nw = number_of_ways;
+        unsigned nr = number_of_relations;
+        unsigned no = number_of_others;
+        SimpleLogger().Write() << "Raw input contains "
+                               << nn << " nodes, "
+                               << nw << " ways, and "
+                               << nr << " relations, and "
+                               << no << " unknown entities";
 
         extractor_callbacks.reset();
 

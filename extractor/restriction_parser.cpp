@@ -102,7 +102,7 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
 }
 
 mapbox::util::optional<InputRestrictionContainer>
-RestrictionParser::TryParse(osmium::Relation &relation) const
+RestrictionParser::TryParse(const osmium::Relation &relation) const
 {
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
