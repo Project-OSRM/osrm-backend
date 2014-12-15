@@ -8,19 +8,21 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Respect maxspeeds when lower that way type speed
         Given the node map
-            | a | b | c | d |
+            | a | b | c | d | e |
 
         And the ways
             | nodes | highway | maxspeed |
             | ab    | trunk   |          |
             | bc    | trunk   | 60       |
             | cd    | trunk   | FR:urban |
+            | de    | trunk   | CH:trunk |
 
         When I route I should get
             | from | to | route | speed        |
             | a    | b  | ab    | 67 km/h      |
             | b    | c  | bc    | 48 km/h +- 1 |
             | c    | d  | cd    | 40 km/h      |
+            | d    | e  | de    | 80 km/h      |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
