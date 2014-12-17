@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TIMINGUTIL_H
-#define TIMINGUTIL_H
+#ifndef TIMING_UTIL_HPP
+#define TIMING_UTIL_HPP
 
 #include <atomic>
 #include <chrono>
@@ -77,4 +77,4 @@ private:
 #define TIMER_SEC(_X)  (0.000001*std::chrono::duration_cast<std::chrono::microseconds>(_X##_stop - _X##_start).count())
 #define TIMER_MIN(_X) std::chrono::duration_cast<std::chrono::minutes>(_X##_stop - _X##_start).count()
 
-#endif // TIMINGUTIL_H
+#endif // TIMING_UTIL_HPP

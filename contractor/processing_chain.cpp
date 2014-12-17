@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../Util/StringUtil.h"
-#include "../Util/TimingUtil.h"
+#include "../Util/timing_util.hpp"
 #include "../typedefs.h"
 
 #include "../Util/GraphLoader.h"

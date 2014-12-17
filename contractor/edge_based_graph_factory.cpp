@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/integer_range.hpp"
 #include "../Util/lua_util.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/TimingUtil.h"
+#include "../Util/timing_util.hpp"
 
 #include <boost/assert.hpp>
 

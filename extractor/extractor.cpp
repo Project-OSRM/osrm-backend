@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/IniFileUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
-#include "../Util/TimingUtil.h"
+#include "../Util/timing_util.hpp"
 #include "../Util/make_unique.hpp"
 
 #include "../typedefs.h"
