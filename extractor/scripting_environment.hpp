@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 #include <memory>
+#include <mutex>
 #include <tbb/enumerable_thread_specific.h>
 
 struct lua_State;
@@ -38,13 +39,13 @@ class ScriptingEnvironment
 {
   public:
     ScriptingEnvironment() = delete;
-    explicit ScriptingEnvironment(const char *file_name);
+    explicit ScriptingEnvironment(const std::string &file_name);
 
-    lua_State *getLuaState();
+    lua_State *get_lua_state();
 
   private:
-    void initLuaState(lua_State* lua_state);
-
+    void init_lua_state(lua_State* lua_state);
+    std::mutex init_mutex; 
     std::string file_name;
     tbb::enumerable_thread_specific<std::shared_ptr<lua_State>> script_contexts;
 };

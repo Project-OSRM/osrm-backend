@@ -60,13 +60,13 @@ int lua_error_callback(lua_State *L) // This is so I can use my own function as 
 }
 
 
-ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
+ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name)
 : file_name(file_name)
 {
     SimpleLogger().Write() << "Using script " << file_name;
 }
 
-void ScriptingEnvironment::initLuaState(lua_State* lua_state)
+void ScriptingEnvironment::init_lua_state(lua_State* lua_state)
 {
     typedef double (osmium::Location::* location_member_ptr_type)() const;
 
@@ -129,18 +129,18 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
     }
 }
 
-lua_State *ScriptingEnvironment::getLuaState()
+lua_State *ScriptingEnvironment::get_lua_state()
 {
+    std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
     auto& ref = script_contexts.local(initialized);
     if (!initialized)
     {
         std::shared_ptr<lua_State> state(luaL_newstate(), lua_close);
         ref = state;
-        initLuaState(ref.get());
+        init_lua_state(ref.get());
     }
     luabind::set_pcall_callback(&lua_error_callback);
 
     return ref.get();
 }
-

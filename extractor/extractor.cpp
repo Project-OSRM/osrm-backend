@@ -155,7 +155,7 @@ int Extractor::Run(int argc, char *argv[])
             resulting_restrictions;
 
         // setup restriction parser
-        const RestrictionParser restriction_parser(scripting_environment.getLuaState());
+        const RestrictionParser restriction_parser(scripting_environment.get_lua_state());
 
         while (const osmium::memory::Buffer buffer = reader.read())
         {
@@ -181,12 +181,14 @@ int Extractor::Run(int argc, char *argv[])
                     ExtractionNode result_node;
                     ExtractionWay result_way;
 
+                    lua_State * local_state = scripting_environment.get_lua_state(); 
+
                     switch (entity->type())
                     {
                     case osmium::item_type::node:
                         ++number_of_nodes;
                         luabind::call_function<void>(
-                            scripting_environment.getLuaState(),
+                            local_state,
                             "node_function",
                             boost::cref(static_cast<const osmium::Node &>(*entity)),
                             boost::ref(result_node));
@@ -195,7 +197,7 @@ int Extractor::Run(int argc, char *argv[])
                     case osmium::item_type::way:
                         ++number_of_ways;
                         luabind::call_function<void>(
-                            scripting_environment.getLuaState(),
+                            local_state,
                             "way_function",
                             boost::cref(static_cast<const osmium::Way &>(*entity)),
                             boost::ref(result_way));
