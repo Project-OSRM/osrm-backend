@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include "RequestParser.h"
+// #include "RequestParser.h"
 #include "Http/CompressionType.h"
 #include "Http/Request.h"
 
@@ -96,7 +96,6 @@ class Connection : public std::enable_shared_from_this<Connection>
     RequestHandler &request_handler;
     boost::array<char, 8192> incoming_data_buffer;
     Request request;
-    RequestParser request_parser;
     Reply reply;
 };
 
