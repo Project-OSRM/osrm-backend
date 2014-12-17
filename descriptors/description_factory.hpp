@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../algorithms/douglas_peucker.hpp"
 #include "../data_structures/phantom_node.hpp"
-#include "../data_structures/json_container.hpp"
 #include "../data_structures/segment_information.hpp"
 #include "../data_structures/turn_instructions.hpp"
 

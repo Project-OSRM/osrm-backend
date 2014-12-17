@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../data_structures/travel_mode.hpp"
-#include <osrm/Coordinate.h>
 
 #include <boost/assert.hpp>
 

@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RAW_ROUTE_DATA_H
 #define RAW_ROUTE_DATA_H
 
-#include "../DataStructures/phantom_node.hpp"
-#include "../DataStructures/TravelMode.h"
-#include "../DataStructures/TurnInstructions.h"
+#include "../data_structures/phantom_node.hpp"
+#include "../data_structures/travel_mode.hpp"
+#include "../data_structures/turn_instructions.hpp"
 #include "../typedefs.h"
 
 #include <osrm/coordinate.hpp>

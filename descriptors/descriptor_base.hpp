@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTOR_BASE_HPP
 #define DESCRIPTOR_BASE_HPP
 
+#include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/phantom_node.hpp"
-#include "../data_structures/raw_route_data.hpp"
 #include "../typedefs.h"
 
 #include <osrm/json_container.hpp>

@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../algorithms/polyline_formatter.hpp"
-#include "../data_structures/raw_route_data.hpp"
+#include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/turn_instructions.hpp"
 
 DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }

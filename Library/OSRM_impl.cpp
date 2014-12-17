@@ -30,10 +30,6 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "OSRM_impl.h"
 #include "OSRM.h"
 
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
-#include <osrm/ServerPaths.h>
-
 #include "../plugins/distance_table.hpp"
 #include "../plugins/hello_world.hpp"
 #include "../plugins/locate.hpp"
