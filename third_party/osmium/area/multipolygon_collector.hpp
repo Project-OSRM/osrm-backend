@@ -86,8 +86,9 @@ namespace osmium {
 
             void flush_output_buffer() {
                 if (this->callback()) {
-                    this->callback()(m_output_buffer);
-                    m_output_buffer.clear();
+                    osmium::memory::Buffer buffer(initial_output_buffer_size);
+                    std::swap(buffer, m_output_buffer);
+                    this->callback()(std::move(buffer));
                 }
             }
 

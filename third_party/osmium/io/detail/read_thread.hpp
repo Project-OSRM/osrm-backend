@@ -41,8 +41,8 @@ DEALINGS IN THE SOFTWARE.
 #include <utility>
 
 #include <osmium/io/compression.hpp>
-#include <osmium/thread/name.hpp>
 #include <osmium/thread/queue.hpp>
+#include <osmium/thread/util.hpp>
 
 namespace osmium {
 

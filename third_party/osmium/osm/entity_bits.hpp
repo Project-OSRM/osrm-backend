@@ -61,7 +61,9 @@ namespace osmium {
             node       = 0x01,
             way        = 0x02,
             relation   = 0x04,
+            nwr        = 0x07, ///< node, way, or relation object
             area       = 0x08,
+            nwra       = 0x0f, ///< node, way, relation, or area object
             object     = 0x0f, ///< node, way, relation, or area object
             changeset  = 0x10,
             all        = 0x1f  ///< object or changeset
@@ -79,6 +81,10 @@ namespace osmium {
 
         inline type operator&(const type lhs, const type rhs) noexcept {
             return static_cast<type>(static_cast<int>(lhs) & static_cast<int> (rhs));
+        }
+
+        inline type operator~(const type value) noexcept {
+            return static_cast<type>(~static_cast<int>(value));
         }
 
         inline type operator&=(type& lhs, const type rhs) noexcept {

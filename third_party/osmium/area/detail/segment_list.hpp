@@ -70,11 +70,11 @@ namespace osmium {
 
                 ~SegmentList() = default;
 
-                SegmentList(const SegmentList& other) = delete;
-                SegmentList(SegmentList&& other) = delete;
+                SegmentList(const SegmentList&) = delete;
+                SegmentList(SegmentList&&) = delete;
 
-                SegmentList& operator=(const SegmentList& other) = delete;
-                SegmentList& operator=(SegmentList&& other) = delete;
+                SegmentList& operator=(const SegmentList&) = delete;
+                SegmentList& operator=(SegmentList&&) = delete;
 
                 /// The number of segments in the list.
                 size_t size() const noexcept {

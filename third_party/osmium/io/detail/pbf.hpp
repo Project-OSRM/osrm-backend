@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 # include <winsock2.h>
 #endif
 
+#include <osmium/io/error.hpp>
 #include <osmium/osm/item_type.hpp>
 
 namespace osmium {
@@ -77,6 +78,22 @@ namespace osmium {
                 throw std::runtime_error("Unknown relation member type");
         }
     }
+
+    /**
+     * Exception thrown when there was a problem with parsing the PBF format of
+     * a file.
+     */
+    struct pbf_error : public io_error {
+
+        pbf_error(const std::string& what) :
+            io_error(std::string("PBF error: ") + what) {
+        }
+
+        pbf_error(const char* what) :
+            io_error(std::string("PBF error: ") + what) {
+        }
+
+    }; // struct pbf_error
 
 } // namespace osmium
 

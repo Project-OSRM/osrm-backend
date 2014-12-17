@@ -527,9 +527,6 @@ namespace osmium {
                     std::promise<std::string> promise;
                     m_output_queue.push(promise.get_future());
                     promise.set_value(serialize_blob("OSMData", pbf_primitive_block, m_use_compression));
-                    while (m_output_queue.size() > 10) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // XXX
-                    }
 
                     // clear the PrimitiveBlock struct
                     pbf_primitive_block.Clear();

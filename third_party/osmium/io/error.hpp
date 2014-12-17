@@ -1,5 +1,5 @@
-#ifndef OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
-#define OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
+#ifndef OSMIUM_IO_ERROR_HPP
+#define OSMIUM_IO_ERROR_HPP
 
 /*
 
@@ -33,22 +33,25 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/index/multimap/vector.hpp>
-#include <osmium/index/detail/mmap_vector_file.hpp>
+#include <stdexcept>
 
 namespace osmium {
 
-    namespace index {
+    /**
+     * Exception thrown when some kind of input/output operation failed.
+     */
+    struct io_error : public std::runtime_error {
 
-        namespace multimap {
+        io_error(const std::string& what) :
+            std::runtime_error(what) {
+        }
 
-            template <typename TId, typename TValue>
-            using SparseMultimapFile = VectorBasedSparseMultimap<TId, TValue, osmium::detail::mmap_vector_file>;
+        io_error(const char* what) :
+            std::runtime_error(what) {
+        }
 
-        } // namespace multimap
-
-    } // namespace index
+    }; // struct io_error
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
+#endif // OSMIUM_IO_ERROR_HPP

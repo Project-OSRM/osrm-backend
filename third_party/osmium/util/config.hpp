@@ -1,5 +1,5 @@
-#ifndef OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
-#define OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
+#ifndef OSMIUM_UTIL_CONFIG_HPP
+#define OSMIUM_UTIL_CONFIG_HPP
 
 /*
 
@@ -33,22 +33,36 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/index/multimap/vector.hpp>
-#include <osmium/index/detail/mmap_vector_file.hpp>
+#include <cstdlib>
+#include <cstring>
 
 namespace osmium {
 
-    namespace index {
+    namespace config {
 
-        namespace multimap {
+        inline int get_pool_threads() {
+            const char* env = getenv("OSMIUM_POOL_THREADS");
+            if (env) {
+                return std::atoi(env);
+            }
+            return -2;
+        }
 
-            template <typename TId, typename TValue>
-            using SparseMultimapFile = VectorBasedSparseMultimap<TId, TValue, osmium::detail::mmap_vector_file>;
+        inline bool use_pool_threads_for_pbf_parsing() {
+            const char* env = getenv("OSMIUM_USE_POOL_THREADS_FOR_PBF_PARSING");
+            if (env) {
+                if (!strcasecmp(env, "off") ||
+                    !strcasecmp(env, "false") ||
+                    !strcasecmp(env, "no") ||
+                    !strcasecmp(env, "0")) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-        } // namespace multimap
-
-    } // namespace index
+    } // namespace config
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
+#endif // OSMIUM_UTIL_CONFIG_HPP

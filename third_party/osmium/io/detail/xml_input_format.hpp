@@ -57,6 +57,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/builder/builder.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/detail/input_format.hpp>
+#include <osmium/io/error.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -68,7 +69,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/thread/queue.hpp>
-#include <osmium/thread/checked_task.hpp>
+#include <osmium/thread/util.hpp>
 #include <osmium/util/cast.hpp>
 
 namespace osmium {
@@ -178,8 +179,6 @@ namespace osmium {
 
                 osmium::osm_entity_bits::type m_read_types;
 
-                size_t m_max_queue_size;
-
                 std::atomic<bool>& m_done;
 
                 /**
@@ -270,7 +269,6 @@ namespace osmium {
                     m_queue(queue),
                     m_header_promise(header_promise),
                     m_read_types(read_types),
-                    m_max_queue_size(100),
                     m_done(done) {
                 }
 
@@ -297,15 +295,14 @@ namespace osmium {
                     m_queue(other.m_queue),
                     m_header_promise(other.m_header_promise),
                     m_read_types(other.m_read_types),
-                    m_max_queue_size(100),
                     m_done(other.m_done) {
                 }
 
-                XMLParser(XMLParser&& other) = default;
+                XMLParser(XMLParser&&) = default;
 
                 XMLParser& operator=(const XMLParser&) = delete;
 
-                XMLParser& operator=(XMLParser&& other) = default;
+                XMLParser& operator=(XMLParser&&) = default;
 
                 ~XMLParser() = default;
 
@@ -650,10 +647,6 @@ namespace osmium {
                         m_queue.push(std::move(m_buffer));
                         osmium::memory::Buffer buffer(buffer_size);
                         std::swap(m_buffer, buffer);
-
-                        while (m_queue.size() > m_max_queue_size) {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                        }
                     }
                 }
 
@@ -661,12 +654,12 @@ namespace osmium {
 
             class XMLInputFormat : public osmium::io::detail::InputFormat {
 
-                static constexpr size_t m_max_queue_size = 100;
+                static constexpr size_t max_queue_size = 100;
 
                 osmium::thread::Queue<osmium::memory::Buffer> m_queue;
                 std::atomic<bool> m_done;
                 std::promise<osmium::io::Header> m_header_promise;
-                osmium::thread::CheckedTask<XMLParser> m_parser_task;
+                std::future<bool> m_parser_future;
 
             public:
 
@@ -679,10 +672,10 @@ namespace osmium {
                  */
                 explicit XMLInputFormat(const osmium::io::File& file, osmium::osm_entity_bits::type read_which_entities, osmium::thread::Queue<std::string>& input_queue) :
                     osmium::io::detail::InputFormat(file, read_which_entities, input_queue),
-                    m_queue(),
+                    m_queue(max_queue_size, "xml_parser_results"),
                     m_done(false),
                     m_header_promise(),
-                    m_parser_task(input_queue, m_queue, m_header_promise, read_which_entities, m_done) {
+                    m_parser_future(std::async(std::launch::async, XMLParser(input_queue, m_queue, m_header_promise, read_which_entities, m_done))) {
                 }
 
                 ~XMLInputFormat() {
@@ -694,7 +687,7 @@ namespace osmium {
                 }
 
                 virtual osmium::io::Header header() override final {
-                    m_parser_task.check_for_exception();
+                    osmium::thread::check_for_exception(m_parser_future);
                     return m_header_promise.get_future().get();
                 }
 
@@ -704,13 +697,13 @@ namespace osmium {
                         m_queue.wait_and_pop(buffer);
                     }
 
-                    m_parser_task.check_for_exception();
+                    osmium::thread::check_for_exception(m_parser_future);
                     return buffer;
                 }
 
                 void close() {
                     m_done = true;
-                    m_parser_task.close();
+                    osmium::thread::wait_until_done(m_parser_future);
                 }
 
             }; // class XMLInputFormat

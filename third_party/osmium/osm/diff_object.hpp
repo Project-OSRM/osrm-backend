@@ -66,11 +66,11 @@ namespace osmium {
             m_next(&next) {
         }
 
-        DiffObject(const DiffObject& other) = default;
-        DiffObject& operator=(const DiffObject& other) = default;
+        DiffObject(const DiffObject&) = default;
+        DiffObject& operator=(const DiffObject&) = default;
 
-        DiffObject(DiffObject&& other) = default;
-        DiffObject& operator=(DiffObject&& other) = default;
+        DiffObject(DiffObject&&) = default;
+        DiffObject& operator=(DiffObject&&) = default;
 
         const osmium::OSMObject& prev() const noexcept {
             return *m_prev;
@@ -127,11 +127,11 @@ namespace osmium {
             DiffObject(prev, curr, next) {
         }
 
-        DiffObjectDerived(const DiffObjectDerived& other) = default;
-        DiffObjectDerived& operator=(const DiffObjectDerived& other) = default;
+        DiffObjectDerived(const DiffObjectDerived&) = default;
+        DiffObjectDerived& operator=(const DiffObjectDerived&) = default;
 
-        DiffObjectDerived(DiffObjectDerived&& other) = default;
-        DiffObjectDerived& operator=(DiffObjectDerived&& other) = default;
+        DiffObjectDerived(DiffObjectDerived&&) = default;
+        DiffObjectDerived& operator=(DiffObjectDerived&&) = default;
 
         const T& prev() const noexcept {
             return *static_cast<const T*>(m_prev);

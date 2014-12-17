@@ -189,8 +189,8 @@ namespace osmium {
                 OPLOutputBlock(const OPLOutputBlock&) = delete;
                 OPLOutputBlock& operator=(const OPLOutputBlock&) = delete;
 
-                OPLOutputBlock(OPLOutputBlock&& other) = default;
-                OPLOutputBlock& operator=(OPLOutputBlock&& other) = default;
+                OPLOutputBlock(OPLOutputBlock&&) = default;
+                OPLOutputBlock& operator=(OPLOutputBlock&&) = default;
 
                 std::string operator()() {
                     osmium::apply(m_input_buffer.cbegin(), m_input_buffer.cend(), *this);
@@ -282,11 +282,7 @@ namespace osmium {
                 }
 
                 void write_buffer(osmium::memory::Buffer&& buffer) override final {
-                    osmium::thread::SharedPtrWrapper<OPLOutputBlock> output_block(std::move(buffer));
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(std::move(output_block)));
-                    while (m_output_queue.size() > 10) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // XXX
-                    }
+                    m_output_queue.push(osmium::thread::Pool::instance().submit(OPLOutputBlock{std::move(buffer)}));
                 }
 
                 void close() override final {

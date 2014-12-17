@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/io/compression.hpp>
 #include <osmium/io/detail/output_format.hpp>
-#include <osmium/thread/name.hpp>
+#include <osmium/thread/util.hpp>
 
 namespace osmium {
 

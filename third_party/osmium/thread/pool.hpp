@@ -42,9 +42,10 @@ DEALINGS IN THE SOFTWARE.
 #include <type_traits>
 #include <vector>
 
-#include <osmium/thread/queue.hpp>
-#include <osmium/thread/name.hpp>
 #include <osmium/thread/function_wrapper.hpp>
+#include <osmium/thread/queue.hpp>
+#include <osmium/thread/util.hpp>
+#include <osmium/util/config.hpp>
 
 namespace osmium {
 
@@ -58,7 +59,10 @@ namespace osmium {
          */
         class Pool {
 
-            // This class makes sure pool threads are joined when the pool is destructed
+            /**
+             * This class makes sure all pool threads will be joined when
+             * the pool is destructed.
+             */
             class thread_joiner {
 
                 std::vector<std::thread>& m_threads;
@@ -108,20 +112,15 @@ namespace osmium {
              *
              * In all cases the minimum number of threads in the pool is 1.
              */
-            explicit Pool(int num_threads) :
+            explicit Pool(int num_threads, size_t max_queue_size) :
                 m_done(false),
-                m_work_queue(),
+                m_work_queue(max_queue_size, "work"),
                 m_threads(),
                 m_joiner(m_threads),
                 m_num_threads(num_threads) {
 
                 if (m_num_threads == 0) {
-                    const char* env_threads = getenv("OSMIUM_POOL_THREADS");
-                    if (env_threads) {
-                        m_num_threads = std::atoi(env_threads);
-                    } else {
-                        m_num_threads = -2;
-                    }
+                    m_num_threads = osmium::config::get_pool_threads();
                 }
 
                 if (m_num_threads <= 0) {
@@ -141,9 +140,10 @@ namespace osmium {
         public:
 
             static constexpr int default_num_threads = 0;
+            static constexpr size_t max_work_queue_size = 10;
 
             static Pool& instance() {
-                static Pool pool(default_num_threads);
+                static Pool pool(default_num_threads, max_work_queue_size);
                 return pool;
             }
 
@@ -172,30 +172,6 @@ namespace osmium {
             }
 
         }; // class Pool
-
-        /**
-         * Wrapper for classes that can't be copied but need to be copyable for
-         * putting them in the pool.
-         */
-        template <class TWrapped>
-        class SharedPtrWrapper {
-
-            std::shared_ptr<TWrapped> m_task;
-
-        public:
-
-            typedef typename std::result_of<TWrapped()>::type result_type;
-
-            template <typename... TArgs>
-            SharedPtrWrapper(TArgs&&... args) :
-                m_task(std::make_shared<TWrapped>(std::forward<TArgs>(args)...)) {
-            }
-
-            result_type operator()() {
-                return m_task->operator()();
-            }
-
-        }; // class SharedPtrWrapper
 
     } // namespace thread
 

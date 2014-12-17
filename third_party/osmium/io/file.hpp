@@ -46,21 +46,6 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     /**
-     * Exception thrown when some kind of input/output operation failed.
-     */
-    struct io_error : public std::runtime_error {
-
-        io_error(const std::string& what) :
-            std::runtime_error(what) {
-        }
-
-        io_error(const char* what) :
-            std::runtime_error(what) {
-        }
-
-    }; // struct io_error
-
-    /**
      * @brief Everything related to input and output of OSM data.
      */
     namespace io {
@@ -162,11 +147,11 @@ namespace osmium {
                 }
             }
 
-            File(const File& other) = default;
-            File& operator=(const File& other) = default;
+            File(const File&) = default;
+            File& operator=(const File&) = default;
 
-            File(File&& other) = default;
-            File& operator=(File&& other) = default;
+            File(File&&) = default;
+            File& operator=(File&&) = default;
 
             ~File() = default;
 

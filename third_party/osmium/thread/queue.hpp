@@ -33,16 +33,20 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
 #include <mutex>
 #include <queue>
+#include <thread>
 #include <utility>
 
 namespace osmium {
 
     namespace thread {
+
+        constexpr std::chrono::milliseconds full_queue_sleep_duration { 10 }; // XXX
 
         /**
          *  A thread-safe queue.
@@ -50,33 +54,79 @@ namespace osmium {
         template <typename T>
         class Queue {
 
+            /// Maximum size of this queue. If the queue is full pushing to
+            /// the queue will block.
+            const size_t m_max_size;
+
+            /// Name of this queue (for debugging only).
+            const std::string m_name;
+
             mutable std::mutex m_mutex;
+
             std::queue<T> m_queue;
+
+            /// Used to signal readers when data is available in the queue.
             std::condition_variable m_data_available;
+
+#ifdef OSMIUM_DEBUG_QUEUE_SIZE
+            /// The largest size the queue has been so far.
+            size_t m_largest_size;
+
+            /// The number of times the queue was full and a thread pushing
+            /// to the queue was blocked.
+            std::atomic<int> m_full_counter;
+#endif
 
         public:
 
-            Queue() :
+            /**
+             * Construct a multithreaded queue.
+             *
+             * @param max_size Maximum number of elements in the queue. Set to
+             *                 0 for an unlimited size.
+             * @param name Optional name for this queue. (Used for debugging.)
+             */
+            Queue(size_t max_size = 0, const std::string& name = "") :
+                m_max_size(max_size),
+                m_name(name),
                 m_mutex(),
                 m_queue(),
-                m_data_available() {
+                m_data_available()
+#ifdef OSMIUM_DEBUG_QUEUE_SIZE
+                ,
+                m_largest_size(0),
+                m_full_counter(0)
+#endif
+            {
             }
 
+            ~Queue() {
+#ifdef OSMIUM_DEBUG_QUEUE_SIZE
+                std::cerr << "queue '" << m_name << "' with max_size=" << m_max_size << " had largest size " << m_largest_size << " and was full " << m_full_counter << " times\n";
+#endif
+            }
+
+            /**
+             * Push an element onto the queue. If the queue has a max size, this
+             * call will block if the queue is full.
+             */
             void push(T value) {
+                if (m_max_size) {
+                    while (size() >= m_max_size) {
+                        std::this_thread::sleep_for(full_queue_sleep_duration);
+#ifdef OSMIUM_DEBUG_QUEUE_SIZE
+                        ++m_full_counter;
+#endif
+                    }
+                }
                 std::lock_guard<std::mutex> lock(m_mutex);
                 m_queue.push(std::move(value));
+#ifdef OSMIUM_DEBUG_QUEUE_SIZE
+                if (m_largest_size < m_queue.size()) {
+                    m_largest_size = m_queue.size();
+                }
+#endif
                 m_data_available.notify_one();
-            }
-
-            size_t push_and_get_size(T&& value) {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                m_queue.push(std::forward<T>(value));
-                m_data_available.notify_one();
-                return m_queue.size();
-            }
-
-            void push(T value, int) {
-                push(value);
             }
 
             void wait_and_pop(T& value) {

@@ -44,7 +44,7 @@ namespace osmium {
         static_assert(sizeof(T) < sizeof(F), "unnecessary static_cast_with_assert when casting into type of equal or larger size");
         assert(value >= std::numeric_limits<T>::min() && value <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
-    } 
+    }
 
     template <typename T, typename F, typename std::enable_if<std::is_integral<T>::value && std::is_integral<F>::value && std::is_unsigned<T>::value && std::is_signed<F>::value, int>::type = 0>
     inline T static_cast_with_assert(const F value) {
@@ -65,7 +65,7 @@ namespace osmium {
         static_assert(sizeof(T) <= sizeof(F), "unnecessary static_cast_with_assert when casting into type of larger size");
         assert(value <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
-    } 
+    }
 
 } // namespace osmium
 

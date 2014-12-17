@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #define OSMIUM_LINK_WITH_LIBS_ZLIB -lz
 
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -76,10 +77,10 @@ namespace osmium {
              * @param raw_size Size of uncompressed data.
              * @returns Uncompressed data.
              */
-            inline std::string zlib_uncompress(const std::string& input, unsigned long raw_size) {
-                std::string output(raw_size, '\0');
+            inline std::unique_ptr<std::string> zlib_uncompress(const std::string& input, unsigned long raw_size) {
+                auto output = std::unique_ptr<std::string>(new std::string(raw_size, '\0'));
 
-                if (::uncompress(reinterpret_cast<unsigned char*>(const_cast<char *>(output.data())),
+                if (::uncompress(reinterpret_cast<unsigned char*>(const_cast<char *>(output->data())),
                                  &raw_size,
                                  reinterpret_cast<const unsigned char*>(input.data()),
                                  input.size()) != Z_OK) {

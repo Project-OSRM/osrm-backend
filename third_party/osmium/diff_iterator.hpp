@@ -81,11 +81,11 @@ namespace osmium {
             m_end(end) {
         }
 
-        DiffIterator(const DiffIterator& other) = default;
-        DiffIterator& operator=(const DiffIterator& other) = default;
+        DiffIterator(const DiffIterator&) = default;
+        DiffIterator& operator=(const DiffIterator&) = default;
 
-        DiffIterator(DiffIterator&& other) = default;
-        DiffIterator& operator=(DiffIterator&& other) = default;
+        DiffIterator(DiffIterator&&) = default;
+        DiffIterator& operator=(DiffIterator&&) = default;
 
         DiffIterator& operator++() {
             m_prev = std::move(m_curr);

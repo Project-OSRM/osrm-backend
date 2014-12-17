@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/header.hpp>
 #include <osmium/io/overwrite.hpp>
 #include <osmium/memory/buffer.hpp>
-#include <osmium/thread/checked_task.hpp>
+#include <osmium/thread/util.hpp>
 
 namespace osmium {
 
@@ -61,12 +61,13 @@ namespace osmium {
 
             osmium::io::File m_file;
 
-            std::unique_ptr<osmium::io::detail::OutputFormat> m_output;
             osmium::io::detail::data_queue_type m_output_queue;
+
+            std::unique_ptr<osmium::io::detail::OutputFormat> m_output;
 
             std::unique_ptr<osmium::io::Compressor> m_compressor;
 
-            osmium::thread::CheckedTask<detail::WriteThread> m_write_task;
+            std::future<bool> m_write_future;
 
         public:
 
@@ -87,9 +88,10 @@ namespace osmium {
              */
             explicit Writer(const osmium::io::File& file, const osmium::io::Header& header = osmium::io::Header(), overwrite allow_overwrite = overwrite::no) :
                 m_file(file),
+                m_output_queue(20, "raw_output"), // XXX
                 m_output(osmium::io::detail::OutputFormatFactory::instance().create_output(m_file, m_output_queue)),
                 m_compressor(osmium::io::CompressionFactory::instance().create_compressor(file.compression(), osmium::io::detail::open_for_writing(m_file.filename(), allow_overwrite))),
-                m_write_task(m_output_queue, m_compressor.get()) {
+                m_write_future(std::async(std::launch::async, detail::WriteThread(m_output_queue, m_compressor.get()))) {
                 assert(!m_file.buffer());
                 m_output->write_header(header);
             }
@@ -115,7 +117,7 @@ namespace osmium {
              * @throws Some form of std::runtime_error when there is a problem.
              */
             void operator()(osmium::memory::Buffer&& buffer) {
-                m_write_task.check_for_exception();
+                osmium::thread::check_for_exception(m_write_future);
                 if (buffer.committed() > 0) {
                     m_output->write_buffer(std::move(buffer));
                 }
@@ -131,7 +133,7 @@ namespace osmium {
              */
             void close() {
                 m_output->close();
-                m_write_task.close();
+                osmium::thread::wait_until_done(m_write_future);
             }
 
         }; // class Writer

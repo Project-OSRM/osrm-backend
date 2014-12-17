@@ -67,6 +67,13 @@ namespace osmium {
             static_assert(std::is_base_of<osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>, TStorageNegIDs>::value,
                 "Index class must be derived from osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>");
 
+        public:
+
+            typedef TStoragePosIDs index_pos_type;
+            typedef TStorageNegIDs index_neg_type;
+
+        private:
+
             /// Object that handles the actual storage of the node locations (with positive IDs).
             TStoragePosIDs& m_storage_pos;
 

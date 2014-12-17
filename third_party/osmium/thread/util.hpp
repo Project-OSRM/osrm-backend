@@ -1,5 +1,5 @@
-#ifndef OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
-#define OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
+#ifndef OSMIUM_THREAD_UTIL_HPP
+#define OSMIUM_THREAD_UTIL_HPP
 
 /*
 
@@ -33,22 +33,55 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/index/multimap/vector.hpp>
-#include <osmium/index/detail/mmap_vector_file.hpp>
+#include <chrono>
+#include <future>
+
+#ifdef __linux__
+# include <sys/prctl.h>
+#endif
 
 namespace osmium {
 
-    namespace index {
+    namespace thread {
 
-        namespace multimap {
+        /**
+         * Check if the future resulted in an exception. This will re-throw
+         * the exception stored in the future if there was one. Otherwise it
+         * will just return.
+         */
+        template <class T>
+        inline void check_for_exception(std::future<T>& future) {
+            if (future.valid() && future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                future.get();
+            }
+        }
 
-            template <typename TId, typename TValue>
-            using SparseMultimapFile = VectorBasedSparseMultimap<TId, TValue, osmium::detail::mmap_vector_file>;
+        /**
+         * Wait until the given future becomes ready. Will block if the future
+         * is not ready. Can be called more than once unless future.get().
+         */
+        template <class T>
+        inline void wait_until_done(std::future<T>& future) {
+            if (future.valid()) {
+                future.get();
+            }
+        }
 
-        } // namespace multimap
+        /**
+         * Set name of current thread for debugging. This only works on Linux.
+         */
+#ifdef __linux__
+        inline void set_thread_name(const char* name) {
+            prctl(PR_SET_NAME, name, 0, 0, 0);
+        }
+#else
+        inline void set_thread_name(const char*) {
+            // intentionally left blank
+        }
+#endif
 
-    } // namespace index
+    } // namespace thread
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MULTIMAP_MMAP_VECTOR_FILE_HPP
+#endif //  OSMIUM_THREAD_UTIL_HPP

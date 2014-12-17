@@ -59,8 +59,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/entity_bits.hpp>
-#include <osmium/thread/checked_task.hpp>
-#include <osmium/thread/name.hpp>
+#include <osmium/thread/util.hpp>
 #include <osmium/thread/queue.hpp>
 
 namespace osmium {
@@ -83,7 +82,7 @@ namespace osmium {
             osmium::thread::Queue<std::string> m_input_queue;
 
             std::unique_ptr<osmium::io::Decompressor> m_decompressor;
-            osmium::thread::CheckedTask<detail::ReadThread> m_read_task;
+            std::future<bool> m_read_future;
 
             std::unique_ptr<osmium::io::detail::InputFormat> m_input;
 
@@ -173,11 +172,11 @@ namespace osmium {
                 m_read_which_entities(read_which_entities),
                 m_input_done(false),
                 m_childpid(0),
-                m_input_queue(),
+                m_input_queue(20, "raw_input"), // XXX
                 m_decompressor(m_file.buffer() ?
                     osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), m_file.buffer(), m_file.buffer_size()) :
                     osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), open_input_file_or_url(m_file.filename(), &m_childpid))),
-                m_read_task(m_input_queue, m_decompressor.get(), m_input_done),
+                m_read_future(std::async(std::launch::async, detail::ReadThread(m_input_queue, m_decompressor.get(), m_input_done))),
                 m_input(osmium::io::detail::InputFormatFactory::instance().create_input(m_file, m_read_which_entities, m_input_queue)) {
             }
 
@@ -228,7 +227,7 @@ namespace osmium {
                 }
 #endif
 
-                m_read_task.close();
+                osmium::thread::wait_until_done(m_read_future);
             }
 
             /**
@@ -251,7 +250,7 @@ namespace osmium {
             osmium::memory::Buffer read() {
                 // If an exception happened in the input thread, re-throw
                 // it in this (the main) thread.
-                m_read_task.check_for_exception();
+                osmium::thread::check_for_exception(m_read_future);
 
                 if (m_read_which_entities == osmium::osm_entity_bits::nothing || m_input_done) {
                     // If the caller didn't want anything but the header, it will
@@ -270,7 +269,7 @@ namespace osmium {
              * Has the end of file been reached? This is set after the last
              * data has been read. It is also set by calling close().
              */
-            bool eof() {
+            bool eof() const {
                 return m_input_done;
             }
 
