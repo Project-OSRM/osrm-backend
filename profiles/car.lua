@@ -384,10 +384,10 @@ function way_function (way, result)
 
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
-    result.forward_speed = result.forward_speed*speed_reduction
+    result.forward_speed = result.forward_speed*speed_reduction + 11;
   end
   if result.backward_speed > 0 then
-    result.backward_speed = result.backward_speed*speed_reduction
+    result.backward_speed = result.backward_speed*speed_reduction + 11;
   end
 end
 
