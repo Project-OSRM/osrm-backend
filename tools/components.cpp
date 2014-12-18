@@ -27,10 +27,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../algorithms/tiny_components.hpp"
+#include "../data_structures/dynamic_graph.hpp"
 #include "../Util/GraphLoader.h"
+#include "../Util/make_unique.hpp"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../Util/FingerPrint.h"
+
+#include <boost/filesystem.hpp>
+
+#if defined(__APPLE__) || defined (_WIN32)
+#include <gdal.h>
+#include <ogrsf_frmts.h>
+#else
+#include <gdal/gdal.h>
+#include <gdal/ogrsf_frmts.h>
+#endif
 
 #include <fstream>
 #include <memory>
@@ -39,8 +51,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 std::vector<QueryNode> coordinate_list;
 std::vector<TurnRestriction> restrictions_vector;
-std::vector<NodeID> bollard_ID_list;
-std::vector<NodeID> trafficlight_ID_list;
+std::vector<NodeID> bollard_node_list;
+std::vector<NodeID> traffic_lights_list;
+
+struct TarjanEdgeData
+{
+    TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
+    TarjanEdgeData(int distance, unsigned name_id) : distance(distance), name_id(name_id) {}
+    int distance;
+    unsigned name_id;
+};
+
+using TarjanDynamicGraph = DynamicGraph<TarjanEdgeData>;
+using TarjanEdge = TarjanDynamicGraph::InputEdge;
+
+void DeleteFileIfExists(const std::string &file_name)
+{
+    if (boost::filesystem::exists(file_name))
+    {
+        boost::filesystem::remove(file_name);
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -94,32 +125,158 @@ int main(int argc, char *argv[])
         std::vector<ImportEdge> edge_list;
         const NodeID number_of_nodes = readBinaryOSRMGraphFromStream(input_stream,
                                                                      edge_list,
-                                                                     bollard_ID_list,
-                                                                     trafficlight_ID_list,
+                                                                     bollard_node_list,
+                                                                     traffic_lights_list,
                                                                      &coordinate_list,
                                                                      restrictions_vector);
         input_stream.close();
+
 
         BOOST_ASSERT_MSG(restrictions_vector.size() == usable_restrictions,
                          "size of restrictions_vector changed");
 
         SimpleLogger().Write() << restrictions_vector.size() << " restrictions, "
-                               << bollard_ID_list.size() << " bollard nodes, "
-                               << trafficlight_ID_list.size() << " traffic lights";
+                               << bollard_node_list.size() << " bollard nodes, "
+                               << traffic_lights_list.size() << " traffic lights";
 
-        // Building an edge-expanded graph from node-based input an turn
-        // restrictions
-        SimpleLogger().Write() << "Starting SCC graph traversal";
-        std::shared_ptr<TarjanSCC> tarjan = std::make_shared<TarjanSCC>(number_of_nodes,
-                                                                        edge_list,
-                                                                        bollard_ID_list,
-                                                                        trafficlight_ID_list,
-                                                                        restrictions_vector,
-                                                                        coordinate_list);
+        traffic_lights_list.clear();
+        traffic_lights_list.shrink_to_fit();
+
+        // Building an node-based graph 
+        DeallocatingVector<TarjanEdge> graph_edge_list;
+        for (const NodeBasedEdge &input_edge : edge_list)
+        {
+            if (input_edge.source == input_edge.target)
+            {
+                continue;
+            }
+
+            if (input_edge.forward)
+            {
+                graph_edge_list.emplace_back(input_edge.source,
+                                       input_edge.target,
+                                       (std::max)((int)input_edge.weight, 1),
+                                       input_edge.name_id);
+            }
+            if (input_edge.backward)
+            {
+                graph_edge_list.emplace_back(input_edge.target,
+                                       input_edge.source,
+                                       (std::max)((int)input_edge.weight, 1),
+                                       input_edge.name_id);
+            }
+        }
+        edge_list.clear();
+        edge_list.shrink_to_fit();
+        BOOST_ASSERT_MSG(0 == edge_list.size() && 0 == edge_list.capacity(),
+                         "input edge vector not properly deallocated");
+
+        tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
+        auto graph = std::make_shared<TarjanDynamicGraph>(number_of_nodes, graph_edge_list);
         edge_list.clear();
         edge_list.shrink_to_fit();
 
+        SimpleLogger().Write() << "Starting SCC graph traversal";
+        auto tarjan = osrm::make_unique<TarjanSCC<TarjanDynamicGraph>>(graph,
+                                                                       bollard_node_list,
+                                                                       restrictions_vector);
         tarjan->Run();
+
+        // output
+        TIMER_START(SCC_RUN_SETUP);
+
+        // remove files from previous run if exist
+        DeleteFileIfExists("component.dbf");
+        DeleteFileIfExists("component.shx");
+        DeleteFileIfExists("component.shp");
+
+        Percent p(number_of_nodes);
+
+        OGRRegisterAll();
+
+        const char *pszDriverName = "ESRI Shapefile";
+        OGRSFDriver *poDriver =
+            OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(pszDriverName);
+        if (nullptr == poDriver)
+        {
+            throw OSRMException("ESRI Shapefile driver not available");
+        }
+        OGRDataSource *poDS = poDriver->CreateDataSource("component.shp", nullptr);
+
+        if (nullptr == poDS)
+        {
+            throw OSRMException("Creation of output file failed");
+        }
+
+        OGRSpatialReference *poSRS = new OGRSpatialReference();
+        poSRS->importFromEPSG(4326);
+
+        OGRLayer *poLayer = poDS->CreateLayer("component", poSRS, wkbLineString, nullptr);
+
+        if (nullptr == poLayer)
+        {
+            throw OSRMException("Layer creation failed.");
+        }
+        TIMER_STOP(SCC_RUN_SETUP);
+        SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP)/1000. << "s";
+
+        uint64_t total_network_distance = 0;
+        p.reinit(number_of_nodes);
+        // const NodeID last_u_node = m_node_based_graph->GetNumberOfNodes();
+        TIMER_START(SCC_OUTPUT);
+        for (const NodeID source : osrm::irange(0u, number_of_nodes))
+        {
+            p.printIncrement();
+            for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
+            {
+                const TarjanDynamicGraph::NodeIterator target = graph->GetTarget(current_edge);
+
+                if (source < target || graph->EndEdges(target) == graph->FindEdge(target, source))
+                {
+                    total_network_distance +=
+                        100 * FixedPointCoordinate::ApproximateEuclideanDistance(
+                                  coordinate_list[source].lat,
+                                  coordinate_list[source].lon,
+                                  coordinate_list[target].lat,
+                                  coordinate_list[target].lon);
+
+                    BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
+                    BOOST_ASSERT(source != SPECIAL_NODEID);
+                    BOOST_ASSERT(target != SPECIAL_NODEID);
+
+                    const unsigned size_of_containing_component =
+                        std::min(tarjan->get_component_size(source),
+                                 tarjan->get_component_size(target));
+
+                    // edges that end on bollard nodes may actually be in two distinct components
+                    if (size_of_containing_component < 1000)
+                    {
+                        OGRLineString lineString;
+                        lineString.addPoint(coordinate_list[source].lon / COORDINATE_PRECISION,
+                                            coordinate_list[source].lat / COORDINATE_PRECISION);
+                        lineString.addPoint(coordinate_list[target].lon / COORDINATE_PRECISION,
+                                            coordinate_list[target].lat / COORDINATE_PRECISION);
+
+                        OGRFeature *poFeature = OGRFeature::CreateFeature(poLayer->GetLayerDefn());
+
+                        poFeature->SetGeometry(&lineString);
+                        if (OGRERR_NONE != poLayer->CreateFeature(poFeature))
+                        {
+                            throw OSRMException("Failed to create feature in shapefile.");
+                        }
+                        OGRFeature::DestroyFeature(poFeature);
+                    }
+                }
+            }
+        }
+        OGRSpatialReference::DestroySpatialReference(poSRS);
+        OGRDataSource::DestroyDataSource(poDS);
+        TIMER_STOP(SCC_OUTPUT);
+        SimpleLogger().Write() << "generating output took: " << TIMER_MSEC(SCC_OUTPUT)/1000. << "s";
+
+        SimpleLogger().Write() << "total network distance: "
+                               << (uint64_t)total_network_distance / 100 / 1000. << " km";
+
         SimpleLogger().Write() << "finished component analysis";
     }
     catch (const std::exception &e)
