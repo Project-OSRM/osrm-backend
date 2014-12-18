@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "node_based_graph.hpp"
 #include "restriction.hpp"
-#include "../Util/StdHashExtensions.h"
+#include "../Util/std_hash.hpp"
 #include "../typedefs.h"
 
 #include <unordered_map>

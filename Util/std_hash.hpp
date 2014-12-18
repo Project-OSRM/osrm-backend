@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef STD_HASH_EXTENSIONS_H
-#define STD_HASH_EXTENSIONS_H
+#ifndef STD_HASH_HPP
+#define STD_HASH_HPP
 
 #include <functional>
 
@@ -74,4 +74,4 @@ template <typename T1, typename T2> struct hash<std::pair<T1, T2>>
 };
 }
 
-#endif // STD_HASH_EXTENSIONS_H
+#endif // STD_HASH_HPP
