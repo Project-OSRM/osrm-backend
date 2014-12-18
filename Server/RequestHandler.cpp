@@ -109,8 +109,17 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
             const std::string json_p = (route_parameters.jsonp_parameter + "(");
             reply.content.insert(reply.content.end(), json_p.begin(), json_p.end());
         }
-        routing_machine->RunQuery(route_parameters, json_result);
-
+        const auto return_code = routing_machine->RunQuery(route_parameters, json_result);
+        if (200 != return_code)
+        {
+            reply = http::Reply::StockReply(http::Reply::badRequest);
+            reply.content.clear();
+            json_result.values["status"] = 400;
+            std::string message = "Bad Request";
+            json_result.values["status_message"] = message;
+            JSON::render(reply.content, json_result);
+            return;
+        }
         // set headers
         reply.headers.emplace_back("Content-Length", cast::integral_to_string(reply.content.size()));
         if ("gpx" == route_parameters.output_format)
