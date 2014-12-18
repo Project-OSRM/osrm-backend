@@ -93,10 +93,10 @@ void delete_region(const SharedDataType region)
 int main(const int argc, const char *argv[])
 {
     LogPolicy::GetInstance().Unmute();
+    SharedBarriers barrier;
 
     try
     {
-       SharedBarriers barrier;
 #ifdef __linux__
         // try to disable swapping on Linux
         const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
