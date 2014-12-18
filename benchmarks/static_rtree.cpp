@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../DataStructures/OriginalEdgeData.h"
-#include "../DataStructures/QueryNode.h"
-#include "../DataStructures/SharedMemoryVectorWrapper.h"
-#include "../DataStructures/StaticRTree.h"
+#include "../data_structures/original_edge_data.hpp"
+#include "../data_structures/query_node.hpp"
+#include "../data_structures/shared_memory_vector_wrapper.hpp"
+#include "../data_structures/static_rtree.hpp"
 #include "../Util/BoostFileSystemFix.h"
-#include "../DataStructures/EdgeBasedNode.h"
+#include "../data_structures/edge_based_node.hpp"
 
 #include <osrm/coordinate.hpp>
 
