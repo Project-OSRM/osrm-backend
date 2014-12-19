@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 #include <cstdio>
-#include <cstdlib>
 #include <fcntl.h>
 #ifdef __linux__
 #include <malloc.h>
@@ -45,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <chrono>
 #include <iomanip>
 #include <numeric>
+#include <random>
 #include <vector>
 
 const unsigned number_of_elements = 268435456;
@@ -201,9 +201,12 @@ int main(int argc, char *argv[])
 #endif
             // make 1000 random access, time each I/O seperately
             unsigned number_of_blocks = (number_of_elements * sizeof(unsigned) - 1) / 4096;
+            std::random_device rd;
+            std::default_random_engine e1(rd());
+            std::uniform_int_distribution<unsigned> uniform_dist(0, number_of_blocks - 1);
             for (unsigned i = 0; i < 1000; ++i)
             {
-                unsigned block_to_read = std::rand() % number_of_blocks;
+                unsigned block_to_read =uniform_dist(e1);
                 off_t current_offset = block_to_read * 4096;
                 TIMER_START(random_access);
 #ifdef __APPLE__
