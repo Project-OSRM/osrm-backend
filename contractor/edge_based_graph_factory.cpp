@@ -389,10 +389,10 @@ void EdgeBasedGraphFactory::CompressGeometry()
 
             // update any involved turn restrictions
             m_restriction_map->FixupStartingTurnRestriction(node_u, node_v, node_w);
-            m_restriction_map->FixupArrivingTurnRestriction(node_u, node_v, node_w);
+            m_restriction_map->FixupArrivingTurnRestriction(node_u, node_v, node_w, m_node_based_graph);
 
             m_restriction_map->FixupStartingTurnRestriction(node_w, node_v, node_u);
-            m_restriction_map->FixupArrivingTurnRestriction(node_w, node_v, node_u);
+            m_restriction_map->FixupArrivingTurnRestriction(node_w, node_v, node_u, m_node_based_graph);
 
             // store compressed geometry in container
             m_geometry_compressor.CompressEdge(

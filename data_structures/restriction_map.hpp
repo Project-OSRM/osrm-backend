@@ -30,13 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
 
-#include "node_based_graph.hpp"
 #include "restriction.hpp"
 #include "../Util/std_hash.hpp"
 #include "../typedefs.h"
 
+#include <boost/assert.hpp>
+
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 struct RestrictionSource
 {
@@ -94,26 +96,84 @@ template <> struct hash<RestrictionTarget>
 class RestrictionMap
 {
   public:
-    RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &graph,
-                   const std::vector<TurnRestriction> &input_restrictions_list);
+    RestrictionMap(const std::vector<TurnRestriction> &restriction_list);
 
-    void FixupArrivingTurnRestriction(const NodeID u, const NodeID v, const NodeID w);
-    void FixupStartingTurnRestriction(const NodeID u, const NodeID v, const NodeID w);
-    NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
-    bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
+    // Replace end v with w in each turn restriction containing u as via node
+    template<class GraphT>
+    void FixupArrivingTurnRestriction(const NodeID node_u,
+                                      const NodeID node_v,
+                                      const NodeID node_w,
+                                      const std::shared_ptr<GraphT> &graph)
+    {
+        BOOST_ASSERT(node_u != SPECIAL_NODEID);
+        BOOST_ASSERT(node_v != SPECIAL_NODEID);
+        BOOST_ASSERT(node_w != SPECIAL_NODEID);
+
+        if (!IsViaNode(node_u))
+        {
+            return;
+        }
+
+        // find all potential start edges. It is more efficent to get a (small) list
+        // of potential start edges than iterating over all buckets
+        std::vector<NodeID> predecessors;
+        for (const EdgeID current_edge_id : graph->GetAdjacentEdgeRange(node_u))
+        {
+            const NodeID target = graph->GetTarget(current_edge_id);
+            if (node_v != target)
+            {
+                predecessors.push_back(target);
+            }
+        }
+
+        for (const NodeID node_x : predecessors)
+        {
+            const auto restriction_iterator = m_restriction_map.find({node_x, node_u});
+            if (restriction_iterator == m_restriction_map.end())
+            {
+                continue;
+            }
+
+            const unsigned index = restriction_iterator->second;
+            auto &bucket = m_restriction_bucket_list.at(index);
+            for (RestrictionTarget &restriction_target : bucket)
+            {
+                if (node_v == restriction_target.target_node)
+                {
+                    restriction_target.target_node = node_w;
+                }
+            }
+        }
+    }
+
     bool IsViaNode(const NodeID node) const;
+
+
+    // Replaces start edge (v, w) with (u, w). Only start node changes.
+    void FixupStartingTurnRestriction(const NodeID node_u,
+                                      const NodeID node_v,
+                                      const NodeID node_w);
+
+    // Check if edge (u, v) is the start of any turn restriction.
+    // If so returns id of first target node.
+    NodeID CheckForEmanatingIsOnlyTurn(const NodeID node_u, const NodeID node_v) const;
+    // Checks if turn <u,v,w> is actually a turn restriction.
+    bool CheckIfTurnIsRestricted(const NodeID node_u,
+                                 const NodeID node_v,
+                                 const NodeID node_w) const;
+
     std::size_t size()
     {
         return m_count;
     }
 
   private:
+    // check of node is the start of any restriction
     bool IsSourceNode(const NodeID node) const;
+
     using EmanatingRestrictionsVector = std::vector<RestrictionTarget>;
-    using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
     std::size_t m_count;
-    std::shared_ptr<NodeBasedDynamicGraph> m_graph;
     //! index -> list of (target, isOnly)
     std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     //! maps (start, via) -> bucket index

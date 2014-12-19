@@ -27,98 +27,53 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "restriction_map.hpp"
 
+RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_list)
+        : m_count(0)
+    {
+        // decompose restriction consisting of a start, via and end node into a
+        // a pair of starting edge and a list of all end nodes
+        for (auto &restriction : restriction_list)
+        {
+            m_restriction_start_nodes.insert(restriction.from.node);
+            m_no_turn_via_node_set.insert(restriction.via.node);
+
+            RestrictionSource restriction_source = {restriction.from.node, restriction.via.node};
+
+            unsigned index;
+            auto restriction_iter = m_restriction_map.find(restriction_source);
+            if (restriction_iter == m_restriction_map.end())
+            {
+                index = m_restriction_bucket_list.size();
+                m_restriction_bucket_list.resize(index + 1);
+                m_restriction_map.emplace(restriction_source, index);
+            }
+            else
+            {
+                index = restriction_iter->second;
+                // Map already contains an is_only_*-restriction
+                if (m_restriction_bucket_list.at(index).begin()->is_only)
+                {
+                    continue;
+                }
+                else if (restriction.flags.is_only)
+                {
+                    // We are going to insert an is_only_*-restriction. There can be only one.
+                    m_count -= m_restriction_bucket_list.at(index).size();
+                    m_restriction_bucket_list.at(index).clear();
+                }
+            }
+            ++m_count;
+            m_restriction_bucket_list.at(index)
+                .emplace_back(restriction.to.node, restriction.flags.is_only);
+        }
+    }
+
+
 bool RestrictionMap::IsViaNode(const NodeID node) const
 {
     return m_no_turn_via_node_set.find(node) != m_no_turn_via_node_set.end();
 }
 
-RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &graph,
-                               const std::vector<TurnRestriction> &restriction_list)
-    : m_count(0), m_graph(graph)
-{
-    // decompose restriction consisting of a start, via and end node into a
-    // a pair of starting edge and a list of all end nodes
-    for (auto &restriction : restriction_list)
-    {
-        m_restriction_start_nodes.insert(restriction.from.node);
-        m_no_turn_via_node_set.insert(restriction.via.node);
-
-        RestrictionSource restriction_source = {restriction.from.node, restriction.via.node};
-
-        unsigned index;
-        auto restriction_iter = m_restriction_map.find(restriction_source);
-        if (restriction_iter == m_restriction_map.end())
-        {
-            index = m_restriction_bucket_list.size();
-            m_restriction_bucket_list.resize(index + 1);
-            m_restriction_map.emplace(restriction_source, index);
-        }
-        else
-        {
-            index = restriction_iter->second;
-            // Map already contains an is_only_*-restriction
-            if (m_restriction_bucket_list.at(index).begin()->is_only)
-            {
-                continue;
-            }
-            else if (restriction.flags.is_only)
-            {
-                // We are going to insert an is_only_*-restriction. There can be only one.
-                m_count -= m_restriction_bucket_list.at(index).size();
-                m_restriction_bucket_list.at(index).clear();
-            }
-        }
-        ++m_count;
-        m_restriction_bucket_list.at(index)
-            .emplace_back(restriction.to.node, restriction.flags.is_only);
-    }
-}
-
-// Replace end v with w in each turn restriction containing u as via node
-void RestrictionMap::FixupArrivingTurnRestriction(const NodeID node_u,
-                                                  const NodeID node_v,
-                                                  const NodeID node_w)
-{
-    BOOST_ASSERT(node_u != SPECIAL_NODEID);
-    BOOST_ASSERT(node_v != SPECIAL_NODEID);
-    BOOST_ASSERT(node_w != SPECIAL_NODEID);
-
-    if (!IsViaNode(node_u))
-    {
-        return;
-    }
-
-    // find all potential start edges. It is more efficent to get a (small) list
-    // of potential start edges than iterating over all buckets
-    std::vector<NodeID> predecessors;
-    for (const EdgeID current_edge_id : m_graph->GetAdjacentEdgeRange(node_u))
-    {
-        const NodeID target = m_graph->GetTarget(current_edge_id);
-        if (node_v != target)
-        {
-            predecessors.push_back(target);
-        }
-    }
-
-    for (const NodeID node_x : predecessors)
-    {
-        const auto restriction_iterator = m_restriction_map.find({node_x, node_u});
-        if (restriction_iterator == m_restriction_map.end())
-        {
-            continue;
-        }
-
-        const unsigned index = restriction_iterator->second;
-        auto &bucket = m_restriction_bucket_list.at(index);
-        for (RestrictionTarget &restriction_target : bucket)
-        {
-            if (node_v == restriction_target.target_node)
-            {
-                restriction_target.target_node = node_w;
-            }
-        }
-    }
-}
 
 // Replaces start edge (v, w) with (u, w). Only start node changes.
 void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
