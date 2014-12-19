@@ -44,6 +44,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gdal/ogrsf_frmts.h>
 #endif
 
+#include <osrm/Coordinate.h>
+
 #include <fstream>
 #include <memory>
 #include <string>
@@ -142,7 +144,7 @@ int main(int argc, char *argv[])
         traffic_lights_list.clear();
         traffic_lights_list.shrink_to_fit();
 
-        // Building an node-based graph 
+        // Building an node-based graph
         DeallocatingVector<TarjanEdge> graph_edge_list;
         for (const NodeBasedEdge &input_edge : edge_list)
         {
@@ -190,7 +192,7 @@ int main(int argc, char *argv[])
         DeleteFileIfExists("component.shx");
         DeleteFileIfExists("component.shp");
 
-        Percent p(number_of_nodes);
+        Percent p(graph->GetNumberOfNodes());
 
         OGRRegisterAll();
 
@@ -221,10 +223,9 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP)/1000. << "s";
 
         uint64_t total_network_distance = 0;
-        p.reinit(number_of_nodes);
-        // const NodeID last_u_node = m_node_based_graph->GetNumberOfNodes();
+        p.reinit(graph->GetNumberOfNodes());
         TIMER_START(SCC_OUTPUT);
-        for (const NodeID source : osrm::irange(0u, number_of_nodes))
+        for (const NodeID source : osrm::irange(0u, graph->GetNumberOfNodes()))
         {
             p.printIncrement();
             for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
