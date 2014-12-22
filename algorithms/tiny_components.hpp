@@ -86,12 +86,12 @@ class TarjanSCC
   public:
     TarjanSCC(std::shared_ptr<GraphT> graph,
               const RestrictionMap &restrictions,
-              const std::vector<NodeID> &barrier_nodes)
+              const std::vector<NodeID> &barrier_node_list)
         : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID),
           m_node_based_graph(graph), m_restriction_map(restrictions), 
           size_one_counter(0)
     {
-        barrier_node_set.insert(std::begin(barrier_nodes), std::end(barrier_nodes));
+        barrier_node_set.insert(std::begin(barrier_node_list), std::end(barrier_node_list));
         BOOST_ASSERT(m_node_based_graph->GetNumberOfNodes() > 0);
     }
 
@@ -118,8 +118,10 @@ class TarjanSCC
             while (!recursion_stack.empty())
             {
                 TarjanStackFrame currentFrame = recursion_stack.top();
+                const NodeID u = currentFrame.parent;
                 const NodeID v = currentFrame.v;
                 recursion_stack.pop();
+
                 const bool before_recursion = processing_node_before_recursion[v];
 
                 if (before_recursion && tarjan_node_list[v].index != UINT_MAX)
@@ -141,9 +143,29 @@ class TarjanSCC
                     ++index;
 
                     // Traverse outgoing edges
+                    if (barrier_node_set.find(v) != barrier_node_set.end())
+                    {
+                        continue;
+                    }
+
+                    const NodeID to_node_of_only_restriction =
+                        m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
+
                     for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(v))
                     {
                         const auto vprime = m_node_based_graph->GetTarget(current_edge);
+                        if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
+                            vprime == to_node_of_only_restriction)
+                        {
+                            // At an only_-restriction but not at the right turn
+                            // continue;
+                        }
+                        
+                        if (m_restriction_map.CheckIfTurnIsRestricted(u, v, vprime))
+                        {
+                            // continue;
+                        }
+
                         if (SPECIAL_NODEID == tarjan_node_list[vprime].index)
                         {
                             recursion_stack.emplace(TarjanStackFrame(vprime, v));
