@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 #include "../algorithms/tiny_components.hpp"
 #include "../data_structures/dynamic_graph.hpp"
-#include "../Util/GraphLoader.h"
+#include "../Util/graph_loader.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"

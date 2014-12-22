@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/static_rtree.hpp"
 #include "../../data_structures/range_table.hpp"
 #include "../../Util/BoostFileSystemFix.h"
-#include "../../Util/GraphLoader.h"
+#include "../../Util/graph_loader.hpp"
 #include "../../Util/simple_logger.hpp"
 
 #include <osrm/Coordinate.h>

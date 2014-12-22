@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/static_graph.hpp"
 #include "../Util/integer_range.hpp"
-#include "../Util/GraphLoader.h"
+#include "../Util/graph_loader.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/OSRMException.h"
 

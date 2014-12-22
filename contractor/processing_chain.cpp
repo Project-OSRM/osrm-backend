@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/restriction_map.hpp"
 
 #include "../Util/GitDescription.h"
+#include "../Util/graph_loader.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/lua_util.hpp"
 #include "../Util/make_unique.hpp"
@@ -43,8 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 #include "../Util/timing_util.hpp"
 #include "../typedefs.h"
-
-#include "../Util/GraphLoader.h"
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>

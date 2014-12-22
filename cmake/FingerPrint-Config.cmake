@@ -4,7 +4,7 @@ if (EXISTS ${OLDFILE})
 endif()
 file(MD5 ${SOURCE_DIR}/prepare.cpp MD5PREPARE)
 file(MD5 ${SOURCE_DIR}/data_structures/static_rtree.hpp MD5RTREE)
-file(MD5 ${SOURCE_DIR}/Util/GraphLoader.h MD5GRAPH)
+file(MD5 ${SOURCE_DIR}/Util/graph_loader.hpp MD5GRAPH)
 file(MD5 ${SOURCE_DIR}/Server/DataStructures/InternalDataFacade.h MD5OBJECTS)
 
 CONFIGURE_FILE( ${SOURCE_DIR}/Util/finger_print.cpp.in ${SOURCE_DIR}/Util/finger_print.cpp )
