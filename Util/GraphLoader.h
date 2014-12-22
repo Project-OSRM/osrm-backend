@@ -178,7 +178,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
             continue;
         }
         target = internal_id_iter->second;
-        BOOST_ASSERT_MSG(source != UINT_MAX && target != UINT_MAX, "nonexisting source or target");
+        BOOST_ASSERT_MSG(source != SPECIAL_NODEID && target != SPECIAL_NODEID, "nonexisting source or target");
 
         if (source > target)
         {
@@ -210,22 +210,22 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                 (edge_list[i - 1].backward == edge_list[i].backward);
             const bool edge_flags_are_superset1 =
                 (edge_list[i - 1].forward && edge_list[i - 1].backward) &&
-                (edge_list[i].backward != edge_list[i].backward);
+                (edge_list[i].forward != edge_list[i].backward);
             const bool edge_flags_are_superset_2 =
                 (edge_list[i].forward && edge_list[i].backward) &&
-                (edge_list[i - 1].backward != edge_list[i - 1].backward);
+                (edge_list[i - 1].forward != edge_list[i - 1].backward);
 
             if (edge_flags_equivalent)
             {
                 edge_list[i].weight = std::min(edge_list[i - 1].weight, edge_list[i].weight);
-                edge_list[i - 1].source = UINT_MAX;
+                edge_list[i - 1].source = SPECIAL_NODEID;
             }
             else if (edge_flags_are_superset1)
             {
                 if (edge_list[i - 1].weight <= edge_list[i].weight)
                 {
                     // edge i-1 is smaller and goes in both directions. Throw away the other edge
-                    edge_list[i].source = UINT_MAX;
+                    edge_list[i].source = SPECIAL_NODEID;
                 }
                 else
                 {
@@ -247,7 +247,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                 else
                 {
                     // edge i is smaller and goes in both direction. Throw away edge i-1
-                    edge_list[i - 1].source = UINT_MAX;
+                    edge_list[i - 1].source = SPECIAL_NODEID;
                 }
             }
         }
@@ -340,7 +340,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
             continue;
         }
         target = internal_id_iter->second;
-        BOOST_ASSERT_MSG(source != UINT_MAX && target != UINT_MAX, "nonexisting source or target");
+        BOOST_ASSERT_MSG(source != SPECIAL_NODEID && target != SPECIAL_NODEID, "nonexisting source or target");
 
         if (source > target)
         {
@@ -358,7 +358,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
             (edge_list[i - 1].source == edge_list[i].source))
         {
                 edge_list[i].distance = std::min(edge_list[i - 1].distance, edge_list[i].distance);
-                edge_list[i - 1].source = UINT_MAX;
+                edge_list[i - 1].source = SPECIAL_NODEID;
         }
     }
     const auto new_end_iter = std::remove_if(edge_list.begin(),
