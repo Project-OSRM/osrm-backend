@@ -70,12 +70,12 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                             "Reprocess to get rid of this warning.";
     }
 
-    NodeID n, source, target;
-    EdgeID m;
-    short dir; // direction (0 = open, 1 = forward, 2+ = open)
     std::unordered_map<NodeID, NodeID> ext_to_int_id_map;
+
+    NodeID n;
     input_stream.read((char *)&n, sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
+
     ExternalMemoryNode current_node;
     for (NodeID i = 0; i < n; ++i)
     {
@@ -95,8 +95,8 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     // tighten vector sizes
     barrier_node_list.shrink_to_fit();
     traffic_light_node_list.shrink_to_fit();
-    input_stream.read((char *)&m, sizeof(unsigned));
-    SimpleLogger().Write() << " and " << m << " edges ";
+
+    // renumber nodes in turn restrictions
     for (TurnRestriction &current_restriction : restriction_list)
     {
         auto internal_id_iter = ext_to_int_id_map.find(current_restriction.from.node);
@@ -124,12 +124,19 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         current_restriction.to.node = internal_id_iter->second;
     }
 
-    edge_list.reserve(m);
     EdgeWeight weight;
-    NodeID nameID;
+    NodeID source, target;
+    unsigned nameID;
     int length;
+    short dir; // direction (0 = open, 1 = forward, 2+ = open)
     bool is_roundabout, ignore_in_grid, is_access_restricted, is_split;
     TravelMode travel_mode;
+
+    EdgeID m;
+    input_stream.read((char *)&m, sizeof(unsigned));
+    edge_list.reserve(m);
+    SimpleLogger().Write() << " and " << m << " edges ";
+
     for (EdgeID i = 0; i < m; ++i)
     {
         input_stream.read((char *)&source, sizeof(unsigned));
@@ -178,7 +185,8 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
             continue;
         }
         target = internal_id_iter->second;
-        BOOST_ASSERT_MSG(source != SPECIAL_NODEID && target != SPECIAL_NODEID, "nonexisting source or target");
+        BOOST_ASSERT_MSG(source != SPECIAL_NODEID && target != SPECIAL_NODEID,
+                         "nonexisting source or target");
 
         if (source > target)
         {
@@ -198,8 +206,10 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                travel_mode,
                                is_split);
     }
+    ext_to_int_id_map.clear();
 
     tbb::parallel_sort(edge_list.begin(), edge_list.end());
+
     for (unsigned i = 1; i < edge_list.size(); ++i)
     {
         if ((edge_list[i - 1].target == edge_list[i].target) &&
@@ -252,11 +262,11 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
             }
         }
     }
-    const auto new_end_iter = std::remove_if(edge_list.begin(),
-                                       edge_list.end(),
-                                       [](const EdgeT &edge)
-                                       { return edge.source == SPECIAL_NODEID; });
-    ext_to_int_id_map.clear();
+    const auto new_end_iter = std::remove_if(edge_list.begin(), edge_list.end(), [] (const EdgeT &edge)
+                                        {
+                                            return edge.source == SPECIAL_NODEID ||
+                                                   edge.target == SPECIAL_NODEID;
+                                        });
     edge_list.erase(new_end_iter, edge_list.end()); // remove excess candidates.
     edge_list.shrink_to_fit();
     SimpleLogger().Write() << "Graph loaded ok and has " << edge_list.size() << " edges";
