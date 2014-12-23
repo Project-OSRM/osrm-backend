@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_H
 #define OSRM_H
 
-#include <osrm/ServerPaths.h>
+#include <osrm/ServerConfig.h>
 
 #include <memory>
 
@@ -46,7 +46,7 @@ class OSRM
     std::unique_ptr<OSRM_impl> OSRM_pimpl_;
 
   public:
-    explicit OSRM(ServerPaths paths, const bool use_shared_memory = false, const int max_locations_distance_table = 100);
+    explicit OSRM(ServerConfig serverConfig);
     ~OSRM();
     void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
 };
