@@ -76,7 +76,7 @@ class TarjanSCC
         bool on_stack;
     };
 
-    std::vector<unsigned> components_index;     
+    std::vector<unsigned> components_index;
     std::vector<NodeID> component_size_vector;
     std::shared_ptr<GraphT> m_node_based_graph;
     std::unordered_set<NodeID> barrier_node_set;
@@ -84,18 +84,19 @@ class TarjanSCC
     unsigned size_one_counter;
 
   public:
+    template<class ContainerT>
     TarjanSCC(std::shared_ptr<GraphT> graph,
               const RestrictionMap &restrictions,
-              const std::vector<NodeID> &barrier_node_list)
+              const ContainerT &barrier_node_list)
         : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID),
-          m_node_based_graph(graph), m_restriction_map(restrictions), 
+          m_node_based_graph(graph), m_restriction_map(restrictions),
           size_one_counter(0)
     {
         barrier_node_set.insert(std::begin(barrier_node_list), std::end(barrier_node_list));
         BOOST_ASSERT(m_node_based_graph->GetNumberOfNodes() > 0);
     }
 
-    void Run()
+    void run()
     {
         TIMER_START(SCC_RUN);
         // The following is a hack to distinguish between stuff that happens
@@ -160,7 +161,7 @@ class TarjanSCC
                             // At an only_-restriction but not at the right turn
                             // continue;
                         }
-                        
+
                         if (m_restriction_map.CheckIfTurnIsRestricted(u, v, vprime))
                         {
                             // continue;
@@ -230,6 +231,12 @@ class TarjanSCC
         SimpleLogger().Write() << "identified " << size_one_counter << " SCCs of size 1";
 
     }
+
+    std::size_t get_number_of_components() const
+    {
+        return component_size_vector.size();
+    }
+
 
     unsigned get_component_size(const NodeID node) const
     {

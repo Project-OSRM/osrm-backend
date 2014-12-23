@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
         auto tarjan = osrm::make_unique<TarjanSCC<TarjanDynamicGraph>>(graph,
                                                                        restriction_map,
                                                                        bollard_node_list);
-        tarjan->Run();
+        tarjan->run();
 
         // output
         TIMER_START(SCC_RUN_SETUP);

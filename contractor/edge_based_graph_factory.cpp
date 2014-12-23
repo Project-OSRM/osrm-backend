@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "edge_based_graph_factory.hpp"
-#include "../algorithms/bfs_components.hpp"
+#include "../algorithms/tiny_components.hpp"
 #include "../data_structures/percent.hpp"
 #include "../Util/compute_angle.hpp"
 #include "../Util/integer_range.hpp"
@@ -473,12 +473,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     SimpleLogger().Write() << "Identifying components of the road network";
 
     // Run a BFS on the undirected graph and identify small components
-    BFSComponentExplorer<NodeBasedDynamicGraph> component_explorer(
-        *m_node_based_graph, *m_restriction_map, m_barrier_nodes);
+    TarjanSCC<NodeBasedDynamicGraph> component_explorer(
+        m_node_based_graph, *m_restriction_map, m_barrier_nodes);
 
     component_explorer.run();
 
-    SimpleLogger().Write() << "identified: " << component_explorer.GetNumberOfComponents()
+    SimpleLogger().Write() << "identified: " << component_explorer.get_number_of_components()
                            << " many components";
     SimpleLogger().Write() << "generating edge-expanded nodes";
 
@@ -507,8 +507,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
             // Note: edges that end on barrier nodes or on a turn restriction
             // may actually be in two distinct components. We choose the smallest
-            const unsigned size_of_component = std::min(component_explorer.GetComponentSize(u),
-                                                        component_explorer.GetComponentSize(v));
+            const unsigned size_of_component = std::min(component_explorer.get_component_size(u),
+                                                        component_explorer.get_component_size(v));
 
             const bool component_is_tiny = (size_of_component < 1000);
             if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
