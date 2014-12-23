@@ -510,14 +510,23 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
             const unsigned size_of_component = std::min(component_explorer.get_component_size(u),
                                                         component_explorer.get_component_size(v));
 
+            const unsigned id_of_smaller_component = [u,v,component_explorer] {
+                if (component_explorer.get_component_size(u) < component_explorer.get_component_size(v))
+                {
+                    return component_explorer.get_component_id(u);
+                }
+                return component_explorer.get_component_id(v);
+            }();
+
             const bool component_is_tiny = (size_of_component < 1000);
+
             if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
             {
-                InsertEdgeBasedNode(v, u, component_is_tiny);
+                InsertEdgeBasedNode(v, u, (component_is_tiny ? id_of_smaller_component + 1 : 0));
             }
             else
             {
-                InsertEdgeBasedNode(u, v, component_is_tiny);
+                InsertEdgeBasedNode(u, v, (component_is_tiny ? id_of_smaller_component + 1 : 0));
             }
         }
     }
