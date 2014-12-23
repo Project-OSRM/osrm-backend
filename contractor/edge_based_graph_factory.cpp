@@ -52,7 +52,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
       m_node_info_list(node_info_list), m_node_based_graph(node_based_graph),
       m_restriction_map(std::move(restriction_map)), max_id(0)
 {
-
     // insert into unordered sets for fast lookup
     m_barrier_nodes.insert(barrier_node_list.begin(), barrier_node_list.end());
     m_traffic_lights.insert(traffic_light_node_list.begin(), traffic_light_node_list.end());

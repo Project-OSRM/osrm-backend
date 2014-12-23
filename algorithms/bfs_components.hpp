@@ -122,38 +122,38 @@ template <typename GraphT> class BFSComponentExplorer
             const NodeID u = current_queue_item.second; // parent
             // increment size counter of current component
             ++current_component_size;
-            if (m_barrier_nodes.find(v) != m_barrier_nodes.end())
+            const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
+            if (!is_barrier_node)
             {
-                continue;
-            }
-            const NodeID to_node_of_only_restriction =
-                m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
+                const NodeID to_node_of_only_restriction =
+                    m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
 
-            for (auto e2 : m_graph.GetAdjacentEdgeRange(v))
-            {
-                const NodeID w = m_graph.GetTarget(e2);
-
-                if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
-                    w != to_node_of_only_restriction)
+                for (auto e2 : m_graph.GetAdjacentEdgeRange(v))
                 {
-                    // At an only_-restriction but not at the right turn
-                    continue;
-                }
+                    const NodeID w = m_graph.GetTarget(e2);
 
-                if (u != w)
-                {
-                    // only add an edge if turn is not a U-turn except
-                    // when it is at the end of a dead-end street.
-                    if (!m_restriction_map.CheckIfTurnIsRestricted(u, v, w))
+                    if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
+                        w != to_node_of_only_restriction)
                     {
-                        // only add an edge if turn is not prohibited
-                        if (std::numeric_limits<unsigned>::max() == m_component_index_list[w])
+                        // At an only_-restriction but not at the right turn
+                        continue;
+                    }
+
+                    if (u != w)
+                    {
+                        // only add an edge if turn is not a U-turn except
+                        // when it is at the end of a dead-end street.
+                        if (!m_restriction_map.CheckIfTurnIsRestricted(u, v, w))
                         {
-                            // insert next (node, parent) only if w has
-                            // not yet been explored
-                            // mark node as read
-                            m_component_index_list[w] = current_component;
-                            bfs_queue.emplace(w, v);
+                            // only add an edge if turn is not prohibited
+                            if (std::numeric_limits<unsigned>::max() == m_component_index_list[w])
+                            {
+                                // insert next (node, parent) only if w has
+                                // not yet been explored
+                                // mark node as read
+                                m_component_index_list[w] = current_component;
+                                bfs_queue.emplace(w, v);
+                            }
                         }
                     }
                 }

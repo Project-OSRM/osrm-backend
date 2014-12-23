@@ -52,7 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 std::vector<QueryNode> coordinate_list;
-std::vector<TurnRestriction> restriction_list;
+std::vector<TurnRestriction> restrictions_vector;
 std::vector<NodeID> bollard_node_list;
 std::vector<NodeID> traffic_lights_list;
 
@@ -107,12 +107,12 @@ int main(int argc, char *argv[])
         }
         uint32_t usable_restrictions = 0;
         restriction_ifstream.read((char *)&usable_restrictions, sizeof(uint32_t));
-        restriction_list.resize(usable_restrictions);
+        restrictions_vector.resize(usable_restrictions);
 
         // load restrictions
         if (usable_restrictions > 0)
         {
-            restriction_ifstream.read((char *)&(restriction_list[0]),
+            restriction_ifstream.read((char *)&(restrictions_vector[0]),
                                       usable_restrictions * sizeof(TurnRestriction));
         }
         restriction_ifstream.close();
@@ -130,14 +130,14 @@ int main(int argc, char *argv[])
                                                                      bollard_node_list,
                                                                      traffic_lights_list,
                                                                      &coordinate_list,
-                                                                     restriction_list);
+                                                                     restrictions_vector);
         input_stream.close();
 
 
-        BOOST_ASSERT_MSG(restriction_list.size() == usable_restrictions,
-                         "size of restriction_list changed");
+        BOOST_ASSERT_MSG(restrictions_vector.size() == usable_restrictions,
+                         "size of restrictions_vector changed");
 
-        SimpleLogger().Write() << restriction_list.size() << " restrictions, "
+        SimpleLogger().Write() << restrictions_vector.size() << " restrictions, "
                                << bollard_node_list.size() << " bollard nodes, "
                                << traffic_lights_list.size() << " traffic lights";
 
@@ -179,11 +179,9 @@ int main(int argc, char *argv[])
         edge_list.shrink_to_fit();
 
         SimpleLogger().Write() << "Starting SCC graph traversal";
-
-        RestrictionMap restriction_map(restriction_list);
         auto tarjan = osrm::make_unique<TarjanSCC<TarjanDynamicGraph>>(graph,
-                                                                       restriction_map,
-                                                                       bollard_node_list);
+                                                                       bollard_node_list,
+                                                                       restrictions_vector);
         tarjan->Run();
 
         // output
