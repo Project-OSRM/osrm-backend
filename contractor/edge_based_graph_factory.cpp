@@ -444,10 +444,9 @@ void EdgeBasedGraphFactory::RenumberEdges()
 {
     // renumber edge based node IDs
     unsigned numbered_edges_count = 0;
-    for (NodeID current_node = 0; current_node < m_node_based_graph->GetNumberOfNodes();
-         ++current_node)
+    for (const auto current_node : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
-        for (EdgeID current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
+        for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
         {
             EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
             if (!edge_data.forward)
@@ -470,7 +469,7 @@ void EdgeBasedGraphFactory::RenumberEdges()
  */
 void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 {
-    SimpleLogger().Write() << "Identifying components of the road network";
+    SimpleLogger().Write() << "Identifying components of the (compressed) road network";
 
     // Run a BFS on the undirected graph and identify small components
     TarjanSCC<NodeBasedDynamicGraph> component_explorer(
@@ -480,6 +479,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
     SimpleLogger().Write() << "identified: " << component_explorer.get_number_of_components()
                            << " many components";
+    SimpleLogger().Write() << "identified " << component_explorer.get_size_one_count() 
+                           << " SCCs of size 1";
     SimpleLogger().Write() << "generating edge-expanded nodes";
 
     Percent progress(m_node_based_graph->GetNumberOfNodes());

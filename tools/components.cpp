@@ -185,6 +185,9 @@ int main(int argc, char *argv[])
                                                                        restriction_map,
                                                                        bollard_node_list);
         tarjan->run();
+        SimpleLogger().Write() << "identified: " << tarjan->get_number_of_components()
+                           << " many components";
+        SimpleLogger().Write() << "identified " << tarjan->get_size_one_count() << " SCCs of size 1";
 
         // output
         TIMER_START(SCC_RUN_SETUP);
