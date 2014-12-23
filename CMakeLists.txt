@@ -60,9 +60,11 @@ add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
 set(ExtractorSources extract.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
 
-file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp data_structures/restriction_map.cpp Util/compute_angle.cpp)
+add_library(RESTRICTION OBJECT data_structures/restriction_map.cpp)
+
+file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp Util/compute_angle.cpp {RestrictionMapGlob})
 set(PrepareSources prepare.cpp ${PrepareGlob})
-add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
+add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION>)
 
 file(GLOB ServerGlob Server/*.cpp)
 file(GLOB DescriptorGlob descriptors/*.cpp)
@@ -120,7 +122,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
   if (HAS_LTO_FLAG)
     set(LTO_FLAGS "${LTO_FLAGS} -flto")
 
-    # With GCC 4.9 the LTO format is non-standard ('slim'), so we need to use the build-in tools
+    # Since gcc 4.9 the LTO format is non-standart ('slim'), so we need to use the build-in tools
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
         NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0" AND NOT MINGW)
       message(STATUS "Using gcc specific binutils for LTO.")
@@ -280,7 +282,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   find_package(GDAL)
   if(GDAL_FOUND)
-    add_executable(osrm-components tools/components.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER>)
+    add_executable(osrm-components tools/components.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION>)
     target_link_libraries(osrm-components ${TBB_LIBRARIES})
     include_directories(${GDAL_INCLUDE_DIR})
     target_link_libraries(
