@@ -369,19 +369,6 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             input_coordinate, result, zoom_level);
     }
 
-    bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                      PhantomNode &resulting_phantom_node,
-                                      const unsigned zoom_level) final
-    {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-        }
-
-        return m_static_rtree->second->FindPhantomNodeForCoordinate(
-            input_coordinate, resulting_phantom_node, zoom_level);
-    }
-
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             PhantomNode &resulting_phantom_node,

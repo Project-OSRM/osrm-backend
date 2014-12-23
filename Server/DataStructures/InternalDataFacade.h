@@ -377,19 +377,6 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             input_coordinate, result, zoom_level);
     }
 
-    bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                      PhantomNode &resulting_phantom_node,
-                                      const unsigned zoom_level) final
-    {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-        }
-
-        return m_static_rtree->FindPhantomNodeForCoordinate(
-            input_coordinate, resulting_phantom_node, zoom_level);
-    }
-
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             PhantomNode &resulting_phantom_node,

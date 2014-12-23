@@ -98,10 +98,6 @@ template <class EdgeDataT> class BaseDataFacade
                                                     FixedPointCoordinate &result,
                                                     const unsigned zoom_level = 18) = 0;
 
-    virtual bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                              PhantomNode &resulting_phantom_node,
-                                              const unsigned zoom_level) = 0;
-
     virtual bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,

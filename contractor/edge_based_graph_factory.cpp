@@ -78,7 +78,9 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
 }
 
 void
-EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v, const bool belongs_to_tiny_cc)
+EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, 
+                                           const NodeID node_v, 
+                                           const unsigned component_id)
 {
     // merge edges together into one EdgeBasedNode
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
@@ -180,8 +182,8 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
                                                 forward_dist_prefix_sum[i],
                                                 reverse_dist_prefix_sum[i],
                                                 m_geometry_compressor.GetPositionForID(e1),
+                                                component_id,
                                                 i,
-                                                belongs_to_tiny_cc,
                                                 forward_data.travel_mode,
                                                 reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
@@ -232,8 +234,8 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
                                             0,
                                             0,
                                             SPECIAL_EDGEID,
+                                            component_id,
                                             0,
-                                            belongs_to_tiny_cc,
                                             forward_data.travel_mode,
                                             reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
