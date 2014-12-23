@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,43 +25,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_IMPL_H
-#define OSRM_IMPL_H
+#ifndef SERVER_CONFIG_H
+#define SERVER_CONFIG_H
 
-class BasePlugin;
-namespace http { class Reply; }
-struct RouteParameters;
+#include <osrm/ServerPaths.h>
 
-#include <osrm/ServerConfig.h>
-
-#include "../data_structures/server_config.hpp"
-#include "../data_structures/query_edge.hpp"
-
-#include <memory>
-#include <unordered_map>
-#include <string>
-
-struct SharedBarriers;
-template <class EdgeDataT> class BaseDataFacade;
-
-class OSRM_impl
+struct ServerConfig
 {
-  private:
-    using PluginMap = std::unordered_map<std::string, BasePlugin *>;
+    ServerConfig();
 
-  public:
-    OSRM_impl(ServerConfig serverConfig);
-    OSRM_impl(const OSRM_impl &) = delete;
-    virtual ~OSRM_impl();
-    void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
+    void setServerPaths(const ServerPaths paths);
 
-  private:
-    void RegisterPlugin(BasePlugin *plugin);
-    PluginMap plugin_map;
-    // will only be initialized if shared memory is used
-    std::unique_ptr<SharedBarriers> barrier;
-    // base class pointer to the objects
-    BaseDataFacade<QueryEdge::EdgeData> *query_data_facade;
+    void setUseSharedMemory(const bool use_shared_memory);
+
+    void setMaxLocationsDistanceTable(const int max_locations_distance_table);
+
+    ServerPaths server_paths;
+    bool use_shared_memory;
+    int max_locations_distance_table;
 };
 
-#endif // OSRM_IMPL_H
+#endif // SERVER_CONFIG_H
