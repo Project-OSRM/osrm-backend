@@ -50,7 +50,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     : speed_profile(speed_profile),
       m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
       m_node_info_list(node_info_list), m_node_based_graph(node_based_graph),
-      m_restriction_map(std::move(restriction_map)), max_id(0)
+      m_restriction_map(std::move(restriction_map)), max_id(0), removed_node_count(0)
 {
     // insert into unordered sets for fast lookup
     m_barrier_nodes.insert(barrier_node_list.begin(), barrier_node_list.end());
@@ -289,7 +289,6 @@ void EdgeBasedGraphFactory::CompressGeometry()
     const unsigned original_number_of_edges = m_node_based_graph->GetNumberOfEdges();
 
     Percent progress(original_number_of_nodes);
-    unsigned removed_node_count = 0;
 
     for (const NodeID node_v : osrm::irange(0u, original_number_of_nodes))
     {

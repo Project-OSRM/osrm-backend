@@ -121,6 +121,8 @@ class EdgeBasedGraphFactory
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 
     NodeID max_id;
+    std::size_t removed_node_count;
+
 };
 
 #endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */
