@@ -241,6 +241,11 @@ class TarjanSCC
     {
         return component_size_vector[components_index[node]];
     }
+
+    unsigned get_component_id(const NodeID node) const
+    {
+        return components_index[node];
+    }
 };
 
 #endif /* TINY_COMPONENTS_HPP */
