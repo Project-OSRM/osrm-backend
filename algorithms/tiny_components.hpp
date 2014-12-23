@@ -218,8 +218,6 @@ class TarjanSCC
 
         TIMER_STOP(SCC_RUN);
         SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN)/1000. << "s";
-        SimpleLogger().Write() << "identified: " << component_size_vector.size() << " many components";
-
 
         size_one_counter = std::count_if(component_size_vector.begin(),
                                          component_size_vector.end(),
@@ -227,9 +225,6 @@ class TarjanSCC
                                          {
             return 1 == value;
         });
-
-        SimpleLogger().Write() << "identified " << size_one_counter << " SCCs of size 1";
-
     }
 
     std::size_t get_number_of_components() const
@@ -237,6 +232,10 @@ class TarjanSCC
         return component_size_vector.size();
     }
 
+    unsigned get_size_one_count() const 
+    {
+        return size_one_counter;
+    }
 
     unsigned get_component_size(const NodeID node) const
     {
