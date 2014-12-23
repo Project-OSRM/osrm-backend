@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_node.hpp"
 #include "../data_structures/percent.hpp"
 #include "../data_structures/restriction.hpp"
+#include "../data_structures/restriction_map.hpp"
 #include "../data_structures/turn_instructions.hpp"
 
 #include "../Util/integer_range.hpp"
@@ -75,64 +76,23 @@ class TarjanSCC
         bool on_stack;
     };
 
-    using RestrictionSource = std::pair<NodeID, NodeID>;
-    using RestrictionTarget = std::pair<NodeID, bool>;
-    using EmanatingRestrictionsVector = std::vector<RestrictionTarget>;
-    using RestrictionMap = std::unordered_map<RestrictionSource, unsigned>;
-
-    std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     std::vector<unsigned> components_index;     
     std::vector<NodeID> component_size_vector;
     std::shared_ptr<GraphT> m_node_based_graph;
-    std::unordered_set<NodeID> barrier_node_list;
-    unsigned size_one_counter;
+    std::unordered_set<NodeID> barrier_node_set;
     RestrictionMap m_restriction_map;
+    unsigned size_one_counter;
 
   public:
     TarjanSCC(std::shared_ptr<GraphT> graph,
-              std::vector<NodeID> &bn,
-              std::vector<TurnRestriction> &irs)
+              const RestrictionMap &restrictions,
+              const std::vector<NodeID> &barrier_node_list)
         : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID),
-          m_node_based_graph(graph), 
+          m_node_based_graph(graph), m_restriction_map(restrictions), 
           size_one_counter(0)
     {
-
-        TIMER_START(SCC_LOAD);
-        for (const TurnRestriction &restriction : irs)
-        {
-            std::pair<NodeID, NodeID> restriction_source = {restriction.from.node,
-                                                            restriction.via.node};
-            unsigned index = 0;
-            const auto restriction_iterator = m_restriction_map.find(restriction_source);
-            if (restriction_iterator == m_restriction_map.end())
-            {
-                index = m_restriction_bucket_list.size();
-                m_restriction_bucket_list.resize(index + 1);
-                m_restriction_map.emplace(restriction_source, index);
-            }
-            else
-            {
-                index = restriction_iterator->second;
-                // Map already contains an is_only_*-restriction
-                if (m_restriction_bucket_list.at(index).begin()->second)
-                {
-                    continue;
-                }
-                else if (restriction.flags.is_only)
-                {
-                    // We are going to insert an is_only_*-restriction. There can be only one.
-                    m_restriction_bucket_list.at(index).clear();
-                }
-            }
-
-            m_restriction_bucket_list.at(index)
-                .emplace_back(restriction.to.node, restriction.flags.is_only);
-        }
-
-        barrier_node_list.insert(bn.begin(), bn.end());
-
-        TIMER_STOP(SCC_LOAD);
-        SimpleLogger().Write() << "Loading data into SCC took " << TIMER_MSEC(SCC_LOAD)/1000. << "s";
+        barrier_node_set.insert(std::begin(barrier_node_list), std::end(barrier_node_list));
+        BOOST_ASSERT(m_node_based_graph->GetNumberOfNodes() > 0);
     }
 
     void Run()
@@ -158,8 +118,10 @@ class TarjanSCC
             while (!recursion_stack.empty())
             {
                 TarjanStackFrame currentFrame = recursion_stack.top();
+                const NodeID u = currentFrame.parent;
                 const NodeID v = currentFrame.v;
                 recursion_stack.pop();
+
                 const bool before_recursion = processing_node_before_recursion[v];
 
                 if (before_recursion && tarjan_node_list[v].index != UINT_MAX)
@@ -181,9 +143,29 @@ class TarjanSCC
                     ++index;
 
                     // Traverse outgoing edges
+                    if (barrier_node_set.find(v) != barrier_node_set.end())
+                    {
+                        continue;
+                    }
+
+                    const NodeID to_node_of_only_restriction =
+                        m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
+
                     for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(v))
                     {
                         const auto vprime = m_node_based_graph->GetTarget(current_edge);
+                        if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
+                            vprime == to_node_of_only_restriction)
+                        {
+                            // At an only_-restriction but not at the right turn
+                            // continue;
+                        }
+                        
+                        if (m_restriction_map.CheckIfTurnIsRestricted(u, v, vprime))
+                        {
+                            // continue;
+                        }
+
                         if (SPECIAL_NODEID == tarjan_node_list[vprime].index)
                         {
                             recursion_stack.emplace(TarjanStackFrame(vprime, v));
@@ -252,44 +234,6 @@ class TarjanSCC
     unsigned get_component_size(const NodeID node) const
     {
         return component_size_vector[components_index[node]];
-    }
-
-  private:
-    unsigned CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const
-    {
-        std::pair<NodeID, NodeID> restriction_source = {u, v};
-        const auto restriction_iterator = m_restriction_map.find(restriction_source);
-        if (restriction_iterator != m_restriction_map.end())
-        {
-            const unsigned index = restriction_iterator->second;
-            for (const RestrictionSource &restriction_target : m_restriction_bucket_list.at(index))
-            {
-                if (restriction_target.second)
-                {
-                    return restriction_target.first;
-                }
-            }
-        }
-        return SPECIAL_NODEID;
-    }
-
-    bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const
-    {
-        // only add an edge if turn is not a U-turn except it is the end of dead-end street.
-        std::pair<NodeID, NodeID> restriction_source = {u, v};
-        const auto restriction_iterator = m_restriction_map.find(restriction_source);
-        if (restriction_iterator != m_restriction_map.end())
-        {
-            const unsigned index = restriction_iterator->second;
-            for (const RestrictionTarget &restriction_target : m_restriction_bucket_list.at(index))
-            {
-                if (w == restriction_target.first)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 };
 
