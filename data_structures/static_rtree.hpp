@@ -1023,94 +1023,94 @@ class StaticRTree
 
 
 
-    // bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-    //                                   PhantomNode &result_phantom_node,
-    //                                   const unsigned zoom_level)
-    // {
-    //     const bool ignore_tiny_components = (zoom_level <= 14);
-    //     EdgeDataT nearest_edge;
+    bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                      PhantomNode &result_phantom_node,
+                                      const unsigned zoom_level)
+    {
+        const bool ignore_tiny_components = (zoom_level <= 14);
+        EdgeDataT nearest_edge;
 
-    //     float min_dist = std::numeric_limits<float>::max();
-    //     float min_max_dist = std::numeric_limits<float>::max();
+        float min_dist = std::numeric_limits<float>::max();
+        float min_max_dist = std::numeric_limits<float>::max();
 
-    //     std::priority_queue<QueryCandidate> traversal_queue;
-    //     traversal_queue.emplace(0.f, 0);
+        std::priority_queue<QueryCandidate> traversal_queue;
+        traversal_queue.emplace(0.f, 0);
 
-    //     while (!traversal_queue.empty())
-    //     {
-    //         const QueryCandidate current_query_node = traversal_queue.top();
-    //         traversal_queue.pop();
+        while (!traversal_queue.empty())
+        {
+            const QueryCandidate current_query_node = traversal_queue.top();
+            traversal_queue.pop();
 
-    //         const bool prune_downward = (current_query_node.min_dist > min_max_dist);
-    //         const bool prune_upward = (current_query_node.min_dist > min_dist);
-    //         if (!prune_downward && !prune_upward)
-    //         { // downward pruning
-    //             const TreeNode &current_tree_node = m_search_tree[current_query_node.node_id];
-    //             if (current_tree_node.child_is_on_disk)
-    //             {
-    //                 LeafNode current_leaf_node;
-    //                 LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
-    //                 for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
-    //                 {
-    //                     const EdgeDataT &current_edge = current_leaf_node.objects[i];
-    //                     if (ignore_tiny_components && current_edge.is_in_tiny_cc)
-    //                     {
-    //                         continue;
-    //                     }
+            const bool prune_downward = (current_query_node.min_dist > min_max_dist);
+            const bool prune_upward = (current_query_node.min_dist > min_dist);
+            if (!prune_downward && !prune_upward)
+            { // downward pruning
+                const TreeNode &current_tree_node = m_search_tree[current_query_node.node_id];
+                if (current_tree_node.child_is_on_disk)
+                {
+                    LeafNode current_leaf_node;
+                    LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
+                    for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
+                    {
+                        const EdgeDataT &current_edge = current_leaf_node.objects[i];
+                        if (ignore_tiny_components && current_edge.component_id != 0)
+                        {
+                            continue;
+                        }
 
-    //                     float current_ratio = 0.;
-    //                     FixedPointCoordinate nearest;
-    //                     const float current_perpendicular_distance =
-    //                         FixedPointCoordinate::ComputePerpendicularDistance(
-    //                             m_coordinate_list->at(current_edge.u),
-    //                             m_coordinate_list->at(current_edge.v),
-    //                             input_coordinate,
-    //                             nearest,
-    //                             current_ratio);
+                        float current_ratio = 0.;
+                        FixedPointCoordinate nearest;
+                        const float current_perpendicular_distance =
+                            FixedPointCoordinate::ComputePerpendicularDistance(
+                                m_coordinate_list->at(current_edge.u),
+                                m_coordinate_list->at(current_edge.v),
+                                input_coordinate,
+                                nearest,
+                                current_ratio);
 
-    //                     BOOST_ASSERT(0. <= current_perpendicular_distance);
+                        BOOST_ASSERT(0. <= current_perpendicular_distance);
 
-    //                     if ((current_perpendicular_distance < min_dist) &&
-    //                         !osrm::epsilon_compare(current_perpendicular_distance, min_dist))
-    //                     { // found a new minimum
-    //                         min_dist = current_perpendicular_distance;
-    //                         result_phantom_node = {current_edge.forward_edge_based_node_id,
-    //                                                current_edge.reverse_edge_based_node_id,
-    //                                                current_edge.name_id,
-    //                                                current_edge.forward_weight,
-    //                                                current_edge.reverse_weight,
-    //                                                current_edge.forward_offset,
-    //                                                current_edge.reverse_offset,
-    //                                                current_edge.packed_geometry_id,
-    //                                                nearest,
-    //                                                current_edge.fwd_segment_position,
-    //                                                current_edge.forward_travel_mode,
-    //                                                current_edge.backward_travel_mode};
-    //                         nearest_edge = current_edge;
-    //                     }
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 min_max_dist = ExploreTreeNode(current_tree_node,
-    //                                                input_coordinate,
-    //                                                min_dist,
-    //                                                min_max_dist,
-    //                                                traversal_queue);
-    //             }
-    //         }
-    //     }
+                        if ((current_perpendicular_distance < min_dist) &&
+                            !osrm::epsilon_compare(current_perpendicular_distance, min_dist))
+                        { // found a new minimum
+                            min_dist = current_perpendicular_distance;
+                            result_phantom_node = {current_edge.forward_edge_based_node_id,
+                                                   current_edge.reverse_edge_based_node_id,
+                                                   current_edge.name_id,
+                                                   current_edge.forward_weight,
+                                                   current_edge.reverse_weight,
+                                                   current_edge.forward_offset,
+                                                   current_edge.reverse_offset,
+                                                   current_edge.packed_geometry_id,
+                                                   nearest,
+                                                   current_edge.fwd_segment_position,
+                                                   current_edge.forward_travel_mode,
+                                                   current_edge.backward_travel_mode};
+                            nearest_edge = current_edge;
+                        }
+                    }
+                }
+                else
+                {
+                    min_max_dist = ExploreTreeNode(current_tree_node,
+                                                   input_coordinate,
+                                                   min_dist,
+                                                   min_max_dist,
+                                                   traversal_queue);
+                }
+            }
+        }
 
-    //     if (result_phantom_node.location.is_valid())
-    //     {
-    //         // Hack to fix rounding errors and wandering via nodes.
-    //         FixUpRoundingIssue(input_coordinate, result_phantom_node);
+        if (result_phantom_node.location.is_valid())
+        {
+            // Hack to fix rounding errors and wandering via nodes.
+            FixUpRoundingIssue(input_coordinate, result_phantom_node);
 
-    //         // set forward and reverse weights on the phantom node
-    //         SetForwardAndReverseWeightsOnPhantomNode(nearest_edge, result_phantom_node);
-    //     }
-    //     return result_phantom_node.location.is_valid();
-    // }
+            // set forward and reverse weights on the phantom node
+            SetForwardAndReverseWeightsOnPhantomNode(nearest_edge, result_phantom_node);
+        }
+        return result_phantom_node.location.is_valid();
+    }
 
   private:
 

@@ -78,7 +78,7 @@ class LinearSearchNN
         FixedPointCoordinate min_coord;
         for (const TestData &e : edges)
         {
-            if (ignore_tiny_components && e.is_in_tiny_cc)
+            if (ignore_tiny_components && e.component_id != 0)
                 continue;
 
             const FixedPointCoordinate &start = coords->at(e.u);
@@ -114,7 +114,7 @@ class LinearSearchNN
         TestData nearest_edge;
         for (const TestData &e : edges)
         {
-            if (ignore_tiny_components && e.is_in_tiny_cc)
+            if (ignore_tiny_components && e.component_id != 0)
                 continue;
 
             float current_ratio = 0.;
@@ -224,7 +224,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
             if (used_edges.find(std::pair<unsigned, unsigned>(
                     std::min(data.u, data.v), std::max(data.u, data.v))) == used_edges.end())
             {
-                data.is_in_tiny_cc = false;
+                data.component_id = 0;
                 edges.emplace_back(data);
                 used_edges.emplace(std::min(data.u, data.v), std::max(data.u, data.v));
             }
