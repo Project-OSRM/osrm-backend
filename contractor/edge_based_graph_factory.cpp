@@ -476,16 +476,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
     component_explorer.run();
 
-    SimpleLogger().Write() << "identified: " << component_explorer.get_number_of_components()
-                           << " many components";
-    SimpleLogger().Write() << "identified " << component_explorer.get_size_one_count() 
-                           << " SCCs of size 1";
+    SimpleLogger().Write() << "identified: " << component_explorer.get_number_of_components() - removed_node_count
+                           << " (compressed) components";
+    SimpleLogger().Write() << "identified " << component_explorer.get_size_one_count() - removed_node_count
+                           << " (compressed) SCCs of size 1";
     SimpleLogger().Write() << "generating edge-expanded nodes";
 
     Percent progress(m_node_based_graph->GetNumberOfNodes());
 
     // loop over all edges and generate new set of nodes
-    for (NodeID u = 0, end = m_node_based_graph->GetNumberOfNodes(); u < end; ++u)
+    for (const auto u : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         BOOST_ASSERT(u != SPECIAL_NODEID);
         BOOST_ASSERT(u < m_node_based_graph->GetNumberOfNodes());
@@ -556,7 +556,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
 
     Percent progress(m_node_based_graph->GetNumberOfNodes());
 
-    for (NodeID u = 0, end = m_node_based_graph->GetNumberOfNodes(); u < end; ++u)
+    for (const auto u : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         progress.printStatus(u);
         for (const EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
