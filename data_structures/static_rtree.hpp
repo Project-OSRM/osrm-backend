@@ -765,14 +765,14 @@ class StaticRTree
                 const EdgeDataT & current_segment = current_query_node.node.template get<EdgeDataT>();
 
                 // don't collect too many results from big components
-                if (number_of_results_found_in_big_cc == number_of_results && 
+                if (number_of_results_found_in_big_cc == number_of_results &&
                     current_segment.component_id == 0)
                 {
                     continue;
                 }
 
                 // don't collect too many results from small components
-                if (number_of_results_found_in_tiny_cc == number_of_results && 
+                if (number_of_results_found_in_tiny_cc == number_of_results &&
                     current_segment.component_id != 0)
                 {
                     continue;
@@ -804,6 +804,7 @@ class StaticRTree
                          current_segment.forward_offset,
                          current_segment.reverse_offset,
                          current_segment.packed_geometry_id,
+                         current_segment.component_id,
                          foot_point_coordinate_on_segment,
                          current_segment.fwd_segment_position,
                          current_segment.forward_travel_mode,

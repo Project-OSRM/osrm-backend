@@ -39,7 +39,7 @@ struct PhantomNode
 {
     PhantomNode(NodeID forward_node_id, NodeID reverse_node_id, unsigned name_id,
                 int forward_weight, int reverse_weight, int forward_offset, int reverse_offset,
-                unsigned packed_geometry_id, FixedPointCoordinate &location,
+                unsigned packed_geometry_id, unsigned component_id, FixedPointCoordinate &location,
                 unsigned short fwd_segment_position,
                 TravelMode forward_travel_mode, TravelMode backward_travel_mode);
 
@@ -53,6 +53,7 @@ struct PhantomNode
     int forward_offset;
     int reverse_offset;
     unsigned packed_geometry_id;
+    unsigned component_id;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
     TravelMode forward_travel_mode : 4;
@@ -69,6 +70,8 @@ struct PhantomNode
     bool is_valid(const unsigned numberOfNodes) const;
 
     bool is_valid() const;
+
+    bool is_in_tiny_component() const;
 
     bool operator==(const PhantomNode & other) const;
 };
@@ -104,6 +107,7 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn)
             "fwd-o: " << pn.forward_offset       << ", " <<
             "rev-o: " << pn.reverse_offset       << ", " <<
             "geom: "  << pn.packed_geometry_id   << ", " <<
+            "comp: "  << pn.component_id         << ", " <<
             "pos: "   << pn.fwd_segment_position << ", " <<
             "loc: "   << pn.location;
     return out;

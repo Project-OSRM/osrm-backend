@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PhantomNode::PhantomNode(NodeID forward_node_id, NodeID reverse_node_id, unsigned name_id,
             int forward_weight, int reverse_weight, int forward_offset, int reverse_offset,
-            unsigned packed_geometry_id, FixedPointCoordinate &location,
+            unsigned packed_geometry_id, unsigned component_id, FixedPointCoordinate &location,
             unsigned short fwd_segment_position,
             TravelMode forward_travel_mode, TravelMode backward_travel_mode) :
     forward_node_id(forward_node_id),
@@ -40,6 +40,7 @@ PhantomNode::PhantomNode(NodeID forward_node_id, NodeID reverse_node_id, unsigne
     forward_offset(forward_offset),
     reverse_offset(reverse_offset),
     packed_geometry_id(packed_geometry_id),
+    component_id(component_id),
     location(location),
     fwd_segment_position(fwd_segment_position),
     forward_travel_mode(forward_travel_mode),
@@ -55,6 +56,7 @@ PhantomNode::PhantomNode() :
     forward_offset(0),
     reverse_offset(0),
     packed_geometry_id(SPECIAL_EDGEID),
+    component_id(-1),
     fwd_segment_position(0),
     forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
     backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
@@ -103,6 +105,11 @@ bool PhantomNode::is_valid(const unsigned number_of_nodes) const
         ) &&
         (name_id != INVALID_NAMEID
     );
+}
+
+bool PhantomNode::is_in_tiny_component() const
+{
+    return component_id != 0;
 }
 
 bool PhantomNode::is_valid() const
