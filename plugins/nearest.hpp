@@ -60,7 +60,6 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
         std::vector<PhantomNode> phantom_node_vector;
         facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates.front(),
                                                         phantom_node_vector,
-                                                        route_parameters.zoom_level,
                                                         static_cast<int>(number_of_results));
 
         JSON::Object json_result;

@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "shared_memory_vector_wrapper.hpp"
 
 #include "../Util/floating_point.hpp"
+#include "../Util/integer_range.hpp"
 #include "../Util/MercatorUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
@@ -649,21 +650,11 @@ class StaticRTree
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &result_phantom_node_vector,
-                                            const unsigned zoom_level,
                                             const unsigned number_of_results,
                                             const unsigned max_checked_segments = 4*LEAF_NODE_SIZE)
     {
-        // TIMER_START(samet);
-        // SimpleLogger().Write(logDEBUG) << "searching for " << number_of_results << " results";
         std::vector<float> min_found_distances(number_of_results, std::numeric_limits<float>::max());
-
-        // unsigned dequeues = 0;
-        // unsigned inspected_mbrs = 0;
-        // unsigned loaded_leafs = 0;
         unsigned inspected_segments = 0;
-        // unsigned pruned_elements = 0;
-        // unsigned ignored_segments = 0;
-        // unsigned ignored_mbrs = 0;
 
         unsigned number_of_results_found_in_big_cc = 0;
         unsigned number_of_results_found_in_tiny_cc = 0;
@@ -677,13 +668,9 @@ class StaticRTree
             const IncrementalQueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
 
-            // ++dequeues;
-
             const float current_min_dist = min_found_distances[number_of_results-1];
-
             if (current_query_node.min_dist > current_min_dist)
             {
-                // ++pruned_elements;
                 continue;
             }
 
@@ -692,13 +679,6 @@ class StaticRTree
                 const TreeNode & current_tree_node = current_query_node.node.template get<TreeNode>();
                 if (current_tree_node.child_is_on_disk)
                 {
-                    // ++loaded_leafs;
-                    // SimpleLogger().Write(logDEBUG) << "loading leaf: " << current_tree_node.children[0] << " w/ mbr [" <<
-                    //     current_tree_node.minimum_bounding_rectangle.min_lat/COORDINATE_PRECISION << "," <<
-                    //     current_tree_node.minimum_bounding_rectangle.min_lon/COORDINATE_PRECISION << "," <<
-                    //     current_tree_node.minimum_bounding_rectangle.max_lat/COORDINATE_PRECISION << "-" <<
-                    //     current_tree_node.minimum_bounding_rectangle.max_lon/COORDINATE_PRECISION << "]";
-
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     // Add all objects from leaf into queue
@@ -717,23 +697,10 @@ class StaticRTree
                         {
                             traversal_queue.emplace(current_perpendicular_distance, current_edge);
                         }
-                        // else
-                        // {
-                        //     ++ignored_segments;
-                        // }
                     }
-                    // SimpleLogger().Write(logDEBUG) << "added " << current_leaf_node.object_count << " roads into queue of " << traversal_queue.size();
                 }
                 else
                 {
-                    // ++inspected_mbrs;
-                    // explore inner node
-                    // SimpleLogger().Write(logDEBUG) << "explore inner node w/ mbr [" <<
-                    //     current_tree_node.minimum_bounding_rectangle.min_lat/COORDINATE_PRECISION << "," <<
-                    //     current_tree_node.minimum_bounding_rectangle.min_lon/COORDINATE_PRECISION << "," <<
-                    //     current_tree_node.minimum_bounding_rectangle.max_lat/COORDINATE_PRECISION << "-" <<
-                    //     current_tree_node.minimum_bounding_rectangle.max_lon/COORDINATE_PRECISION << "," << "]";
-
                     // for each child mbr
                     for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
                     {
@@ -750,12 +717,7 @@ class StaticRTree
                         {
                             traversal_queue.emplace(lower_bound_to_element, child_tree_node);
                         }
-                        // else
-                        // {
-                        //     ++ignored_mbrs;
-                        // }
                     }
-                    // SimpleLogger().Write(logDEBUG) << "added " << current_tree_node.child_count << " mbrs into queue of " << traversal_queue.size();
                 }
             }
             else
@@ -866,7 +828,6 @@ class StaticRTree
     bool
     IncrementalFindPhantomNodeForCoordinateWithDistance(const FixedPointCoordinate &input_coordinate,
                                                         std::vector<std::pair<PhantomNode, double>> &result_phantom_node_vector,
-                                                        const unsigned zoom_level,
                                                         const unsigned number_of_results,
                                                         const unsigned max_checked_segments = 4*LEAF_NODE_SIZE)
     {
