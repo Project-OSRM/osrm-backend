@@ -1044,6 +1044,7 @@ class StaticRTree
                                                    current_edge.forward_offset,
                                                    current_edge.reverse_offset,
                                                    current_edge.packed_geometry_id,
+                                                   current_edge.component_id,
                                                    nearest,
                                                    current_edge.fwd_segment_position,
                                                    current_edge.forward_travel_mode,
