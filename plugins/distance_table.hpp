@@ -75,7 +75,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         unsigned max_locations =
             std::min(100u, static_cast<unsigned>(route_parameters.coordinates.size()));
         PhantomNodeArray phantom_node_vector(max_locations);
-        for (const auto i : osrm::irange(1u, max_locations))
+        for (const auto i : osrm::irange(0u, max_locations))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
