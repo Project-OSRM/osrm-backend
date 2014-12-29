@@ -71,37 +71,68 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
     {
+        SimpleLogger().Write() << "handling call";
+
         if (!check_all_coordinates(route_parameters.coordinates))
         {
+            SimpleLogger().Write() << "coordinates not ok";
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
         reply.status = http::Reply::ok;
+        SimpleLogger().Write() << "coordinates ok";
 
-        std::vector<PhantomNode> phantom_node_vector(route_parameters.coordinates.size());
+        std::vector<phantom_node_pair> phantom_node_pair_list(route_parameters.coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
+            SimpleLogger().Write() << "[" << i << "] checking coordinate";
+            SimpleLogger().Write() << "route_parameters.hints.size()" << route_parameters.hints.size();
+
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
             {
-                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
-                if (phantom_node_vector[i].is_valid(facade->GetNumberOfNodes()))
+                SimpleLogger().Write() << "decoding hint " << i;
+
+                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], phantom_node_pair_list[i]);
+                if (phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
                 {
+                    SimpleLogger().Write() << "decoded PhantomNode";
                     continue;
                 }
             }
-            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i]);
+            std::vector<PhantomNode> phantom_node_vector;
+            SimpleLogger().Write() << "finding coordinate";
+
+            if (facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
+                                                                phantom_node_vector,
+                                                                1))
+            {
+                SimpleLogger().Write() << "found first PhantomNode";
+
+                BOOST_ASSERT(!phantom_node_vector.empty());
+                phantom_node_pair_list[i].first = phantom_node_vector.front();
+                if (phantom_node_vector.size() > 1)
+                {
+                    SimpleLogger().Write() << "found second PhantomNode";
+                    phantom_node_pair_list[i].second = phantom_node_vector.back();
+                }
+            } else {
+                SimpleLogger().Write() << "found no PhantomNode";
+            }
         }
 
+        //TODO: - if all PhantomNodes are from same tiny cc then take those
+        //      - otherwise take all from big component.
+        //      - rotate results into phantom_node_pair.first
+
         RawRouteData raw_route;
-        auto build_phantom_pairs = [&raw_route] (const PhantomNode &first, const PhantomNode &second)
+        auto build_phantom_pairs = [&raw_route] (const phantom_node_pair &first_pair, const phantom_node_pair &second_pair)
         {
-            raw_route.segment_end_coordinates.emplace_back(PhantomNodes{first, second});
+            raw_route.segment_end_coordinates.emplace_back(PhantomNodes{first_pair.first, first_pair.second});
         };
-        osrm::for_each_pair(phantom_node_vector, build_phantom_pairs);
+        osrm::for_each_pair(phantom_node_pair_list, build_phantom_pairs);
 
         if (route_parameters.alternate_route &&
             1 == raw_route.segment_end_coordinates.size())
