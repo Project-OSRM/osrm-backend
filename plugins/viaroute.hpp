@@ -109,13 +109,13 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                                                                 phantom_node_vector,
                                                                 1))
             {
-                SimpleLogger().Write() << "found first PhantomNode";
+                SimpleLogger().Write() << "found first PhantomNode" << phantom_node_vector.front();
 
                 BOOST_ASSERT(!phantom_node_vector.empty());
                 phantom_node_pair_list[i].first = phantom_node_vector.front();
                 if (phantom_node_vector.size() > 1)
                 {
-                    SimpleLogger().Write() << "found second PhantomNode";
+                    SimpleLogger().Write() << "found second PhantomNode" << phantom_node_vector.back();
                     phantom_node_pair_list[i].second = phantom_node_vector.back();
                 }
             } else {
@@ -130,7 +130,9 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         RawRouteData raw_route;
         auto build_phantom_pairs = [&raw_route] (const phantom_node_pair &first_pair, const phantom_node_pair &second_pair)
         {
-            raw_route.segment_end_coordinates.emplace_back(PhantomNodes{first_pair.first, first_pair.second});
+            raw_route.segment_end_coordinates.emplace_back(PhantomNodes{first_pair.first, second_pair.first});
+            SimpleLogger().Write() << "emplaced: " << raw_route.segment_end_coordinates.back().source_phantom;
+            SimpleLogger().Write() << "          " << raw_route.segment_end_coordinates.back().target_phantom;
         };
         osrm::for_each_pair(phantom_node_pair_list, build_phantom_pairs);
 
