@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct EdgeBasedNode
 {
-
     EdgeBasedNode() :
         forward_edge_based_node_id(SPECIAL_NODEID),
         reverse_edge_based_node_id(SPECIAL_NODEID),
@@ -104,6 +103,11 @@ struct EdgeBasedNode
     bool IsCompressed() const
     {
         return packed_geometry_id != SPECIAL_EDGEID;
+    }
+
+    bool is_in_tiny_cc() const
+    {
+        return 0 != component_id;
     }
 
     NodeID forward_edge_based_node_id; // needed for edge-expanded graph
