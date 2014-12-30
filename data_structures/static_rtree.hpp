@@ -646,18 +646,20 @@ class StaticRTree
         return result_coordinate.is_valid();
     }
 
+
     // implementation of the Hjaltason/Samet query [3], a BFS traversal of the tree
+    // - searches for k elements nearest elements
+    // - continues to find the k+1st element from a big component if k elements
+    //   come from tiny components
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &result_phantom_node_vector,
-                                            const unsigned number_of_results,
-                                            const unsigned max_checked_segments = 4*LEAF_NODE_SIZE)
+                                            const unsigned max_number_of_phantom_nodes,
+                                            const unsigned max_checked_elements = 4*LEAF_NODE_SIZE)
     {
-        std::vector<float> min_found_distances(number_of_results, std::numeric_limits<float>::max());
-        unsigned inspected_segments = 0;
-
-        unsigned number_of_results_found_in_big_cc = 0;
-        unsigned number_of_results_found_in_tiny_cc = 0;
+        unsigned inspected_elements = 0;
+        unsigned number_of_elements_from_big_cc = 0;
+        unsigned number_of_elements_from_tiny_cc = 0;
 
         // initialize queue with root element
         std::priority_queue<IncrementalQueryCandidate> traversal_queue;
@@ -668,21 +670,16 @@ class StaticRTree
             const IncrementalQueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
 
-            const float current_min_dist = min_found_distances[number_of_results-1];
-            if (current_query_node.min_dist > current_min_dist)
-            {
-                continue;
-            }
-
             if (current_query_node.node.template is<TreeNode>())
-            {
+            { // current object is a tree node
                 const TreeNode & current_tree_node = current_query_node.node.template get<TreeNode>();
                 if (current_tree_node.child_is_on_disk)
                 {
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
-                    // Add all objects from leaf into queue
-                    for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
+
+                    // current object represents a block on disk
+                    for (const auto i : osrm::irange(0u, current_leaf_node.object_count))
                     {
                         const auto &current_edge = current_leaf_node.objects[i];
                         const float current_perpendicular_distance =
@@ -691,59 +688,45 @@ class StaticRTree
                                 m_coordinate_list->at(current_edge.v),
                                 input_coordinate);
                         // distance must be non-negative
-                        BOOST_ASSERT(0. <= current_perpendicular_distance);
+                        BOOST_ASSERT(0.f <= current_perpendicular_distance);
 
-                        if (current_perpendicular_distance < current_min_dist)
-                        {
-                            traversal_queue.emplace(current_perpendicular_distance, current_edge);
-                        }
+                        // put element in queue
+                        traversal_queue.emplace(current_perpendicular_distance, current_edge);
                     }
                 }
                 else
                 {
-                    // for each child mbr
-                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
+                    // for each child mbr get a lower bound and enqueue it
+                    for (const auto i : osrm::irange(0u, current_tree_node.child_count))
                     {
                         const int32_t child_id = current_tree_node.children[i];
                         const TreeNode &child_tree_node = m_search_tree[child_id];
                         const RectangleT &child_rectangle = child_tree_node.minimum_bounding_rectangle;
                         const float lower_bound_to_element = child_rectangle.GetMinDist(input_coordinate);
+                        BOOST_ASSERT(0.f <= lower_bound_to_element);
 
-                        // TODO - enough elements found, i.e. nearest distance > maximum distance?
-                        //        ie. some measure of 'confidence of accuracy'
-
-                        // check if it needs to be explored by mindist
-                        if (lower_bound_to_element < current_min_dist)
-                        {
-                            traversal_queue.emplace(lower_bound_to_element, child_tree_node);
-                        }
+                        traversal_queue.emplace(lower_bound_to_element, child_tree_node);
                     }
                 }
             }
             else
-            {
-                ++inspected_segments;
+            { // current object is a leaf node
+                ++inspected_elements;
                 // inspecting an actual road segment
                 const EdgeDataT & current_segment = current_query_node.node.template get<EdgeDataT>();
 
-                // don't collect too many results from big components
-                if (number_of_results_found_in_big_cc == number_of_results &&
-                    current_segment.component_id == 0)
-                {
-                    continue;
-                }
-
-                // don't collect too many results from small components
-                if (number_of_results_found_in_tiny_cc == number_of_results &&
-                    current_segment.component_id != 0)
+                // continue searching for the first segment from a big component
+                if (number_of_elements_from_big_cc == 0 &&
+                    number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes &&
+                    current_segment.is_in_tiny_cc())
                 {
                     continue;
                 }
 
                 // check if it is smaller than what we had before
-                float current_ratio = 0.;
+                float current_ratio = 0.f;
                 FixedPointCoordinate foot_point_coordinate_on_segment;
-                const float current_perpendicular_distance =
+                // const float current_perpendicular_distance =
                     FixedPointCoordinate::ComputePerpendicularDistance(
                         m_coordinate_list->at(current_segment.u),
                         m_coordinate_list->at(current_segment.v),
@@ -751,76 +734,56 @@ class StaticRTree
                         foot_point_coordinate_on_segment,
                         current_ratio);
 
-                BOOST_ASSERT(0. <= current_perpendicular_distance);
+                SimpleLogger().Write() << "nearest: " << std::setprecision(8) << foot_point_coordinate_on_segment;
+                // store phantom node in result vector
+                result_phantom_node_vector.emplace_back(
+                    current_segment.forward_edge_based_node_id,
+                    current_segment.reverse_edge_based_node_id,
+                    current_segment.name_id,
+                    current_segment.forward_weight,
+                    current_segment.reverse_weight,
+                    current_segment.forward_offset,
+                    current_segment.reverse_offset,
+                    current_segment.packed_geometry_id,
+                    current_segment.component_id,
+                    foot_point_coordinate_on_segment,
+                    current_segment.fwd_segment_position,
+                    current_segment.forward_travel_mode,
+                    current_segment.backward_travel_mode);
 
-                if ((current_perpendicular_distance < current_min_dist) &&
-                    !osrm::epsilon_compare(current_perpendicular_distance, current_min_dist))
-                {
-                    // store phantom node in result vector
-                    result_phantom_node_vector.emplace_back(
-                        current_segment.forward_edge_based_node_id,
-                         current_segment.reverse_edge_based_node_id,
-                         current_segment.name_id,
-                         current_segment.forward_weight,
-                         current_segment.reverse_weight,
-                         current_segment.forward_offset,
-                         current_segment.reverse_offset,
-                         current_segment.packed_geometry_id,
-                         current_segment.component_id,
-                         foot_point_coordinate_on_segment,
-                         current_segment.fwd_segment_position,
-                         current_segment.forward_travel_mode,
-                         current_segment.backward_travel_mode);
+                // Hack to fix rounding errors and wandering via nodes.
+                FixUpRoundingIssue(input_coordinate, result_phantom_node_vector.back());
 
-                    // Hack to fix rounding errors and wandering via nodes.
-                    FixUpRoundingIssue(input_coordinate, result_phantom_node_vector.back());
+                // set forward and reverse weights on the phantom node
+                SetForwardAndReverseWeightsOnPhantomNode(current_segment,
+                                                         result_phantom_node_vector.back());
 
-                    // set forward and reverse weights on the phantom node
-                    SetForwardAndReverseWeightsOnPhantomNode(current_segment,
-                                                             result_phantom_node_vector.back());
-
-                    // do we have results only in a small scc
-                    if (current_segment.component_id != 0)
-                    {
-                        ++number_of_results_found_in_tiny_cc;
-                    }
-                    else
-                    {
-                        // found an element in a large component
-                        min_found_distances[number_of_results_found_in_big_cc] = current_perpendicular_distance;
-                        ++number_of_results_found_in_big_cc;
-                        // SimpleLogger().Write(logDEBUG) << std::setprecision(8) << foot_point_coordinate_on_segment << " at " << current_perpendicular_distance;
-                    }
+                // update counts on what we found from which result class
+                if (current_segment.is_in_tiny_cc())
+                { // found an element in tiny component
+                    ++number_of_elements_from_tiny_cc;
                 }
+                else
+                { // found an element in a big component
+                    ++number_of_elements_from_big_cc;
+                }
+
+                // SimpleLogger().Write() << "result_phantom_node_vector.size(): " << result_phantom_node_vector.size();
+                // SimpleLogger().Write() << "max_number_of_phantom_nodes: " << max_number_of_phantom_nodes;
+                // SimpleLogger().Write() << "number_of_elements_from_big_cc: " << number_of_elements_from_big_cc;
+                // SimpleLogger().Write() << "number_of_elements_from_tiny_cc: " << number_of_elements_from_tiny_cc;
+                // SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
+                // SimpleLogger().Write() << "max_checked_elements: " << max_checked_elements;
             }
 
-            // TODO add indicator to prune if maxdist > threshold
-            if (number_of_results == number_of_results_found_in_big_cc || inspected_segments >= max_checked_segments)
+            // stop the search by flushing the queue
+            if ((result_phantom_node_vector.size() >= max_number_of_phantom_nodes && number_of_elements_from_big_cc > 0) ||
+                inspected_elements >= max_checked_elements)
             {
-                // SimpleLogger().Write(logDEBUG) << "flushing queue of " << traversal_queue.size() << " elements";
-                // work-around for traversal_queue.clear();
                 traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
         }
-
-        // for (const PhantomNode& result_node : result_phantom_node_vector)
-        // {
-        //     SimpleLogger().Write(logDEBUG) << std::setprecision(8) << "found location " << result_node.forward_node_id << " at " << result_node.location;
-        // }
-        // SimpleLogger().Write(logDEBUG) << "dequeues: " << dequeues;
-        // SimpleLogger().Write(logDEBUG) << "inspected_mbrs: " << inspected_mbrs;
-        // SimpleLogger().Write(logDEBUG) << "loaded_leafs: " << loaded_leafs;
-        // SimpleLogger().Write(logDEBUG) << "inspected_segments: " << inspected_segments;
-        // SimpleLogger().Write(logDEBUG) << "pruned_elements: " << pruned_elements;
-        // SimpleLogger().Write(logDEBUG) << "ignored_segments: " << ignored_segments;
-        // SimpleLogger().Write(logDEBUG) << "ignored_mbrs: " << ignored_mbrs;
-
-        // SimpleLogger().Write(logDEBUG) << "number_of_results_found_in_big_cc: " << number_of_results_found_in_big_cc;
-        // SimpleLogger().Write(logDEBUG) << "number_of_results_found_in_tiny_cc: " << number_of_results_found_in_tiny_cc;
-        // TIMER_STOP(samet);
-        // SimpleLogger().Write() << "query took " << TIMER_MSEC(samet) << "ms";
-
-        // if we found an element in either category, then we are good
+        SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
         return !result_phantom_node_vector.empty();
     }
 
