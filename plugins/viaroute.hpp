@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef VIA_ROUTE_PLUGIN_H
-#define VIA_ROUTE_PLUGIN_H
+#ifndef VIA_ROUTE_HPP
+#define VIA_ROUTE_HPP
 
 #include "plugin_base.hpp"
 
@@ -88,14 +88,17 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
             SimpleLogger().Write() << "[" << i << "] checking coordinate";
-            SimpleLogger().Write() << "route_parameters.hints.size()" << route_parameters.hints.size();
+            SimpleLogger().Write() << "route_parameters.hints.size() "
+                                   << route_parameters.hints.size();
 
+            // TODO: Remove hinting mechanism
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
             {
                 SimpleLogger().Write() << "decoding hint " << i;
 
-                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], phantom_node_pair_list[i]);
+                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i],
+                                                phantom_node_pair_list[i]);
                 if (phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
                 {
                     SimpleLogger().Write() << "decoded PhantomNode";
@@ -106,8 +109,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             SimpleLogger().Write() << "finding coordinate";
 
             if (facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                                phantom_node_vector,
-                                                                1))
+                                                                phantom_node_vector, 1))
             {
                 SimpleLogger().Write() << "found first PhantomNode" << phantom_node_vector.front();
 
@@ -115,37 +117,85 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 phantom_node_pair_list[i].first = phantom_node_vector.front();
                 if (phantom_node_vector.size() > 1)
                 {
-                    SimpleLogger().Write() << "found second PhantomNode" << phantom_node_vector.back();
+                    SimpleLogger().Write() << "found second PhantomNode"
+                                           << phantom_node_vector.back();
                     phantom_node_pair_list[i].second = phantom_node_vector.back();
                 }
-            } else {
-                SimpleLogger().Write() << "found no PhantomNode";
+                // } else {
+                //     SimpleLogger().Write() << "found no PhantomNode";
             }
         }
 
-        //TODO: - if all PhantomNodes are from same tiny cc then take those
+        // TODO: - if all PhantomNodes are from same tiny cc then take those
         //      - otherwise take all from big component.
         //      - rotate results into phantom_node_pair.first
 
-        RawRouteData raw_route;
-        auto build_phantom_pairs = [&raw_route] (const phantom_node_pair &first_pair, const phantom_node_pair &second_pair)
+        auto check_component_id_is_tiny = [](const phantom_node_pair &phantom_pair)
         {
-            raw_route.segment_end_coordinates.emplace_back(PhantomNodes{first_pair.first, second_pair.first});
-            SimpleLogger().Write() << "emplaced: " << raw_route.segment_end_coordinates.back().source_phantom;
-            SimpleLogger().Write() << "          " << raw_route.segment_end_coordinates.back().target_phantom;
+            return phantom_pair.first.component_id != 0;
+        };
+
+        const bool every_phantom_is_in_tiny_cc =
+            std::all_of(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
+                        check_component_id_is_tiny);
+        SimpleLogger().Write() << "every_phantom_is_in_tiny_cc: "
+                               << (every_phantom_is_in_tiny_cc ? "y" : "n");
+
+        // are all phantoms from a tiny cc?
+        const auto component_id = phantom_node_pair_list.front().first.component_id;
+        BOOST_ASSERT(0 != component_id);
+
+        auto check_component_id_is_equal = [component_id](const phantom_node_pair &phantom_pair)
+        {
+            BOOST_ASSERT(0 != phantom_pair.first.component_id);
+            return component_id == phantom_pair.first.component_id;
+        };
+
+        const bool every_phantom_has_equal_id =
+            std::all_of(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
+                        check_component_id_is_equal);
+
+        SimpleLogger().Write() << "every_phantom_has_equal_id: "
+                               << (every_phantom_has_equal_id ? "y" : "n");
+
+        auto swap_phantom_from_big_cc_into_front = [](phantom_node_pair &phantom_pair)
+        {
+            if (0 != phantom_pair.first.component_id)
+            {
+                using namespace std;
+                swap(phantom_pair.first, phantom_pair.second);
+            }
+        };
+
+        // this case is true if we take phantoms from the big CC
+        if (!every_phantom_is_in_tiny_cc || !every_phantom_has_equal_id)
+        {
+            std::for_each(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
+                          swap_phantom_from_big_cc_into_front);
+        }
+
+        RawRouteData raw_route;
+        auto build_phantom_pairs =
+            [&raw_route](const phantom_node_pair &first_pair, const phantom_node_pair &second_pair)
+        {
+            raw_route.segment_end_coordinates.emplace_back(
+                PhantomNodes{first_pair.first, second_pair.first});
+            SimpleLogger().Write()
+                << "emplaced: " << raw_route.segment_end_coordinates.back().source_phantom;
+            SimpleLogger().Write() << "          "
+                                   << raw_route.segment_end_coordinates.back().target_phantom;
         };
         osrm::for_each_pair(phantom_node_pair_list, build_phantom_pairs);
 
-        if (route_parameters.alternate_route &&
-            1 == raw_route.segment_end_coordinates.size())
+        if (route_parameters.alternate_route && 1 == raw_route.segment_end_coordinates.size())
         {
-            search_engine_ptr->alternative_path(
-                raw_route.segment_end_coordinates.front(), raw_route);
+            search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
+                                                raw_route);
         }
         else
         {
-            search_engine_ptr->shortest_path(
-                raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
+            search_engine_ptr->shortest_path(raw_route.segment_end_coordinates,
+                                             route_parameters.uturns, raw_route);
         }
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
@@ -172,4 +222,4 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
     }
 };
 
-#endif // VIA_ROUTE_PLUGIN_H
+#endif // VIA_ROUTE_HPP
