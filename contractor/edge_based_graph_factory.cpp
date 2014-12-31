@@ -583,7 +583,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 m_restriction_map->CheckForEmanatingIsOnlyTurn(u, v);
             const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
 
-            for (EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
+            for (const EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
             {
                 if (!m_node_based_graph->GetEdgeData(e2).forward)
                 {
