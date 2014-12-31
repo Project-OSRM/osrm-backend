@@ -143,18 +143,21 @@ class TarjanSCC
                     tarjan_node_list[v].on_stack = true;
                     ++index;
 
-                    // Traverse outgoing edges
-                    if (barrier_node_set.find(v) != barrier_node_set.end())
-                    {
-                        continue;
-                    }
-
                     const NodeID to_node_of_only_restriction =
                         m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
 
                     for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(v))
                     {
                         const auto vprime = m_node_based_graph->GetTarget(current_edge);
+
+                        // Traverse outgoing edges
+                        if (barrier_node_set.find(v) != barrier_node_set.end() && 
+                            u != vprime)
+                        {
+                            // continue;
+                        }
+
+
                         if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
                             vprime == to_node_of_only_restriction)
                         {
