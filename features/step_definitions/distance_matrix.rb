@@ -30,8 +30,22 @@ When /^I request a travel time matrix I should get$/ do |table|
     
     # compare actual and expected result, one row at a time
     table.rows.each_with_index do |row,ri|
+      
+      # fuzzy match
+      ok = true
+      0.upto(nodes.size-1) do |i|
+        if FuzzyMatch.match result[ri][i], row[i+1]
+          result[ri][i] = row[i+1]
+        else
+          result[ri][i] = result[ri][i].to_s
+          ok = false
+        end
+      end
+      
+      # add row header
       r = [row[0],result[ri]].flatten
-      r.map! { |v| v.to_s }
+      
+      # store row for comparison
       actual << r
     end
   end
