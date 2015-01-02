@@ -97,15 +97,13 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         return added_element_count;
     }
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply) final
+    void Run(const RawRouteData &raw_route, JSON::Object& json_result) final
     {
-        JSON::Object json_result;
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
             json_result.values["status"] = 207;
             json_result.values["status_message"] = "Cannot find route between points";
-            JSON::render(reply.content, json_result);
             return;
         }
 
@@ -293,9 +291,13 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_hint_object.values["locations"] = json_location_hint_array;
         json_result.values["hint_data"] = json_hint_object;
 
+    }
+
+    void Render(const JSON::Object& result, std::vector<char>& output) final
+    {
         // render the content to the output array
         TIMER_START(route_render);
-        JSON::render(reply.content, json_result);
+        JSON::render(output, result);
         TIMER_STOP(route_render);
         SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
     }

@@ -66,7 +66,7 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
 
     void SetConfig(const DescriptorConfig &c) final { config = c; }
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply) final
+    void Run(const RawRouteData &raw_route, JSON::Object& object) final
     {
         JSON::Array json_result;
         if (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT)
@@ -86,7 +86,12 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
             AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location,
                           json_result);
         }
-        JSON::gpx_render(reply.content, json_result);
+        object.values["rte"] = json_result;
+    }
+
+    void Render(const JSON::Object& result, std::vector<char>& output) final
+    {
+        JSON::gpx_render(output, result);
     }
 };
 #endif // GPX_DESCRIPTOR_HPP
