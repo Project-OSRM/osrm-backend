@@ -734,7 +734,6 @@ class StaticRTree
                         foot_point_coordinate_on_segment,
                         current_ratio);
 
-                SimpleLogger().Write() << "nearest: " << std::setprecision(8) << foot_point_coordinate_on_segment;
                 // store phantom node in result vector
                 result_phantom_node_vector.emplace_back(
                     current_segment.forward_edge_based_node_id,
@@ -783,7 +782,7 @@ class StaticRTree
                 traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
         }
-        SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
+        // SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
         return !result_phantom_node_vector.empty();
     }
 
