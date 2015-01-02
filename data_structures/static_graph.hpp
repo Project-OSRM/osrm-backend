@@ -90,7 +90,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     {
         tbb::parallel_sort(graph.begin(), graph.end());
         number_of_nodes = nodes;
-        number_of_edges = (EdgeIterator)graph.size();
+        number_of_edges = static_cast<EdgeIterator>(graph.size());
         node_array.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
