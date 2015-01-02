@@ -79,7 +79,7 @@ struct ExtractionWay
         }
     }
 
-    const Directions get_direction() const
+    Directions get_direction() const
     {
         if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
         {
@@ -102,9 +102,9 @@ struct ExtractionWay
     // These accessors exists because it's not possible to take the address of a bitfield,
     // and LUA therefore cannot read/write the mode attributes directly.
     void set_forward_mode(const TravelMode m) { forward_travel_mode = m; }
-    const TravelMode get_forward_mode() const { return forward_travel_mode; }
+    TravelMode get_forward_mode() const { return forward_travel_mode; }
     void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
-    const TravelMode get_backward_mode() const { return backward_travel_mode; }
+    TravelMode get_backward_mode() const { return backward_travel_mode; }
 
     double forward_speed;
     double backward_speed;
