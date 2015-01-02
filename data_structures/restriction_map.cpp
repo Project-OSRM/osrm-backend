@@ -39,7 +39,7 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
 
             RestrictionSource restriction_source = {restriction.from.node, restriction.via.node};
 
-            unsigned index;
+            std::size_t index;
             auto restriction_iter = m_restriction_map.find(restriction_source);
             if (restriction_iter == m_restriction_map.end())
             {
