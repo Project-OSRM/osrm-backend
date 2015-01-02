@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RANGE_H
-#define RANGE_H
+#ifndef INTEGER_RANGE_HPP
+#define INTEGER_RANGE_HPP
 
 #include <type_traits>
 
@@ -58,10 +58,13 @@ template <typename Integer> class range
 };
 
 // convenience function to construct an integer range with type deduction
-template <typename Integer> range<Integer> irange(Integer first, Integer last)
+template <typename Integer>
+range<Integer> irange(const Integer first,
+                      const Integer last,
+                      typename std::enable_if<std::is_integral<Integer>::value>::type * = 0)
 {
     return range<Integer>(first, last);
 }
 }
 
-#endif // RANGE_H
+#endif // INTEGER_RANGE_HPP
