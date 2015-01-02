@@ -90,12 +90,10 @@ int main(int argc, const char *argv[])
         route_parameters.alternate_route = true;    // get an alternate route, too
         route_parameters.geometry = true;           // retrieve geometry of route
         route_parameters.compression = true;        // polyline encoding
-        route_parameters.check_sum = UINT_MAX;      // see wiki
         route_parameters.service = "viaroute";      // that's routing
         route_parameters.output_format = "json";
         route_parameters.jsonp_parameter = ""; // set for jsonp wrapping
         route_parameters.language = "";        // unused atm
-        // route_parameters.hints.push_back(); // see wiki, saves I/O if done properly
 
         // start_coordinate
         route_parameters.coordinates.emplace_back(52.519930 * COORDINATE_PRECISION,
