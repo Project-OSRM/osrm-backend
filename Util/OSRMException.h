@@ -36,10 +36,10 @@ class OSRMException : public std::exception
   public:
     explicit OSRMException(const char *message) : message(message) {}
     explicit OSRMException(const std::string &message) : message(message) {}
-    virtual ~OSRMException() throw() {}
+    virtual ~OSRMException() noexcept {}
 
   private:
-    virtual const char *what() const throw() { return message.c_str(); }
+    virtual const char *what() const noexcept { return message.c_str(); }
     const std::string message;
 };
 
