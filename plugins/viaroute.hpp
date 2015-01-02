@@ -83,7 +83,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         SimpleLogger().Write() << "coordinates ok";
 
         std::vector<phantom_node_pair> phantom_node_pair_list(route_parameters.coordinates.size());
-        const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
+        // const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
@@ -92,19 +92,19 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                                    << route_parameters.hints.size();
 
             // TODO: Remove hinting mechanism
-            if (checksum_OK && i < route_parameters.hints.size() &&
-                !route_parameters.hints[i].empty())
-            {
-                SimpleLogger().Write() << "decoding hint " << i;
+            // if (checksum_OK && i < route_parameters.hints.size() &&
+            //     !route_parameters.hints[i].empty())
+            // {
+            //     SimpleLogger().Write() << "decoding hint " << i;
 
-                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i],
-                                                phantom_node_pair_list[i]);
-                if (phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
-                {
-                    SimpleLogger().Write() << "decoded PhantomNode";
-                    continue;
-                }
-            }
+            //     ObjectEncoder::DecodeFromBase64(route_parameters.hints[i],
+            //                                     phantom_node_pair_list[i]);
+            //     if (phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
+            //     {
+            //         SimpleLogger().Write() << "decoded PhantomNode";
+            //         continue;
+            //     }
+            // }
             std::vector<PhantomNode> phantom_node_vector;
             SimpleLogger().Write() << "finding coordinate";
 
@@ -143,11 +143,9 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         // are all phantoms from a tiny cc?
         const auto component_id = phantom_node_pair_list.front().first.component_id;
-        BOOST_ASSERT(0 != component_id);
 
         auto check_component_id_is_equal = [component_id](const phantom_node_pair &phantom_pair)
         {
-            BOOST_ASSERT(0 != phantom_pair.first.component_id);
             return component_id == phantom_pair.first.component_id;
         };
 

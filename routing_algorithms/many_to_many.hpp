@@ -67,7 +67,7 @@ template <class DataFacadeT> class ManyToManyRouting final : public BasicRouting
     std::shared_ptr<std::vector<EdgeWeight>> operator()(const PhantomNodeArray &phantom_nodes_array)
         const
     {
-        const unsigned number_of_locations = static_cast<unsigned>(phantom_nodes_array.size());
+        const auto number_of_locations = phantom_nodes_array.size();
         std::shared_ptr<std::vector<EdgeWeight>> result_table =
             std::make_shared<std::vector<EdgeWeight>>(number_of_locations * number_of_locations,
                                                       std::numeric_limits<EdgeWeight>::max());
