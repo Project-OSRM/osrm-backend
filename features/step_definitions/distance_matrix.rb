@@ -1,5 +1,6 @@
 When /^I request a travel time matrix I should get$/ do |table|
   
+  no_route = 2147483647   # MAX_INT
   
   raise "*** Top-left cell of matrix table must be empty" unless table.headers[0]==""
   
@@ -36,6 +37,8 @@ When /^I request a travel time matrix I should get$/ do |table|
       0.upto(nodes.size-1) do |i|
         if FuzzyMatch.match result[ri][i], row[i+1]
           result[ri][i] = row[i+1]
+        elsif row[i+1]=="" and result[ri][i]==no_route
+          result[ri][i] = ""
         else
           result[ri][i] = result[ri][i].to_s
           ok = false

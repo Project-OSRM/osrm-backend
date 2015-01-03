@@ -70,7 +70,7 @@ Feature: Basic Distance Matrix
             | e | 200 | 100 | 0   | 100 |
             | f | 300 | 200 | 100 | 0   |
 
-    @todo
+    @x
     Scenario: Testbot - Travel time matrix of network with unroutable parts
         Given the node map
             | a | b |
@@ -82,7 +82,7 @@ Feature: Basic Distance Matrix
         When I request a travel time matrix I should get
             |   | a  | b   |
             | a | 0  | 100 |
-            | b | -1 | 0   |
+            | b |    | 0   |
     
     Scenario: Testbot - Travel time matrix of network with oneways
         Given the node map
