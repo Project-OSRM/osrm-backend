@@ -70,7 +70,6 @@ Feature: Basic Distance Matrix
             | e | 200 | 100 | 0   | 100 |
             | f | 300 | 200 | 100 | 0   |
 
-    @x
     Scenario: Testbot - Travel time matrix of network with unroutable parts
         Given the node map
             | a | b |
