@@ -86,7 +86,10 @@ struct PhantomNode
 
 using PhantomNodeArray = std::vector<std::vector<PhantomNode>>;
 
-using phantom_node_pair = std::pair<PhantomNode, PhantomNode>;
+class phantom_node_pair : public std::pair<PhantomNode, PhantomNode>
+{
+
+};
 
 struct PhantomNodeLists
 {

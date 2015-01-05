@@ -71,12 +71,23 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return;
         }
 
-        // const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
+        const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
         unsigned max_locations =
             std::min(100u, static_cast<unsigned>(route_parameters.coordinates.size()));
         PhantomNodeArray phantom_node_vector(max_locations);
         for (const auto i : osrm::irange(0u, max_locations))
         {
+            if (checksum_OK && i < route_parameters.hints.size() &&
+                !route_parameters.hints[i].empty())
+            {
+                PhantomNode current_phantom_node;
+                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
+                if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
+                {
+                    phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
+                    continue;
+                }
+            }
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
                                                             phantom_node_vector[i],
                                                             1);

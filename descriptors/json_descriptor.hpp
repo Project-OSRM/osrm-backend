@@ -279,19 +279,19 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             json_result.values["alternative_names"] = json_alternate_names_array;
         }
 
-        // JSON::Object json_hint_object;
-        // json_hint_object.values["checksum"] = facade->GetCheckSum();
-        // JSON::Array json_location_hint_array;
-        // std::string hint;
-        // for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
-        // {
-        //     ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
-        //     json_location_hint_array.values.push_back(hint);
-        // }
-        // ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
-        // json_location_hint_array.values.push_back(hint);
-        // json_hint_object.values["locations"] = json_location_hint_array;
-        // json_result.values["hint_data"] = json_hint_object;
+        JSON::Object json_hint_object;
+        json_hint_object.values["checksum"] = facade->GetCheckSum();
+        JSON::Array json_location_hint_array;
+        std::string hint;
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
+        {
+            ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
+            json_location_hint_array.values.push_back(hint);
+        }
+        ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
+        json_location_hint_array.values.push_back(hint);
+        json_hint_object.values["locations"] = json_location_hint_array;
+        json_result.values["hint_data"] = json_hint_object;
 
         // render the content to the output array
         TIMER_START(route_render);

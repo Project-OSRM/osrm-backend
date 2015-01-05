@@ -79,9 +79,20 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         reply.status = http::Reply::ok;
 
         std::vector<phantom_node_pair> phantom_node_pair_list(route_parameters.coordinates.size());
+        const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
+            if (checksum_OK && i < route_parameters.hints.size() &&
+                !route_parameters.hints[i].empty())
+            {
+                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i],
+                                                phantom_node_pair_list[i]);
+                if (phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
+                {
+                    continue;
+                }
+            }
             std::vector<PhantomNode> phantom_node_vector;
             if (facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
                                                                 phantom_node_vector, 1))
