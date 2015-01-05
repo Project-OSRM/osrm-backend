@@ -32,13 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct ServerConfig
 {
-    ServerConfig();
+    ServerConfig()
+        : use_shared_memory(false)
+        , max_locations_distance_table(100)
+    {}
 
-    void setServerPaths(const ServerPaths paths);
-
-    void setUseSharedMemory(const bool use_shared_memory);
-
-    void setMaxLocationsDistanceTable(const int max_locations_distance_table);
+    ServerConfig(const ServerPaths paths, const bool flag, const int max)
+        : server_paths(paths)
+        , use_shared_memory(flag)
+        , max_locations_distance_table(max)
+    {}
 
     ServerPaths server_paths;
     bool use_shared_memory;
