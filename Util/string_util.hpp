@@ -30,8 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/algorithm/string.hpp>
 
-#include <cstdio>
 #include <cctype>
+
+#include <random>
 #include <string>
 #include <vector>
 
@@ -145,21 +146,5 @@ inline std::size_t URIDecode(const std::string &input, std::string &output)
 }
 
 inline std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
-
-inline std::string GetRandomString()
-{
-    std::string s;
-    s.resize(128);
-    static const char alphanum[] = "0123456789"
-                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                   "abcdefghijklmnopqrstuvwxyz";
-
-    for (std::size_t i = 0; i < 127; ++i)
-    {
-        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
-    }
-    s[127] = 0;
-    return s;
-}
 
 #endif // STRING_UTIL_HPP
