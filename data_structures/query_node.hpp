@@ -78,7 +78,7 @@ struct QueryNode
             break;
         }
         BOOST_ASSERT_MSG(false, "should not happen");
-        return std::numeric_limits<unsigned>::max();
+        return std::numeric_limits<int>::lowest();
     }
 };
 
