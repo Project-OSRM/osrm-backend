@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,30 +25,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_H
-#define OSRM_H
+#ifndef SERVER_CONFIG_H
+#define SERVER_CONFIG_H
 
-#include <osrm/ServerConfig.h>
+#include <osrm/ServerPaths.h>
 
-#include <memory>
-
-class OSRM_impl;
-struct RouteParameters;
-
-namespace http
+struct ServerConfig
 {
-class Reply;
-}
+    ServerConfig()
+        : use_shared_memory(false)
+        , max_locations_distance_table(100)
+    {}
 
-class OSRM
-{
-  private:
-    std::unique_ptr<OSRM_impl> OSRM_pimpl_;
+    ServerConfig(const ServerPaths paths, const bool flag, const int max)
+        : server_paths(paths)
+        , use_shared_memory(flag)
+        , max_locations_distance_table(max)
+    {}
 
-  public:
-    explicit OSRM(ServerConfig serverConfig);
-    ~OSRM();
-    void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
+    ServerPaths server_paths;
+    bool use_shared_memory;
+    int max_locations_distance_table;
 };
 
-#endif // OSRM_H
+#endif // SERVER_CONFIG_H

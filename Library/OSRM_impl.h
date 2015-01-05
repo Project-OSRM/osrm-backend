@@ -32,7 +32,7 @@ class BasePlugin;
 namespace http { class Reply; }
 struct RouteParameters;
 
-#include <osrm/ServerPaths.h>
+#include <osrm/ServerConfig.h>
 
 #include "../data_structures/query_edge.hpp"
 
@@ -49,7 +49,7 @@ class OSRM_impl
     using PluginMap = std::unordered_map<std::string, BasePlugin *>;
 
   public:
-    OSRM_impl(ServerPaths paths, const bool use_shared_memory);
+    OSRM_impl(ServerConfig serverConfig);
     OSRM_impl(const OSRM_impl &) = delete;
     virtual ~OSRM_impl();
     void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
