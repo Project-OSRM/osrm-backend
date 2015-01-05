@@ -118,10 +118,7 @@ int main(int argc, const char *argv[])
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        ServerConfig server_config;
-        server_config.setServerPaths(server_paths);
-        server_config.setUseSharedMemory(use_shared_memory);
-        server_config.setMaxLocationsDistanceTable(max_locations_distance_table);
+        ServerConfig server_config(server_paths, use_shared_memory, max_locations_distance_table);
         OSRM osrm_lib(server_config);
         auto routing_server =
             Server::CreateServer(ip_address, ip_port, requested_thread_num);
