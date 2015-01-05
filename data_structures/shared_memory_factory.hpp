@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_MEMORY_FACTORY_HPP
 #define SHARED_MEMORY_FACTORY_HPP
 
-#include "../Util/OSRMException.h"
+#include "../Util/osrm_exception.hpp"
 #include "../Util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
@@ -344,7 +344,7 @@ template <class LockFileT = OSRMLockFile> class SharedMemoryFactory_tmpl
             {
                 if (0 == size)
                 {
-                    throw OSRMException("lock file does not exist, exiting");
+                    throw osrm::exception("lock file does not exist, exiting");
                 }
                 else
                 {
@@ -358,7 +358,7 @@ template <class LockFileT = OSRMLockFile> class SharedMemoryFactory_tmpl
         {
             SimpleLogger().Write(logWARNING) << "caught exception: " << e.what() << ", code "
                                              << e.get_error_code();
-            throw OSRMException(e.what());
+            throw osrm::exception(e.what());
         }
     }
 

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -38,7 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/turn_instructions.hpp"
 
 #include "../Util/integer_range.hpp"
-#include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
 #include "../Util/std_hash.hpp"
 #include "../Util/timing_util.hpp"
@@ -151,7 +150,7 @@ class TarjanSCC
                         const auto vprime = m_node_based_graph->GetTarget(current_edge);
 
                         // Traverse outgoing edges
-                        if (barrier_node_set.find(v) != barrier_node_set.end() && 
+                        if (barrier_node_set.find(v) != barrier_node_set.end() &&
                             u != vprime)
                         {
                             // continue;
@@ -235,7 +234,7 @@ class TarjanSCC
         return component_size_vector.size();
     }
 
-    unsigned get_size_one_count() const 
+    unsigned get_size_one_count() const
     {
         return size_one_counter;
     }

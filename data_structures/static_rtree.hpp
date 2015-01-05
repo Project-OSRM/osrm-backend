@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/floating_point.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/MercatorUtil.h"
-#include "../Util/OSRMException.h"
+#include "../Util/osrm_exception.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/timing_util.hpp"
 #include "../typedefs.h"
@@ -511,11 +511,11 @@ class StaticRTree
 
         if (!boost::filesystem::exists(node_file))
         {
-            throw OSRMException("ram index file does not exist");
+            throw osrm::exception("ram index file does not exist");
         }
         if (0 == boost::filesystem::file_size(node_file))
         {
-            throw OSRMException("ram index file is empty");
+            throw osrm::exception("ram index file is empty");
         }
         boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
 
@@ -531,11 +531,11 @@ class StaticRTree
         // open leaf node file and store thread specific pointer
         if (!boost::filesystem::exists(leaf_file))
         {
-            throw OSRMException("mem index file does not exist");
+            throw osrm::exception("mem index file does not exist");
         }
         if (0 == boost::filesystem::file_size(leaf_file))
         {
-            throw OSRMException("mem index file is empty");
+            throw osrm::exception("mem index file is empty");
         }
 
         leaves_stream.open(leaf_file, std::ios::binary);
@@ -555,11 +555,11 @@ class StaticRTree
         // open leaf node file and store thread specific pointer
         if (!boost::filesystem::exists(leaf_file))
         {
-            throw OSRMException("mem index file does not exist");
+            throw osrm::exception("mem index file does not exist");
         }
         if (0 == boost::filesystem::file_size(leaf_file))
         {
-            throw OSRMException("mem index file is empty");
+            throw osrm::exception("mem index file is empty");
         }
 
         leaves_stream.open(leaf_file, std::ios::binary);

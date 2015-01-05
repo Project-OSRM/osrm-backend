@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/BoostFileSystemFix.h"
 #include "Util/DataStoreOptions.h"
 #include "Util/simple_logger.hpp"
+#include "Util/osrm_exception.hpp"
 #include "Util/FingerPrint.h"
 #include "typedefs.h"
 
@@ -133,31 +134,31 @@ int main(const int argc, const char *argv[])
 
         if (server_paths.find("hsgrdata") == server_paths.end())
         {
-            throw OSRMException("no hsgr file found");
+            throw osrm::exception("no hsgr file found");
         }
         if (server_paths.find("ramindex") == server_paths.end())
         {
-            throw OSRMException("no ram index file found");
+            throw osrm::exception("no ram index file found");
         }
         if (server_paths.find("fileindex") == server_paths.end())
         {
-            throw OSRMException("no leaf index file found");
+            throw osrm::exception("no leaf index file found");
         }
         if (server_paths.find("nodesdata") == server_paths.end())
         {
-            throw OSRMException("no nodes file found");
+            throw osrm::exception("no nodes file found");
         }
         if (server_paths.find("edgesdata") == server_paths.end())
         {
-            throw OSRMException("no edges file found");
+            throw osrm::exception("no edges file found");
         }
         if (server_paths.find("namesdata") == server_paths.end())
         {
-            throw OSRMException("no names file found");
+            throw osrm::exception("no names file found");
         }
         if (server_paths.find("geometry") == server_paths.end())
         {
-            throw OSRMException("no geometry file found");
+            throw osrm::exception("no geometry file found");
         }
 
         ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");

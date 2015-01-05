@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/dynamic_graph.hpp"
 #include "../Util/graph_loader.hpp"
 #include "../Util/make_unique.hpp"
-#include "../Util/OSRMException.h"
+#include "../Util/osrm_exception.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/FingerPrint.h"
 
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
         if (!restriction_ifstream.good())
         {
-            throw OSRMException("Could not access <osrm-restrictions> files");
+            throw osrm::exception("Could not access <osrm-restrictions> files");
         }
         uint32_t usable_restrictions = 0;
         restriction_ifstream.read((char *)&usable_restrictions, sizeof(uint32_t));
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
         std::ifstream input_stream(argv[1], std::ifstream::in | std::ifstream::binary);
         if (!input_stream.is_open())
         {
-            throw OSRMException("Cannot open osrm file");
+            throw osrm::exception("Cannot open osrm file");
         }
 
         // load graph data
@@ -206,13 +206,13 @@ int main(int argc, char *argv[])
             OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(pszDriverName);
         if (nullptr == poDriver)
         {
-            throw OSRMException("ESRI Shapefile driver not available");
+            throw osrm::exception("ESRI Shapefile driver not available");
         }
         OGRDataSource *poDS = poDriver->CreateDataSource("component.shp", nullptr);
 
         if (nullptr == poDS)
         {
-            throw OSRMException("Creation of output file failed");
+            throw osrm::exception("Creation of output file failed");
         }
 
         OGRSpatialReference *poSRS = new OGRSpatialReference();
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
 
         if (nullptr == poLayer)
         {
-            throw OSRMException("Layer creation failed.");
+            throw osrm::exception("Layer creation failed.");
         }
         TIMER_STOP(SCC_RUN_SETUP);
         SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP)/1000. << "s";
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
                         poFeature->SetGeometry(&lineString);
                         if (OGRERR_NONE != poLayer->CreateFeature(poFeature))
                         {
-                            throw OSRMException("Failed to create feature in shapefile.");
+                            throw osrm::exception("Failed to create feature in shapefile.");
                         }
                         OGRFeature::DestroyFeature(poFeature);
                     }

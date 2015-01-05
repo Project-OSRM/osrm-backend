@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/node_id.hpp"
 #include "../data_structures/range_table.hpp"
 
-#include "../Util/OSRMException.h"
+#include "../Util/osrm_exception.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/timing_util.hpp"
 
@@ -374,7 +374,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                     file_out_stream.write((char *)&one, sizeof(short));
                     break;
                 default:
-                    throw OSRMException("edge has broken direction");
+                    throw osrm::exception("edge has broken direction");
                 }
 
                 file_out_stream.write((char *)&integer_weight, sizeof(int));

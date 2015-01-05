@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BOOST_FILE_SYSTEM_FIX_H
 #define BOOST_FILE_SYSTEM_FIX_H
 
-#include "OSRMException.h"
+#include "osrm_exception.hpp"
 
 // #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
@@ -62,7 +62,7 @@ namespace filesystem
 //     if(boost::filesystem::is_regular_file(input_string)) {
 //         v = boost::any(boost::filesystem::path(input_string));
 //     } else {
-//         throw OSRMException(input_string + " not found");
+//         throw osrm::exception(input_string + " not found");
 //     }
 // }
 
@@ -137,7 +137,7 @@ inline void AssertPathExists(const boost::filesystem::path &path)
 {
     if (!boost::filesystem::is_regular_file(path))
     {
-        throw OSRMException(path.string() + " not found.");
+        throw osrm::exception(path.string() + " not found.");
     }
 }
 

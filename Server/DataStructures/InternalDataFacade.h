@@ -235,31 +235,31 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         // generate paths of data files
         if (server_paths.find("hsgrdata") == server_paths.end())
         {
-            throw OSRMException("no hsgr file given in ini file");
+            throw osrm::exception("no hsgr file given in ini file");
         }
         if (server_paths.find("ramindex") == server_paths.end())
         {
-            throw OSRMException("no ram index file given in ini file");
+            throw osrm::exception("no ram index file given in ini file");
         }
         if (server_paths.find("fileindex") == server_paths.end())
         {
-            throw OSRMException("no leaf index file given in ini file");
+            throw osrm::exception("no leaf index file given in ini file");
         }
         if (server_paths.find("geometries") == server_paths.end())
         {
-            throw OSRMException("no geometries file given in ini file");
+            throw osrm::exception("no geometries file given in ini file");
         }
         if (server_paths.find("nodesdata") == server_paths.end())
         {
-            throw OSRMException("no nodes file given in ini file");
+            throw osrm::exception("no nodes file given in ini file");
         }
         if (server_paths.find("edgesdata") == server_paths.end())
         {
-            throw OSRMException("no edges file given in ini file");
+            throw osrm::exception("no edges file given in ini file");
         }
         if (server_paths.find("namesdata") == server_paths.end())
         {
-            throw OSRMException("no names file given in ini file");
+            throw osrm::exception("no names file given in ini file");
         }
 
         ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");

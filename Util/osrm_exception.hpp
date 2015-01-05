@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,22 +25,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_EXCEPTION_H
-#define OSRM_EXCEPTION_H
+#ifndef OSRM_EXCEPTION_HPP
+#define OSRM_EXCEPTION_HPP
 
 #include <exception>
 #include <string>
 
-class OSRMException : public std::exception
+namespace osrm
+{
+class exception : public std::exception
 {
   public:
-    explicit OSRMException(const char *message) : message(message) {}
-    explicit OSRMException(const std::string &message) : message(message) {}
-    virtual ~OSRMException() noexcept {}
+    explicit exception(const char *message) : message(message) {}
+    explicit exception(const std::string &message) : message(message) {}
+    virtual ~exception() noexcept {}
 
   private:
+    virtual void anchor() const;
     virtual const char *what() const noexcept { return message.c_str(); }
     const std::string message;
 };
-
-#endif /* OSRM_EXCEPTION_H */
+}
+#endif /* OSRM_EXCEPTION_HPP */

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -53,7 +53,7 @@ class Percent
         if (current_value >= m_next_threshold)
         {
             m_next_threshold += m_percent_interval;
-            printPercent(current_value / (double)m_max_value * 100);
+            printPercent(current_value / static_cast<double>(m_max_value) * 100.);
         }
         if (current_value + 1 == m_max_value)
             std::cout << " 100%" << std::endl;

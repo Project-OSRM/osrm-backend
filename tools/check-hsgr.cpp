@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/integer_range.hpp"
 #include "../Util/graph_loader.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/OSRMException.h"
+#include "../Util/osrm_exception.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
                 const EdgeID edge_id_1 = m_query_graph->FindEdgeInEitherDirection(node_u, data.id);
                 if (SPECIAL_EDGEID == edge_id_1)
                 {
-                    throw OSRMException("cannot find first segment of edge (" +
+                    throw osrm::exception("cannot find first segment of edge (" +
                                         std::to_string(node_u) + "," + std::to_string(data.id) +
                                         "," + std::to_string(node_v) + "), eid: " +
                                         std::to_string(eid));
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
                 const EdgeID edge_id_2 = m_query_graph->FindEdgeInEitherDirection(data.id, node_v);
                 if (SPECIAL_EDGEID == edge_id_2)
                 {
-                    throw OSRMException("cannot find second segment of edge (" +
+                    throw osrm::exception("cannot find second segment of edge (" +
                                         std::to_string(node_u) + "," + std::to_string(data.id) +
                                         "," + std::to_string(node_v) + "), eid: " +
                                         std::to_string(eid));

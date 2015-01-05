@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "simple_logger.hpp"
 
-#include "OSRMException.h"
+#include "osrm_exception.hpp"
 
 #include <boost/assert.hpp>
 
@@ -103,8 +103,8 @@ std::ostringstream &SimpleLogger::Write(LogLevel lvl)
     }
     catch (const std::exception &e)
     {
-        // encapsulate in OSRMException
-        throw OSRMException(std::string(e.what()) + ", getting ostringstream");
+        // encapsulate in osrm::exception
+        throw osrm::exception(std::string(e.what()) + ", getting ostringstream");
     }
     return os;
 }

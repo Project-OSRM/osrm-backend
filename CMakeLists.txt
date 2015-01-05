@@ -56,15 +56,16 @@ file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT Util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
+add_library(EXCEPTION OBJECT Util/osrm_exception.cpp)
 
 set(ExtractorSources extract.cpp ${ExtractorGlob})
-add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER>)
+add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION>)
 
 add_library(RESTRICTION OBJECT data_structures/restriction_map.cpp)
 
 file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp Util/compute_angle.cpp {RestrictionMapGlob})
 set(PrepareSources prepare.cpp ${PrepareGlob})
-add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION>)
+add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION>)
 
 file(GLOB ServerGlob Server/*.cpp)
 file(GLOB DescriptorGlob descriptors/*.cpp)
@@ -92,15 +93,15 @@ add_library(GITDESCRIPTION OBJECT Util/git_sha.cpp)
 add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 
-add_executable(osrm-routed routed.cpp ${ServerGlob})
-add_executable(osrm-datastore datastore.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER>)
+add_executable(osrm-routed routed.cpp ${ServerGlob} $<TARGET_OBJECTS:EXCEPTION>)
+add_executable(osrm-datastore datastore.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION>)
 
 # Unit tests
-add_executable(datastructure-tests EXCLUDE_FROM_ALL UnitTests/datastructure_tests.cpp ${DataStructureTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
-add_executable(algorithm-tests EXCLUDE_FROM_ALL UnitTests/algorithm_tests.cpp ${AlgorithmTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
+add_executable(datastructure-tests EXCLUDE_FROM_ALL UnitTests/datastructure_tests.cpp ${DataStructureTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION>)
+add_executable(algorithm-tests EXCLUDE_FROM_ALL UnitTests/algorithm_tests.cpp ${AlgorithmTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION>)
 
 # Benchmarks
-add_executable(rtree-bench EXCLUDE_FROM_ALL benchmarks/static_rtree.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
+add_executable(rtree-bench EXCLUDE_FROM_ALL benchmarks/static_rtree.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION>)
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -139,7 +140,7 @@ endif()
 # Configuring compilers
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # using Clang
-  #  -Weverything -Wno-c++98-compat
+  #  -Weverything -Wno-c++98-compat -Wno-shadow -Wno-exit-time-destructors
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wunreachable-code -pedantic -fPIC")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
@@ -288,7 +289,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   find_package(GDAL)
   if(GDAL_FOUND)
-    add_executable(osrm-components tools/components.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION>)
+    add_executable(osrm-components tools/components.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION>)
     target_link_libraries(osrm-components ${TBB_LIBRARIES})
     include_directories(${GDAL_INCLUDE_DIR})
     target_link_libraries(
@@ -298,19 +299,19 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   else()
     message(FATAL_ERROR "libgdal and/or development headers not found")
   endif()
-  add_executable(osrm-cli tools/simpleclient.cpp $<TARGET_OBJECTS:LOGGER>)
+  add_executable(osrm-cli tools/simpleclient.cpp $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:LOGGER>)
   target_link_libraries(osrm-cli ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
   target_link_libraries(osrm-cli ${TBB_LIBRARIES})
-  add_executable(osrm-io-benchmark tools/io-benchmark.cpp $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER>)
+  add_executable(osrm-io-benchmark tools/io-benchmark.cpp $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER>)
   target_link_libraries(osrm-io-benchmark ${Boost_LIBRARIES})
-  add_executable(osrm-unlock-all tools/unlock_all_mutexes.cpp $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER>)
+  add_executable(osrm-unlock-all tools/unlock_all_mutexes.cpp $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION>)
   target_link_libraries(osrm-unlock-all ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   if(UNIX AND NOT APPLE)
     target_link_libraries(osrm-unlock-all rt)
   endif()
-  add_executable(osrm-check-hsgr tools/check-hsgr.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER>)
+  add_executable(osrm-check-hsgr tools/check-hsgr.cpp $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER>)
   target_link_libraries(osrm-check-hsgr ${Boost_LIBRARIES})
-  add_executable(osrm-springclean tools/springclean.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:GITDESCRIPTION>)
+  add_executable(osrm-springclean tools/springclean.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:EXCEPTION>)
   target_link_libraries(osrm-springclean ${Boost_LIBRARIES})
 
   install(TARGETS osrm-cli DESTINATION bin)

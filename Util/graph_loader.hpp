@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
-#include "OSRMException.h"
+#include "osrm_exception.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/import_edge.hpp"
 #include "../data_structures/query_node.hpp"
@@ -281,11 +281,11 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
 {
     if (!boost::filesystem::exists(hsgr_file))
     {
-        throw OSRMException("hsgr file does not exist");
+        throw osrm::exception("hsgr file does not exist");
     }
     if (0 == boost::filesystem::file_size(hsgr_file))
     {
-        throw OSRMException("hsgr file is empty");
+        throw osrm::exception("hsgr file is empty");
     }
 
     boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);

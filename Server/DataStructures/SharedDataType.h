@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_DATA_TYPE_H_
 #define SHARED_DATA_TYPE_H_
 
-#include "../../Util/OSRMException.h"
+#include "../../Util/osrm_exception.hpp"
 #include "../../Util/simple_logger.hpp"
 
 #include <cstdint>
@@ -162,11 +162,11 @@ struct SharedDataLayout
             bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
             if (!start_canary_alive)
             {
-                throw OSRMException("Start canary of block corrupted.");
+                throw osrm::exception("Start canary of block corrupted.");
             }
             if (!end_canary_alive)
             {
-                throw OSRMException("End canary of block corrupted.");
+                throw osrm::exception("End canary of block corrupted.");
             }
         }
 

@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/integer_range.hpp"
 #include "../Util/lua_util.hpp"
 #include "../Util/make_unique.hpp"
-#include "../Util/OSRMException.h"
+#include "../Util/osrm_exception.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/string_util.hpp"
 #include "../Util/timing_util.hpp"

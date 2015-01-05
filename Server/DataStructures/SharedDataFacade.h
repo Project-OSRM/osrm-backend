@@ -258,7 +258,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             if (!boost::filesystem::exists(file_index_path))
             {
                 SimpleLogger().Write(logDEBUG) << "Leaf file name " << file_index_path.string();
-                throw OSRMException("Could not load leaf index file."
+                throw osrm::exception("Could not load leaf index file."
                                     "Is any data loaded into shared memory?");
             }
 
