@@ -57,6 +57,8 @@ class HelloWorldPlugin final : public BasePlugin
         temp_string = cast::integral_to_string(routeParameters.zoom_level);
         json_result.values["zoom_level"] = temp_string;
 
+        temp_string = cast::integral_to_string(routeParameters.check_sum);
+        json_result.values["check_sum"] = temp_string;
         json_result.values["instructions"] = (routeParameters.print_instructions ? "yes" : "no");
         json_result.values["geometry"] = (routeParameters.geometry ? "yes" : "no");
         json_result.values["compression"] = (routeParameters.compression ? "yes" : "no");
@@ -84,6 +86,16 @@ class HelloWorldPlugin final : public BasePlugin
             ++counter;
         }
         json_result.values["locations"] = json_locations;
+        json_result.values["hint_count"] = routeParameters.hints.size();
+
+        JSON::Array json_hints;
+        counter = 0;
+        for (const std::string &current_hint : routeParameters.hints)
+        {
+            json_hints.values.push_back(current_hint);
+            ++counter;
+        }
+        json_result.values["hints"] = json_hints;
 
         JSON::render(reply.content, json_result);
     }

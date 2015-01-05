@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
-      compression(true), deprecatedAPI(false), uturn_default(false), num_results(1)
+      compression(true), deprecatedAPI(false), uturn_default(false), check_sum(-1), num_results(1)
 {
 }
 
@@ -77,7 +77,7 @@ void RouteParameters::setAllUTurns(const bool flag)
 
 void RouteParameters::setDeprecatedAPIFlag(const std::string &) { deprecatedAPI = true; }
 
-void RouteParameters::setChecksum(const unsigned sum) { }
+void RouteParameters::setChecksum(const unsigned sum) { check_sum = sum; }
 
 void RouteParameters::setInstructionFlag(const bool flag) { print_instructions = flag; }
 
@@ -92,11 +92,11 @@ void RouteParameters::setJSONpParameter(const std::string &parameter)
 
 void RouteParameters::addHint(const std::string &hint)
 {
-    // hints.resize(coordinates.size());
-    // if (!hints.empty())
-    // {
-    //     hints.back() = hint;
-    // }
+    hints.resize(coordinates.size());
+    if (!hints.empty())
+    {
+        hints.back() = hint;
+    }
 }
 
 void RouteParameters::setLanguage(const std::string &language_string)
