@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -63,11 +63,15 @@ struct DescriptorConfig
     DescriptorConfig(const OtherT &other) : instructions(other.print_instructions),
                                             geometry(other.geometry),
                                             encode_geometry(other.compression),
-                                            zoom_level(other.zoom_level) { }
+                                            zoom_level(other.zoom_level)
+    {
+        BOOST_ASSERT(zoom_level >= 0);
+    }
+
     bool instructions;
     bool geometry;
     bool encode_geometry;
-    unsigned short zoom_level;
+    short zoom_level;
 };
 
 template <class DataFacadeT> class BaseDescriptor

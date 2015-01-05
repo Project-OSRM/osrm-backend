@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DATA_STORE_OPTIONS_H
 
 #include "BoostFileSystemFix.h"
-#include "GitDescription.h"
+#include "git_sha.hpp"
 #include "IniFileUtil.h"
 #include "OSRMException.h"
 #include "simple_logger.hpp"

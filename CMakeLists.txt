@@ -48,8 +48,8 @@ add_custom_target(benchmarks DEPENDS rtree-bench)
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
 
 configure_file(
-  ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
-  ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
+  ${CMAKE_SOURCE_DIR}/Util/git_sha.cpp.in
+  ${CMAKE_SOURCE_DIR}/Util/git_sha.cpp
 )
 file(GLOB ExtractorGlob extractor/*.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp)
@@ -88,7 +88,7 @@ set(
 )
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(FINGERPRINT OBJECT Util/finger_print.cpp)
-add_library(GITDESCRIPTION OBJECT Util/GitDescription.cpp)
+add_library(GITDESCRIPTION OBJECT Util/git_sha.cpp)
 add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 
@@ -139,6 +139,7 @@ endif()
 # Configuring compilers
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # using Clang
+  #  -Weverything -Wno-c++98-compat
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wunreachable-code -pedantic -fPIC")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")

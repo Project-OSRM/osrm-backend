@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "restriction_parser.hpp"
 #include "scripting_environment.hpp"
 
-#include "../Util/GitDescription.h"
+#include "../Util/git_sha.hpp"
 #include "../Util/IniFileUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/simple_logger.hpp"
@@ -181,7 +181,7 @@ int Extractor::Run(int argc, char *argv[])
                     ExtractionNode result_node;
                     ExtractionWay result_way;
 
-                    lua_State * local_state = scripting_environment.get_lua_state(); 
+                    lua_State * local_state = scripting_environment.get_lua_state();
 
                     switch (entity->type())
                     {
