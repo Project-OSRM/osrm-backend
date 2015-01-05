@@ -52,10 +52,10 @@ FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path &nodes
     boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
     QueryNode current_node;
-    unsigned number_of_coordinates = 0;
-    nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
-    auto coords = std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
-    for (unsigned i = 0; i < number_of_coordinates; ++i)
+    unsigned coordinate_count = 0;
+    nodes_input_stream.read((char *)&coordinate_count, sizeof(unsigned));
+    auto coords = std::make_shared<std::vector<FixedPointCoordinate>>(coordinate_count);
+    for (unsigned i = 0; i < coordinate_count; ++i)
     {
         nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
         coords->at(i) = FixedPointCoordinate(current_node.lat, current_node.lon);
@@ -84,15 +84,15 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
                   << "\n";
 
         TIMER_START(query_phantom);
-        std::vector<PhantomNode> resulting_phantom_node_vector;
+        std::vector<PhantomNode> phantom_node_vector;
         for (const auto &q : queries)
         {
-            resulting_phantom_node_vector.clear();
+            phantom_node_vector.clear();
             rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, resulting_phantom_node_vector, 3, num_results);
-            resulting_phantom_node_vector.clear();
+                q, phantom_node_vector, 3, num_results);
+            phantom_node_vector.clear();
             rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, resulting_phantom_node_vector, 17, num_results);
+                q, phantom_node_vector, 17, num_results);
         }
         TIMER_STOP(query_phantom);
 
@@ -122,18 +122,18 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
     std::cout << "#### FindPhantomNodeForCoordinate"
               << "\n";
 
-    TIMER_START(query_phantomnode);
+    TIMER_START(query_node);
     for (const auto &q : queries)
     {
         PhantomNode phantom;
         rtree.FindPhantomNodeForCoordinate(q, phantom, 3);
     }
-    TIMER_STOP(query_phantomnode);
+    TIMER_STOP(query_node);
 
-    std::cout << "Took " << TIMER_MSEC(query_phantomnode) << " msec for " << num_queries
+    std::cout << "Took " << TIMER_MSEC(query_node) << " msec for " << num_queries
               << " queries."
               << "\n";
-    std::cout << TIMER_MSEC(query_phantomnode) / ((double)num_queries) << " msec/query."
+    std::cout << TIMER_MSEC(query_node) / ((double)num_queries) << " msec/query."
               << "\n";
 
     {
@@ -143,15 +143,15 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
                   << "\n";
 
         TIMER_START(query_phantom);
-        std::vector<PhantomNode> resulting_phantom_node_vector;
+        std::vector<PhantomNode> phantom_node_vector;
         for (const auto &q : queries)
         {
-            resulting_phantom_node_vector.clear();
+            phantom_node_vector.clear();
             rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, resulting_phantom_node_vector, 3, num_results);
-            resulting_phantom_node_vector.clear();
+                q, phantom_node_vector, 3, num_results);
+            phantom_node_vector.clear();
             rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, resulting_phantom_node_vector, 17, num_results);
+                q, phantom_node_vector, 17, num_results);
         }
         TIMER_STOP(query_phantom);
 
