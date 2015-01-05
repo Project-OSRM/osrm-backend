@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef NDEBUG
 #include "../Util/simple_logger.hpp"
 #endif
-#include "../Util/StringUtil.h"
+#include "../Util/string_util.hpp"
 
 #include <boost/assert.hpp>
 

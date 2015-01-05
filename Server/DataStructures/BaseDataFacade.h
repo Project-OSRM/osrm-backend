@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/turn_instructions.hpp"
 #include "../../Util/integer_range.hpp"
 #include "../../Util/OSRMException.h"
-#include "../../Util/StringUtil.h"
+#include "../../Util/string_util.hpp"
 #include "../../typedefs.h"
 
 #include <osrm/Coordinate.h>

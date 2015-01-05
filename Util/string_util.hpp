@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef STRINGUTIL_H
-#define STRINGUTIL_H
+#ifndef STRING_UTIL_HPP
+#define STRING_UTIL_HPP
 
 #include <boost/algorithm/string.hpp>
 
@@ -154,7 +154,7 @@ inline std::string GetRandomString()
                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "abcdefghijklmnopqrstuvwxyz";
 
-    for (int i = 0; i < 127; ++i)
+    for (std::size_t i = 0; i < 127; ++i)
     {
         s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
     }
@@ -162,4 +162,4 @@ inline std::string GetRandomString()
     return s;
 }
 
-#endif // STRINGUTIL_H
+#endif // STRING_UTIL_HPP

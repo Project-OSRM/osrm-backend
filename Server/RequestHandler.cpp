@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Library/OSRM.h"
 #include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/StringUtil.h"
+#include "../Util/string_util.hpp"
 #include "../typedefs.h"
 
 #include <osrm/Reply.h>

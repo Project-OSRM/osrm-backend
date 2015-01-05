@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../descriptors/descriptor_base.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/make_unique.hpp"
-#include "../Util/StringUtil.h"
+#include "../Util/string_util.hpp"
 #include "../Util/timing_util.hpp"
 
 #include <cstdlib>

@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/integer_range.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/StringUtil.h"
+#include "../Util/string_util.hpp"
 #include "../Util/timing_util.hpp"
 
 #include <algorithm>

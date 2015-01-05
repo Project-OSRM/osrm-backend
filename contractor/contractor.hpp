@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/xor_fast_hash_storage.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/StringUtil.h"
 #include "../Util/timing_util.hpp"
 #include "../typedefs.h"
 

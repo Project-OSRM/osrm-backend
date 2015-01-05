@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OBJECT_ENCODER_HPP
 #define OBJECT_ENCODER_HPP
 
-#include "../Util/StringUtil.h"
+#include "../Util/string_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
