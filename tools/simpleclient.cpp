@@ -66,16 +66,19 @@ int main(int argc, const char *argv[])
     {
         std::string ip_address;
         int ip_port, requested_thread_num;
-        bool use_shared_memory = false, trial = false;
+        bool use_shared_memory = false, trial_run = false;
         ServerPaths server_paths;
-        if (!GenerateServerProgramOptions(argc,
-                                          argv,
-                                          server_paths,
-                                          ip_address,
-                                          ip_port,
-                                          requested_thread_num,
-                                          use_shared_memory,
-                                          trial))
+
+        const unsigned init_result = GenerateServerProgramOptions(argc,
+                                                                  argv,
+                                                                  server_paths,
+                                                                  ip_address,
+                                                                  ip_port,
+                                                                  requested_thread_num,
+                                                                  use_shared_memory,
+                                                                  trial_run);
+
+        if (init_result == INIT_FAILED)
         {
             return 0;
         }
