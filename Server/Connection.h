@@ -30,9 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // #include "RequestParser.h"
 #include "Http/CompressionType.h"
+#include "Http/Reply.h"
 #include "Http/Request.h"
-
-#include <osrm/Reply.h>
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>

@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/FingerPrint.h"
 #include "typedefs.h"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 using RTreeLeaf = BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf;
 using RTreeNode = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode;

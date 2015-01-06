@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "description_factory.hpp"
 #include "../algorithms/object_encoder.hpp"
 #include "../algorithms/route_name_extraction.hpp"
-#include "../data_structures/json_container.hpp"
 #include "../data_structures/segment_information.hpp"
 #include "../data_structures/turn_instructions.hpp"
 #include "../Util/bearing.hpp"
@@ -41,6 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/simple_logger.hpp"
 #include "../Util/string_util.hpp"
 #include "../Util/timing_util.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <algorithm>
 
@@ -97,15 +98,14 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         return added_element_count;
     }
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply) final
+    void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) final
     {
-        JSON::Object json_result;
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
             json_result.values["status"] = 207;
             json_result.values["status_message"] = "Cannot find route between points";
-            JSON::render(reply.content, json_result);
+            // JSON::render(reply.content, json_result);
             return;
         }
 
@@ -294,10 +294,10 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_result.values["hint_data"] = json_hint_object;
 
         // render the content to the output array
-        TIMER_START(route_render);
-        JSON::render(reply.content, json_result);
-        TIMER_STOP(route_render);
-        SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
+        // TIMER_START(route_render);
+        // JSON::render(reply.content, json_result);
+        // TIMER_STOP(route_render);
+        // SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
     }
 
     // TODO: reorder parameters
@@ -390,4 +390,4 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
     }
 };
 
-#endif /* JSON_DESCRIPTOR_HPP */
+#endif /* JSON_DESCRIPTOR_H_ */

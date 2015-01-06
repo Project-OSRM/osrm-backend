@@ -28,16 +28,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTOR_BASE_HPP
 #define DESCRIPTOR_BASE_HPP
 
+#include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/phantom_node.hpp"
-#include "../data_structures/raw_route_data.hpp"
 #include "../typedefs.h"
 
-#include <osrm/Reply.h>
+#include <osrm/json_container.hpp>
 
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 
 struct DescriptorTable : public std::unordered_map<std::string, unsigned>
 {
@@ -80,8 +79,8 @@ template <class DataFacadeT> class BaseDescriptor
     BaseDescriptor() {}
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() {}
-    virtual void Run(const RawRouteData &raw_route, http::Reply &reply) = 0;
-    virtual void SetConfig(const DescriptorConfig &config) = 0;
+    virtual void Run(const InternalRouteResult &, JSON::Object &) = 0;
+    virtual void SetConfig(const DescriptorConfig &) = 0;
 };
 
 #endif // DESCRIPTOR_BASE_HPP

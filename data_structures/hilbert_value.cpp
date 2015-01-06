@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "hilbert_value.hpp"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 uint64_t HilbertCode::operator()(const FixedPointCoordinate &current_coordinate) const
 {

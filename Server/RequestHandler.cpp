@@ -28,17 +28,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RequestHandler.h"
 
 #include "APIGrammar.h"
+#include "Http/Reply.h"
 #include "Http/Request.h"
 
-#include "../data_structures/json_container.hpp"
 #include "../Library/OSRM.h"
 #include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/string_util.hpp"
+#include "../Util/xml_renderer.hpp"
 #include "../typedefs.h"
 
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
+#include <osrm/route_parameters.hpp>
+#include <osrm/json_container.hpp>
 
 #include <ctime>
 
@@ -84,13 +85,14 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         auto iter = request.begin();
         const bool result = boost::spirit::qi::parse(iter, request.end(), api_parser);
 
+        JSON::Object json_result;
         // check if the was an error with the request
         if (!result || (iter != request.end()))
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             reply.content.clear();
             const auto position = std::distance(request.begin(), iter);
-            JSON::Object json_result;
+
             json_result.values["status"] = 400;
             std::string message = "Query string malformed close to position ";
             message += cast::integral_to_string(position);
@@ -107,28 +109,40 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
             const std::string json_p = (route_parameters.jsonp_parameter + "(");
             reply.content.insert(reply.content.end(), json_p.begin(), json_p.end());
         }
-        routing_machine->RunQuery(route_parameters, reply);
-        if (!route_parameters.jsonp_parameter.empty())
-        { // append brace to jsonp response
-            reply.content.push_back(')');
+        const auto return_code = routing_machine->RunQuery(route_parameters, json_result);
+        if (200 != return_code)
+        {
+            reply = http::Reply::StockReply(http::Reply::badRequest);
+            reply.content.clear();
+            json_result.values["status"] = 400;
+            std::string message = "Bad Request";
+            json_result.values["status_message"] = message;
+            JSON::render(reply.content, json_result);
+            return;
         }
-
         // set headers
         reply.headers.emplace_back("Content-Length", cast::integral_to_string(reply.content.size()));
         if ("gpx" == route_parameters.output_format)
         { // gpx file
+            JSON::gpx_render(reply.content, json_result.values["route"]);
             reply.headers.emplace_back("Content-Type", "application/gpx+xml; charset=UTF-8");
             reply.headers.emplace_back("Content-Disposition", "attachment; filename=\"route.gpx\"");
         }
         else if (route_parameters.jsonp_parameter.empty())
         { // json file
+            JSON::render(reply.content, json_result);
             reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
             reply.headers.emplace_back("Content-Disposition", "inline; filename=\"response.json\"");
         }
         else
         { // jsonp
+            JSON::render(reply.content, json_result);
             reply.headers.emplace_back("Content-Type", "text/javascript; charset=UTF-8");
             reply.headers.emplace_back("Content-Disposition", "inline; filename=\"response.js\"");
+        }
+        if (!route_parameters.jsonp_parameter.empty())
+        { // append brace to jsonp response
+            reply.content.push_back(')');
         }
     }
     catch (const std::exception &e)

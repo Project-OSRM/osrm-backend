@@ -30,10 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "plugin_base.hpp"
 
-#include "../data_structures/json_container.hpp"
 #include "../data_structures/phantom_node.hpp"
 #include "../Util/integer_range.hpp"
 #include "../Util/json_renderer.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <string>
 
@@ -48,13 +49,12 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
 
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
         auto number_of_results = static_cast<std::size_t>(route_parameters.num_results);
         std::vector<PhantomNode> phantom_node_vector;
@@ -62,14 +62,13 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                                                         phantom_node_vector,
                                                         static_cast<int>(number_of_results));
 
-        JSON::Object json_result;
         if (phantom_node_vector.empty() || !phantom_node_vector.front().is_valid())
         {
             json_result.values["status"] = 207;
         }
         else
         {
-            reply.status = http::Reply::ok;
+            // reply.status = http::Reply::ok;
             json_result.values["status"] = 0;
 
             if (number_of_results > 1)
@@ -106,7 +105,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                 json_result.values["name"] = temp_string;
             }
         }
-        JSON::render(reply.content, json_result);
+        return 200;
     }
 
   private:

@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct SegmentInformation;
 
-#include "../data_structures/json_container.hpp"
+#include <osrm/json_container.hpp>
 
 #include <string>
 #include <vector>

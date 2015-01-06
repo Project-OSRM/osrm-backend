@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gdal/ogrsf_frmts.h>
 #endif
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <fstream>
 #include <memory>

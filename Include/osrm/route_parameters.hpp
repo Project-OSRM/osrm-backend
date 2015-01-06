@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTE_PARAMETERS_H
 #define ROUTE_PARAMETERS_H
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <boost/fusion/container/vector/vector_fwd.hpp>
 
@@ -40,7 +40,7 @@ struct RouteParameters
     RouteParameters();
 
     void setZoomLevel(const short level);
-    
+
     void setNumberOfResults(const short number);
 
     void setAlternateRouteFlag(const bool flag);

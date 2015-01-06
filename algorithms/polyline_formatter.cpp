@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "polyline_compressor.hpp"
 #include "../data_structures/segment_information.hpp"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 JSON::String
 PolylineFormatter::printEncodedString(const std::vector<SegmentInformation> &polyline) const

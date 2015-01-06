@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "osrm_exception.hpp"
 #include "simple_logger.hpp"
 
-#include <osrm/ServerPaths.h>
+#include <osrm/server_paths.hpp>
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>

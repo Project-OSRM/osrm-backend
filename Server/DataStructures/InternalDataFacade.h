@@ -43,8 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/graph_loader.hpp"
 #include "../../Util/simple_logger.hpp"
 
-#include <osrm/Coordinate.h>
-#include <osrm/ServerPaths.h>
+#include <osrm/coordinate.hpp>
+#include <osrm/server_paths.hpp>
 
 template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<EdgeDataT>
 {

@@ -30,10 +30,6 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "OSRM_impl.h"
 #include "OSRM.h"
 
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
-#include <osrm/ServerPaths.h>
-
 #include "../plugins/distance_table.hpp"
 #include "../plugins/hello_world.hpp"
 #include "../plugins/locate.hpp"
@@ -51,6 +47,9 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+
+#include <osrm/route_parameters.hpp>
+#include <osrm/server_paths.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -99,13 +98,12 @@ void OSRM_impl::RegisterPlugin(BasePlugin *plugin)
     plugin_map.emplace(plugin->GetDescriptor(), plugin);
 }
 
-void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
+int OSRM_impl::RunQuery(RouteParameters &route_parameters, JSON::Object &json_result)
 {
     const PluginMap::const_iterator &iter = plugin_map.find(route_parameters.service);
 
     if (plugin_map.end() != iter)
     {
-        reply.status = http::Reply::ok;
         if (barrier)
         {
             // lock update pending
@@ -126,7 +124,7 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
                 ->CheckAndReloadFacade();
         }
 
-        iter->second->HandleRequest(route_parameters, reply);
+        iter->second->HandleRequest(route_parameters, json_result);
         if (barrier)
         {
             // lock query
@@ -143,10 +141,11 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
                 barrier->no_running_queries_condition.notify_all();
             }
         }
+        return 200;
     }
     else
     {
-        reply = http::Reply::StockReply(http::Reply::badRequest);
+        return 400;
     }
 }
 
@@ -159,7 +158,7 @@ OSRM::OSRM(ServerPaths paths, const bool use_shared_memory)
 
 OSRM::~OSRM() { OSRM_pimpl_.reset(); }
 
-void OSRM::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
+int OSRM::RunQuery(RouteParameters &route_parameters, JSON::Object &json_result)
 {
-    OSRM_pimpl_->RunQuery(route_parameters, reply);
+    return OSRM_pimpl_->RunQuery(route_parameters, json_result);
 }

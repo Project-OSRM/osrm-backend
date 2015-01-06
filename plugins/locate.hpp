@@ -30,9 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "plugin_base.hpp"
 
-#include "../data_structures/json_container.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/string_util.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <string>
 
@@ -43,16 +44,14 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     explicit LocatePlugin(DataFacadeT *facade) : descriptor_string("locate"), facade(facade) {}
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
 
-        JSON::Object json_result;
         FixedPointCoordinate result;
         if (!facade->LocateClosestEndPointForCoordinate(route_parameters.coordinates.front(),
                                                         result))
@@ -61,15 +60,13 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
         }
         else
         {
-            reply.status = http::Reply::ok;
             json_result.values["status"] = 0;
             JSON::Array json_coordinate;
             json_coordinate.values.push_back(result.lat / COORDINATE_PRECISION);
             json_coordinate.values.push_back(result.lon / COORDINATE_PRECISION);
             json_result.values["mapped_coordinate"] = json_coordinate;
         }
-
-        JSON::render(reply.content, json_result);
+        return 200;
     }
 
   private:

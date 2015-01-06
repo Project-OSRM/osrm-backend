@@ -30,8 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "plugin_base.hpp"
 
-#include "../data_structures/json_container.hpp"
 #include "../Util/json_renderer.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <string>
 
@@ -43,14 +44,12 @@ template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
     {
     }
     const std::string GetDescriptor() const final { return descriptor_string; }
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
-        reply.status = http::Reply::ok;
-        JSON::Object json_result;
         json_result.values["status"] = 0;
         const std::string timestamp = facade->GetTimestamp();
         json_result.values["timestamp"] = timestamp;
-        JSON::render(reply.content, json_result);
+        return 200;
     }
 
   private:

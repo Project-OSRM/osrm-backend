@@ -25,11 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <osrm/RouteParameters.h>
-
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic.hpp>
 #include <boost/fusion/include/at_c.hpp>
+
+#include <osrm/route_parameters.hpp>
 
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),

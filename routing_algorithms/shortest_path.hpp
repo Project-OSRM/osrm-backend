@@ -51,7 +51,7 @@ template <class DataFacadeT> class ShortestPathRouting final : public BasicRouti
 
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
                     const std::vector<bool> &uturn_indicators,
-                    RawRouteData &raw_route_data) const
+                    InternalRouteResult &raw_route_data) const
     {
         int distance1 = 0;
         int distance2 = 0;
