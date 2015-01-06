@@ -26,11 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Library/OSRM.h"
-#include "Server/ServerFactory.h"
+#include "Server/Server.h"
 #include "Util/GitDescription.h"
 #include "Util/ProgramOptions.h"
-#include "Util/SimpleLogger.h"
-#include "Util/FingerPrint.h"
+#include "Util/simple_logger.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -41,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <signal.h>
 
 #include <chrono>
-#include <functional>
 #include <future>
 #include <iostream>
 #include <thread>
@@ -101,27 +99,16 @@ int main(int argc, const char *argv[])
             SimpleLogger().Write(logWARNING) << argv[0] << " could not be locked to RAM";
         }
 #endif
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
-                               << "compiled at " << __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
         if (use_shared_memory)
         {
             SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
         }
-        else
-        {
-            SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
-            SimpleLogger().Write(logDEBUG) << "Nodes file:\t" << server_paths["nodesdata"];
-            SimpleLogger().Write(logDEBUG) << "Edges file:\t" << server_paths["edgesdata"];
-            SimpleLogger().Write(logDEBUG) << "Geometry file:\t" << server_paths["geometries"];
-            SimpleLogger().Write(logDEBUG) << "RAM file:\t" << server_paths["ramindex"];
-            SimpleLogger().Write(logDEBUG) << "Index file:\t" << server_paths["fileindex"];
-            SimpleLogger().Write(logDEBUG) << "Names file:\t" << server_paths["namesdata"];
-            SimpleLogger().Write(logDEBUG) << "Timestamp file:\t" << server_paths["timestamp"];
-            SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
-            SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
-            SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
-        }
+
+        SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
+        SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
+        SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
 #ifndef _WIN32
         int sig = 0;
         sigset_t new_mask;
@@ -131,8 +118,8 @@ int main(int argc, const char *argv[])
 #endif
 
         OSRM osrm_lib(server_paths, use_shared_memory);
-        Server *routing_server =
-            ServerFactory::CreateServer(ip_address, ip_port, requested_thread_num);
+        auto routing_server =
+            Server::CreateServer(ip_address, ip_port, requested_thread_num);
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
@@ -181,7 +168,7 @@ int main(int argc, const char *argv[])
         }
 
         SimpleLogger().Write() << "freeing objects";
-        delete routing_server;
+        routing_server.reset();
         SimpleLogger().Write() << "shutdown completed";
     }
     catch (const std::exception &e)

@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "Contractor/Prepare.h"
+#include "contractor/processing_chain.hpp"
 
 #include <boost/program_options.hpp>
 

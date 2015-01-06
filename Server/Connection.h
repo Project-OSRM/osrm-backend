@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/version.hpp>
 
  #include <memory>
- #include <string>
  #include <vector>
 
 //workaround for incomplete std::shared_ptr compatibility in old boost versions

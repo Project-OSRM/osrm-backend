@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -34,19 +34,20 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <osrm/RouteParameters.h>
 #include <osrm/ServerPaths.h>
 
-#include "../Plugins/BasePlugin.h"
-#include "../Plugins/DistanceTablePlugin.h"
-#include "../Plugins/HelloWorldPlugin.h"
-#include "../Plugins/LocatePlugin.h"
-#include "../Plugins/NearestPlugin.h"
-#include "../Plugins/MultiTargetPlugin.h"
-#include "../Plugins/TimestampPlugin.h"
-#include "../Plugins/ViaRoutePlugin.h"
+#include "../plugins/distance_table.hpp"
+#include "../plugins/hello_world.hpp"
+#include "../plugins/locate.hpp"
+#include "../plugins/multi_target.hpp"
+#include "../plugins/nearest.hpp"
+#include "../plugins/timestamp.hpp"
+#include "../plugins/viaroute.hpp"
 #include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Server/DataStructures/InternalDataFacade.h"
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
-#include "../Util/SimpleLogger.h"
+#include "../Util/make_unique.hpp"
+#include "../Util/ProgramOptions.h"
+#include "../Util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
@@ -57,16 +58,17 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memory)
-    : use_shared_memory(use_shared_memory)
+OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory)
 {
     if (use_shared_memory)
     {
-        barrier = new SharedBarriers();
+        barrier = osrm::make_unique<SharedBarriers>();
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
     }
     else
     {
+        // populate base path
+        populate_base_path(server_paths);
         query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(server_paths);
     }
 
@@ -87,10 +89,6 @@ OSRM_impl::~OSRM_impl()
     {
         delete plugin_pointer.second;
     }
-    if (use_shared_memory)
-    {
-        delete barrier;
-    }
 }
 
 void OSRM_impl::RegisterPlugin(BasePlugin *plugin)
@@ -110,7 +108,7 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
     if (plugin_map.end() != iter)
     {
         reply.status = http::Reply::ok;
-        if (use_shared_memory)
+        if (barrier)
         {
             // lock update pending
             boost::interprocess::scoped_lock<boost::interprocess::named_mutex> pending_lock(
@@ -131,7 +129,7 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
         }
 
         iter->second->HandleRequest(route_parameters, reply);
-        if (use_shared_memory)
+        if (barrier)
         {
             // lock query
             boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
@@ -156,12 +154,12 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
 
 // proxy code for compilation firewall
 
-OSRM::OSRM(const ServerPaths &paths, const bool use_shared_memory)
-    : OSRM_pimpl_(new OSRM_impl(paths, use_shared_memory))
+OSRM::OSRM(ServerPaths paths, const bool use_shared_memory)
+    : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(paths, use_shared_memory))
 {
 }
 
-OSRM::~OSRM() { delete OSRM_pimpl_; }
+OSRM::~OSRM() { OSRM_pimpl_.reset(); }
 
 void OSRM::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
 {
