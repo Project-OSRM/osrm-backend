@@ -67,8 +67,8 @@ class SimpleLogger
     std::ostringstream &Write(LogLevel l = logINFO);
 
   private:
-    LogLevel level;
     std::ostringstream os;
+    LogLevel level;
 };
 
 #endif /* SIMPLE_LOGGER_HPP */

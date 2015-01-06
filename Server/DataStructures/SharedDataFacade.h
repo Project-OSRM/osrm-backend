@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -33,11 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BaseDataFacade.h"
 #include "SharedDataType.h"
 
-#include "../../DataStructures/RangeTable.h"
-#include "../../DataStructures/StaticGraph.h"
-#include "../../DataStructures/StaticRTree.h"
+#include "../../data_structures/range_table.hpp"
+#include "../../data_structures/static_graph.hpp"
+#include "../../data_structures/static_rtree.hpp"
 #include "../../Util/BoostFileSystemFix.h"
-#include "../../Util/ProgramOptions.h"
 #include "../../Util/make_unique.hpp"
 #include "../../Util/simple_logger.hpp"
 
@@ -259,7 +258,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             if (!boost::filesystem::exists(file_index_path))
             {
                 SimpleLogger().Write(logDEBUG) << "Leaf file name " << file_index_path.string();
-                throw OSRMException("Could not load leaf index file."
+                throw osrm::exception("Could not load leaf index file."
                                     "Is any data loaded into shared memory?");
             }
 
@@ -276,7 +275,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             SimpleLogger().Write() << "number of geometries: " << m_coordinate_list->size();
             for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
             {
-                if (!GetCoordinateOfNode(i).isValid())
+                if (!GetCoordinateOfNode(i).is_valid())
                 {
                     SimpleLogger().Write() << "coordinate " << i << " not valid";
                 }
@@ -370,23 +369,25 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             input_coordinate, result, zoom_level);
     }
 
-    bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                      PhantomNode &resulting_phantom_node,
-                                      const unsigned zoom_level) final
+    bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node) final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
+                                                              resulting_phantom_node_vector,
+                                                              1);
+        if (result)
         {
-            LoadRTree();
+            BOOST_ASSERT(!resulting_phantom_node_vector.empty());
+            resulting_phantom_node = resulting_phantom_node_vector.front();
         }
-
-        return m_static_rtree->second->FindPhantomNodeForCoordinate(
-            input_coordinate, resulting_phantom_node, zoom_level);
+        return result;
     }
 
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
-                                            const unsigned zoom_level,
                                             const unsigned number_of_results) final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
@@ -395,7 +396,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         }
 
         return m_static_rtree->second->IncrementalFindPhantomNodeForCoordinate(
-            input_coordinate, resulting_phantom_node_vector, zoom_level, number_of_results);
+            input_coordinate, resulting_phantom_node_vector, number_of_results);
     }
 
     unsigned GetCheckSum() const final { return m_check_sum; }

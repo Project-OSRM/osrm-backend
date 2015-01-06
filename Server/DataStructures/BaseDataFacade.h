@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,13 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Exposes all data access interfaces to the algorithms via base class ptr
 
-#include "../../DataStructures/EdgeBasedNode.h"
-#include "../../DataStructures/ImportNode.h"
-#include "../../DataStructures/PhantomNodes.h"
-#include "../../DataStructures/Range.h"
-#include "../../DataStructures/TurnInstructions.h"
-#include "../../Util/OSRMException.h"
-#include "../../Util/StringUtil.h"
+#include "../../data_structures/edge_based_node.hpp"
+#include "../../data_structures/external_memory_node.hpp"
+#include "../../data_structures/phantom_node.hpp"
+#include "../../data_structures/turn_instructions.hpp"
+#include "../../Util/integer_range.hpp"
+#include "../../Util/osrm_exception.hpp"
+#include "../../Util/string_util.hpp"
 #include "../../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -98,15 +98,14 @@ template <class EdgeDataT> class BaseDataFacade
                                                     FixedPointCoordinate &result,
                                                     const unsigned zoom_level = 18) = 0;
 
-    virtual bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                              PhantomNode &resulting_phantom_node,
-                                              const unsigned zoom_level) = 0;
-
     virtual bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
-                                            const unsigned zoom_level,
                                             const unsigned number_of_results) = 0;
+
+    virtual bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node) = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 

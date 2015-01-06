@@ -32,19 +32,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDataFacade.h"
 
-#include "../../DataStructures/OriginalEdgeData.h"
-#include "../../DataStructures/QueryNode.h"
-#include "../../DataStructures/QueryEdge.h"
-#include "../../DataStructures/SharedMemoryVectorWrapper.h"
-#include "../../DataStructures/StaticGraph.h"
-#include "../../DataStructures/StaticRTree.h"
-#include "../../DataStructures/RangeTable.h"
+#include "../../data_structures/original_edge_data.hpp"
+#include "../../data_structures/query_node.hpp"
+#include "../../data_structures/query_edge.hpp"
+#include "../../data_structures/shared_memory_vector_wrapper.hpp"
+#include "../../data_structures/static_graph.hpp"
+#include "../../data_structures/static_rtree.hpp"
+#include "../../data_structures/range_table.hpp"
 #include "../../Util/BoostFileSystemFix.h"
-#include "../../Util/GraphLoader.h"
-#include "../../Util/ProgramOptions.h"
+#include "../../Util/graph_loader.hpp"
 #include "../../Util/simple_logger.hpp"
 
 #include <osrm/Coordinate.h>
+#include <osrm/ServerPaths.h>
 
 template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<EdgeDataT>
 {
@@ -126,14 +126,14 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     {
         boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
-        NodeInfo current_node;
+        QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list =
             std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
-            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
+            nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
             m_coordinate_list->at(i) = FixedPointCoordinate(current_node.lat, current_node.lon);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
@@ -235,31 +235,31 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         // generate paths of data files
         if (server_paths.find("hsgrdata") == server_paths.end())
         {
-            throw OSRMException("no hsgr file given in ini file");
+            throw osrm::exception("no hsgr file given in ini file");
         }
         if (server_paths.find("ramindex") == server_paths.end())
         {
-            throw OSRMException("no ram index file given in ini file");
+            throw osrm::exception("no ram index file given in ini file");
         }
         if (server_paths.find("fileindex") == server_paths.end())
         {
-            throw OSRMException("no leaf index file given in ini file");
+            throw osrm::exception("no leaf index file given in ini file");
         }
         if (server_paths.find("geometries") == server_paths.end())
         {
-            throw OSRMException("no geometries file given in ini file");
+            throw osrm::exception("no geometries file given in ini file");
         }
         if (server_paths.find("nodesdata") == server_paths.end())
         {
-            throw OSRMException("no nodes file given in ini file");
+            throw osrm::exception("no nodes file given in ini file");
         }
         if (server_paths.find("edgesdata") == server_paths.end())
         {
-            throw OSRMException("no edges file given in ini file");
+            throw osrm::exception("no edges file given in ini file");
         }
         if (server_paths.find("namesdata") == server_paths.end())
         {
-            throw OSRMException("no names file given in ini file");
+            throw osrm::exception("no names file given in ini file");
         }
 
         ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
@@ -377,23 +377,25 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             input_coordinate, result, zoom_level);
     }
 
-    bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                      PhantomNode &resulting_phantom_node,
-                                      const unsigned zoom_level) final
+    bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            PhantomNode &resulting_phantom_node) final
     {
-        if (!m_static_rtree.get())
+        std::vector<PhantomNode> resulting_phantom_node_vector;
+        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
+                                                              resulting_phantom_node_vector,
+                                                              1);
+        if (result)
         {
-            LoadRTree();
+            BOOST_ASSERT(!resulting_phantom_node_vector.empty());
+            resulting_phantom_node = resulting_phantom_node_vector.front();
         }
-
-        return m_static_rtree->FindPhantomNodeForCoordinate(
-            input_coordinate, resulting_phantom_node, zoom_level);
+        return result;
     }
 
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
-                                            const unsigned zoom_level,
                                             const unsigned number_of_results) final
     {
         if (!m_static_rtree.get())
@@ -402,7 +404,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         }
 
         return m_static_rtree->IncrementalFindPhantomNodeForCoordinate(
-            input_coordinate, resulting_phantom_node_vector, zoom_level, number_of_results);
+            input_coordinate, resulting_phantom_node_vector, number_of_results);
     }
 
     unsigned GetCheckSum() const final { return m_check_sum; }

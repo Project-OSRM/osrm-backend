@@ -69,10 +69,10 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     CompressionType compression_type(noCompression);
     boost::tribool result;
     boost::tie(result, boost::tuples::ignore) =
-        request_parser.Parse(request,
+        RequestParser().Parse(request,
                               incoming_data_buffer.data(),
                               incoming_data_buffer.data() + bytes_transferred,
-                              &compression_type);
+                              compression_type);
 
     // the request has been parsed
     if (result)

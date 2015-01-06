@@ -30,10 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "APIGrammar.h"
 #include "Http/Request.h"
 
-#include "../DataStructures/JSONContainer.h"
+#include "../data_structures/json_container.hpp"
 #include "../Library/OSRM.h"
+#include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/StringUtil.h"
+#include "../Util/string_util.hpp"
 #include "../typedefs.h"
 
 #include <osrm/Reply.h>

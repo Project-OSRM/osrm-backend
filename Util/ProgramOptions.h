@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PROGAM_OPTIONS_H
 #define PROGAM_OPTIONS_H
 
-#include "GitDescription.h"
+#include "git_sha.hpp"
 #include "IniFileUtil.h"
-#include "OSRMException.h"
+#include "osrm_exception.hpp"
 #include "simple_logger.hpp"
 
 #include <osrm/ServerPaths.h>
@@ -88,49 +88,49 @@ inline void populate_base_path(ServerPaths &server_paths)
             SimpleLogger().Write() << "not a regular file";
         }
 
-        throw OSRMException(".hsgr not found: " + path_iterator->second.string());
+        throw osrm::exception(".hsgr not found: " + path_iterator->second.string());
     }
 
     path_iterator = server_paths.find("nodesdata");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw OSRMException(".nodes not found");
+        throw osrm::exception(".nodes not found");
     }
 
     path_iterator = server_paths.find("edgesdata");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw OSRMException(".edges not found");
+        throw osrm::exception(".edges not found");
     }
 
     path_iterator = server_paths.find("geometries");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw OSRMException(".geometry not found");
+        throw osrm::exception(".geometry not found");
     }
 
     path_iterator = server_paths.find("ramindex");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw OSRMException(".ramIndex not found");
+        throw osrm::exception(".ramIndex not found");
     }
 
     path_iterator = server_paths.find("fileindex");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw OSRMException(".fileIndex not found");
+        throw osrm::exception(".fileIndex not found");
     }
 
     path_iterator = server_paths.find("namesdata");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw OSRMException(".namesIndex not found");
+        throw osrm::exception(".namesIndex not found");
     }
 
     SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
@@ -261,7 +261,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
 
     if (1 > requested_num_threads)
     {
-        throw OSRMException("Number of threads must be a positive number");
+        throw osrm::exception("Number of threads must be a positive number");
     }
 
     if (!use_shared_memory && option_variables.count("base"))

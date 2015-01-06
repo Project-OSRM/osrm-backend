@@ -36,6 +36,6 @@ enum CompressionType
   gzipRFC1952,
   deflateRFC1951 };
 
-} // namespace http
+}
 
 #endif // COMPRESSION_TYPE_H

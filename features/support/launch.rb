@@ -1,5 +1,6 @@
 require 'socket'
 require 'open3'
+require 'json'
 
 # Only one isntance of osrm-routed is ever launched, to avoid collisions.
 # The default is to keep osrm-routed running and load data with datastore.

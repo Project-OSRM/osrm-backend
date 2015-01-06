@@ -145,7 +145,7 @@ struct cast
     template <typename T> struct scientific_policy : boost::spirit::karma::real_policies<T>
     {
         //  we want the numbers always to be in fixed format
-        static int floatfield(T n)
+        static int floatfield(T)
         {
             return boost::spirit::karma::real_policies<T>::fmtflags::fixed;
         }

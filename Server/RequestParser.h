@@ -46,10 +46,10 @@ class RequestParser
     void Reset();
 
     boost::tuple<boost::tribool, char *>
-    Parse(Request &req, char *begin, char *end, CompressionType *compressionType);
+    Parse(Request &req, char *begin, char *end, CompressionType &compression_type);
 
   private:
-    boost::tribool consume(Request &req, char input, CompressionType *compressionType);
+    boost::tribool consume(Request &req, char input, CompressionType &compression_type);
 
     inline bool isChar(int c);
 

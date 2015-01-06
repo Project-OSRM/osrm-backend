@@ -42,7 +42,6 @@ class FingerPrint
     bool TestGraphUtil(const FingerPrint &other) const;
     bool TestPrepare(const FingerPrint &other) const;
     bool TestRTree(const FingerPrint &other) const;
-    bool TestNodeInfo(const FingerPrint &other) const;
     bool TestQueryObjects(const FingerPrint &other) const;
 
   private:

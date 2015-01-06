@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BOOST_FILE_SYSTEM_FIX_H
 #define BOOST_FILE_SYSTEM_FIX_H
 
-#include "OSRMException.h"
+#include "osrm_exception.hpp"
 
 // #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
@@ -50,7 +50,7 @@ namespace filesystem
 // exists. The validate() function must be defined in the same namespace
 // as the target type, (boost::filesystem::path in this case), otherwise
 // it is not called
-// void validate(
+// inline void validate(
 //     boost::any & v,
 //     const std::vector<std::string> & values,
 //     boost::filesystem::path *,
@@ -62,13 +62,13 @@ namespace filesystem
 //     if(boost::filesystem::is_regular_file(input_string)) {
 //         v = boost::any(boost::filesystem::path(input_string));
 //     } else {
-//         throw OSRMException(input_string + " not found");
+//         throw osrm::exception(input_string + " not found");
 //     }
 // }
 
 // adapted from:
 // http://stackoverflow.com/questions/1746136/how-do-i-normalize-a-pathname-using-boostfilesystem
-boost::filesystem::path
+inline boost::filesystem::path
 portable_canonical(const boost::filesystem::path &relative_path,
                    const boost::filesystem::path &current_path = boost::filesystem::current_path())
 {
@@ -115,7 +115,7 @@ portable_canonical(const boost::filesystem::path &relative_path,
 
 #if BOOST_FILESYSTEM_VERSION < 3
 
-path temp_directory_path()
+inline path temp_directory_path()
 {
     char *buffer;
     buffer = tmpnam(nullptr);
@@ -123,7 +123,7 @@ path temp_directory_path()
     return path(buffer);
 }
 
-path unique_path(const path &) { return temp_directory_path(); }
+inline path unique_path(const path &) { return temp_directory_path(); }
 
 #endif
 }
@@ -133,11 +133,11 @@ path unique_path(const path &) { return temp_directory_path(); }
 #define BOOST_FILESYSTEM_VERSION 3
 #endif
 
-void AssertPathExists(const boost::filesystem::path &path)
+inline void AssertPathExists(const boost::filesystem::path &path)
 {
     if (!boost::filesystem::is_regular_file(path))
     {
-        throw OSRMException(path.string() + " not found.");
+        throw osrm::exception(path.string() + " not found.");
     }
 }
 
