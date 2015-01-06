@@ -334,7 +334,7 @@ void build_rtree(const std::string &prefix,
     const std::string coords_path = prefix + ".nodes";
 
     boost::filesystem::ofstream node_stream(coords_path, std::ios::binary);
-    const unsigned num_nodes = fixture->nodes.size();
+    const auto num_nodes = static_cast<unsigned>(fixture->nodes.size());
     node_stream.write((char *)&num_nodes, sizeof(unsigned));
     node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(QueryNode));
     node_stream.close();
