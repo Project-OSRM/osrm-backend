@@ -278,7 +278,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     }
     if (1 > max_locations_distance_table)
     {
-        throw OSRMException("Max location for distance table must be a positive number");
+        throw osrm::exception("Max location for distance table must be a positive number");
     }
 
     SimpleLogger().Write() << visible_options;

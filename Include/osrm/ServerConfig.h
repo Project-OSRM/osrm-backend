@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -33,19 +33,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct ServerConfig
 {
     ServerConfig()
-        : use_shared_memory(false)
-        , max_locations_distance_table(100)
+        : max_locations_distance_table(100)
+        , use_shared_memory(false)
     {}
 
-    ServerConfig(const ServerPaths paths, const bool flag, const int max)
+    ServerConfig(const ServerPaths &paths, const bool flag, const int max)
         : server_paths(paths)
-        , use_shared_memory(flag)
         , max_locations_distance_table(max)
+        , use_shared_memory(flag)
     {}
 
     ServerPaths server_paths;
-    bool use_shared_memory;
     int max_locations_distance_table;
+    bool use_shared_memory;
 };
 
 #endif // SERVER_CONFIG_H

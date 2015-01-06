@@ -57,7 +57,7 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(ServerConfig serverConfig)
+OSRM_impl::OSRM_impl(ServerConfig &serverConfig)
 {
     if (serverConfig.use_shared_memory)
     {
