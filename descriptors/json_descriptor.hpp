@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -134,7 +134,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                             raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
-        description_factory.Run(facade, config.zoom_level);
+        description_factory.Run(config.zoom_level);
 
         if (config.geometry)
         {
@@ -210,7 +210,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             alternate_description_factory.SetEndSegment(
                 raw_route.segment_end_coordinates.back().target_phantom,
                 raw_route.alt_source_traversed_in_reverse.back());
-            alternate_description_factory.Run(facade, config.zoom_level);
+            alternate_description_factory.Run(config.zoom_level);
 
             if (config.geometry)
             {
