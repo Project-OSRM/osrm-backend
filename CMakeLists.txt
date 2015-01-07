@@ -233,6 +233,7 @@ target_link_libraries(osrm-extract ${Boost_LIBRARIES})
 target_link_libraries(osrm-prepare ${Boost_LIBRARIES})
 target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES})
+target_link_libraries(algorithm-tests ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
 target_link_libraries(datastructure-tests ${Boost_LIBRARIES})
 target_link_libraries(rtree-bench ${Boost_LIBRARIES})
 
