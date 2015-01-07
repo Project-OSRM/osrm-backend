@@ -28,9 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTOR_BASE_HPP
 #define DESCRIPTOR_BASE_HPP
 
+#include "description_factory.hpp"
+#include "../algorithms/route_name_extraction.hpp"
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/phantom_node.hpp"
+#include "../Util/bearing.hpp"
 #include "../Util/cast.hpp"
 #include "../typedefs.h"
 
@@ -201,7 +204,7 @@ public:
                     instruction.time = round(segment.duration / 10);
                     instruction.length_string = cast::integral_to_string(static_cast<int>(segment.length)) + "m";
                     const double bearing_value = (segment.bearing / 10.);
-                    instruction.bearing = Azimuth::Get(bearing_value);
+                    instruction.bearing = Bearing::Get(bearing_value);
                     instruction.azimuth = static_cast<unsigned>(round(bearing_value));
                     instruction.travel_mode = segment.travel_mode;
 
@@ -227,14 +230,13 @@ public:
         instruction.position = necessary_segments_running_index - 1;
         instruction.time = 0;
         instruction.length_string = "0m";
-        instruction.bearing = Azimuth::Get(0.0);
+        instruction.bearing = Bearing::Get(0.0);
         instruction.azimuth = 0.;
         instructions.push_back(instruction);
     }
 
     virtual ~BaseDescriptor() {}
     virtual void Run(const InternalRouteResult &raw_route, osrm::json::Object &json_result) = 0;
-    virtual void SetConfig(const DescriptorConfig &c) = 0;
 };
 
 #endif // DESCRIPTOR_BASE_HPP

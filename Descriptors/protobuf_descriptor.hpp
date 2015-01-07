@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Kirill Zhdanovich
+Copyright (c) 2015, Project OSRM, Kirill Zhdanovich
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef PROTOBUF_DESCRIPTOR_H
-#define PROTOBUF_DESCRIPTOR_H
+#ifndef PROTOBUF_DESCRIPTOR_HPP
+#define PROTOBUF_DESCRIPTOR_HPP
 
-#include "BaseDescriptor.h"
+#include "descriptor_base.hpp"
 #include "response.pb.h"
 
 #include "../Util/simple_logger.hpp"
@@ -72,8 +72,9 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
   public:
     PBFDescriptor(DataFacadeT *facade) : super(facade) {}
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply)
+    void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) final
     {
+        std::vector<char> result_vector;
         protobufResponse::Response response;
         std::string output;
 
@@ -83,7 +84,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             response.set_status(207);
             response.set_status_message("Cannot find route between points");
             response.SerializeToString(&output);
-            reply.content.insert(reply.content.end(), output.begin(), output.end());
+            result_vector.insert(result_vector.end(), output.begin(), output.end());
             return;
         }
 
@@ -113,7 +114,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         }
 
         protobufResponse::Route main_route;
-        super::description_factory.Run(super::facade, super::config.zoom_level);
+        super::description_factory.Run(super::config.zoom_level);
         if (super::config.geometry)
         {
             std::string route_geometry;
@@ -183,7 +184,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
             super::alternate_description_factory.SetEndSegment(
                 raw_route.segment_end_coordinates.back().target_phantom,
                 raw_route.alt_source_traversed_in_reverse.back());
-            super::alternate_description_factory.Run(super::facade, super::config.zoom_level);
+            super::alternate_description_factory.Run(super::config.zoom_level);
 
             if (super::config.geometry)
             {
@@ -250,7 +251,7 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         SimpleLogger().Write(logDEBUG) << response.DebugString();
 
         response.SerializeToString(&output);
-        reply.content.insert(reply.content.end(), output.begin(), output.end());
+        result_vector.insert(result_vector.end(), output.begin(), output.end());
     }
 };
-#endif // PROTOBUF_DESCRIPTOR_H
+#endif // PROTOBUF_DESCRIPTOR_HPP

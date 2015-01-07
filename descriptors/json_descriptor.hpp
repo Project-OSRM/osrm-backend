@@ -79,15 +79,13 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         return added_element_count;
     }
 
-    void Run(const RawRouteData &raw_route, http::Reply &reply) final
+    void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) final
     {
-        JSON::Object json_result;
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
             json_result.values["status"] = 207;
             json_result.values["status_message"] = "Cannot find route between points";
-            JSON::render(reply.content, json_result);
             return;
         }
 
@@ -117,7 +115,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                         raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
-        super::description_factory.Run(super::facade, super::config.zoom_level);
+        super::description_factory.Run(super::config.zoom_level);
 
         if (super::config.geometry)
         {
@@ -194,8 +192,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             super::alternate_description_factory.SetEndSegment(
                                                    raw_route.segment_end_coordinates.back().target_phantom,
                                                    raw_route.alt_source_traversed_in_reverse.back());
-            super::alternate_description_factory.Run(
-                                                   super::facade, super::config.zoom_level);
+            super::alternate_description_factory.Run(super::config.zoom_level);
 
             if (super::config.geometry)
             {
@@ -278,12 +275,6 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_location_hint_array.values.emplace_back(hint);
         json_hint_object.values["locations"] = json_location_hint_array;
         json_result.values["hint_data"] = json_hint_object;
-
-        // render the content to the output array
-        TIMER_START(route_render);
-        JSON::render(reply.content, json_result);
-        TIMER_STOP(route_render);
-        SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
     }
 
     // TODO: reorder parameters
