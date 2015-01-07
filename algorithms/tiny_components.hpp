@@ -80,7 +80,7 @@ class TarjanSCC
     std::shared_ptr<GraphT> m_node_based_graph;
     std::unordered_set<NodeID> barrier_node_set;
     RestrictionMap m_restriction_map;
-    unsigned size_one_counter;
+    std::size_t size_one_counter;
 
   public:
     template<class ContainerT>
