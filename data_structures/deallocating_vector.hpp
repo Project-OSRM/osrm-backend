@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DEALLOCATINGVECTOR_H_
-#define DEALLOCATINGVECTOR_H_
+#ifndef DEALLOCATING_VECTOR_HPP
+#define DEALLOCATING_VECTOR_HPP
 
 #include "../Util/integer_range.hpp"
 
@@ -303,4 +303,4 @@ class DeallocatingVector
     }
 };
 
-#endif /* DEALLOCATINGVECTOR_H_ */
+#endif /* DEALLOCATING_VECTOR_HPP */
