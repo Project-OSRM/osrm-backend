@@ -73,6 +73,11 @@ struct Null
 {
 };
 
+struct char_array
+{
+    std::vector<char> values;
+};
+
 using Value = mapbox::util::variant<String,
                                     Number,
                                     mapbox::util::recursive_wrapper<Object>,
@@ -91,6 +96,6 @@ struct Array
     std::vector<Value> values;
 };
 
-} // namespace JSON
+} // namespace json
 } // namespace osrm
 #endif // JSON_CONTAINER_HPP
