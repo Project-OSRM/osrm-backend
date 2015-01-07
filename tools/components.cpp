@@ -51,10 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-std::vector<QueryNode> coordinate_list;
-std::vector<TurnRestriction> restriction_list;
-std::vector<NodeID> bollard_node_list;
-std::vector<NodeID> traffic_lights_list;
+namespace {
 
 struct TarjanEdgeData
 {
@@ -74,9 +71,15 @@ void DeleteFileIfExists(const std::string &file_name)
         boost::filesystem::remove(file_name);
     }
 }
+}
 
 int main(int argc, char *argv[])
 {
+    std::vector<QueryNode> coordinate_list;
+    std::vector<TurnRestriction> restriction_list;
+    std::vector<NodeID> bollard_node_list;
+    std::vector<NodeID> traffic_lights_list;
+
     LogPolicy::GetInstance().Unmute();
     try
     {
