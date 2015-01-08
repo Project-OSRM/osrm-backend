@@ -73,11 +73,6 @@ struct Null
 {
 };
 
-struct char_array
-{
-    std::vector<char> values;
-};
-
 using Value = mapbox::util::variant<String,
                                     Number,
                                     mapbox::util::recursive_wrapper<Object>,
