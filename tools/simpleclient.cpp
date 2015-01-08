@@ -32,8 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
+#include <osrm/libosrm_config.hpp>
 #include <osrm/route_parameters.hpp>
-#include <osrm/server_paths.hpp>
 
 #include <string>
 
@@ -44,16 +44,17 @@ int main(int argc, const char *argv[])
     {
         std::string ip_address;
         int ip_port, requested_thread_num;
-        bool use_shared_memory = false, trial_run = false;
-        ServerPaths server_paths;
+        bool trial_run = false;
+        libosrm_config lib_config;
         const unsigned init_result = GenerateServerProgramOptions(argc,
                                                                   argv,
-                                                                  server_paths,
+                                                                  lib_config.server_paths,
                                                                   ip_address,
                                                                   ip_port,
                                                                   requested_thread_num,
-                                                                  use_shared_memory,
-                                                                  trial_run);
+                                                                  lib_config.use_shared_memory,
+                                                                  trial_run,
+                                                                  lib_config.max_locations_distance_table);
 
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
@@ -65,7 +66,7 @@ int main(int argc, const char *argv[])
         }
         SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
-        OSRM routing_machine(server_paths, use_shared_memory);
+        OSRM routing_machine(lib_config);
 
         RouteParameters route_parameters;
         route_parameters.zoom_level = 18;           // no generalization

@@ -25,30 +25,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_H
-#define OSRM_H
+#ifndef SERVER_CONFIG_HPP
+#define SERVER_CONFIG_HPP
 
-#include <osrm/libosrm_config.hpp>
+#include <osrm/server_paths.hpp>
 
-#include <memory>
-
-class OSRM_impl;
-struct RouteParameters;
-
-namespace JSON
+struct libosrm_config
 {
-struct Object;
-}
+    libosrm_config(const libosrm_config&) = delete;
+    libosrm_config()
+        : max_locations_distance_table(100)
+        , use_shared_memory(false)
+    {}
 
-class OSRM
-{
-  private:
-    std::unique_ptr<OSRM_impl> OSRM_pimpl_;
+    libosrm_config(const ServerPaths &paths, const bool flag, const int max)
+        : server_paths(paths)
+        , max_locations_distance_table(max)
+        , use_shared_memory(flag)
+    {}
 
-  public:
-    explicit OSRM(libosrm_config &lib_config);
-    ~OSRM();
-    int RunQuery(RouteParameters &route_parameters, JSON::Object &json_result);
+    ServerPaths server_paths;
+    int max_locations_distance_table;
+    bool use_shared_memory;
 };
 
-#endif // OSRM_H
+#endif // SERVER_CONFIG_HPP
