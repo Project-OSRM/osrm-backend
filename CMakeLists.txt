@@ -17,7 +17,7 @@ if(PROTOBUF_PROTOC_EXECUTABLE STREQUAL "PROTOBUF_PROTOC_EXECUTABLE-NOTFOUND")
 endif()
 
 include_directories(${PROTOBUF_INCLUDE_DIRS})
-file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/Descriptors/*.proto")
+file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/descriptors/*.proto")
 PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
 add_library(PBFoutput OBJECT ${ProtoSources} ${ProtoHeaders})
 
