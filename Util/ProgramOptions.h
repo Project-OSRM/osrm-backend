@@ -197,12 +197,12 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         "threads,t",
         boost::program_options::value<int>(&requested_num_threads)->default_value(8),
         "Number of threads to use")(
-        "sharedmemory,s",
+        "shared-memory,s",
         boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
         "Load data from shared memory")(
-        "max_locations_distance_table",
+        "max-table-size,m",
         boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
-        "Max locations supported in distance table query");
+        "Max. locations supported in distance table query");
 
     // hidden options, will be allowed both on command line and in config
     // file, but will not be shown to the user
