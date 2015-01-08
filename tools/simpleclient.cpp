@@ -32,8 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
+#include <osrm/libosrm_config.hpp>
 #include <osrm/route_parameters.hpp>
-#include <osrm/ServerConfig.h>
 
 #include <string>
 
@@ -45,16 +45,16 @@ int main(int argc, const char *argv[])
         std::string ip_address;
         int ip_port, requested_thread_num;
         bool trial_run = false;
-        ServerConfig server_config;
+        libosrm_config lib_config;
         const unsigned init_result = GenerateServerProgramOptions(argc,
                                                                   argv,
-                                                                  server_config.server_paths,
+                                                                  lib_config.server_paths,
                                                                   ip_address,
                                                                   ip_port,
                                                                   requested_thread_num,
-                                                                  server_config.use_shared_memory,
+                                                                  lib_config.use_shared_memory,
                                                                   trial_run,
-                                                                  server_config.max_locations_distance_table);
+                                                                  lib_config.max_locations_distance_table);
 
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
@@ -66,7 +66,7 @@ int main(int argc, const char *argv[])
         }
         SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
-        OSRM routing_machine(server_config);
+        OSRM routing_machine(lib_config);
 
         RouteParameters route_parameters;
         route_parameters.zoom_level = 18;           // no generalization

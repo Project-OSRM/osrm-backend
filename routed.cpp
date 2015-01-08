@@ -69,21 +69,21 @@ int main(int argc, const char *argv[])
     {
         LogPolicy::GetInstance().Unmute();
 
-        bool use_shared_memory = false, trial_run = false;
+        bool trial_run = false;
         std::string ip_address;
-        int ip_port, requested_thread_num, max_locations_distance_table;
+        int ip_port, requested_thread_num;
 
-        ServerPaths server_paths;
+        libosrm_config lib_config;
 
         const unsigned init_result = GenerateServerProgramOptions(argc,
                                                                   argv,
-                                                                  server_paths,
+                                                                  lib_config.server_paths,
                                                                   ip_address,
                                                                   ip_port,
                                                                   requested_thread_num,
-                                                                  use_shared_memory,
+                                                                  lib_config.use_shared_memory,
                                                                   trial_run,
-                                                                  max_locations_distance_table);
+                                                                  lib_config.max_locations_distance_table);
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
             return 0;
@@ -102,7 +102,7 @@ int main(int argc, const char *argv[])
 #endif
         SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
-        if (use_shared_memory)
+        if (lib_config.use_shared_memory)
         {
             SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
         }
@@ -118,8 +118,7 @@ int main(int argc, const char *argv[])
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        ServerConfig server_config(server_paths, use_shared_memory, max_locations_distance_table);
-        OSRM osrm_lib(server_config);
+        OSRM osrm_lib(lib_config);
         auto routing_server =
             Server::CreateServer(ip_address, ip_port, requested_thread_num);
 

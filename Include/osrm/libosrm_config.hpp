@@ -30,14 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/server_paths.hpp>
 
-struct ServerConfig
+struct libosrm_config
 {
-    ServerConfig()
+    libosrm_config(const libosrm_config&) = delete;
+    libosrm_config()
         : max_locations_distance_table(100)
         , use_shared_memory(false)
     {}
 
-    ServerConfig(const ServerPaths &paths, const bool flag, const int max)
+    libosrm_config(const ServerPaths &paths, const bool flag, const int max)
         : server_paths(paths)
         , max_locations_distance_table(max)
         , use_shared_memory(flag)

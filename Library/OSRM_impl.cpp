@@ -55,9 +55,9 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(ServerConfig &serverConfig)
+OSRM_impl::OSRM_impl(libosrm_config &lib_config)
 {
-    if (serverConfig.use_shared_memory)
+    if (lib_config.use_shared_memory)
     {
         barrier = osrm::make_unique<SharedBarriers>();
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
@@ -65,13 +65,13 @@ OSRM_impl::OSRM_impl(ServerConfig &serverConfig)
     else
     {
         // populate base path
-        populate_base_path(serverConfig.server_paths);
-        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(serverConfig.server_paths);
+        populate_base_path(lib_config.server_paths);
+        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(lib_config.server_paths);
     }
 
     // The following plugins handle all requests.
     RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
-        serverConfig.max_locations_distance_table));
+        lib_config.max_locations_distance_table));
     RegisterPlugin(new HelloWorldPlugin());
     RegisterPlugin(new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
@@ -151,8 +151,8 @@ int OSRM_impl::RunQuery(RouteParameters &route_parameters, JSON::Object &json_re
 
 // proxy code for compilation firewall
 
-OSRM::OSRM(ServerConfig server_config)
-    : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(server_config))
+OSRM::OSRM(libosrm_config &lib_config)
+    : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config))
 {
 }
 
