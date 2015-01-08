@@ -53,9 +53,11 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 {
   private:
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
+    int max_locations_distance_table;
 
   public:
-    explicit DistanceTablePlugin(DataFacadeT *facade) : descriptor_string("table"), facade(facade)
+    explicit DistanceTablePlugin(DataFacadeT *facade, const int max_locations_distance_table) :
+      max_locations_distance_table(max_locations_distance_table), descriptor_string("table"), facade(facade)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
@@ -72,8 +74,9 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         }
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
-        unsigned max_locations =
-            std::min(100u, static_cast<unsigned>(route_parameters.coordinates.size()));
+        unsigned max_locations = std::min(static_cast<unsigned>(max_locations_distance_table),
+                                          static_cast<unsigned>(route_parameters.coordinates.size()));
+
         PhantomNodeArray phantom_node_vector(max_locations);
         for (const auto i : osrm::irange(0u, max_locations))
         {

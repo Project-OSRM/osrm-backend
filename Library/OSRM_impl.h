@@ -32,10 +32,10 @@ class BasePlugin;
 namespace http { class Reply; }
 struct RouteParameters;
 
-#include <osrm/json_container.hpp>
-#include <osrm/server_paths.hpp>
-
 #include "../data_structures/query_edge.hpp"
+
+#include <osrm/json_container.hpp>
+#include <osrm/ServerConfig.h>
 
 #include <memory>
 #include <unordered_map>
@@ -50,7 +50,7 @@ class OSRM_impl
     using PluginMap = std::unordered_map<std::string, BasePlugin *>;
 
   public:
-    OSRM_impl(ServerPaths paths, const bool use_shared_memory);
+    OSRM_impl(ServerConfig &serverConfig);
     OSRM_impl(const OSRM_impl &) = delete;
     virtual ~OSRM_impl();
     int RunQuery(RouteParameters &route_parameters, JSON::Object &json_result);
