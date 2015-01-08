@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/json_container.hpp>
 
+#include <type_traits>
+
 namespace JSON {
 
 struct PBFToArrayRenderer : mapbox::util::static_visitor<>
@@ -43,27 +45,9 @@ struct PBFToArrayRenderer : mapbox::util::static_visitor<>
         out.insert(out.end(), string.value.begin(), string.value.end());
     }
 
-    void operator()(const Number &number) const
-    {
-    }
-
-    void operator()(const Object &object) const
-    {
-    }
-
-    void operator()(const Array &array) const
-    {
-    }
-
-    void operator()(const True &) const
-    {
-    }
-
-    void operator()(const False &) const
-    {
-    }
-
-    void operator()(const Null &) const
+    template<class Other>
+    typename std::enable_if<!std::is_same<Other, String>::value, void>::type
+    operator()(const Other &other) const
     {
     }
 
@@ -72,7 +56,7 @@ struct PBFToArrayRenderer : mapbox::util::static_visitor<>
 };
 
 template<class JSONObject>
-inline void pbf_render(std::vector<char> &out, const JSONObject &object)
+void pbf_render(std::vector<char> &out, const JSONObject &object)
 {
     Value value = object;
     mapbox::util::apply_visitor(PBFToArrayRenderer(out), value);
