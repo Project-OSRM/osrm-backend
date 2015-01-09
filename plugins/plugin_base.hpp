@@ -25,8 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASE_PLUGIN_HPP
-#define BASE_PLUGIN_HPP
+#ifndef PLUGIN_BASE_HPP
+#define PLUGIN_BASE_HPP
+
+#include "../descriptors/descriptor_base.hpp"
 
 #include <osrm/coordinate.hpp>
 #include <osrm/json_container.hpp>
@@ -38,7 +40,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class BasePlugin
 {
   public:
-    BasePlugin() {}
+    const DescriptorTable descriptor_table;
+    BasePlugin() : descriptor_table({{"json", 0}, {"gpx", 1}, {"pbf", 2}})
+    {
+        // descriptor_table.emplace("json", 0);
+        // descriptor_table.emplace("gpx", 1);
+        // descriptor_table.emplace("pbf", 2);
+        // descriptor_table.emplace("geojson", 3);
+    }
+
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BasePlugin() {}
     virtual const std::string GetDescriptor() const = 0;
@@ -58,4 +68,4 @@ class BasePlugin
     }
 };
 
-#endif /* BASE_PLUGIN_HPP */
+#endif /* PLUGIN_BASE_HPP */

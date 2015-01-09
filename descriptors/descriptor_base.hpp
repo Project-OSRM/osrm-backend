@@ -46,9 +46,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct DescriptorTable : public std::unordered_map<std::string, unsigned>
 {
-    unsigned get_id(const std::string &key)
+    using super_class = typename std::unordered_map<std::string, unsigned>;
+    DescriptorTable(super_class &&map)
     {
-        auto iter = find(key);
+        super_class(std::forward<super_class>(map));
+    }
+    unsigned get_id(const std::string &key) const
+    {
+        const auto iter = find(key);
         if (iter != end())
         {
             return iter->second;
