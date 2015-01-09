@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct DescriptorTable : public std::unordered_map<std::string, unsigned>
 {
-    using super_class = typename std::unordered_map<std::string, unsigned>;
+    using super_class = std::unordered_map<std::string, unsigned>;
     DescriptorTable(super_class &&map)
     {
         super_class(std::forward<super_class>(map));
