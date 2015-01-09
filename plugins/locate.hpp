@@ -62,18 +62,19 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
 
         if ("pbf" == route_parameters.output_format)
         {
-            protobuffer_response::location_response location_response;
-            location_response.set_status(207);
+            protobuffer_response::locate_response locate_response;
+            locate_response.set_status(207);
             if (found_coordinate)
             {
-                location_response.set_status(207);
+                locate_response.set_status(0);
                 protobuffer_response::Point point;
                 point.set_lat(result.lat / COORDINATE_PRECISION);
                 point.set_lon(result.lon / COORDINATE_PRECISION);
-                location_response.mutable_mapped_coordinate()->CopyFrom(point);
+                locate_response.mutable_mapped_coordinate()->CopyFrom(point);
             }
             return 200;
         }
+
         json_result.values["status"] = 207;
         if (found_coordinate)
         {
