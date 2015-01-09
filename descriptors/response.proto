@@ -60,3 +60,11 @@ message distance_matrix
 {
     repeated matrix_row row = 1;
 }
+
+message location_response
+{
+    required uint32 status = 1;
+    optional Point  location = 2;
+    optional string name = 3;
+    optional uint32 results = 4;
+}
