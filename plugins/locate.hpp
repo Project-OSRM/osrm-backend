@@ -57,9 +57,8 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
         }
 
         FixedPointCoordinate result;
-        bool found_coordinate = facade->LocateClosestEndPointForCoordinate(
-                                    route_parameters.coordinates.front(),
-                                    result);
+        const bool found_coordinate = facade->LocateClosestEndPointForCoordinate(
+            route_parameters.coordinates.front(), result);
 
         if ("pbf" == route_parameters.output_format)
         {
