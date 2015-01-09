@@ -51,12 +51,12 @@ message Response {
     optional Hint hint = 5;
 }
 
-message MatrixRow
+message matrix_row
 {
     repeated uint32 entry = 1;
 }
 
-message DistanceMatrix
+message distance_matrix
 {
-    repeated MatrixRow row = 1;
+    repeated matrix_row row = 1;
 }
