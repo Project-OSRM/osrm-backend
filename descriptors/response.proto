@@ -1,0 +1,62 @@
+package protobufResponse;
+
+message Point
+{
+    required float lat = 1;
+    required float lon = 2;
+}
+
+message RouteSummary
+{
+    required uint32 total_distance = 1;
+    required uint32 total_time = 2;
+    required string start_point = 3;
+    required string end_point = 4;
+}
+
+message RouteInstructions
+{
+    required string instruction_id = 1;
+    required string street_name = 2;
+    required int32 length = 3;
+    required int32 position = 4;
+    required int32 time = 5;
+    required string length_str = 6;
+    required string earth_direction = 7;
+    required int32 azimuth = 8;
+    optional int32 travel_mode = 9;
+}
+
+message Route
+{
+    optional RouteSummary route_summary = 1;
+    optional string route_geometry = 2;
+    repeated Point via_points = 3;
+    repeated int32 via_indices = 4;
+    repeated string route_name = 5;
+    repeated RouteInstructions route_instructions = 6;
+}
+
+message Hint
+{
+    required int32 check_sum = 1;
+    repeated string location = 2;
+}
+
+message Response {
+    required int32  status = 1;
+    required string status_message = 2;
+    optional Route main_route = 3;
+    optional Route alternative_route = 4;
+    optional Hint hint = 5;
+}
+
+message MatrixRow
+{
+    repeated uint32 entry = 1;
+}
+
+message DistanceMatrix
+{
+    repeated MatrixRow row = 1;
+}
