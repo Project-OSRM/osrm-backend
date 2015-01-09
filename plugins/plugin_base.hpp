@@ -41,12 +41,8 @@ class BasePlugin
 {
   public:
     const DescriptorTable descriptor_table;
-    BasePlugin() : descriptor_table({{"json", 0}, {"gpx", 1}, {"pbf", 2}})
+    BasePlugin() : descriptor_table({{"json", 0}, {"gpx", 1}, {"pbf", 2}/*, {"geojson", 3}*/})
     {
-        // descriptor_table.emplace("json", 0);
-        // descriptor_table.emplace("gpx", 1);
-        // descriptor_table.emplace("pbf", 2);
-        // descriptor_table.emplace("geojson", 3);
     }
 
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
