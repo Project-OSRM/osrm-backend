@@ -61,7 +61,7 @@ message distance_matrix
     repeated matrix_row row = 1;
 }
 
-message location
+message named_location
 {
     required Point  mapped_coordinate = 1;
     required string name = 2;
@@ -76,5 +76,5 @@ message locate_response
 message nearest_response
 {
     required uint32 status = 1;
-    repeated location location = 2;
+    repeated named_location location = 2;
 }
