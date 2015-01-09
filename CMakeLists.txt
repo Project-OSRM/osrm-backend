@@ -104,14 +104,7 @@ add_executable(rtree-bench EXCLUDE_FROM_ALL benchmarks/static_rtree.cpp $<TARGET
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_BUILD_TYPE Release)
 endif()
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-  message(STATUS "Configuring OSRM in debug mode")
-  if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    message(STATUS "adding profiling flags")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage -fno-inline")
-    set(CMAKE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage -fno-inline")
-  endif()
-endif()
+
 if(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
   # Check if LTO is available

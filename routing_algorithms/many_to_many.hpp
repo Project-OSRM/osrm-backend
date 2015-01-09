@@ -156,7 +156,6 @@ template <class DataFacadeT,
 
             ++source_id;
         }
-        BOOST_ASSERT(source_id == target_id);
         return result_table;
     }
 

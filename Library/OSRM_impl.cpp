@@ -78,6 +78,7 @@ OSRM_impl::OSRM_impl(ServerPaths server_paths, const bool use_shared_memory)
     RegisterPlugin(new MultiTargetPlugin<BaseDataFacade<QueryEdge::EdgeData>, true>(query_data_facade));
     RegisterPlugin(new MultiTargetPlugin<BaseDataFacade<QueryEdge::EdgeData>, false>(query_data_facade));
     RegisterPlugin(new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
+    RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>, false, false>(query_data_facade));
     RegisterPlugin(new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
 }

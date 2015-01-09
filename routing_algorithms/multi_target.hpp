@@ -83,26 +83,31 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
         // Fill forward heap with the source location phantom node(s).
         // The source location is located at index 0.
         // The target locations are located at index [1, ..., n].
+        EdgeWeight min_edge_offset = 0;
         for (const PhantomNode &phantom_node : source)
         {
             if (SPECIAL_NODEID != phantom_node.forward_node_id)
             {
-                forward_heap.Insert(phantom_node.forward_node_id,
-                                    (forward ? -1 : 1) * phantom_node.GetForwardWeightPlusOffset(),
+                EdgeWeight offset = (forward ? -1 : 1) * phantom_node.GetForwardWeightPlusOffset();
+                forward_heap.Insert(phantom_node.forward_node_id, offset,
                                     phantom_node.forward_node_id);
+                min_edge_offset = std::min(min_edge_offset, offset);
             }
             if (SPECIAL_NODEID != phantom_node.reverse_node_id)
             {
+                EdgeWeight offset = (forward ? -1 : 1) * phantom_node.GetReverseWeightPlusOffset();
                 forward_heap.Insert(phantom_node.reverse_node_id,
                                     (forward ? -1 : 1) * phantom_node.GetReverseWeightPlusOffset(),
                                     phantom_node.reverse_node_id);
+                min_edge_offset = std::min(min_edge_offset, offset);
             }
         }
 
         for (auto const &target : targets)
         {
             const std::vector<PhantomNode> &phantom_node_vector = target;
-            auto result = FindShortestPath(source, phantom_node_vector, forward_heap, reverse_heap);
+            auto result = FindShortestPath(source, phantom_node_vector, forward_heap, reverse_heap,
+                                           min_edge_offset);
             results->emplace_back(std::move(result));
         }
 
@@ -115,7 +120,8 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
     std::pair<EdgeWeight, double> FindShortestPath(const std::vector<PhantomNode> &source,
                                                    const std::vector<PhantomNode> &target,
                                                    QueryHeap &forward_heap,
-                                                   QueryHeap &backward_heap) const
+                                                   QueryHeap &backward_heap,
+                                                   EdgeWeight min_edge_offset) const
     {
         NodeID middle = UINT_MAX;
         int local_upper_bound = INT_MAX;
@@ -127,15 +133,17 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
         {
             if (SPECIAL_NODEID != phantom_node.forward_node_id)
             {
-                backward_heap.Insert(phantom_node.forward_node_id,
-                                     (forward ? 1 : -1) * phantom_node.GetForwardWeightPlusOffset(),
+                EdgeWeight offset = (forward ? 1 : -1) * phantom_node.GetForwardWeightPlusOffset();
+                backward_heap.Insert(phantom_node.forward_node_id, offset,
                                      phantom_node.forward_node_id);
+                min_edge_offset = std::min(min_edge_offset, offset);
             }
             if (SPECIAL_NODEID != phantom_node.reverse_node_id)
             {
-                backward_heap.Insert(phantom_node.reverse_node_id,
-                                     (forward ? 1 : -1) * phantom_node.GetReverseWeightPlusOffset(),
+                EdgeWeight offset = (forward ? 1 : -1) * phantom_node.GetReverseWeightPlusOffset();
+                backward_heap.Insert(phantom_node.reverse_node_id, offset,
                                      phantom_node.reverse_node_id);
+                min_edge_offset = std::min(min_edge_offset, offset);
             }
         }
 
@@ -149,13 +157,13 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
             {
                 forward_heap_finished =
                     forward_heap_finished ||
-                    super::RoutingStep(forward_heap, backward_heap, &middle, &local_upper_bound, 0,
-                                       forward_dir, false);
+                    super::RoutingStep(forward_heap, backward_heap, &middle, &local_upper_bound,
+                                       min_edge_offset, forward_dir, false);
             }
             if (0 < backward_heap.Size())
             {
-                super::RoutingStep(backward_heap, forward_heap, &middle, &local_upper_bound, 0,
-                                   !forward_dir);
+                super::RoutingStep(backward_heap, forward_heap, &middle, &local_upper_bound,
+                                   min_edge_offset, !forward_dir);
             }
         }
 
@@ -165,8 +173,6 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
             return std::make_pair(INVALID_EDGE_WEIGHT, 0);
         }
 
-        return std::make_pair(round(local_upper_bound / 10.), 0);
-        /*
         // Calculate exact distance in km.
         std::vector<NodeID> packed_path;
         super::RetrievePackedPathFromHeap(forward_heap, backward_heap, middle, packed_path);
@@ -222,7 +228,6 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
         }
 
         return std::make_pair(round(local_upper_bound / 10.), distance);
-        */
     }
 };
 

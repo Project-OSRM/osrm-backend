@@ -81,7 +81,8 @@ template <class DataFacadeT, bool forward> class MultiTargetPlugin final : publi
             }
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
                                                             phantom_node_vector[i],
-                                                            route_parameters.zoom_level, 1);
+                                                            route_parameters.zoom_level,
+                                                            1);
 
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }

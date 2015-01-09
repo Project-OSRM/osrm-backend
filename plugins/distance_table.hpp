@@ -70,24 +70,11 @@ template <class DataFacadeT,
         const RouteParameters &route_parameters, unsigned &calctime_in_us)
     {
         if (!check_all_coordinates(route_parameters.coordinates))
-        {
-            return nullptr;
-        }
-
-        RawRouteData raw_route;
-
-        if (std::any_of(begin(route_parameters.coordinates),
-                        end(route_parameters.coordinates),
-                        [&](FixedPointCoordinate coordinate) {
-                            return !coordinate.is_valid();
-                        }))
-        {
-            return nullptr;
-        }
+            return {};
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
         PhantomNodeArray phantom_node_vector(route_parameters.coordinates.size());
-        for (const auto i : osrm::irange(1ul, route_parameters.coordinates.size()))
+        for (const auto i : osrm::irange(0ul, route_parameters.coordinates.size()))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -108,9 +95,9 @@ template <class DataFacadeT,
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
 
-        TIMER_START(distance_table);
         std::shared_ptr<std::vector<EdgeWeight>> result_table;
 
+        TIMER_START(distance_table);
         if (single_source)
         {
             result_table = search_engine_ptr->distance_table_single_source(phantom_node_vector);
@@ -123,8 +110,8 @@ template <class DataFacadeT,
         {
             result_table = search_engine_ptr->distance_table(phantom_node_vector);
         }
-
         TIMER_STOP(distance_table);
+
         calctime_in_us = TIMER_USEC(distance_table);
 
         return result_table;
@@ -140,10 +127,11 @@ template <class DataFacadeT,
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
+
         JSON::Object json_object;
         JSON::Array json_array;
-        const unsigned number_of_locations = route_parameters.coordinates.size();
-        for (unsigned row = 0; row < number_of_locations; ++row)
+        const auto number_of_locations = route_parameters.coordinates.size();
+        for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
         {
             JSON::Array json_row;
             auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
