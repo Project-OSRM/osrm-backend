@@ -1,4 +1,4 @@
-package protobufResponse;
+package protobuffer_response;
 
 message Point
 {
