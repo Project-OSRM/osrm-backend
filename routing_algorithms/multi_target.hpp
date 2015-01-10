@@ -138,6 +138,7 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
                                      phantom_node.forward_node_id);
                 min_edge_offset = std::min(min_edge_offset, offset);
             }
+
             if (SPECIAL_NODEID != phantom_node.reverse_node_id)
             {
                 EdgeWeight offset = (forward ? 1 : -1) * phantom_node.GetReverseWeightPlusOffset();
@@ -148,22 +149,17 @@ class MultiTargetRouting final : public BasicRoutingInterface<DataFacadeT>
         }
 
         // Execute bidirectional Dijkstra shortest path search.
-        bool forward_heap_finished = false;
-        while (0 < backward_heap.Size() || (0 < forward_heap.Size() && !forward_heap_finished))
+        while (0 < backward_heap.Size() || 0 < forward_heap.Size())
         {
-            bool forward_dir = forward ? true : false;
-
             if (0 < forward_heap.Size())
             {
-                forward_heap_finished =
-                    forward_heap_finished ||
-                    super::RoutingStep(forward_heap, backward_heap, &middle, &local_upper_bound,
-                                       min_edge_offset, forward_dir, false);
+                super::RoutingStep(forward_heap, backward_heap, &middle, &local_upper_bound,
+                                   min_edge_offset, forward, false);
             }
             if (0 < backward_heap.Size())
             {
                 super::RoutingStep(backward_heap, forward_heap, &middle, &local_upper_bound,
-                                   min_edge_offset, !forward_dir);
+                                   min_edge_offset, !forward);
             }
         }
 

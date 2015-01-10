@@ -81,13 +81,10 @@ template <class DataFacadeT> class BasicRoutingInterface
             }
         }
 
-        if (distance + min_edge_offset > *upper_bound)
+        if (clear_if_finished && distance + min_edge_offset > *upper_bound)
         {
             // SimpleLogger().Write() << "min_edge_offset: " << min_edge_offset;
-            if (clear_if_finished)
-            {
-                forward_heap.DeleteAll();
-            }
+            forward_heap.DeleteAll();
             return true;
         }
 
