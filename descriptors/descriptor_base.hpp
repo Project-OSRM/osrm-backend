@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/phantom_node.hpp"
 #include "../Util/bearing.hpp"
 #include "../Util/cast.hpp"
+#include "../Util/simple_logger.hpp"
 #include "../typedefs.h"
 
 #include <osrm/json_container.hpp>
@@ -47,10 +48,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct DescriptorTable : public std::unordered_map<std::string, unsigned>
 {
     using super_class = std::unordered_map<std::string, unsigned>;
-    DescriptorTable(super_class &&map)
+    DescriptorTable(super_class &&map) : super_class(std::forward<super_class>(map))
     {
-        super_class(std::forward<super_class>(map));
     }
+
     unsigned get_id(const std::string &key) const
     {
         const auto iter = find(key);
