@@ -247,8 +247,6 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
         response.mutable_hint()->CopyFrom(hint);
         response.mutable_main_route()->CopyFrom(main_route);
 
-        SimpleLogger().Write(logDEBUG) << response.DebugString();
-
         response.SerializeToString(&result_string.value);
         json_result.values["pbf"] = result_string;
     }
