@@ -141,7 +141,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                     matrix_row->add_entry(entry);
                 }
             }
-            protobuffer_response::Response response;
+            protobuffer_response::route_response response;
 
             JSON::String result_string;
             distance_matrix.SerializeToString(&result_string.value);

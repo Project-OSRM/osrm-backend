@@ -67,10 +67,10 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
             if (found_coordinate)
             {
                 locate_response.set_status(0);
-                protobuffer_response::Point point;
-                point.set_lat(result.lat / COORDINATE_PRECISION);
-                point.set_lon(result.lon / COORDINATE_PRECISION);
-                locate_response.mutable_mapped_coordinate()->CopyFrom(point);
+                protobuffer_response::coordinate coordinate;
+                coordinate.set_lat(result.lat / COORDINATE_PRECISION);
+                coordinate.set_lon(result.lon / COORDINATE_PRECISION);
+                locate_response.mutable_mapped_coordinate()->CopyFrom(coordinate);
             }
             return 200;
         }

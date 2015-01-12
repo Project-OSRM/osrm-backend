@@ -80,10 +80,10 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                      osrm::irange<std::size_t>(0, std::min(number_of_results, output_size)))
                 {
                     protobuffer_response::named_location location;
-                    protobuffer_response::Point point;
-                    point.set_lat(phantom_node_vector.at(i).location.lat / COORDINATE_PRECISION);
-                    point.set_lon(phantom_node_vector.at(i).location.lon / COORDINATE_PRECISION);
-                    location.mutable_mapped_coordinate()->CopyFrom(point);
+                    protobuffer_response::coordinate coordinate;
+                    coordinate.set_lat(phantom_node_vector.at(i).location.lat / COORDINATE_PRECISION);
+                    coordinate.set_lon(phantom_node_vector.at(i).location.lon / COORDINATE_PRECISION);
+                    location.mutable_mapped_coordinate()->CopyFrom(coordinate);
                     std::string temp_string;
                     facade->GetName(phantom_node_vector.at(i).name_id, temp_string);
                     location.set_name(temp_string);
