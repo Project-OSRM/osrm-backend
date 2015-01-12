@@ -53,69 +53,101 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                       osrm::json::Object &json_result) override final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() ||
-            !route_parameters.coordinates.front().is_valid())
+        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
         {
             return 400;
         }
-        const auto number_of_results = static_cast<std::size_t>(route_parameters.num_results);
+        auto number_of_results = static_cast<std::size_t>(route_parameters.num_results);
         std::vector<PhantomNode> phantom_node_vector;
         facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates.front(),
                                                         phantom_node_vector,
                                                         static_cast<int>(number_of_results));
 
-        const bool found_coordinate = !phantom_node_vector.empty() &&
-                                      phantom_node_vector.front().is_valid();
-
-        const auto output_size = std::min(number_of_results, phantom_node_vector.size());
-
-        if ("pbf" == route_parameters.output_format)
+        if (phantom_node_vector.empty() || !phantom_node_vector.front().is_valid())
         {
-            protobuffer_response::nearest_response nearest_response;
-            nearest_response.set_status(207);
-            if (found_coordinate)
+            if ("pbf" == route_parameters.output_format)
             {
-                nearest_response.set_status(0);
-                for (const auto i :
-                     osrm::irange<std::size_t>(0, std::min(number_of_results, output_size)))
+                protobuffer_response::locate_response locate_response;
+                locate_response.set_status(207);
+                response.SerializeToString(&result_string.value);
+                json_result.values["pbf"] = result_string;
+            } else {
+                json_result.values["status"] = 207;
+            }
+        }
+        else
+        {
+            if ("pbf" == route_parameters.output_format)
+            {
+                protobuffer_response::locate_response locate_response;
+
+                if (number_of_results > 1)
                 {
-                    protobuffer_response::named_location location;
-                    protobuffer_response::coordinate coordinate;
-                    coordinate.set_lat(phantom_node_vector.at(i).location.lat / COORDINATE_PRECISION);
-                    coordinate.set_lon(phantom_node_vector.at(i).location.lon / COORDINATE_PRECISION);
-                    location.mutable_mapped_coordinate()->CopyFrom(coordinate);
+                    auto vector_length = phantom_node_vector.size();
+                    for (const auto i : osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
+                    {
+                        JSON::Array json_coordinate;
+                        json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
+                                                         COORDINATE_PRECISION);
+                        json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
+                                                         COORDINATE_PRECISION);
+                        result.values["mapped coordinate"] = json_coordinate;
+                        std::string temp_string;
+                        facade->GetName(phantom_node_vector.at(i).name_id, temp_string);
+                        result.values["name"] = temp_string;
+                        results.values.push_back(result);
+                    }
+                    json_result.values["results"] = results;
+                }
+                else
+                {
+                    JSON::Array json_coordinate;
+                    json_coordinate.values.push_back(phantom_node_vector.front().location.lat /
+                                                     COORDINATE_PRECISION);
+                    json_coordinate.values.push_back(phantom_node_vector.front().location.lon /
+                                                     COORDINATE_PRECISION);
+                    json_result.values["mapped_coordinate"] = json_coordinate;
                     std::string temp_string;
-                    facade->GetName(phantom_node_vector.at(i).name_id, temp_string);
-                    location.set_name(temp_string);
-                    nearest_response.add_location()->CopyFrom(location);
+                    facade->GetName(phantom_node_vector.front().name_id, temp_string);
+                    json_result.values["name"] = temp_string;
+                }
+            } else {
+                json_result.values["status"] = 0;
+
+                if (number_of_results > 1)
+                {
+                    JSON::Array results;
+
+                    auto vector_length = phantom_node_vector.size();
+                    for (const auto i : osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
+                    {
+                        JSON::Array json_coordinate;
+                        JSON::Object result;
+                        json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
+                                                         COORDINATE_PRECISION);
+                        json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
+                                                         COORDINATE_PRECISION);
+                        result.values["mapped coordinate"] = json_coordinate;
+                        std::string temp_string;
+                        facade->GetName(phantom_node_vector.at(i).name_id, temp_string);
+                        result.values["name"] = temp_string;
+                        results.values.push_back(result);
+                    }
+                    json_result.values["results"] = results;
+                }
+                else
+                {
+                    JSON::Array json_coordinate;
+                    json_coordinate.values.push_back(phantom_node_vector.front().location.lat /
+                                                     COORDINATE_PRECISION);
+                    json_coordinate.values.push_back(phantom_node_vector.front().location.lon /
+                                                     COORDINATE_PRECISION);
+                    json_result.values["mapped_coordinate"] = json_coordinate;
+                    std::string temp_string;
+                    facade->GetName(phantom_node_vector.front().name_id, temp_string);
+                    json_result.values["name"] = temp_string;
                 }
             }
-            return 200;
-        }
-
-        json_result.values["status"] = 207;
-        if (found_coordinate)
-        {
-            json_result.values["status"] = 0;
-
-            JSON::Array results;
-
-            for (const auto i :
-                 osrm::irange<std::size_t>(0, std::min(number_of_results, output_size)))
-            {
-                osrm::json::Array json_coordinate;
-                osrm::json::Object result;
-                json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
-                                                 COORDINATE_PRECISION);
-                json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
-                                                 COORDINATE_PRECISION);
-                result.values["mapped coordinate"] = json_coordinate;
-                std::string temp_string;
-                facade->GetName(phantom_node_vector.at(i).name_id, temp_string);
-                result.values["name"] = temp_string;
-                results.values.push_back(result);
-            }
-            json_result.values["results"] = results;
         }
         return 200;
     }

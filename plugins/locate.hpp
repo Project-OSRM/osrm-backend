@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LOCATE_HPP
-#define LOCATE_HPP
+#ifndef LOCATE_PLUGIN_H
+#define LOCATE_PLUGIN_H
 
 #include "plugin_base.hpp"
 
@@ -62,8 +62,8 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
 
         if ("pbf" == route_parameters.output_format)
         {
+            osrm::json::String result_string;
             protobuffer_response::locate_response locate_response;
-            locate_response.set_status(207);
             if (found_coordinate)
             {
                 locate_response.set_status(0);
@@ -71,18 +71,23 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
                 coordinate.set_lat(result.lat / COORDINATE_PRECISION);
                 coordinate.set_lon(result.lon / COORDINATE_PRECISION);
                 locate_response.mutable_mapped_coordinate()->CopyFrom(coordinate);
+            } else {
+            locate_response.set_status(207);
+            response.SerializeToString(&result_string.value);
+            json_result.values["pbf"] = result_string;
             }
-            return 200;
-        }
+        return 200;
+        
 
-        json_result.values["status"] = 207;
         if (found_coordinate)
         {
-            json_result.values["status"] = 0;
             osrm::json::Array json_coordinate;
             json_coordinate.values.push_back(result.lat / COORDINATE_PRECISION);
             json_coordinate.values.push_back(result.lon / COORDINATE_PRECISION);
             json_result.values["mapped_coordinate"] = json_coordinate;
+            json_result.values["status"] = 0;
+        } else {
+            json_result.values["status"] = 207;
         }
         return 200;
     }
@@ -92,4 +97,4 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif /* LOCATE_HPP */
+#endif /* LOCATE_PLUGIN_H */
