@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LOCATE_PLUGIN_H
-#define LOCATE_PLUGIN_H
+#ifndef LOCATE_HPP
+#define LOCATE_HPP
 
 #include "plugin_base.hpp"
 
@@ -73,7 +73,7 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
                 locate_response.mutable_mapped_coordinate()->CopyFrom(coordinate);
             } else {
             locate_response.set_status(207);
-            response.SerializeToString(&result_string.value);
+            locate_response.SerializeToString(&result_string.value);
             json_result.values["pbf"] = result_string;
             }
         return 200;
@@ -97,4 +97,4 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif /* LOCATE_PLUGIN_H */
+#endif /* LOCATE_HPP */
