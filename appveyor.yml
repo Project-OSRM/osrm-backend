@@ -9,9 +9,6 @@ branches:
   only:
     - develop
 
-# Operating system (build VM template)
-os: Windows Server 2012 R2
-
 # scripts that are called at very beginning, before repo cloning
 init:
   - git config --global core.autocrlf input
