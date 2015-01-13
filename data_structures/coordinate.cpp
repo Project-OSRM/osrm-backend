@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/MercatorUtil.h"
+#include "../Util/mercator.hpp"
 #ifndef NDEBUG
 #include "../Util/simple_logger.hpp"
 #endif
@@ -160,11 +160,11 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
                                                    const FixedPointCoordinate &point)
 {
     // initialize values
-    const float x_value = static_cast<float>(lat2y(point.lat / COORDINATE_PRECISION));
+    const float x_value = static_cast<float>(mercator::lat2y(point.lat / COORDINATE_PRECISION));
     const float y_value = point.lon / COORDINATE_PRECISION;
-    float a = static_cast<float>(lat2y(source_coordinate.lat / COORDINATE_PRECISION));
+    float a = static_cast<float>(mercator::lat2y(source_coordinate.lat / COORDINATE_PRECISION));
     float b = source_coordinate.lon / COORDINATE_PRECISION;
-    float c = static_cast<float>(lat2y(target_coordinate.lat / COORDINATE_PRECISION));
+    float c = static_cast<float>(mercator::lat2y(target_coordinate.lat / COORDINATE_PRECISION));
     float d = target_coordinate.lon / COORDINATE_PRECISION;
     float p, q;
     if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
@@ -243,7 +243,7 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
     }
     else
     { // point lies in between
-        nearest_location.lat = static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
+        nearest_location.lat = static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
 
@@ -260,11 +260,11 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     BOOST_ASSERT(query_location.is_valid());
 
     // initialize values
-    const double x = lat2y(query_location.lat / COORDINATE_PRECISION);
+    const double x = mercator::lat2y(query_location.lat / COORDINATE_PRECISION);
     const double y = query_location.lon / COORDINATE_PRECISION;
-    const double a = lat2y(segment_source.lat / COORDINATE_PRECISION);
+    const double a = mercator::lat2y(segment_source.lat / COORDINATE_PRECISION);
     const double b = segment_source.lon / COORDINATE_PRECISION;
-    const double c = lat2y(segment_target.lat / COORDINATE_PRECISION);
+    const double c = mercator::lat2y(segment_target.lat / COORDINATE_PRECISION);
     const double d = segment_target.lon / COORDINATE_PRECISION;
     double p, q /*,mX*/, nY;
     if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
@@ -317,7 +317,7 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     else
     {
         // point lies in between
-        nearest_location.lat = static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
+        nearest_location.lat = static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
     BOOST_ASSERT(nearest_location.is_valid());
@@ -430,11 +430,11 @@ int FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
     const FixedPointCoordinate &segment_target)
 {
     // initialize values
-    const float x = static_cast<float>(lat2y(input_point.lat / COORDINATE_PRECISION));
+    const float x = static_cast<float>(mercator::lat2y(input_point.lat / COORDINATE_PRECISION));
     const float y = input_point.lon / COORDINATE_PRECISION;
-    const float a = static_cast<float>(lat2y(segment_source.lat / COORDINATE_PRECISION));
+    const float a = static_cast<float>(mercator::lat2y(segment_source.lat / COORDINATE_PRECISION));
     const float b = segment_source.lon / COORDINATE_PRECISION;
-    const float c = static_cast<float>(lat2y(segment_target.lat / COORDINATE_PRECISION));
+    const float c = static_cast<float>(mercator::lat2y(segment_target.lat / COORDINATE_PRECISION));
     const float d = segment_target.lon / COORDINATE_PRECISION;
 
     float p, q;
@@ -476,7 +476,7 @@ int FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
     {
         // point lies in between
         dx = input_point.lon - static_cast<int>(q * COORDINATE_PRECISION);
-        dy = input_point.lat - static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
+        dy = input_point.lat - static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
     }
 
     // return an approximation in the plane

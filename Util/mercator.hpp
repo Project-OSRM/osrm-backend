@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,19 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef MERCATOR_UTIL_H
-#define MERCATOR_UTIL_H
+#ifndef MERCATOR_HPP
+#define MERCATOR_HPP
 
-#include <cmath>
-
-inline double y2lat(const double a)
+struct mercator
 {
-    return 180. * M_1_PI * (2. * std::atan(std::exp(a * M_PI / 180.)) - M_PI_2);
-}
+    static double y2lat(const double a);
 
-inline double lat2y(const double a)
-{
-    return 180. * M_1_PI * std::log(std::tan(M_PI_4 + a * (M_PI / 180.) / 2.));
-}
+    static double lat2y(const double a);
+};
 
-#endif // MERCATOR_UTIL_H
+#endif // MERCATOR_HPP

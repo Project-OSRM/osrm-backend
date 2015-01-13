@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/floating_point.hpp"
 #include "../Util/integer_range.hpp"
-#include "../Util/MercatorUtil.h"
+#include "../Util/mercator.hpp"
 #include "../Util/osrm_exception.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/timing_util.hpp"
@@ -377,7 +377,7 @@ class StaticRTree
                         FixedPointCoordinate(coordinate_list.at(current_element.v).lat,
                                              coordinate_list.at(current_element.v).lon));
                     current_centroid.lat =
-                        COORDINATE_PRECISION * lat2y(current_centroid.lat / COORDINATE_PRECISION);
+                        COORDINATE_PRECISION * mercator::lat2y(current_centroid.lat / COORDINATE_PRECISION);
 
                     current_wrapper.m_hilbert_value = get_hilbert_number(current_centroid);
                 }
