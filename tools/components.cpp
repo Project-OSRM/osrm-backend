@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../algorithms/tiny_components.hpp"
-#include "../data_structures/dynamic_graph.hpp"
+#include "../data_structures/static_graph.hpp"
 #include "../Util/fingerprint.hpp"
 #include "../Util/graph_loader.hpp"
 #include "../Util/make_unique.hpp"
@@ -61,8 +61,8 @@ struct TarjanEdgeData
     unsigned name_id;
 };
 
-using TarjanDynamicGraph = DynamicGraph<TarjanEdgeData>;
-using TarjanEdge = TarjanDynamicGraph::InputEdge;
+using TarjanGraph = StaticGraph<TarjanEdgeData>;
+using TarjanEdge = TarjanGraph::InputEdge;
 
 void DeleteFileIfExists(const std::string &file_name)
 {
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
         traffic_lights_list.shrink_to_fit();
 
         // Building an node-based graph
-        DeallocatingVector<TarjanEdge> graph_edge_list;
+        std::vector<TarjanEdge> graph_edge_list;
         for (const NodeBasedEdge &input_edge : edge_list)
         {
             if (input_edge.source == input_edge.target)
@@ -177,14 +177,14 @@ int main(int argc, char *argv[])
                          "input edge vector not properly deallocated");
 
         tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
-        auto graph = std::make_shared<TarjanDynamicGraph>(number_of_nodes, graph_edge_list);
+        auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
         edge_list.clear();
         edge_list.shrink_to_fit();
 
         SimpleLogger().Write() << "Starting SCC graph traversal";
 
         RestrictionMap restriction_map(restriction_list);
-        auto tarjan = osrm::make_unique<TarjanSCC<TarjanDynamicGraph>>(graph,
+        auto tarjan = osrm::make_unique<TarjanSCC<TarjanGraph>>(graph,
                                                                        restriction_map,
                                                                        bollard_node_list);
         tarjan->run();
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
             p.printIncrement();
             for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
             {
-                const TarjanDynamicGraph::NodeIterator target = graph->GetTarget(current_edge);
+                const TarjanGraph::NodeIterator target = graph->GetTarget(current_edge);
 
                 if (source < target || graph->EndEdges(target) == graph->FindEdge(target, source))
                 {
