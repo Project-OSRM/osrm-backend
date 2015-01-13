@@ -33,15 +33,15 @@ OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/finger_print.cpp finger_print.cpp.alwaysbuild
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/fingerprint.cpp fingerprint.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/Util/finger_print.cpp.in
-  COMMENT "Configuring finger_print.cpp"
+    ${CMAKE_SOURCE_DIR}/Util/fingerprint.cpp.in
+  COMMENT "Configuring fingerprint.cpp"
   VERBATIM)
 
-add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/finger_print.cpp)
+add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/fingerprint.cpp)
 add_custom_target(tests DEPENDS datastructure-tests algorithm-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
@@ -88,7 +88,7 @@ set(
   ${HttpGlob}
 )
 add_library(COORDINATE OBJECT ${CoordinateGlob})
-add_library(FINGERPRINT OBJECT Util/finger_print.cpp)
+add_library(FINGERPRINT OBJECT Util/fingerprint.cpp)
 add_library(GITDESCRIPTION OBJECT Util/git_sha.cpp)
 add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)

@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 #include "../algorithms/tiny_components.hpp"
 #include "../data_structures/dynamic_graph.hpp"
+#include "../Util/fingerprint.hpp"
 #include "../Util/graph_loader.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/osrm_exception.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/finger_print.hpp"
 
 #include <boost/filesystem.hpp>
 

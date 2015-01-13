@@ -33,8 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/import_edge.hpp"
 #include "../data_structures/query_node.hpp"
 #include "../data_structures/restriction.hpp"
+#include "../Util/fingerprint.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/finger_print.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>

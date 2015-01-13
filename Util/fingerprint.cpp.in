@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "finger_print.hpp"
+#include "fingerprint.hpp"
 
 #include "osrm_exception.hpp"
 
