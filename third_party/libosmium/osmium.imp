@@ -1,0 +1,4 @@
+[
+    { "include": ["<bits/fcntl-linux.h>", "private", "<fcntl.h>", "public"] },
+    { "include": ["<sys/types.h>", "public", "<cstdint>", "public"] }
+]

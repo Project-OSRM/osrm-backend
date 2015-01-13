@@ -1,0 +1,55 @@
+#
+# Configuration for appveyor.com
+#
+
+environment:
+  matrix:
+  - configuration: Dev
+#  - configuration: Release
+
+# branches to build
+branches:
+  # whitelist
+  only:
+    - master
+
+# Operating system (build VM template)
+os: Windows Server 2012 R2
+
+# scripts that are called at very beginning, before repo cloning
+init:
+
+# clone directory
+clone_folder: c:\projects\libosmium
+
+platform: x64
+
+install:
+  # by default, all script lines are interpreted as batch
+  - cd c:\projects
+  - nuget install boost
+  - nuget install bzip2
+  - nuget install zlib
+  - nuget install GDAL
+  - nuget install expat
+  - nuget install protobuf
+  - dir /S c:\projects
+  - git clone https://github.com/scrosby/OSM-binary
+  - cd OSM-binary
+  - mkdir build
+  - cd build
+  - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
+  - cmake .. -G "Visual Studio 12 Win64" -DSEARCH_PREFIX=c:\projects -T CTP_Nov2013
+  - msbuild /clp:Verbosity=minimal /nologo OSM-binary.sln
+
+build_script:
+  - cd c:\projects\libosmium
+  - mkdir build
+  - cd build
+  - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
+  - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
+  - SET P=c:/projects/libosmium
+  - cmake .. -G "Visual Studio 12 Win64" -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_PREFIX_PATH=c:\projects -DBoost_USE_STATIC_LIBS=ON -T CTP_Nov2013
+  - msbuild /clp:Verbosity=minimal /nologo libosmium.sln
+  - msbuild /clp:Verbosity=minimal /nologo tests.vcxproj
+
