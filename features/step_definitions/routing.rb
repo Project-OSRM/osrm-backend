@@ -43,21 +43,23 @@ When /^I route I should get$/ do |table|
           got[k]=v
         end
       end
-
-      if response.body.empty? == false
-        json = JSON.parse response.body
-      end
-
-      if response.body.empty? == false
-        if json['status'] == 0
-          instructions = way_list json['route_instructions']
-          bearings = bearing_list json['route_instructions']
-          compasses = compass_list json['route_instructions']
-          turns = turn_list json['route_instructions']
-          modes = mode_list json['route_instructions']
-          times = time_list json['route_instructions']
-          distances = distance_list json['route_instructions']
+      
+      unless response.body.empty?
+        if @query_params['output']=='pbf'
+          Protojson.decode ProtobufferResponse::Route_response, response.body, :json
+        else
+          parsed = JSON.parse response.body
         end
+      end
+      
+      if parsed && parsed['status'] == 0
+        instructions = way_list parsed['route_instructions']
+        bearings = bearing_list parsed['route_instructions']
+        compasses = compass_list parsed['route_instructions']
+        turns = turn_list parsed['route_instructions']
+        modes = mode_list parsed['route_instructions']
+        times = time_list parsed['route_instructions']
+        distances = distance_list parsed['route_instructions']
       end
 
       if table.headers.include? 'status'

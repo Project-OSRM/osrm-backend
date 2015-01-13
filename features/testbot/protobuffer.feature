@@ -7,7 +7,7 @@ Feature: Importing protobuffer (.pbf) format
 
     Background:
         Given the profile "testbot"
-        And the import format "pbf"
+        And the input format "pbf"
 
     Scenario: Testbot - Protobuffer import, nodes and ways
         Given the node map

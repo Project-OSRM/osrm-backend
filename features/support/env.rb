@@ -1,6 +1,5 @@
 require 'rspec/expectations'
 
-
 DEFAULT_PORT = 5000
 DEFAULT_TIMEOUT = 2
 ROOT_FOLDER = Dir.pwd
@@ -16,6 +15,7 @@ DEFAULT_GRID_SIZE = 100   #meters
 PROFILES_PATH = File.join ROOT_FOLDER, 'profiles'
 BIN_PATH = File.join ROOT_FOLDER, 'build'
 DEFAULT_INPUT_FORMAT = 'osm'
+DEFAULT_OUTPUT_FORMAT = nil
 DEFAULT_ORIGIN = [1,1]
 LAUNCH_TIMEOUT = 1
 SHUTDOWN_TIMEOUT = 10

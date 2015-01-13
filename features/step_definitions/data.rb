@@ -2,8 +2,12 @@ Given /^the profile "([^"]*)"$/ do |profile|
   set_profile profile
 end
 
-Given(/^the import format "(.*?)"$/) do |format|
+Given(/^the input format "(.*?)"$/) do |format|
   set_input_format format
+end
+
+Given(/^the output format "(.*?)"$/) do |format|
+  set_output_format format
 end
 
 Given /^a grid size of (\d+) meters$/ do |meters|
