@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef GRAPHLOADER_H
-#define GRAPHLOADER_H
+#ifndef GRAPH_LOADER_HPP
+#define GRAPH_LOADER_HPP
 
 #include "osrm_exception.hpp"
 #include "../data_structures/external_memory_node.hpp"
@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_node.hpp"
 #include "../data_structures/restriction.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Util/FingerPrint.h"
+#include "../Util/finger_print.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
@@ -322,4 +322,4 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
     return number_of_nodes;
 }
 
-#endif // GRAPHLOADER_H
+#endif // GRAPH_LOADER_HPP

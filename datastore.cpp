@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/DataStoreOptions.h"
 #include "Util/simple_logger.hpp"
 #include "Util/osrm_exception.hpp"
-#include "Util/FingerPrint.h"
+#include "Util/finger_print.hpp"
 #include "typedefs.h"
 
 #include <osrm/coordinate.hpp>
