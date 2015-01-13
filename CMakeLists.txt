@@ -88,6 +88,7 @@ set(
   ${AlgorithmGlob}
   ${HttpGlob}
 )
+
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(FINGERPRINT OBJECT Util/fingerprint.cpp)
 add_library(GITDESCRIPTION OBJECT Util/git_sha.cpp)
