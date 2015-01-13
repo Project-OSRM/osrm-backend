@@ -9,8 +9,8 @@ def parse_output response, format
       parsed['main_route'].each_pair {|k,v| parsed[k]=v }
       parsed.delete 'main_route'
       instructions = []
-      parsed['route_instructions'].each  do |v|
-        instructions[v['position']] = [
+      parsed['route_instructions'].each_with_index  do |v,i|
+        instructions[i] = [
           v['instruction_id'],     # 0
           v['street_name'],        # 1
           v['length'],             # 2
