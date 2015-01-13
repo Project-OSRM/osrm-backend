@@ -30,12 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/segment_information.hpp"
 #include "../Util/integer_range.hpp"
 
+#include <boost/assert.hpp>
 #include <osrm/coordinate.hpp>
 
-#include <boost/assert.hpp>
-
 #include <cmath>
-
 #include <algorithm>
 
 namespace
@@ -90,7 +88,7 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
 
 void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level)
 {
-    unsigned size = std::distance(begin, end);
+    const auto size = std::distance(begin, end);
     if (size < 2)
     {
         return;
