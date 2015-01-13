@@ -1,4 +1,4 @@
-@routing @pbf @testbot @format
+@routing @pbf_output @testbot
 Feature: Outputting protobuffer format
 
     Background:
@@ -6,14 +6,13 @@ Feature: Outputting protobuffer format
         And the query options
             | output | pbf |
     
-    @todo
     Scenario: Testbot - Protobuffer import, nodes and ways
         Given the node map
             | a | b |
 
         And the ways
-            | nodes | name |
-            | ab    | xyz  |
+            | nodes |
+            | ab    |
 
         When I route I should get
             | from | to | route |

@@ -7,7 +7,6 @@ When /^I route I should get$/ do |table|
         got = {'request' => row['request'] }
         response = request_url row['request']
       else
-        params = @query_params
         waypoints = []
         if row['from'] and row['to']
           node = find_node_by_name(row['from'])
@@ -19,7 +18,7 @@ When /^I route I should get$/ do |table|
           waypoints << node
 
           got = {'from' => row['from'], 'to' => row['to'] }
-          response = request_route waypoints, params
+          response = request_route waypoints, @query_params
         elsif row['waypoints']
           row['waypoints'].split(',').each do |n|
             node = find_node_by_name(n.strip)
@@ -27,7 +26,7 @@ When /^I route I should get$/ do |table|
             waypoints << node
           end
           got = {'waypoints' => row['waypoints'] }
-          response = request_route waypoints, params
+          response = request_route waypoints, @query_params
         else
           raise "*** no waypoints"
         end
@@ -44,13 +43,7 @@ When /^I route I should get$/ do |table|
         end
       end
       
-      unless response.body.empty?
-        if @query_params['output']=='pbf'
-          Protojson.decode ProtobufferResponse::Route_response, response.body, :json
-        else
-          parsed = JSON.parse response.body
-        end
-      end
+      parsed = parse_output response, @query_params['output']
       
       if parsed && parsed['status'] == 0
         instructions = way_list parsed['route_instructions']
@@ -63,10 +56,10 @@ When /^I route I should get$/ do |table|
       end
 
       if table.headers.include? 'status'
-        got['status'] = json['status'].to_s
+        got['status'] = parsed['status'].to_s
       end
       if table.headers.include? 'message'
-        got['message'] = json['status_message']
+        got['message'] = parsed['status_message']
       end
       if table.headers.include? '#'   # comment column
         got['#'] = row['#']           # copy value so it always match
@@ -74,13 +67,13 @@ When /^I route I should get$/ do |table|
 
       if response.code == "200"
         if table.headers.include? 'start'
-          got['start'] = instructions ? json['route_summary']['start_point'] : nil
+          got['start'] = instructions ? parsed['route_summary']['start_point'] : nil
         end
         if table.headers.include? 'end'
-          got['end'] = instructions ? json['route_summary']['end_point'] : nil
+          got['end'] = instructions ? parsed['route_summary']['end_point'] : nil
         end
         if table.headers.include? 'geometry'
-            got['geometry'] = json['route_geometry']
+            got['geometry'] = parsed['route_geometry']
         end
         if table.headers.include? 'route'
           got['route'] = (instructions || '').strip
@@ -88,17 +81,17 @@ When /^I route I should get$/ do |table|
             if row['distance']!=''
               raise "*** Distance must be specied in meters. (ex: 250m)" unless row['distance'] =~ /\d+m/
             end
-            got['distance'] = instructions ? "#{json['route_summary']['total_distance'].to_s}m" : ''
+            got['distance'] = instructions ? "#{parsed['route_summary']['total_distance'].to_s}m" : ''
           end
           if table.headers.include?('time')
             raise "*** Time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
-            got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : ''
+            got['time'] = instructions ? "#{parsed['route_summary']['total_time'].to_s}s" : ''
           end
           if table.headers.include?('speed')
             if row['speed'] != '' && instructions
               raise "*** Speed must be specied in km/h. (ex: 50 km/h)" unless row['speed'] =~ /\d+ km\/h/
-                time = json['route_summary']['total_time']
-                distance = json['route_summary']['total_distance']
+                time = parsed['route_summary']['total_time']
+                distance = parsed['route_summary']['total_distance']
                 speed = time>0 ? (3.6*distance/time).to_i : nil
                 got['speed'] =  "#{speed} km/h"
             else
