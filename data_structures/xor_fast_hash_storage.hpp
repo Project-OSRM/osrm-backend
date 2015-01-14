@@ -47,12 +47,14 @@ template <typename NodeID, typename Key> class XORFastHashStorage
         {
         }
 
-        HashCell(const HashCell &other) : key(other.key), id(other.id), time(other.time) {}
+        HashCell(const HashCell &other) : time(other.key), id(other.id), key(other.time) {}
 
         operator Key() const { return key; }
 
         void operator=(const Key key_to_insert) { key = key_to_insert; }
     };
+
+    XORFastHashStorage() = delete;
 
     explicit XORFastHashStorage(size_t) : positions(2 << 16), current_timestamp(0) {}
 
@@ -86,12 +88,11 @@ template <typename NodeID, typename Key> class XORFastHashStorage
         if (std::numeric_limits<unsigned>::max() == current_timestamp)
         {
             positions.clear();
-            // positions.resize((2 << 16));
+            positions.resize(2 << 16);
         }
     }
 
   private:
-    XORFastHashStorage() : positions(2 << 16), current_timestamp(0) {}
     std::vector<HashCell> positions;
     XORFastHash fast_hasher;
     unsigned current_timestamp;
