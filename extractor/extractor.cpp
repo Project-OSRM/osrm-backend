@@ -37,9 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/git_sha.hpp"
 #include "../Util/IniFileUtil.h"
+#include "../Util/make_unique.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/timing_util.hpp"
-#include "../Util/make_unique.hpp"
 
 #include "../typedefs.h"
 
