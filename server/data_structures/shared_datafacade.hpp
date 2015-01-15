@@ -405,7 +405,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     }
 
     bool
-    IncrementalFindPhantomNodeForCoordinateWithDistance(const FixedPointCoordinate &input_coordinate,
+    IncrementalFindPhantomNodeForCoordinateWithMaxDistance(const FixedPointCoordinate &input_coordinate,
                                                         std::vector<std::pair<PhantomNode, double>> &resulting_phantom_node_vector,
                                                         const double max_distance,
                                                         const unsigned min_number_of_phantom_nodes,
