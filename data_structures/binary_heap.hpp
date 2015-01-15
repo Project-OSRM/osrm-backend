@@ -50,6 +50,11 @@ template <typename NodeID, typename Key> class ArrayStorage
 
     Key &operator[](NodeID node) { return positions[node]; }
 
+    Key peek_index(const NodeID node) const
+    {
+        return positions[node];
+    }
+
     void Clear() {}
 
   private:
@@ -65,6 +70,15 @@ template <typename NodeID, typename Key> class MapStorage
 
     void Clear() { nodes.clear(); }
 
+    Key peek_index(const NodeID node) const
+    {
+        const auto iter = nodes.find(node);
+        if (std::end(nodes) != iter)
+        {
+            return iter->second;
+        }
+        return Key(-1);
+    }
   private:
     std::map<NodeID, Key> nodes;
 };
@@ -76,14 +90,14 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
 
     Key &operator[](const NodeID node) { return nodes[node]; }
 
-    Key peek_index(const NodeID node) const 
-    { 
+    Key peek_index(const NodeID node) const
+    {
         const auto iter = nodes.find(node);
         if (std::end(nodes) != iter)
         {
             return iter->second;
         }
-        return Key(-1); 
+        return Key(-1);
     }
 
     Key const &operator[](const NodeID node) const
