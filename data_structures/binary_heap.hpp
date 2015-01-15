@@ -36,17 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <cstring>
 
 template <typename NodeID, typename Key> class ArrayStorage
 {
   public:
-    explicit ArrayStorage(size_t size) : positions(new Key[size])
+    explicit ArrayStorage(size_t size) : positions(size, 0)
     {
-        memset(positions, 0, size * sizeof(Key));
     }
 
-    ~ArrayStorage() { delete[] positions; }
+    ~ArrayStorage() { }
 
     Key &operator[](NodeID node) { return positions[node]; }
 
@@ -58,7 +56,7 @@ template <typename NodeID, typename Key> class ArrayStorage
     void Clear() {}
 
   private:
-    Key *positions;
+    std::vector<Key> positions;
 };
 
 template <typename NodeID, typename Key> class MapStorage
@@ -73,11 +71,11 @@ template <typename NodeID, typename Key> class MapStorage
     Key peek_index(const NodeID node) const
     {
         const auto iter = nodes.find(node);
-        if (std::end(nodes) != iter)
+        if (nodes.end() != iter)
         {
             return iter->second;
         }
-        return Key(-1);
+        return std::numeric_limits<Key>::max();
     }
   private:
     std::map<NodeID, Key> nodes;
@@ -97,7 +95,7 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
         {
             return iter->second;
         }
-        return Key(-1);
+        return std::numeric_limits<Key>::max();
     }
 
     Key const &operator[](const NodeID node) const
@@ -179,9 +177,9 @@ class BinaryHeap
         return inserted_nodes[index].key == 0;
     }
 
-    bool WasInserted(const NodeID node)
+    bool WasInserted(const NodeID node) const
     {
-        const Key index = node_index.peek_index(node);
+        const auto index = node_index.peek_index(node);
         if (index >= static_cast<Key>(inserted_nodes.size()))
         {
             return false;
