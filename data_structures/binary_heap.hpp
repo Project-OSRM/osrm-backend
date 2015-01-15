@@ -180,7 +180,7 @@ class BinaryHeap
     bool WasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
-        if (index >= static_cast<Key>(inserted_nodes.size()))
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()))
         {
             return false;
         }
