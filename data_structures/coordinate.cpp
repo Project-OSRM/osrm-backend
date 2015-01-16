@@ -157,98 +157,16 @@ float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
 float
 FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &source_coordinate,
                                                    const FixedPointCoordinate &target_coordinate,
-                                                   const FixedPointCoordinate &point)
+                                                   const FixedPointCoordinate &query_location)
 {
-    // initialize values
-    const float x_value = static_cast<float>(mercator::lat2y(point.lat / COORDINATE_PRECISION));
-    const float y_value = point.lon / COORDINATE_PRECISION;
-    float a = static_cast<float>(mercator::lat2y(source_coordinate.lat / COORDINATE_PRECISION));
-    float b = source_coordinate.lon / COORDINATE_PRECISION;
-    float c = static_cast<float>(mercator::lat2y(target_coordinate.lat / COORDINATE_PRECISION));
-    float d = target_coordinate.lon / COORDINATE_PRECISION;
-    float p, q;
-    if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
-    {
-        const float slope = (d - b) / (c - a); // slope
-        // Projection of (x,y) on line joining (a,b) and (c,d)
-        p = ((x_value + (slope * y_value)) + (slope * slope * a - slope * b)) /
-            (1.f + slope * slope);
-        q = b + slope * (p - a);
-    }
-    else
-    {
-        p = c;
-        q = y_value;
-    }
-
     float ratio;
-    bool inverse_ratio = false;
-
-    // straight line segment on equator
-    if (std::abs(c) < std::numeric_limits<float>::epsilon() &&
-        std::abs(a) < std::numeric_limits<float>::epsilon())
-    {
-        ratio = (q - b) / (d - b);
-    }
-    else
-    {
-        if (std::abs(c) < std::numeric_limits<float>::epsilon())
-        {
-            // swap start/end
-            std::swap(a, c);
-            std::swap(b, d);
-            inverse_ratio = true;
-        }
-
-        float nY = (d * p - c * q) / (a * d - b * c);
-        // discretize the result to coordinate precision. it's a hack!
-        if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
-        {
-            nY = 0.f;
-        }
-
-        // compute ratio
-        ratio = (p - nY * a) / c;
-    }
-
-    if (std::isnan(ratio))
-    {
-        ratio = (target_coordinate == point ? 1.f : 0.f);
-    }
-    else if (std::abs(ratio) <= std::numeric_limits<float>::epsilon())
-    {
-        ratio = 0.f;
-    }
-    else if (std::abs(ratio - 1.f) <= std::numeric_limits<float>::epsilon())
-    {
-        ratio = 1.f;
-    }
-
-    // we need to do this, if we switched start/end coordinates
-    if (inverse_ratio)
-    {
-        ratio = 1.0f - ratio;
-    }
-
-    // compute the nearest location
     FixedPointCoordinate nearest_location;
-    BOOST_ASSERT(!std::isnan(ratio));
-    if (ratio <= 0.f)
-    { // point is "left" of edge
-        nearest_location = source_coordinate;
-    }
-    else if (ratio >= 1.f)
-    { // point is "right" of edge
-        nearest_location = target_coordinate;
-    }
-    else
-    { // point lies in between
-        nearest_location.lat = static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
-        nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
-    }
 
-    BOOST_ASSERT(nearest_location.is_valid());
-    return FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
+    return ComputePerpendicularDistance(source_coordinate,
+                                        target_coordinate,
+                                        query_location,
+                                        nearest_location,
+                                        ratio);
 }
 
 float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &segment_source,
