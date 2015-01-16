@@ -114,9 +114,9 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::cout << "[extractor] Fixing restriction starts ... " << std::flush;
         TIMER_START(fix_restriction_starts);
         auto restrictions_iterator = restrictions_list.begin();
-        auto way_start_and_end_iterator = way_start_end_id_list.begin();
+        auto way_start_and_end_iterator = way_start_end_id_list.cbegin();
 
-        while (way_start_and_end_iterator != way_start_end_id_list.end() &&
+        while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
                restrictions_iterator != restrictions_list.end())
         {
             if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.from.way)
@@ -137,21 +137,12 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
             if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
                 restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->first_segment_source_id;
-            }
-            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
-            {
-                restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->first_segment_source_id;
-            }
-            else if (way_start_and_end_iterator->last_segment_source_id == via_node_id)
-            {
-                restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->last_segment_target_id;
+                    way_start_and_end_iterator->first_segment_target_id;
             }
             else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
             {
-                restrictions_iterator->restriction.from.node = way_start_and_end_iterator->last_segment_source_id;
+                restrictions_iterator->restriction.from.node =
+                    way_start_and_end_iterator->last_segment_source_id;
             }
             ++restrictions_iterator;
         }
@@ -168,12 +159,11 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         TIMER_STOP(sort_restrictions_to);
         std::cout << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s" << std::endl;
 
-        unsigned number_of_useable_restrictions = 0;
         std::cout << "[extractor] Fixing restriction ends   ... " << std::flush;
         TIMER_START(fix_restriction_ends);
         restrictions_iterator = restrictions_list.begin();
-        way_start_and_end_iterator = way_start_end_id_list.begin();
-        while (way_start_and_end_iterator != way_start_end_id_list.end() &&
+        way_start_and_end_iterator = way_start_end_id_list.cbegin();
+        while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
                restrictions_iterator != restrictions_list.end())
         {
             if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.to.way)
@@ -186,51 +176,47 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 ++restrictions_iterator;
                 continue;
             }
-            NodeID via_node_id = restrictions_iterator->restriction.via.node;
-            if (way_start_and_end_iterator->last_segment_source_id == via_node_id)
+            BOOST_ASSERT(way_start_and_end_iterator->way_id == restrictions_iterator->restriction.to.way);
+            const NodeID via_node_id = restrictions_iterator->restriction.via.node;
+
+            if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->last_segment_target_id;
+                restrictions_iterator->restriction.to.node =
+                    way_start_and_end_iterator->first_segment_target_id;
             }
             else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->last_segment_source_id;
-            }
-            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
-            {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_target_id;
-            }
-            else if (way_start_and_end_iterator->first_segment_target_id == via_node_id)
-            {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_source_id;
-            }
-
-            if (std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.from.node &&
-                std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.to.node)
-            {
-                ++number_of_useable_restrictions;
+                restrictions_iterator->restriction.to.node =
+                    way_start_and_end_iterator->last_segment_source_id;
             }
             ++restrictions_iterator;
         }
         TIMER_STOP(fix_restriction_ends);
         std::cout << "ok, after " << TIMER_SEC(fix_restriction_ends) << "s" << std::endl;
 
-        SimpleLogger().Write() << "usable restrictions: " << number_of_useable_restrictions;
         // serialize restrictions
         std::ofstream restrictions_out_stream;
+        unsigned written_restriction_count = 0;
         restrictions_out_stream.open(restrictions_file_name.c_str(), std::ios::binary);
         restrictions_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
-        restrictions_out_stream.write((char *)&number_of_useable_restrictions, sizeof(unsigned));
+        const auto count_position = restrictions_out_stream.tellp();
+        restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
 
         for(const auto & restriction_container : restrictions_list)
         {
-            if (std::numeric_limits<unsigned>::max() != restriction_container.restriction.from.node &&
-                std::numeric_limits<unsigned>::max() != restriction_container.restriction.to.node)
+            if (SPECIAL_NODEID != restriction_container.restriction.from.node &&
+                SPECIAL_NODEID != restriction_container.restriction.to.node)
             {
                 restrictions_out_stream.write((char *)&(restriction_container.restriction),
                                               sizeof(TurnRestriction));
+                ++written_restriction_count;
             }
         }
+        restrictions_out_stream.seekp(count_position);
+        restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
+
         restrictions_out_stream.close();
+        SimpleLogger().Write() << "usable restrictions: " << written_restriction_count;
 
         std::ofstream file_out_stream;
         file_out_stream.open(output_file_name.c_str(), std::ios::binary);
