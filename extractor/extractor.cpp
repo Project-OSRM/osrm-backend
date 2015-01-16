@@ -173,14 +173,13 @@ int Extractor::Run(int argc, char *argv[])
             tbb::parallel_for(tbb::blocked_range<std::size_t>(0, osm_elements.size()),
                               [&](const tbb::blocked_range<std::size_t> &range)
                               {
+                ExtractionNode result_node;
+                ExtractionWay result_way;
+                lua_State * local_state = scripting_environment.get_lua_state();
+
                 for (auto x = range.begin(); x != range.end(); ++x)
                 {
                     const auto entity = osm_elements[x];
-
-                    ExtractionNode result_node;
-                    ExtractionWay result_way;
-
-                    lua_State * local_state = scripting_environment.get_lua_state();
 
                     switch (entity->type())
                     {
