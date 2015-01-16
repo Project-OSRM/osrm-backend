@@ -15,6 +15,6 @@ BOOST_AUTO_TEST_CASE(regression_test_1347)
     FixedPointCoordinate nearest_location;
     float d2 = FixedPointCoordinate::ComputePerpendicularDistance(u, v, q, nearest_location, ratio);
 
-    BOOST_CHECK_LE(std::abs(d1 - d2), 0.01);
+    BOOST_CHECK_LE(std::abs(d1 - d2), 0.01f);
 }
 
