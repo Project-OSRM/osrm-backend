@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,14 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RESTRICTION_MAP_HPP
 #define RESTRICTION_MAP_HPP
 
-#include <memory>
-
 #include "restriction.hpp"
 #include "../Util/std_hash.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -136,6 +135,7 @@ class RestrictionMap
 
             const unsigned index = restriction_iterator->second;
             auto &bucket = m_restriction_bucket_list.at(index);
+
             for (RestrictionTarget &restriction_target : bucket)
             {
                 if (node_v == restriction_target.target_node)
