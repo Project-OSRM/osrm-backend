@@ -102,7 +102,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         auto internal_id_iter = ext_to_int_id_map.find(current_restriction.from.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
-            SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
+            SimpleLogger().Write(logDEBUG) << "Unmapped from node " << current_restriction.from.node << " of restriction";
             continue;
         }
         current_restriction.from.node = internal_id_iter->second;
@@ -110,15 +110,16 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         internal_id_iter = ext_to_int_id_map.find(current_restriction.via.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
-            SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
+            SimpleLogger().Write(logDEBUG) << "Unmapped via node " << current_restriction.via.node << " of restriction";
             continue;
         }
+
         current_restriction.via.node = internal_id_iter->second;
 
         internal_id_iter = ext_to_int_id_map.find(current_restriction.to.node);
         if (internal_id_iter == ext_to_int_id_map.end())
         {
-            SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
+            SimpleLogger().Write(logDEBUG) << "Unmapped to node " << current_restriction.to.node << " of restriction";
             continue;
         }
         current_restriction.to.node = internal_id_iter->second;
