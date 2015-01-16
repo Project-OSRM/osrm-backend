@@ -367,9 +367,24 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
                 file_out_stream.write((char *)&integer_weight, sizeof(int));
                 file_out_stream.write((char *)&edge_iterator->name_id, sizeof(unsigned));
-                file_out_stream.write((char *)&(edge_iterator->is_roundabout ? yes : no), sizeof(bool));
-                file_out_stream.write((char *)&(edge_iterator->is_in_tiny_cc ? yes : no), sizeof(bool));
-                file_out_stream.write((char *)&(edge_iterator->is_access_restricted ? yes : no), sizeof(bool));
+                if (edge_iterator->is_roundabout)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                } else {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
+                if (edge_iterator->is_in_tiny_cc)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                } else {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
+                if (edge_iterator->is_access_restricted)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                } else {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
 
                 // cannot take adress of bit field, so use local
                 const TravelMode  travel_mode = edge_iterator->travel_mode;
