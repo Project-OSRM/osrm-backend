@@ -1,6 +1,8 @@
+#include <boost/test/unit_test.hpp>
+
 #include <osrm/coordinate.hpp>
 
-#include <boost/test/unit_test.hpp>
+#include <cmath>
 
 // Regression test for bug captured in #1347
 BOOST_AUTO_TEST_CASE(regression_test_1347)
