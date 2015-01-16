@@ -338,9 +338,11 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                     1,
                     (int)std::floor(
                         (edge_iterator->is_duration_set ? edge_iterator->speed : weight) + .5));
-                int integer_distance = std::max(1, (int)distance);
-                short zero = 0;
-                short one = 1;
+                const int integer_distance = std::max(1, (int)distance);
+                const short zero = 0;
+                const short one = 1;
+                const bool yes = true;
+                const bool no = false;
 
                 file_out_stream.write((char *)&edge_iterator->start, sizeof(unsigned));
                 file_out_stream.write((char *)&edge_iterator->target, sizeof(unsigned));
@@ -365,15 +367,15 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
                 file_out_stream.write((char *)&integer_weight, sizeof(int));
                 file_out_stream.write((char *)&edge_iterator->name_id, sizeof(unsigned));
-                file_out_stream.write((char *)&edge_iterator->is_roundabout, sizeof(bool));
-                file_out_stream.write((char *)&edge_iterator->is_in_tiny_cc, sizeof(bool));
-                file_out_stream.write((char *)&edge_iterator->is_access_restricted, sizeof(bool));
+                file_out_stream.write((char *)&(edge_iterator->is_roundabout ? yes : no), sizeof(bool));
+                file_out_stream.write((char *)&(edge_iterator->is_in_tiny_cc ? yes : no), sizeof(bool));
+                file_out_stream.write((char *)&(edge_iterator->is_access_restricted ? yes : no), sizeof(bool));
 
                 // cannot take adress of bit field, so use local
                 const TravelMode  travel_mode = edge_iterator->travel_mode;
                 file_out_stream.write((char *)&travel_mode, sizeof(TravelMode));
 
-                file_out_stream.write((char *)&edge_iterator->is_split, sizeof(bool));
+                file_out_stream.write((char *)&(edge_iterator->is_split ? yes : no), sizeof(bool));
                 ++number_of_used_edges;
             }
             ++edge_iterator;
