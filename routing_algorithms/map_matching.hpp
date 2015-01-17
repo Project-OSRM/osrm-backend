@@ -312,42 +312,82 @@ template <class DataFacadeT> class MapMatching final
         Matching::CandidateLists timestamp_list;
         expandCandidates(candidates_lists, timestamp_list);
 
+        std::vector<bool> breakage(timestamp_list.size(), true);
+
         BOOST_ASSERT(timestamp_list.size() > 0);
 
         // TODO for the viterbi values we actually only need the current and last row
         std::vector<std::vector<double>> viterbi;
         std::vector<std::vector<std::size_t>> parents;
+        std::vector<std::vector<bool>> pruned;
         for (const auto& l : timestamp_list)
         {
             viterbi.emplace_back(l.size(), -std::numeric_limits<double>::infinity());
             parents.emplace_back(l.size(), 0);
+            pruned.emplace_back(l.size(), true);
         }
 
+        JSON::Array _debug_timestamps;
         JSON::Array _debug_viterbi;
-        JSON::Array _debug_initial_viterbi;
-        for (auto s = 0u; s < viterbi[0].size(); ++s)
-        {
-            // this might need to be squared as pi_s is also defined as the emission
-            // probability in the paper.
-            viterbi[0][s] = log_probability(emission_probability(timestamp_list[0][s].second));
-            parents[0][s] = s;
+        JSON::Array _debug_pruned;
 
-            _debug_initial_viterbi.values.push_back(makeJSONSave(viterbi[0][s]));
-        }
-        _debug_viterbi.values.push_back(_debug_initial_viterbi);
+        unsigned initial_timestamp = 0;
+        do
+        {
+            JSON::Array _debug_initial_viterbi;
+            JSON::Array _debug_initial_pruned;
+
+            for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
+            {
+                // this might need to be squared as pi_s is also defined as the emission
+                // probability in the paper.
+                viterbi[initial_timestamp][s] = log_probability(emission_probability(timestamp_list[initial_timestamp][s].second));
+                parents[initial_timestamp][s] = s;
+                pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < -std::numeric_limits<double>::max();
+
+                breakage[initial_timestamp] = breakage[initial_timestamp] && pruned[initial_timestamp][s];
+            }
+
+            for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
+            {
+                _debug_initial_viterbi.values.push_back(makeJSONSave(viterbi[initial_timestamp][s]));
+                _debug_initial_pruned.values.push_back(static_cast<unsigned>(pruned[initial_timestamp][s]));
+            }
+
+            _debug_viterbi.values.push_back(_debug_initial_viterbi);
+            _debug_pruned.values.push_back(_debug_initial_pruned);
+
+
+            if (initial_timestamp > 0) {
+                JSON::Array _debug_transition_rows;
+                for (auto s = 0u; s < viterbi[initial_timestamp-1].size(); ++s) {
+                    _debug_transition_rows.values.push_back(JSON::Array());
+                }
+                _debug_timestamps.values.push_back(_debug_transition_rows);
+            }
+
+            ++initial_timestamp;
+        } while (breakage[initial_timestamp - 1]);
+
+        BOOST_ASSERT(initial_timestamp > 0 && initial_timestamp < viterbi.size());
+        --initial_timestamp;
+
+        BOOST_ASSERT(breakage[initial_timestamp] == false);
 
         // attention, this call is relatively expensive
         //const auto beta = get_beta(state_size, timestamp_list, coordinate_list);
         const auto beta = 10.0;
 
-        JSON::Array _debug_timestamps;
-        for (auto t = 1u; t < timestamp_list.size(); ++t)
+        unsigned prev_unbroken_timestamp = initial_timestamp;
+        for (auto t = initial_timestamp + 1; t < timestamp_list.size(); ++t)
         {
-            const auto& prev_viterbi = viterbi[t-1];
-            const auto& prev_timestamps_list = timestamp_list[t-1];
-            const auto& prev_coordinate = coordinate_list[t-1];
+            const auto& prev_viterbi = viterbi[prev_unbroken_timestamp];
+            const auto& prev_pruned = pruned[prev_unbroken_timestamp];
+            const auto& prev_unbroken_timestamps_list = timestamp_list[prev_unbroken_timestamp];
+            const auto& prev_coordinate = coordinate_list[prev_unbroken_timestamp];
 
             auto& current_viterbi = viterbi[t];
+            auto& current_pruned = pruned[t];
             auto& current_parents = parents[t];
             const auto& current_timestamps_list = timestamp_list[t];
             const auto& current_coordinate = coordinate_list[t];
@@ -356,8 +396,13 @@ template <class DataFacadeT> class MapMatching final
             // compute d_t for this timestamp and the next one
             for (auto s = 0u; s < prev_viterbi.size(); ++s)
             {
-
                 JSON::Array _debug_row;
+                if (prev_pruned[s])
+                {
+                    _debug_transition_rows.values.push_back(_debug_row);
+                    continue;
+                }
+
                 for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
                 {
 
@@ -367,7 +412,7 @@ template <class DataFacadeT> class MapMatching final
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = get_distance_difference(prev_coordinate,
                                                              current_coordinate,
-                                                             prev_timestamps_list[s].first,
+                                                             prev_unbroken_timestamps_list[s].first,
                                                              current_timestamps_list[s_prime].first);
 
                     // plug probabilities together
@@ -378,7 +423,7 @@ template <class DataFacadeT> class MapMatching final
                         makeJSONSave(prev_viterbi[s]),
                         makeJSONSave(emission_pr),
                         makeJSONSave(transition_pr),
-                        get_network_distance(prev_timestamps_list[s].first, current_timestamps_list[s_prime].first),
+                        get_network_distance(prev_unbroken_timestamps_list[s].first, current_timestamps_list[s_prime].first),
                         coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate)
                     );
 
@@ -388,6 +433,8 @@ template <class DataFacadeT> class MapMatching final
                     {
                         current_viterbi[s_prime] = new_value;
                         current_parents[s_prime] = s;
+                        current_pruned[s_prime] = false;
+                        breakage[t] = false;
                     }
                 }
                 _debug_transition_rows.values.push_back(_debug_row);
@@ -395,38 +442,71 @@ template <class DataFacadeT> class MapMatching final
             _debug_timestamps.values.push_back(_debug_transition_rows);
 
             JSON::Array _debug_viterbi_col;
-            for (auto s_prime = 0u; s_prime < current_timestamps_list.size(); ++s_prime)
+            JSON::Array _debug_pruned_col;
+            for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
             {
                 _debug_viterbi_col.values.push_back(makeJSONSave(current_viterbi[s_prime]));
+                _debug_pruned_col.values.push_back(static_cast<unsigned>(current_pruned[s_prime]));
             }
             _debug_viterbi.values.push_back(_debug_viterbi_col);
+            _debug_pruned.values.push_back(_debug_pruned_col);
+
+            if (!breakage[t])
+            {
+                prev_unbroken_timestamp = t;
+            }
         }
 
         _debug_info.values["transitions"] = _debug_timestamps;
         _debug_info.values["viterbi"] = _debug_viterbi;
+        _debug_info.values["pruned"] = _debug_pruned;
         _debug_info.values["beta"] = beta;
 
         // loop through the columns, and only compare the last entry
-        auto max_element_iter = std::max_element(viterbi.back().begin(), viterbi.back().end());
-        auto parent_index = std::distance(viterbi.back().begin(), max_element_iter);
-        std::deque<std::size_t> reconstructed_indices;
+        auto max_element_iter = std::max_element(viterbi[prev_unbroken_timestamp].begin(), viterbi[prev_unbroken_timestamp].end());
+        auto parent_index = std::distance(viterbi[prev_unbroken_timestamp].begin(), max_element_iter);
+        std::deque<std::pair<std::size_t, std::size_t>> reconstructed_indices;
 
-        for (auto i = timestamp_list.size() - 1u; i > 0u; --i)
+        for (auto i = prev_unbroken_timestamp; i > initial_timestamp; --i)
         {
-            reconstructed_indices.push_front(parent_index);
+            if (breakage[i])
+                continue;
+            reconstructed_indices.emplace_front(i, parent_index);
             parent_index = parents[i][parent_index];
         }
-        reconstructed_indices.push_front(parent_index);
+        reconstructed_indices.emplace_front(initial_timestamp, parent_index);
 
-        JSON::Array _debug_chosen_candidates;
         matched_nodes.resize(reconstructed_indices.size());
         for (auto i = 0u; i < reconstructed_indices.size(); ++i)
         {
-            auto location_index = reconstructed_indices[i];
-            matched_nodes[i] = timestamp_list[i][location_index].first;
-            _debug_chosen_candidates.values.push_back(location_index);
+            auto timestamp_index = reconstructed_indices[i].first;
+            auto location_index = reconstructed_indices[i].second;
+
+            matched_nodes[i] = timestamp_list[timestamp_index][location_index].first;
+        }
+
+        JSON::Array _debug_chosen_candidates;
+        auto _debug_candidate_iter = reconstructed_indices.begin();
+        for (auto i = 0u; i < timestamp_list.size(); ++i)
+        {
+            if (_debug_candidate_iter != reconstructed_indices.end() && _debug_candidate_iter->first == i)
+            {
+                _debug_chosen_candidates.values.push_back(_debug_candidate_iter->second);
+                _debug_candidate_iter = std::next(_debug_candidate_iter);
+            }
+            else
+            {
+                _debug_chosen_candidates.values.push_back(JSON::Null());
+            }
         }
         _debug_info.values["chosen_candidates"] = _debug_chosen_candidates;
+
+        JSON::Array _debug_breakage;
+        for (auto b : breakage) {
+            _debug_breakage.values.push_back(static_cast<unsigned>(b));
+        }
+        _debug_info.values["breakage"] = _debug_breakage;
+
         JSON::Array _debug_expanded_candidates;
         for (const auto& l : timestamp_list) {
             JSON::Array _debug_expanded_candidates_col;
