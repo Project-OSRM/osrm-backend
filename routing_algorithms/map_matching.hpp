@@ -485,6 +485,10 @@ template <class DataFacadeT> class MapMatching final
             matched_nodes[i] = timestamp_list[timestamp_index][location_index].first;
         }
 
+        unsigned removed = candidates_lists.size() - matched_nodes.size();
+        if (removed > 10)
+            SimpleLogger().Write(logWARNING) << "Warning: removed " << removed << " candiates.";
+
         JSON::Array _debug_chosen_candidates;
         auto _debug_candidate_iter = reconstructed_indices.begin();
         for (auto i = 0u; i < timestamp_list.size(); ++i)
