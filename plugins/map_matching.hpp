@@ -108,8 +108,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
 
+        if (2 > matched_nodes.size())
+        {
+            reply = http::Reply::StockReply(http::Reply::badRequest);
+            return;
+        }
+
         search_engine_ptr->shortest_path(
-            raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
+            raw_route.segment_end_coordinates,
+            std::vector<bool>(raw_route.segment_end_coordinates.size(), true),
+            raw_route);
 
         DescriptorConfig descriptor_config;
 
