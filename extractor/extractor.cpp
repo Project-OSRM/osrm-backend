@@ -184,6 +184,7 @@ int Extractor::Run(int argc, char *argv[])
                     switch (entity->type())
                     {
                     case osmium::item_type::node:
+                        result_node.clear();
                         ++number_of_nodes;
                         luabind::call_function<void>(
                             local_state,
@@ -193,6 +194,7 @@ int Extractor::Run(int argc, char *argv[])
                         resulting_nodes.push_back(std::make_pair(x, result_node));
                         break;
                     case osmium::item_type::way:
+                        result_way.clear();
                         ++number_of_ways;
                         luabind::call_function<void>(
                             local_state,
