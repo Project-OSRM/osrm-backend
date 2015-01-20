@@ -390,7 +390,12 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 const TravelMode  travel_mode = edge_iterator->travel_mode;
                 file_out_stream.write((char *)&travel_mode, sizeof(TravelMode));
 
-                file_out_stream.write((char *)&(edge_iterator->is_split ? yes : no), sizeof(bool));
+                if (edge_iterator->is_split)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                } else {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
                 ++number_of_used_edges;
             }
             ++edge_iterator;
