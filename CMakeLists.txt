@@ -31,6 +31,7 @@ OPTION(WITH_TOOLS "Build OSRM tools" OFF)
 OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/libosmium/include/)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/fingerprint.cpp fingerprint.cpp.alwaysbuild
