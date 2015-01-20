@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_containers.hpp"
 #include "extraction_way.hpp"
 
+#include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/node_id.hpp"
 #include "../data_structures/range_table.hpp"
 
@@ -327,7 +328,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 edge_iterator->target_coordinate.lat = node_iterator->lat;
                 edge_iterator->target_coordinate.lon = node_iterator->lon;
 
-                const double distance = FixedPointCoordinate::ApproximateEuclideanDistance(
+                const double distance = coordinate_calculation::approx_euclidean_distance(
                     edge_iterator->source_coordinate.lat,
                     edge_iterator->source_coordinate.lon,
                     node_iterator->lat,

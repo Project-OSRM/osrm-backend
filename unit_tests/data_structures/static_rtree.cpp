@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "../../data_structures/coordinate_calculation.hpp"
 #include "../../data_structures/static_rtree.hpp"
 #include "../../data_structures/query_node.hpp"
 #include "../../data_structures/edge_based_node.hpp"
@@ -77,7 +78,7 @@ class LinearSearchNN
         {
             const FixedPointCoordinate &start = coords->at(e.u);
             const FixedPointCoordinate &end = coords->at(e.v);
-            float distance = FixedPointCoordinate::ApproximateEuclideanDistance(
+            float distance = coordinate_calculation::approx_euclidean_distance(
                 input_coordinate.lat, input_coordinate.lon, start.lat, start.lon);
             if (distance < min_dist)
             {
@@ -85,7 +86,7 @@ class LinearSearchNN
                 min_dist = distance;
             }
 
-            distance = FixedPointCoordinate::ApproximateEuclideanDistance(
+            distance = coordinate_calculation::approx_euclidean_distance(
                 input_coordinate.lat, input_coordinate.lon, end.lat, end.lon);
             if (distance < min_dist)
             {
@@ -112,7 +113,7 @@ class LinearSearchNN
             float current_ratio = 0.;
             FixedPointCoordinate nearest;
             const float current_perpendicular_distance =
-                FixedPointCoordinate::ComputePerpendicularDistance(
+                coordinate_calculation::ComputePerpendicularDistance(
                     coords->at(e.u), coords->at(e.v), input_coordinate, nearest, current_ratio);
 
             if ((current_perpendicular_distance < min_dist) &&
@@ -148,9 +149,9 @@ class LinearSearchNN
                 result_phantom_node.location.lat = input_coordinate.lat;
             }
 
-            const float distance_1 = FixedPointCoordinate::ApproximateEuclideanDistance(
+            const float distance_1 = coordinate_calculation::approx_euclidean_distance(
                 coords->at(nearest_edge.u), result_phantom_node.location);
-            const float distance_2 = FixedPointCoordinate::ApproximateEuclideanDistance(
+            const float distance_2 = coordinate_calculation::approx_euclidean_distance(
                 coords->at(nearest_edge.u), coords->at(nearest_edge.v));
             const float ratio = std::min(1.f, distance_1 / distance_2);
 
@@ -285,10 +286,10 @@ void simple_verify_rtree(RTreeT &rtree,
         bool found_u = rtree.LocateClosestEndPointForCoordinate(pu, result_u, 1);
         bool found_v = rtree.LocateClosestEndPointForCoordinate(pv, result_v, 1);
         BOOST_CHECK(found_u && found_v);
-        float dist_u = FixedPointCoordinate::ApproximateEuclideanDistance(
+        float dist_u = coordinate_calculation::approx_euclidean_distance(
             result_u.lat, result_u.lon, pu.lat, pu.lon);
         BOOST_CHECK_LE(dist_u, std::numeric_limits<float>::epsilon());
-        float dist_v = FixedPointCoordinate::ApproximateEuclideanDistance(
+        float dist_v = coordinate_calculation::approx_euclidean_distance(
             result_v.lat, result_v.lon, pv.lat, pv.lon);
         BOOST_CHECK_LE(dist_v, std::numeric_limits<float>::epsilon());
     }
@@ -449,30 +450,30 @@ void TestRectangle(double width, double height, double center_lat, double center
 
     /* Distance to line segments of rectangle */
     BOOST_CHECK_EQUAL(rect.GetMinDist(north),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           north, FixedPointCoordinate(rect.max_lat, north.lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(south),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           south, FixedPointCoordinate(rect.min_lat, south.lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(west),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           west, FixedPointCoordinate(west.lat, rect.min_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(east),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           east, FixedPointCoordinate(east.lat, rect.max_lon)));
 
     /* Distance to corner points */
     BOOST_CHECK_EQUAL(rect.GetMinDist(north_east),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           north_east, FixedPointCoordinate(rect.max_lat, rect.max_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(north_west),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           north_west, FixedPointCoordinate(rect.max_lat, rect.min_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(south_east),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           south_east, FixedPointCoordinate(rect.min_lat, rect.max_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(south_west),
-                      FixedPointCoordinate::ApproximateEuclideanDistance(
+                      coordinate_calculation::approx_euclidean_distance(
                           south_west, FixedPointCoordinate(rect.min_lat, rect.min_lon)));
 }
 

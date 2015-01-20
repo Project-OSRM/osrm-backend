@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef RECTANGLE_HPP
 #define RECTANGLE_HPP
+
+#include "coordinate_calculation.hpp"
 
 #include <boost/assert.hpp>
 
@@ -115,28 +117,28 @@ struct RectangleInt2D
         switch (d)
         {
             case NORTH:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, location.lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, location.lon));
                 break;
             case SOUTH:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, location.lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, location.lon));
                 break;
             case WEST:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, min_lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(location.lat, min_lon));
                 break;
             case EAST:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, max_lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(location.lat, max_lon));
                 break;
             case NORTH_EAST:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, max_lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, max_lon));
                 break;
             case NORTH_WEST:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, min_lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, min_lon));
                 break;
             case SOUTH_EAST:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, max_lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, max_lon));
                 break;
             case SOUTH_WEST:
-                min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, min_lon));
+                min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, min_lon));
                 break;
             default:
                 break;
@@ -159,24 +161,24 @@ struct RectangleInt2D
         min_max_dist = std::min(
             min_max_dist,
             std::max(
-                FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left),
-                FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right)));
+                coordinate_calculation::approx_euclidean_distance(location, upper_left),
+                coordinate_calculation::approx_euclidean_distance(location, upper_right)));
 
         min_max_dist = std::min(
             min_max_dist,
             std::max(
-                FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right),
-                FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right)));
+                coordinate_calculation::approx_euclidean_distance(location, upper_right),
+                coordinate_calculation::approx_euclidean_distance(location, lower_right)));
 
         min_max_dist = std::min(
             min_max_dist,
-            std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right),
-                     FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left)));
+            std::max(coordinate_calculation::approx_euclidean_distance(location, lower_right),
+                     coordinate_calculation::approx_euclidean_distance(location, lower_left)));
 
         min_max_dist = std::min(
             min_max_dist,
-            std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left),
-                     FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left)));
+            std::max(coordinate_calculation::approx_euclidean_distance(location, lower_left),
+                     coordinate_calculation::approx_euclidean_distance(location, upper_left)));
         return min_max_dist;
     }
 
