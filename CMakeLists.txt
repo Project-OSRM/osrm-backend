@@ -325,7 +325,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
 endif()
 
 file(GLOB InstallGlob Include/osrm/*.hpp Library/OSRM.h)
-file(GLOB VariantGlob Include/variant/*.hpp)
+file(GLOB VariantGlob third_party/variant/*.hpp)
 
 # Add RPATH info to executables so that when they are run after being installed
 # (i.e., from /usr/local/bin/) the linker can find library dependencies. For
