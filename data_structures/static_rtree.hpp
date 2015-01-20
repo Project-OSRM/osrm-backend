@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "rectangle.hpp"
 #include "shared_memory_factory.hpp"
 #include "shared_memory_vector_wrapper.hpp"
+#include "upper_bound.hpp"
 
 #include "../Util/floating_point.hpp"
 #include "../Util/integer_range.hpp"
@@ -176,28 +177,28 @@ class StaticRTree
             switch (d)
             {
                 case NORTH:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, location.lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, location.lon));
                     break;
                 case SOUTH:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, location.lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, location.lon));
                     break;
                 case WEST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, min_lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(location.lat, min_lon));
                     break;
                 case EAST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, max_lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(location.lat, max_lon));
                     break;
                 case NORTH_EAST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, max_lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, max_lon));
                     break;
                 case NORTH_WEST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, min_lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, min_lon));
                     break;
                 case SOUTH_EAST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, max_lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, max_lon));
                     break;
                 case SOUTH_WEST:
-                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, min_lon));
+                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, min_lon));
                     break;
                 default:
                     break;
@@ -220,24 +221,24 @@ class StaticRTree
             min_max_dist = std::min(
                 min_max_dist,
                 std::max(
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left),
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right)));
+                    coordinate_calculation::approx_euclidean_distance(location, upper_left),
+                    coordinate_calculation::approx_euclidean_distance(location, upper_right)));
 
             min_max_dist = std::min(
                 min_max_dist,
                 std::max(
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right),
-                    FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right)));
+                    coordinate_calculation::approx_euclidean_distance(location, upper_right),
+                    coordinate_calculation::approx_euclidean_distance(location, lower_right)));
 
             min_max_dist = std::min(
                 min_max_dist,
-                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right),
-                         FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left)));
+                std::max(coordinate_calculation::approx_euclidean_distance(location, lower_right),
+                         coordinate_calculation::approx_euclidean_distance(location, lower_left)));
 
             min_max_dist = std::min(
                 min_max_dist,
-                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left),
-                         FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left)));
+                std::max(coordinate_calculation::approx_euclidean_distance(location, lower_left),
+                         coordinate_calculation::approx_euclidean_distance(location, upper_left)));
             return min_max_dist;
         }
 
@@ -606,7 +607,7 @@ class StaticRTree
                         }
 
                         float current_minimum_distance =
-                            FixedPointCoordinate::ApproximateEuclideanDistance(
+                            coordinate_calculation::approx_euclidean_distance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 m_coordinate_list->at(current_edge.u).lat,
@@ -619,7 +620,7 @@ class StaticRTree
                         }
 
                         current_minimum_distance =
-                            FixedPointCoordinate::ApproximateEuclideanDistance(
+                            coordinate_calculation::approx_euclidean_distance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 m_coordinate_list->at(current_edge.v).lat,
@@ -661,6 +662,15 @@ class StaticRTree
         unsigned number_of_elements_from_big_cc = 0;
         unsigned number_of_elements_from_tiny_cc = 0;
 
+        unsigned pruned_elements = 0;
+
+        std::pair<double, double> projected_coordinate = 
+            { mercator::lat2y(input_coordinate.lat / COORDINATE_PRECISION),
+              input_coordinate.lon / COORDINATE_PRECISION };
+
+        // upper bound pruning technique
+        upper_bound<float> pruning_bound(max_number_of_phantom_nodes);
+
         // initialize queue with root element
         std::priority_queue<IncrementalQueryCandidate> traversal_queue;
         traversal_queue.emplace(0.f, m_search_tree[0]);
@@ -683,15 +693,22 @@ class StaticRTree
                     {
                         const auto &current_edge = current_leaf_node.objects[i];
                         const float current_perpendicular_distance =
-                            FixedPointCoordinate::ComputePerpendicularDistance(
+                            coordinate_calculation::perpendicular_distance_from_projected_coordinate(
                                 m_coordinate_list->at(current_edge.u),
                                 m_coordinate_list->at(current_edge.v),
-                                input_coordinate);
+                                input_coordinate,
+                                projected_coordinate);
                         // distance must be non-negative
                         BOOST_ASSERT(0.f <= current_perpendicular_distance);
 
-                        // put element in queue
-                        traversal_queue.emplace(current_perpendicular_distance, current_edge);
+                        if (pruning_bound.get() >= current_perpendicular_distance ||
+                            current_edge.is_in_tiny_cc())
+                        {
+                            pruning_bound.insert(current_perpendicular_distance);
+                            traversal_queue.emplace(current_perpendicular_distance, current_edge);
+                        } else {
+                            ++pruned_elements;
+                        }
                     }
                 }
                 else
@@ -727,10 +744,11 @@ class StaticRTree
                 float current_ratio = 0.f;
                 FixedPointCoordinate foot_point_coordinate_on_segment;
                 // const float current_perpendicular_distance =
-                    FixedPointCoordinate::ComputePerpendicularDistance(
+                    coordinate_calculation::perpendicular_distance_from_projected_coordinate(
                         m_coordinate_list->at(current_segment.u),
                         m_coordinate_list->at(current_segment.v),
                         input_coordinate,
+                        projected_coordinate,
                         foot_point_coordinate_on_segment,
                         current_ratio);
 
@@ -766,13 +784,6 @@ class StaticRTree
                 { // found an element in a big component
                     ++number_of_elements_from_big_cc;
                 }
-
-                // SimpleLogger().Write() << "result_phantom_node_vector.size(): " << result_phantom_node_vector.size();
-                // SimpleLogger().Write() << "max_number_of_phantom_nodes: " << max_number_of_phantom_nodes;
-                // SimpleLogger().Write() << "number_of_elements_from_big_cc: " << number_of_elements_from_big_cc;
-                // SimpleLogger().Write() << "number_of_elements_from_tiny_cc: " << number_of_elements_from_tiny_cc;
-                // SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
-                // SimpleLogger().Write() << "max_checked_elements: " << max_checked_elements;
             }
 
             // stop the search by flushing the queue
@@ -782,7 +793,14 @@ class StaticRTree
                 traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
         }
+        // SimpleLogger().Write() << "result_phantom_node_vector.size(): " << result_phantom_node_vector.size();
+        // SimpleLogger().Write() << "max_number_of_phantom_nodes: " << max_number_of_phantom_nodes;
+        // SimpleLogger().Write() << "number_of_elements_from_big_cc: " << number_of_elements_from_big_cc;
+        // SimpleLogger().Write() << "number_of_elements_from_tiny_cc: " << number_of_elements_from_tiny_cc;
         // SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
+        // SimpleLogger().Write() << "max_checked_elements: " << max_checked_elements;
+        // SimpleLogger().Write() << "pruned_elements: " << pruned_elements;
+
         return !result_phantom_node_vector.empty();
     }
 
@@ -828,7 +846,7 @@ class StaticRTree
                     {
                         const auto &current_edge = current_leaf_node.objects[i];
                         const float current_perpendicular_distance =
-                            FixedPointCoordinate::ComputePerpendicularDistance(
+                            coordinate_calculation::ComputePerpendicularDistance(
                                 m_coordinate_list->at(current_edge.u),
                                 m_coordinate_list->at(current_edge.v),
                                 input_coordinate);
@@ -885,7 +903,7 @@ class StaticRTree
                 float current_ratio = 0.;
                 FixedPointCoordinate foot_point_coordinate_on_segment;
                 const float current_perpendicular_distance =
-                    FixedPointCoordinate::ComputePerpendicularDistance(
+                    coordinate_calculation::ComputePerpendicularDistance(
                         m_coordinate_list->at(current_segment.u),
                         m_coordinate_list->at(current_segment.v),
                         input_coordinate,
@@ -985,7 +1003,7 @@ class StaticRTree
                         float current_ratio = 0.;
                         FixedPointCoordinate nearest;
                         const float current_perpendicular_distance =
-                            FixedPointCoordinate::ComputePerpendicularDistance(
+                            coordinate_calculation::ComputePerpendicularDistance(
                                 m_coordinate_list->at(current_edge.u),
                                 m_coordinate_list->at(current_edge.v),
                                 input_coordinate,
@@ -1042,9 +1060,9 @@ class StaticRTree
     inline void SetForwardAndReverseWeightsOnPhantomNode(const EdgeDataT & nearest_edge,
                                                          PhantomNode &result_phantom_node) const
     {
-        const float distance_1 = FixedPointCoordinate::ApproximateEuclideanDistance(
+        const float distance_1 = coordinate_calculation::approx_euclidean_distance(
             m_coordinate_list->at(nearest_edge.u), result_phantom_node.location);
-        const float distance_2 = FixedPointCoordinate::ApproximateEuclideanDistance(
+        const float distance_2 = coordinate_calculation::approx_euclidean_distance(
             m_coordinate_list->at(nearest_edge.u), m_coordinate_list->at(nearest_edge.v));
         const float ratio = std::min(1.f, distance_1 / distance_2);
 

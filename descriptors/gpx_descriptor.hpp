@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -49,10 +49,10 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
 
         std::string tmp;
 
-        FixedPointCoordinate::convertInternalLatLonToString(coordinate.lat, tmp);
+        coordinate_calculation::lat_or_lon_to_string(coordinate.lat, tmp);
         json_lat.values["_lat"] = tmp;
 
-        FixedPointCoordinate::convertInternalLatLonToString(coordinate.lon, tmp);
+        coordinate_calculation::lat_or_lon_to_string(coordinate.lon, tmp);
         json_lon.values["_lon"] = tmp;
 
         json_row.values.push_back(json_lat);

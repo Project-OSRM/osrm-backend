@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -36,6 +36,7 @@ namespace
 {
 constexpr static const float COORDINATE_PRECISION = 1000000.f;
 }
+
 struct FixedPointCoordinate
 {
     int lat;
@@ -56,52 +57,8 @@ struct FixedPointCoordinate
     bool is_valid() const;
     bool operator==(const FixedPointCoordinate &other) const;
 
-    static double
-    ApproximateDistance(const int lat1, const int lon1, const int lat2, const int lon2);
-
-    static double ApproximateDistance(const FixedPointCoordinate &first_coordinate,
-                                      const FixedPointCoordinate &second_coordinate);
-
-    static float ApproximateEuclideanDistance(const FixedPointCoordinate &first_coordinate,
-                                              const FixedPointCoordinate &second_coordinate);
-
-    static float
-    ApproximateEuclideanDistance(const int lat1, const int lon1, const int lat2, const int lon2);
-
-    static float ApproximateSquaredEuclideanDistance(const FixedPointCoordinate &first_coordinate,
-                                                     const FixedPointCoordinate &second_coordinate);
-
-    static void convertInternalLatLonToString(const int value, std::string &output);
-
-    static void convertInternalCoordinateToString(const FixedPointCoordinate &coordinate,
-                                                  std::string &output);
-
-    static void convertInternalReversedCoordinateToString(const FixedPointCoordinate &coordinate,
-                                                          std::string &output);
-
-    static float ComputePerpendicularDistance(const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location);
-
-    static float ComputePerpendicularDistance(const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location,
-                                              FixedPointCoordinate &nearest_location,
-                                              float &ratio);
-
-    static int
-    OrderedPerpendicularDistanceApproximation(const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location);
-
-    static float GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
-
     float GetBearing(const FixedPointCoordinate &other) const;
-
     void Output(std::ostream &out) const;
-
-    static float DegreeToRadian(const float degree);
-    static float RadianToDegree(const float radian);
 };
 
 inline std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate const &coordinate)

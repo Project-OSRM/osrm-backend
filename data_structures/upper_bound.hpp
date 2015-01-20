@@ -25,27 +25,51 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <boost/test/unit_test.hpp>
+#ifndef LOWER_BOUND_HPP
+#define LOWER_BOUND_HPP
 
-#include "../../data_structures/coordinate_calculation.hpp"
+#include <functional>
+#include <limits>
+#include <queue>
 
-#include <osrm/coordinate.hpp>
+// max pq holds k elements
+// insert if key is smaller than max
+// if size > k then remove element
+// get() always yields a bound to the k smallest element in the stream
 
-#include <cmath>
-
-// Regression test for bug captured in #1347
-BOOST_AUTO_TEST_CASE(regression_test_1347)
+template<typename key_type>
+class upper_bound
 {
-    FixedPointCoordinate u(10 * COORDINATE_PRECISION, -100 * COORDINATE_PRECISION);
-    FixedPointCoordinate v(10.001 * COORDINATE_PRECISION, -100.002 * COORDINATE_PRECISION);
-    FixedPointCoordinate q(10.002 * COORDINATE_PRECISION, -100.001 * COORDINATE_PRECISION);
+  public:
+    upper_bound() = delete;
+    upper_bound(std::size_t size) : size(size)
+    {
+    }
 
-    float d1 = coordinate_calculation::ComputePerpendicularDistance(u, v, q);
+    key_type get() const
+    {
+        if (queue.size() < size)
+        {
+            return std::numeric_limits<key_type>::max();
+        }
+        return queue.top();
+    }
 
-    float ratio;
-    FixedPointCoordinate nearest_location;
-    float d2 = coordinate_calculation::ComputePerpendicularDistance(u, v, q, nearest_location, ratio);
+    void insert(const key_type key)
+    {
+        if (key < get())
+        {
+            queue.emplace(key);
+            while (queue.size() > size) 
+            {
+                queue.pop();
+            }
+        }
+    }
 
-    BOOST_CHECK_LE(std::abs(d1 - d2), 0.01f);
-}
+  private:
+    std::priority_queue<key_type, std::vector<key_type>, std::less<key_type>> queue;
+    const std::size_t size;
+};
 
+#endif // LOWER_BOUND_HPP

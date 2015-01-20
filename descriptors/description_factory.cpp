@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "description_factory.hpp"
 
 #include "../algorithms/polyline_formatter.hpp"
+#include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/turn_instructions.hpp"
 #include "../typedefs.h"
@@ -134,7 +135,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
-        path_description[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(
+        path_description[i].length = coordinate_calculation::approx_euclidean_distance(
             path_description[i - 1].location, path_description[i].location);
     }
 
