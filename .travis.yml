@@ -24,7 +24,7 @@ before_script:
  - bundle install
  - mkdir build
  - cd build
- - cmake .. $CMAKEOPTIONS
+ - cmake .. $CMAKEOPTIONS -DBUILD_TOOLS=1
 script:
  - make -j 2
  - make -j 2 tests
