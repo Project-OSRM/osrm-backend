@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 #include "../algorithms/tiny_components.hpp"
 #include "../data_structures/static_graph.hpp"
+#include "../data_structures/coordinate_calculation.hpp"
 #include "../Util/fingerprint.hpp"
 #include "../Util/graph_loader.hpp"
 #include "../Util/make_unique.hpp"
@@ -243,7 +244,7 @@ int main(int argc, char *argv[])
                 if (source < target || graph->EndEdges(target) == graph->FindEdge(target, source))
                 {
                     total_network_distance +=
-                        100 * FixedPointCoordinate::ApproximateEuclideanDistance(
+                        100 * coordinate_calculation::approx_euclidean_distance(
                                   coordinate_list[source].lat,
                                   coordinate_list[source].lon,
                                   coordinate_list[target].lat,
