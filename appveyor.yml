@@ -16,6 +16,8 @@ init:
 # clone directory
 clone_folder: c:\projects\osrm
 
+os: Visual Studio 2015 CTP
+
 platform: x64
 
 install:
@@ -31,7 +33,7 @@ build_script:
   - cd build
   - echo Running cmake...
   - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
-  - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
+  - set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
   - SET P=c:/projects/osrm
   - set TBB_INSTALL_DIR=%P%/tbb
   - set TBB_ARCH_PLATFORM=intel64/vc12
