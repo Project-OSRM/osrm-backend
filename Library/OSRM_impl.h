@@ -62,6 +62,11 @@ class OSRM_impl
     std::unique_ptr<SharedBarriers> barrier;
     // base class pointer to the objects
     BaseDataFacade<QueryEdge::EdgeData> *query_data_facade;
+
+    // decrease number of concurrent queries
+    void decrease_concurrent_query_count();
+    // increase number of concurrent queries
+    void increase_concurrent_query_count();
 };
 
 #endif // OSRM_IMPL_H

@@ -100,54 +100,68 @@ void OSRM_impl::RegisterPlugin(BasePlugin *plugin)
 
 int OSRM_impl::RunQuery(RouteParameters &route_parameters, JSON::Object &json_result)
 {
-    const PluginMap::const_iterator &iter = plugin_map.find(route_parameters.service);
+    const auto &plugin_iterator = plugin_map.find(route_parameters.service);
 
-    if (plugin_map.end() != iter)
+    if (plugin_map.end() == plugin_iterator)
     {
-        if (barrier)
-        {
-            // lock update pending
-            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> pending_lock(
-                barrier->pending_update_mutex);
-
-            // lock query
-            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
-                barrier->query_mutex);
-
-            // unlock update pending
-            pending_lock.unlock();
-
-            // increment query count
-            ++(barrier->number_of_queries);
-
-            (static_cast<SharedDataFacade<QueryEdge::EdgeData> *>(query_data_facade))
-                ->CheckAndReloadFacade();
-        }
-
-        iter->second->HandleRequest(route_parameters, json_result);
-        if (barrier)
-        {
-            // lock query
-            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
-                barrier->query_mutex);
-
-            // decrement query count
-            --(barrier->number_of_queries);
-            BOOST_ASSERT_MSG(0 <= barrier->number_of_queries, "invalid number of queries");
-
-            // notify all processes that were waiting for this condition
-            if (0 == barrier->number_of_queries)
-            {
-                barrier->no_running_queries_condition.notify_all();
-            }
-        }
-        return 200;
+        return 400;
     }
-    return 400;
+
+    increase_concurrent_query_count();
+    plugin_iterator->second->HandleRequest(route_parameters, json_result);
+    decrease_concurrent_query_count();
+    return 200;
+}
+
+// decrease number of concurrent queries
+void OSRM_impl::decrease_concurrent_query_count()
+{
+    if (!barrier)
+    {
+        return;
+    }
+    // lock query
+    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
+        barrier->query_mutex);
+
+    // decrement query count
+    --(barrier->number_of_queries);
+    BOOST_ASSERT_MSG(0 <= barrier->number_of_queries, "invalid number of queries");
+
+    // notify all processes that were waiting for this condition
+    if (0 == barrier->number_of_queries)
+    {
+        barrier->no_running_queries_condition.notify_all();
+    }
+}
+
+// increase number of concurrent queries
+void OSRM_impl::increase_concurrent_query_count()
+{
+    if (!barrier)
+    {
+        return;
+    }
+
+    // lock update pending
+    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> pending_lock(
+        barrier->pending_update_mutex);
+
+    // lock query
+    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
+        barrier->query_mutex);
+
+    // unlock update pending
+    pending_lock.unlock();
+
+    // increment query count
+    ++(barrier->number_of_queries);
+
+    (static_cast<SharedDataFacade<QueryEdge::EdgeData> *>(query_data_facade))
+        ->CheckAndReloadFacade();
 }
 
 // proxy code for compilation firewall
-
 OSRM::OSRM(libosrm_config &lib_config)
     : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config))
 {
