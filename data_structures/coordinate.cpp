@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "coordinate_calculation.hpp"
 
 #include "../Util/mercator.hpp"
+#ifndef NDEBUG
 #include "../Util/simple_logger.hpp"
-
+#endif
 #include <boost/assert.hpp>
 #include <osrm/coordinate.hpp>
 
@@ -84,5 +85,5 @@ void FixedPointCoordinate::output(std::ostream &out) const
 
 float FixedPointCoordinate::bearing(const FixedPointCoordinate &other) const
 {
-    return coordinate_calculation::bearing(*this, other);
+    return coordinate_calculation::bearing(other, *this);
 }
