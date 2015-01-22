@@ -239,3 +239,26 @@ float coordinate_calculation::rad_to_deg(const float radian)
 {
     return radian * (180.f * static_cast<float>(M_1_PI));
 }
+
+float coordinate_calculation::bearing(const FixedPointCoordinate &first_coordinate,
+                                      const FixedPointCoordinate &second_coordinate)
+{
+    const float lon_diff =
+        second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
+    const float lon_delta = deg_to_rad(lon_diff);
+    const float lat1 = deg_to_rad(first_coordinate.lat / COORDINATE_PRECISION);
+    const float lat2 = deg_to_rad(second_coordinate.lat / COORDINATE_PRECISION);
+    const float y = sin(lon_delta) * cos(lat2);
+    const float x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon_delta);
+    float result = rad_to_deg(std::atan2(y, x));
+    while (result < 0.f)
+    {
+        result += 360.f;
+    }
+
+    while (result >= 360.f)
+    {
+        result -= 360.f;
+    }
+    return result;
+}

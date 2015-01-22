@@ -45,25 +45,28 @@ struct FixedPointCoordinate
     FixedPointCoordinate();
     FixedPointCoordinate(int lat, int lon);
 
-    template<class T>
-    FixedPointCoordinate(const T &coordinate) : lat(coordinate.lat), lon(coordinate.lon)
+    template <class T>
+    FixedPointCoordinate(const T &coordinate)
+        : lat(coordinate.lat), lon(coordinate.lon)
     {
-        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value, "coordinate types incompatible");
-        static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value, "coordinate types incompatible");
+        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
+                      "coordinate types incompatible");
+        static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value,
+                      "coordinate types incompatible");
     }
 
-    void Reset();
-    bool isSet() const;
+    void reset();
+    bool is_set() const;
     bool is_valid() const;
     bool operator==(const FixedPointCoordinate &other) const;
 
-    float GetBearing(const FixedPointCoordinate &other) const;
-    void Output(std::ostream &out) const;
+    float bearing(const FixedPointCoordinate &other) const;
+    void output(std::ostream &out) const;
 };
 
 inline std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate const &coordinate)
 {
-    coordinate.Output(out_stream);
+    coordinate.output(out_stream);
     return out_stream;
 }
 

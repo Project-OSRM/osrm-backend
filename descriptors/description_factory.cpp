@@ -237,7 +237,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
                 via_indices.push_back(necessary_pieces);
             }
             const double angle =
-                path_description[i + 1].location.GetBearing(path_description[i].location);
+                path_description[i + 1].location.bearing(path_description[i].location);
             path_description[i].bearing = static_cast<unsigned>(angle * 10);
         }
     }

@@ -75,6 +75,9 @@ struct coordinate_calculation
 
     static float deg_to_rad(const float degree);
     static float rad_to_deg(const float radian);
+
+    static float bearing(const FixedPointCoordinate &first_coordinate,
+                         const FixedPointCoordinate &second_coordinate);
 };
 
 #endif // COORDINATE_CALCULATION

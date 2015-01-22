@@ -63,12 +63,12 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon
 #endif
 }
 
-void FixedPointCoordinate::Reset()
+void FixedPointCoordinate::reset()
 {
     lat = std::numeric_limits<int>::min();
     lon = std::numeric_limits<int>::min();
 }
-bool FixedPointCoordinate::isSet() const
+bool FixedPointCoordinate::is_set() const
 {
     return (std::numeric_limits<int>::min() != lat) && (std::numeric_limits<int>::min() != lon);
 }
@@ -86,30 +86,12 @@ bool FixedPointCoordinate::operator==(const FixedPointCoordinate &other) const
     return lat == other.lat && lon == other.lon;
 }
 
-void FixedPointCoordinate::Output(std::ostream &out) const
+void FixedPointCoordinate::output(std::ostream &out) const
 {
     out << "(" << lat / COORDINATE_PRECISION << "," << lon / COORDINATE_PRECISION << ")";
 }
 
-float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
+float FixedPointCoordinate::bearing(const FixedPointCoordinate &other) const
 {
-    const float lon_delta = coordinate_calculation::deg_to_rad(lon / COORDINATE_PRECISION -
-                                                               other.lon / COORDINATE_PRECISION);
-    const float lat1 = coordinate_calculation::deg_to_rad(other.lat / COORDINATE_PRECISION);
-    const float lat2 = coordinate_calculation::deg_to_rad(lat / COORDINATE_PRECISION);
-    const float y_value = std::sin(lon_delta) * std::cos(lat2);
-    const float x_value =
-        std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
-    float result = coordinate_calculation::rad_to_deg(std::atan2(y_value, x_value));
-
-    while (result < 0.f)
-    {
-        result += 360.f;
-    }
-
-    while (result >= 360.f)
-    {
-        result -= 360.f;
-    }
-    return result;
+    return coordinate_calculation::bearing(*this, other);
 }
