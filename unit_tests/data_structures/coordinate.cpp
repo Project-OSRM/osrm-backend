@@ -44,8 +44,7 @@ BOOST_AUTO_TEST_CASE(regression_test_1347)
 
     float ratio;
     FixedPointCoordinate nearest_location;
-    float d2 =
-        coordinate_calculation::perpendicular_distance(u, v, q, nearest_location, ratio);
+    float d2 = coordinate_calculation::perpendicular_distance(u, v, q, nearest_location, ratio);
 
     BOOST_CHECK_LE(std::abs(d1 - d2), 0.01f);
 }

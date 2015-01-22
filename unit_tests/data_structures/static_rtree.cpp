@@ -260,17 +260,17 @@ struct GraphFixture
 };
 
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 3, TEST_LEAF_NODE_SIZE / 2>
-TestRandomGraphFixture_LeafHalfFull;
+    TestRandomGraphFixture_LeafHalfFull;
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 5, TEST_LEAF_NODE_SIZE>
-TestRandomGraphFixture_LeafFull;
+    TestRandomGraphFixture_LeafFull;
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * 10, TEST_LEAF_NODE_SIZE * 2>
-TestRandomGraphFixture_TwoLeaves;
+    TestRandomGraphFixture_TwoLeaves;
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
                            TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR>
-TestRandomGraphFixture_Branch;
+    TestRandomGraphFixture_Branch;
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
                            TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>
-TestRandomGraphFixture_MultipleLevels;
+    TestRandomGraphFixture_MultipleLevels;
 
 template <typename RTreeT>
 void simple_verify_rtree(RTreeT &rtree,
@@ -286,11 +286,11 @@ void simple_verify_rtree(RTreeT &rtree,
         bool found_u = rtree.LocateClosestEndPointForCoordinate(pu, result_u, 1);
         bool found_v = rtree.LocateClosestEndPointForCoordinate(pv, result_v, 1);
         BOOST_CHECK(found_u && found_v);
-        float dist_u = coordinate_calculation::euclidean_distance(
-            result_u.lat, result_u.lon, pu.lat, pu.lon);
+        float dist_u =
+            coordinate_calculation::euclidean_distance(result_u.lat, result_u.lon, pu.lat, pu.lon);
         BOOST_CHECK_LE(dist_u, std::numeric_limits<float>::epsilon());
-        float dist_v = coordinate_calculation::euclidean_distance(
-            result_v.lat, result_v.lon, pv.lat, pv.lon);
+        float dist_v =
+            coordinate_calculation::euclidean_distance(result_v.lat, result_v.lon, pv.lat, pv.lon);
         BOOST_CHECK_LE(dist_v, std::numeric_limits<float>::epsilon());
     }
 }
@@ -389,30 +389,31 @@ BOOST_AUTO_TEST_CASE(regression_test)
 {
     typedef std::pair<float, float> Coord;
     typedef std::pair<unsigned, unsigned> Edge;
-    GraphFixture fixture({
-                          Coord(40.0, 0.0),
-                          Coord(35.0, 5.0),
+    GraphFixture fixture(
+        {
+         Coord(40.0, 0.0),
+         Coord(35.0, 5.0),
 
-                          Coord(5.0, 5.0),
-                          Coord(0.0, 10.0),
+         Coord(5.0, 5.0),
+         Coord(0.0, 10.0),
 
-                          Coord(20.0, 10.0),
-                          Coord(20.0, 5.0),
+         Coord(20.0, 10.0),
+         Coord(20.0, 5.0),
 
-                          Coord(40.0, 100.0),
-                          Coord(35.0, 105.0),
+         Coord(40.0, 100.0),
+         Coord(35.0, 105.0),
 
-                          Coord(5.0, 105.0),
-                          Coord(0.0, 110.0),
-                         },
-                         {Edge(0, 1), Edge(2, 3), Edge(4, 5), Edge(6, 7), Edge(8, 9)});
+         Coord(5.0, 105.0),
+         Coord(0.0, 110.0),
+        },
+        {Edge(0, 1), Edge(2, 3), Edge(4, 5), Edge(6, 7), Edge(8, 9)});
 
     typedef StaticRTree<TestData, std::vector<FixedPointCoordinate>, false, 2, 3> MiniStaticRTree;
 
     std::string leaves_path;
     std::string nodes_path;
-    build_rtree<GraphFixture, MiniStaticRTree>(
-        "test_regression", &fixture, leaves_path, nodes_path);
+    build_rtree<GraphFixture, MiniStaticRTree>("test_regression", &fixture, leaves_path,
+                                               nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
 
     // query a node just right of the center of the gap
