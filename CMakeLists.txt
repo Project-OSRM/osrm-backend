@@ -69,7 +69,7 @@ file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp util/co
 set(PrepareSources prepare.cpp ${PrepareGlob})
 add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
-file(GLOB ServerGlob server/*.cpp)
+file(GLOB ServerGlob server/*.cpp util/compute_angle.cpp)
 file(GLOB DescriptorGlob descriptors/*.cpp)
 file(GLOB DatastructureGlob data_structures/search_engine_data.cpp data_structures/route_parameters.cpp util/bearing.cpp)
 list(REMOVE_ITEM DatastructureGlob data_structures/Coordinate.cpp)

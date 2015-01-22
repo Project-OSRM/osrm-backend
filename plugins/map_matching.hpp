@@ -27,6 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../util/integer_range.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../routing_algorithms/map_matching.hpp"
+#include "../util/compute_angle.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/string_util.hpp"
 #include "../descriptors/descriptor_base.hpp"
@@ -68,22 +69,39 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return 400;
         }
 
-        InternalRouteResult raw_route;
+        const auto& input_coords = route_parameters.coordinates;
         Matching::CandidateLists candidate_lists;
+        std::vector<bool> uturn_indicators(false, input_coords.size());
 
         double last_distance = coordinate_calculation::great_circle_distance(
-            route_parameters.coordinates[0],
-            route_parameters.coordinates[1]);
-        for (const auto current_coordinate : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
+            input_coords[0],
+            input_coords[1]);
+        for (const auto current_coordinate : osrm::irange<std::size_t>(0, input_coords.size()))
         {
             if (0 < current_coordinate)
+            {
                 last_distance = coordinate_calculation::great_circle_distance(
-                    route_parameters.coordinates[current_coordinate - 1],
-                    route_parameters.coordinates[current_coordinate]);
+                    input_coords[current_coordinate - 1],
+                    input_coords[current_coordinate]);
+            }
+
+            if (input_coords.size()-1 > current_coordinate && 0 < current_coordinate)
+            {
+                double turn_angle = ComputeAngle::OfThreeFixedPointCoordinates(
+                                                    input_coords[current_coordinate-1],
+                                                    input_coords[current_coordinate],
+                                                    input_coords[current_coordinate+1]);
+
+                // sharp turns indicate a possible uturn
+                if (turn_angle < 100.0 || turn_angle > 260.0)
+                {
+                    uturn_indicators[current_coordinate] = true;
+                }
+            }
 
             std::vector<std::pair<PhantomNode, double>> candidates;
             if (!facade->IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
-                    route_parameters.coordinates[current_coordinate],
+                    input_coords[current_coordinate],
                     candidates,
                     last_distance/2.0,
                     5,
@@ -98,8 +116,10 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         // call the actual map matching
         std::vector<PhantomNode> matched_nodes;
         JSON::Object debug_info;
-        search_engine_ptr->map_matching(candidate_lists, route_parameters.coordinates, matched_nodes, debug_info);
+        search_engine_ptr->map_matching(candidate_lists, input_coords, uturn_indicators, matched_nodes, debug_info);
 
+
+        InternalRouteResult raw_route;
         PhantomNodes current_phantom_node_pair;
         for (unsigned i = 0; i < matched_nodes.size() - 1; ++i)
         {
@@ -110,8 +130,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         if (2 > matched_nodes.size())
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
 
         search_engine_ptr->shortest_path(
