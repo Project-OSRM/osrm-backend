@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/ref.hpp>
 #include <boost/regex.hpp>
 
+#include <algorithm>
+
 namespace
 {
 int lua_error_callback(lua_State *lua_state)
@@ -228,14 +230,16 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     // only a few exceptions are actually defined.
     std::vector<std::string> exceptions;
     boost::algorithm::split_regex(exceptions, except_tag_string, boost::regex("[;][ ]*"));
-    for (std::string &current_string : exceptions)
-    {
-        const auto string_iterator =
-            std::find(restriction_exceptions.begin(), restriction_exceptions.end(), current_string);
-        if (restriction_exceptions.end() != string_iterator)
-        {
-            return true;
-        }
-    }
-    return false;
+
+    return std::any_of(std::begin(exceptions), std::end(exceptions),
+                       [&](const std::string &current_string)
+                       {
+                           if (restriction_exceptions.end() !=
+                               std::find(restriction_exceptions.begin(),
+                                         restriction_exceptions.end(), current_string))
+                           {
+                               return true;
+                           }
+                           return false;
+                       });
 }
