@@ -31,20 +31,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <limits>
 #include <queue>
+#include <type_traits>
 
 // max pq holds k elements
 // insert if key is smaller than max
 // if size > k then remove element
 // get() always yields a bound to the k smallest element in the stream
 
-template<typename key_type>
-class upper_bound
+template <typename key_type> class upper_bound
 {
+  private:
+    using parameter_type =
+        typename std::conditional<std::is_fundamental<key_type>::value, key_type, key_type &>::type;
+
   public:
     upper_bound() = delete;
-    upper_bound(std::size_t size) : size(size)
-    {
-    }
+    upper_bound(std::size_t size) : size(size) {}
 
     key_type get() const
     {
@@ -55,12 +57,12 @@ class upper_bound
         return queue.top();
     }
 
-    void insert(const key_type key)
+    void insert(const parameter_type key)
     {
         if (key < get())
         {
             queue.emplace(key);
-            while (queue.size() > size) 
+            while (queue.size() > size)
             {
                 queue.pop();
             }
