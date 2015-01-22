@@ -143,10 +143,7 @@ int OSRM_impl::RunQuery(RouteParameters &route_parameters, JSON::Object &json_re
         }
         return 200;
     }
-    else
-    {
-        return 400;
-    }
+    return 400;
 }
 
 // proxy code for compilation firewall
