@@ -236,12 +236,11 @@ int Extractor::Run(int argc, char *argv[])
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
 
-        unsigned nn = number_of_nodes;
-        unsigned nw = number_of_ways;
-        unsigned nr = number_of_relations;
-        unsigned no = number_of_others;
-        SimpleLogger().Write() << "Raw input contains " << nn << " nodes, " << nw << " ways, and "
-                               << nr << " relations, and " << no << " unknown entities";
+        SimpleLogger().Write() << "Raw input contains "
+                               << number_of_nodes.load() << " nodes, "
+                               << number_of_ways.load() << " ways, and "
+                               << number_of_relations.load() << " relations, and "
+                               << number_of_others.load() << " unknown entities";
 
         extractor_callbacks.reset();
 
