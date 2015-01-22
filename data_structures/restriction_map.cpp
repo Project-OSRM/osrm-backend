@@ -145,23 +145,25 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
     }
 
     const auto restriction_iter = m_restriction_map.find({node_u, node_v});
-    if (restriction_iter != m_restriction_map.end())
+    if (restriction_iter == m_restriction_map.end())
     {
-        const unsigned index = restriction_iter->second;
-        const auto &bucket = m_restriction_bucket_list.at(index);
+        return false;
+    }
 
-        for (const RestrictionTarget &restriction_target : bucket)
+    const unsigned index = restriction_iter->second;
+    const auto &bucket = m_restriction_bucket_list.at(index);
+
+    for (const RestrictionTarget &restriction_target : bucket)
+    {
+        if (node_w == restriction_target.target_node && // target found
+            !restriction_target.is_only)                 // and not an only_-restr.
         {
-            if (node_w == restriction_target.target_node && // target found
-                !restriction_target.is_only)                 // and not an only_-restr.
-            {
-                return true;
-            }
-            if (node_w != restriction_target.target_node && // target not found
-                restriction_target.is_only)                 // and is an only restriction
-            {
-                return true;
-            }
+            return true;
+        }
+        if (node_w != restriction_target.target_node && // target not found
+            restriction_target.is_only)                 // and is an only restriction
+        {
+            return true;
         }
     }
     return false;
