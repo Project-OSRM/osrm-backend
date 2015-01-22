@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
         tarjan->run();
         SimpleLogger().Write() << "identified: " << tarjan->get_number_of_components()
                            << " many components";
-        SimpleLogger().Write() << "identified " << tarjan->get_size_one_count() << " SCCs of size 1";
+        SimpleLogger().Write() << "identified " << tarjan->get_size_one_count() << " size 1 SCCs";
 
         // output
         TIMER_START(SCC_RUN_SETUP);

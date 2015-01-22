@@ -103,7 +103,8 @@ int main(const int argc, const char *argv[])
         const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
         if (-1 == mlockall(lock_flags))
         {
-            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
+            SimpleLogger().Write(logWARNING) << "Process " << argv[0]
+                                             << " could not request RAM lock";
         }
 #endif
         try
@@ -340,8 +341,8 @@ int main(const int argc, const char *argv[])
         geometry_input_stream.read((char *)&number_of_geometries_indices, sizeof(unsigned));
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDEX,
                                                   number_of_geometries_indices);
-        boost::iostreams::seek(
-            geometry_input_stream, number_of_geometries_indices * sizeof(unsigned), BOOST_IOS::cur);
+        boost::iostreams::seek(geometry_input_stream,
+                               number_of_geometries_indices * sizeof(unsigned), BOOST_IOS::cur);
         geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_LIST,
                                                   number_of_compressed_geometries);
@@ -410,9 +411,8 @@ int main(const int argc, const char *argv[])
         unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
             shared_memory_ptr, SharedDataLayout::NAME_ID_LIST);
 
-        TravelMode *travel_mode_ptr =
-            shared_layout_ptr->GetBlockPtr<TravelMode, true>(
-                shared_memory_ptr, SharedDataLayout::TRAVEL_MODE);
+        TravelMode *travel_mode_ptr = shared_layout_ptr->GetBlockPtr<TravelMode, true>(
+            shared_memory_ptr, SharedDataLayout::TRAVEL_MODE);
 
         TurnInstruction *turn_instructions_ptr =
             shared_layout_ptr->GetBlockPtr<TurnInstruction, true>(

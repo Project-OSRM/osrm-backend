@@ -46,15 +46,9 @@ int main(int argc, const char *argv[])
         int ip_port, requested_thread_num;
         bool trial_run = false;
         libosrm_config lib_config;
-        const unsigned init_result = GenerateServerProgramOptions(argc,
-                                                                  argv,
-                                                                  lib_config.server_paths,
-                                                                  ip_address,
-                                                                  ip_port,
-                                                                  requested_thread_num,
-                                                                  lib_config.use_shared_memory,
-                                                                  trial_run,
-                                                                  lib_config.max_locations_distance_table);
+        const unsigned init_result = GenerateServerProgramOptions(
+            argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
+            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table);
 
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {

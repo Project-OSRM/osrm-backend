@@ -39,9 +39,11 @@ double ComputeAngle::OfThreeFixedPointCoordinates(const FixedPointCoordinate &A,
                                                   const FixedPointCoordinate &B)
 {
     const double v1x = (A.lon - C.lon) / COORDINATE_PRECISION;
-    const double v1y = mercator::lat2y(A.lat / COORDINATE_PRECISION) - mercator::lat2y(C.lat / COORDINATE_PRECISION);
+    const double v1y = mercator::lat2y(A.lat / COORDINATE_PRECISION) -
+                       mercator::lat2y(C.lat / COORDINATE_PRECISION);
     const double v2x = (B.lon - C.lon) / COORDINATE_PRECISION;
-    const double v2y = mercator::lat2y(B.lat / COORDINATE_PRECISION) - mercator::lat2y(C.lat / COORDINATE_PRECISION);
+    const double v2y = mercator::lat2y(B.lat / COORDINATE_PRECISION) -
+                       mercator::lat2y(C.lat / COORDINATE_PRECISION);
 
     double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / M_PI;
     while (angle < 0.)

@@ -44,8 +44,8 @@ class ScriptingEnvironment
     lua_State *get_lua_state();
 
   private:
-    void init_lua_state(lua_State* lua_state);
-    std::mutex init_mutex; 
+    void init_lua_state(lua_State *lua_state);
+    std::mutex init_mutex;
     std::string file_name;
     tbb::enumerable_thread_specific<std::shared_ptr<lua_State>> script_contexts;
 };

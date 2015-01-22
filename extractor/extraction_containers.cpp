@@ -83,32 +83,25 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         TIMER_STOP(erasing_dups);
         std::cout << "ok, after " << TIMER_SEC(erasing_dups) << "s" << std::endl;
 
-
         std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
         TIMER_START(sorting_nodes);
-        stxxl::sort(all_nodes_list.begin(),
-                    all_nodes_list.end(),
-                    ExternalMemoryNodeSTXXLCompare(),
+        stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), ExternalMemoryNodeSTXXLCompare(),
                     stxxl_memory);
         TIMER_STOP(sorting_nodes);
         std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
 
-
         std::cout << "[extractor] Sorting used ways         ... " << std::flush;
         TIMER_START(sort_ways);
-        stxxl::sort(way_start_end_id_list.begin(),
-                    way_start_end_id_list.end(),
-                    FirstAndLastSegmentOfWayStxxlCompare(),
-                    stxxl_memory);
+        stxxl::sort(way_start_end_id_list.begin(), way_start_end_id_list.end(),
+                    FirstAndLastSegmentOfWayStxxlCompare(), stxxl_memory);
         TIMER_STOP(sort_ways);
         std::cout << "ok, after " << TIMER_SEC(sort_ways) << "s" << std::endl;
 
-        std::cout << "[extractor] Sorting " << restrictions_list.size() << " restrictions. by from... " << std::flush;
+        std::cout << "[extractor] Sorting " << restrictions_list.size()
+                  << " restrictions. by from... " << std::flush;
         TIMER_START(sort_restrictions);
-        stxxl::sort(restrictions_list.begin(),
-                    restrictions_list.end(),
-                    CmpRestrictionContainerByFrom(),
-                    stxxl_memory);
+        stxxl::sort(restrictions_list.begin(), restrictions_list.end(),
+                    CmpRestrictionContainerByFrom(), stxxl_memory);
         TIMER_STOP(sort_restrictions);
         std::cout << "ok, after " << TIMER_SEC(sort_restrictions) << "s" << std::endl;
 
@@ -132,7 +125,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 continue;
             }
 
-            BOOST_ASSERT(way_start_and_end_iterator->way_id == restrictions_iterator->restriction.from.way);
+            BOOST_ASSERT(way_start_and_end_iterator->way_id ==
+                         restrictions_iterator->restriction.from.way);
             const NodeID via_node_id = restrictions_iterator->restriction.via.node;
 
             if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
@@ -153,10 +147,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         std::cout << "[extractor] Sorting restrictions. by to  ... " << std::flush;
         TIMER_START(sort_restrictions_to);
-        stxxl::sort(restrictions_list.begin(),
-                    restrictions_list.end(),
-                    CmpRestrictionContainerByTo(),
-                    stxxl_memory);
+        stxxl::sort(restrictions_list.begin(), restrictions_list.end(),
+                    CmpRestrictionContainerByTo(), stxxl_memory);
         TIMER_STOP(sort_restrictions_to);
         std::cout << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s" << std::endl;
 
@@ -177,7 +169,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 ++restrictions_iterator;
                 continue;
             }
-            BOOST_ASSERT(way_start_and_end_iterator->way_id == restrictions_iterator->restriction.to.way);
+            BOOST_ASSERT(way_start_and_end_iterator->way_id ==
+                         restrictions_iterator->restriction.to.way);
             const NodeID via_node_id = restrictions_iterator->restriction.via.node;
 
             if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
@@ -203,7 +196,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         const auto count_position = restrictions_out_stream.tellp();
         restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
 
-        for(const auto & restriction_container : restrictions_list)
+        for (const auto &restriction_container : restrictions_list)
         {
             if (SPECIAL_NODEID != restriction_container.restriction.from.node &&
                 SPECIAL_NODEID != restriction_container.restriction.to.node)
@@ -267,7 +260,6 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         TIMER_STOP(sort_edges_by_start);
         std::cout << "ok, after " << TIMER_SEC(sort_edges_by_start) << "s" << std::endl;
 
-
         std::cout << "[extractor] Setting start coords      ... " << std::flush;
         TIMER_START(set_start_coords);
         file_out_stream.write((char *)&number_of_used_edges, sizeof(unsigned));
@@ -298,7 +290,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         // Sort Edges by target
         std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
         TIMER_START(sort_edges_by_target);
-        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByTargetID(), stxxl_memory);
+        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByTargetID(),
+                    stxxl_memory);
         TIMER_STOP(sort_edges_by_target);
         std::cout << "ok, after " << TIMER_SEC(sort_edges_by_target) << "s" << std::endl;
 
@@ -329,16 +322,13 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 edge_iterator->target_coordinate.lon = node_iterator->lon;
 
                 const double distance = coordinate_calculation::approx_euclidean_distance(
-                    edge_iterator->source_coordinate.lat,
-                    edge_iterator->source_coordinate.lon,
-                    node_iterator->lat,
-                    node_iterator->lon);
+                    edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
+                    node_iterator->lat, node_iterator->lon);
 
                 const double weight = (distance * 10.) / (edge_iterator->speed / 3.6);
                 int integer_weight = std::max(
-                    1,
-                    (int)std::floor(
-                        (edge_iterator->is_duration_set ? edge_iterator->speed : weight) + .5));
+                    1, (int)std::floor(
+                           (edge_iterator->is_duration_set ? edge_iterator->speed : weight) + .5));
                 const int integer_distance = std::max(1, (int)distance);
                 const short zero = 0;
                 const short one = 1;
@@ -371,30 +361,38 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 if (edge_iterator->is_roundabout)
                 {
                     file_out_stream.write((char *)&yes, sizeof(bool));
-                } else {
+                }
+                else
+                {
                     file_out_stream.write((char *)&no, sizeof(bool));
                 }
                 if (edge_iterator->is_in_tiny_cc)
                 {
                     file_out_stream.write((char *)&yes, sizeof(bool));
-                } else {
+                }
+                else
+                {
                     file_out_stream.write((char *)&no, sizeof(bool));
                 }
                 if (edge_iterator->is_access_restricted)
                 {
                     file_out_stream.write((char *)&yes, sizeof(bool));
-                } else {
+                }
+                else
+                {
                     file_out_stream.write((char *)&no, sizeof(bool));
                 }
 
                 // cannot take adress of bit field, so use local
-                const TravelMode  travel_mode = edge_iterator->travel_mode;
+                const TravelMode travel_mode = edge_iterator->travel_mode;
                 file_out_stream.write((char *)&travel_mode, sizeof(TravelMode));
 
                 if (edge_iterator->is_split)
                 {
                     file_out_stream.write((char *)&yes, sizeof(bool));
-                } else {
+                }
+                else
+                {
                     file_out_stream.write((char *)&no, sizeof(bool));
                 }
                 ++number_of_used_edges;
@@ -420,7 +418,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::vector<unsigned> name_lengths;
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
+            const unsigned string_length =
+                std::min(static_cast<unsigned>(temp_string.length()), 255u);
             name_lengths.push_back(string_length);
             total_length += string_length;
         }
@@ -428,11 +427,12 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         RangeTable<> table(name_lengths);
         name_file_stream << table;
 
-        name_file_stream.write((char*) &total_length, sizeof(unsigned));
+        name_file_stream.write((char *)&total_length, sizeof(unsigned));
         // write all chars consecutively
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
+            const unsigned string_length =
+                std::min(static_cast<unsigned>(temp_string.length()), 255u);
             name_file_stream.write(temp_string.c_str(), string_length);
         }
 
@@ -443,5 +443,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         SimpleLogger().Write() << "Processed " << number_of_used_nodes << " nodes and "
                                << number_of_used_edges << " edges";
     }
-    catch (const std::exception &e) { std::cerr << "Caught Execption:" << e.what() << std::endl; }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Caught Execption:" << e.what() << std::endl;
+    }
 }

@@ -75,15 +75,9 @@ int main(int argc, const char *argv[])
 
         libosrm_config lib_config;
 
-        const unsigned init_result = GenerateServerProgramOptions(argc,
-                                                                  argv,
-                                                                  lib_config.server_paths,
-                                                                  ip_address,
-                                                                  ip_port,
-                                                                  requested_thread_num,
-                                                                  lib_config.use_shared_memory,
-                                                                  trial_run,
-                                                                  lib_config.max_locations_distance_table);
+        const unsigned init_result = GenerateServerProgramOptions(
+            argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
+            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table);
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
             return 0;
@@ -119,8 +113,7 @@ int main(int argc, const char *argv[])
 #endif
 
         OSRM osrm_lib(lib_config);
-        auto routing_server =
-            Server::CreateServer(ip_address, ip_port, requested_thread_num);
+        auto routing_server = Server::CreateServer(ip_address, ip_port, requested_thread_num);
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
@@ -130,7 +123,11 @@ int main(int argc, const char *argv[])
         }
         else
         {
-            std::packaged_task<int()> server_task([&]()->int{ routing_server->Run(); return 0; });
+            std::packaged_task<int()> server_task([&]() -> int
+                                                  {
+                                                      routing_server->Run();
+                                                      return 0;
+                                                  });
             auto future = server_task.get_future();
             std::thread server_thread(std::move(server_task));
 
@@ -159,7 +156,7 @@ int main(int argc, const char *argv[])
 
             if (status == std::future_status::ready)
             {
-               server_thread.join();
+                server_thread.join();
             }
             else
             {

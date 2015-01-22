@@ -52,10 +52,12 @@ struct ExtractionWay
     }
 
     enum Directions
-    { notSure = 0,
-      oneway,
-      bidirectional,
-      opposite };
+    {
+        notSure = 0,
+        oneway,
+        bidirectional,
+        opposite
+    };
 
     // These accessor methods exists to support the depreciated "way.direction" access
     // in LUA. Since the direction attribute was removed from ExtractionWay, the
@@ -69,19 +71,20 @@ struct ExtractionWay
         }
         else if (Directions::opposite == m)
         {
-          forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
-          backward_travel_mode = TRAVEL_MODE_DEFAULT;
+            forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+            backward_travel_mode = TRAVEL_MODE_DEFAULT;
         }
         else if (Directions::bidirectional == m)
         {
-          forward_travel_mode = TRAVEL_MODE_DEFAULT;
-          backward_travel_mode = TRAVEL_MODE_DEFAULT;
+            forward_travel_mode = TRAVEL_MODE_DEFAULT;
+            backward_travel_mode = TRAVEL_MODE_DEFAULT;
         }
     }
 
     Directions get_direction() const
     {
-        if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode && TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
+        if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode &&
+            TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
         {
             return Directions::bidirectional;
         }

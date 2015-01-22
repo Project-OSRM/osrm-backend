@@ -41,9 +41,8 @@ bool ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &e
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "config,c",
-        boost::program_options::value<boost::filesystem::path>(&extractor_config.config_file_path)
-            ->default_value("extractor.ini"),
+        "config,c", boost::program_options::value<boost::filesystem::path>(
+                        &extractor_config.config_file_path)->default_value("extractor.ini"),
         "Path to a configuration file.");
 
     // declare a group of options that will be allowed both on command line and in config file
@@ -60,10 +59,9 @@ bool ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &e
     // hidden options, will be allowed both on command line and in config file, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<boost::filesystem::path>(&extractor_config.input_path),
-        "Input file in .osm, .osm.bz2 or .osm.pbf format");
+    hidden_options.add_options()("input,i", boost::program_options::value<boost::filesystem::path>(
+                                                &extractor_config.input_path),
+                                 "Input file in .osm, .osm.bz2 or .osm.pbf format");
 
     // positional option
     boost::program_options::positional_options_description positional_options;

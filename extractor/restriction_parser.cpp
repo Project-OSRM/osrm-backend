@@ -85,8 +85,8 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
     {
         luabind::set_pcall_callback(&lua_error_callback);
         // get list of turn restriction exceptions
-        luabind::call_function<void>(
-            lua_state, "get_exceptions", boost::ref(restriction_exceptions));
+        luabind::call_function<void>(lua_state, "get_exceptions",
+                                     boost::ref(restriction_exceptions));
         const unsigned exception_count = restriction_exceptions.size();
         SimpleLogger().Write() << "Found " << exception_count
                                << " exceptions to turn restrictions:";

@@ -77,10 +77,9 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
     nodes.swap(m_edge_based_node_list);
 }
 
-void
-EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
-                                           const NodeID node_v,
-                                           const unsigned component_id)
+void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
+                                                const NodeID node_v,
+                                                const unsigned component_id)
 {
     // merge edges together into one EdgeBasedNode
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
@@ -172,20 +171,13 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
             BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
             // build edges
-            m_edge_based_node_list.emplace_back(forward_data.edgeBasedNodeID,
-                                                reverse_data.edgeBasedNodeID,
-                                                current_edge_source_coordinate_id,
-                                                current_edge_target_coordinate_id,
-                                                forward_data.nameID,
-                                                forward_geometry[i].second,
-                                                reverse_geometry[geometry_size - 1 - i].second,
-                                                forward_dist_prefix_sum[i],
-                                                reverse_dist_prefix_sum[i],
-                                                m_geometry_compressor.GetPositionForID(e1),
-                                                component_id,
-                                                i,
-                                                forward_data.travel_mode,
-                                                reverse_data.travel_mode);
+            m_edge_based_node_list.emplace_back(
+                forward_data.edgeBasedNodeID, reverse_data.edgeBasedNodeID,
+                current_edge_source_coordinate_id, current_edge_target_coordinate_id,
+                forward_data.nameID, forward_geometry[i].second,
+                reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
+                reverse_dist_prefix_sum[i], m_geometry_compressor.GetPositionForID(e1),
+                component_id, i, forward_data.travel_mode, reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -224,20 +216,10 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         BOOST_ASSERT(forward_data.edgeBasedNodeID != SPECIAL_NODEID ||
                      reverse_data.edgeBasedNodeID != SPECIAL_NODEID);
 
-        m_edge_based_node_list.emplace_back(forward_data.edgeBasedNodeID,
-                                            reverse_data.edgeBasedNodeID,
-                                            node_u,
-                                            node_v,
-                                            forward_data.nameID,
-                                            forward_data.distance,
-                                            reverse_data.distance,
-                                            0,
-                                            0,
-                                            SPECIAL_EDGEID,
-                                            component_id,
-                                            0,
-                                            forward_data.travel_mode,
-                                            reverse_data.travel_mode);
+        m_edge_based_node_list.emplace_back(
+            forward_data.edgeBasedNodeID, reverse_data.edgeBasedNodeID, node_u, node_v,
+            forward_data.nameID, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
+            component_id, 0, forward_data.travel_mode, reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -245,7 +227,8 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 void EdgeBasedGraphFactory::FlushVectorToStream(
     std::ofstream &edge_data_file, std::vector<OriginalEdgeData> &original_edge_data_vector) const
 {
-    if (original_edge_data_vector.empty()) {
+    if (original_edge_data_vector.empty())
+    {
         return;
     }
     edge_data_file.write((char *)&(original_edge_data_vector[0]),
@@ -342,15 +325,15 @@ void EdgeBasedGraphFactory::CompressGeometry()
         const EdgeData &fwd_edge_data1 = m_node_based_graph->GetEdgeData(forward_e1);
         const EdgeData &rev_edge_data1 = m_node_based_graph->GetEdgeData(reverse_e1);
 
-        if ((m_node_based_graph->FindEdge(node_u, node_w) != m_node_based_graph->EndEdges(node_u)) ||
+        if ((m_node_based_graph->FindEdge(node_u, node_w) !=
+             m_node_based_graph->EndEdges(node_u)) ||
             (m_node_based_graph->FindEdge(node_w, node_u) != m_node_based_graph->EndEdges(node_w)))
         {
             continue;
         }
 
         if ( // TODO: rename to IsCompatibleTo
-                fwd_edge_data1.IsEqualTo(fwd_edge_data2) &&
-                rev_edge_data1.IsEqualTo(rev_edge_data2))
+            fwd_edge_data1.IsEqualTo(fwd_edge_data2) && rev_edge_data1.IsEqualTo(rev_edge_data2))
         {
             // Get distances before graph is modified
             const int forward_weight1 = m_node_based_graph->GetEdgeData(forward_e1).distance;
@@ -389,30 +372,21 @@ void EdgeBasedGraphFactory::CompressGeometry()
 
             // update any involved turn restrictions
             m_restriction_map->FixupStartingTurnRestriction(node_u, node_v, node_w);
-            m_restriction_map->FixupArrivingTurnRestriction(node_u, node_v,
-                                                            node_w,
+            m_restriction_map->FixupArrivingTurnRestriction(node_u, node_v, node_w,
                                                             m_node_based_graph);
 
             m_restriction_map->FixupStartingTurnRestriction(node_w, node_v, node_u);
-            m_restriction_map->FixupArrivingTurnRestriction(node_w,
-                                                            node_v,
-                                                            node_u, m_node_based_graph);
+            m_restriction_map->FixupArrivingTurnRestriction(node_w, node_v, node_u,
+                                                            m_node_based_graph);
 
             // store compressed geometry in container
             m_geometry_compressor.CompressEdge(
-                forward_e1,
-                forward_e2,
-                node_v,
-                node_w,
+                forward_e1, forward_e2, node_v, node_w,
                 forward_weight1 +
                     (add_traffic_signal_penalty ? speed_profile.traffic_signal_penalty : 0),
                 forward_weight2);
             m_geometry_compressor.CompressEdge(
-                reverse_e1,
-                reverse_e2,
-                node_v,
-                node_u,
-                reverse_weight1,
+                reverse_e1, reverse_e2, node_v, node_u, reverse_weight1,
                 reverse_weight2 +
                     (add_traffic_signal_penalty ? speed_profile.traffic_signal_penalty : 0));
             ++removed_node_count;
@@ -427,7 +401,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
     unsigned new_node_count = 0;
     unsigned new_edge_count = 0;
 
-    for(const auto i : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+    for (const auto i : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         if (m_node_based_graph->GetOutDegree(i) > 0)
         {
@@ -436,10 +410,10 @@ void EdgeBasedGraphFactory::CompressGeometry()
         }
     }
     SimpleLogger().Write() << "new nodes: " << new_node_count << ", edges " << new_edge_count;
-    SimpleLogger().Write() << "Node compression ratio: " << new_node_count /
-                                                                (double)original_number_of_nodes;
-    SimpleLogger().Write() << "Edge compression ratio: " << new_edge_count /
-                                                                (double)original_number_of_edges;
+    SimpleLogger().Write() << "Node compression ratio: "
+                           << new_node_count / (double)original_number_of_nodes;
+    SimpleLogger().Write() << "Edge compression ratio: "
+                           << new_edge_count / (double)original_number_of_edges;
 }
 
 /**
@@ -477,14 +451,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     SimpleLogger().Write() << "Identifying components of the (compressed) road network";
 
     // Run a BFS on the undirected graph and identify small components
-    TarjanSCC<NodeBasedDynamicGraph> component_explorer(
-        m_node_based_graph, *m_restriction_map, m_barrier_nodes);
+    TarjanSCC<NodeBasedDynamicGraph> component_explorer(m_node_based_graph, *m_restriction_map,
+                                                        m_barrier_nodes);
 
     component_explorer.run();
 
-    SimpleLogger().Write() << "identified: " << component_explorer.get_number_of_components() - removed_node_count
+    SimpleLogger().Write() << "identified: "
+                           << component_explorer.get_number_of_components() - removed_node_count
                            << " (compressed) components";
-    SimpleLogger().Write() << "identified " << component_explorer.get_size_one_count() - removed_node_count
+    SimpleLogger().Write() << "identified "
+                           << component_explorer.get_size_one_count() - removed_node_count
                            << " (compressed) SCCs of size 1";
     SimpleLogger().Write() << "generating edge-expanded nodes";
 
@@ -516,8 +492,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
             const unsigned size_of_component = std::min(component_explorer.get_component_size(u),
                                                         component_explorer.get_component_size(v));
 
-            const unsigned id_of_smaller_component = [u,v,&component_explorer] {
-                if (component_explorer.get_component_size(u) < component_explorer.get_component_size(v))
+            const unsigned id_of_smaller_component = [u, v, &component_explorer]
+            {
+                if (component_explorer.get_component_size(u) <
+                    component_explorer.get_component_size(v))
                 {
                     return component_explorer.get_component_id(u);
                 }
@@ -544,9 +522,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 /**
  * Actually it also generates OriginalEdgeData and serializes them...
  */
-void
-EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
-                                                 lua_State *lua_state)
+void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
+    const std::string &original_edge_data_filename, lua_State *lua_state)
 {
     SimpleLogger().Write() << "generating edge-expanded edges";
 
@@ -647,14 +624,16 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 }
 
                 // unpack last node of first segment if packed
-                const auto first_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e1) ?
-                                        m_geometry_compressor.GetLastNodeIDOfBucket(e1) :
-                                        u)];
+                const auto first_coordinate =
+                    m_node_info_list[(m_geometry_compressor.HasEntryForID(e1)
+                                          ? m_geometry_compressor.GetLastNodeIDOfBucket(e1)
+                                          : u)];
 
                 // unpack first node of second segment if packed
-                const auto third_coordinate = m_node_info_list[(m_geometry_compressor.HasEntryForID(e2) ?
-                                        m_geometry_compressor.GetFirstNodeIDOfBucket(e2) :
-                                        w)];
+                const auto third_coordinate =
+                    m_node_info_list[(m_geometry_compressor.HasEntryForID(e2)
+                                          ? m_geometry_compressor.GetFirstNodeIDOfBucket(e2)
+                                          : w)];
 
                 const double turn_angle = ComputeAngle::OfThreeFixedPointCoordinates(
                     first_coordinate, m_node_info_list[v], third_coordinate);
@@ -676,9 +655,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
 
                 original_edge_data_vector.emplace_back(
                     (edge_is_compressed ? m_geometry_compressor.GetPositionForID(e1) : v),
-                    edge_data1.nameID,
-                    turn_instruction,
-                    edge_is_compressed,
+                    edge_data1.nameID, turn_instruction, edge_is_compressed,
                     edge_data2.travel_mode);
 
                 ++original_edges_counter;
@@ -691,12 +668,9 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edgeBasedNodeID);
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edgeBasedNodeID);
 
-                m_edge_based_edge_list.emplace_back(EdgeBasedEdge(edge_data1.edgeBasedNodeID,
-                                                                  edge_data2.edgeBasedNodeID,
-                                                                  m_edge_based_edge_list.size(),
-                                                                  distance,
-                                                                  true,
-                                                                  false));
+                m_edge_based_edge_list.emplace_back(
+                    EdgeBasedEdge(edge_data1.edgeBasedNodeID, edge_data2.edgeBasedNodeID,
+                                  m_edge_based_edge_list.size(), distance, true, false));
             }
         }
     }
@@ -727,7 +701,10 @@ int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) co
             // call lua profile to compute turn penalty
             return luabind::call_function<int>(lua_state, "turn_function", 180. - angle);
         }
-        catch (const luabind::error &er) { SimpleLogger().Write(logWARNING) << er.what(); }
+        catch (const luabind::error &er)
+        {
+            SimpleLogger().Write(logWARNING) << er.what();
+        }
     }
     return 0;
 }
@@ -735,8 +712,7 @@ int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) co
 TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
                                                    const NodeID node_v,
                                                    const NodeID node_w,
-                                                   const double angle)
-    const
+                                                   const double angle) const
 {
     if (node_u == node_w)
     {

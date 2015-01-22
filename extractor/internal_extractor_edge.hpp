@@ -55,8 +55,8 @@ struct InternalExtractorEdge
                                    bool is_access_restricted,
                                    TravelMode travel_mode,
                                    bool is_split)
-        : start(start), target(target), speed(speed), name_id(name_id),
-          direction(direction), is_roundabout(is_roundabout), is_in_tiny_cc(is_in_tiny_cc),
+        : start(start), target(target), speed(speed), name_id(name_id), direction(direction),
+          is_roundabout(is_roundabout), is_in_tiny_cc(is_in_tiny_cc),
           is_duration_set(is_duration_set), is_access_restricted(is_access_restricted),
           is_split(is_split), travel_mode(travel_mode)
     {
@@ -65,12 +65,13 @@ struct InternalExtractorEdge
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_value()
     {
-        return InternalExtractorEdge(0, 0, 0, 0, 0, false, false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
+        return InternalExtractorEdge(0, 0, 0, 0, 0, false, false, false, false,
+                                     TRAVEL_MODE_INACCESSIBLE, false);
     }
     static InternalExtractorEdge max_value()
     {
-        return InternalExtractorEdge(
-            SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, false, false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
+        return InternalExtractorEdge(SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, false, false, false,
+                                     false, TRAVEL_MODE_INACCESSIBLE, false);
     }
 
     NodeID start;
@@ -78,11 +79,11 @@ struct InternalExtractorEdge
     double speed;
     unsigned name_id;
     short direction;
-    bool is_roundabout:1;
-    bool is_in_tiny_cc:1;
-    bool is_duration_set:1;
-    bool is_access_restricted:1;
-    bool is_split:1;
+    bool is_roundabout : 1;
+    bool is_in_tiny_cc : 1;
+    bool is_duration_set : 1;
+    bool is_access_restricted : 1;
+    bool is_split : 1;
     TravelMode travel_mode : 4;
 
     FixedPointCoordinate source_coordinate;

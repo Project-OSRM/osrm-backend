@@ -70,14 +70,15 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         time_stamp = localtime(&ltime);
 
         // log timestamp
-        SimpleLogger().Write() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
-                               << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
-                               << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
-                               << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "") << time_stamp->tm_min
-                               << ":" << (time_stamp->tm_sec < 10 ? "0" : "") << time_stamp->tm_sec << " "
-                               << req.endpoint.to_string() << " " << req.referrer
-                               << (0 == req.referrer.length() ? "- " : " ") << req.agent
-                               << (0 == req.agent.length() ? "- " : " ") << request;
+        SimpleLogger().Write() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday
+                               << "-" << (time_stamp->tm_mon + 1 < 10 ? "0" : "")
+                               << (time_stamp->tm_mon + 1) << "-" << 1900 + time_stamp->tm_year
+                               << " " << (time_stamp->tm_hour < 10 ? "0" : "")
+                               << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
+                               << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
+                               << time_stamp->tm_sec << " " << req.endpoint.to_string() << " "
+                               << req.referrer << (0 == req.referrer.length() ? "- " : " ")
+                               << req.agent << (0 == req.agent.length() ? "- " : " ") << request;
 
         RouteParameters route_parameters;
         APIGrammarParser api_parser(&route_parameters);
@@ -121,7 +122,8 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
             return;
         }
         // set headers
-        reply.headers.emplace_back("Content-Length", cast::integral_to_string(reply.content.size()));
+        reply.headers.emplace_back("Content-Length",
+                                   cast::integral_to_string(reply.content.size()));
         if ("gpx" == route_parameters.output_format)
         { // gpx file
             JSON::gpx_render(reply.content, json_result.values["route"]);

@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-namespace 
+namespace
 {
 constexpr static const float RAD = 0.017453292519943295769236907684886;
 constexpr static const float earth_radius = 6372797.560856f;
@@ -72,23 +72,23 @@ double coordinate_calculation::ApproximateDistance(const int lat1,
 }
 
 double coordinate_calculation::ApproximateDistance(const FixedPointCoordinate &coordinate_1,
-                                                 const FixedPointCoordinate &coordinate_2)
+                                                   const FixedPointCoordinate &coordinate_2)
 {
-    return ApproximateDistance(
-        coordinate_1.lat, coordinate_1.lon, coordinate_2.lat, coordinate_2.lon);
+    return ApproximateDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+                               coordinate_2.lon);
 }
 
 float coordinate_calculation::approx_euclidean_distance(const FixedPointCoordinate &coordinate_1,
-                                                         const FixedPointCoordinate &coordinate_2)
+                                                        const FixedPointCoordinate &coordinate_2)
 {
-    return approx_euclidean_distance(
-        coordinate_1.lat, coordinate_1.lon, coordinate_2.lat, coordinate_2.lon);
+    return approx_euclidean_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+                                     coordinate_2.lon);
 }
 
 float coordinate_calculation::approx_euclidean_distance(const int lat1,
-                                                         const int lon1,
-                                                         const int lat2,
-                                                         const int lon2)
+                                                        const int lon1,
+                                                        const int lat2,
+                                                        const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
@@ -105,26 +105,24 @@ float coordinate_calculation::approx_euclidean_distance(const int lat1,
     return sqrt(x_value * x_value + y_value * y_value) * earth_radius;
 }
 
-float
-coordinate_calculation::ComputePerpendicularDistance(const FixedPointCoordinate &source_coordinate,
-                                                   const FixedPointCoordinate &target_coordinate,
-                                                   const FixedPointCoordinate &query_location)
+float coordinate_calculation::ComputePerpendicularDistance(
+    const FixedPointCoordinate &source_coordinate,
+    const FixedPointCoordinate &target_coordinate,
+    const FixedPointCoordinate &query_location)
 {
     float ratio;
     FixedPointCoordinate nearest_location;
 
-    return ComputePerpendicularDistance(source_coordinate,
-                                        target_coordinate,
-                                        query_location,
-                                        nearest_location,
-                                        ratio);
+    return ComputePerpendicularDistance(source_coordinate, target_coordinate, query_location,
+                                        nearest_location, ratio);
 }
 
-float coordinate_calculation::ComputePerpendicularDistance(const FixedPointCoordinate &segment_source,
-                                                         const FixedPointCoordinate &segment_target,
-                                                         const FixedPointCoordinate &query_location,
-                                                         FixedPointCoordinate &nearest_location,
-                                                         float &ratio)
+float coordinate_calculation::ComputePerpendicularDistance(
+    const FixedPointCoordinate &segment_source,
+    const FixedPointCoordinate &segment_target,
+    const FixedPointCoordinate &query_location,
+    FixedPointCoordinate &nearest_location,
+    float &ratio)
 {
     BOOST_ASSERT(query_location.is_valid());
 
@@ -197,31 +195,27 @@ float coordinate_calculation::ComputePerpendicularDistance(const FixedPointCoord
     return approximate_distance;
 }
 
-float
-coordinate_calculation::perpendicular_distance_from_projected_coordinate(
-                                                const FixedPointCoordinate &source_coordinate,
-                                                const FixedPointCoordinate &target_coordinate,
-                                                const FixedPointCoordinate &query_location,
-                                                const std::pair<double, double> &projected_coordinate)
+float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
+    const FixedPointCoordinate &source_coordinate,
+    const FixedPointCoordinate &target_coordinate,
+    const FixedPointCoordinate &query_location,
+    const std::pair<double, double> &projected_coordinate)
 {
     float ratio;
     FixedPointCoordinate nearest_location;
 
-    return perpendicular_distance_from_projected_coordinate(source_coordinate,
-                                                            target_coordinate,
-                                                            query_location,
-                                                            projected_coordinate,
-                                                            nearest_location,
-                                                            ratio);
+    return perpendicular_distance_from_projected_coordinate(source_coordinate, target_coordinate,
+                                                            query_location, projected_coordinate,
+                                                            nearest_location, ratio);
 }
 
 float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
-                                                        const FixedPointCoordinate &segment_source,
-                                                        const FixedPointCoordinate &segment_target,
-                                                        const FixedPointCoordinate &query_location,
-                                                        const std::pair<double, double> &projected_coordinate,
-                                                        FixedPointCoordinate &nearest_location,
-                                                        float &ratio)
+    const FixedPointCoordinate &segment_source,
+    const FixedPointCoordinate &segment_target,
+    const FixedPointCoordinate &query_location,
+    const std::pair<double, double> &projected_coordinate,
+    FixedPointCoordinate &nearest_location,
+    float &ratio)
 {
     BOOST_ASSERT(query_location.is_valid());
 
@@ -302,7 +296,7 @@ void coordinate_calculation::lat_or_lon_to_string(const int value, std::string &
 }
 
 void coordinate_calculation::convertInternalCoordinateToString(const FixedPointCoordinate &coord,
-                                                             std::string &output)
+                                                               std::string &output)
 {
     std::string tmp;
     tmp.reserve(23);
@@ -313,9 +307,8 @@ void coordinate_calculation::convertInternalCoordinateToString(const FixedPointC
     output += tmp;
 }
 
-void
-coordinate_calculation::convertInternalReversedCoordinateToString(const FixedPointCoordinate &coord,
-                                                                std::string &output)
+void coordinate_calculation::convertInternalReversedCoordinateToString(
+    const FixedPointCoordinate &coord, std::string &output)
 {
     std::string tmp;
     tmp.reserve(23);
@@ -327,7 +320,7 @@ coordinate_calculation::convertInternalReversedCoordinateToString(const FixedPoi
 }
 
 float coordinate_calculation::GetBearing(const FixedPointCoordinate &first_coordinate,
-                                       const FixedPointCoordinate &second_coordinate)
+                                         const FixedPointCoordinate &second_coordinate)
 {
     const float lon_diff =
         second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;

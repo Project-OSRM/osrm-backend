@@ -93,8 +93,8 @@ void FixedPointCoordinate::Output(std::ostream &out) const
 
 float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
 {
-    const float lon_delta =
-        coordinate_calculation::deg_to_rad(lon / COORDINATE_PRECISION - other.lon / COORDINATE_PRECISION);
+    const float lon_delta = coordinate_calculation::deg_to_rad(lon / COORDINATE_PRECISION -
+                                                               other.lon / COORDINATE_PRECISION);
     const float lat1 = coordinate_calculation::deg_to_rad(other.lat / COORDINATE_PRECISION);
     const float lat2 = coordinate_calculation::deg_to_rad(lat / COORDINATE_PRECISION);
     const float y_value = std::sin(lon_delta) * std::cos(lat2);
