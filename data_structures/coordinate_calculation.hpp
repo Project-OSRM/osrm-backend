@@ -49,12 +49,6 @@ struct coordinate_calculation
 
     static void lat_or_lon_to_string(const int value, std::string &output);
 
-    static void convertInternalCoordinateToString(const FixedPointCoordinate &coordinate,
-                                                  std::string &output);
-
-    static void convertInternalReversedCoordinateToString(const FixedPointCoordinate &coordinate,
-                                                          std::string &output);
-
     static float perpendicular_distance(const FixedPointCoordinate &segment_source,
                                         const FixedPointCoordinate &segment_target,
                                         const FixedPointCoordinate &query_location);
@@ -78,8 +72,6 @@ struct coordinate_calculation
         const std::pair<double, double> &projected_coordinate,
         FixedPointCoordinate &nearest_location,
         float &ratio);
-
-    static float GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
 
     static float deg_to_rad(const float degree);
     static float rad_to_deg(const float radian);

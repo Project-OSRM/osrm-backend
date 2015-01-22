@@ -230,53 +230,6 @@ void coordinate_calculation::lat_or_lon_to_string(const int value, std::string &
     output = printInt<11, 6>(buffer, value);
 }
 
-void coordinate_calculation::convertInternalCoordinateToString(const FixedPointCoordinate &coord,
-                                                               std::string &output)
-{
-    std::string tmp;
-    tmp.reserve(23);
-    lat_or_lon_to_string(coord.lon, tmp);
-    output = tmp;
-    output += ",";
-    lat_or_lon_to_string(coord.lat, tmp);
-    output += tmp;
-}
-
-void coordinate_calculation::convertInternalReversedCoordinateToString(
-    const FixedPointCoordinate &coord, std::string &output)
-{
-    std::string tmp;
-    tmp.reserve(23);
-    lat_or_lon_to_string(coord.lat, tmp);
-    output = tmp;
-    output += ",";
-    lat_or_lon_to_string(coord.lon, tmp);
-    output += tmp;
-}
-
-float coordinate_calculation::GetBearing(const FixedPointCoordinate &first_coordinate,
-                                         const FixedPointCoordinate &second_coordinate)
-{
-    const float lon_diff =
-        second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
-    const float lon_delta = deg_to_rad(lon_diff);
-    const float lat1 = deg_to_rad(first_coordinate.lat / COORDINATE_PRECISION);
-    const float lat2 = deg_to_rad(second_coordinate.lat / COORDINATE_PRECISION);
-    const float y = sin(lon_delta) * cos(lat2);
-    const float x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon_delta);
-    float result = rad_to_deg(std::atan2(y, x));
-    while (result < 0.f)
-    {
-        result += 360.f;
-    }
-
-    while (result >= 360.f)
-    {
-        result -= 360.f;
-    }
-    return result;
-}
-
 float coordinate_calculation::deg_to_rad(const float degree)
 {
     return degree * (static_cast<float>(M_PI) / 180.f);
