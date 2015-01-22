@@ -43,10 +43,9 @@ struct coordinate_calculation
                                         const FixedPointCoordinate &second_coordinate);
 
     static float euclidean_distance(const FixedPointCoordinate &first_coordinate,
-                                              const FixedPointCoordinate &second_coordinate);
+                                    const FixedPointCoordinate &second_coordinate);
 
-    static float
-    euclidean_distance(const int lat1, const int lon1, const int lat2, const int lon2);
+    static float euclidean_distance(const int lat1, const int lon1, const int lat2, const int lon2);
 
     static void lat_or_lon_to_string(const int value, std::string &output);
 
@@ -67,18 +66,18 @@ struct coordinate_calculation
                                         float &ratio);
 
     static float perpendicular_distance_from_projected_coordinate(
-                                              const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location,
-                                              const std::pair<double, double> &projected_coordinate);
+        const FixedPointCoordinate &segment_source,
+        const FixedPointCoordinate &segment_target,
+        const FixedPointCoordinate &query_location,
+        const std::pair<double, double> &projected_coordinate);
 
     static float perpendicular_distance_from_projected_coordinate(
-                                              const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location,
-                                              const std::pair<double, double> &projected_coordinate,
-                                              FixedPointCoordinate &nearest_location,
-                                              float &ratio);
+        const FixedPointCoordinate &segment_source,
+        const FixedPointCoordinate &segment_target,
+        const FixedPointCoordinate &query_location,
+        const std::pair<double, double> &projected_coordinate,
+        FixedPointCoordinate &nearest_location,
+        float &ratio);
 
     static float GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
 
@@ -86,4 +85,4 @@ struct coordinate_calculation
     static float rad_to_deg(const float radian);
 };
 
-#endif //COORDINATE_CALCULATION
+#endif // COORDINATE_CALCULATION
