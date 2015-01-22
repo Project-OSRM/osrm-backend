@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef NDEBUG
 #include <bitset>
 #endif
+#include <iostream>
 #include <limits>
 
 FixedPointCoordinate::FixedPointCoordinate()
