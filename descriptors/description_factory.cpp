@@ -204,25 +204,22 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     }
 
     // Post-processing to remove empty or nearly empty path segments
-    if (std::numeric_limits<double>::epsilon() > path_description.back().length)
+    if (path_description.size() > 2 &&
+        std::numeric_limits<double>::epsilon() > path_description.back().length)
     {
-        if (path_description.size() > 2)
-        {
-            path_description.pop_back();
-            path_description.back().necessary = true;
-            path_description.back().turn_instruction = TurnInstruction::NoTurn;
-            target_phantom.name_id = (path_description.end() - 2)->name_id;
-        }
+        path_description.pop_back();
+        path_description.back().necessary = true;
+        path_description.back().turn_instruction = TurnInstruction::NoTurn;
+        target_phantom.name_id = (path_description.end() - 2)->name_id;
     }
-    if (std::numeric_limits<double>::epsilon() > path_description.front().length)
+
+    if (path_description.size() > 2 &&
+        std::numeric_limits<double>::epsilon() > path_description.front().length)
     {
-        if (path_description.size() > 2)
-        {
-            path_description.erase(path_description.begin());
-            path_description.front().turn_instruction = TurnInstruction::HeadOn;
-            path_description.front().necessary = true;
-            start_phantom.name_id = path_description.front().name_id;
-        }
+        path_description.erase(path_description.begin());
+        path_description.front().turn_instruction = TurnInstruction::HeadOn;
+        path_description.front().necessary = true;
+        start_phantom.name_id = path_description.front().name_id;
     }
 
     // Generalize poly line
