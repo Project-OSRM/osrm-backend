@@ -59,15 +59,15 @@ struct coordinate_calculation
     static void convertInternalReversedCoordinateToString(const FixedPointCoordinate &coordinate,
                                                           std::string &output);
 
-    static float ComputePerpendicularDistance(const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location);
+    static float perpendicular_distance(const FixedPointCoordinate &segment_source,
+                                        const FixedPointCoordinate &segment_target,
+                                        const FixedPointCoordinate &query_location);
 
-    static float ComputePerpendicularDistance(const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location,
-                                              FixedPointCoordinate &nearest_location,
-                                              float &ratio);
+    static float perpendicular_distance(const FixedPointCoordinate &segment_source,
+                                        const FixedPointCoordinate &segment_target,
+                                        const FixedPointCoordinate &query_location,
+                                        FixedPointCoordinate &nearest_location,
+                                        float &ratio);
 
     static float perpendicular_distance_from_projected_coordinate(
                                               const FixedPointCoordinate &segment_source,
@@ -82,11 +82,6 @@ struct coordinate_calculation
                                               const std::pair<double, double> &projected_coordinate,
                                               FixedPointCoordinate &nearest_location,
                                               float &ratio);
-
-    static int
-    OrderedPerpendicularDistanceApproximation(const FixedPointCoordinate &segment_source,
-                                              const FixedPointCoordinate &segment_target,
-                                              const FixedPointCoordinate &query_location);
 
     static float GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
 

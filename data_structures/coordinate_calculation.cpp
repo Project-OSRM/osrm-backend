@@ -105,94 +105,28 @@ float coordinate_calculation::approx_euclidean_distance(const int lat1,
     return sqrt(x_value * x_value + y_value * y_value) * earth_radius;
 }
 
-float coordinate_calculation::ComputePerpendicularDistance(
-    const FixedPointCoordinate &source_coordinate,
-    const FixedPointCoordinate &target_coordinate,
-    const FixedPointCoordinate &query_location)
+float coordinate_calculation::perpendicular_distance(const FixedPointCoordinate &source_coordinate,
+                                                     const FixedPointCoordinate &target_coordinate,
+                                                     const FixedPointCoordinate &query_location)
 {
     float ratio;
     FixedPointCoordinate nearest_location;
 
-    return ComputePerpendicularDistance(source_coordinate, target_coordinate, query_location,
-                                        nearest_location, ratio);
+    return perpendicular_distance(source_coordinate, target_coordinate, query_location,
+                                  nearest_location, ratio);
 }
 
-float coordinate_calculation::ComputePerpendicularDistance(
-    const FixedPointCoordinate &segment_source,
-    const FixedPointCoordinate &segment_target,
-    const FixedPointCoordinate &query_location,
-    FixedPointCoordinate &nearest_location,
-    float &ratio)
+float coordinate_calculation::perpendicular_distance(const FixedPointCoordinate &segment_source,
+                                                     const FixedPointCoordinate &segment_target,
+                                                     const FixedPointCoordinate &query_location,
+                                                     FixedPointCoordinate &nearest_location,
+                                                     float &ratio)
 {
-    BOOST_ASSERT(query_location.is_valid());
-
-    // initialize values
-    const double x = mercator::lat2y(query_location.lat / COORDINATE_PRECISION);
-    const double y = query_location.lon / COORDINATE_PRECISION;
-    const double a = mercator::lat2y(segment_source.lat / COORDINATE_PRECISION);
-    const double b = segment_source.lon / COORDINATE_PRECISION;
-    const double c = mercator::lat2y(segment_target.lat / COORDINATE_PRECISION);
-    const double d = segment_target.lon / COORDINATE_PRECISION;
-    double p, q /*,mX*/, nY;
-    if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
-    {
-        const double m = (d - b) / (c - a); // slope
-        // Projection of (x,y) on line joining (a,b) and (c,d)
-        p = ((x + (m * y)) + (m * m * a - m * b)) / (1.f + m * m);
-        q = b + m * (p - a);
-    }
-    else
-    {
-        p = c;
-        q = y;
-    }
-    nY = (d * p - c * q) / (a * d - b * c);
-
-    // discretize the result to coordinate precision. it's a hack!
-    if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
-    {
-        nY = 0.f;
-    }
-
-    // compute ratio
-    ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
-    // not calculate the explicit values of m an n as we
-    // are just interested in the ratio
-    if (std::isnan(ratio))
-    {
-        ratio = (segment_target == query_location ? 1.f : 0.f);
-    }
-    else if (std::abs(ratio) <= std::numeric_limits<double>::epsilon())
-    {
-        ratio = 0.f;
-    }
-    else if (std::abs(ratio - 1.f) <= std::numeric_limits<double>::epsilon())
-    {
-        ratio = 1.f;
-    }
-
-    // compute nearest location
-    BOOST_ASSERT(!std::isnan(ratio));
-    if (ratio <= 0.f)
-    {
-        nearest_location = segment_source;
-    }
-    else if (ratio >= 1.f)
-    {
-        nearest_location = segment_target;
-    }
-    else
-    {
-        // point lies in between
-        nearest_location.lat = static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
-        nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
-    }
-    BOOST_ASSERT(nearest_location.is_valid());
-
-    const float approximate_distance =
-        coordinate_calculation::approx_euclidean_distance(query_location, nearest_location);
-    BOOST_ASSERT(0. <= approximate_distance);
-    return approximate_distance;
+    return perpendicular_distance_from_projected_coordinate(
+        segment_source, segment_target, query_location,
+        {mercator::lat2y(query_location.lat / COORDINATE_PRECISION),
+         query_location.lon / COORDINATE_PRECISION},
+        nearest_location, ratio);
 }
 
 float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
@@ -350,66 +284,4 @@ float coordinate_calculation::deg_to_rad(const float degree)
 float coordinate_calculation::rad_to_deg(const float radian)
 {
     return radian * (180.f * static_cast<float>(M_1_PI));
-}
-
-// This distance computation does integer arithmetic only and is a lot faster than
-// the other distance function which are numerically correct('ish).
-// It preserves some order among the elements that make it useful for certain purposes
-int coordinate_calculation::OrderedPerpendicularDistanceApproximation(
-    const FixedPointCoordinate &input_point,
-    const FixedPointCoordinate &segment_source,
-    const FixedPointCoordinate &segment_target)
-{
-    // initialize values
-    const float x = static_cast<float>(mercator::lat2y(input_point.lat / COORDINATE_PRECISION));
-    const float y = input_point.lon / COORDINATE_PRECISION;
-    const float a = static_cast<float>(mercator::lat2y(segment_source.lat / COORDINATE_PRECISION));
-    const float b = segment_source.lon / COORDINATE_PRECISION;
-    const float c = static_cast<float>(mercator::lat2y(segment_target.lat / COORDINATE_PRECISION));
-    const float d = segment_target.lon / COORDINATE_PRECISION;
-
-    float p, q;
-    if (a == c)
-    {
-        p = c;
-        q = y;
-    }
-    else
-    {
-        const float m = (d - b) / (c - a); // slope
-        // Projection of (x,y) on line joining (a,b) and (c,d)
-        p = ((x + (m * y)) + (m * m * a - m * b)) / (1.f + m * m);
-        q = b + m * (p - a);
-    }
-
-    const float nY = (d * p - c * q) / (a * d - b * c);
-    float ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
-    // not calculate the explicit values of m an n as we
-    // are just interested in the ratio
-    if (std::isnan(ratio))
-    {
-        ratio = (segment_target == input_point) ? 1.f : 0.f;
-    }
-
-    // compute target quasi-location
-    int dx, dy;
-    if (ratio < 0.f)
-    {
-        dx = input_point.lon - segment_source.lon;
-        dy = input_point.lat - segment_source.lat;
-    }
-    else if (ratio > 1.f)
-    {
-        dx = input_point.lon - segment_target.lon;
-        dy = input_point.lat - segment_target.lat;
-    }
-    else
-    {
-        // point lies in between
-        dx = input_point.lon - static_cast<int>(q * COORDINATE_PRECISION);
-        dy = input_point.lat - static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
-    }
-
-    // return an approximation in the plane
-    return static_cast<int>(sqrt(dx * dx + dy * dy));
 }

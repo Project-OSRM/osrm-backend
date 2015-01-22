@@ -664,7 +664,7 @@ class StaticRTree
 
         unsigned pruned_elements = 0;
 
-        std::pair<double, double> projected_coordinate = 
+        std::pair<double, double> projected_coordinate =
             { mercator::lat2y(input_coordinate.lat / COORDINATE_PRECISION),
               input_coordinate.lon / COORDINATE_PRECISION };
 
@@ -846,7 +846,7 @@ class StaticRTree
                     {
                         const auto &current_edge = current_leaf_node.objects[i];
                         const float current_perpendicular_distance =
-                            coordinate_calculation::ComputePerpendicularDistance(
+                            coordinate_calculation::perpendicular_distance(
                                 m_coordinate_list->at(current_edge.u),
                                 m_coordinate_list->at(current_edge.v),
                                 input_coordinate);
@@ -903,7 +903,7 @@ class StaticRTree
                 float current_ratio = 0.;
                 FixedPointCoordinate foot_point_coordinate_on_segment;
                 const float current_perpendicular_distance =
-                    coordinate_calculation::ComputePerpendicularDistance(
+                    coordinate_calculation::perpendicular_distance(
                         m_coordinate_list->at(current_segment.u),
                         m_coordinate_list->at(current_segment.v),
                         input_coordinate,
@@ -1003,7 +1003,7 @@ class StaticRTree
                         float current_ratio = 0.;
                         FixedPointCoordinate nearest;
                         const float current_perpendicular_distance =
-                            coordinate_calculation::ComputePerpendicularDistance(
+                            coordinate_calculation::perpendicular_distance(
                                 m_coordinate_list->at(current_edge.u),
                                 m_coordinate_list->at(current_edge.v),
                                 input_coordinate,
