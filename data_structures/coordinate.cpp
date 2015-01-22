@@ -63,15 +63,6 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon
 #endif
 }
 
-void FixedPointCoordinate::reset()
-{
-    lat = std::numeric_limits<int>::min();
-    lon = std::numeric_limits<int>::min();
-}
-bool FixedPointCoordinate::is_set() const
-{
-    return (std::numeric_limits<int>::min() != lat) && (std::numeric_limits<int>::min() != lon);
-}
 bool FixedPointCoordinate::is_valid() const
 {
     if (lat > 90 * COORDINATE_PRECISION || lat < -90 * COORDINATE_PRECISION ||

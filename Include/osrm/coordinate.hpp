@@ -55,8 +55,6 @@ struct FixedPointCoordinate
                       "coordinate types incompatible");
     }
 
-    void reset();
-    bool is_set() const;
     bool is_valid() const;
     bool operator==(const FixedPointCoordinate &other) const;
 
