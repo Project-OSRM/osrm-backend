@@ -276,7 +276,8 @@ template <class DataFacadeT> class MapMatching final
 
     // TODO optimize: a lot of copying that could probably be avoided
     void expandCandidates(const Matching::CandidateLists &candidates_lists,
-                          Matching::CandidateLists &expanded_lists) const
+                          Matching::CandidateLists &expanded_lists,
+                          const std::vector<bool>& uturn_indicators) const
     {
         // expand list of PhantomNodes to be single-directional
         expanded_lists.resize(candidates_lists.size());
@@ -284,8 +285,8 @@ template <class DataFacadeT> class MapMatching final
         {
             for (const auto& candidate : candidates_lists[i])
             {
-                // bi-directional edge, split phantom node
-                if (candidate.first.forward_node_id != SPECIAL_NODEID && candidate.first.reverse_node_id != SPECIAL_NODEID)
+                // bi-directional edge, split phantom node if we don't expect a uturn
+                if (!uturn_indicators[i] && candidate.first.forward_node_id != SPECIAL_NODEID && candidate.first.reverse_node_id != SPECIAL_NODEID)
                 {
                     PhantomNode forward_node(candidate.first);
                     PhantomNode reverse_node(candidate.first);
@@ -304,13 +305,15 @@ template <class DataFacadeT> class MapMatching final
 
     void operator()(const Matching::CandidateLists &candidates_lists,
                     const std::vector<FixedPointCoordinate> coordinate_list,
+                    const std::vector<bool>& uturn_indicators,
                     std::vector<PhantomNode>& matched_nodes,
                     JSON::Object& _debug_info) const
     {
         BOOST_ASSERT(candidates_lists.size() == coordinate_list.size());
+        BOOST_ASSERT(candidates_lists.size() == uturn_indicators.size());
 
         Matching::CandidateLists timestamp_list;
-        expandCandidates(candidates_lists, timestamp_list);
+        expandCandidates(candidates_lists, timestamp_list, uturn_indicators);
 
         std::vector<bool> breakage(timestamp_list.size(), true);
 
