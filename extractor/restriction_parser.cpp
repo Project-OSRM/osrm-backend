@@ -168,9 +168,8 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
                 continue;
             }
             BOOST_ASSERT(0 == strcmp("via", role));
-            // set the via node id
-            // SimpleLogger().Write() << "via: " << member.ref();
 
+            // set via node id
             restriction_container.restriction.via.node = member.ref();
             break;
 
@@ -179,19 +178,17 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
                          0 == strcmp("via", role));
             if (0 == strcmp("from", role))
             {
-                // SimpleLogger().Write() << "from: " << member.ref();
                 restriction_container.restriction.from.way = member.ref();
             }
             else if (0 == strcmp("to", role))
             {
-                // SimpleLogger().Write() << "to: " << member.ref();
                 restriction_container.restriction.to.way = member.ref();
             }
-            else if (0 == strcmp("via", role))
-            {
-                // not yet suppported
-                // restriction_container.restriction.via.way = member.ref();
-            }
+            // else if (0 == strcmp("via", role))
+            // {
+            //     not yet suppported
+            //     restriction_container.restriction.via.way = member.ref();
+            // }
             break;
         case osmium::item_type::relation:
             // not yet supported, but who knows what the future holds...
@@ -202,14 +199,6 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
             break;
         }
     }
-
-    // SimpleLogger().Write() << (restriction_container.restriction.flags.is_only ? "only" : "no")
-    //                        << "-restriction "
-    //                        << "<" << restriction_container.restriction.from.node << "->"
-    //                        << restriction_container.restriction.via.node << "->" <<
-    //                        restriction_container.restriction.to.node
-    //                        << ">";
-
     return mapbox::util::optional<InputRestrictionContainer>(restriction_container);
 }
 
@@ -234,9 +223,9 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     return std::any_of(std::begin(exceptions), std::end(exceptions),
                        [&](const std::string &current_string)
                        {
-                           if (restriction_exceptions.end() !=
-                               std::find(restriction_exceptions.begin(),
-                                         restriction_exceptions.end(), current_string))
+                           if (std::end(restriction_exceptions) !=
+                               std::find(std::begin(restriction_exceptions),
+                                         std::end(restriction_exceptions), current_string))
                            {
                                return true;
                            }
