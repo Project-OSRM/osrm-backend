@@ -42,53 +42,53 @@ constexpr static const float RAD = 0.017453292519943295769236907684886;
 constexpr static const float earth_radius = 6372797.560856f;
 }
 
-double coordinate_calculation::ApproximateDistance(const int lat1,
-                                                   const int lon1,
-                                                   const int lat2,
-                                                   const int lon2)
+double coordinate_calculation::great_circle_distance(const int lat1,
+                                                     const int lon1,
+                                                     const int lat2,
+                                                     const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
-    double lt1 = lat1 / COORDINATE_PRECISION;
-    double ln1 = lon1 / COORDINATE_PRECISION;
-    double lt2 = lat2 / COORDINATE_PRECISION;
-    double ln2 = lon2 / COORDINATE_PRECISION;
-    double dlat1 = lt1 * (RAD);
+    const double lt1 = lat1 / COORDINATE_PRECISION;
+    const double ln1 = lon1 / COORDINATE_PRECISION;
+    const double lt2 = lat2 / COORDINATE_PRECISION;
+    const double ln2 = lon2 / COORDINATE_PRECISION;
+    const double dlat1 = lt1 * (RAD);
 
-    double dlong1 = ln1 * (RAD);
-    double dlat2 = lt2 * (RAD);
-    double dlong2 = ln2 * (RAD);
+    const double dlong1 = ln1 * (RAD);
+    const double dlat2 = lt2 * (RAD);
+    const double dlong2 = ln2 * (RAD);
 
-    double dLong = dlong1 - dlong2;
-    double dLat = dlat1 - dlat2;
+    const double dLong = dlong1 - dlong2;
+    const double dLat = dlat1 - dlat2;
 
-    double aHarv = pow(sin(dLat / 2.0), 2.0) + cos(dlat1) * cos(dlat2) * pow(sin(dLong / 2.), 2);
-    double cHarv = 2. * atan2(sqrt(aHarv), sqrt(1.0 - aHarv));
+    const double aHarv = pow(sin(dLat / 2.0), 2.0) + cos(dlat1) * cos(dlat2) * pow(sin(dLong / 2.), 2);
+    const double cHarv = 2. * atan2(sqrt(aHarv), sqrt(1.0 - aHarv));
     // earth radius varies between 6,356.750-6,378.135 km (3,949.901-3,963.189mi)
     // The IUGG value for the equatorial radius is 6378.137 km (3963.19 miles)
     return earth_radius * cHarv;
 }
 
-double coordinate_calculation::ApproximateDistance(const FixedPointCoordinate &coordinate_1,
-                                                   const FixedPointCoordinate &coordinate_2)
+double coordinate_calculation::great_circle_distance(const FixedPointCoordinate &coordinate_1,
+                                                     const FixedPointCoordinate &coordinate_2)
 {
-    return ApproximateDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
-                               coordinate_2.lon);
+    return great_circle_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+                                coordinate_2.lon);
 }
 
-float coordinate_calculation::approx_euclidean_distance(const FixedPointCoordinate &coordinate_1,
-                                                        const FixedPointCoordinate &coordinate_2)
+float coordinate_calculation::euclidean_distance(const FixedPointCoordinate &coordinate_1,
+                                                 const FixedPointCoordinate &coordinate_2)
 {
-    return approx_euclidean_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+    return euclidean_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                                      coordinate_2.lon);
 }
 
-float coordinate_calculation::approx_euclidean_distance(const int lat1,
-                                                        const int lon1,
-                                                        const int lat2,
-                                                        const int lon2)
+float coordinate_calculation::euclidean_distance(const int lat1,
+                                                 const int lon1,
+                                                 const int lat2,
+                                                 const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
@@ -217,7 +217,7 @@ float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
     BOOST_ASSERT(nearest_location.is_valid());
 
     const float approximate_distance =
-        coordinate_calculation::approx_euclidean_distance(query_location, nearest_location);
+        coordinate_calculation::euclidean_distance(query_location, nearest_location);
     BOOST_ASSERT(0. <= approximate_distance);
     return approximate_distance;
 }

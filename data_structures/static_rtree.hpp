@@ -177,28 +177,28 @@ class StaticRTree
             switch (d)
             {
                 case NORTH:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, location.lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(max_lat, location.lon));
                     break;
                 case SOUTH:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, location.lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(min_lat, location.lon));
                     break;
                 case WEST:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(location.lat, min_lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(location.lat, min_lon));
                     break;
                 case EAST:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(location.lat, max_lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(location.lat, max_lon));
                     break;
                 case NORTH_EAST:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, max_lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(max_lat, max_lon));
                     break;
                 case NORTH_WEST:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(max_lat, min_lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(max_lat, min_lon));
                     break;
                 case SOUTH_EAST:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, max_lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(min_lat, max_lon));
                     break;
                 case SOUTH_WEST:
-                    min_dist = coordinate_calculation::approx_euclidean_distance(location, FixedPointCoordinate(min_lat, min_lon));
+                    min_dist = coordinate_calculation::euclidean_distance(location, FixedPointCoordinate(min_lat, min_lon));
                     break;
                 default:
                     break;
@@ -221,24 +221,24 @@ class StaticRTree
             min_max_dist = std::min(
                 min_max_dist,
                 std::max(
-                    coordinate_calculation::approx_euclidean_distance(location, upper_left),
-                    coordinate_calculation::approx_euclidean_distance(location, upper_right)));
+                    coordinate_calculation::euclidean_distance(location, upper_left),
+                    coordinate_calculation::euclidean_distance(location, upper_right)));
 
             min_max_dist = std::min(
                 min_max_dist,
                 std::max(
-                    coordinate_calculation::approx_euclidean_distance(location, upper_right),
-                    coordinate_calculation::approx_euclidean_distance(location, lower_right)));
+                    coordinate_calculation::euclidean_distance(location, upper_right),
+                    coordinate_calculation::euclidean_distance(location, lower_right)));
 
             min_max_dist = std::min(
                 min_max_dist,
-                std::max(coordinate_calculation::approx_euclidean_distance(location, lower_right),
-                         coordinate_calculation::approx_euclidean_distance(location, lower_left)));
+                std::max(coordinate_calculation::euclidean_distance(location, lower_right),
+                         coordinate_calculation::euclidean_distance(location, lower_left)));
 
             min_max_dist = std::min(
                 min_max_dist,
-                std::max(coordinate_calculation::approx_euclidean_distance(location, lower_left),
-                         coordinate_calculation::approx_euclidean_distance(location, upper_left)));
+                std::max(coordinate_calculation::euclidean_distance(location, lower_left),
+                         coordinate_calculation::euclidean_distance(location, upper_left)));
             return min_max_dist;
         }
 
@@ -607,7 +607,7 @@ class StaticRTree
                         }
 
                         float current_minimum_distance =
-                            coordinate_calculation::approx_euclidean_distance(
+                            coordinate_calculation::euclidean_distance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 m_coordinate_list->at(current_edge.u).lat,
@@ -620,7 +620,7 @@ class StaticRTree
                         }
 
                         current_minimum_distance =
-                            coordinate_calculation::approx_euclidean_distance(
+                            coordinate_calculation::euclidean_distance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 m_coordinate_list->at(current_edge.v).lat,
@@ -1060,9 +1060,9 @@ class StaticRTree
     inline void SetForwardAndReverseWeightsOnPhantomNode(const EdgeDataT & nearest_edge,
                                                          PhantomNode &result_phantom_node) const
     {
-        const float distance_1 = coordinate_calculation::approx_euclidean_distance(
+        const float distance_1 = coordinate_calculation::euclidean_distance(
             m_coordinate_list->at(nearest_edge.u), result_phantom_node.location);
-        const float distance_2 = coordinate_calculation::approx_euclidean_distance(
+        const float distance_2 = coordinate_calculation::euclidean_distance(
             m_coordinate_list->at(nearest_edge.u), m_coordinate_list->at(nearest_edge.v));
         const float ratio = std::min(1.f, distance_1 / distance_2);
 

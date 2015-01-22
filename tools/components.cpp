@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
                 if (source < target || graph->EndEdges(target) == graph->FindEdge(target, source))
                 {
                     total_network_distance +=
-                        100 * coordinate_calculation::approx_euclidean_distance(
+                        100 * coordinate_calculation::euclidean_distance(
                                   coordinate_list[source].lat,
                                   coordinate_list[source].lon,
                                   coordinate_list[target].lat,

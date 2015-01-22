@@ -37,19 +37,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct coordinate_calculation
 {
     static double
-    ApproximateDistance(const int lat1, const int lon1, const int lat2, const int lon2);
+    great_circle_distance(const int lat1, const int lon1, const int lat2, const int lon2);
 
-    static double ApproximateDistance(const FixedPointCoordinate &first_coordinate,
-                                      const FixedPointCoordinate &second_coordinate);
+    static double great_circle_distance(const FixedPointCoordinate &first_coordinate,
+                                        const FixedPointCoordinate &second_coordinate);
 
-    static float approx_euclidean_distance(const FixedPointCoordinate &first_coordinate,
+    static float euclidean_distance(const FixedPointCoordinate &first_coordinate,
                                               const FixedPointCoordinate &second_coordinate);
 
     static float
-    approx_euclidean_distance(const int lat1, const int lon1, const int lat2, const int lon2);
-
-    static float ApproximateSquaredEuclideanDistance(const FixedPointCoordinate &first_coordinate,
-                                                     const FixedPointCoordinate &second_coordinate);
+    euclidean_distance(const int lat1, const int lon1, const int lat2, const int lon2);
 
     static void lat_or_lon_to_string(const int value, std::string &output);
 

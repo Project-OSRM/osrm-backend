@@ -321,7 +321,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 edge_iterator->target_coordinate.lat = node_iterator->lat;
                 edge_iterator->target_coordinate.lon = node_iterator->lon;
 
-                const double distance = coordinate_calculation::approx_euclidean_distance(
+                const double distance = coordinate_calculation::euclidean_distance(
                     edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
                     node_iterator->lat, node_iterator->lon);
 
