@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -52,8 +52,7 @@ void Connection::start()
 {
     TCP_socket.async_read_some(
         boost::asio::buffer(incoming_data_buffer),
-        strand.wrap(boost::bind(&Connection::handle_read,
-                                this->shared_from_this(),
+        strand.wrap(boost::bind(&Connection::handle_read, this->shared_from_this(),
                                 boost::asio::placeholders::error,
                                 boost::asio::placeholders::bytes_transferred)));
 }
@@ -68,11 +67,9 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     // no error detected, let's parse the request
     CompressionType compression_type(noCompression);
     boost::tribool result;
-    boost::tie(result, boost::tuples::ignore) =
-        RequestParser().Parse(request,
-                              incoming_data_buffer.data(),
-                              incoming_data_buffer.data() + bytes_transferred,
-                              compression_type);
+    std::tie(result, std::ignore) =
+        RequestParser().Parse(request, incoming_data_buffer.data(),
+                              incoming_data_buffer.data() + bytes_transferred, compression_type);
 
     // the request has been parsed
     if (result)
@@ -110,29 +107,26 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
             break;
         }
         // write result to stream
-        boost::asio::async_write(TCP_socket,
-                                 output_buffer,
-                                 strand.wrap(boost::bind(&Connection::handle_write,
-                                                         this->shared_from_this(),
-                                                         boost::asio::placeholders::error)));
+        boost::asio::async_write(
+            TCP_socket, output_buffer,
+            strand.wrap(boost::bind(&Connection::handle_write, this->shared_from_this(),
+                                    boost::asio::placeholders::error)));
     }
     else if (!result)
     { // request is not parseable
         reply = Reply::StockReply(Reply::badRequest);
 
-        boost::asio::async_write(TCP_socket,
-                                 reply.ToBuffers(),
-                                 strand.wrap(boost::bind(&Connection::handle_write,
-                                                         this->shared_from_this(),
-                                                         boost::asio::placeholders::error)));
+        boost::asio::async_write(
+            TCP_socket, reply.ToBuffers(),
+            strand.wrap(boost::bind(&Connection::handle_write, this->shared_from_this(),
+                                    boost::asio::placeholders::error)));
     }
     else
     {
         // we don't have a result yet, so continue reading
         TCP_socket.async_read_some(
             boost::asio::buffer(incoming_data_buffer),
-            strand.wrap(boost::bind(&Connection::handle_read,
-                                    this->shared_from_this(),
+            strand.wrap(boost::bind(&Connection::handle_read, this->shared_from_this(),
                                     boost::asio::placeholders::error,
                                     boost::asio::placeholders::bytes_transferred)));
     }

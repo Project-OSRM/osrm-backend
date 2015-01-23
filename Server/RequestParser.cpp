@@ -36,7 +36,7 @@ RequestParser::RequestParser() : state_(method_start), header({"", ""}) {}
 
 void RequestParser::Reset() { state_ = method_start; }
 
-boost::tuple<boost::tribool, char *>
+std::tuple<boost::tribool, char *>
 RequestParser::Parse(Request &req, char *begin, char *end, http::CompressionType &compression_type)
 {
     while (begin != end)
@@ -44,11 +44,11 @@ RequestParser::Parse(Request &req, char *begin, char *end, http::CompressionType
         boost::tribool result = consume(req, *begin++, compression_type);
         if (result || !result)
         {
-            return boost::make_tuple(result, begin);
+            return std::make_tuple(result, begin);
         }
     }
     boost::tribool result = boost::indeterminate;
-    return boost::make_tuple(result, begin);
+    return std::make_tuple(result, begin);
 }
 
 boost::tribool

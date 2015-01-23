@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Http/Header.h"
 
 #include <boost/logic/tribool.hpp>
-#include <boost/tuple/tuple.hpp>
+
+#include <tuple>
 
 namespace http
 {
@@ -45,7 +46,7 @@ class RequestParser
     RequestParser();
     void Reset();
 
-    boost::tuple<boost::tribool, char *>
+    std::tuple<boost::tribool, char *>
     Parse(Request &req, char *begin, char *end, CompressionType &compression_type);
 
   private:
@@ -60,27 +61,29 @@ class RequestParser
     inline bool isDigit(int c);
 
     enum state
-    { method_start,
-      method,
-      uri_start,
-      uri,
-      http_version_h,
-      http_version_t_1,
-      http_version_t_2,
-      http_version_p,
-      http_version_slash,
-      http_version_major_start,
-      http_version_major,
-      http_version_minor_start,
-      http_version_minor,
-      expecting_newline_1,
-      header_line_start,
-      header_lws,
-      header_name,
-      space_before_header_value,
-      header_value,
-      expecting_newline_2,
-      expecting_newline_3 } state_;
+    {
+        method_start,
+        method,
+        uri_start,
+        uri,
+        http_version_h,
+        http_version_t_1,
+        http_version_t_2,
+        http_version_p,
+        http_version_slash,
+        http_version_major_start,
+        http_version_major,
+        http_version_minor_start,
+        http_version_minor,
+        expecting_newline_1,
+        header_line_start,
+        header_lws,
+        header_name,
+        space_before_header_value,
+        header_value,
+        expecting_newline_2,
+        expecting_newline_3
+    } state_;
 
     Header header;
 };
