@@ -183,18 +183,19 @@ float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
     }
 
     // compute ratio
-    ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
+    ratio =
+        static_cast<float>((p - nY * a) / c); // These values are actually n/m+n and m/m+n , we need
     // not calculate the explicit values of m an n as we
     // are just interested in the ratio
     if (std::isnan(ratio))
     {
         ratio = (segment_target == query_location ? 1.f : 0.f);
     }
-    else if (std::abs(ratio) <= std::numeric_limits<double>::epsilon())
+    else if (std::abs(ratio) <= std::numeric_limits<float>::epsilon())
     {
         ratio = 0.f;
     }
-    else if (std::abs(ratio - 1.f) <= std::numeric_limits<double>::epsilon())
+    else if (std::abs(ratio - 1.f) <= std::numeric_limits<float>::epsilon())
     {
         ratio = 1.f;
     }
@@ -219,7 +220,7 @@ float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
 
     const float approximate_distance =
         coordinate_calculation::euclidean_distance(query_location, nearest_location);
-    BOOST_ASSERT(0. <= approximate_distance);
+    BOOST_ASSERT(0.f <= approximate_distance);
     return approximate_distance;
 }
 
