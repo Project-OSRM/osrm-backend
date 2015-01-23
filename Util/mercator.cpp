@@ -29,12 +29,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 
-double mercator::y2lat(const double a)
+double mercator::y2lat(const double value)
 {
-    return 180. * M_1_PI * (2. * std::atan(std::exp(a * M_PI / 180.)) - M_PI_2);
+    return 180. * M_1_PI * (2. * std::atan(std::exp(value * M_PI / 180.)) - M_PI_2);
 }
 
-double mercator::lat2y(const double a)
+double mercator::lat2y(const double latitude)
 {
-    return 180. * M_1_PI * std::log(std::tan(M_PI_4 + a * (M_PI / 180.) / 2.));
+    return 180. * M_1_PI * std::log(std::tan(M_PI_4 + latitude * (M_PI / 180.) / 2.));
 }
