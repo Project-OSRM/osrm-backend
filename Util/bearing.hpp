@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,14 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BEARING_HPP_
-#define BEARING_HPP_
+#ifndef BEARING_HPP
+#define BEARING_HPP
 
 #include <string>
 
-struct Bearing
+struct bearing
 {
-    static std::string Get(const double heading);
+    static std::string get(const double heading);
 };
 
-#endif // BEARING_HPP_
+#endif // BEARING_HPP

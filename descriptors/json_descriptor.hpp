@@ -73,7 +73,9 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
     ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
 
   public:
-    explicit JSONDescriptor(DataFacadeT *facade) : facade(facade), entered_restricted_area_count(0) {}
+    explicit JSONDescriptor(DataFacadeT *facade) : facade(facade), entered_restricted_area_count(0)
+    {
+    }
 
     void SetConfig(const DescriptorConfig &c) final { config = c; }
 
@@ -91,8 +93,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
-        description_factory.SetEndSegment(
-            leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
+        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse,
+                                          is_via_leg);
         ++added_element_count;
         BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
         return added_element_count;
@@ -130,8 +132,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
 #endif
                 DescribeLeg(raw_route.unpacked_path_segments[i],
                             raw_route.segment_end_coordinates[i],
-                            raw_route.target_traversed_in_reverse[i],
-                            raw_route.is_via_leg(i));
+                            raw_route.target_traversed_in_reverse[i], raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
         description_factory.Run(config.zoom_level);
@@ -145,10 +146,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         if (config.instructions)
         {
             JSON::Array json_route_instructions;
-            BuildTextualDescription(description_factory,
-                                    json_route_instructions,
-                                    raw_route.shortest_path_length,
-                                    shortest_path_segments);
+            BuildTextualDescription(description_factory, json_route_instructions,
+                                    raw_route.shortest_path_length, shortest_path_segments);
             json_result.values["route_instructions"] = json_route_instructions;
         }
         description_factory.BuildRouteSummary(description_factory.get_entire_length(),
@@ -225,15 +224,15 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             JSON::Array json_current_alt_instructions;
             if (config.instructions)
             {
-                BuildTextualDescription(alternate_description_factory,
-                                        json_current_alt_instructions,
-                                        raw_route.alternative_path_length,
-                                        alternative_path_segments);
+                BuildTextualDescription(
+                    alternate_description_factory, json_current_alt_instructions,
+                    raw_route.alternative_path_length, alternative_path_segments);
                 json_alt_instructions.values.push_back(json_current_alt_instructions);
                 json_result.values["alternative_instructions"] = json_alt_instructions;
             }
             alternate_description_factory.BuildRouteSummary(
-                alternate_description_factory.get_entire_length(), raw_route.alternative_path_length);
+                alternate_description_factory.get_entire_length(),
+                raw_route.alternative_path_length);
 
             JSON::Object json_alternate_route_summary;
             JSON::Array json_alternate_route_summary_array;
@@ -285,10 +284,12 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         std::string hint;
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
         {
-            ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
+            ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates[i].source_phantom,
+                                          hint);
             json_location_hint_array.values.push_back(hint);
         }
-        ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
+        ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates.back().target_phantom,
+                                      hint);
         json_location_hint_array.values.push_back(hint);
         json_hint_object.values["locations"] = json_location_hint_array;
         json_result.values["hint_data"] = json_hint_object;
@@ -331,8 +332,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     std::string current_turn_instruction;
                     if (TurnInstruction::LeaveRoundAbout == current_instruction)
                     {
-                        temp_instruction =
-                            cast::integral_to_string(cast::enum_to_underlying(TurnInstruction::EnterRoundAbout));
+                        temp_instruction = cast::integral_to_string(
+                            cast::enum_to_underlying(TurnInstruction::EnterRoundAbout));
                         current_turn_instruction += temp_instruction;
                         current_turn_instruction += "-";
                         temp_instruction = cast::integral_to_string(round_about.leave_at_exit + 1);
@@ -341,7 +342,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     }
                     else
                     {
-                        temp_instruction = cast::integral_to_string(cast::enum_to_underlying(current_instruction));
+                        temp_instruction =
+                            cast::integral_to_string(cast::enum_to_underlying(current_instruction));
                         current_turn_instruction += temp_instruction;
                     }
                     json_instruction_row.values.push_back(current_turn_instruction);
@@ -354,14 +356,13 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     json_instruction_row.values.push_back(
                         cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
                     const double bearing_value = (segment.bearing / 10.);
-                    json_instruction_row.values.push_back(Bearing::Get(bearing_value));
+                    json_instruction_row.values.push_back(bearing::get(bearing_value));
                     json_instruction_row.values.push_back(
                         static_cast<unsigned>(round(bearing_value)));
                     json_instruction_row.values.push_back(segment.travel_mode);
 
                     route_segments_list.emplace_back(
-                        segment.name_id,
-                        static_cast<int>(segment.length),
+                        segment.name_id, static_cast<int>(segment.length),
                         static_cast<unsigned>(route_segments_list.size()));
                     json_instruction_array.values.push_back(json_instruction_row);
                 }
@@ -377,14 +378,15 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         }
 
         JSON::Array json_last_instruction_row;
-        temp_instruction = cast::integral_to_string(cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
+        temp_instruction = cast::integral_to_string(
+            cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
         json_last_instruction_row.values.push_back(temp_instruction);
         json_last_instruction_row.values.push_back("");
         json_last_instruction_row.values.push_back(0);
         json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
         json_last_instruction_row.values.push_back(0);
         json_last_instruction_row.values.push_back("0m");
-        json_last_instruction_row.values.push_back(Bearing::Get(0.0));
+        json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
         json_instruction_array.values.push_back(json_last_instruction_row);
     }

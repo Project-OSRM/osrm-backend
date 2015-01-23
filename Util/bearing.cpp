@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -27,37 +27,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "bearing.hpp"
 
-std::string Bearing::Get(const double heading)
+std::string bearing::get(const double heading)
 {
+    if (heading <= 22.5)
+    {
+        return "N";
+    }
+    if (heading <= 67.5)
+    {
+        return "NE";
+    }
+    if (heading <= 112.5)
+    {
+        return "E";
+    }
+    if (heading <= 157.5)
+    {
+        return "SE";
+    }
     if (heading <= 202.5)
     {
-        if (heading >= 0. && heading <= 22.5)
-        {
-            return "N";
-        }
-        if (heading > 22.5 && heading <= 67.5)
-        {
-            return "NE";
-        }
-        if (heading > 67.5 && heading <= 112.5)
-        {
-            return "E";
-        }
-        if (heading > 112.5 && heading <= 157.5)
-        {
-            return "SE";
-        }
         return "S";
     }
-    if (heading > 202.5 && heading <= 247.5)
+    if (heading <= 247.5)
     {
         return "SW";
     }
-    if (heading > 247.5 && heading <= 292.5)
+    if (heading <= 292.5)
     {
         return "W";
     }
-    if (heading > 292.5 && heading <= 337.5)
+    if (heading <= 337.5)
     {
         return "NW";
     }
