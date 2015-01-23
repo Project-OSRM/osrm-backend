@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/turn_instructions.hpp"
+#include "../Util/container.hpp"
 #include "../typedefs.h"
 
 DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }
@@ -216,23 +217,27 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     polyline_generalizer.Run(path_description.begin(), path_description.end(), zoom_level);
 
     // fix what needs to be fixed else
-    unsigned necessary_pieces = 0; // a running index that counts the necessary pieces
-    for (unsigned i = 0; i < path_description.size() - 1 && path_description.size() >= 2; ++i)
-    {
-        if (path_description[i].necessary)
+    unsigned necessary_segments = 0; // a running index that counts the necessary pieces
+    osrm::for_each_pair(
+        path_description, [&](SegmentInformation &first, const SegmentInformation &second)
         {
-            ++necessary_pieces;
-            if (path_description[i].is_via_location)
-            { // mark the end of a leg
-                via_indices.push_back(necessary_pieces);
+            if (!first.necessary)
+            {
+                return;
             }
-            const double angle =
-                path_description[i + 1].location.bearing(path_description[i].location);
-            path_description[i].bearing = static_cast<unsigned>(angle * 10);
-        }
-    }
-    via_indices.push_back(necessary_pieces + 1);
+
+            ++necessary_segments;
+
+            if (first.is_via_location)
+            { // mark the end of a leg (of several segments)
+                via_indices.push_back(necessary_segments);
+            }
+
+            const double angle = coordinate_calculation::bearing(first.location, second.location);
+            first.bearing = static_cast<short>(angle * 10);
+        });
+
+    via_indices.push_back(necessary_segments + 1);
     BOOST_ASSERT(via_indices.size() >= 2);
-    // BOOST_ASSERT(0 != necessary_pieces || path_description.empty());
     return;
 }
