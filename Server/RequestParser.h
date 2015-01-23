@@ -48,11 +48,10 @@ class RequestParser
     RequestParser();
     void Reset();
 
-    std::tuple<osrm::tribool, char *>
-    Parse(Request &req, char *begin, char *end, CompressionType &compression_type);
+    std::tuple<osrm::tribool, CompressionType> Parse(Request &req, char *begin, char *end);
 
   private:
-    osrm::tribool consume(Request &req, char input, CompressionType &compression_type);
+    osrm::tribool consume(Request &req, char input);
 
     inline bool isChar(int c);
 
@@ -88,6 +87,7 @@ class RequestParser
     } state_;
 
     Header header;
+    CompressionType compression_type;
 };
 
 } // namespace http

@@ -36,23 +36,22 @@ RequestParser::RequestParser() : state_(method_start), header({"", ""}) {}
 
 void RequestParser::Reset() { state_ = method_start; }
 
-std::tuple<osrm::tribool, char *>
-RequestParser::Parse(Request &req, char *begin, char *end, http::CompressionType &compression_type)
+std::tuple<osrm::tribool, CompressionType>
+RequestParser::Parse(Request &req, char *begin, char *end)
 {
     while (begin != end)
     {
-        osrm::tribool result = consume(req, *begin++, compression_type);
+        osrm::tribool result = consume(req, *begin++);
         if (result == osrm::tribool::yes || result == osrm::tribool::no)
         {
-            return std::make_tuple(result, begin);
+            return std::make_tuple(result, compression_type);
         }
     }
     osrm::tribool result = osrm::tribool::indeterminate;
-    return std::make_tuple(result, begin);
+    return std::make_tuple(result, compression_type);
 }
 
-osrm::tribool
-RequestParser::consume(Request &req, char input, http::CompressionType &compression_type)
+osrm::tribool RequestParser::consume(Request &req, char input)
 {
     switch (state_)
     {

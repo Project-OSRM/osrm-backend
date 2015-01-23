@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-// #include "RequestParser.h"
 #include "Http/CompressionType.h"
 #include "Http/Reply.h"
 #include "Http/Request.h"
@@ -38,29 +37,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
- #include <memory>
- #include <vector>
+#include <memory>
+#include <vector>
 
-//workaround for incomplete std::shared_ptr compatibility in old boost versions
+// workaround for incomplete std::shared_ptr compatibility in old boost versions
 #if BOOST_VERSION < 105300 || defined BOOST_NO_CXX11_SMART_PTR
 
-namespace boost {
-template<class T>
-const T* get_pointer(std::shared_ptr<T> const& p)
+namespace boost
 {
-    return p.get();
-}
+template <class T> const T *get_pointer(std::shared_ptr<T> const &p) { return p.get(); }
 
-template<class T>
-T* get_pointer(std::shared_ptr<T>& p)
-{
-    return p.get();
-}
+template <class T> T *get_pointer(std::shared_ptr<T> &p) { return p.get(); }
 } // namespace boost
 
 #endif
-
-
 
 class RequestHandler;
 
