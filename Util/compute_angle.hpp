@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,13 +29,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define COMPUTE_ANGLE_HPP
 
 struct FixedPointCoordinate;
-struct NodeInfo;
 
 struct ComputeAngle
 {
-    /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
-    static double OfThreeFixedPointCoordinates(const FixedPointCoordinate &A,
-                                               const FixedPointCoordinate &C,
-                                               const FixedPointCoordinate &B);
+    // Get angle of line segment (A,C)->(C,B)
+    // atan2 magic, formerly cosine theorem
+    static double OfThreeFixedPointCoordinates(const FixedPointCoordinate &first,
+                                               const FixedPointCoordinate &second,
+                                               const FixedPointCoordinate &third);
 };
+
 #endif // COMPUTE_ANGLE_HPP

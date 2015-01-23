@@ -34,16 +34,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 
-double ComputeAngle::OfThreeFixedPointCoordinates(const FixedPointCoordinate &A,
-                                                  const FixedPointCoordinate &C,
-                                                  const FixedPointCoordinate &B)
+double ComputeAngle::OfThreeFixedPointCoordinates(const FixedPointCoordinate &first,
+                                                  const FixedPointCoordinate &second,
+                                                  const FixedPointCoordinate &third)
 {
-    const double v1x = (A.lon - C.lon) / COORDINATE_PRECISION;
-    const double v1y = mercator::lat2y(A.lat / COORDINATE_PRECISION) -
-                       mercator::lat2y(C.lat / COORDINATE_PRECISION);
-    const double v2x = (B.lon - C.lon) / COORDINATE_PRECISION;
-    const double v2y = mercator::lat2y(B.lat / COORDINATE_PRECISION) -
-                       mercator::lat2y(C.lat / COORDINATE_PRECISION);
+    const double v1x = (first.lon - second.lon) / COORDINATE_PRECISION;
+    const double v1y = mercator::lat2y(first.lat / COORDINATE_PRECISION) -
+                       mercator::lat2y(second.lat / COORDINATE_PRECISION);
+    const double v2x = (third.lon - second.lon) / COORDINATE_PRECISION;
+    const double v2y = mercator::lat2y(third.lat / COORDINATE_PRECISION) -
+                       mercator::lat2y(second.lat / COORDINATE_PRECISION);
 
     double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / M_PI;
     while (angle < 0.)
