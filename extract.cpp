@@ -36,10 +36,18 @@ int main(int argc, char *argv[])
         LogPolicy::GetInstance().Unmute();
         ExtractorConfig extractor_config;
 
-        if (!ExtractorOptions::ParseArguments(argc, argv, extractor_config))
+        const return_code result = ExtractorOptions::ParseArguments(argc, argv, extractor_config);
+
+        if (return_code::fail == result)
+        {
+            return 1;
+        }
+
+        if (return_code::exit == result)
         {
             return 0;
         }
+
         ExtractorOptions::GenerateOutputFilesNames(extractor_config);
 
         if (1 > extractor_config.requested_num_threads)
@@ -61,11 +69,11 @@ int main(int argc, char *argv[])
                                              << " not found!";
             return 1;
         }
-
         return extractor().run(extractor_config);
     }
     catch (const std::exception &e)
     {
         SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+        return 1;
     }
 }

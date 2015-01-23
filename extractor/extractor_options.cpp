@@ -36,7 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/task_scheduler_init.h>
 
-bool ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config)
+return_code
+ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -79,46 +80,54 @@ bool ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &e
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options
-    boost::program_options::variables_map option_variables;
-    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                      .options(cmdline_options)
-                                      .positional(positional_options)
-                                      .run(),
-                                  option_variables);
-
-    if (option_variables.count("version"))
+    try
     {
-        SimpleLogger().Write() << g_GIT_DESCRIPTION;
-        return false;
-    }
-
-    if (option_variables.count("help"))
-    {
-        SimpleLogger().Write() << visible_options;
-        return false;
-    }
-
-    boost::program_options::notify(option_variables);
-
-    // parse config file
-    if (boost::filesystem::is_regular_file(extractor_config.config_file_path))
-    {
-        SimpleLogger().Write() << "Reading options from: "
-                               << extractor_config.config_file_path.string();
-        std::string ini_file_contents =
-            ReadIniFileAndLowerContents(extractor_config.config_file_path);
-        std::stringstream config_stream(ini_file_contents);
-        boost::program_options::store(parse_config_file(config_stream, config_file_options),
+        boost::program_options::variables_map option_variables;
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                          .options(cmdline_options)
+                                          .positional(positional_options)
+                                          .run(),
                                       option_variables);
+        if (option_variables.count("version"))
+        {
+            SimpleLogger().Write() << g_GIT_DESCRIPTION;
+            return return_code::exit;
+        }
+
+        if (option_variables.count("help"))
+        {
+            SimpleLogger().Write() << visible_options;
+            return return_code::exit;
+        }
+
         boost::program_options::notify(option_variables);
+
+        // parse config file
+        if (boost::filesystem::is_regular_file(extractor_config.config_file_path))
+        {
+            SimpleLogger().Write()
+                << "Reading options from: " << extractor_config.config_file_path.string();
+            std::string ini_file_contents =
+                ReadIniFileAndLowerContents(extractor_config.config_file_path);
+            std::stringstream config_stream(ini_file_contents);
+            boost::program_options::store(parse_config_file(config_stream, config_file_options),
+                                          option_variables);
+            boost::program_options::notify(option_variables);
+        }
+
+        if (!option_variables.count("input"))
+        {
+            SimpleLogger().Write() << visible_options;
+            return return_code::exit;
+        }
+    }
+    catch (std::exception &e)
+    {
+        SimpleLogger().Write(logWARNING) << e.what();
+        return return_code::fail;
     }
 
-    if (!option_variables.count("input"))
-    {
-        SimpleLogger().Write() << visible_options;
-        return false;
-    }
-    return true;
+    return return_code::ok;
 }
 
 void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_config)

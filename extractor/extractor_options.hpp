@@ -30,6 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem.hpp>
 
+enum class return_code : unsigned
+{
+    ok,
+    fail,
+    exit
+};
+
 struct ExtractorConfig
 {
     ExtractorConfig() noexcept : requested_num_threads(0) {}
@@ -46,7 +53,7 @@ struct ExtractorConfig
 
 struct ExtractorOptions
 {
-    static bool ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config);
+    static return_code ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config);
 
     static void GenerateOutputFilesNames(ExtractorConfig &extractor_config);
 };
