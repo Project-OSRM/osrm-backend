@@ -74,6 +74,7 @@ bool FixedPointCoordinate::is_valid() const
     }
     return true;
 }
+
 bool FixedPointCoordinate::operator==(const FixedPointCoordinate &other) const
 {
     return lat == other.lat && lon == other.lon;
