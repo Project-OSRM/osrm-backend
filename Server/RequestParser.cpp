@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -36,22 +36,22 @@ RequestParser::RequestParser() : state_(method_start), header({"", ""}) {}
 
 void RequestParser::Reset() { state_ = method_start; }
 
-std::tuple<boost::tribool, char *>
+std::tuple<osrm::tribool, char *>
 RequestParser::Parse(Request &req, char *begin, char *end, http::CompressionType &compression_type)
 {
     while (begin != end)
     {
-        boost::tribool result = consume(req, *begin++, compression_type);
-        if (result || !result)
+        osrm::tribool result = consume(req, *begin++, compression_type);
+        if (result == osrm::tribool::yes || result == osrm::tribool::no)
         {
             return std::make_tuple(result, begin);
         }
     }
-    boost::tribool result = boost::indeterminate;
+    osrm::tribool result = osrm::tribool::indeterminate;
     return std::make_tuple(result, begin);
 }
 
-boost::tribool
+osrm::tribool
 RequestParser::consume(Request &req, char input, http::CompressionType &compression_type)
 {
     switch (state_)
@@ -59,119 +59,119 @@ RequestParser::consume(Request &req, char input, http::CompressionType &compress
     case method_start:
         if (!isChar(input) || isCTL(input) || isTSpecial(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
         state_ = method;
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case method:
         if (input == ' ')
         {
             state_ = uri;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (!isChar(input) || isCTL(input) || isTSpecial(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case uri_start:
         if (isCTL(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
         state_ = uri;
         req.uri.push_back(input);
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case uri:
         if (input == ' ')
         {
             state_ = http_version_h;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (isCTL(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
         req.uri.push_back(input);
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case http_version_h:
         if (input == 'H')
         {
             state_ = http_version_t_1;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_t_1:
         if (input == 'T')
         {
             state_ = http_version_t_2;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_t_2:
         if (input == 'T')
         {
             state_ = http_version_p;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_p:
         if (input == 'P')
         {
             state_ = http_version_slash;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_slash:
         if (input == '/')
         {
             state_ = http_version_major_start;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_major_start:
         if (isDigit(input))
         {
             state_ = http_version_major;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_major:
         if (input == '.')
         {
             state_ = http_version_minor_start;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (isDigit(input))
         {
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_minor_start:
         if (isDigit(input))
         {
             state_ = http_version_minor;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case http_version_minor:
         if (input == '\r')
         {
             state_ = expecting_newline_1;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (isDigit(input))
         {
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case expecting_newline_1:
         if (input == '\n')
         {
             state_ = header_line_start;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case header_line_start:
         if (header.name == "Accept-Encoding")
         {
@@ -199,74 +199,74 @@ RequestParser::consume(Request &req, char input, http::CompressionType &compress
         if (input == '\r')
         {
             state_ = expecting_newline_3;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (!isChar(input) || isCTL(input) || isTSpecial(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
         state_ = header_name;
         header.Clear();
         header.name.push_back(input);
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case header_lws:
         if (input == '\r')
         {
             state_ = expecting_newline_2;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (input == ' ' || input == '\t')
         {
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (isCTL(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
         state_ = header_value;
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case header_name:
         if (input == ':')
         {
             state_ = space_before_header_value;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (!isChar(input) || isCTL(input) || isTSpecial(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
         header.name.push_back(input);
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case space_before_header_value:
         if (input == ' ')
         {
             state_ = header_value;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
+        return osrm::tribool::no;
     case header_value:
         if (input == '\r')
         {
             state_ = expecting_newline_2;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
         if (isCTL(input))
         {
-            return false;
+            return osrm::tribool::no;
         }
         header.value.push_back(input);
-        return boost::indeterminate;
+        return osrm::tribool::indeterminate;
     case expecting_newline_2:
         if (input == '\n')
         {
             state_ = header_line_start;
-            return boost::indeterminate;
+            return osrm::tribool::indeterminate;
         }
-        return false;
-    default: // expecting_newline_3:
-        return (input == '\n');
+        return osrm::tribool::no;
+    default: // expecting_newline_3
+        return (input == '\n' ? osrm::tribool::yes : osrm::tribool::no);
         // default:
-        //     return false;
+        //     return osrm::tribool::no;
     }
 }
 

@@ -31,7 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Http/CompressionType.h"
 #include "Http/Header.h"
 
-#include <boost/logic/tribool.hpp>
+#include "../data_structures/tribool.hpp"
+
+// #include <boost/logic/tribool.hpp>
 
 #include <tuple>
 
@@ -46,11 +48,11 @@ class RequestParser
     RequestParser();
     void Reset();
 
-    std::tuple<boost::tribool, char *>
+    std::tuple<osrm::tribool, char *>
     Parse(Request &req, char *begin, char *end, CompressionType &compression_type);
 
   private:
-    boost::tribool consume(Request &req, char input, CompressionType &compression_type);
+    osrm::tribool consume(Request &req, char input, CompressionType &compression_type);
 
     inline bool isChar(int c);
 
