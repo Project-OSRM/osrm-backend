@@ -30,10 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Http/CompressionType.h"
 #include "Http/Header.h"
-
 #include "../data_structures/tribool.hpp"
-
-// #include <boost/logic/tribool.hpp>
 
 #include <tuple>
 
