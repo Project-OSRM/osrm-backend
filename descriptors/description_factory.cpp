@@ -44,9 +44,8 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
         (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
     const TravelMode travel_mode =
         (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
-    AppendSegment(
-        source.location,
-        PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration, travel_mode));
+    AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn,
+                                            segment_duration, travel_mode));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -59,15 +58,10 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     const TravelMode travel_mode =
         (traversed_in_reverse ? target.backward_travel_mode : target.forward_travel_mode);
-    path_description.emplace_back(target.location,
-                                  target.name_id,
-                                  segment_duration,
-                                  0.f,
+    path_description.emplace_back(target.location, target.name_id, segment_duration, 0.f,
                                   is_via_location ? TurnInstruction::ReachViaLocation
                                                   : TurnInstruction::NoTurn,
-                                  true,
-                                  true,
-                                  travel_mode);
+                                  true, true, travel_mode);
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -98,12 +92,8 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         return path_point.turn_instruction;
     }();
 
-    path_description.emplace_back(coordinate,
-                                  path_point.name_id,
-                                  path_point.segment_duration,
-                                  0.f,
-                                  turn,
-                                  path_point.travel_mode);
+    path_description.emplace_back(coordinate, path_point.name_id, path_point.segment_duration, 0.f,
+                                  turn, path_point.travel_mode);
 }
 
 JSON::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
@@ -205,7 +195,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
 
     // Post-processing to remove empty or nearly empty path segments
     if (path_description.size() > 2 &&
-        std::numeric_limits<double>::epsilon() > path_description.back().length)
+        std::numeric_limits<float>::epsilon() > path_description.back().length)
     {
         path_description.pop_back();
         path_description.back().necessary = true;
@@ -214,7 +204,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     }
 
     if (path_description.size() > 2 &&
-        std::numeric_limits<double>::epsilon() > path_description.front().length)
+        std::numeric_limits<float>::epsilon() > path_description.front().length)
     {
         path_description.erase(path_description.begin());
         path_description.front().turn_instruction = TurnInstruction::HeadOn;
