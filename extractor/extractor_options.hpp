@@ -28,12 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_OPTIONS_HPP
 #define EXTRACTOR_OPTIONS_HPP
 
-#include "extractor.hpp"
+#include <boost/filesystem.hpp>
 
 struct ExtractorConfig
 {
     ExtractorConfig() noexcept : requested_num_threads(0) {}
-    unsigned requested_num_threads;
     boost::filesystem::path config_file_path;
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;
@@ -41,6 +40,8 @@ struct ExtractorConfig
     std::string output_file_name;
     std::string restriction_file_name;
     std::string timestamp_file_name;
+
+    unsigned requested_num_threads;
 };
 
 struct ExtractorOptions

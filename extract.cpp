@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -26,17 +26,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "extractor/extractor.hpp"
+#include "extractor/extractor_options.hpp"
 #include "Util/simple_logger.hpp"
 
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     try
     {
-        return Extractor().Run(argc, argv);
+        LogPolicy::GetInstance().Unmute();
+        ExtractorConfig extractor_config;
+
+        if (!ExtractorOptions::ParseArguments(argc, argv, extractor_config))
+        {
+            return 0;
+        }
+        ExtractorOptions::GenerateOutputFilesNames(extractor_config);
+
+        if (1 > extractor_config.requested_num_threads)
+        {
+            SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
+            return 1;
+        }
+
+        if (!boost::filesystem::is_regular_file(extractor_config.input_path))
+        {
+            SimpleLogger().Write(logWARNING)
+                << "Input file " << extractor_config.input_path.string() << " not found!";
+            return 1;
+        }
+
+        if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
+        {
+            SimpleLogger().Write(logWARNING) << "Profile " << extractor_config.profile_path.string()
+                                             << " not found!";
+            return 1;
+        }
+
+        return extractor().run(extractor_config);
     }
     catch (const std::exception &e)
     {
         SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     }
-
 }

@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_node.hpp"
 #include "extraction_way.hpp"
 #include "extractor_callbacks.hpp"
-#include "extractor_options.hpp"
 #include "restriction_parser.hpp"
 #include "scripting_environment.hpp"
 
@@ -63,40 +62,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
-int Extractor::Run(int argc, char *argv[])
+int extractor::run(const ExtractorConfig &extractor_config)
 {
-    ExtractorConfig extractor_config;
-
     try
     {
         LogPolicy::GetInstance().Unmute();
         TIMER_START(extracting);
-
-        if (!ExtractorOptions::ParseArguments(argc, argv, extractor_config))
-        {
-            return 0;
-        }
-        ExtractorOptions::GenerateOutputFilesNames(extractor_config);
-
-        if (1 > extractor_config.requested_num_threads)
-        {
-            SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
-            return 1;
-        }
-
-        if (!boost::filesystem::is_regular_file(extractor_config.input_path))
-        {
-            SimpleLogger().Write(logWARNING)
-                << "Input file " << extractor_config.input_path.string() << " not found!";
-            return 1;
-        }
-
-        if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
-        {
-            SimpleLogger().Write(logWARNING) << "Profile " << extractor_config.profile_path.string()
-                                             << " not found!";
-            return 1;
-        }
 
         const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
         const auto number_of_threads =
@@ -236,8 +207,7 @@ int Extractor::Run(int argc, char *argv[])
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
 
-        SimpleLogger().Write() << "Raw input contains "
-                               << number_of_nodes.load() << " nodes, "
+        SimpleLogger().Write() << "Raw input contains " << number_of_nodes.load() << " nodes, "
                                << number_of_ways.load() << " ways, and "
                                << number_of_relations.load() << " relations, and "
                                << number_of_others.load() << " unknown entities";
