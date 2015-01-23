@@ -72,7 +72,7 @@ class DescriptionFactory
         {
             // compute distance/duration for route summary
             distance = static_cast<unsigned>(std::round(raw_distance));
-            duration = static_cast<unsigned>(std::round(raw_duration / 10.));
+            duration = static_cast<EdgeWeight>(std::round(raw_duration / 10.));
         }
     } summary;
 
@@ -88,10 +88,7 @@ class DescriptionFactory
     JSON::Value AppendGeometryString(const bool return_encoded);
     std::vector<unsigned> const &GetViaIndices() const;
 
-    double get_entire_length() const
-    {
-        return entire_length;
-    }
+    double get_entire_length() const { return entire_length; }
 
     void Run(const unsigned zoom_level);
 };
