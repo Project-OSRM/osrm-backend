@@ -122,8 +122,8 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     }
 
     /** starts at index 1 */
-    path_description[0].length = 0;
-    for (const auto i : osrm::irange<std::size_t>(0, path_description.size()))
+    path_description[0].length = 0.f;
+    for (const auto i : osrm::irange<std::size_t>(1, path_description.size()))
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
