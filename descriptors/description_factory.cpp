@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/turn_instructions.hpp"
 #include "../Util/container.hpp"
+#include "../Util/integer_range.hpp"
 #include "../typedefs.h"
 
 DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }
@@ -122,7 +123,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
 
     /** starts at index 1 */
     path_description[0].length = 0;
-    for (unsigned i = 1; i < path_description.size(); ++i)
+    for (const auto i : osrm::irange<std::size_t>(0, path_description.size()))
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
@@ -174,10 +175,10 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     //    }
 
     float segment_length = 0.;
-    unsigned segment_duration = 0;
-    unsigned segment_start_index = 0;
+    EdgeWeight segment_duration = 0;
+    std::size_t segment_start_index = 0;
 
-    for (unsigned i = 1; i < path_description.size(); ++i)
+    for (const auto i : osrm::irange<std::size_t>(1, path_description.size()))
     {
         entire_length += path_description[i].length;
         segment_length += path_description[i].length;
