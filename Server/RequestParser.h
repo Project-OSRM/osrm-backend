@@ -50,15 +50,15 @@ class RequestParser
   private:
     osrm::tribool consume(Request &req, char input);
 
-    inline bool isChar(int c);
+    bool is_char(int c) const;
 
-    inline bool isCTL(int c);
+    bool is_CTL(int c) const;
 
-    inline bool isTSpecial(int c);
+    bool is_special(int c) const;
 
-    inline bool isDigit(int c);
+    bool is_digit(int c) const;
 
-    enum state
+    enum class internal_state : unsigned char
     {
         method_start,
         method,
@@ -81,7 +81,7 @@ class RequestParser
         header_value,
         expecting_newline_2,
         expecting_newline_3
-    } state_;
+    } state;
 
     Header header;
     CompressionType compression_type;

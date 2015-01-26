@@ -33,11 +33,11 @@ namespace http
 {
 
 RequestParser::RequestParser()
-    : state_(method_start), header({"", ""}), compression_type(noCompression)
+    : state(internal_state::method_start), header({"", ""}), compression_type(noCompression)
 {
 }
 
-void RequestParser::Reset() { state_ = method_start; }
+void RequestParser::Reset() { state = internal_state::method_start; }
 
 std::tuple<osrm::tribool, CompressionType>
 RequestParser::Parse(Request &req, char *begin, char *end)
@@ -56,125 +56,125 @@ RequestParser::Parse(Request &req, char *begin, char *end)
 
 osrm::tribool RequestParser::consume(Request &req, char input)
 {
-    switch (state_)
+    switch (state)
     {
-    case method_start:
-        if (!isChar(input) || isCTL(input) || isTSpecial(input))
+    case internal_state::method_start:
+        if (!is_char(input) || is_CTL(input) || is_special(input))
         {
             return osrm::tribool::no;
         }
-        state_ = method;
+        state = internal_state::method;
         return osrm::tribool::indeterminate;
-    case method:
+    case internal_state::method:
         if (input == ' ')
         {
-            state_ = uri;
+            state = internal_state::uri;
             return osrm::tribool::indeterminate;
         }
-        if (!isChar(input) || isCTL(input) || isTSpecial(input))
+        if (!is_char(input) || is_CTL(input) || is_special(input))
         {
             return osrm::tribool::no;
         }
         return osrm::tribool::indeterminate;
-    case uri_start:
-        if (isCTL(input))
+    case internal_state::uri_start:
+        if (is_CTL(input))
         {
             return osrm::tribool::no;
         }
-        state_ = uri;
+        state = internal_state::uri;
         req.uri.push_back(input);
         return osrm::tribool::indeterminate;
-    case uri:
+    case internal_state::uri:
         if (input == ' ')
         {
-            state_ = http_version_h;
+            state = internal_state::http_version_h;
             return osrm::tribool::indeterminate;
         }
-        if (isCTL(input))
+        if (is_CTL(input))
         {
             return osrm::tribool::no;
         }
         req.uri.push_back(input);
         return osrm::tribool::indeterminate;
-    case http_version_h:
+    case internal_state::http_version_h:
         if (input == 'H')
         {
-            state_ = http_version_t_1;
+            state = internal_state::http_version_t_1;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_t_1:
+    case internal_state::http_version_t_1:
         if (input == 'T')
         {
-            state_ = http_version_t_2;
+            state = internal_state::http_version_t_2;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_t_2:
+    case internal_state::http_version_t_2:
         if (input == 'T')
         {
-            state_ = http_version_p;
+            state = internal_state::http_version_p;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_p:
+    case internal_state::http_version_p:
         if (input == 'P')
         {
-            state_ = http_version_slash;
+            state = internal_state::http_version_slash;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_slash:
+    case internal_state::http_version_slash:
         if (input == '/')
         {
-            state_ = http_version_major_start;
+            state = internal_state::http_version_major_start;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_major_start:
-        if (isDigit(input))
+    case internal_state::http_version_major_start:
+        if (is_digit(input))
         {
-            state_ = http_version_major;
+            state = internal_state::http_version_major;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_major:
+    case internal_state::http_version_major:
         if (input == '.')
         {
-            state_ = http_version_minor_start;
+            state = internal_state::http_version_minor_start;
             return osrm::tribool::indeterminate;
         }
-        if (isDigit(input))
+        if (is_digit(input))
         {
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_minor_start:
-        if (isDigit(input))
+    case internal_state::http_version_minor_start:
+        if (is_digit(input))
         {
-            state_ = http_version_minor;
+            state = internal_state::http_version_minor;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case http_version_minor:
+    case internal_state::http_version_minor:
         if (input == '\r')
         {
-            state_ = expecting_newline_1;
+            state = internal_state::expecting_newline_1;
             return osrm::tribool::indeterminate;
         }
-        if (isDigit(input))
+        if (is_digit(input))
         {
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case expecting_newline_1:
+    case internal_state::expecting_newline_1:
         if (input == '\n')
         {
-            state_ = header_line_start;
+            state = internal_state::header_line_start;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case header_line_start:
+    case internal_state::header_line_start:
         if (header.name == "Accept-Encoding")
         {
             /* giving gzip precedence over deflate */
@@ -200,86 +200,84 @@ osrm::tribool RequestParser::consume(Request &req, char input)
 
         if (input == '\r')
         {
-            state_ = expecting_newline_3;
+            state = internal_state::expecting_newline_3;
             return osrm::tribool::indeterminate;
         }
-        if (!isChar(input) || isCTL(input) || isTSpecial(input))
+        if (!is_char(input) || is_CTL(input) || is_special(input))
         {
             return osrm::tribool::no;
         }
-        state_ = header_name;
+        state = internal_state::header_name;
         header.Clear();
         header.name.push_back(input);
         return osrm::tribool::indeterminate;
-    case header_lws:
+    case internal_state::header_lws:
         if (input == '\r')
         {
-            state_ = expecting_newline_2;
+            state = internal_state::expecting_newline_2;
             return osrm::tribool::indeterminate;
         }
         if (input == ' ' || input == '\t')
         {
             return osrm::tribool::indeterminate;
         }
-        if (isCTL(input))
+        if (is_CTL(input))
         {
             return osrm::tribool::no;
         }
-        state_ = header_value;
+        state = internal_state::header_value;
         return osrm::tribool::indeterminate;
-    case header_name:
+    case internal_state::header_name:
         if (input == ':')
         {
-            state_ = space_before_header_value;
+            state = internal_state::space_before_header_value;
             return osrm::tribool::indeterminate;
         }
-        if (!isChar(input) || isCTL(input) || isTSpecial(input))
+        if (!is_char(input) || is_CTL(input) || is_special(input))
         {
             return osrm::tribool::no;
         }
         header.name.push_back(input);
         return osrm::tribool::indeterminate;
-    case space_before_header_value:
+    case internal_state::space_before_header_value:
         if (input == ' ')
         {
-            state_ = header_value;
+            state = internal_state::header_value;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    case header_value:
+    case internal_state::header_value:
         if (input == '\r')
         {
-            state_ = expecting_newline_2;
+            state = internal_state::expecting_newline_2;
             return osrm::tribool::indeterminate;
         }
-        if (isCTL(input))
+        if (is_CTL(input))
         {
             return osrm::tribool::no;
         }
         header.value.push_back(input);
         return osrm::tribool::indeterminate;
-    case expecting_newline_2:
+    case internal_state::expecting_newline_2:
         if (input == '\n')
         {
-            state_ = header_line_start;
+            state = internal_state::header_line_start;
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
     default: // expecting_newline_3
         return (input == '\n' ? osrm::tribool::yes : osrm::tribool::no);
-        // default:
-        //     return osrm::tribool::no;
     }
 }
 
-inline bool RequestParser::isChar(int character) { return character >= 0 && character <= 127; }
+bool RequestParser::is_char(int character) const { return character >= 0 && character <= 127; }
 
-inline bool RequestParser::isCTL(int character)
+bool RequestParser::is_CTL(int character) const
 {
     return (character >= 0 && character <= 31) || (character == 127);
 }
 
-inline bool RequestParser::isTSpecial(int character)
+bool RequestParser::is_special(int character) const
 {
     switch (character)
     {
@@ -308,5 +306,5 @@ inline bool RequestParser::isTSpecial(int character)
     }
 }
 
-inline bool RequestParser::isDigit(int character) { return character >= '0' && character <= '9'; }
+bool RequestParser::is_digit(int character) const { return character >= '0' && character <= '9'; }
 }
