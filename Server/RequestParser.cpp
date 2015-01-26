@@ -32,7 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace http
 {
 
-RequestParser::RequestParser() : state_(method_start), header({"", ""}) {}
+RequestParser::RequestParser()
+    : state_(method_start), header({"", ""}), compression_type(noCompression)
+{
+}
 
 void RequestParser::Reset() { state_ = method_start; }
 
