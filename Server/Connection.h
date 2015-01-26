@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Http/Reply.h"
 #include "Http/Request.h"
 
+#include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/config.hpp>
 #include <boost/version.hpp>
@@ -81,7 +82,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     boost::asio::io_service::strand strand;
     boost::asio::ip::tcp::socket TCP_socket;
     RequestHandler &request_handler;
-    std::array<char, 8192> incoming_data_buffer;
+    boost::array<char, 8192> incoming_data_buffer;
     Request request;
     Reply reply;
 };
