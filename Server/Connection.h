@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -75,9 +75,8 @@ class Connection : public std::enable_shared_from_this<Connection>
     /// Handle completion of a write operation.
     void handle_write(const boost::system::error_code &e);
 
-    void CompressBufferCollection(std::vector<char> uncompressed_data,
-                                  CompressionType compression_type,
-                                  std::vector<char> &compressed_data);
+    std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
+                                       const CompressionType compression_type);
 
     boost::asio::io_service::strand strand;
     boost::asio::ip::tcp::socket TCP_socket;

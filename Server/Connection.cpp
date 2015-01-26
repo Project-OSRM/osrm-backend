@@ -86,7 +86,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         case deflateRFC1951:
             // use deflate for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
-            CompressBufferCollection(reply.content, compression_type, compressed_output);
+            compressed_output = compress_buffers(reply.content, compression_type);
             reply.SetSize(static_cast<unsigned>(compressed_output.size()));
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
@@ -94,7 +94,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         case gzipRFC1952:
             // use gzip for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
-            CompressBufferCollection(reply.content, compression_type, compressed_output);
+            compressed_output = compress_buffers(reply.content, compression_type);
             reply.SetSize(static_cast<unsigned>(compressed_output.size()));
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
@@ -142,9 +142,8 @@ void Connection::handle_write(const boost::system::error_code &error)
     }
 }
 
-void Connection::CompressBufferCollection(std::vector<char> uncompressed_data,
-                                          CompressionType compression_type,
-                                          std::vector<char> &compressed_data)
+std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompressed_data,
+                                               const CompressionType compression_type)
 {
     boost::iostreams::gzip_params compression_parameters;
 
@@ -156,12 +155,14 @@ void Connection::CompressBufferCollection(std::vector<char> uncompressed_data,
         compression_parameters.noheader = true;
     }
 
-    BOOST_ASSERT(compressed_data.empty());
+    std::vector<char> compressed_data;
     // plug data into boost's compression stream
     boost::iostreams::filtering_ostream gzip_stream;
     gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
     gzip_stream.push(boost::iostreams::back_inserter(compressed_data));
     gzip_stream.write(&uncompressed_data[0], uncompressed_data.size());
     boost::iostreams::close(gzip_stream);
+
+    return compressed_data;
 }
 }
