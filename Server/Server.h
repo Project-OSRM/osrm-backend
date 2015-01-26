@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RequestHandler.h"
 
 #include "../Util/cast.hpp"
-#include "../Util/make_unique.hpp"
+#include "../Util/integer_range.hpp"
 #include "../Util/simple_logger.hpp"
 
 #include <boost/asio.hpp>
@@ -48,9 +48,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Server
 {
   public:
-
     // Note: returns a shared instead of a unique ptr as it is captured in a lambda somewhere else
-    static std::shared_ptr<Server> CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
+    static std::shared_ptr<Server>
+    CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
     {
         SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
@@ -60,7 +60,7 @@ class Server
 
     explicit Server(const std::string &address, const int port, const unsigned thread_pool_size)
         : thread_pool_size(thread_pool_size), acceptor(io_service),
-          new_connection(std::make_shared<http::Connection>(io_service, request_handler)), request_handler()
+          new_connection(std::make_shared<http::Connection>(io_service, request_handler))
     {
         const std::string port_string = cast::integral_to_string(port);
 
