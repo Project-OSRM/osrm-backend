@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef PROGAM_OPTIONS_H
-#define PROGAM_OPTIONS_H
+#ifndef ROUTED_OPTIONS_HPP
+#define ROUTED_OPTIONS_HPP
 
 #include "git_sha.hpp"
 #include "ini_file.hpp"
@@ -274,4 +274,4 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     return INIT_OK_DO_NOT_START_ENGINE;
 }
 
-#endif /* PROGRAM_OPTIONS_H */
+#endif // ROUTED_OPTIONS_HPP

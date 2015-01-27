@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DATA_STORE_OPTIONS_H
-#define DATA_STORE_OPTIONS_H
+#ifndef DATASTORE_OPTIONS_HPP
+#define DATASTORE_OPTIONS_HPP
 
 #include "BoostFileSystemFix.h"
 #include "git_sha.hpp"
@@ -270,4 +270,4 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
     return true;
 }
 
-#endif /* DATA_STORE_OPTIONS_H */
+#endif /* DATASTORE_OPTIONS_HPP */

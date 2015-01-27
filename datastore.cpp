@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "server/data_structures/shared_datatype.hpp"
 #include "server/data_structures/shared_barriers.hpp"
 #include "Util/BoostFileSystemFix.h"
-#include "Util/DataStoreOptions.h"
+#include "Util/datastore_options.hpp"
 #include "Util/simple_logger.hpp"
 #include "Util/osrm_exception.hpp"
 #include "Util/fingerprint.hpp"
