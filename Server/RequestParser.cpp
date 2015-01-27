@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Http/Request.h"
 
+#include <boost/algorithm/string/predicate.hpp>
+
 namespace http
 {
 
@@ -37,15 +39,13 @@ RequestParser::RequestParser()
 {
 }
 
-void RequestParser::Reset() { state = internal_state::method_start; }
-
 std::tuple<osrm::tribool, CompressionType>
-RequestParser::Parse(Request &req, char *begin, char *end)
+RequestParser::parse(Request &request, char *begin, char *end)
 {
     while (begin != end)
     {
-        osrm::tribool result = consume(req, *begin++);
-        if (result == osrm::tribool::yes || result == osrm::tribool::no)
+        osrm::tribool result = consume(request, *begin++);
+        if (result != osrm::tribool::indeterminate)
         {
             return std::make_tuple(result, compression_type);
         }
@@ -54,7 +54,7 @@ RequestParser::Parse(Request &req, char *begin, char *end)
     return std::make_tuple(result, compression_type);
 }
 
-osrm::tribool RequestParser::consume(Request &req, char input)
+osrm::tribool RequestParser::consume(Request &request, const char input)
 {
     switch (state)
     {
@@ -82,7 +82,7 @@ osrm::tribool RequestParser::consume(Request &req, char input)
             return osrm::tribool::no;
         }
         state = internal_state::uri;
-        req.uri.push_back(input);
+        request.uri.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::uri:
         if (input == ' ')
@@ -94,7 +94,7 @@ osrm::tribool RequestParser::consume(Request &req, char input)
         {
             return osrm::tribool::no;
         }
-        req.uri.push_back(input);
+        request.uri.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::http_version_h:
         if (input == 'H')
@@ -175,27 +175,27 @@ osrm::tribool RequestParser::consume(Request &req, char input)
         }
         return osrm::tribool::no;
     case internal_state::header_line_start:
-        if (header.name == "Accept-Encoding")
+        if (boost::iequals(header.name, "Accept-Encoding"))
         {
             /* giving gzip precedence over deflate */
-            if (header.value.find("deflate") != std::string::npos)
+            if (boost::icontains(header.value, "deflate"))
             {
                 compression_type = deflateRFC1951;
             }
-            if (header.value.find("gzip") != std::string::npos)
+            if (boost::icontains(header.value, "gzip"))
             {
                 compression_type = gzipRFC1952;
             }
         }
 
-        if ("Referer" == header.name)
+        if (boost::iequals(header.name, "Referer"))
         {
-            req.referrer = header.value;
+            request.referrer = header.value;
         }
 
-        if ("User-Agent" == header.name)
+        if (boost::iequals(header.name, "User-Agent"))
         {
-            req.agent = header.value;
+            request.agent = header.value;
         }
 
         if (input == '\r')
@@ -208,7 +208,7 @@ osrm::tribool RequestParser::consume(Request &req, char input)
             return osrm::tribool::no;
         }
         state = internal_state::header_name;
-        header.Clear();
+        header.clear();
         header.name.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::header_lws:
@@ -270,14 +270,17 @@ osrm::tribool RequestParser::consume(Request &req, char input)
     }
 }
 
-bool RequestParser::is_char(int character) const { return character >= 0 && character <= 127; }
+bool RequestParser::is_char(const int character) const
+{
+    return character >= 0 && character <= 127;
+}
 
-bool RequestParser::is_CTL(int character) const
+bool RequestParser::is_CTL(const int character) const
 {
     return (character >= 0 && character <= 31) || (character == 127);
 }
 
-bool RequestParser::is_special(int character) const
+bool RequestParser::is_special(const int character) const
 {
     switch (character)
     {
@@ -306,5 +309,8 @@ bool RequestParser::is_special(int character) const
     }
 }
 
-bool RequestParser::is_digit(int character) const { return character >= '0' && character <= '9'; }
+bool RequestParser::is_digit(const int character) const
+{
+    return character >= '0' && character <= '9';
+}
 }

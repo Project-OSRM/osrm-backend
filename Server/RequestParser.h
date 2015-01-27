@@ -43,20 +43,19 @@ class RequestParser
 {
   public:
     RequestParser();
-    void Reset();
 
-    std::tuple<osrm::tribool, CompressionType> Parse(Request &req, char *begin, char *end);
+    std::tuple<osrm::tribool, CompressionType> parse(Request &request, char *begin, char *end);
 
   private:
-    osrm::tribool consume(Request &req, char input);
+    osrm::tribool consume(Request &req, const char input);
 
-    bool is_char(int c) const;
+    bool is_char(const int character) const;
 
-    bool is_CTL(int c) const;
+    bool is_CTL(const int character) const;
 
-    bool is_special(int c) const;
+    bool is_special(const int character) const;
 
-    bool is_digit(int c) const;
+    bool is_digit(const int character) const;
 
     enum class internal_state : unsigned char
     {
