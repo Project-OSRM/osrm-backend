@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "compute_angle.hpp"
 
-#include "TrigonometryTables.h"
+#include "trigonometry_table.hpp"
 #include "../Util/mercator.hpp"
 
 #include <osrm/coordinate.hpp>

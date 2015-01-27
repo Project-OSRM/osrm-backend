@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/range_table.hpp"
 #include "../../data_structures/static_graph.hpp"
 #include "../../data_structures/static_rtree.hpp"
-#include "../../Util/BoostFileSystemFix.h"
+#include "../../Util/boost_filesystem_2_fix.hpp"
 #include "../../Util/make_unique.hpp"
 #include "../../Util/simple_logger.hpp"
 

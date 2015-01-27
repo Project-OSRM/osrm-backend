@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DATASTORE_OPTIONS_HPP
 #define DATASTORE_OPTIONS_HPP
 
-#include "BoostFileSystemFix.h"
+#include "boost_filesystem_2_fix.hpp"
 #include "git_sha.hpp"
 #include "ini_file.hpp"
 #include "osrm_exception.hpp"
