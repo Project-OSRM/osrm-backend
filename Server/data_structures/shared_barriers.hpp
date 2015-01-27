@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SHARED_BARRIER_H
-#define SHARED_BARRIER_H
+#ifndef SHARED_BARRIERS_HPP
+#define SHARED_BARRIERS_HPP
 
 #include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
@@ -57,4 +57,4 @@ struct SharedBarriers
     int number_of_queries;
 };
 
-#endif // SHARED_BARRIER_H
+#endif // SHARED_BARRIERS_HPP

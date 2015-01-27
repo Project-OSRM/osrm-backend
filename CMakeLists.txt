@@ -75,7 +75,7 @@ file(GLOB DatastructureGlob data_structures/search_engine_data.cpp data_structur
 list(REMOVE_ITEM DatastructureGlob data_structures/Coordinate.cpp)
 file(GLOB CoordinateGlob data_structures/coordinate*.cpp)
 file(GLOB AlgorithmGlob algorithms/*.cpp)
-file(GLOB HttpGlob Server/Http/*.cpp)
+file(GLOB HttpGlob Server/http/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
 file(GLOB DataStructureTestsGlob unit_tests/data_structures/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB AlgorithmTestsGlob unit_tests/algorithms/*.cpp)

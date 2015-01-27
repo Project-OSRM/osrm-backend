@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/git_sha.hpp"
 #include "../Util/simple_logger.hpp"
-#include "../Server/DataStructures/SharedBarriers.h"
+#include "../Server/data_structures/shared_barriers.hpp"
 
 #include <iostream>
 

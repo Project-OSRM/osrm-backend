@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 
 #include "../data_structures/shared_memory_factory.hpp"
-#include "../Server/DataStructures/SharedDataType.h"
+#include "../Server/data_structures/shared_datatype.hpp"
 #include "../Util/git_sha.hpp"
 #include "../Util/simple_logger.hpp"
 
@@ -83,8 +83,8 @@ int main()
         SimpleLogger().Write() << "----------------------";
         SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
         SimpleLogger().Write() << "Type 'Y' to acknowledge that you know what your are doing.";
-        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated " <<
-                                  "by osrm-datastore? [type 'Y' to confirm]";
+        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated "
+                               << "by osrm-datastore? [type 'Y' to confirm]";
 
         const auto letter = getchar();
         if (letter != 'Y')

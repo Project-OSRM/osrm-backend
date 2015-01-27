@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SHARED_DATA_FACADE_H
-#define SHARED_DATA_FACADE_H
+#ifndef SHARED_DATAFACADE_HPP
+#define SHARED_DATAFACADE_HPP
 
 // implements all data storage when shared memory _IS_ used
 
-#include "BaseDataFacade.h"
-#include "SharedDataType.h"
+#include "datafacade_base.hpp"
+#include "shared_datatype.hpp"
 
 #include "../../data_structures/range_table.hpp"
 #include "../../data_structures/static_graph.hpp"
@@ -112,12 +112,11 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
         RTreeNode *tree_ptr =
             data_layout->GetBlockPtr<RTreeNode>(shared_memory, SharedDataLayout::R_SEARCH_TREE);
-        m_static_rtree.reset(new TimeStampedRTreePair(CURRENT_TIMESTAMP,
+        m_static_rtree.reset(new TimeStampedRTreePair(
+            CURRENT_TIMESTAMP,
             osrm::make_unique<SharedRTree>(
-                tree_ptr,
-                data_layout->num_entries[SharedDataLayout::R_SEARCH_TREE],
-                file_index_path,
-                m_coordinate_list)));
+                tree_ptr, data_layout->num_entries[SharedDataLayout::R_SEARCH_TREE],
+                file_index_path, m_coordinate_list)));
     }
 
     void LoadGraph()
@@ -143,11 +142,10 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         m_coordinate_list = osrm::make_unique<ShM<FixedPointCoordinate, true>::vector>(
             coordinate_list_ptr, data_layout->num_entries[SharedDataLayout::COORDINATE_LIST]);
 
-        TravelMode *travel_mode_list_ptr = data_layout->GetBlockPtr<TravelMode>(
-            shared_memory, SharedDataLayout::TRAVEL_MODE);
+        TravelMode *travel_mode_list_ptr =
+            data_layout->GetBlockPtr<TravelMode>(shared_memory, SharedDataLayout::TRAVEL_MODE);
         typename ShM<TravelMode, true>::vector travel_mode_list(
-            travel_mode_list_ptr,
-            data_layout->num_entries[SharedDataLayout::TRAVEL_MODE]);
+            travel_mode_list_ptr, data_layout->num_entries[SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list.swap(travel_mode_list);
 
         TurnInstruction *turn_instruction_list_ptr = data_layout->GetBlockPtr<TurnInstruction>(
@@ -259,7 +257,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             {
                 SimpleLogger().Write(logDEBUG) << "Leaf file name " << file_index_path.string();
                 throw osrm::exception("Could not load leaf index file."
-                                    "Is any data loaded into shared memory?");
+                                      "Is any data loaded into shared memory?");
             }
 
             LoadGraph();
@@ -337,8 +335,8 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         const unsigned end = m_geometry_indices.at(id + 1);
 
         result_nodes.clear();
-        result_nodes.insert(
-            result_nodes.begin(), m_geometry_list.begin() + begin, m_geometry_list.begin() + end);
+        result_nodes.insert(result_nodes.begin(), m_geometry_list.begin() + begin,
+                            m_geometry_list.begin() + end);
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const final
@@ -351,10 +349,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         return m_turn_instruction_list.at(id);
     }
 
-    TravelMode GetTravelModeForEdgeID(const unsigned id) const
-    {
-        return m_travel_mode_list.at(id);
-    }
+    TravelMode GetTravelModeForEdgeID(const unsigned id) const { return m_travel_mode_list.at(id); }
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             FixedPointCoordinate &result,
@@ -365,18 +360,16 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             LoadRTree();
         }
 
-        return m_static_rtree->second->LocateClosestEndPointForCoordinate(
-            input_coordinate, result, zoom_level);
+        return m_static_rtree->second->LocateClosestEndPointForCoordinate(input_coordinate, result,
+                                                                          zoom_level);
     }
 
-    bool
-    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                            PhantomNode &resulting_phantom_node) final
+    bool IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                                 PhantomNode &resulting_phantom_node) final
     {
         std::vector<PhantomNode> resulting_phantom_node_vector;
         auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
-                                                              resulting_phantom_node_vector,
-                                                              1);
+                                                              resulting_phantom_node_vector, 1);
         if (result)
         {
             BOOST_ASSERT(!resulting_phantom_node_vector.empty());
@@ -420,12 +413,11 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         {
             result.resize(range.back() - range.front() + 1);
             std::copy(m_names_char_list.begin() + range.front(),
-                      m_names_char_list.begin() + range.back() + 1,
-                      result.begin());
+                      m_names_char_list.begin() + range.back() + 1, result.begin());
         }
     }
 
     std::string GetTimestamp() const final { return m_timestamp; }
 };
 
-#endif // SHARED_DATA_FACADE_H
+#endif // SHARED_DATAFACADE_HPP

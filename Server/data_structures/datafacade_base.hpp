@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASE_DATA_FACADE_H
-#define BASE_DATA_FACADE_H
+#ifndef DATAFACADE_BASE_HPP
+#define DATAFACADE_BASE_HPP
 
 // Exposes all data access interfaces to the algorithms via base class ptr
 
@@ -123,4 +123,4 @@ template <class EdgeDataT> class BaseDataFacade
     virtual std::string GetTimestamp() const = 0;
 };
 
-#endif // BASE_DATA_FACADE_H
+#endif // DATAFACADE_BASE_HPP

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INTERNAL_DATA_FACADE
-#define INTERNAL_DATA_FACADE
+#ifndef INTERNAL_DATAFACADE_HPP
+#define INTERNAL_DATAFACADE_HPP
 
 // implements all data storage when shared memory is _NOT_ used
 
-#include "BaseDataFacade.h"
+#include "datafacade_base.hpp"
 
 #include "../../data_structures/original_edge_data.hpp"
 #include "../../data_structures/query_node.hpp"
@@ -359,10 +359,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         return m_turn_instruction_list.at(id);
     }
 
-    TravelMode GetTravelModeForEdgeID(const unsigned id) const
-    {
-      return m_travel_mode_list.at(id);
-    }
+    TravelMode GetTravelModeForEdgeID(const unsigned id) const { return m_travel_mode_list.at(id); }
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             FixedPointCoordinate &result,
@@ -373,18 +370,16 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             LoadRTree();
         }
 
-        return m_static_rtree->LocateClosestEndPointForCoordinate(
-            input_coordinate, result, zoom_level);
+        return m_static_rtree->LocateClosestEndPointForCoordinate(input_coordinate, result,
+                                                                  zoom_level);
     }
 
-    bool
-    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                            PhantomNode &resulting_phantom_node) final
+    bool IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                                 PhantomNode &resulting_phantom_node) final
     {
         std::vector<PhantomNode> resulting_phantom_node_vector;
         auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
-                                                              resulting_phantom_node_vector,
-                                                              1);
+                                                              resulting_phantom_node_vector, 1);
         if (result)
         {
             BOOST_ASSERT(!resulting_phantom_node_vector.empty());
@@ -428,8 +423,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         {
             result.resize(range.back() - range.front() + 1);
             std::copy(m_names_char_list.begin() + range.front(),
-                      m_names_char_list.begin() + range.back() + 1,
-                      result.begin());
+                      m_names_char_list.begin() + range.back() + 1, result.begin());
         }
     }
 
@@ -445,11 +439,11 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         const unsigned end = m_geometry_indices.at(id + 1);
 
         result_nodes.clear();
-        result_nodes.insert(
-            result_nodes.begin(), m_geometry_list.begin() + begin, m_geometry_list.begin() + end);
+        result_nodes.insert(result_nodes.begin(), m_geometry_list.begin() + begin,
+                            m_geometry_list.begin() + end);
     }
 
     std::string GetTimestamp() const final { return m_timestamp; }
 };
 
-#endif // INTERNAL_DATA_FACADE
+#endif // INTERNAL_DATAFACADE_HPP

@@ -25,7 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-namespace boost { namespace interprocess { class named_mutex; } }
+namespace boost
+{
+namespace interprocess
+{
+class named_mutex;
+}
+}
 
 #include "OSRM_impl.h"
 #include "OSRM.h"
@@ -36,10 +42,10 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include "../plugins/nearest.hpp"
 #include "../plugins/timestamp.hpp"
 #include "../plugins/viaroute.hpp"
-#include "../Server/DataStructures/BaseDataFacade.h"
-#include "../Server/DataStructures/InternalDataFacade.h"
-#include "../Server/DataStructures/SharedBarriers.h"
-#include "../Server/DataStructures/SharedDataFacade.h"
+#include "../Server/data_structures/datafacade_base.hpp"
+#include "../Server/data_structures/internal_datafacade.hpp"
+#include "../Server/data_structures/shared_barriers.hpp"
+#include "../Server/data_structures/shared_datafacade.hpp"
 #include "../Util/make_unique.hpp"
 #include "../Util/ProgramOptions.h"
 #include "../Util/simple_logger.hpp"
@@ -70,8 +76,8 @@ OSRM_impl::OSRM_impl(libosrm_config &lib_config)
     }
 
     // The following plugins handle all requests.
-    RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
-        lib_config.max_locations_distance_table));
+    RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(
+        query_data_facade, lib_config.max_locations_distance_table));
     RegisterPlugin(new HelloWorldPlugin());
     RegisterPlugin(new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
@@ -162,10 +168,7 @@ void OSRM_impl::increase_concurrent_query_count()
 }
 
 // proxy code for compilation firewall
-OSRM::OSRM(libosrm_config &lib_config)
-    : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config))
-{
-}
+OSRM::OSRM(libosrm_config &lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config)) {}
 
 OSRM::~OSRM() { OSRM_pimpl_.reset(); }
 
