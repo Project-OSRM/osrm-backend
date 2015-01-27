@@ -35,7 +35,7 @@ namespace http
 {
 
 RequestParser::RequestParser()
-    : state(internal_state::method_start), header({"", ""}), compression_type(no_compression)
+    : state(internal_state::method_start), header({"", ""}), selected_compression(no_compression)
 {
 }
 
@@ -47,11 +47,11 @@ RequestParser::parse(request &current_request, char *begin, char *end)
         osrm::tribool result = consume(current_request, *begin++);
         if (result != osrm::tribool::indeterminate)
         {
-            return std::make_tuple(result, compression_type);
+            return std::make_tuple(result, selected_compression);
         }
     }
     osrm::tribool result = osrm::tribool::indeterminate;
-    return std::make_tuple(result, compression_type);
+    return std::make_tuple(result, selected_compression);
 }
 
 osrm::tribool RequestParser::consume(request &current_request, const char input)
@@ -180,11 +180,11 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
             /* giving gzip precedence over deflate */
             if (boost::icontains(header.value, "deflate"))
             {
-                compression_type = deflate_rfc1951;
+                selected_compression = deflate_rfc1951;
             }
             if (boost::icontains(header.value, "gzip"))
             {
-                compression_type = gzip_rfc1952;
+                selected_compression = gzip_rfc1952;
             }
         }
 

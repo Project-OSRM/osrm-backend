@@ -84,7 +84,7 @@ class RequestParser
     } state;
 
     header header;
-    compression_type compression_type;
+    compression_type selected_compression;
 };
 
 } // namespace http

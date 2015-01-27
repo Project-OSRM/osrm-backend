@@ -67,14 +67,15 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     // no error detected, let's parse the request
     compression_type compression_type(no_compression);
     osrm::tribool result;
-    std::tie(result, compression_type) = RequestParser().parse(
-        request, incoming_data_buffer.data(), incoming_data_buffer.data() + bytes_transferred);
+    std::tie(result, compression_type) =
+        RequestParser().parse(current_request, incoming_data_buffer.data(),
+                              incoming_data_buffer.data() + bytes_transferred);
 
     // the request has been parsed
     if (result == osrm::tribool::yes)
     {
-        request.endpoint = TCP_socket.remote_endpoint().address();
-        request_handler.handle_request(request, reply);
+        current_request.endpoint = TCP_socket.remote_endpoint().address();
+        request_handler.handle_request(current_request, current_reply);
 
         // Header compression_header;
         std::vector<char> compressed_output;
@@ -85,24 +86,26 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         {
         case deflate_rfc1951:
             // use deflate for compression
-            reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
-            compressed_output = compress_buffers(reply.content, compression_type);
-            reply.set_size(static_cast<unsigned>(compressed_output.size()));
-            output_buffer = reply.headers_to_buffers();
+            current_reply.headers.insert(current_reply.headers.begin(),
+                                         {"Content-Encoding", "deflate"});
+            compressed_output = compress_buffers(current_reply.content, compression_type);
+            current_reply.set_size(static_cast<unsigned>(compressed_output.size()));
+            output_buffer = current_reply.headers_to_buffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
         case gzip_rfc1952:
             // use gzip for compression
-            reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
-            compressed_output = compress_buffers(reply.content, compression_type);
-            reply.set_size(static_cast<unsigned>(compressed_output.size()));
-            output_buffer = reply.headers_to_buffers();
+            current_reply.headers.insert(current_reply.headers.begin(),
+                                         {"Content-Encoding", "gzip"});
+            compressed_output = compress_buffers(current_reply.content, compression_type);
+            current_reply.set_size(static_cast<unsigned>(compressed_output.size()));
+            output_buffer = current_reply.headers_to_buffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
         case no_compression:
             // don't use any compression
-            reply.set_uncompressed_size();
-            output_buffer = reply.to_buffers();
+            current_reply.set_uncompressed_size();
+            output_buffer = current_reply.to_buffers();
             break;
         }
         // write result to stream
@@ -113,10 +116,10 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     }
     else if (result == osrm::tribool::no)
     { // request is not parseable
-        reply = reply::stock_reply(reply::bad_request);
+        current_reply = reply::stock_reply(reply::bad_request);
 
         boost::asio::async_write(
-            TCP_socket, reply.to_buffers(),
+            TCP_socket, current_reply.to_buffers(),
             strand.wrap(boost::bind(&Connection::handle_write, this->shared_from_this(),
                                     boost::asio::placeholders::error)));
     }
