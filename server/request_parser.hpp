@@ -83,7 +83,7 @@ class RequestParser
         expecting_newline_3
     } state;
 
-    header header;
+    header current_header;
     compression_type selected_compression;
 };
 

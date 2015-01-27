@@ -35,7 +35,8 @@ namespace http
 {
 
 RequestParser::RequestParser()
-    : state(internal_state::method_start), header({"", ""}), selected_compression(no_compression)
+    : state(internal_state::method_start), current_header({"", ""}),
+      selected_compression(no_compression)
 {
 }
 
@@ -175,27 +176,27 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         }
         return osrm::tribool::no;
     case internal_state::header_line_start:
-        if (boost::iequals(header.name, "Accept-Encoding"))
+        if (boost::iequals(current_header.name, "Accept-Encoding"))
         {
             /* giving gzip precedence over deflate */
-            if (boost::icontains(header.value, "deflate"))
+            if (boost::icontains(current_header.value, "deflate"))
             {
                 selected_compression = deflate_rfc1951;
             }
-            if (boost::icontains(header.value, "gzip"))
+            if (boost::icontains(current_header.value, "gzip"))
             {
                 selected_compression = gzip_rfc1952;
             }
         }
 
-        if (boost::iequals(header.name, "Referer"))
+        if (boost::iequals(current_header.name, "Referer"))
         {
-            current_request.referrer = header.value;
+            current_request.referrer = current_header.value;
         }
 
-        if (boost::iequals(header.name, "User-Agent"))
+        if (boost::iequals(current_header.name, "User-Agent"))
         {
-            current_request.agent = header.value;
+            current_request.agent = current_header.value;
         }
 
         if (input == '\r')
@@ -208,8 +209,8 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
             return osrm::tribool::no;
         }
         state = internal_state::header_name;
-        header.clear();
-        header.name.push_back(input);
+        current_header.clear();
+        current_header.name.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::header_lws:
         if (input == '\r')
@@ -237,7 +238,7 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         {
             return osrm::tribool::no;
         }
-        header.name.push_back(input);
+        current_header.name.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::space_before_header_value:
         if (input == ' ')
@@ -256,7 +257,7 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         {
             return osrm::tribool::no;
         }
-        header.value.push_back(input);
+        current_header.value.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::expecting_newline_2:
         if (input == '\n')
