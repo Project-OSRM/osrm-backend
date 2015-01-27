@@ -35,6 +35,7 @@ namespace http
 {
 struct header
 {
+    // explicitly use default copy c'tor as adding move c'tor
     header &operator=(const header &other) = default;
     header(const std::string &name, const std::string &value) : name(name), value(value) {}
     header(header &&other) : name(std::move(other.name)), value(std::move(other.value)) {}

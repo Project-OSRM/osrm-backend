@@ -32,15 +32,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace http
 {
 
-const char okHTML[] = "";
-const char badRequestHTML[] = "{\"status\": 400,\"status_message\":\"Bad Request\"}";
-const char internalServerErrorHTML[] =
+const char ok_html[] = "";
+const char bad_request_html[] = "{\"status\": 400,\"status_message\":\"Bad Request\"}";
+const char internal_server_error_html[] =
     "{\"status\": 500,\"status_message\":\"Internal Server Error\"}";
 const char seperators[] = {':', ' '};
 const char crlf[] = {'\r', '\n'};
-const std::string okString = "HTTP/1.0 200 OK\r\n";
-const std::string badRequestString = "HTTP/1.0 400 Bad Request\r\n";
-const std::string internalServerErrorString = "HTTP/1.0 500 Internal Server Error\r\n";
+const std::string http_ok_string = "HTTP/1.0 200 OK\r\n";
+const std::string http_bad_request_string = "HTTP/1.0 400 Bad Request\r\n";
+const std::string http_internal_server_error_string = "HTTP/1.0 500 Internal Server Error\r\n";
 
 void reply::set_size(const std::size_t size)
 {
@@ -104,26 +104,26 @@ std::string reply::status_to_string(const reply::status_type status)
 {
     if (reply::ok == status)
     {
-        return okHTML;
+        return ok_html;
     }
     if (reply::bad_request == status)
     {
-        return badRequestHTML;
+        return bad_request_html;
     }
-    return internalServerErrorHTML;
+    return internal_server_error_html;
 }
 
 boost::asio::const_buffer reply::status_to_buffer(const reply::status_type status)
 {
     if (reply::ok == status)
     {
-        return boost::asio::buffer(okString);
+        return boost::asio::buffer(http_ok_string);
     }
     if (reply::internal_server_error == status)
     {
-        return boost::asio::buffer(internalServerErrorString);
+        return boost::asio::buffer(http_internal_server_error_string);
     }
-    return boost::asio::buffer(badRequestString);
+    return boost::asio::buffer(http_bad_request_string);
 }
 
 reply::reply() : status(ok) {}
