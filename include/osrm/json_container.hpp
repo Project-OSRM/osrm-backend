@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,24 +25,70 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVER_CONFIG_HPP
-#define SERVER_CONFIG_HPP
+// based on
+// https://svn.apache.org/repos/asf/mesos/tags/release-0.9.0-incubating-RC0/src/common/json.hpp
 
-#include <osrm/server_paths.hpp>
+#ifndef JSON_CONTAINER_H
+#define JSON_CONTAINER_H
 
-struct libosrm_config
+#include <variant/variant.hpp>
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+
+namespace JSON
 {
-    libosrm_config(const libosrm_config &) = delete;
-    libosrm_config() : max_locations_distance_table(100), use_shared_memory(false) {}
 
-    libosrm_config(const ServerPaths &paths, const bool flag, const int max)
-        : server_paths(paths), max_locations_distance_table(max), use_shared_memory(flag)
-    {
-    }
+struct Object;
+struct Array;
 
-    ServerPaths server_paths;
-    int max_locations_distance_table;
-    bool use_shared_memory;
+struct String
+{
+    String() {}
+    String(const char *value) : value(value) {}
+    String(const std::string &value) : value(value) {}
+    std::string value;
 };
 
-#endif // SERVER_CONFIG_HPP
+struct Number
+{
+    Number() {}
+    Number(double value) : value(static_cast<double>(value)) {}
+    double value;
+};
+
+struct True
+{
+};
+
+struct False
+{
+};
+
+struct Null
+{
+};
+
+using Value = mapbox::util::variant<String,
+                                    Number,
+                                    mapbox::util::recursive_wrapper<Object>,
+                                    mapbox::util::recursive_wrapper<Array>,
+                                    True,
+                                    False,
+                                    Null>;
+
+struct Object
+{
+    std::unordered_map<std::string, Value> values;
+};
+
+struct Array
+{
+    std::vector<Value> values;
+};
+
+} // namespace JSON
+
+#endif // JSON_CONTAINER_H

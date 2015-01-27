@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,24 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVER_CONFIG_HPP
-#define SERVER_CONFIG_HPP
+#ifndef SERVER_PATH_H
+#define SERVER_PATH_H
 
-#include <osrm/server_paths.hpp>
+#include <boost/filesystem.hpp>
 
-struct libosrm_config
-{
-    libosrm_config(const libosrm_config &) = delete;
-    libosrm_config() : max_locations_distance_table(100), use_shared_memory(false) {}
+#include <unordered_map>
+#include <string>
 
-    libosrm_config(const ServerPaths &paths, const bool flag, const int max)
-        : server_paths(paths), max_locations_distance_table(max), use_shared_memory(flag)
-    {
-    }
+typedef std::unordered_map<std::string, boost::filesystem::path> ServerPaths;
 
-    ServerPaths server_paths;
-    int max_locations_distance_table;
-    bool use_shared_memory;
-};
-
-#endif // SERVER_CONFIG_HPP
+#endif // SERVER_PATH_H

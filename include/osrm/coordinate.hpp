@@ -25,24 +25,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVER_CONFIG_HPP
-#define SERVER_CONFIG_HPP
+#ifndef COORDINATE_HPP_
+#define COORDINATE_HPP_
 
-#include <osrm/server_paths.hpp>
+#include <iosfwd> //for std::ostream
+#include <string>
+#include <type_traits>
 
-struct libosrm_config
+namespace
 {
-    libosrm_config(const libosrm_config &) = delete;
-    libosrm_config() : max_locations_distance_table(100), use_shared_memory(false) {}
+constexpr static const float COORDINATE_PRECISION = 1000000.f;
+}
 
-    libosrm_config(const ServerPaths &paths, const bool flag, const int max)
-        : server_paths(paths), max_locations_distance_table(max), use_shared_memory(flag)
+struct FixedPointCoordinate
+{
+    int lat;
+    int lon;
+
+    FixedPointCoordinate();
+    FixedPointCoordinate(int lat, int lon);
+
+    template <class T>
+    FixedPointCoordinate(const T &coordinate)
+        : lat(coordinate.lat), lon(coordinate.lon)
     {
+        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
+                      "coordinate types incompatible");
+        static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value,
+                      "coordinate types incompatible");
     }
 
-    ServerPaths server_paths;
-    int max_locations_distance_table;
-    bool use_shared_memory;
+    bool is_valid() const;
+    bool operator==(const FixedPointCoordinate &other) const;
+
+    float bearing(const FixedPointCoordinate &other) const;
+    void output(std::ostream &out) const;
 };
 
-#endif // SERVER_CONFIG_HPP
+inline std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate const &coordinate)
+{
+    coordinate.output(out_stream);
+    return out_stream;
+}
+
+#endif /* COORDINATE_HPP_ */

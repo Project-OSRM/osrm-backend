@@ -30,7 +30,7 @@ endif()
 OPTION(WITH_TOOLS "Build OSRM tools" OFF)
 OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 
-include_directories(${CMAKE_SOURCE_DIR}/Include/)
+include_directories(${CMAKE_SOURCE_DIR}/include/)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/libosmium/include/)
 
@@ -325,7 +325,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   install(TARGETS osrm-springclean DESTINATION bin)
 endif()
 
-file(GLOB InstallGlob Include/osrm/*.hpp Library/OSRM.h)
+file(GLOB InstallGlob include/osrm/*.hpp Library/OSRM.h)
 file(GLOB VariantGlob third_party/variant/*.hpp)
 
 # Add RPATH info to executables so that when they are run after being installed
