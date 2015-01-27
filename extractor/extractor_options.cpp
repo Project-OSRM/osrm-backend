@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extractor_options.hpp"
 
 #include "../Util/git_sha.hpp"
-#include "../Util/IniFileUtil.h"
+#include "../Util/ini_file.hpp"
 #include "../Util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
@@ -108,7 +108,7 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
             SimpleLogger().Write()
                 << "Reading options from: " << extractor_config.config_file_path.string();
             std::string ini_file_contents =
-                ReadIniFileAndLowerContents(extractor_config.config_file_path);
+                read_file_lower_content(extractor_config.config_file_path);
             std::stringstream config_stream(ini_file_contents);
             boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                           option_variables);

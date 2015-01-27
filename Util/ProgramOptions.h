@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PROGAM_OPTIONS_H
 
 #include "git_sha.hpp"
-#include "IniFileUtil.h"
+#include "ini_file.hpp"
 #include "osrm_exception.hpp"
 #include "simple_logger.hpp"
 
@@ -244,7 +244,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         !option_variables.count("base"))
     {
         SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
-        std::string ini_file_contents = ReadIniFileAndLowerContents(path_iterator->second);
+        std::string ini_file_contents = read_file_lower_content(path_iterator->second);
         std::stringstream config_stream(ini_file_contents);
         boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                       option_variables);

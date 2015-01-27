@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BoostFileSystemFix.h"
 #include "git_sha.hpp"
-#include "IniFileUtil.h"
+#include "ini_file.hpp"
 #include "osrm_exception.hpp"
 #include "simple_logger.hpp"
 
@@ -47,34 +47,29 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")
-        ("springclean,s", "Remove all regions in shared memory")("config,c",
-        boost::program_options::value<boost::filesystem::path>(&paths["config"])
-            ->default_value("server.ini"),
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "springclean,s", "Remove all regions in shared memory")(
+        "config,c", boost::program_options::value<boost::filesystem::path>(&paths["config"])
+                        ->default_value("server.ini"),
         "Path to a configuration file");
 
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
     boost::program_options::options_description config_options("Configuration");
     config_options.add_options()(
-        "hsgrdata",
-        boost::program_options::value<boost::filesystem::path>(&paths["hsgrdata"]),
+        "hsgrdata", boost::program_options::value<boost::filesystem::path>(&paths["hsgrdata"]),
         ".hsgr file")("nodesdata",
                       boost::program_options::value<boost::filesystem::path>(&paths["nodesdata"]),
                       ".nodes file")(
-        "edgesdata",
-        boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
+        "edgesdata", boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
         ".edges file")("geometry",
                        boost::program_options::value<boost::filesystem::path>(&paths["geometry"]),
                        ".geometry file")(
-        "ramindex",
-        boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
+        "ramindex", boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
         ".ramIndex file")(
-        "fileindex",
-        boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
+        "fileindex", boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
         ".fileIndex file")(
-        "namesdata",
-        boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
+        "namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
         ".names file")("timestamp",
                        boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
                        ".timestamp file");
@@ -83,8 +78,7 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
     // file, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
-        "base,b",
-        boost::program_options::value<boost::filesystem::path>(&paths["base"]),
+        "base,b", boost::program_options::value<boost::filesystem::path>(&paths["base"]),
         "base path to .osrm file");
 
     // positional option
@@ -157,7 +151,7 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
         !option_variables.count("base"))
     {
         SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
-        std::string ini_file_contents = ReadIniFileAndLowerContents(path_iterator->second);
+        std::string ini_file_contents = read_file_lower_content(path_iterator->second);
         std::stringstream config_stream(ini_file_contents);
         boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                       option_variables);

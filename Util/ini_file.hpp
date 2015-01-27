@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,25 +25,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INI_FILE_UTIL_H
-#define INI_FILE_UTIL_H
+#ifndef INI_FILE_HPP
+#define INI_FILE_HPP
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/regex.hpp>
 
-#include <regex>
+#include <algorithm>
 #include <string>
 
+namespace
+{
+
 // support old capitalized option names by down-casing them with a regex replace
-inline std::string ReadIniFileAndLowerContents(const boost::filesystem::path &path)
+std::string read_file_lower_content(const boost::filesystem::path &path)
 {
     boost::filesystem::fstream config_stream(path);
     std::string ini_file_content((std::istreambuf_iterator<char>(config_stream)),
-                          std::istreambuf_iterator<char>());
-    boost::regex regex( "^([^=]*)" ); //match from start of line to '='
-    std::string format( "\\L$1\\E" ); //replace with downcased substring
-    return boost::regex_replace( ini_file_content, regex, format );
+                                 std::istreambuf_iterator<char>());
+    std::transform(std::begin(ini_file_content), std::end(ini_file_content),
+                   std::begin(ini_file_content), ::tolower);
+    return ini_file_content;
 }
-
-#endif // INI_FILE_UTIL_H
+}
+#endif // INI_FILE_HPP

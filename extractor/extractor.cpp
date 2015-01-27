@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "scripting_environment.hpp"
 
 #include "../Util/git_sha.hpp"
-#include "../Util/IniFileUtil.h"
 #include "../Util/make_unique.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/timing_util.hpp"
@@ -45,6 +44,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <luabind/luabind.hpp>
 
 #include <osmium/io/any_input.hpp>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <tbb/parallel_for.h>
 #include <tbb/task_scheduler_init.h>
