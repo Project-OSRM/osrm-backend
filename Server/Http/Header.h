@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,11 +35,11 @@ namespace http
 {
 struct Header
 {
-    Header& operator=(const Header& other) = default;
-    Header(const std::string & name, const std::string & value) : name(name), value(value) {}
-    Header(Header && other) : name(std::move(other.name)), value(std::move(other.value)) {}
+    Header &operator=(const Header &other) = default;
+    Header(const std::string &name, const std::string &value) : name(name), value(value) {}
+    Header(Header &&other) : name(std::move(other.name)), value(std::move(other.value)) {}
 
-    void Clear()
+    void clear()
     {
         name.clear();
         value.clear();
