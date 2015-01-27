@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor/extractor.hpp"
 #include "extractor/extractor_options.hpp"
-#include "Util/simple_logger.hpp"
+#include "util/simple_logger.hpp"
 
 int main(int argc, char *argv[])
 {

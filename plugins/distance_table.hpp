@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DISTANCE_TABLE_PLUGIN_H
-#define DISTANCE_TABLE_PLUGIN_H
+#ifndef DISTANCE_TABLE_HPP
+#define DISTANCE_TABLE_HPP
 
 #include "plugin_base.hpp"
 
@@ -34,10 +34,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/make_unique.hpp"
-#include "../Util/string_util.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/string_util.hpp"
+#include "../util/timing_util.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -56,8 +56,9 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     int max_locations_distance_table;
 
   public:
-    explicit DistanceTablePlugin(DataFacadeT *facade, const int max_locations_distance_table) :
-      max_locations_distance_table(max_locations_distance_table), descriptor_string("table"), facade(facade)
+    explicit DistanceTablePlugin(DataFacadeT *facade, const int max_locations_distance_table)
+        : max_locations_distance_table(max_locations_distance_table), descriptor_string("table"),
+          facade(facade)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
@@ -74,8 +75,9 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         }
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
-        unsigned max_locations = std::min(static_cast<unsigned>(max_locations_distance_table),
-                                          static_cast<unsigned>(route_parameters.coordinates.size()));
+        unsigned max_locations =
+            std::min(static_cast<unsigned>(max_locations_distance_table),
+                     static_cast<unsigned>(route_parameters.coordinates.size()));
 
         PhantomNodeArray phantom_node_vector(max_locations);
         for (const auto i : osrm::irange(0u, max_locations))
@@ -92,8 +94,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 }
             }
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i],
-                                                            1);
+                                                            phantom_node_vector[i], 1);
 
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
@@ -128,4 +129,4 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif // DISTANCE_TABLE_PLUGIN_H
+#endif // DISTANCE_TABLE_HPP

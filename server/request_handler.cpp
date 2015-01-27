@@ -32,10 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "http/request.hpp"
 
 #include "../library/osrm.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/string_util.hpp"
-#include "../Util/xml_renderer.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/string_util.hpp"
+#include "../util/xml_renderer.hpp"
 #include "../typedefs.h"
 
 #include <osrm/route_parameters.hpp>

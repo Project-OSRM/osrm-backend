@@ -34,9 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/external_memory_node.hpp"
 #include "../../data_structures/phantom_node.hpp"
 #include "../../data_structures/turn_instructions.hpp"
-#include "../../Util/integer_range.hpp"
-#include "../../Util/osrm_exception.hpp"
-#include "../../Util/string_util.hpp"
+#include "../../util/integer_range.hpp"
+#include "../../util/osrm_exception.hpp"
+#include "../../util/string_util.hpp"
 #include "../../typedefs.h"
 
 #include <osrm/coordinate.hpp>

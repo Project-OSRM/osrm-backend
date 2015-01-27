@@ -46,9 +46,9 @@ class named_mutex;
 #include "../server/data_structures/internal_datafacade.hpp"
 #include "../server/data_structures/shared_barriers.hpp"
 #include "../server/data_structures/shared_datafacade.hpp"
-#include "../Util/make_unique.hpp"
-#include "../Util/routed_options.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/routed_options.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>

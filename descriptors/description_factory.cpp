@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/turn_instructions.hpp"
-#include "../Util/container.hpp"
-#include "../Util/integer_range.hpp"
+#include "../util/container.hpp"
+#include "../util/integer_range.hpp"
 #include "../typedefs.h"
 
 DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }

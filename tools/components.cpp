@@ -29,15 +29,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../algorithms/tiny_components.hpp"
 #include "../data_structures/static_graph.hpp"
 #include "../data_structures/coordinate_calculation.hpp"
-#include "../Util/fingerprint.hpp"
-#include "../Util/graph_loader.hpp"
-#include "../Util/make_unique.hpp"
-#include "../Util/osrm_exception.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/fingerprint.hpp"
+#include "../util/graph_loader.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/osrm_exception.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
 
-#if defined(__APPLE__) || defined (_WIN32)
+#if defined(__APPLE__) || defined(_WIN32)
 #include <gdal.h>
 #include <ogrsf_frmts.h>
 #else
@@ -52,7 +52,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-namespace {
+namespace
+{
 
 struct TarjanEdgeData
 {
@@ -129,14 +130,10 @@ int main(int argc, char *argv[])
 
         // load graph data
         std::vector<ImportEdge> edge_list;
-        const NodeID number_of_nodes = readBinaryOSRMGraphFromStream(input_stream,
-                                                                     edge_list,
-                                                                     bollard_node_list,
-                                                                     traffic_lights_list,
-                                                                     &coordinate_list,
-                                                                     restriction_list);
+        const NodeID number_of_nodes =
+            readBinaryOSRMGraphFromStream(input_stream, edge_list, bollard_node_list,
+                                          traffic_lights_list, &coordinate_list, restriction_list);
         input_stream.close();
-
 
         BOOST_ASSERT_MSG(restriction_list.size() == usable_restrictions,
                          "size of restriction_list changed");
@@ -159,17 +156,15 @@ int main(int argc, char *argv[])
 
             if (input_edge.forward)
             {
-                graph_edge_list.emplace_back(input_edge.source,
-                                       input_edge.target,
-                                       (std::max)((int)input_edge.weight, 1),
-                                       input_edge.name_id);
+                graph_edge_list.emplace_back(input_edge.source, input_edge.target,
+                                             (std::max)((int)input_edge.weight, 1),
+                                             input_edge.name_id);
             }
             if (input_edge.backward)
             {
-                graph_edge_list.emplace_back(input_edge.target,
-                                       input_edge.source,
-                                       (std::max)((int)input_edge.weight, 1),
-                                       input_edge.name_id);
+                graph_edge_list.emplace_back(input_edge.target, input_edge.source,
+                                             (std::max)((int)input_edge.weight, 1),
+                                             input_edge.name_id);
             }
         }
         edge_list.clear();
@@ -185,12 +180,11 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "Starting SCC graph traversal";
 
         RestrictionMap restriction_map(restriction_list);
-        auto tarjan = osrm::make_unique<TarjanSCC<TarjanGraph>>(graph,
-                                                                       restriction_map,
-                                                                       bollard_node_list);
+        auto tarjan =
+            osrm::make_unique<TarjanSCC<TarjanGraph>>(graph, restriction_map, bollard_node_list);
         tarjan->run();
         SimpleLogger().Write() << "identified: " << tarjan->get_number_of_components()
-                           << " many components";
+                               << " many components";
         SimpleLogger().Write() << "identified " << tarjan->get_size_one_count() << " size 1 SCCs";
 
         // output
@@ -229,7 +223,8 @@ int main(int argc, char *argv[])
             throw osrm::exception("Layer creation failed.");
         }
         TIMER_STOP(SCC_RUN_SETUP);
-        SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP)/1000. << "s";
+        SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP) / 1000.
+                               << "s";
 
         uint64_t total_network_distance = 0;
         p.reinit(graph->GetNumberOfNodes());
@@ -245,18 +240,15 @@ int main(int argc, char *argv[])
                 {
                     total_network_distance +=
                         100 * coordinate_calculation::euclidean_distance(
-                                  coordinate_list[source].lat,
-                                  coordinate_list[source].lon,
-                                  coordinate_list[target].lat,
-                                  coordinate_list[target].lon);
+                                  coordinate_list[source].lat, coordinate_list[source].lon,
+                                  coordinate_list[target].lat, coordinate_list[target].lon);
 
                     BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
                     BOOST_ASSERT(source != SPECIAL_NODEID);
                     BOOST_ASSERT(target != SPECIAL_NODEID);
 
-                    const unsigned size_of_containing_component =
-                        std::min(tarjan->get_component_size(source),
-                                 tarjan->get_component_size(target));
+                    const unsigned size_of_containing_component = std::min(
+                        tarjan->get_component_size(source), tarjan->get_component_size(target));
 
                     // edges that end on bollard nodes may actually be in two distinct components
                     if (size_of_containing_component < 1000)
@@ -282,7 +274,8 @@ int main(int argc, char *argv[])
         OGRSpatialReference::DestroySpatialReference(poSRS);
         OGRDataSource::DestroyDataSource(poDS);
         TIMER_STOP(SCC_OUTPUT);
-        SimpleLogger().Write() << "generating output took: " << TIMER_MSEC(SCC_OUTPUT)/1000. << "s";
+        SimpleLogger().Write() << "generating output took: " << TIMER_MSEC(SCC_OUTPUT) / 1000.
+                               << "s";
 
         SimpleLogger().Write() << "total network distance: "
                                << (uint64_t)total_network_distance / 100 / 1000. << " km";

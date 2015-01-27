@@ -26,10 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../library/osrm.hpp"
-#include "../Util/git_sha.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/routed_options.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/routed_options.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
 #include <osrm/libosrm_config.hpp>

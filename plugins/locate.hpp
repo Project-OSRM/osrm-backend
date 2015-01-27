@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LOCATE_PLUGIN_H
-#define LOCATE_PLUGIN_H
+#ifndef LOCATE_HPP
+#define LOCATE_HPP
 
 #include "plugin_base.hpp"
 
-#include "../Util/json_renderer.hpp"
-#include "../Util/string_util.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/string_util.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -47,7 +47,8 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
+        if (route_parameters.coordinates.empty() ||
+            !route_parameters.coordinates.front().is_valid())
         {
             return 400;
         }
@@ -74,4 +75,4 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif /* LOCATE_PLUGIN_H */
+#endif /* LOCATE_HPP */

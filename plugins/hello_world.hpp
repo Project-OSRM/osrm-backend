@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef HELLO_WORLD_PLUGIN_H
-#define HELLO_WORLD_PLUGIN_H
+#ifndef HELLO_WORLD_HPP
+#define HELLO_WORLD_HPP
 
 #include "plugin_base.hpp"
 
-#include "../Util/cast.hpp"
-#include "../Util/json_renderer.hpp"
+#include "../util/cast.hpp"
+#include "../util/json_renderer.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -77,8 +77,10 @@ class HelloWorldPlugin final : public BasePlugin
             JSON::Object json_location;
             JSON::Array json_coordinates;
 
-            json_coordinates.values.push_back(static_cast<double>(coordinate.lat / COORDINATE_PRECISION));
-            json_coordinates.values.push_back(static_cast<double>(coordinate.lon / COORDINATE_PRECISION));
+            json_coordinates.values.push_back(
+                static_cast<double>(coordinate.lat / COORDINATE_PRECISION));
+            json_coordinates.values.push_back(
+                static_cast<double>(coordinate.lon / COORDINATE_PRECISION));
             json_location.values[cast::integral_to_string(counter)] = json_coordinates;
             json_locations.values.push_back(json_location);
             ++counter;
@@ -101,4 +103,4 @@ class HelloWorldPlugin final : public BasePlugin
     std::string descriptor_string;
 };
 
-#endif // HELLO_WORLD_PLUGIN_H
+#endif // HELLO_WORLD_HPP

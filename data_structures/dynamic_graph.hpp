@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DYNAMICGRAPH_HPP
 
 #include "deallocating_vector.hpp"
-#include "../Util/integer_range.hpp"
+#include "../util/integer_range.hpp"
 
 #include <boost/assert.hpp>
 
@@ -55,10 +55,17 @@ template <typename EdgeDataT> class DynamicGraph
         NodeIterator target;
         EdgeDataT data;
 
-        InputEdge() : source(std::numeric_limits<NodeIterator>::max()), target(std::numeric_limits<NodeIterator>::max()) { }
+        InputEdge()
+            : source(std::numeric_limits<NodeIterator>::max()),
+              target(std::numeric_limits<NodeIterator>::max())
+        {
+        }
 
-        template<typename... Ts>
-        InputEdge(NodeIterator source, NodeIterator target, Ts &&...data) : source(source), target(target), data(std::forward<Ts>(data)...) { }
+        template <typename... Ts>
+        InputEdge(NodeIterator source, NodeIterator target, Ts &&... data)
+            : source(source), target(target), data(std::forward<Ts>(data)...)
+        {
+        }
 
         bool operator<(const InputEdge &right) const
         {
@@ -106,7 +113,7 @@ template <typename EdgeDataT> class DynamicGraph
         for (const auto node : osrm::irange(0u, number_of_nodes))
         {
             for (const auto i : osrm::irange(node_list[node].firstEdge,
-                                              node_list[node].firstEdge + node_list[node].edges))
+                                             node_list[node].firstEdge + node_list[node].edges))
             {
                 edge_list[i].target = graph[edge].target;
                 edge_list[i].data = graph[edge].data;

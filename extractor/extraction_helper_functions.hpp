@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTION_HELPER_FUNCTIONS_HPP
 #define EXTRACTION_HELPER_FUNCTIONS_HPP
 
-#include "../Util/cast.hpp"
+#include "../util/cast.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>

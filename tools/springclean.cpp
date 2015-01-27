@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/shared_memory_factory.hpp"
 #include "../server/data_structures/shared_datatype.hpp"
-#include "../Util/git_sha.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/simple_logger.hpp"
 
 void delete_region(const SharedDataType region)
 {

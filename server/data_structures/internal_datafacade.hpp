@@ -39,9 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/static_graph.hpp"
 #include "../../data_structures/static_rtree.hpp"
 #include "../../data_structures/range_table.hpp"
-#include "../../Util/boost_filesystem_2_fix.hpp"
-#include "../../Util/graph_loader.hpp"
-#include "../../Util/simple_logger.hpp"
+#include "../../util/boost_filesystem_2_fix.hpp"
+#include "../../util/graph_loader.hpp"
+#include "../../util/simple_logger.hpp"
 
 #include <osrm/coordinate.hpp>
 #include <osrm/server_paths.hpp>

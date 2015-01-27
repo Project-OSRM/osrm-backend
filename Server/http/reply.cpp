@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "reply.hpp"
 
-#include "../../Util/cast.hpp"
+#include "../../util/cast.hpp"
 
 namespace http
 {

@@ -27,9 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "coordinate_calculation.hpp"
 
-#include "../Util/mercator.hpp"
+#include "../util/mercator.hpp"
 #ifndef NDEBUG
-#include "../Util/simple_logger.hpp"
+#include "../util/simple_logger.hpp"
 #endif
 #include <boost/assert.hpp>
 #include <osrm/coordinate.hpp>

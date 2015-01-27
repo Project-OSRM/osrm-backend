@@ -27,9 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "library/osrm.hpp"
 #include "server/server.hpp"
-#include "Util/git_sha.hpp"
-#include "Util/routed_options.hpp"
-#include "Util/simple_logger.hpp"
+#include "util/git_sha.hpp"
+#include "util/routed_options.hpp"
+#include "util/simple_logger.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>

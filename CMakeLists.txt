@@ -34,44 +34,44 @@ include_directories(${CMAKE_SOURCE_DIR}/include/)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/libosmium/include/)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/fingerprint.cpp fingerprint.cpp.alwaysbuild
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/util/fingerprint.cpp fingerprint.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/Util/fingerprint.cpp.in
+    ${CMAKE_SOURCE_DIR}/util/fingerprint.cpp.in
   COMMENT "Configuring fingerprint.cpp"
   VERBATIM)
 
-add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/fingerprint.cpp)
+add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/util/fingerprint.cpp)
 add_custom_target(tests DEPENDS datastructure-tests algorithm-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
 
 configure_file(
-  ${CMAKE_SOURCE_DIR}/Util/git_sha.cpp.in
-  ${CMAKE_SOURCE_DIR}/Util/git_sha.cpp
+  ${CMAKE_SOURCE_DIR}/util/git_sha.cpp.in
+  ${CMAKE_SOURCE_DIR}/util/git_sha.cpp
 )
 file(GLOB ExtractorGlob extractor/*.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
-add_library(LOGGER OBJECT Util/simple_logger.cpp)
+add_library(LOGGER OBJECT util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
-add_library(EXCEPTION OBJECT Util/osrm_exception.cpp)
-add_library(MERCATOR OBJECT Util/mercator.cpp)
+add_library(EXCEPTION OBJECT util/osrm_exception.cpp)
+add_library(MERCATOR OBJECT util/mercator.cpp)
 
 set(ExtractorSources extract.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
 add_library(RESTRICTION OBJECT data_structures/restriction_map.cpp)
 
-file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp Util/compute_angle.cpp {RestrictionMapGlob})
+file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp util/compute_angle.cpp {RestrictionMapGlob})
 set(PrepareSources prepare.cpp ${PrepareGlob})
 add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
 file(GLOB ServerGlob server/*.cpp)
 file(GLOB DescriptorGlob descriptors/*.cpp)
-file(GLOB DatastructureGlob data_structures/search_engine_data.cpp data_structures/route_parameters.cpp Util/bearing.cpp)
+file(GLOB DatastructureGlob data_structures/search_engine_data.cpp data_structures/route_parameters.cpp util/bearing.cpp)
 list(REMOVE_ITEM DatastructureGlob data_structures/Coordinate.cpp)
 file(GLOB CoordinateGlob data_structures/coordinate*.cpp)
 file(GLOB AlgorithmGlob algorithms/*.cpp)
@@ -91,8 +91,8 @@ set(
 )
 
 add_library(COORDINATE OBJECT ${CoordinateGlob})
-add_library(FINGERPRINT OBJECT Util/fingerprint.cpp)
-add_library(GITDESCRIPTION OBJECT Util/git_sha.cpp)
+add_library(FINGERPRINT OBJECT util/fingerprint.cpp)
+add_library(GITDESCRIPTION OBJECT util/git_sha.cpp)
 add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 

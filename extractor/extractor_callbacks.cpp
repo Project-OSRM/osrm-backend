@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -32,8 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
-#include "../Util/container.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/container.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <osrm/coordinate.hpp>
 

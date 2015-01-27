@@ -36,11 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "server/data_structures/datafacade_base.hpp"
 #include "server/data_structures/shared_datatype.hpp"
 #include "server/data_structures/shared_barriers.hpp"
-#include "Util/boost_filesystem_2_fix.hpp"
-#include "Util/datastore_options.hpp"
-#include "Util/simple_logger.hpp"
-#include "Util/osrm_exception.hpp"
-#include "Util/fingerprint.hpp"
+#include "util/boost_filesystem_2_fix.hpp"
+#include "util/datastore_options.hpp"
+#include "util/simple_logger.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/fingerprint.hpp"
 #include "typedefs.h"
 
 #include <osrm/coordinate.hpp>

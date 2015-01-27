@@ -31,9 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "connection.hpp"
 #include "request_handler.hpp"
 
-#include "../Util/cast.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/cast.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>

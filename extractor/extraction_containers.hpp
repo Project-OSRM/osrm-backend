@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "first_and_last_segment_of_way.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
-#include "../Util/fingerprint.hpp"
+#include "../util/fingerprint.hpp"
 
 #include <stxxl/vector>
 

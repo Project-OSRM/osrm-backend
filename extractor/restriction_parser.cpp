@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "scripting_environment.hpp"
 
 #include "../data_structures/external_memory_node.hpp"
-#include "../Util/lua_util.hpp"
-#include "../Util/osrm_exception.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/lua_util.hpp"
+#include "../util/osrm_exception.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>

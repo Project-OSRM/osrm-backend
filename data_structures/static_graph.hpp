@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "percent.hpp"
 #include "shared_memory_vector_wrapper.hpp"
-#include "../Util/integer_range.hpp"
+#include "../util/integer_range.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
@@ -57,8 +57,11 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         NodeIterator target;
         EdgeDataT data;
 
-        template<typename... Ts>
-        InputEdge(NodeIterator source, NodeIterator target, Ts &&...data) : source(source), target(target), data(std::forward<Ts>(data)...) { }
+        template <typename... Ts>
+        InputEdge(NodeIterator source, NodeIterator target, Ts &&... data)
+            : source(source), target(target), data(std::forward<Ts>(data)...)
+        {
+        }
         bool operator<(const InputEdge &right) const
         {
             if (source != right.source)
@@ -94,7 +97,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         node_array.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
-        for (const auto node : osrm::irange(0u, number_of_nodes+1))
+        for (const auto node : osrm::irange(0u, number_of_nodes + 1))
         {
             EdgeIterator last_edge = edge;
             while (edge < number_of_edges && graph[edge].source == node)

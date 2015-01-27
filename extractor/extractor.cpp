@@ -34,10 +34,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "restriction_parser.hpp"
 #include "scripting_environment.hpp"
 
-#include "../Util/git_sha.hpp"
-#include "../Util/make_unique.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 
 #include "../typedefs.h"
 

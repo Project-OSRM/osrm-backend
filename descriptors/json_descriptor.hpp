@@ -34,12 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../algorithms/route_name_extraction.hpp"
 #include "../data_structures/segment_information.hpp"
 #include "../data_structures/turn_instructions.hpp"
-#include "../Util/bearing.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/string_util.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/bearing.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/string_util.hpp"
+#include "../util/timing_util.hpp"
 
 #include <osrm/json_container.hpp>
 

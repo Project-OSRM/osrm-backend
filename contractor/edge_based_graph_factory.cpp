@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "edge_based_graph_factory.hpp"
 #include "../algorithms/tiny_components.hpp"
 #include "../data_structures/percent.hpp"
-#include "../Util/compute_angle.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/lua_util.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/compute_angle.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/lua_util.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 
 #include <boost/assert.hpp>
 

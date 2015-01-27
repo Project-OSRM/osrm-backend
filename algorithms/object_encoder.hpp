@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OBJECT_ENCODER_HPP
 #define OBJECT_ENCODER_HPP
 
-#include "../Util/string_util.hpp"
+#include "../util/string_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
@@ -49,8 +49,7 @@ struct ObjectEncoder
         8,
         6>;
 
-    template <class ObjectT>
-    static void EncodeToBase64(const ObjectT &object, std::string &encoded)
+    template <class ObjectT> static void EncodeToBase64(const ObjectT &object, std::string &encoded)
     {
         const char *char_ptr_to_object = (const char *)&object;
         std::vector<unsigned char> data(sizeof(object));
@@ -71,8 +70,7 @@ struct ObjectEncoder
         replaceAll(encoded, "/", "_");
     }
 
-    template <class ObjectT>
-    static void DecodeFromBase64(const std::string &input, ObjectT &object)
+    template <class ObjectT> static void DecodeFromBase64(const std::string &input, ObjectT &object)
     {
         try
         {
@@ -81,8 +79,7 @@ struct ObjectEncoder
             replaceAll(encoded, "-", "+");
             replaceAll(encoded, "_", "/");
 
-            std::copy(binary_t(encoded.begin()),
-                      binary_t(encoded.begin() + encoded.length() - 1),
+            std::copy(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length() - 1),
                       (char *)&object);
         }
         catch (...)

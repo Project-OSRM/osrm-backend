@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/static_rtree.hpp"
 #include "../../data_structures/query_node.hpp"
 #include "../../data_structures/edge_based_node.hpp"
-#include "../../Util/floating_point.hpp"
+#include "../../util/floating_point.hpp"
 #include "../../typedefs.h"
 
 #include <boost/test/unit_test.hpp>

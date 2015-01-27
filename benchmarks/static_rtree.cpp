@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_node.hpp"
 #include "../data_structures/shared_memory_vector_wrapper.hpp"
 #include "../data_structures/static_rtree.hpp"
-#include "../Util/boost_filesystem_2_fix.hpp"
+#include "../util/boost_filesystem_2_fix.hpp"
 #include "../data_structures/edge_based_node.hpp"
 
 #include <osrm/coordinate.hpp>

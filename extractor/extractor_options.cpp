@@ -27,9 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor_options.hpp"
 
-#include "../Util/git_sha.hpp"
-#include "../Util/ini_file.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/ini_file.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>

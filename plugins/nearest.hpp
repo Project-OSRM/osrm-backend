@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,14 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef NEAREST_PLUGIN_H
-#define NEAREST_PLUGIN_H
+#ifndef NEAREST_HPP
+#define NEAREST_HPP
 
 #include "plugin_base.hpp"
 
 #include "../data_structures/phantom_node.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/json_renderer.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/json_renderer.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -52,7 +52,8 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
+        if (route_parameters.coordinates.empty() ||
+            !route_parameters.coordinates.front().is_valid())
         {
             return 400;
         }
@@ -76,7 +77,8 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                 JSON::Array results;
 
                 auto vector_length = phantom_node_vector.size();
-                for (const auto i : osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
+                for (const auto i :
+                     osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                 {
                     JSON::Array json_coordinate;
                     JSON::Object result;
@@ -113,4 +115,4 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     std::string descriptor_string;
 };
 
-#endif /* NEAREST_PLUGIN_H */
+#endif /* NEAREST_HPP */

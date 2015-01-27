@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../data_structures/turn_instructions.hpp"
-// #include "../Util/simple_logger.hpp"
+// #include "../util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 
@@ -56,7 +56,7 @@ template <class DataFacadeT> class BasicRoutingInterface
     BasicRoutingInterface() = delete;
     BasicRoutingInterface(const BasicRoutingInterface &) = delete;
     explicit BasicRoutingInterface(DataFacadeT *facade) : facade(facade) {}
-    virtual ~BasicRoutingInterface() {};
+    virtual ~BasicRoutingInterface(){};
 
     inline void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
                             SearchEngineData::QueryHeap &reverse_heap,
@@ -69,7 +69,8 @@ template <class DataFacadeT> class BasicRoutingInterface
         const int distance = forward_heap.GetKey(node);
 
         // const NodeID parentnode = forward_heap.GetData(node).parent;
-        // SimpleLogger().Write() << (forward_direction ? "[fwd] " : "[rev] ") << "settled edge (" << parentnode << "," << node << "), dist: " << distance;
+        // SimpleLogger().Write() << (forward_direction ? "[fwd] " : "[rev] ") << "settled edge ("
+        // << parentnode << "," << node << "), dist: " << distance;
 
         if (reverse_heap.WasInserted(node))
         {
@@ -80,9 +81,11 @@ template <class DataFacadeT> class BasicRoutingInterface
                 {
                     *middle_node_id = node;
                     *upper_bound = new_distance;
-                //     SimpleLogger().Write() << "accepted middle node " << node << " at distance " << new_distance;
-                // } else {
-                //     SimpleLogger().Write() << "discared middle node " << node << " at distance " << new_distance;
+                    //     SimpleLogger().Write() << "accepted middle node " << node << " at
+                    //     distance " << new_distance;
+                    // } else {
+                    //     SimpleLogger().Write() << "discared middle node " << node << " at
+                    //     distance " << new_distance;
                 }
             }
         }
@@ -228,15 +231,11 @@ template <class DataFacadeT> class BasicRoutingInterface
                 const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
 
-
                 if (!facade->EdgeIsCompressed(ed.id))
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
-                    unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id),
-                                               name_index,
-                                               turn_instruction,
-                                               ed.distance,
-                                               travel_mode);
+                    unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id), name_index,
+                                               turn_instruction, ed.distance, travel_mode);
                 }
                 else
                 {
@@ -257,7 +256,8 @@ template <class DataFacadeT> class BasicRoutingInterface
                     BOOST_ASSERT(start_index <= end_index);
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
-                        unpacked_path.emplace_back(id_vector[i], name_index, TurnInstruction::NoTurn, 0, travel_mode);
+                        unpacked_path.emplace_back(id_vector[i], name_index,
+                                                   TurnInstruction::NoTurn, 0, travel_mode);
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().segment_duration = ed.distance;
@@ -294,18 +294,19 @@ template <class DataFacadeT> class BasicRoutingInterface
 
             if (start_index > end_index)
             {
-                start_index = std::min(start_index, id_vector.size()-1);
+                start_index = std::min(start_index, id_vector.size() - 1);
             }
 
             for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
             {
                 BOOST_ASSERT(i < id_vector.size());
-                BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode>0 );
-                unpacked_path.emplace_back(PathData{id_vector[i],
-                                                    phantom_node_pair.target_phantom.name_id,
-                                                    TurnInstruction::NoTurn,
-                                                    0,
-                                                    phantom_node_pair.target_phantom.forward_travel_mode});
+                BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
+                unpacked_path.emplace_back(
+                    PathData{id_vector[i],
+                             phantom_node_pair.target_phantom.name_id,
+                             TurnInstruction::NoTurn,
+                             0,
+                             phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
 
@@ -367,7 +368,8 @@ template <class DataFacadeT> class BasicRoutingInterface
                     }
                 }
             }
-            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(), "edge weight invalid");
+            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(),
+                             "edge weight invalid");
 
             const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
             if (ed.shortcut)
