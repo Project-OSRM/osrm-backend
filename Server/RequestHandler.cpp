@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RequestHandler.h"
 
 #include "APIGrammar.h"
-#include "Http/Reply.h"
-#include "Http/Request.h"
+#include "http/reply.hpp"
+#include "http/request.hpp"
 
 #include "../Library/OSRM.h"
 #include "../Util/json_renderer.hpp"
@@ -48,20 +48,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RequestHandler::RequestHandler() : routing_machine(nullptr) {}
 
-void RequestHandler::handle_request(const http::Request &req, http::Reply &reply)
+void RequestHandler::handle_request(const http::request &current_request,
+                                    http::reply &current_reply)
 {
     // parse command
     try
     {
-        std::string request;
-        URIDecode(req.uri, request);
+        std::string request_string;
+        URIDecode(current_request.uri, request_string);
 
         // deactivated as GCC apparently does not implement that, not even in 4.9
         // std::time_t t = std::time(nullptr);
         // SimpleLogger().Write() << std::put_time(std::localtime(&t), "%m-%d-%Y %H:%M:%S") <<
-        //     " " << req.endpoint.to_string() << " " <<
-        //     req.referrer << ( 0 == req.referrer.length() ? "- " :" ") <<
-        //     req.agent << ( 0 == req.agent.length() ? "- " :" ") << request;
+        //     " " << current_request.endpoint.to_string() << " " <<
+        //     current_request.referrer << ( 0 == current_request.referrer.length() ? "- " :" ") <<
+        //     current_request.agent << ( 0 == current_request.agent.length() ? "- " :" ") <<
+        //     request;
 
         time_t ltime;
         struct tm *time_stamp;
@@ -76,29 +78,33 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
                                << " " << (time_stamp->tm_hour < 10 ? "0" : "")
                                << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
                                << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
-                               << time_stamp->tm_sec << " " << req.endpoint.to_string() << " "
-                               << req.referrer << (0 == req.referrer.length() ? "- " : " ")
-                               << req.agent << (0 == req.agent.length() ? "- " : " ") << request;
+                               << time_stamp->tm_sec << " " << current_request.endpoint.to_string()
+                               << " " << current_request.referrer
+                               << (0 == current_request.referrer.length() ? "- " : " ")
+                               << current_request.agent
+                               << (0 == current_request.agent.length() ? "- " : " ")
+                               << request_string;
 
         RouteParameters route_parameters;
         APIGrammarParser api_parser(&route_parameters);
 
-        auto api_iterator = request.begin();
-        const bool result = boost::spirit::qi::parse(api_iterator, request.end(), api_parser);
+        auto api_iterator = request_string.begin();
+        const bool result =
+            boost::spirit::qi::parse(api_iterator, request_string.end(), api_parser);
 
         JSON::Object json_result;
         // check if the was an error with the request
-        if (!result || (api_iterator != request.end()))
+        if (!result || (api_iterator != request_string.end()))
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            reply.content.clear();
-            const auto position = std::distance(request.begin(), api_iterator);
+            current_reply = http::reply::stock_reply(http::reply::bad_request);
+            current_reply.content.clear();
+            const auto position = std::distance(request_string.begin(), api_iterator);
 
             json_result.values["status"] = 400;
             std::string message = "Query string malformed close to position ";
             message += cast::integral_to_string(position);
             json_result.values["status_message"] = message;
-            JSON::render(reply.content, json_result);
+            JSON::render(current_reply.content, json_result);
             return;
         }
 
@@ -108,50 +114,54 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         if (!route_parameters.jsonp_parameter.empty())
         { // prepend response with jsonp parameter
             const std::string json_p = (route_parameters.jsonp_parameter + "(");
-            reply.content.insert(reply.content.end(), json_p.begin(), json_p.end());
+            current_reply.content.insert(current_reply.content.end(), json_p.begin(), json_p.end());
         }
         const auto return_code = routing_machine->RunQuery(route_parameters, json_result);
         if (200 != return_code)
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            reply.content.clear();
+            current_reply = http::reply::stock_reply(http::reply::bad_request);
+            current_reply.content.clear();
             json_result.values["status"] = 400;
             std::string message = "Bad Request";
             json_result.values["status_message"] = message;
-            JSON::render(reply.content, json_result);
+            JSON::render(current_reply.content, json_result);
             return;
         }
         // set headers
-        reply.headers.emplace_back("Content-Length",
-                                   cast::integral_to_string(reply.content.size()));
+        current_reply.headers.emplace_back("Content-Length",
+                                           cast::integral_to_string(current_reply.content.size()));
         if ("gpx" == route_parameters.output_format)
         { // gpx file
-            JSON::gpx_render(reply.content, json_result.values["route"]);
-            reply.headers.emplace_back("Content-Type", "application/gpx+xml; charset=UTF-8");
-            reply.headers.emplace_back("Content-Disposition", "attachment; filename=\"route.gpx\"");
+            JSON::gpx_render(current_reply.content, json_result.values["route"]);
+            current_reply.headers.emplace_back("Content-Type",
+                                               "application/gpx+xml; charset=UTF-8");
+            current_reply.headers.emplace_back("Content-Disposition",
+                                               "attachment; filename=\"route.gpx\"");
         }
         else if (route_parameters.jsonp_parameter.empty())
         { // json file
-            JSON::render(reply.content, json_result);
-            reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
-            reply.headers.emplace_back("Content-Disposition", "inline; filename=\"response.json\"");
+            JSON::render(current_reply.content, json_result);
+            current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
+            current_reply.headers.emplace_back("Content-Disposition",
+                                               "inline; filename=\"response.json\"");
         }
         else
         { // jsonp
-            JSON::render(reply.content, json_result);
-            reply.headers.emplace_back("Content-Type", "text/javascript; charset=UTF-8");
-            reply.headers.emplace_back("Content-Disposition", "inline; filename=\"response.js\"");
+            JSON::render(current_reply.content, json_result);
+            current_reply.headers.emplace_back("Content-Type", "text/javascript; charset=UTF-8");
+            current_reply.headers.emplace_back("Content-Disposition",
+                                               "inline; filename=\"response.js\"");
         }
         if (!route_parameters.jsonp_parameter.empty())
         { // append brace to jsonp response
-            reply.content.push_back(')');
+            current_reply.content.push_back(')');
         }
     }
     catch (const std::exception &e)
     {
-        reply = http::Reply::StockReply(http::Reply::internalServerError);
+        current_reply = http::reply::stock_reply(http::reply::internal_server_error);
         SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
-                                         << ", uri: " << req.uri;
+                                         << ", uri: " << current_request.uri;
         return;
     }
 }

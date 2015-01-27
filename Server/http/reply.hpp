@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef REPLY_H
-#define REPLY_H
+#ifndef REPLY_HPP
+#define REPLY_HPP
 
-#include "Header.h"
+#include "header.hpp"
 
 #include <boost/asio.hpp>
 
@@ -36,39 +36,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace http
 {
-
-const char okHTML[] = "";
-const char badRequestHTML[] = "{\"status\": 400,\"status_message\":\"Bad Request\"}";
-const char internalServerErrorHTML[] =
-    "{\"status\": 500,\"status_message\":\"Internal Server Error\"}";
-const char seperators[] = {':', ' '};
-const char crlf[] = {'\r', '\n'};
-const std::string okString = "HTTP/1.0 200 OK\r\n";
-const std::string badRequestString = "HTTP/1.0 400 Bad Request\r\n";
-const std::string internalServerErrorString = "HTTP/1.0 500 Internal Server Error\r\n";
-
-class Reply
+class reply
 {
   public:
     enum status_type
-    { ok = 200,
-      badRequest = 400,
-      internalServerError = 500 } status;
+    {
+        ok = 200,
+        bad_request = 400,
+        internal_server_error = 500
+    } status;
 
-    std::vector<Header> headers;
-    std::vector<boost::asio::const_buffer> ToBuffers();
-    std::vector<boost::asio::const_buffer> HeaderstoBuffers();
+    std::vector<header> headers;
+    std::vector<boost::asio::const_buffer> to_buffers();
+    std::vector<boost::asio::const_buffer> headers_to_buffers();
     std::vector<char> content;
-    static Reply StockReply(status_type status);
-    void SetSize(const unsigned size);
-    void SetUncompressedSize();
+    static reply stock_reply(const status_type status);
+    void set_size(const std::size_t size);
+    void set_uncompressed_size();
 
-    Reply();
+    reply();
 
   private:
-    std::string ToString(Reply::status_type status);
-    boost::asio::const_buffer ToBuffer(Reply::status_type status);
+    std::string status_to_string(reply::status_type status);
+    boost::asio::const_buffer status_to_buffer(reply::status_type status);
 };
 }
 
-#endif // REPLY_H
+#endif // REPLY_HPP

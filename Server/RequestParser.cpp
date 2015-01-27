@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "RequestParser.h"
 
-#include "Http/Request.h"
+#include "http/request.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -35,16 +35,16 @@ namespace http
 {
 
 RequestParser::RequestParser()
-    : state(internal_state::method_start), header({"", ""}), compression_type(noCompression)
+    : state(internal_state::method_start), header({"", ""}), compression_type(no_compression)
 {
 }
 
-std::tuple<osrm::tribool, CompressionType>
-RequestParser::parse(Request &request, char *begin, char *end)
+std::tuple<osrm::tribool, compression_type>
+RequestParser::parse(request &current_request, char *begin, char *end)
 {
     while (begin != end)
     {
-        osrm::tribool result = consume(request, *begin++);
+        osrm::tribool result = consume(current_request, *begin++);
         if (result != osrm::tribool::indeterminate)
         {
             return std::make_tuple(result, compression_type);
@@ -54,7 +54,7 @@ RequestParser::parse(Request &request, char *begin, char *end)
     return std::make_tuple(result, compression_type);
 }
 
-osrm::tribool RequestParser::consume(Request &request, const char input)
+osrm::tribool RequestParser::consume(request &current_request, const char input)
 {
     switch (state)
     {
@@ -82,7 +82,7 @@ osrm::tribool RequestParser::consume(Request &request, const char input)
             return osrm::tribool::no;
         }
         state = internal_state::uri;
-        request.uri.push_back(input);
+        current_request.uri.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::uri:
         if (input == ' ')
@@ -94,7 +94,7 @@ osrm::tribool RequestParser::consume(Request &request, const char input)
         {
             return osrm::tribool::no;
         }
-        request.uri.push_back(input);
+        current_request.uri.push_back(input);
         return osrm::tribool::indeterminate;
     case internal_state::http_version_h:
         if (input == 'H')
@@ -180,22 +180,22 @@ osrm::tribool RequestParser::consume(Request &request, const char input)
             /* giving gzip precedence over deflate */
             if (boost::icontains(header.value, "deflate"))
             {
-                compression_type = deflateRFC1951;
+                compression_type = deflate_rfc1951;
             }
             if (boost::icontains(header.value, "gzip"))
             {
-                compression_type = gzipRFC1952;
+                compression_type = gzip_rfc1952;
             }
         }
 
         if (boost::iequals(header.name, "Referer"))
         {
-            request.referrer = header.value;
+            current_request.referrer = header.value;
         }
 
         if (boost::iequals(header.name, "User-Agent"))
         {
-            request.agent = header.value;
+            current_request.agent = header.value;
         }
 
         if (input == '\r')

@@ -36,8 +36,8 @@ class OSRM;
 
 namespace http
 {
-class Reply;
-struct Request;
+class reply;
+struct request;
 }
 
 class RequestHandler
@@ -49,7 +49,7 @@ class RequestHandler
     RequestHandler();
     RequestHandler(const RequestHandler &) = delete;
 
-    void handle_request(const http::Request &req, http::Reply &rep);
+    void handle_request(const http::request &current_request, http::reply &current_reply);
     void RegisterRoutingMachine(OSRM *osrm);
 
   private:

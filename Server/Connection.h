@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include "Http/CompressionType.h"
-#include "Http/Reply.h"
-#include "Http/Request.h"
+#include "http/compression_type.hpp"
+#include "http/reply.hpp"
+#include "http/request.hpp"
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
@@ -77,14 +77,14 @@ class Connection : public std::enable_shared_from_this<Connection>
     void handle_write(const boost::system::error_code &e);
 
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
-                                       const CompressionType compression_type);
+                                       const compression_type compression_type);
 
     boost::asio::io_service::strand strand;
     boost::asio::ip::tcp::socket TCP_socket;
     RequestHandler &request_handler;
     boost::array<char, 8192> incoming_data_buffer;
-    Request request;
-    Reply reply;
+    request request;
+    reply reply;
 };
 
 } // namespace http

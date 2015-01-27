@@ -65,7 +65,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     }
 
     // no error detected, let's parse the request
-    CompressionType compression_type(noCompression);
+    compression_type compression_type(no_compression);
     osrm::tribool result;
     std::tie(result, compression_type) = RequestParser().parse(
         request, incoming_data_buffer.data(), incoming_data_buffer.data() + bytes_transferred);
@@ -83,26 +83,26 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         // compress the result w/ gzip/deflate if requested
         switch (compression_type)
         {
-        case deflateRFC1951:
+        case deflate_rfc1951:
             // use deflate for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
             compressed_output = compress_buffers(reply.content, compression_type);
-            reply.SetSize(static_cast<unsigned>(compressed_output.size()));
-            output_buffer = reply.HeaderstoBuffers();
+            reply.set_size(static_cast<unsigned>(compressed_output.size()));
+            output_buffer = reply.headers_to_buffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
-        case gzipRFC1952:
+        case gzip_rfc1952:
             // use gzip for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
             compressed_output = compress_buffers(reply.content, compression_type);
-            reply.SetSize(static_cast<unsigned>(compressed_output.size()));
-            output_buffer = reply.HeaderstoBuffers();
+            reply.set_size(static_cast<unsigned>(compressed_output.size()));
+            output_buffer = reply.headers_to_buffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
-        case noCompression:
+        case no_compression:
             // don't use any compression
-            reply.SetUncompressedSize();
-            output_buffer = reply.ToBuffers();
+            reply.set_uncompressed_size();
+            output_buffer = reply.to_buffers();
             break;
         }
         // write result to stream
@@ -113,10 +113,10 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     }
     else if (result == osrm::tribool::no)
     { // request is not parseable
-        reply = Reply::StockReply(Reply::badRequest);
+        reply = reply::stock_reply(reply::bad_request);
 
         boost::asio::async_write(
-            TCP_socket, reply.ToBuffers(),
+            TCP_socket, reply.to_buffers(),
             strand.wrap(boost::bind(&Connection::handle_write, this->shared_from_this(),
                                     boost::asio::placeholders::error)));
     }
@@ -143,14 +143,14 @@ void Connection::handle_write(const boost::system::error_code &error)
 }
 
 std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompressed_data,
-                                               const CompressionType compression_type)
+                                               const compression_type compression_type)
 {
     boost::iostreams::gzip_params compression_parameters;
 
     // there's a trade-off between speed and size. speed wins
     compression_parameters.level = boost::iostreams::zlib::best_speed;
     // check which compression flavor is used
-    if (deflateRFC1951 == compression_type)
+    if (deflate_rfc1951 == compression_type)
     {
         compression_parameters.noheader = true;
     }

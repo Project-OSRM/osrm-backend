@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,17 +25,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef COMPRESSION_TYPE_H
-#define COMPRESSION_TYPE_H
+#ifndef COMPRESSION_TYPE_HPP
+#define COMPRESSION_TYPE_HPP
 
 namespace http
 {
 
-enum CompressionType
-{ noCompression,
-  gzipRFC1952,
-  deflateRFC1951 };
-
+enum compression_type
+{
+    no_compression,
+    gzip_rfc1952,
+    deflate_rfc1951
+};
 }
 
-#endif // COMPRESSION_TYPE_H
+#endif // COMPRESSION_TYPE_HPP

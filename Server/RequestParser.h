@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REQUEST_PARSER_H
 #define REQUEST_PARSER_H
 
-#include "Http/CompressionType.h"
-#include "Http/Header.h"
+#include "http/compression_type.hpp"
+#include "http/header.hpp"
 #include "../data_structures/tribool.hpp"
 
 #include <tuple>
@@ -37,17 +37,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace http
 {
 
-struct Request;
+struct request;
 
 class RequestParser
 {
   public:
     RequestParser();
 
-    std::tuple<osrm::tribool, CompressionType> parse(Request &request, char *begin, char *end);
+    std::tuple<osrm::tribool, compression_type>
+    parse(request &current_request, char *begin, char *end);
 
   private:
-    osrm::tribool consume(Request &req, const char input);
+    osrm::tribool consume(request &current_request, const char input);
 
     bool is_char(const int character) const;
 
@@ -82,8 +83,8 @@ class RequestParser
         expecting_newline_3
     } state;
 
-    Header header;
-    CompressionType compression_type;
+    header header;
+    compression_type compression_type;
 };
 
 } // namespace http

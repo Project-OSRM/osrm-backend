@@ -25,29 +25,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef HTTP_HEADER_H
-#define HTTP_HEADER_H
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
+
+#include <boost/asio.hpp>
 
 #include <string>
-#include <algorithm>
 
 namespace http
 {
-struct Header
+
+struct request
 {
-    Header &operator=(const Header &other) = default;
-    Header(const std::string &name, const std::string &value) : name(name), value(value) {}
-    Header(Header &&other) : name(std::move(other.name)), value(std::move(other.value)) {}
-
-    void clear()
-    {
-        name.clear();
-        value.clear();
-    }
-
-    std::string name;
-    std::string value;
+    std::string uri;
+    std::string referrer;
+    std::string agent;
+    boost::asio::ip::address endpoint;
 };
-}
 
-#endif // HTTP_HEADER_H
+} // namespace http
+
+#endif // REQUEST_HPP

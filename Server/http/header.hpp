@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,24 +25,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef REQUEST_H
-#define REQUEST_H
-
-#include <boost/asio.hpp>
+#ifndef HEADER_HPP
+#define HEADER_HPP
 
 #include <string>
+#include <algorithm>
 
 namespace http
 {
-
-struct Request
+struct header
 {
-    std::string uri;
-    std::string referrer;
-    std::string agent;
-    boost::asio::ip::address endpoint;
+    header &operator=(const header &other) = default;
+    header(const std::string &name, const std::string &value) : name(name), value(value) {}
+    header(header &&other) : name(std::move(other.name)), value(std::move(other.value)) {}
+
+    void clear()
+    {
+        name.clear();
+        value.clear();
+    }
+
+    std::string name;
+    std::string value;
 };
+}
 
-} // namespace http
-
-#endif // REQUEST_H
+#endif // HEADER_HPP
