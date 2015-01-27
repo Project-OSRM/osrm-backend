@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Library/OSRM.h"
-#include "Server/Server.h"
+#include "server/server.hpp"
 #include "Util/git_sha.hpp"
 #include "Util/ProgramOptions.h"
 #include "Util/simple_logger.hpp"

@@ -25,68 +25,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef REQUEST_PARSER_H
-#define REQUEST_PARSER_H
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
 
-#include "http/compression_type.hpp"
-#include "http/header.hpp"
-#include "../data_structures/tribool.hpp"
+#include <boost/asio.hpp>
 
-#include <tuple>
+#include <string>
 
 namespace http
 {
 
-struct request;
-
-class RequestParser
+struct request
 {
-  public:
-    RequestParser();
-
-    std::tuple<osrm::tribool, compression_type>
-    parse(request &current_request, char *begin, char *end);
-
-  private:
-    osrm::tribool consume(request &current_request, const char input);
-
-    bool is_char(const int character) const;
-
-    bool is_CTL(const int character) const;
-
-    bool is_special(const int character) const;
-
-    bool is_digit(const int character) const;
-
-    enum class internal_state : unsigned char
-    {
-        method_start,
-        method,
-        uri_start,
-        uri,
-        http_version_h,
-        http_version_t_1,
-        http_version_t_2,
-        http_version_p,
-        http_version_slash,
-        http_version_major_start,
-        http_version_major,
-        http_version_minor_start,
-        http_version_minor,
-        expecting_newline_1,
-        header_line_start,
-        header_lws,
-        header_name,
-        space_before_header_value,
-        header_value,
-        expecting_newline_2,
-        expecting_newline_3
-    } state;
-
-    header header;
-    compression_type compression_type;
+    std::string uri;
+    std::string referrer;
+    std::string agent;
+    boost::asio::ip::address endpoint;
 };
 
 } // namespace http
 
-#endif // REQUEST_PARSER_H
+#endif // REQUEST_HPP

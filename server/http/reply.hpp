@@ -25,27 +25,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/git_sha.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../server/data_structures/shared_barriers.hpp"
+#ifndef REPLY_HPP
+#define REPLY_HPP
 
-#include <iostream>
+#include "header.hpp"
 
-int main()
+#include <boost/asio.hpp>
+
+#include <vector>
+
+namespace http
 {
-    LogPolicy::GetInstance().Unmute();
-    try
+class reply
+{
+  public:
+    enum status_type
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
-        SimpleLogger().Write() << "Releasing all locks";
-        SharedBarriers barrier;
-        barrier.pending_update_mutex.unlock();
-        barrier.query_mutex.unlock();
-        barrier.update_mutex.unlock();
-    }
-    catch (const std::exception &e)
-    {
-        SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
-    }
-    return 0;
+        ok = 200,
+        bad_request = 400,
+        internal_server_error = 500
+    } status;
+
+    std::vector<header> headers;
+    std::vector<boost::asio::const_buffer> to_buffers();
+    std::vector<boost::asio::const_buffer> headers_to_buffers();
+    std::vector<char> content;
+    static reply stock_reply(const status_type status);
+    void set_size(const std::size_t size);
+    void set_uncompressed_size();
+
+    reply();
+
+  private:
+    std::string status_to_string(reply::status_type status);
+    boost::asio::const_buffer status_to_buffer(reply::status_type status);
+};
 }
+
+#endif // REPLY_HPP

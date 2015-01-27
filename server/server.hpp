@@ -25,11 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
-#include "Connection.h"
-#include "RequestHandler.h"
+#include "connection.hpp"
+#include "request_handler.hpp"
 
 #include "../Util/cast.hpp"
 #include "../Util/integer_range.hpp"
@@ -116,4 +116,4 @@ class Server
     RequestHandler request_handler;
 };
 
-#endif // SERVER_H
+#endif // SERVER_HPP

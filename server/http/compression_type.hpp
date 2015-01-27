@@ -25,27 +25,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/git_sha.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../server/data_structures/shared_barriers.hpp"
+#ifndef COMPRESSION_TYPE_HPP
+#define COMPRESSION_TYPE_HPP
 
-#include <iostream>
-
-int main()
+namespace http
 {
-    LogPolicy::GetInstance().Unmute();
-    try
-    {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
-        SimpleLogger().Write() << "Releasing all locks";
-        SharedBarriers barrier;
-        barrier.pending_update_mutex.unlock();
-        barrier.query_mutex.unlock();
-        barrier.update_mutex.unlock();
-    }
-    catch (const std::exception &e)
-    {
-        SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
-    }
-    return 0;
+
+enum compression_type
+{
+    no_compression,
+    gzip_rfc1952,
+    deflate_rfc1951
+};
 }
+
+#endif // COMPRESSION_TYPE_HPP

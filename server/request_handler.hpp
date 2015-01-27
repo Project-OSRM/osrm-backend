@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef REQUEST_HANDLER_H
-#define REQUEST_HANDLER_H
+#ifndef REQUEST_HANDLER_HPP
+#define REQUEST_HANDLER_HPP
 
 #include <string>
 
@@ -56,4 +56,4 @@ class RequestHandler
     OSRM *routing_machine;
 };
 
-#endif // REQUEST_HANDLER_H
+#endif // REQUEST_HANDLER_HPP

@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef CONNECTION_H
-#define CONNECTION_H
+#ifndef CONNECTION_HPP
+#define CONNECTION_HPP
 
 #include "http/compression_type.hpp"
 #include "http/reply.hpp"
@@ -89,4 +89,4 @@ class Connection : public std::enable_shared_from_this<Connection>
 
 } // namespace http
 
-#endif // CONNECTION_H
+#endif // CONNECTION_HPP

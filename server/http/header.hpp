@@ -25,27 +25,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/git_sha.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../server/data_structures/shared_barriers.hpp"
+#ifndef HEADER_HPP
+#define HEADER_HPP
 
-#include <iostream>
+#include <string>
+#include <algorithm>
 
-int main()
+namespace http
 {
-    LogPolicy::GetInstance().Unmute();
-    try
+struct header
+{
+    // explicitly use default copy c'tor as adding move c'tor
+    header &operator=(const header &other) = default;
+    header(const std::string &name, const std::string &value) : name(name), value(value) {}
+    header(header &&other) : name(std::move(other.name)), value(std::move(other.value)) {}
+
+    void clear()
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
-        SimpleLogger().Write() << "Releasing all locks";
-        SharedBarriers barrier;
-        barrier.pending_update_mutex.unlock();
-        barrier.query_mutex.unlock();
-        barrier.update_mutex.unlock();
+        name.clear();
+        value.clear();
     }
-    catch (const std::exception &e)
-    {
-        SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
-    }
-    return 0;
+
+    std::string name;
+    std::string value;
+};
 }
+
+#endif // HEADER_HPP

@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 
 #include "../data_structures/shared_memory_factory.hpp"
-#include "../Server/data_structures/shared_datatype.hpp"
+#include "../server/data_structures/shared_datatype.hpp"
 #include "../Util/git_sha.hpp"
 #include "../Util/simple_logger.hpp"
 
