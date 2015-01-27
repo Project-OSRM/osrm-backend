@@ -58,8 +58,8 @@ namespace
 struct TarjanEdgeData
 {
     TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
-    TarjanEdgeData(int distance, unsigned name_id) : distance(distance), name_id(name_id) {}
-    int distance;
+    TarjanEdgeData(unsigned distance, unsigned name_id) : distance(distance), name_id(name_id) {}
+    unsigned distance;
     unsigned name_id;
 };
 
@@ -97,7 +97,8 @@ int main(int argc, char *argv[])
         std::ifstream restriction_ifstream(argv[2], std::ios::binary);
         const FingerPrint fingerprint_orig;
         FingerPrint fingerprint_loaded;
-        restriction_ifstream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+        restriction_ifstream.read(reinterpret_cast<char *>(&fingerprint_loaded),
+                                  sizeof(FingerPrint));
 
         // check fingerprint and warn if necessary
         if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
@@ -111,13 +112,13 @@ int main(int argc, char *argv[])
             throw osrm::exception("Could not access <osrm-restrictions> files");
         }
         uint32_t usable_restrictions = 0;
-        restriction_ifstream.read((char *)&usable_restrictions, sizeof(uint32_t));
+        restriction_ifstream.read(reinterpret_cast<char *>(&usable_restrictions), sizeof(uint32_t));
         restriction_list.resize(usable_restrictions);
 
         // load restrictions
         if (usable_restrictions > 0)
         {
-            restriction_ifstream.read((char *)&(restriction_list[0]),
+            restriction_ifstream.read(reinterpret_cast<char *>(&restriction_list[0]),
                                       usable_restrictions * sizeof(TurnRestriction));
         }
         restriction_ifstream.close();
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
 
         // Building an node-based graph
         std::vector<TarjanEdge> graph_edge_list;
-        for (const NodeBasedEdge &input_edge : edge_list)
+        for (const auto &input_edge : edge_list)
         {
             if (input_edge.source == input_edge.target)
             {
@@ -157,14 +158,12 @@ int main(int argc, char *argv[])
             if (input_edge.forward)
             {
                 graph_edge_list.emplace_back(input_edge.source, input_edge.target,
-                                             (std::max)((int)input_edge.weight, 1),
-                                             input_edge.name_id);
+                                             (std::max)(input_edge.weight, 1), input_edge.name_id);
             }
             if (input_edge.backward)
             {
                 graph_edge_list.emplace_back(input_edge.target, input_edge.source,
-                                             (std::max)((int)input_edge.weight, 1),
-                                             input_edge.name_id);
+                                             (std::max)(input_edge.weight, 1), input_edge.name_id);
             }
         }
         edge_list.clear();
@@ -226,7 +225,7 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP) / 1000.
                                << "s";
 
-        uint64_t total_network_distance = 0;
+        uint64_t total_network_length = 0;
         p.reinit(graph->GetNumberOfNodes());
         TIMER_START(SCC_OUTPUT);
         for (const NodeID source : osrm::irange(0u, graph->GetNumberOfNodes()))
@@ -238,7 +237,7 @@ int main(int argc, char *argv[])
 
                 if (source < target || graph->EndEdges(target) == graph->FindEdge(target, source))
                 {
-                    total_network_distance +=
+                    total_network_length +=
                         100 * coordinate_calculation::euclidean_distance(
                                   coordinate_list[source].lat, coordinate_list[source].lon,
                                   coordinate_list[target].lat, coordinate_list[target].lon);
@@ -278,7 +277,8 @@ int main(int argc, char *argv[])
                                << "s";
 
         SimpleLogger().Write() << "total network distance: "
-                               << (uint64_t)total_network_distance / 100 / 1000. << " km";
+                               << static_cast<uint64_t>(total_network_length / 100 / 1000.)
+                               << " km";
 
         SimpleLogger().Write() << "finished component analysis";
     }
