@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
         DeleteFileIfExists("component.shx");
         DeleteFileIfExists("component.shp");
 
-        Percent p(graph->GetNumberOfNodes());
+        Percent percentage(graph->GetNumberOfNodes());
 
         OGRRegisterAll();
 
@@ -226,11 +226,11 @@ int main(int argc, char *argv[])
                                << "s";
 
         uint64_t total_network_length = 0;
-        p.reinit(graph->GetNumberOfNodes());
+        percentage.reinit(graph->GetNumberOfNodes());
         TIMER_START(SCC_OUTPUT);
         for (const NodeID source : osrm::irange(0u, graph->GetNumberOfNodes()))
         {
-            p.printIncrement();
+            percentage.printIncrement();
             for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
             {
                 const TarjanGraph::NodeIterator target = graph->GetTarget(current_edge);
