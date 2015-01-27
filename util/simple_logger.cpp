@@ -127,7 +127,8 @@ SimpleLogger::~SimpleLogger()
                       << std::endl;
 #endif
             break;
-        default: // logINFO:
+        case logINFO:
+        default:
             std::cout << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
             break;
         }
