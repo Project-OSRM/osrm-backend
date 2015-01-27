@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_H
-#define OSRM_H
+#ifndef OSRM_HPP
+#define OSRM_HPP
 
 #include <osrm/libosrm_config.hpp>
 
@@ -51,4 +51,4 @@ class OSRM
     int RunQuery(RouteParameters &route_parameters, JSON::Object &json_result);
 };
 
-#endif // OSRM_H
+#endif // OSRM_HPP

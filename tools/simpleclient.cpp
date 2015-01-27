@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Library/OSRM.h"
+#include "../library/osrm.hpp"
 #include "../Util/git_sha.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/ProgramOptions.h"

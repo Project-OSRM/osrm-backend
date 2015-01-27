@@ -25,11 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_IMPL_H
-#define OSRM_IMPL_H
+#ifndef OSRM_IMPL_HPP
+#define OSRM_IMPL_HPP
 
 class BasePlugin;
-namespace http { class Reply; }
+namespace http
+{
+class Reply;
+}
 struct RouteParameters;
 
 #include "../data_structures/query_edge.hpp"
@@ -69,4 +72,4 @@ class OSRM_impl
     void increase_concurrent_query_count();
 };
 
-#endif // OSRM_IMPL_H
+#endif // OSRM_IMPL_HPP

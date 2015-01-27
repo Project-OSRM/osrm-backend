@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "http/reply.hpp"
 #include "http/request.hpp"
 
-#include "../Library/OSRM.h"
+#include "../library/osrm.hpp"
 #include "../Util/json_renderer.hpp"
 #include "../Util/simple_logger.hpp"
 #include "../Util/string_util.hpp"

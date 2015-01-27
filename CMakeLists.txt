@@ -76,7 +76,7 @@ list(REMOVE_ITEM DatastructureGlob data_structures/Coordinate.cpp)
 file(GLOB CoordinateGlob data_structures/coordinate*.cpp)
 file(GLOB AlgorithmGlob algorithms/*.cpp)
 file(GLOB HttpGlob server/http/*.cpp)
-file(GLOB LibOSRMGlob Library/*.cpp)
+file(GLOB LibOSRMGlob library/*.cpp)
 file(GLOB DataStructureTestsGlob unit_tests/data_structures/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB AlgorithmTestsGlob unit_tests/algorithms/*.cpp)
 
@@ -325,7 +325,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   install(TARGETS osrm-springclean DESTINATION bin)
 endif()
 
-file(GLOB InstallGlob include/osrm/*.hpp Library/OSRM.h)
+file(GLOB InstallGlob include/osrm/*.hpp library/osrm.hpp)
 file(GLOB VariantGlob third_party/variant/*.hpp)
 
 # Add RPATH info to executables so that when they are run after being installed
