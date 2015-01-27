@@ -83,8 +83,8 @@ class Connection : public std::enable_shared_from_this<Connection>
     boost::asio::ip::tcp::socket TCP_socket;
     RequestHandler &request_handler;
     boost::array<char, 8192> incoming_data_buffer;
-    request request;
-    reply reply;
+    request current_request;
+    reply current_reply;
 };
 
 } // namespace http
