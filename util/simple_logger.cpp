@@ -78,34 +78,26 @@ std::mutex &SimpleLogger::get_mutex()
     return mtx;
 }
 
-std::ostringstream &SimpleLogger::Write(LogLevel lvl)
+std::ostringstream &SimpleLogger::Write(LogLevel lvl) noexcept
 {
     std::lock_guard<std::mutex> lock(get_mutex());
-    try
+    level = lvl;
+    os << "[";
+    switch (level)
     {
-        level = lvl;
-        os << "[";
-        switch (level)
-        {
-        case logWARNING:
-            os << "warn";
-            break;
-        case logDEBUG:
+    case logWARNING:
+        os << "warn";
+        break;
+    case logDEBUG:
 #ifndef NDEBUG
-            os << "debug";
+        os << "debug";
 #endif
-            break;
-        default: // logINFO:
-            os << "info";
-            break;
-        }
-        os << "] ";
+        break;
+    default: // logINFO:
+        os << "info";
+        break;
     }
-    catch (const std::exception &e)
-    {
-        // encapsulate in osrm::exception
-        throw osrm::exception(std::string(e.what()) + ", getting ostringstream");
-    }
+    os << "] ";
     return os;
 }
 

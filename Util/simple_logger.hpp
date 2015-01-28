@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -64,7 +64,7 @@ class SimpleLogger
 
     virtual ~SimpleLogger();
     std::mutex &get_mutex();
-    std::ostringstream &Write(LogLevel l = logINFO);
+    std::ostringstream &Write(LogLevel l = logINFO) noexcept;
 
   private:
     std::ostringstream os;
