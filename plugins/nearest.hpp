@@ -47,9 +47,10 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
   public:
     explicit NearestPlugin(DataFacadeT *facade) : facade(facade), descriptor_string("nearest") {}
 
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
+    int HandleRequest(const RouteParameters &route_parameters,
+                      JSON::Object &json_result) override final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() ||

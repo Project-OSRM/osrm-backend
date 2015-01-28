@@ -42,9 +42,10 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
 {
   public:
     explicit LocatePlugin(DataFacadeT *facade) : descriptor_string("locate"), facade(facade) {}
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
+    int HandleRequest(const RouteParameters &route_parameters,
+                      JSON::Object &json_result) override final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() ||

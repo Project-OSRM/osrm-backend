@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <memory>
 
-template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDataT>
+template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<EdgeDataT>
 {
 
   private:
@@ -282,54 +282,61 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     }
 
     // search graph access
-    unsigned GetNumberOfNodes() const final { return m_query_graph->GetNumberOfNodes(); }
+    unsigned GetNumberOfNodes() const override final { return m_query_graph->GetNumberOfNodes(); }
 
-    unsigned GetNumberOfEdges() const final { return m_query_graph->GetNumberOfEdges(); }
+    unsigned GetNumberOfEdges() const override final { return m_query_graph->GetNumberOfEdges(); }
 
-    unsigned GetOutDegree(const NodeID n) const final { return m_query_graph->GetOutDegree(n); }
+    unsigned GetOutDegree(const NodeID n) const override final
+    {
+        return m_query_graph->GetOutDegree(n);
+    }
 
-    NodeID GetTarget(const EdgeID e) const final { return m_query_graph->GetTarget(e); }
+    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
 
-    EdgeDataT &GetEdgeData(const EdgeID e) const final { return m_query_graph->GetEdgeData(e); }
+    EdgeDataT &GetEdgeData(const EdgeID e) const override final
+    {
+        return m_query_graph->GetEdgeData(e);
+    }
 
-    EdgeID BeginEdges(const NodeID n) const final { return m_query_graph->BeginEdges(n); }
+    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph->BeginEdges(n); }
 
-    EdgeID EndEdges(const NodeID n) const final { return m_query_graph->EndEdges(n); }
+    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph->EndEdges(n); }
 
-    EdgeRange GetAdjacentEdgeRange(const NodeID node) const final
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
         return m_query_graph->GetAdjacentEdgeRange(node);
     };
 
     // searches for a specific edge
-    EdgeID FindEdge(const NodeID from, const NodeID to) const final
+    EdgeID FindEdge(const NodeID from, const NodeID to) const override final
     {
         return m_query_graph->FindEdge(from, to);
     }
 
-    EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const final
+    EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const override final
     {
         return m_query_graph->FindEdgeInEitherDirection(from, to);
     }
 
-    EdgeID FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const final
+    EdgeID
+    FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const override final
     {
         return m_query_graph->FindEdgeIndicateIfReverse(from, to, result);
     }
 
     // node and edge information access
-    FixedPointCoordinate GetCoordinateOfNode(const NodeID id) const final
+    FixedPointCoordinate GetCoordinateOfNode(const NodeID id) const override final
     {
         return m_coordinate_list->at(id);
     };
 
-    virtual bool EdgeIsCompressed(const unsigned id) const final
+    virtual bool EdgeIsCompressed(const unsigned id) const override final
     {
         return m_edge_is_compressed.at(id);
     }
 
     virtual void GetUncompressedGeometry(const unsigned id,
-                                         std::vector<unsigned> &result_nodes) const final
+                                         std::vector<unsigned> &result_nodes) const override final
     {
         const unsigned begin = m_geometry_indices.at(id);
         const unsigned end = m_geometry_indices.at(id + 1);
@@ -339,12 +346,12 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
                             m_geometry_list.begin() + end);
     }
 
-    virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const final
+    virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
     {
         return m_via_node_list.at(id);
     }
 
-    TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const final
+    TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }
@@ -353,7 +360,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             FixedPointCoordinate &result,
-                                            const unsigned zoom_level = 18) final
+                                            const unsigned zoom_level = 18) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -365,7 +372,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     }
 
     bool IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                                 PhantomNode &resulting_phantom_node) final
+                                                 PhantomNode &resulting_phantom_node) override final
     {
         std::vector<PhantomNode> resulting_phantom_node_vector;
         auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
@@ -381,7 +388,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
-                                            const unsigned number_of_results) final
+                                            const unsigned number_of_results) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -392,14 +399,14 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             input_coordinate, resulting_phantom_node_vector, number_of_results);
     }
 
-    unsigned GetCheckSum() const final { return m_check_sum; }
+    unsigned GetCheckSum() const override final { return m_check_sum; }
 
-    unsigned GetNameIndexFromEdgeID(const unsigned id) const final
+    unsigned GetNameIndexFromEdgeID(const unsigned id) const override final
     {
         return m_name_ID_list.at(id);
     };
 
-    void GetName(const unsigned name_id, std::string &result) const final
+    void GetName(const unsigned name_id, std::string &result) const override final
     {
         if (UINT_MAX == name_id)
         {
@@ -417,7 +424,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         }
     }
 
-    std::string GetTimestamp() const final { return m_timestamp; }
+    std::string GetTimestamp() const override final { return m_timestamp; }
 };
 
 #endif // SHARED_DATAFACADE_HPP

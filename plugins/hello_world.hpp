@@ -45,9 +45,10 @@ class HelloWorldPlugin final : public BasePlugin
   public:
     HelloWorldPlugin() : descriptor_string("hello") {}
     virtual ~HelloWorldPlugin() {}
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &routeParameters, JSON::Object &json_result) final
+    int HandleRequest(const RouteParameters &routeParameters,
+                      JSON::Object &json_result) override final
     {
         std::string temp_string;
         json_result.values["title"] = "Hello World";
