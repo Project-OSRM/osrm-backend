@@ -53,11 +53,6 @@ Thumbs.db
 stxxl.log
 stxxl.errlog
 
-# External Libs #
-#################
-/lib/
-/win/lib
-
 # Compiled Binary Files #
 ####################################
 /osrm-extract
