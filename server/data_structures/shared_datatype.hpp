@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace
 {
 // Added at the start and end of each block as sanity check
-constexpr static const char CANARY[] = "OSRM";
+static const char CANARY[] = "OSRM";
 }
 
 struct SharedDataLayout
