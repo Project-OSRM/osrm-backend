@@ -29,10 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OSRM_IMPL_HPP
 
 class BasePlugin;
-namespace http
-{
-class Reply;
-}
 struct RouteParameters;
 
 #include "../data_structures/query_edge.hpp"
