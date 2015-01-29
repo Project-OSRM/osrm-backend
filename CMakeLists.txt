@@ -176,7 +176,7 @@ endif()
 
 # Activate C++11
 if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  ADD_DEFINITIONS(-std=c++11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 endif()
 
 # Configuring other platform dependencies
@@ -264,6 +264,9 @@ include_directories(${STXXL_INCLUDE_DIR})
 target_link_libraries(OSRM ${STXXL_LIBRARY})
 target_link_libraries(osrm-extract ${STXXL_LIBRARY})
 target_link_libraries(osrm-prepare ${STXXL_LIBRARY})
+
+# check if we need to link against libgomp
+include(check_stxxl)
 
 if(MINGW)
   # STXXL needs OpenMP library
