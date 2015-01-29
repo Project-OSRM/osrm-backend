@@ -905,8 +905,8 @@ class StaticRTree
                     projected_coordinate, foot_point_coordinate_on_segment, current_ratio);
 
                 if (number_of_elements_from_big_cc > 0
-                && (number_of_elements_from_tiny_cc + number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes
-                || current_perpendicular_distance >= max_distance))
+                && result_phantom_node_vector.size() >= min_number_of_phantom_nodes
+                && current_perpendicular_distance >= max_distance)
                 {
                     traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
                     continue;
