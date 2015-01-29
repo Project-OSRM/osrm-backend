@@ -272,9 +272,10 @@ target_link_libraries(OSRM ${STXXL_LIBRARY})
 target_link_libraries(osrm-extract ${STXXL_LIBRARY})
 target_link_libraries(osrm-prepare ${STXXL_LIBRARY})
 
-find_package(Gomp REQUIRED)
-if(LIBGOMP_FOUND)
-  target_link_libraries(osrm-extract gomp)
+find_package(OpenMP)
+if(OPENMP_FOUND)
+ message(STATUS "OpenMP support found. Linking just in case for stxxl")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 find_package(OSMPBF REQUIRED)
