@@ -48,7 +48,7 @@ SECTION("Remap") {
     REQUIRE(25ul == new_data[9]);
 }
 #else
-# pragma message "not running 'Remap' test case on this machine"
+# pragma message("not running 'Remap' test case on this machine")
 #endif
 
 SECTION("FileSize") {

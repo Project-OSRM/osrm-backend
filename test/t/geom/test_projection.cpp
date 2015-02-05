@@ -48,26 +48,26 @@ SECTION("project_location_3857") {
     {
         const osmium::Location loc(0.0, 0.0);
         const osmium::geom::Coordinates c {0.0, 0.0};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
     {
         const osmium::Location loc(180.0, 0.0);
         const osmium::geom::Coordinates c {20037508.34, 0.0};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
     {
         const osmium::Location loc(180.0, 0.0);
         const osmium::geom::Coordinates c {20037508.34, 0.0};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
     {
         const osmium::Location loc(0.0, 85.0511288);
         const osmium::geom::Coordinates c {0.0, 20037508.34};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
 }
 
@@ -77,26 +77,26 @@ SECTION("project_location_mercator") {
     {
         const osmium::Location loc(0.0, 0.0);
         const osmium::geom::Coordinates c {0.0, 0.0};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
     {
         const osmium::Location loc(180.0, 0.0);
         const osmium::geom::Coordinates c {20037508.34, 0.0};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
     {
         const osmium::Location loc(180.0, 0.0);
         const osmium::geom::Coordinates c {20037508.34, 0.0};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
     {
         const osmium::Location loc(0.0, 85.0511288);
         const osmium::geom::Coordinates c {0.0, 20037508.34};
-        REQUIRE(std::abs(projection(loc).x - c.x) < 0.1);
-        REQUIRE(std::abs(projection(loc).y - c.y) < 0.1);
+        REQUIRE(projection(loc).x == Approx(c.x).epsilon(0.1));
+        REQUIRE(projection(loc).y == Approx(c.y).epsilon(0.1));
     }
 }
 
@@ -108,23 +108,23 @@ SECTION("compare_mercators") {
 
     {
         const osmium::Location loc(4.2, 27.3);
-        REQUIRE(std::abs(projection_merc(loc).x - projection_3857(loc).x) < 0.1);
-        REQUIRE(std::abs(projection_merc(loc).y - projection_3857(loc).y) < 0.1);
+        REQUIRE(projection_merc(loc).x == Approx(projection_3857(loc).x).epsilon(0.1));
+        REQUIRE(projection_merc(loc).y == Approx(projection_3857(loc).y).epsilon(0.1));
     }
     {
         const osmium::Location loc(160.789, -42.42);
-        REQUIRE(std::abs(projection_merc(loc).x - projection_3857(loc).x) < 0.1);
-        REQUIRE(std::abs(projection_merc(loc).y - projection_3857(loc).y) < 0.1);
+        REQUIRE(projection_merc(loc).x == Approx(projection_3857(loc).x).epsilon(0.1));
+        REQUIRE(projection_merc(loc).y == Approx(projection_3857(loc).y).epsilon(0.1));
     }
     {
         const osmium::Location loc(-0.001, 0.001);
-        REQUIRE(std::abs(projection_merc(loc).x - projection_3857(loc).x) < 0.1);
-        REQUIRE(std::abs(projection_merc(loc).y - projection_3857(loc).y) < 0.1);
+        REQUIRE(projection_merc(loc).x == Approx(projection_3857(loc).x).epsilon(0.1));
+        REQUIRE(projection_merc(loc).y == Approx(projection_3857(loc).y).epsilon(0.1));
     }
     {
         const osmium::Location loc(-85.2, -85.2);
-        REQUIRE(std::abs(projection_merc(loc).x - projection_3857(loc).x) < 0.1);
-        REQUIRE(std::abs(projection_merc(loc).y - projection_3857(loc).y) < 0.1);
+        REQUIRE(projection_merc(loc).x == Approx(projection_3857(loc).x).epsilon(0.1));
+        REQUIRE(projection_merc(loc).y == Approx(projection_3857(loc).y).epsilon(0.1));
     }
 }
 

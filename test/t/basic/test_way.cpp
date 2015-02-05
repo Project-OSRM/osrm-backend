@@ -22,6 +22,9 @@ SECTION("way_builder") {
         .set_uid(21)
         .set_timestamp(123);
 
+    REQUIRE(osmium::item_type::way == way.type());
+    REQUIRE(way.type_is_in(osmium::osm_entity_bits::way));
+    REQUIRE(way.type_is_in(osmium::osm_entity_bits::node | osmium::osm_entity_bits::way));
     REQUIRE(17 == way.id());
     REQUIRE(3 == way.version());
     REQUIRE(true == way.visible());

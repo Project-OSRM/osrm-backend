@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -412,28 +412,34 @@ namespace osmium {
 
             class DataBlobParser {
 
-                std::string m_input_buffer;
+                std::shared_ptr<std::string> m_input_buffer;
                 osmium::osm_entity_bits::type m_read_types;
 
             public:
 
                 DataBlobParser(std::string&& input_buffer, osmium::osm_entity_bits::type read_types) :
-                    m_input_buffer(std::move(input_buffer)),
+                    m_input_buffer(std::make_shared<std::string>(std::move(input_buffer))),
                     m_read_types(read_types) {
                     if (input_buffer.size() > OSMPBF::max_uncompressed_blob_size) {
                         throw osmium::pbf_error(std::string("invalid blob size: " + std::to_string(input_buffer.size())));
                     }
                 }
-
+/*
                 DataBlobParser(const DataBlobParser& other) :
                     m_input_buffer(std::move(other.m_input_buffer)),
                     m_read_types(other.m_read_types) {
-                }
+                }*/
 
-                DataBlobParser& operator=(const DataBlobParser&) = delete;
+                DataBlobParser(const DataBlobParser&) = default;
+                DataBlobParser& operator=(const DataBlobParser&) = default;
+
+                DataBlobParser(DataBlobParser&&) = default;
+                DataBlobParser& operator=(DataBlobParser&&) = default;
+
+                ~DataBlobParser() = default;
 
                 osmium::memory::Buffer operator()() {
-                    const std::unique_ptr<const std::string> data = unpack_blob(m_input_buffer);
+                    const std::unique_ptr<const std::string> data = unpack_blob(*m_input_buffer);
                     PBFPrimitiveBlockParser parser(*data, m_read_types);
                     return parser();
                 }

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -699,7 +699,7 @@ namespace osmium {
                     return buffer;
                 }
 
-                void close() {
+                void close() override {
                     m_done = true;
                     osmium::thread::wait_until_done(m_parser_future);
                 }

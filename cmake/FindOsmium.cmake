@@ -9,16 +9,15 @@
 #
 #  Usage:
 #
-#    Copy this file (and OsmiumOptions.cmake) somewhere into your project
-#    directory, where cmake can find it. Usually this will be a directory
-#    called "cmake" which you can add to your module search path with the
-#    following line in your CMakeLists.txt:
+#    Copy this file somewhere into your project directory, where cmake can
+#    find it. Usually this will be a directory called "cmake" which you can
+#    add to the CMake module search path with the following line in your
+#    CMakeLists.txt:
 #
 #      list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 #
 #    Then add the following in your CMakeLists.txt:
 #
-#      include(OsmiumOptions)
 #      find_package(Osmium REQUIRED COMPONENTS <XXX>)
 #      include_directories(${OSMIUM_INCLUDE_DIRS})
 #
@@ -75,6 +74,8 @@ find_package_handle_standard_args(OSMIUM REQUIRED_VARS OSMIUM_INCLUDE_DIR)
 # Copy the results to the output variables.
 if(OSMIUM_FOUND)
     set(OSMIUM_INCLUDE_DIRS ${OSMIUM_INCLUDE_DIR})
+else()
+    set(OSMIUM_INCLUDE_DIRS "")
 endif()
 
 if(Osmium_FIND_REQUIRED AND NOT OSMIUM_FOUND)
@@ -234,10 +235,22 @@ endif()
 #----------------------------------------------------------------------
 
 list(REMOVE_DUPLICATES OSMIUM_INCLUDE_DIRS)
-list(REMOVE_DUPLICATES OSMIUM_XML_LIBRARIES)
-list(REMOVE_DUPLICATES OSMIUM_PBF_LIBRARIES)
-list(REMOVE_DUPLICATES OSMIUM_IO_LIBRARIES)
-list(REMOVE_DUPLICATES OSMIUM_LIBRARIES)
+
+if(OSMIUM_XML_LIBRARIES)
+    list(REMOVE_DUPLICATES OSMIUM_XML_LIBRARIES)
+endif()
+
+if(OSMIUM_PBF_LIBRARIES)
+    list(REMOVE_DUPLICATES OSMIUM_PBF_LIBRARIES)
+endif()
+
+if(OSMIUM_IO_LIBRARIES)
+    list(REMOVE_DUPLICATES OSMIUM_IO_LIBRARIES)
+endif()
+
+if(OSMIUM_LIBRARIES)
+    list(REMOVE_DUPLICATES OSMIUM_LIBRARIES)
+endif()
 
 #----------------------------------------------------------------------
 #
@@ -256,7 +269,14 @@ endif()
 add_definitions(-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64)
 
 if(MSVC)
-    add_definitions(-wd4996 -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-wd4996)
+    add_definitions(-wd4068)
+
+    # Disable warning C4715: "not all control paths return a value" because
+    # it generates too many false positives.
+    add_definitions(-wd4715)
+
+    add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 if(APPLE)
@@ -271,7 +291,11 @@ endif()
 
 # This is a set of recommended warning options that can be added when compiling
 # libosmium code.
-set(OSMIUM_WARNING_OPTIONS "-Wall -Wextra -pedantic -Wredundant-decls -Wdisabled-optimization -Wctor-dtor-privacy -Wnon-virtual-dtor -Woverloaded-virtual -Wsign-promo -Wold-style-cast -Wno-return-type" CACHE STRING "Recommended warning options for libosmium")
+if(MSVC)
+    set(OSMIUM_WARNING_OPTIONS "/W3 /wd4514" CACHE STRING "Recommended warning options for libosmium")
+else()
+    set(OSMIUM_WARNING_OPTIONS "-Wall -Wextra -pedantic -Wredundant-decls -Wdisabled-optimization -Wctor-dtor-privacy -Wnon-virtual-dtor -Woverloaded-virtual -Wsign-promo -Wold-style-cast -Wno-return-type" CACHE STRING "Recommended warning options for libosmium")
+endif()
 
 set(OSMIUM_DRACONIC_CLANG_OPTIONS "-Wdocumentation -Wunused-exception-parameter -Wmissing-declarations -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-macros -Wno-exit-time-destructors -Wno-global-constructors -Wno-padded -Wno-switch-enum -Wno-missing-prototypes -Wno-weak-vtables -Wno-cast-align -Wno-float-equal")
 

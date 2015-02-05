@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -32,6 +32,8 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
+
+#include <osmium/osm/item_type.hpp>
 
 namespace osmium {
 
@@ -90,6 +92,10 @@ namespace osmium {
         inline type operator&=(type& lhs, const type rhs) noexcept {
             lhs = lhs & rhs;
             return lhs;
+        }
+
+        inline type from_item_type(osmium::item_type item_type) noexcept {
+            return static_cast<osmium::osm_entity_bits::type>(0x1 << (static_cast<uint16_t>(item_type) - 1));
         }
 
     } // namespace osm_entity_bits

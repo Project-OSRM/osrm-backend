@@ -11,11 +11,11 @@ clean:
 distclean:
 	rm -fr build
 
-deb:
-	debuild -I -us -uc
-
-deb-clean:
-	debuild clean
+#deb:
+#	debuild -I -us -uc
+#
+#deb-clean:
+#	debuild clean
 
 indent:
 	astyle --style=java --indent-namespaces --indent-switches --pad-header --lineend=linux --suffix=none --recursive include/\*.hpp examples/\*.cpp test/\*.cpp

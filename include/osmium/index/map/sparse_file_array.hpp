@@ -1,11 +1,11 @@
-#ifndef OSMIUM_INDEX_MAP_STL_VECTOR_HPP
-#define OSMIUM_INDEX_MAP_STL_VECTOR_HPP
+#ifndef OSMIUM_INDEX_MAP_SPARSE_FILE_ARRAY_HPP
+#define OSMIUM_INDEX_MAP_SPARSE_FILE_ARRAY_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,9 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <string>
 #include <vector>
 
-#include <osmium/index/map/vector.hpp>
+#include <osmium/index/detail/mmap_vector_file.hpp>
+#include <osmium/index/detail/vector_map.hpp>
+#include <osmium/index/detail/create_map_with_fd.hpp>
+
+#define OSMIUM_HAS_INDEX_MAP_SPARSE_FILE_ARRAY
 
 namespace osmium {
 
@@ -44,13 +49,14 @@ namespace osmium {
         namespace map {
 
             template <typename TId, typename TValue>
-            using DenseMapMem = VectorBasedDenseMap<std::vector<TValue>, TId, TValue>;
-
-            template <typename T>
-            using StdVectorWrap = std::vector<T>;
+            using SparseFileArray = VectorBasedSparseMap<TId, TValue, osmium::detail::mmap_vector_file>;
 
             template <typename TId, typename TValue>
-            using SparseMapMem = VectorBasedSparseMap<TId, TValue, StdVectorWrap>;
+            struct create_map<TId, TValue, SparseFileArray> {
+                SparseFileArray<TId, TValue>* operator()(const std::vector<std::string>& config) {
+                    return osmium::index::detail::create_map_with_fd<SparseFileArray<TId, TValue>>(config);
+                }
+            };
 
         } // namespace map
 
@@ -58,4 +64,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MAP_STL_VECTOR_HPP
+#endif // OSMIUM_INDEX_MAP_SPARSE_FILE_ARRAY_HPP

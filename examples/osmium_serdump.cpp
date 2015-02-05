@@ -24,27 +24,26 @@
 #include <osmium/handler/disk_store.hpp>
 #include <osmium/handler/object_relations.hpp>
 
-#include <osmium/index/map/stl_vector.hpp>
-#include <osmium/index/multimap/stl_multimap.hpp>
-#include <osmium/index/multimap/stl_vector.hpp>
+#include <osmium/index/map/sparse_mem_array.hpp>
+#include <osmium/index/multimap/sparse_mem_multimap.hpp>
+#include <osmium/index/multimap/sparse_mem_array.hpp>
 #include <osmium/index/multimap/hybrid.hpp>
 
 // ==============================================================================
 // Choose the following depending on the size of the input OSM files:
 // ==============================================================================
 // for smaller OSM files (extracts)
-typedef osmium::index::map::SparseMapMem<osmium::unsigned_object_id_type, size_t> offset_index_type;
+typedef osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, size_t> offset_index_type;
 //typedef osmium::index::map::SparseMapMmap<osmium::unsigned_object_id_type, size_t> offset_index_type;
 //typedef osmium::index::map::SparseMapFile<osmium::unsigned_object_id_type, size_t> offset_index_type;
 
-typedef osmium::index::multimap::SparseMultimapMem<osmium::unsigned_object_id_type, osmium::unsigned_object_id_type> map_type;
-//typedef osmium::index::multimap::StlMultimap<osmium::unsigned_object_id_type, osmium::unsigned_object_id_type> map_type;
+typedef osmium::index::multimap::SparseMemArray<osmium::unsigned_object_id_type, osmium::unsigned_object_id_type> map_type;
+//typedef osmium::index::multimap::SparseMemMultimap<osmium::unsigned_object_id_type, osmium::unsigned_object_id_type> map_type;
 //typedef osmium::index::multimap::Hybrid<osmium::unsigned_object_id_type, osmium::unsigned_object_id_type> map_type;
 
 // ==============================================================================
 // for very large OSM files (planet)
-//typedef osmium::index::map::DenseMapMmap<osmium::unsigned_object_id_type, size_t> offset_index_type;
-//typedef osmium::index::map::DenseMapMem map_type;
+//typedef osmium::index::map::DenseMmapArray<osmium::unsigned_object_id_type, size_t> offset_index_type;
 // ==============================================================================
 
 void print_help() {

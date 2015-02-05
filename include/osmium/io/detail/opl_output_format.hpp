@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -97,9 +97,9 @@ namespace osmium {
 
                 static constexpr size_t tmp_buffer_size = 100;
 
-                osmium::memory::Buffer m_input_buffer;
+                std::shared_ptr<osmium::memory::Buffer> m_input_buffer;
 
-                std::string m_out;
+                std::shared_ptr<std::string> m_out;
 
                 char m_tmp_buffer[tmp_buffer_size+1];
 
@@ -114,13 +114,13 @@ namespace osmium {
                     _snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
 #endif
                     assert(len > 0 && static_cast<size_t>(len) < tmp_buffer_size);
-                    m_out += m_tmp_buffer;
+                    *m_out += m_tmp_buffer;
                 }
 
                 void append_encoded_string(const std::string& data) {
                     boost::u8_to_u32_iterator<std::string::const_iterator> it(data.cbegin(), data.cbegin(), data.cend());
                     boost::u8_to_u32_iterator<std::string::const_iterator> end(data.cend(), data.cend(), data.cend());
-                    boost::utf8_output_iterator<std::back_insert_iterator<std::string>> oit(std::back_inserter(m_out));
+                    boost::utf8_output_iterator<std::back_insert_iterator<std::string>> oit(std::back_inserter(*m_out));
 
                     for (; it != end; ++it) {
                         uint32_t c = *it;
@@ -140,7 +140,7 @@ namespace osmium {
                             (0x00ae <= c && c <= 0x05ff)) {
                             *oit = c;
                         } else {
-                            m_out += '%';
+                            *m_out += '%';
                             output_formatted("%04x", c);
                         }
                     }
@@ -148,21 +148,21 @@ namespace osmium {
 
                 void write_meta(const osmium::OSMObject& object) {
                     output_formatted("%" PRId64 " v%d d", object.id(), object.version());
-                    m_out += (object.visible() ? 'V' : 'D');
+                    *m_out += (object.visible() ? 'V' : 'D');
                     output_formatted(" c%d t", object.changeset());
-                    m_out += object.timestamp().to_iso();
+                    *m_out += object.timestamp().to_iso();
                     output_formatted(" i%d u", object.uid());
                     append_encoded_string(object.user());
-                    m_out += " T";
+                    *m_out += " T";
                     bool first = true;
                     for (const auto& tag : object.tags()) {
                         if (first) {
                             first = false;
                         } else {
-                            m_out += ',';
+                            *m_out += ',';
                         }
                         append_encoded_string(tag.key());
-                        m_out += '=';
+                        *m_out += '=';
                         append_encoded_string(tag.value());
                     }
                 }
@@ -171,109 +171,103 @@ namespace osmium {
                     if (location) {
                         output_formatted(" %c%.7f %c%.7f", x, location.lon_without_check(), y, location.lat_without_check());
                     } else {
-                        m_out += ' ';
-                        m_out += x;
-                        m_out += ' ';
-                        m_out += y;
+                        *m_out += ' ';
+                        *m_out += x;
+                        *m_out += ' ';
+                        *m_out += y;
                     }
                 }
 
             public:
 
                 explicit OPLOutputBlock(osmium::memory::Buffer&& buffer) :
-                    m_input_buffer(std::move(buffer)),
-                    m_out(),
+                    m_input_buffer(std::make_shared<osmium::memory::Buffer>(std::move(buffer))),
+                    m_out(std::make_shared<std::string>()),
                     m_tmp_buffer() {
                 }
 
-                OPLOutputBlock(const OPLOutputBlock&) = delete;
-                OPLOutputBlock& operator=(const OPLOutputBlock&) = delete;
+                OPLOutputBlock(const OPLOutputBlock&) = default;
+                OPLOutputBlock& operator=(const OPLOutputBlock&) = default;
 
-                OPLOutputBlock(OPLOutputBlock&& other) :
-                    m_input_buffer(std::move(other.m_input_buffer)),
-                    m_out(),
-                    m_tmp_buffer() {
-                }
+                OPLOutputBlock(OPLOutputBlock&&) = default;
+                OPLOutputBlock& operator=(OPLOutputBlock&&) = default;
 
-                OPLOutputBlock& operator=(OPLOutputBlock&& other) {
-                    m_input_buffer = std::move(other.m_input_buffer);
-                    return *this;
-                }
+                ~OPLOutputBlock() = default;
 
                 std::string operator()() {
-                    osmium::apply(m_input_buffer.cbegin(), m_input_buffer.cend(), *this);
+                    osmium::apply(m_input_buffer->cbegin(), m_input_buffer->cend(), *this);
 
                     std::string out;
-                    std::swap(out, m_out);
+                    std::swap(out, *m_out);
                     return out;
                 }
 
                 void node(const osmium::Node& node) {
-                    m_out += 'n';
+                    *m_out += 'n';
                     write_meta(node);
                     write_location(node.location(), 'x', 'y');
-                    m_out += '\n';
+                    *m_out += '\n';
                 }
 
                 void way(const osmium::Way& way) {
-                    m_out += 'w';
+                    *m_out += 'w';
                     write_meta(way);
 
-                    m_out += " N";
+                    *m_out += " N";
                     bool first = true;
                     for (const auto& node_ref : way.nodes()) {
                         if (first) {
                             first = false;
                         } else {
-                            m_out += ',';
+                            *m_out += ',';
                         }
                         output_formatted("n%" PRId64, node_ref.ref());
                     }
-                    m_out += '\n';
+                    *m_out += '\n';
                 }
 
                 void relation(const osmium::Relation& relation) {
-                    m_out += 'r';
+                    *m_out += 'r';
                     write_meta(relation);
 
-                    m_out += " M";
+                    *m_out += " M";
                     bool first = true;
                     for (const auto& member : relation.members()) {
                         if (first) {
                             first = false;
                         } else {
-                            m_out += ',';
+                            *m_out += ',';
                         }
-                        m_out += item_type_to_char(member.type());
+                        *m_out += item_type_to_char(member.type());
                         output_formatted("%" PRId64 "@", member.ref());
-                        m_out += member.role();
+                        *m_out += member.role();
                     }
-                    m_out += '\n';
+                    *m_out += '\n';
                 }
 
                 void changeset(const osmium::Changeset& changeset) {
                     output_formatted("c%d k%d s", changeset.id(), changeset.num_changes());
-                    m_out += changeset.created_at().to_iso();
-                    m_out += " e";
-                    m_out += changeset.closed_at().to_iso();
+                    *m_out += changeset.created_at().to_iso();
+                    *m_out += " e";
+                    *m_out += changeset.closed_at().to_iso();
                     output_formatted(" i%d u", changeset.uid());
                     append_encoded_string(changeset.user());
                     write_location(changeset.bounds().bottom_left(), 'x', 'y');
                     write_location(changeset.bounds().top_right(), 'X', 'Y');
-                    m_out += " T";
+                    *m_out += " T";
                     bool first = true;
                     for (const auto& tag : changeset.tags()) {
                         if (first) {
                             first = false;
                         } else {
-                            m_out += ',';
+                            *m_out += ',';
                         }
                         append_encoded_string(tag.key());
-                        m_out += '=';
+                        *m_out += '=';
                         append_encoded_string(tag.value());
                     }
 
-                    m_out += '\n';
+                    *m_out += '\n';
                 }
 
             }; // OPLOutputBlock

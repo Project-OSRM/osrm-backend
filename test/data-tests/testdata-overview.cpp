@@ -2,30 +2,16 @@
 
 #include <iostream>
 
-#pragma GCC diagnostic push
-#ifdef __clang__
-# pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
-#endif
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#pragma GCC diagnostic ignored "-Wshadow"
-# include <ogr_api.h>
-# include <ogrsf_frmts.h>
-#pragma GCC diagnostic pop
+#include <osmium/index/map/sparse_mem_array.hpp>
 
 #include <osmium/geom/ogr.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
-#include <osmium/index/map/dummy.hpp>
-#include <osmium/index/map/stl_vector.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/visitor.hpp>
 
-typedef osmium::index::map::Dummy<osmium::unsigned_object_id_type, osmium::Location> index_neg_type;
-typedef osmium::index::map::SparseMapMem<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
-typedef osmium::handler::NodeLocationsForWays<index_pos_type, index_neg_type> location_handler_type;
+typedef osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location> index_type;
+typedef osmium::handler::NodeLocationsForWays<index_type> location_handler_type;
 
 class TestOverviewHandler : public osmium::handler::Handler {
 
@@ -199,9 +185,8 @@ int main(int argc, char* argv[]) {
 
     osmium::io::Reader reader(input_filename);
 
-    index_pos_type index_pos;
-    index_neg_type index_neg;
-    location_handler_type location_handler(index_pos, index_neg);
+    index_type index;
+    location_handler_type location_handler(index);
     location_handler.ignore_errors();
 
     TestOverviewHandler handler(output_format, output_filename);

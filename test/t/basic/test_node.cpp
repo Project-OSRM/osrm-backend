@@ -21,6 +21,9 @@ SECTION("node_builder") {
         .set_uid(21)
         .set_timestamp(123);
 
+    REQUIRE(osmium::item_type::node == node.type());
+    REQUIRE(node.type_is_in(osmium::osm_entity_bits::node));
+    REQUIRE(node.type_is_in(osmium::osm_entity_bits::nwr));
     REQUIRE(17l == node.id());
     REQUIRE(17ul == node.positive_id());
     REQUIRE(3 == node.version());

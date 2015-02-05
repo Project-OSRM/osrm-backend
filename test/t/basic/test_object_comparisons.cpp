@@ -31,20 +31,20 @@ SECTION("order") {
     node1.set_version(1);
     node2.set_id(15);
     node2.set_version(2);
-    REQUIRE(true == node1 < node2);
-    REQUIRE(false == node1 > node2);
+    REQUIRE(true == (node1 < node2));
+    REQUIRE(false == (node1 > node2));
     node1.set_id(20);
     node1.set_version(1);
     node2.set_id(20);
     node2.set_version(2);
-    REQUIRE(true == node1 < node2);
-    REQUIRE(false == node1 > node2);
+    REQUIRE(true == (node1 < node2));
+    REQUIRE(false == (node1 > node2));
     node1.set_id(-10);
     node1.set_version(2);
     node2.set_id(-15);
     node2.set_version(1);
-    REQUIRE(true == node1 < node2);
-    REQUIRE(false == node1 > node2);
+    REQUIRE(true == (node1 < node2));
+    REQUIRE(false == (node1 > node2));
 }
 
 SECTION("order_types") {
@@ -122,11 +122,11 @@ SECTION("order_types") {
     const osmium::Way& way = static_cast<const osmium::Way&>(*(++it));
     const osmium::Relation& relation = static_cast<const osmium::Relation&>(*(++it));
 
-    REQUIRE(true == node1 < node2);
-    REQUIRE(true == node2 < way);
-    REQUIRE(false == node2 > way);
-    REQUIRE(true == way < relation);
-    REQUIRE(true == node1 < relation);
+    REQUIRE(true == (node1 < node2));
+    REQUIRE(true == (node2 < way));
+    REQUIRE(false == (node2 > way));
+    REQUIRE(true == (way < relation));
+    REQUIRE(true == (node1 < relation));
 
     REQUIRE(true == osmium::object_order_type_id_version()(node1, node2));
     REQUIRE(true == osmium::object_order_type_id_reverse_version()(node2, node1));

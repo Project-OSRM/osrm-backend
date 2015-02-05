@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -258,11 +258,20 @@ namespace osmium {
                     return osmium::memory::Buffer();
                 }
 
-                osmium::memory::Buffer buffer = m_input->read();
-                if (!buffer) {
-                    m_input_done = true;
+                // m_input->read() can return an invalid buffer to signal EOF,
+                // or a valid buffer with or without data. A valid buffer
+                // without data is not an error, it just means we have to get
+                // keep getting the next buffer until there is one with data.
+                while (true) {
+                    osmium::memory::Buffer buffer = m_input->read();
+                    if (!buffer) {
+                        m_input_done = true;
+                        return buffer;
+                    }
+                    if (buffer.committed() > 0) {
+                        return buffer;
+                    }
                 }
-                return buffer;
             }
 
             /**

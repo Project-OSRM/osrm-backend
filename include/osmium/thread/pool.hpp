@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -160,11 +160,11 @@ namespace osmium {
             }
 
             template <typename TFunction>
-            std::future<typename std::result_of<TFunction()>::type> submit(TFunction f) {
+            std::future<typename std::result_of<TFunction()>::type> submit(TFunction&& func) {
 
                 typedef typename std::result_of<TFunction()>::type result_type;
 
-                std::packaged_task<result_type()> task(std::move(f));
+                std::packaged_task<result_type()> task(std::forward<TFunction>(func));
                 std::future<result_type> future_result(task.get_future());
                 m_work_queue.push(std::move(task));
 
