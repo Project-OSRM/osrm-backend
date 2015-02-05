@@ -272,6 +272,7 @@ target_link_libraries(OSRM ${STXXL_LIBRARY})
 target_link_libraries(osrm-extract ${STXXL_LIBRARY})
 target_link_libraries(osrm-prepare ${STXXL_LIBRARY})
 
+set(OpenMP_FIND_QUIETLY ON)
 find_package(OpenMP)
 if(OPENMP_FOUND)
  message(STATUS "OpenMP support found. Linking just in case for stxxl")
