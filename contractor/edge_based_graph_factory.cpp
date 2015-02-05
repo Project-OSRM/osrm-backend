@@ -551,10 +551,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     Percent progress(m_node_based_graph->GetNumberOfNodes());
 
-    for (const auto u : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+    for (const auto node_u : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
-        progress.printStatus(u);
-        for (const EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
+        progress.printStatus(node_u);
+        for (const EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
             if (!m_node_based_graph->GetEdgeData(e1).forward)
             {
@@ -562,21 +562,21 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }
 
             ++node_based_edge_counter;
-            const NodeID v = m_node_based_graph->GetTarget(e1);
+            const NodeID node_v = m_node_based_graph->GetTarget(e1);
             const NodeID to_node_of_only_restriction =
-                m_restriction_map->CheckForEmanatingIsOnlyTurn(u, v);
-            const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
+                m_restriction_map->CheckForEmanatingIsOnlyTurn(node_u, node_v);
+            const bool is_barrier_node = (m_barrier_nodes.find(node_v) != m_barrier_nodes.end());
 
-            for (const EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
+            for (const EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(node_v))
             {
                 if (!m_node_based_graph->GetEdgeData(e2).forward)
                 {
                     continue;
                 }
-                const NodeID w = m_node_based_graph->GetTarget(e2);
+                const NodeID node_w = m_node_based_graph->GetTarget(e2);
 
                 if ((to_node_of_only_restriction != SPECIAL_NODEID) &&
-                    (w != to_node_of_only_restriction))
+                    (node_w != to_node_of_only_restriction))
                 {
                     // We are at an only_-restriction but not at the right turn.
                     ++restricted_turns_counter;
@@ -585,7 +585,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 if (is_barrier_node)
                 {
-                    if (u != w)
+                    if (node_u != node_w)
                     {
                         ++skipped_barrier_turns_counter;
                         continue;
@@ -593,7 +593,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
                 else
                 {
-                    if ((u == w) && (m_node_based_graph->GetOutDegree(v) > 1))
+                    if ((node_u == node_w) && (m_node_based_graph->GetOutDegree(node_v) > 1))
                     {
                         ++skipped_uturns_counter;
                         continue;
@@ -602,9 +602,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 // only add an edge if turn is not a U-turn except when it is
                 // at the end of a dead-end street
-                if (m_restriction_map->CheckIfTurnIsRestricted(u, v, w) &&
+                if (m_restriction_map->CheckIfTurnIsRestricted(node_u, node_v, node_w) &&
                     (to_node_of_only_restriction == SPECIAL_NODEID) &&
-                    (w != to_node_of_only_restriction))
+                    (node_w != to_node_of_only_restriction))
                 {
                     // We are at an only_-restriction but not at the right turn.
                     ++restricted_turns_counter;
@@ -621,7 +621,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 // the following is the core of the loop.
                 unsigned distance = edge_data1.distance;
-                if (m_traffic_lights.find(v) != m_traffic_lights.end())
+                if (m_traffic_lights.find(node_v) != m_traffic_lights.end())
                 {
                     distance += speed_profile.traffic_signal_penalty;
                 }
@@ -630,19 +630,19 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 const auto first_coordinate =
                     m_node_info_list[(m_geometry_compressor.HasEntryForID(e1)
                                           ? m_geometry_compressor.GetLastNodeIDOfBucket(e1)
-                                          : u)];
+                                          : node_u)];
 
                 // unpack first node of second segment if packed
                 const auto third_coordinate =
                     m_node_info_list[(m_geometry_compressor.HasEntryForID(e2)
                                           ? m_geometry_compressor.GetFirstNodeIDOfBucket(e2)
-                                          : w)];
+                                          : node_w)];
 
                 const double turn_angle = ComputeAngle::OfThreeFixedPointCoordinates(
-                    first_coordinate, m_node_info_list[v], third_coordinate);
+                    first_coordinate, m_node_info_list[node_v], third_coordinate);
 
                 const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);
-                TurnInstruction turn_instruction = AnalyzeTurn(u, v, w, turn_angle);
+                TurnInstruction turn_instruction = AnalyzeTurn(node_u, node_v, node_w, turn_angle);
                 if (turn_instruction == TurnInstruction::UTurn)
                 {
                     distance += speed_profile.u_turn_penalty;
@@ -657,7 +657,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
 
                 original_edge_data_vector.emplace_back(
-                    (edge_is_compressed ? m_geometry_compressor.GetPositionForID(e1) : v),
+                    (edge_is_compressed ? m_geometry_compressor.GetPositionForID(e1) : node_v),
                     edge_data1.nameID, turn_instruction, edge_is_compressed,
                     edge_data2.travel_mode);
 
