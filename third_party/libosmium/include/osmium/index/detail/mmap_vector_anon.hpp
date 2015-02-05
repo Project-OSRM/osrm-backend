@@ -1,11 +1,11 @@
-#ifndef OSMIUM_DETAIL_MMAP_VECTOR_ANON_HPP
-#define OSMIUM_DETAIL_MMAP_VECTOR_ANON_HPP
+#ifndef OSMIUM_INDEX_DETAIL_MMAP_VECTOR_ANON_HPP
+#define OSMIUM_INDEX_DETAIL_MMAP_VECTOR_ANON_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -45,8 +45,8 @@ namespace osmium {
     namespace detail {
 
         /**
-        * This class looks and behaves like STL vector, but uses mmap internally.
-        */
+         * This class looks and behaves like STL vector, but uses mmap internally.
+         */
         template <typename T>
         class mmap_vector_anon : public mmap_vector_base<T, mmap_vector_anon> {
 
@@ -75,4 +75,4 @@ namespace osmium {
 
 #endif // __linux__
 
-#endif // OSMIUM_DETAIL_MMAP_VECTOR_ANON_HPP
+#endif // OSMIUM_INDEX_DETAIL_MMAP_VECTOR_ANON_HPP

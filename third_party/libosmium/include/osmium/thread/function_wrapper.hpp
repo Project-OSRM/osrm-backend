@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -94,8 +94,9 @@ namespace osmium {
             }
 
             function_wrapper(const function_wrapper&) = delete;
-            function_wrapper(function_wrapper&) = delete;
             function_wrapper& operator=(const function_wrapper&) = delete;
+
+            ~function_wrapper() = default;
 
             explicit operator bool() const {
                 return static_cast<bool>(impl);

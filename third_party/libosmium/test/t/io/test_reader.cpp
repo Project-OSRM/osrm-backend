@@ -1,4 +1,5 @@
 #include "catch.hpp"
+#include "utils.hpp"
 
 #include <osmium/handler.hpp>
 #include <osmium/io/any_compression.hpp>
@@ -19,7 +20,7 @@ struct CountHandler : public osmium::handler::Handler {
 TEST_CASE("Reader") {
 
     SECTION("reader can be initialized with file") {
-        osmium::io::File file("t/io/data.osm");
+        osmium::io::File file(with_data_dir("t/io/data.osm"));
         osmium::io::Reader reader(file);
         osmium::handler::Handler handler;
 
@@ -27,14 +28,14 @@ TEST_CASE("Reader") {
     }
 
     SECTION("reader can be initialized with string") {
-        osmium::io::Reader reader("t/io/data.osm");
+        osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
         osmium::handler::Handler handler;
 
         osmium::apply(reader, handler);
     }
 
     SECTION("should return invalid buffer after eof") {
-        osmium::io::File file("t/io/data.osm");
+        osmium::io::File file(with_data_dir("t/io/data.osm"));
         osmium::io::Reader reader(file);
 
         REQUIRE(!reader.eof());
@@ -50,7 +51,7 @@ TEST_CASE("Reader") {
     }
 
     SECTION("should not hang when apply() is called twice on reader") {
-        osmium::io::File file("t/io/data.osm");
+        osmium::io::File file(with_data_dir("t/io/data.osm"));
         osmium::io::Reader reader(file);
         osmium::handler::Handler handler;
 
@@ -59,7 +60,7 @@ TEST_CASE("Reader") {
     }
 
     SECTION("should work with a buffer with uncompressed data") {
-        int fd = osmium::io::detail::open_for_reading("t/io/data.osm");
+        int fd = osmium::io::detail::open_for_reading(with_data_dir("t/io/data.osm"));
         REQUIRE(fd >= 0);
 
         const size_t buffer_size = 1000;
@@ -77,7 +78,7 @@ TEST_CASE("Reader") {
     }
 
     SECTION("should work with a buffer with gzip-compressed data") {
-        int fd = osmium::io::detail::open_for_reading("t/io/data.osm.gz");
+        int fd = osmium::io::detail::open_for_reading(with_data_dir("t/io/data.osm.gz"));
         REQUIRE(fd >= 0);
 
         const size_t buffer_size = 1000;
@@ -95,7 +96,7 @@ TEST_CASE("Reader") {
     }
 
     SECTION("should work with a buffer with bzip2-compressed data") {
-        int fd = osmium::io::detail::open_for_reading("t/io/data.osm.bz2");
+        int fd = osmium::io::detail::open_for_reading(with_data_dir("t/io/data.osm.bz2"));
         REQUIRE(fd >= 0);
 
         const size_t buffer_size = 1000;

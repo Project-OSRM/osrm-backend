@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,19 +33,49 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+/**
+ * @file
+ *
+ * This file contains code for conversion of OSM geometries into OGR
+ * geometries.
+ *
+ * @attention If you include this file, you'll need to link with `libgdal`.
+ */
+
 #include <cassert>
 #include <cstddef>
 #include <memory>
 #include <utility>
 
-#pragma GCC diagnostic push
-#ifdef __clang__
-# pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4458)
+# pragma warning(disable : 4251)
+#else
+# pragma GCC diagnostic push
+# ifdef __clang__
+#  pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
+# endif
+# pragma GCC diagnostic ignored "-Wfloat-equal"
+# pragma GCC diagnostic ignored "-Wold-style-cast"
+# pragma GCC diagnostic ignored "-Wpadded"
+# pragma GCC diagnostic ignored "-Wredundant-decls"
+# pragma GCC diagnostic ignored "-Wshadow"
 #endif
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#pragma GCC diagnostic ignored "-Wpadded"
-# include <ogr_geometry.h>
-#pragma GCC diagnostic pop
+
+/* Strictly speaking the following include would be enough here,
+   but everybody using this file will very likely need the other includes,
+   so we are adding them here, so that not everybody will need all those
+   pragmas to disable warnings. */
+//#include <ogr_geometry.h>
+#include <ogr_api.h>
+#include <ogrsf_frmts.h>
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#else
+# pragma GCC diagnostic pop
+#endif
 
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/factory.hpp>

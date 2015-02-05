@@ -10,25 +10,7 @@
 #include <iostream>
 #include <getopt.h>
 
-#pragma GCC diagnostic push
-#ifdef __clang__
-# pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
-#endif
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#pragma GCC diagnostic ignored "-Wshadow"
-# include <ogr_api.h>
-# include <ogrsf_frmts.h>
-#pragma GCC diagnostic pop
-
-// usually you only need one or two of these
-#include <osmium/index/map/dummy.hpp>
-#include <osmium/index/map/sparse_table.hpp>
-#include <osmium/index/map/stl_map.hpp>
-#include <osmium/index/map/mmap_vector_anon.hpp>
-
+#include <osmium/index/map/all.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/visitor.hpp>
 
@@ -37,10 +19,7 @@
 #include <osmium/handler.hpp>
 
 typedef osmium::index::map::Dummy<osmium::unsigned_object_id_type, osmium::Location> index_neg_type;
-
-//typedef osmium::index::map::StlMap<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
-//typedef osmium::index::map::SparseMapMmap<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
-typedef osmium::index::map::SparseTable<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
+typedef osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
 
 typedef osmium::handler::NodeLocationsForWays<index_pos_type, index_neg_type> location_handler_type;
 
@@ -181,21 +160,28 @@ void print_help() {
               << "If INFILE is not given stdin is assumed.\n" \
               << "If OUTFILE is not given 'ogr_out' is used.\n" \
               << "\nOptions:\n" \
-              << "  -h, --help           This help message\n" \
-              << "  -f, --format=FORMAT  Output OGR format (Default: 'SQLite')\n";
+              << "  -h, --help                 This help message\n" \
+              << "  -l, --location_store=TYPE  Set location store\n" \
+              << "  -f, --format=FORMAT        Output OGR format (Default: 'SQLite')\n" \
+              << "  -L                         See available location stores\n";
 }
 
 int main(int argc, char* argv[]) {
+    const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
+
     static struct option long_options[] = {
-        {"help",   no_argument, 0, 'h'},
-        {"format", required_argument, 0, 'f'},
+        {"help",                 no_argument, 0, 'h'},
+        {"format",               required_argument, 0, 'f'},
+        {"location_store",       required_argument, 0, 'l'},
+        {"list_location_stores", no_argument, 0, 'L'},
         {0, 0, 0, 0}
     };
 
-    std::string output_format("SQLite");
+    std::string output_format { "SQLite" };
+    std::string location_store { "sparse_mem_array" };
 
     while (true) {
-        int c = getopt_long(argc, argv, "hf:", long_options, 0);
+        int c = getopt_long(argc, argv, "hf:l:L", long_options, 0);
         if (c == -1) {
             break;
         }
@@ -207,6 +193,15 @@ int main(int argc, char* argv[]) {
             case 'f':
                 output_format = optarg;
                 break;
+            case 'l':
+                location_store = optarg;
+                break;
+            case 'L':
+                std::cout << "Available map types:\n";
+                for (const auto& map_type : map_factory.map_types()) {
+                    std::cout << "  " << map_type << "\n";
+                }
+                exit(0);
             default:
                 exit(1);
         }
@@ -229,9 +224,9 @@ int main(int argc, char* argv[]) {
 
     osmium::io::Reader reader(input_filename);
 
-    index_pos_type index_pos;
+    std::unique_ptr<index_pos_type> index_pos = map_factory.create_map(location_store);
     index_neg_type index_neg;
-    location_handler_type location_handler(index_pos, index_neg);
+    location_handler_type location_handler(*index_pos, index_neg);
     location_handler.ignore_errors();
 
     MyOGRHandler ogr_handler(output_format, output_filename);
@@ -245,7 +240,7 @@ int main(int argc, char* argv[]) {
     if (locations_fd < 0) {
         throw std::system_error(errno, std::system_category(), "Open failed");
     }
-    index_pos.dump_as_list(locations_fd);
+    index_pos->dump_as_list(locations_fd);
     close(locations_fd);
 }
 

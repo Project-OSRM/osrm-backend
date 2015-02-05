@@ -1,11 +1,11 @@
-#ifndef OSMIUM_INDEX_MULTIMAP_STL_VECTOR_HPP
-#define OSMIUM_INDEX_MULTIMAP_STL_VECTOR_HPP
+#ifndef OSMIUM_INDEX_DETAIL_CREATE_MAP_WITH_FD_HPP
+#define OSMIUM_INDEX_DETAIL_CREATE_MAP_WITH_FD_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,26 +33,41 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
+#include <cerrno>
+#include <cstring>
+#include <fcntl.h>
+#include <stdexcept>
+#include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <vector>
-
-#include <osmium/index/multimap/vector.hpp>
 
 namespace osmium {
 
     namespace index {
 
-        namespace multimap {
+        namespace detail {
 
-            template <typename T>
-            using StdVectorWrap = std::vector<T>;
+            template <class T>
+            inline T* create_map_with_fd(const std::vector<std::string>& config) {
+                if (config.size() == 1) {
+                    return new T();
+                } else {
+                    assert(config.size() > 1);
+                    const std::string& filename = config[1];
+                    int fd = ::open(filename.c_str(), O_CREAT | O_RDWR, 0644);
+                    if (fd == -1) {
+                        throw std::runtime_error(std::string("can't open file '") + filename + "': " + strerror(errno));
+                    }
+                    return new T(fd);
+                }
+            }
 
-            template <typename TId, typename TValue>
-            using SparseMultimapMem = VectorBasedSparseMultimap<TId, TValue, StdVectorWrap>;
-
-        } // namespace multimap
+        } // namespace detail
 
     } // namespace index
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MULTIMAP_STL_VECTOR_HPP
+#endif // OSMIUM_INDEX_DETAIL_CREATE_MAP_WITH_FD_HPP

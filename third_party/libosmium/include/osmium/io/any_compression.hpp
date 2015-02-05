@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -32,6 +32,15 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
+
+/**
+ * @file
+ *
+ * Include this file if you want to read or write compressed OSM XML files.
+ *
+ * @attention If you include this file, you'll need to link with `libz`
+ *            and `libbz2`.
+ */
 
 #include <osmium/io/bzip2_compression.hpp> // IWYU pragma: export
 #include <osmium/io/gzip_compression.hpp> // IWYU pragma: export

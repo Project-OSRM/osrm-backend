@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,18 +33,38 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#pragma GCC diagnostic push
-#ifdef __clang__
-# pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
+/**
+ * @file
+ *
+ * This file contains code for reporting problems through OGR when
+ * assembling multipolygons.
+ *
+ * @attention If you include this file, you'll need to link with `libgdal`.
+ */
+
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4458)
+#else
+# pragma GCC diagnostic push
+# ifdef __clang__
+#  pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
+# endif
+# pragma GCC diagnostic ignored "-Wfloat-equal"
+# pragma GCC diagnostic ignored "-Wold-style-cast"
+# pragma GCC diagnostic ignored "-Wpadded"
+# pragma GCC diagnostic ignored "-Wredundant-decls"
+# pragma GCC diagnostic ignored "-Wshadow"
 #endif
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#pragma GCC diagnostic ignored "-Wshadow"
-# include <ogr_api.h>
-# include <ogrsf_frmts.h>
-#pragma GCC diagnostic pop
+
+#include <ogr_api.h>
+#include <ogrsf_frmts.h>
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#else
+# pragma GCC diagnostic pop
+#endif
 
 #include <memory>
 #include <stdexcept>

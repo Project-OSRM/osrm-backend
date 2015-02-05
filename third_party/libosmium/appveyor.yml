@@ -1,11 +1,13 @@
+#-----------------------------------------------------------------------------
 #
-# Configuration for appveyor.com
+#  Configuration for continuous integration service at appveyor.com
 #
+#-----------------------------------------------------------------------------
 
 environment:
   matrix:
-  - configuration: Dev
-#  - configuration: Release
+  - config: Dev
+  - config: Release
 
 # branches to build
 branches:
@@ -14,7 +16,7 @@ branches:
     - master
 
 # Operating system (build VM template)
-os: Windows Server 2012 R2
+os: Visual Studio 2014 CTP4
 
 # scripts that are called at very beginning, before repo cloning
 init:
@@ -25,31 +27,51 @@ clone_folder: c:\projects\libosmium
 platform: x64
 
 install:
-  # by default, all script lines are interpreted as batch
+  # show all availble env vars
+  - SET
+  - ECHO cmake on AppVeyor
+  - cmake -version
+  - CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  - SET PATH=c:\projects\libosmium\cmake-3.1.0-win32-x86\bin;%PATH%
+  - SET LODEPSDIR=c:\projects\libosmium\libosmium-deps
+  - SET PROJ_LIB=%LODEPSDIR%\proj\share
+  - set GDAL_DATA=%LODEPSDIR%\gdal\data
+  #geos.dll
+  - SET PATH=%LODEPSDIR%\geos\lib;%PATH%
+  #gdal.dll
+  - SET PATH=%LODEPSDIR%\gdal\lib;%PATH%
+  #libexpat.dll
+  - SET PATH=%LODEPSDIR%\expat\lib;%PATH%
+  #libtiff.dll
+  - SET PATH=%LODEPSDIR%\libtiff\lib;%PATH%
+  #zlibwapi.dll
+  - SET PATH=%LODEPSDIR%\zlib\lib;%PATH%
+  #convert backslashes in bzip2 path to forward slashes
+  #cmake cannot find it otherwise
+  - SET LIBBZIP2=%LODEPSDIR%\bzip2\lib\libbz2.lib
+  - SET LIBBZIP2=%LIBBZIP2:\=/%
+  - ps: Start-FileDownload https://mapnik.s3.amazonaws.com/deps/cmake-3.1.0-win32-x86.7z -FileName cm.7z
+  - ps: Start-FileDownload https://mapnik.s3.amazonaws.com/dist/dev/libosmium-deps-win-14.0-x64.7z -FileName lodeps.7z
+  - 7z x cm.7z > null
+  - 7z x lodeps.7z > nul
+  - echo %LODEPSDIR%
+  - dir %LODEPSDIR%
+  - ECHO our own cmake
+  - cmake -version
   - cd c:\projects
-  - nuget install boost
-  - nuget install bzip2
-  - nuget install zlib
-  - nuget install GDAL
-  - nuget install expat
-  - nuget install protobuf
-  - dir /S c:\projects
-  - git clone https://github.com/scrosby/OSM-binary
-  - cd OSM-binary
-  - mkdir build
-  - cd build
-  - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
-  - cmake .. -G "Visual Studio 12 Win64" -DSEARCH_PREFIX=c:\projects -T CTP_Nov2013
-  - msbuild /clp:Verbosity=minimal /nologo OSM-binary.sln
+  - git clone https://github.com/osmcode/osm-testdata.git
 
 build_script:
   - cd c:\projects\libosmium
   - mkdir build
   - cd build
-  - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
-  - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
-  - SET P=c:/projects/libosmium
-  - cmake .. -G "Visual Studio 12 Win64" -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_PREFIX_PATH=c:\projects -DBoost_USE_STATIC_LIBS=ON -T CTP_Nov2013
-  - msbuild /clp:Verbosity=minimal /nologo libosmium.sln
-  - msbuild /clp:Verbosity=minimal /nologo tests.vcxproj
+  - echo %config%
+  - cmake .. -LA -G "Visual Studio 14 Win64" -DOsmium_DEBUG=TRUE -DCMAKE_BUILD_TYPE=%config% -DBOOST_ROOT=%LODEPSDIR%\boost -DBoost_PROGRAM_OPTIONS_LIBRARY=%LODEPSDIR%\boost\lib\libboost_program_options-vc140-mt-1_57.lib -DOSMPBF_LIBRARY=%LODEPSDIR%\osmpbf\lib\osmpbf.lib -DOSMPBF_INCLUDE_DIR=%LODEPSDIR%\osmpbf\include -DPROTOBUF_LIBRARY=%LODEPSDIR%\protobuf\lib\libprotobuf.lib -DPROTOBUF_LITE_LIBRARY=%LODEPSDIR%\protobuf\lib\libprotobuf-lite.lib -DPROTOBUF_INCLUDE_DIR=%LODEPSDIR%\protobuf\include -DZLIB_LIBRARY=%LODEPSDIR%\zlib\lib\zlibwapi.lib -DZLIB_INCLUDE_DIR=%LODEPSDIR%\zlib\include -DEXPAT_LIBRARY=%LODEPSDIR%\expat\lib\libexpat.lib -DEXPAT_INCLUDE_DIR=%LODEPSDIR%\expat\include -DBZIP2_LIBRARIES=%LIBBZIP2% -DBZIP2_INCLUDE_DIR=%LODEPSDIR%\bzip2\include -DGDAL_LIBRARY=%LODEPSDIR%\gdal\lib\gdal_i.lib -DGDAL_INCLUDE_DIR=%LODEPSDIR%\gdal\include -DGEOS_LIBRARY=%LODEPSDIR%\geos\lib\geos.lib -DGEOS_INCLUDE_DIR=%LODEPSDIR%\geos\include -DPROJ_LIBRARY=%LODEPSDIR%\proj\lib\proj.lib -DPROJ_INCLUDE_DIR=%LODEPSDIR%\proj\include -DSPARSEHASH_INCLUDE_DIR=%LODEPSDIR%\sparsehash\include -DGETOPT_LIBRARY=%LODEPSDIR%\wingetopt\lib\wingetopt.lib -DGETOPT_INCLUDE_DIR=%LODEPSDIR%\wingetopt\include
+  - msbuild libosmium.sln /p:Configuration=Release /toolsversion:14.0 /p:Platform=x64 /p:PlatformToolset=v140
+  #- cmake .. -LA -G "NMake Makefiles" -DOsmium_DEBUG=TRUE -DCMAKE_BUILD_TYPE=%config% -DBOOST_ROOT=%LODEPSDIR%\boost -DBoost_PROGRAM_OPTIONS_LIBRARY=%LODEPSDIR%\boost\lib\libboost_program_options-vc140-mt-1_57.lib -DOSMPBF_LIBRARY=%LODEPSDIR%\osmpbf\lib\osmpbf.lib -DOSMPBF_INCLUDE_DIR=%LODEPSDIR%\osmpbf\include -DPROTOBUF_LIBRARY=%LODEPSDIR%\protobuf\lib\libprotobuf.lib -DPROTOBUF_LITE_LIBRARY=%LODEPSDIR%\protobuf\lib\libprotobuf-lite.lib -DPROTOBUF_INCLUDE_DIR=%LODEPSDIR%\protobuf\include -DZLIB_LIBRARY=%LODEPSDIR%\zlib\lib\zlibwapi.lib -DZLIB_INCLUDE_DIR=%LODEPSDIR%\zlib\include -DEXPAT_LIBRARY=%LODEPSDIR%\expat\lib\libexpat.lib -DEXPAT_INCLUDE_DIR=%LODEPSDIR%\expat\include -DBZIP2_LIBRARIES=%LIBBZIP2% -DBZIP2_INCLUDE_DIR=%LODEPSDIR%\bzip2\include -DGDAL_LIBRARY=%LODEPSDIR%\gdal\lib\gdal_i.lib -DGDAL_INCLUDE_DIR=%LODEPSDIR%\gdal\include -DGEOS_LIBRARY=%LODEPSDIR%\geos\lib\geos.lib -DGEOS_INCLUDE_DIR=%LODEPSDIR%\geos\include -DPROJ_LIBRARY=%LODEPSDIR%\proj\lib\proj.lib -DPROJ_INCLUDE_DIR=%LODEPSDIR%\proj\include -DSPARSEHASH_INCLUDE_DIR=%LODEPSDIR%\sparsehash\include -DGETOPT_LIBRARY=%LODEPSDIR%\wingetopt\lib\wingetopt.lib -DGETOPT_INCLUDE_DIR=%LODEPSDIR%\wingetopt\include
+  #- nmake
+
+test_script:
+  # Disable multipolygon test because it needs ruby and the 'json' gem
+  - ctest -V -C %config% -E testdata-multipolygon
 

@@ -1,3 +1,12 @@
+#-----------------------------------------------------------------------------
+#
+#  This file describes messages that Valgrind should suppress, because they
+#  are about problems outside Libosmium that we can't fix anyway.
+#
+#  See http://valgrind.org/docs/manual/manual-core.html#manual-core.suppress
+#
+#-----------------------------------------------------------------------------
+
 {
    dl_error1
    Memcheck:Cond

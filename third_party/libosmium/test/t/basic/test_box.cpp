@@ -47,7 +47,7 @@ SECTION("output_defined") {
     std::stringstream out;
     out << b;
     REQUIRE(out.str() == "(1.2,3.4,5.6,7.8)");
-    REQUIRE((19.36 - b.size()) < 0.000001);
+    REQUIRE(b.size() == Approx(19.36).epsilon(0.000001));
 }
 
 SECTION("output_undefined") {

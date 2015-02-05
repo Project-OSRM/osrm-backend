@@ -16,15 +16,15 @@
 #include <osmium/io/xml_input.hpp>
 
 #include <osmium/index/map/dummy.hpp>
-#include <osmium/index/map/mmap_vector_anon.hpp>
-#include <osmium/index/map/mmap_vector_file.hpp>
+#include <osmium/index/map/dense_file_array.hpp>
+#include <osmium/index/map/dense_mmap_array.hpp>
 
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/visitor.hpp>
 
 typedef osmium::index::map::Dummy<osmium::unsigned_object_id_type, osmium::Location> index_neg_type;
-//typedef osmium::index::map::DenseMapMmap<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
-typedef osmium::index::map::DenseMapFile<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
+//typedef osmium::index::map::DenseMmapArray<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
+typedef osmium::index::map::DenseFileArray<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
 
 typedef osmium::handler::NodeLocationsForWays<index_pos_type, index_neg_type> location_handler_type;
 

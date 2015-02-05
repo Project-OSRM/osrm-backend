@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -120,9 +120,9 @@ namespace osmium {
                     op_delete = 3
                 }; // enum class operation
 
-                osmium::memory::Buffer m_input_buffer;
+                std::shared_ptr<osmium::memory::Buffer> m_input_buffer;
 
-                std::string m_out;
+                std::shared_ptr<std::string> m_out;
 
                 operation m_last_op {operation::op_none};
 
@@ -131,7 +131,7 @@ namespace osmium {
 
                 void write_spaces(int num) {
                     for (; num!=0; --num) {
-                        m_out += ' ';
+                        *m_out += ' ';
                     }
                 }
 
@@ -144,33 +144,33 @@ namespace osmium {
                 }
 
                 void write_meta(const osmium::OSMObject& object) {
-                    oprintf(m_out, " id=\"%" PRId64 "\"", object.id());
+                    oprintf(*m_out, " id=\"%" PRId64 "\"", object.id());
 
                     if (object.version()) {
-                        oprintf(m_out, " version=\"%d\"", object.version());
+                        oprintf(*m_out, " version=\"%d\"", object.version());
                     }
 
                     if (object.timestamp()) {
-                        m_out += " timestamp=\"";
-                        m_out += object.timestamp().to_iso();
-                        m_out += "\"";
+                        *m_out += " timestamp=\"";
+                        *m_out += object.timestamp().to_iso();
+                        *m_out += "\"";
                     }
 
                     if (!object.user_is_anonymous()) {
-                        oprintf(m_out, " uid=\"%d\" user=\"", object.uid());
-                        xml_string(m_out, object.user());
-                        m_out += "\"";
+                        oprintf(*m_out, " uid=\"%d\" user=\"", object.uid());
+                        xml_string(*m_out, object.user());
+                        *m_out += "\"";
                     }
 
                     if (object.changeset()) {
-                        oprintf(m_out, " changeset=\"%d\"", object.changeset());
+                        oprintf(*m_out, " changeset=\"%d\"", object.changeset());
                     }
 
                     if (m_write_visible_flag) {
                         if (object.visible()) {
-                            m_out += " visible=\"true\"";
+                            *m_out += " visible=\"true\"";
                         } else {
-                            m_out += " visible=\"false\"";
+                            *m_out += " visible=\"false\"";
                         }
                     }
                 }
@@ -178,11 +178,11 @@ namespace osmium {
                 void write_tags(const osmium::TagList& tags) {
                     for (const auto& tag : tags) {
                         write_prefix();
-                        m_out += "  <tag k=\"";
-                        xml_string(m_out, tag.key());
-                        m_out += "\" v=\"";
-                        xml_string(m_out, tag.value());
-                        m_out += "\"/>\n";
+                        *m_out += "  <tag k=\"";
+                        xml_string(*m_out, tag.key());
+                        *m_out += "\" v=\"";
+                        xml_string(*m_out, tag.value());
+                        *m_out += "\"/>\n";
                     }
                 }
 
@@ -195,13 +195,13 @@ namespace osmium {
                         case operation::op_none:
                             break;
                         case operation::op_create:
-                            m_out += "  </create>\n";
+                            *m_out += "  </create>\n";
                             break;
                         case operation::op_modify:
-                            m_out += "  </modify>\n";
+                            *m_out += "  </modify>\n";
                             break;
                         case operation::op_delete:
-                            m_out += "  </delete>\n";
+                            *m_out += "  </delete>\n";
                             break;
                     }
 
@@ -209,13 +209,13 @@ namespace osmium {
                         case operation::op_none:
                             break;
                         case operation::op_create:
-                            m_out += "  <create>\n";
+                            *m_out += "  <create>\n";
                             break;
                         case operation::op_modify:
-                            m_out += "  <modify>\n";
+                            *m_out += "  <modify>\n";
                             break;
                         case operation::op_delete:
-                            m_out += "  <delete>\n";
+                            *m_out += "  <delete>\n";
                             break;
                     }
 
@@ -225,26 +225,29 @@ namespace osmium {
             public:
 
                 explicit XMLOutputBlock(osmium::memory::Buffer&& buffer, bool write_visible_flag, bool write_change_ops) :
-                    m_input_buffer(std::move(buffer)),
+                    m_input_buffer(std::make_shared<osmium::memory::Buffer>(std::move(buffer))),
+                    m_out(std::make_shared<std::string>()),
                     m_write_visible_flag(write_visible_flag && !write_change_ops),
                     m_write_change_ops(write_change_ops) {
                 }
 
-                XMLOutputBlock(const XMLOutputBlock&) = delete;
-                XMLOutputBlock& operator=(const XMLOutputBlock&) = delete;
+                XMLOutputBlock(const XMLOutputBlock&) = default;
+                XMLOutputBlock& operator=(const XMLOutputBlock&) = default;
 
                 XMLOutputBlock(XMLOutputBlock&&) = default;
                 XMLOutputBlock& operator=(XMLOutputBlock&&) = default;
 
+                ~XMLOutputBlock() = default;
+
                 std::string operator()() {
-                    osmium::apply(m_input_buffer.cbegin(), m_input_buffer.cend(), *this);
+                    osmium::apply(m_input_buffer->cbegin(), m_input_buffer->cend(), *this);
 
                     if (m_write_change_ops) {
                         open_close_op_tag();
                     }
 
                     std::string out;
-                    std::swap(out, m_out);
+                    std::swap(out, *m_out);
                     return out;
                 }
 
@@ -254,29 +257,29 @@ namespace osmium {
                     }
 
                     write_prefix();
-                    m_out += "<node";
+                    *m_out += "<node";
 
                     write_meta(node);
 
                     if (node.location()) {
-                        m_out += " lat=\"";
-                        osmium::util::double2string(std::back_inserter(m_out), node.location().lat_without_check(), 7);
-                        m_out += "\" lon=\"";
-                        osmium::util::double2string(std::back_inserter(m_out), node.location().lon_without_check(), 7);
-                        m_out += "\"";
+                        *m_out += " lat=\"";
+                        osmium::util::double2string(std::back_inserter(*m_out), node.location().lat_without_check(), 7);
+                        *m_out += "\" lon=\"";
+                        osmium::util::double2string(std::back_inserter(*m_out), node.location().lon_without_check(), 7);
+                        *m_out += "\"";
                     }
 
                     if (node.tags().empty()) {
-                        m_out += "/>\n";
+                        *m_out += "/>\n";
                         return;
                     }
 
-                    m_out += ">\n";
+                    *m_out += ">\n";
 
                     write_tags(node.tags());
 
                     write_prefix();
-                    m_out += "</node>\n";
+                    *m_out += "</node>\n";
                 }
 
                 void way(const osmium::Way& way) {
@@ -285,25 +288,25 @@ namespace osmium {
                     }
 
                     write_prefix();
-                    m_out += "<way";
+                    *m_out += "<way";
                     write_meta(way);
 
                     if (way.tags().empty() && way.nodes().empty()) {
-                        m_out += "/>\n";
+                        *m_out += "/>\n";
                         return;
                     }
 
-                    m_out += ">\n";
+                    *m_out += ">\n";
 
                     for (const auto& node_ref : way.nodes()) {
                         write_prefix();
-                        oprintf(m_out, "  <nd ref=\"%" PRId64 "\"/>\n", node_ref.ref());
+                        oprintf(*m_out, "  <nd ref=\"%" PRId64 "\"/>\n", node_ref.ref());
                     }
 
                     write_tags(way.tags());
 
                     write_prefix();
-                    m_out += "</way>\n";
+                    *m_out += "</way>\n";
                 }
 
                 void relation(const osmium::Relation& relation) {
@@ -312,77 +315,77 @@ namespace osmium {
                     }
 
                     write_prefix();
-                    m_out += "<relation";
+                    *m_out += "<relation";
                     write_meta(relation);
 
                     if (relation.tags().empty() && relation.members().empty()) {
-                        m_out += "/>\n";
+                        *m_out += "/>\n";
                         return;
                     }
 
-                    m_out += ">\n";
+                    *m_out += ">\n";
 
                     for (const auto& member : relation.members()) {
                         write_prefix();
-                        m_out += "  <member type=\"";
-                        m_out += item_type_to_name(member.type());
-                        oprintf(m_out, "\" ref=\"%" PRId64 "\" role=\"", member.ref());
-                        xml_string(m_out, member.role());
-                        m_out += "\"/>\n";
+                        *m_out += "  <member type=\"";
+                        *m_out += item_type_to_name(member.type());
+                        oprintf(*m_out, "\" ref=\"%" PRId64 "\" role=\"", member.ref());
+                        xml_string(*m_out, member.role());
+                        *m_out += "\"/>\n";
                     }
 
                     write_tags(relation.tags());
 
                     write_prefix();
-                    m_out += "</relation>\n";
+                    *m_out += "</relation>\n";
                 }
 
                 void changeset(const osmium::Changeset& changeset) {
                     write_prefix();
-                    m_out += "<changeset";
+                    *m_out += "<changeset";
 
-                    oprintf(m_out, " id=\"%" PRId32 "\"", changeset.id());
+                    oprintf(*m_out, " id=\"%" PRId32 "\"", changeset.id());
 
                     if (changeset.created_at()) {
-                        m_out += " created_at=\"";
-                        m_out += changeset.created_at().to_iso();
-                        m_out += "\"";
+                        *m_out += " created_at=\"";
+                        *m_out += changeset.created_at().to_iso();
+                        *m_out += "\"";
                     }
 
-                    oprintf(m_out, " num_changes=\"%" PRId32 "\"", changeset.num_changes());
+                    oprintf(*m_out, " num_changes=\"%" PRId32 "\"", changeset.num_changes());
 
                     if (changeset.closed_at()) {
-                        m_out += " closed_at=\"";
-                        m_out += changeset.closed_at().to_iso();
-                        m_out += "\" open=\"false\"";
+                        *m_out += " closed_at=\"";
+                        *m_out += changeset.closed_at().to_iso();
+                        *m_out += "\" open=\"false\"";
                     } else {
-                        m_out += " open=\"true\"";
+                        *m_out += " open=\"true\"";
                     }
 
                     if (changeset.bounds()) {
-                        oprintf(m_out, " min_lon=\"%.7f\"", changeset.bounds().bottom_left().lon_without_check());
-                        oprintf(m_out, " min_lat=\"%.7f\"", changeset.bounds().bottom_left().lat_without_check());
-                        oprintf(m_out, " max_lon=\"%.7f\"", changeset.bounds().top_right().lon_without_check());
-                        oprintf(m_out, " max_lat=\"%.7f\"", changeset.bounds().top_right().lat_without_check());
+                        oprintf(*m_out, " min_lon=\"%.7f\"", changeset.bounds().bottom_left().lon_without_check());
+                        oprintf(*m_out, " min_lat=\"%.7f\"", changeset.bounds().bottom_left().lat_without_check());
+                        oprintf(*m_out, " max_lon=\"%.7f\"", changeset.bounds().top_right().lon_without_check());
+                        oprintf(*m_out, " max_lat=\"%.7f\"", changeset.bounds().top_right().lat_without_check());
                     }
 
                     if (!changeset.user_is_anonymous()) {
-                        m_out += " user=\"";
-                        xml_string(m_out, changeset.user());
-                        oprintf(m_out, "\" uid=\"%d\"", changeset.uid());
+                        *m_out += " user=\"";
+                        xml_string(*m_out, changeset.user());
+                        oprintf(*m_out, "\" uid=\"%d\"", changeset.uid());
                     }
 
                     if (changeset.tags().empty()) {
-                        m_out += "/>\n";
+                        *m_out += "/>\n";
                         return;
                     }
 
-                    m_out += ">\n";
+                    *m_out += ">\n";
 
                     write_tags(changeset.tags());
 
                     write_prefix();
-                    m_out += "</changeset>\n";
+                    *m_out += "</changeset>\n";
                 }
 
             }; // class XMLOutputBlock

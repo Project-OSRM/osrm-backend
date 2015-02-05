@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -80,7 +80,7 @@ namespace osmium {
              *               defaults will be used. See the default constructor
              *               of osmium::io::Header for details.
              * @param allow_overwrite Allow overwriting of existing file? Can be
-             *               osmium::io::overwrite::allow or osmium::io::overwrite::no+
+             *               osmium::io::overwrite::allow or osmium::io::overwrite::no
              *               (default).
              *
              * @throws std::runtime_error If the file could not be opened.

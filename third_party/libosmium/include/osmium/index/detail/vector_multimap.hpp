@@ -1,11 +1,11 @@
-#ifndef OSMIUM_INDEX_MULTIMAP_VECTOR_HPP
-#define OSMIUM_INDEX_MULTIMAP_VECTOR_HPP
+#ifndef OSMIUM_INDEX_DETAIL_VECTOR_MULTIMAP_HPP
+#define OSMIUM_INDEX_DETAIL_VECTOR_MULTIMAP_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cstddef>
 #include <utility>
 
+#include <osmium/index/index.hpp>
 #include <osmium/index/multimap.hpp>
 #include <osmium/io/detail/read_write.hpp>
 
@@ -136,7 +137,7 @@ namespace osmium {
                     );
                 }
 
-                void dump_as_list(int fd) const override final {
+                void dump_as_list(const int fd) override final {
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(m_vector.data()), byte_size());
                 }
 
@@ -148,4 +149,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MULTIMAP_VECTOR_HPP
+#endif // OSMIUM_INDEX_DETAIL_VECTOR_MULTIMAP_HPP

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -101,7 +101,7 @@ namespace osmium {
             tm.tm_wday = 0;
             tm.tm_yday = 0;
             tm.tm_isdst = 0;
-            m_timestamp = _mkgmtime(&tm);
+            m_timestamp = static_cast<uint32_t>(_mkgmtime(&tm));
 #endif
         }
 

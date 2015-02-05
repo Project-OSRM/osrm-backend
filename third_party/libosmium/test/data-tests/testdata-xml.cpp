@@ -1,11 +1,7 @@
 /* The code in this file is released into the Public Domain. */
 
 #define CATCH_CONFIG_MAIN
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wctor-dtor-privacy"
 #include "catch.hpp"
-#pragma GCC diagnostic pop
 
 #include <cassert>
 #include <cstdlib>

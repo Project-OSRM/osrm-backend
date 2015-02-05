@@ -1,11 +1,11 @@
-#ifndef OSMIUM_INDEX_MAP_MMAP_VECTOR_ANON_HPP
-#define OSMIUM_INDEX_MAP_MMAP_VECTOR_ANON_HPP
+#ifndef OSMIUM_INDEX_MAP_SPARSE_MEM_ARRAY_HPP
+#define OSMIUM_INDEX_MAP_SPARSE_MEM_ARRAY_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#ifdef __linux__
+#include <vector>
 
-#include <osmium/index/map/vector.hpp>
-#include <osmium/index/detail/mmap_vector_anon.hpp>
+#include <osmium/index/detail/vector_map.hpp>
+
+#define OSMIUM_HAS_INDEX_MAP_SPARSE_MEM_ARRAY
 
 namespace osmium {
 
@@ -44,11 +45,11 @@ namespace osmium {
 
         namespace map {
 
-            template <typename TId, typename TValue>
-            using DenseMapMmap = VectorBasedDenseMap<osmium::detail::mmap_vector_anon<TValue>, TId, TValue>;
+            template <typename T>
+            using StdVectorWrap = std::vector<T>;
 
             template <typename TId, typename TValue>
-            using SparseMapMmap = VectorBasedSparseMap<TId, TValue, osmium::detail::mmap_vector_anon>;
+            using SparseMemArray = VectorBasedSparseMap<TId, TValue, StdVectorWrap>;
 
         } // namespace map
 
@@ -56,6 +57,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // __linux__
-
-#endif // OSMIUM_INDEX_MAP_MMAP_VECTOR_ANON_HPP
+#endif // OSMIUM_INDEX_MAP_SPARSE_MEM_ARRAY_HPP

@@ -1,4 +1,5 @@
 #include "catch.hpp"
+#include "utils.hpp"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -9,7 +10,9 @@
 TEST_CASE("Bzip2") {
 
 SECTION("read_compressed_file") {
-    int fd = ::open("t/io/data_bzip2.txt.bz2", O_RDONLY);
+    std::string input_file = with_data_dir("t/io/data_bzip2.txt.bz2");
+
+    int fd = ::open(input_file.c_str(), O_RDONLY);
     REQUIRE(fd > 0);
 
     size_t size = 0;

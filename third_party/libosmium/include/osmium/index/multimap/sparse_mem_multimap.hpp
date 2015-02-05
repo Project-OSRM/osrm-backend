@@ -1,11 +1,11 @@
-#ifndef OSMIUM_INDEX_MULTIMAP_STL_MULTIMAP_HPP
-#define OSMIUM_INDEX_MULTIMAP_STL_MULTIMAP_HPP
+#ifndef OSMIUM_INDEX_MULTIMAP_SPARSE_MEM_MULTIMAP_HPP
+#define OSMIUM_INDEX_MULTIMAP_SPARSE_MEM_MULTIMAP_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -53,7 +53,7 @@ namespace osmium {
              * lot of memory, but might make sense for small maps.
              */
             template <typename TId, typename TValue>
-            class StlMultimap : public osmium::index::multimap::Multimap<TId, TValue> {
+            class SparseMemMultimap : public osmium::index::multimap::Multimap<TId, TValue> {
 
                 // This is a rough estimate for the memory needed for each
                 // element in the map (id + value + pointers to left, right,
@@ -76,9 +76,9 @@ namespace osmium {
 
             public:
 
-                StlMultimap() = default;
+                SparseMemMultimap() = default;
 
-                ~StlMultimap() noexcept override final = default;
+                ~SparseMemMultimap() noexcept override final = default;
 
                 void unsorted_set(const TId id, const TValue value) {
                     m_elements.emplace(id, value);
@@ -130,7 +130,7 @@ namespace osmium {
                     // intentionally left blank
                 }
 
-                void dump_as_list(const int fd) const override final {
+                void dump_as_list(const int fd) override final {
                     std::vector<element_type> v;
                     for (const auto& element : m_elements) {
                         v.emplace_back(element.first, element.second);
@@ -140,7 +140,7 @@ namespace osmium {
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(v.data()), sizeof(element_type) * v.size());
                 }
 
-            }; // class StlMultimap
+            }; // class SparseMemMultimap
 
         } // namespace multimap
 
@@ -148,4 +148,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MULTIMAP_STL_MULTIMAP_HPP
+#endif // OSMIUM_INDEX_MULTIMAP_SPARSE_MEM_MULTIMAP_HPP

@@ -1,11 +1,11 @@
-#ifndef OSMIUM_INDEX_MAP_VECTOR_HPP
-#define OSMIUM_INDEX_MAP_VECTOR_HPP
+#ifndef OSMIUM_INDEX_DETAIL_VECTOR_MAP_HPP
+#define OSMIUM_INDEX_DETAIL_VECTOR_MAP_HPP
 
 /*
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <stdexcept>
 #include <utility>
 
+#include <osmium/index/index.hpp>
 #include <osmium/index/map.hpp>
 #include <osmium/io/detail/read_write.hpp>
 
@@ -198,7 +199,7 @@ namespace osmium {
                     std::sort(m_vector.begin(), m_vector.end());
                 }
 
-                void dump_as_list(int fd) const override final {
+                void dump_as_list(const int fd) override final {
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(m_vector.data()), byte_size());
                 }
 
@@ -234,4 +235,4 @@ namespace osmium {
 
 } // namespace osmium
 
-#endif // OSMIUM_INDEX_MAP_VECTOR_HPP
+#endif // OSMIUM_INDEX_DETAIL_VECTOR_MAP_HPP

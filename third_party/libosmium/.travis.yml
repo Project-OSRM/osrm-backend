@@ -1,8 +1,18 @@
+#-----------------------------------------------------------------------------
+#
+#  Configuration for continuous integration service at travis-ci.org
+#
+#-----------------------------------------------------------------------------
+
 language: cpp
 
 compiler:
  - gcc
  - clang
+
+env:
+ - CONFIGURATION=Dev
+ - CONFIGURATION=Release
 
 before_install:
  # we need at least g++-4.8 for c++11 features
@@ -16,8 +26,8 @@ install:
  - sudo rm /usr/bin/cpp
  - sudo ln -s /usr/bin/cpp-4.8 /usr/bin/cpp
  # upgrade libosmium dependencies
- - sudo apt-get install --yes make libboost-dev libboost-program-options-dev libsparsehash-dev libprotobuf-dev protobuf-compiler libgeos++-dev libproj-dev
- - sudo apt-get install --yes make libgdal1h libgdal-dev
+ - sudo apt-get install --yes make libboost-dev libboost-program-options-dev libsparsehash-dev libprotobuf-dev protobuf-compiler libgeos++-dev libproj-dev libgdal1h libgdal-dev
+ - git clone https://github.com/osmcode/osm-testdata.git
  # OSMPBF is too old, install from git
  #- sudo apt-get install --yes libosmpbf-dev
  - git clone https://github.com/scrosby/OSM-binary.git
@@ -26,8 +36,6 @@ install:
  - sudo make install
  - cd ../..
 
-#env:
-
 before_script:
  - true
 
@@ -35,7 +43,7 @@ script:
  - if [ "${CXX}" = 'g++' ]; then export CXX=g++-4.8; fi;
  - mkdir build
  - cd build
- - cmake -L -DCMAKE_BUILD_TYPE=Dev ..
+ - cmake -LA -DCMAKE_BUILD_TYPE=${CONFIGURATION} ..
  - make VERBOSE=1
  # Disable multipolygon test because it needs ruby and the 'json' gem, but the
  # travis ruby installation doesn't find the gem it did install itself.

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -74,6 +74,14 @@ namespace osmium {
                 m_destination(&destination),
                 m_buffer_wrapper(std::make_shared<buffer_wrapper>(buffer_size)) {
             }
+
+            OutputIterator(const OutputIterator&) = default;
+            OutputIterator(OutputIterator&&) = default;
+
+            OutputIterator& operator=(const OutputIterator&) = default;
+            OutputIterator& operator=(OutputIterator&&) = default;
+
+            ~OutputIterator() = default;
 
             void flush() {
                 osmium::memory::Buffer buffer(m_buffer_wrapper->buffer.capacity(), osmium::memory::Buffer::auto_grow::no);

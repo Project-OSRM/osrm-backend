@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,18 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <algorithm>
 #include <cstddef>
+#include <functional>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <vector>
 
-#include <osmium/index/index.hpp> // IWYU pragma: export
+#include <osmium/util/compatibility.hpp>
+#include <osmium/util/string.hpp>
 
 namespace osmium {
 
@@ -140,13 +148,105 @@ namespace osmium {
                     // default implementation is empty
                 }
 
-                virtual void dump_as_list(int /*fd*/) const {
+                virtual void dump_as_list(const int /*fd*/) {
                     std::runtime_error("can't dump as list");
                 }
 
             }; // class Map
 
         } // namespace map
+
+        template <typename TId, typename TValue>
+        class MapFactory {
+
+        public:
+
+            typedef TId id_type;
+            typedef TValue value_type;
+            typedef osmium::index::map::Map<id_type, value_type> map_type;
+            typedef std::function<map_type*(const std::vector<std::string>&)> create_map_func;
+
+        private:
+
+            std::map<const std::string, create_map_func> m_callbacks;
+
+            MapFactory() = default;
+
+            MapFactory(const MapFactory&) = delete;
+            MapFactory& operator=(const MapFactory&) = delete;
+
+            MapFactory(MapFactory&&) = delete;
+            MapFactory& operator=(MapFactory&&) = delete;
+
+            OSMIUM_NORETURN static void error(const std::string& map_type_name) {
+                std::string error_message {"Support for map type '"};
+                error_message += map_type_name;
+                error_message += "' not compiled into this binary.";
+                throw std::runtime_error(error_message);
+            }
+
+        public:
+
+            static MapFactory<id_type, value_type>& instance() {
+                static MapFactory<id_type, value_type> factory;
+                return factory;
+            }
+
+            bool register_map(const std::string& map_type_name, create_map_func func) {
+                return m_callbacks.emplace(map_type_name, func).second;
+            }
+
+            std::vector<std::string> map_types() const {
+                std::vector<std::string> result;
+
+                for (const auto& cb : m_callbacks) {
+                    result.push_back(cb.first);
+                }
+
+                std::sort(result.begin(), result.end());
+
+                return result;
+            }
+
+            std::unique_ptr<map_type> create_map(const std::string& config_string) const {
+                std::vector<std::string> config = osmium::split_string(config_string, ',');
+
+                if (config.empty()) {
+                    throw std::runtime_error("Need non-empty map type name.");
+                }
+
+                auto it = m_callbacks.find(config[0]);
+                if (it != m_callbacks.end()) {
+                    return std::unique_ptr<map_type>((it->second)(config));
+                }
+
+                error(config[0]);
+            }
+
+        }; // class MapFactory
+
+        namespace map {
+
+            template <typename TId, typename TValue, template<typename, typename> class TMap>
+            struct create_map {
+                TMap<TId, TValue>* operator()(const std::vector<std::string>&) {
+                    return new TMap<TId, TValue>();
+                }
+            };
+
+        } // namespace map
+
+        template <typename TId, typename TValue, template<typename, typename> class TMap>
+        inline bool register_map(const std::string& name) {
+            return osmium::index::MapFactory<TId, TValue>::instance().register_map(name, [](const std::vector<std::string>& config) {
+                return map::create_map<TId, TValue, TMap>()(config);
+            });
+        }
+
+#define REGISTER_MAP(id, value, klass, name) \
+namespace { \
+    const bool registered_index_map_##name = osmium::index::register_map<id, value, klass>(#name); \
+}
 
     } // namespace index
 

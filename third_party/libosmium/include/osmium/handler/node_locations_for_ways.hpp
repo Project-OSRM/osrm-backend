@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -43,6 +43,8 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
+
+#include <osmium/index/node_locations_map.hpp>
 
 namespace osmium {
 
@@ -101,6 +103,9 @@ namespace osmium {
 
             NodeLocationsForWays(const NodeLocationsForWays&) = delete;
             NodeLocationsForWays& operator=(const NodeLocationsForWays&) = delete;
+
+            NodeLocationsForWays(NodeLocationsForWays&&) = default;
+            NodeLocationsForWays& operator=(NodeLocationsForWays&&) = default;
 
             ~NodeLocationsForWays() noexcept = default;
 

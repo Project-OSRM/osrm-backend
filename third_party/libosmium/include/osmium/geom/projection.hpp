@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013,2014 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -32,6 +32,15 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
+
+/**
+ * @file
+ *
+ * This file contains code for projecting OSM locations to arbitrary
+ * coordinate reference systems. It is based on the Proj.4 library.
+ *
+ * @attention If you include this file, you'll need to link with `libproj`.
+ */
 
 #include <memory>
 #include <string>
@@ -77,11 +86,11 @@ namespace osmium {
             }
 
             bool is_latlong() const {
-                return pj_is_latlong(m_crs.get());
+                return pj_is_latlong(m_crs.get()) != 0;
             }
 
             bool is_geocent() const {
-                return pj_is_geocent(m_crs.get());
+                return pj_is_geocent(m_crs.get()) != 0;
             }
 
             /**
