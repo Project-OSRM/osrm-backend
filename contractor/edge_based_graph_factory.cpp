@@ -563,9 +563,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             ++node_based_edge_counter;
             const NodeID node_v = m_node_based_graph->GetTarget(e1);
-            const NodeID to_node_of_only_restriction =
+            const NodeID only_restriction_to_node =
                 m_restriction_map->CheckForEmanatingIsOnlyTurn(node_u, node_v);
-            const bool is_barrier_node = (m_barrier_nodes.find(node_v) != m_barrier_nodes.end());
+            const bool is_barrier_node = m_barrier_nodes.find(node_v) != m_barrier_nodes.end();
 
             for (const EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(node_v))
             {
@@ -575,8 +575,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
                 const NodeID node_w = m_node_based_graph->GetTarget(e2);
 
-                if ((to_node_of_only_restriction != SPECIAL_NODEID) &&
-                    (node_w != to_node_of_only_restriction))
+                if ((only_restriction_to_node != SPECIAL_NODEID) &&
+                    (node_w != only_restriction_to_node))
                 {
                     // We are at an only_-restriction but not at the right turn.
                     ++restricted_turns_counter;
@@ -603,8 +603,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 // only add an edge if turn is not a U-turn except when it is
                 // at the end of a dead-end street
                 if (m_restriction_map->CheckIfTurnIsRestricted(node_u, node_v, node_w) &&
-                    (to_node_of_only_restriction == SPECIAL_NODEID) &&
-                    (node_w != to_node_of_only_restriction))
+                    (only_restriction_to_node == SPECIAL_NODEID) &&
+                    (node_w != only_restriction_to_node))
                 {
                     // We are at an only_-restriction but not at the right turn.
                     ++restricted_turns_counter;
