@@ -370,7 +370,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_turn_instruction_list.at(id);
     }
 
-    TravelMode GetTravelModeForEdgeID(const unsigned id) const { return m_travel_mode_list.at(id); }
+    TravelMode GetTravelModeForEdgeID(const unsigned id) const override final
+    {
+        return m_travel_mode_list.at(id);
+    }
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             FixedPointCoordinate &result,
