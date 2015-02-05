@@ -103,7 +103,7 @@ float coordinate_calculation::euclidean_distance(const int lat1,
 
     const float x_value = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.f);
     const float y_value = float_lat2 - float_lat1;
-    return sqrt(x_value * x_value + y_value * y_value) * earth_radius;
+    return std::hypot(x_value, y_value) * earth_radius;
 }
 
 float coordinate_calculation::perpendicular_distance(const FixedPointCoordinate &source_coordinate,
