@@ -360,7 +360,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_coordinate_list->at(id);
     };
 
-    bool EdgeIsCompressed(const unsigned id) const { return m_edge_is_compressed.at(id); }
+    bool EdgeIsCompressed(const unsigned id) const override final
+    {
+        return m_edge_is_compressed.at(id);
+    }
 
     TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
