@@ -349,7 +349,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
             BOOST_ASSERT(0 != forward_weight2);
 
             const bool add_traffic_signal_penalty =
-                (m_traffic_lights.find(node_v) != m_traffic_lights.end());
+                m_traffic_lights.find(node_v) != m_traffic_lights.end();
 
             // add weight of e2's to e1
             m_node_based_graph->GetEdgeData(forward_e1).distance += fwd_edge_data2.distance;
@@ -503,7 +503,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
                 return component_explorer.get_component_id(node_v);
             }();
 
-            const bool component_is_tiny = (size_of_component < 1000);
+            const bool component_is_tiny = size_of_component < 1000;
 
             if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
             {
