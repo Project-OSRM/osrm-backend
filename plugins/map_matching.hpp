@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "plugin_base.hpp"
 
+#include "../algorithms/bayes_classifier.hpp"
 #include "../algorithms/object_encoder.hpp"
 #include "../util/integer_range.hpp"
 #include "../data_structures/search_engine.hpp"
@@ -48,7 +49,14 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
   public:
-    MapMatchingPlugin(DataFacadeT *facade) : descriptor_string("match"), facade(facade)
+    MapMatchingPlugin(DataFacadeT *facade)
+    : descriptor_string("match")
+    , facade(facade)
+    // the values where derived from fitting a laplace distribution
+    // to the values of manually classified traces
+    , classifier(LaplaceDistribution(0.0057154021891018675, 0.020294704891166186),
+                 LaplaceDistribution(0.11467696742821254, 0.49918444000368756),
+                 0.7977883096366508) // valid apriori probability
     {
         descriptor_table.emplace("json", 0);
         descriptor_table.emplace("gpx", 1);
@@ -118,7 +126,6 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         JSON::Object debug_info;
         search_engine_ptr->map_matching(candidate_lists, input_coords, uturn_indicators, matched_nodes, debug_info);
 
-
         InternalRouteResult raw_route;
         PhantomNodes current_phantom_node_pair;
         for (unsigned i = 0; i < matched_nodes.size() - 1; ++i)
@@ -176,6 +183,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
   private:
     std::string descriptor_string;
     DataFacadeT *facade;
+    BayesClassifier<LaplaceDistribution, LaplaceDistribution, double> classifier;
 };
 
 #endif /* MAP_MATCHING_PLUGIN_H */
