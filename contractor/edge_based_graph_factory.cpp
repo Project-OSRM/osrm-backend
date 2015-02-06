@@ -348,13 +348,12 @@ void EdgeBasedGraphFactory::CompressGeometry()
             BOOST_ASSERT(0 != reverse_weight1);
             BOOST_ASSERT(0 != forward_weight2);
 
-            const bool add_traffic_signal_penalty =
-                m_traffic_lights.find(node_v) != m_traffic_lights.end();
+            const bool has_node_penalty = m_traffic_lights.find(node_v) != m_traffic_lights.end();
 
             // add weight of e2's to e1
             m_node_based_graph->GetEdgeData(forward_e1).distance += fwd_edge_data2.distance;
             m_node_based_graph->GetEdgeData(reverse_e1).distance += rev_edge_data2.distance;
-            if (add_traffic_signal_penalty)
+            if (has_node_penalty)
             {
                 m_node_based_graph->GetEdgeData(forward_e1).distance +=
                     speed_profile.traffic_signal_penalty;
@@ -382,13 +381,11 @@ void EdgeBasedGraphFactory::CompressGeometry()
             // store compressed geometry in container
             m_geometry_compressor.CompressEdge(
                 forward_e1, forward_e2, node_v, node_w,
-                forward_weight1 +
-                    (add_traffic_signal_penalty ? speed_profile.traffic_signal_penalty : 0),
+                forward_weight1 + (has_node_penalty ? speed_profile.traffic_signal_penalty : 0),
                 forward_weight2);
             m_geometry_compressor.CompressEdge(
                 reverse_e1, reverse_e2, node_v, node_u, reverse_weight1,
-                reverse_weight2 +
-                    (add_traffic_signal_penalty ? speed_profile.traffic_signal_penalty : 0));
+                reverse_weight2 + (has_node_penalty ? speed_profile.traffic_signal_penalty : 0));
             ++removed_node_count;
 
             BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e1).nameID ==
