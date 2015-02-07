@@ -48,6 +48,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     std::unordered_map<std::string, unsigned> descriptor_table;
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
+    using ClassifierT = BayesClassifier<LaplaceDistribution, LaplaceDistribution, double>;
+    using TraceClassification = ClassifierT::ClassificationT;
+
   public:
     MapMatchingPlugin(DataFacadeT *facade)
     : descriptor_string("match")
@@ -69,6 +72,29 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
     const std::string GetDescriptor() const final { return descriptor_string; }
 
+    TraceClassification classify(double trace_length, const std::vector<PhantomNode>& matched_nodes, int removed_points) const
+    {
+        double matching_length = 0;
+        for (const auto current_node : osrm::irange<std::size_t>(0, matched_nodes.size()-1))
+        {
+                matching_length += coordinate_calculation::great_circle_distance(
+                    matched_nodes[current_node].location,
+                    matched_nodes[current_node + 1].location);
+        }
+        double distance_feature = -std::log(trace_length / matching_length);
+
+        auto label_with_confidence =  classifier.classify(distance_feature);
+
+        // "second stage classifier": if we need to remove points there is something fishy
+        if (removed_points > 0)
+        {
+            label_with_confidence.first = ClassifierT::ClassLabel::NEGATIVE;
+            label_with_confidence.second = 1.0;
+        }
+
+        return label_with_confidence;
+    }
+
     int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
     {
         // check number of parameters
@@ -84,6 +110,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         double last_distance = coordinate_calculation::great_circle_distance(
             input_coords[0],
             input_coords[1]);
+        double trace_length = 0;
         for (const auto current_coordinate : osrm::irange<std::size_t>(0, input_coords.size()))
         {
             if (0 < current_coordinate)
@@ -91,6 +118,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 last_distance = coordinate_calculation::great_circle_distance(
                     input_coords[current_coordinate - 1],
                     input_coords[current_coordinate]);
+                trace_length += last_distance;
             }
 
             if (input_coords.size()-1 > current_coordinate && 0 < current_coordinate)
@@ -125,6 +153,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         std::vector<PhantomNode> matched_nodes;
         JSON::Object debug_info;
         search_engine_ptr->map_matching(candidate_lists, input_coords, uturn_indicators, matched_nodes, debug_info);
+
+        TraceClassification classification = classify(trace_length, matched_nodes, input_coords.size() - matched_nodes.size());
+        if (classification.first == ClassifierT::ClassLabel::POSITIVE)
+        {
+            json_result.values["confidence"] = classification.second;
+        }
+        else
+        {
+            json_result.values["confidence"] = 1-classification.second;
+        }
 
         InternalRouteResult raw_route;
         PhantomNodes current_phantom_node_pair;
@@ -183,7 +221,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
   private:
     std::string descriptor_string;
     DataFacadeT *facade;
-    BayesClassifier<LaplaceDistribution, LaplaceDistribution, double> classifier;
+    ClassifierT classifier;
 };
 
 #endif /* MAP_MATCHING_PLUGIN_H */
