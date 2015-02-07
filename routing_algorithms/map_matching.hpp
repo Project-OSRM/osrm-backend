@@ -33,7 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <fstream>
 
 template<typename T>
-T makeJSONSave(T d)
+T makeJSONSafe(T d)
 {
     if (std::isnan(d) || std::numeric_limits<T>::infinity() == d) {
         return std::numeric_limits<T>::max();
@@ -326,7 +326,7 @@ template <class DataFacadeT> class MapMatching final
 
             for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
             {
-                _debug_initial_viterbi.values.push_back(makeJSONSave(viterbi[initial_timestamp][s]));
+                _debug_initial_viterbi.values.push_back(makeJSONSafe(viterbi[initial_timestamp][s]));
                 _debug_initial_pruned.values.push_back(static_cast<unsigned>(pruned[initial_timestamp][s]));
             }
 
@@ -392,9 +392,9 @@ template <class DataFacadeT> class MapMatching final
                     const double new_value = prev_viterbi[s] + emission_pr + transition_pr;
 
                     JSON::Array _debug_element = makeJSONArray(
-                        makeJSONSave(prev_viterbi[s]),
-                        makeJSONSave(emission_pr),
-                        makeJSONSave(transition_pr),
+                        makeJSONSafe(prev_viterbi[s]),
+                        makeJSONSafe(emission_pr),
+                        makeJSONSafe(transition_pr),
                         get_network_distance(prev_unbroken_timestamps_list[s].first, current_timestamps_list[s_prime].first),
                         coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate)
                     );
@@ -417,7 +417,7 @@ template <class DataFacadeT> class MapMatching final
             JSON::Array _debug_pruned_col;
             for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
             {
-                _debug_viterbi_col.values.push_back(makeJSONSave(current_viterbi[s_prime]));
+                _debug_viterbi_col.values.push_back(makeJSONSafe(current_viterbi[s_prime]));
                 _debug_pruned_col.values.push_back(static_cast<unsigned>(current_pruned[s_prime]));
             }
             _debug_viterbi.values.push_back(_debug_viterbi_col);
