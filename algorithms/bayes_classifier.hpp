@@ -60,7 +60,7 @@ struct LaplaceDistribution
     }
 
     // FIXME implement log-probability version since its faster
-    double probabilityDensityFunction(const double val)
+    double probabilityDensityFunction(const double val) const
     {
         const double x = std::abs(val - location);
         return 1.0 / (2*scale) * std::exp(-x / scale);
@@ -75,6 +75,7 @@ class BayesClassifier
 {
 public:
     enum class ClassLabel : unsigned {NEGATIVE = 0, POSITIVE};
+    using ClassificationT = std::pair<ClassLabel, double>;
 
     BayesClassifier(const PositiveDistributionT& positive_distribution,
                     const NegativeDistributionT& negative_distribution,
@@ -89,7 +90,7 @@ public:
     /*
      * Returns label and the probability of the label.
      */
-    std::pair<ClassLabel, double> classify(const ValueT& v)
+    ClassificationT classify(const ValueT& v) const
     {
         const double positive_postpriori = positive_apriori_probability * positive_distribution.probabilityDensityFunction(v);
         const double negative_postpriori = negative_apriori_probability * negative_distribution.probabilityDensityFunction(v);
