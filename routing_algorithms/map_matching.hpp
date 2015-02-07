@@ -25,7 +25,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../util/simple_logger.hpp"
-#include "../util/container.hpp"
 
 #include <algorithm>
 #include <iomanip>
@@ -77,20 +76,36 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
     typedef typename SearchEngineData::QueryHeap QueryHeap;
     SearchEngineData &engine_working_data;
 
+    // FIXME this value should be a table based on samples/meter (or samples/min)
+    constexpr static const double beta = 10.0;
     constexpr static const double sigma_z = 4.07;
+    constexpr static const double log_sigma_z = std::log(sigma_z);
+    constexpr static const double log_2_pi = std::log(2 * M_PI);
 
+    // TODO: move to a probability util header and implement as normal distribution
     constexpr double emission_probability(const double distance) const
     {
         return (1. / (std::sqrt(2. * M_PI) * sigma_z)) *
                std::exp(-0.5 * std::pow((distance / sigma_z), 2.));
     }
 
-    constexpr double log_probability(const double probability) const
+    constexpr double transition_probability(const float d_t, const float beta) const
     {
-        return std::log2(probability);
+        return (1. / beta) * std::exp(-d_t / beta);
+    }
+
+    inline double log_emission_probability(const double distance) const {
+        const double normed_distance = distance / sigma_z;
+        return -0.5 * (log_2_pi + normed_distance * normed_distance) - log_sigma_z;
+    }
+
+    inline double log_transition_probability(const float d_t, const float beta) const
+    {
+        return -std::log(beta) - d_t / beta;
     }
 
     // TODO: needs to be estimated from the input locations
+    // FIXME These values seem wrong. Higher beta for more samples/minute? Should be inverse proportional.
     //constexpr static const double beta = 1.;
     // samples/min and beta
     // 1 0.49037673
@@ -125,48 +140,6 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
     // 29 32.21683062
     // 30 34.56991141
 
-    constexpr double transition_probability(const float d_t, const float beta) const
-    {
-        return (1. / beta) * std::exp(-d_t / beta);
-    }
-
-    // deprecated
-    // translates a distance into how likely it is an input
-    // double DistanceToProbability(const double distance) const
-    // {
-    //     if (0. > distance)
-    //     {
-    //         return 0.;
-    //     }
-    //     return 1. - 1. / (1. + exp((-distance + 35.) / 6.));
-    // }
-
-    double get_beta(const unsigned state_size,
-                    const Matching::CandidateLists &timestamp_list,
-                    const std::vector<FixedPointCoordinate> coordinate_list) const
-    {
-        std::vector<double> d_t_list, median_select_d_t_list;
-        for (auto t = 1u; t < timestamp_list.size(); ++t)
-        {
-            for (auto s = 0u; s < state_size; ++s)
-            {
-                d_t_list.push_back(get_distance_difference(coordinate_list[t - 1],
-                                                           coordinate_list[t],
-                                                           timestamp_list[t - 1][s].first,
-                                                           timestamp_list[t][s].first));
-                median_select_d_t_list.push_back(d_t_list.back());
-            }
-        }
-
-        std::nth_element(median_select_d_t_list.begin(),
-                         median_select_d_t_list.begin() + median_select_d_t_list.size() / 2,
-                         median_select_d_t_list.end());
-        const auto median_d_t = median_select_d_t_list[median_select_d_t_list.size() / 2];
-
-        return (1. / std::log(2)) * median_d_t;
-    }
-
-
     double get_distance_difference(const FixedPointCoordinate &location1,
                                    const FixedPointCoordinate &location2,
                                    const PhantomNode &source_phantom,
@@ -185,7 +158,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
     }
 
     double get_network_distance(const PhantomNode &source_phantom,
-                                    const PhantomNode &target_phantom) const
+                                const PhantomNode &target_phantom) const
     {
         EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
@@ -343,7 +316,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             {
                 // this might need to be squared as pi_s is also defined as the emission
                 // probability in the paper.
-                viterbi[initial_timestamp][s] = log_probability(emission_probability(timestamp_list[initial_timestamp][s].second));
+                viterbi[initial_timestamp][s] = log_emission_probability(timestamp_list[initial_timestamp][s].second);
                 parents[initial_timestamp][s] = s;
                 pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < -std::numeric_limits<double>::max();
 
@@ -376,10 +349,6 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
 
         BOOST_ASSERT(breakage[initial_timestamp] == false);
 
-        // attention, this call is relatively expensive
-        //const auto beta = get_beta(state_size, timestamp_list, coordinate_list);
-        const auto beta = 10.0;
-
         unsigned prev_unbroken_timestamp = initial_timestamp;
         for (auto t = initial_timestamp + 1; t < timestamp_list.size(); ++t)
         {
@@ -409,7 +378,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                 {
 
                     // how likely is candidate s_prime at time t to be emitted?
-                    const double emission_pr = log_probability(emission_probability(timestamp_list[t][s_prime].second));
+                    const double emission_pr = log_emission_probability(timestamp_list[t][s_prime].second);
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = get_distance_difference(prev_coordinate,
@@ -418,7 +387,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                                                              current_timestamps_list[s_prime].first);
 
                     // plug probabilities together
-                    const double transition_pr = log_probability(transition_probability(d_t, beta));
+                    const double transition_pr = log_transition_probability(d_t, beta);
                     const double new_value = prev_viterbi[s] + emission_pr + transition_pr;
 
                     JSON::Array _debug_element = makeJSONArray(
