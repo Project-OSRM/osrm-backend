@@ -376,9 +376,15 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
 
                 for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
                 {
+                    double new_value = prev_viterbi[s];
+                    if (current_viterbi[s_prime] > new_value)
+                        continue;
 
                     // how likely is candidate s_prime at time t to be emitted?
                     const double emission_pr = log_emission_probability(timestamp_list[t][s_prime].second);
+                    new_value += emission_pr;
+                    if (current_viterbi[s_prime] > new_value)
+                        continue;
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = get_distance_difference(prev_coordinate,
@@ -386,9 +392,8 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                                                              prev_unbroken_timestamps_list[s].first,
                                                              current_timestamps_list[s_prime].first);
 
-                    // plug probabilities together
                     const double transition_pr = log_transition_probability(d_t, beta);
-                    const double new_value = prev_viterbi[s] + emission_pr + transition_pr;
+                    new_value += transition_pr;
 
                     JSON::Array _debug_element = makeJSONArray(
                         makeJSONSafe(prev_viterbi[s]),
