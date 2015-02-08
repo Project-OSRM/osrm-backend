@@ -95,24 +95,15 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return label_with_confidence;
     }
 
-    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
+    bool get_candiates(const std::vector<FixedPointCoordinate>& input_coords, double& trace_length, Matching::CandidateLists& candidates_lists)
     {
-        // check number of parameters
-        if (!check_all_coordinates(route_parameters.coordinates))
-        {
-            return 400;
-        }
-
-        const auto& input_coords = route_parameters.coordinates;
-        Matching::CandidateLists candidate_lists;
-        std::vector<bool> uturn_indicators(false, input_coords.size());
-
         double last_distance = coordinate_calculation::great_circle_distance(
             input_coords[0],
             input_coords[1]);
-        double trace_length = 0;
+        trace_length = 0;
         for (const auto current_coordinate : osrm::irange<std::size_t>(0, input_coords.size()))
         {
+            bool allow_uturn = false;
             if (0 < current_coordinate)
             {
                 last_distance = coordinate_calculation::great_circle_distance(
@@ -131,7 +122,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 // sharp turns indicate a possible uturn
                 if (turn_angle < 100.0 || turn_angle > 260.0)
                 {
-                    uturn_indicators[current_coordinate] = true;
+                    allow_uturn = true;
                 }
             }
 
@@ -143,17 +134,60 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                     5,
                     20))
             {
-                return 400;
+                return false;
             }
 
-            candidate_lists.push_back(candidates);
+            if (allow_uturn)
+            {
+                candidates_lists.push_back(candidates);
+            }
+            else
+            {
+                unsigned compact_size = candidates.size();
+                for (const auto i : osrm::irange(0u, compact_size))
+                {
+                    // Split edge if it is bidirectional and append reverse direction to end of list
+                    if (candidates[i].first.forward_node_id != SPECIAL_NODEID
+                     && candidates[i].first.reverse_node_id != SPECIAL_NODEID)
+                    {
+                        PhantomNode reverse_node(candidates[i].first);
+                        reverse_node.forward_node_id = SPECIAL_NODEID;
+                        candidates.push_back(std::make_pair(reverse_node, candidates[i].second));
+
+                        candidates[i].first.reverse_node_id = SPECIAL_NODEID;
+                    }
+                }
+                candidates_lists.push_back(candidates);
+            }
+
+        }
+
+        return true;
+    }
+
+    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
+    {
+        // check number of parameters
+        if (!check_all_coordinates(route_parameters.coordinates))
+        {
+            return 400;
+        }
+
+        double trace_length;
+        Matching::CandidateLists candidates_lists;
+        const auto& input_coords = route_parameters.coordinates;
+        bool found_candidates = get_candiates(input_coords, trace_length, candidates_lists);
+        if (!found_candidates)
+        {
+            return 400;
         }
 
         // call the actual map matching
-        std::vector<PhantomNode> matched_nodes;
         JSON::Object debug_info;
-        search_engine_ptr->map_matching(candidate_lists, input_coords, uturn_indicators, matched_nodes, debug_info);
+        std::vector<PhantomNode> matched_nodes;
+        search_engine_ptr->map_matching(candidates_lists, input_coords, matched_nodes, debug_info);
 
+        // classify result
         TraceClassification classification = classify(trace_length, matched_nodes, input_coords.size() - matched_nodes.size());
         if (classification.first == ClassifierT::ClassLabel::POSITIVE)
         {
@@ -164,6 +198,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             json_result.values["confidence"] = 1-classification.second;
         }
 
+        // run shortest path routing to obtain geometry
         InternalRouteResult raw_route;
         PhantomNodes current_phantom_node_pair;
         for (unsigned i = 0; i < matched_nodes.size() - 1; ++i)

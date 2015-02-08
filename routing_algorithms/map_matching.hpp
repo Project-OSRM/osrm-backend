@@ -246,47 +246,11 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
     {
     }
 
-    // TODO optimize: a lot of copying that could probably be avoided
-    void expandCandidates(const Matching::CandidateLists &candidates_lists,
-                          Matching::CandidateLists &expanded_lists,
-                          const std::vector<bool>& uturn_indicators) const
-    {
-        // expand list of PhantomNodes to be single-directional
-        expanded_lists.resize(candidates_lists.size());
-        for (const auto i : osrm::irange(0lu, candidates_lists.size()))
-        {
-            for (const auto& candidate : candidates_lists[i])
-            {
-                // bi-directional edge, split phantom node if we don't expect a uturn
-                if (!uturn_indicators[i] && candidate.first.forward_node_id != SPECIAL_NODEID && candidate.first.reverse_node_id != SPECIAL_NODEID)
-                {
-                    PhantomNode forward_node(candidate.first);
-                    PhantomNode reverse_node(candidate.first);
-                    forward_node.reverse_node_id = SPECIAL_NODEID;
-                    reverse_node.forward_node_id = SPECIAL_NODEID;
-                    expanded_lists[i].emplace_back(forward_node, candidate.second);
-                    expanded_lists[i].emplace_back(reverse_node, candidate.second);
-                }
-                else
-                {
-                    expanded_lists[i].push_back(candidate);
-                }
-            }
-        }
-    }
-
-    void operator()(const Matching::CandidateLists &candidates_lists,
+    void operator()(const Matching::CandidateLists &timestamp_list,
                     const std::vector<FixedPointCoordinate> coordinate_list,
-                    const std::vector<bool>& uturn_indicators,
                     std::vector<PhantomNode>& matched_nodes,
                     JSON::Object& _debug_info) const
     {
-        BOOST_ASSERT(candidates_lists.size() == coordinate_list.size());
-        BOOST_ASSERT(candidates_lists.size() == uturn_indicators.size());
-
-        Matching::CandidateLists timestamp_list;
-        expandCandidates(candidates_lists, timestamp_list, uturn_indicators);
-
         std::vector<bool> breakage(timestamp_list.size(), true);
 
         BOOST_ASSERT(timestamp_list.size() > 0);
@@ -460,10 +424,6 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
 
             matched_nodes[i] = timestamp_list[timestamp_index][location_index].first;
         }
-
-        unsigned removed = candidates_lists.size() - matched_nodes.size();
-        if (removed > 10)
-            SimpleLogger().Write(logWARNING) << "Warning: removed " << removed << " candiates.";
 
         JSON::Array _debug_chosen_candidates;
         auto _debug_candidate_iter = reconstructed_indices.begin();
