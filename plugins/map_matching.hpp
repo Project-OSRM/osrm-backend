@@ -81,15 +81,20 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                     matched_nodes[current_node].location,
                     matched_nodes[current_node + 1].location);
         }
-        double distance_feature = -std::log(trace_length / matching_length);
+        double distance_feature = -std::log(trace_length) + std::log(matching_length);
+
+        // matched to the same point
+        if (!std::isfinite(distance_feature))
+        {
+            return std::make_pair(ClassifierT::ClassLabel::NEGATIVE, 1.0);
+        }
 
         auto label_with_confidence =  classifier.classify(distance_feature);
 
         // "second stage classifier": if we need to remove points there is something fishy
         if (removed_points > 0)
         {
-            label_with_confidence.first = ClassifierT::ClassLabel::NEGATIVE;
-            label_with_confidence.second = 1.0;
+            return std::make_pair(ClassifierT::ClassLabel::NEGATIVE, 1.0);
         }
 
         return label_with_confidence;
