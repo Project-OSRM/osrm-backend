@@ -341,13 +341,9 @@ template <class DataFacadeT> class MapMatching final
 
                 for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
                 {
-                    double new_value = prev_viterbi[s];
-                    if (current_viterbi[s_prime] > new_value)
-                        continue;
-
                     // how likely is candidate s_prime at time t to be emitted?
                     const double emission_pr = log_emission_probability(timestamp_list[t][s_prime].second);
-                    new_value += emission_pr;
+                    double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
                         continue;
 
