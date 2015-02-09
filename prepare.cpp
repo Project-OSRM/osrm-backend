@@ -26,8 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "contractor/processing_chain.hpp"
+#include "util/simple_logger.hpp"
 
-#include <boost/program_options.hpp>
+#include <boost/program_options/errors.hpp>
+
+#include <exception>
+#include <ostream>
 
 int main(int argc, char *argv[])
 {

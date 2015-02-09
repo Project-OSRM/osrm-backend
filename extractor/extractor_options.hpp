@@ -28,7 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_OPTIONS_HPP
 #define EXTRACTOR_OPTIONS_HPP
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
+
+#include <string>
 
 enum class return_code : unsigned
 {

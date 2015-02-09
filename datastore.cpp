@@ -28,10 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "data_structures/original_edge_data.hpp"
 #include "data_structures/range_table.hpp"
 #include "data_structures/query_edge.hpp"
+#include "data_structures/query_node.hpp"
 #include "data_structures/shared_memory_factory.hpp"
 #include "data_structures/shared_memory_vector_wrapper.hpp"
 #include "data_structures/static_graph.hpp"
 #include "data_structures/static_rtree.hpp"
+#include "data_structures/travel_mode.hpp"
 #include "data_structures/turn_instructions.hpp"
 #include "server/data_structures/datafacade_base.hpp"
 #include "server/data_structures/shared_datatype.hpp"
@@ -44,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "typedefs.h"
 
 #include <osrm/coordinate.hpp>
+#include <osrm/server_paths.hpp>
 
 using RTreeLeaf = BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf;
 using RTreeNode = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode;
@@ -57,6 +60,7 @@ using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 #include <boost/iostreams/seek.hpp>
 
 #include <cstdint>
+
 
 #include <fstream>
 #include <string>

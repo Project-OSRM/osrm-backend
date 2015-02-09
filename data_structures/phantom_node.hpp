@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/coordinate.hpp>
 
 #include <iostream>
+#include <utility>
 #include <vector>
 
 struct PhantomNode

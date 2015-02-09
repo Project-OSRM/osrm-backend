@@ -27,9 +27,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "request_parser.hpp"
 
+#include "http/compression_type.hpp"
+#include "http/header.hpp"
 #include "http/request.hpp"
 
+#include "../data_structures/tribool.hpp"
+
 #include <boost/algorithm/string/predicate.hpp>
+
+#include <string>
 
 namespace http
 {

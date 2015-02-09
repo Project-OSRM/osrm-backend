@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
+#include <osrm/coordinate.hpp>
+
 #include <cmath>
 
 #include <limits>

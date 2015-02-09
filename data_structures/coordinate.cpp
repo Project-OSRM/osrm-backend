@@ -27,14 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "coordinate_calculation.hpp"
 
-#include "../util/mercator.hpp"
 #ifndef NDEBUG
 #include "../util/simple_logger.hpp"
 #endif
-#include <boost/assert.hpp>
 #include <osrm/coordinate.hpp>
-
-#include <cmath>
 
 #ifndef NDEBUG
 #include <bitset>

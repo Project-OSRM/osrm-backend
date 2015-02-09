@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "query_node.hpp"
 
-#include <string>
+#include "../typedefs.h"
 
 struct ExternalMemoryNode : QueryNode
 {

@@ -28,9 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DOUGLAS_PEUCKER_HPP_
 #define DOUGLAS_PEUCKER_HPP_
 
-#include <stack>
-#include <vector>
+#include "../data_structures/segment_information.hpp"
+
 #include <array>
+#include <stack>
+#include <utility>
+#include <vector>
+
 
 /* This class object computes the bitvector of indicating generalized input
  * points according to the (Ramer-)Douglas-Peucker algorithm.
@@ -38,8 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Input is vector of pairs. Each pair consists of the point information and a
  * bit indicating if the points is present in the generalization.
  * Note: points may also be pre-selected*/
-
-struct SegmentInformation;
 
 static const std::array<int, 19> DOUGLAS_PEUCKER_THRESHOLDS {{
     512440, // z0

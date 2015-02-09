@@ -26,13 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "simple_logger.hpp"
-
-#include "osrm_exception.hpp"
-
-#include <boost/assert.hpp>
-
-#include <cstdio>
-
 #ifdef _MSC_VER
 #include <io.h>
 #define isatty _isatty
@@ -40,10 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 #include <unistd.h>
 #endif
+#include <cstdio>                     
+#include <iostream>                
+#include <mutex>                      
+#include <string>               
 
-#include <ostream>
-#include <iostream>
-#include <mutex>
 
 namespace
 {

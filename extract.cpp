@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extractor/extractor_options.hpp"
 #include "util/simple_logger.hpp"
 
+#include <boost/filesystem.hpp>
+
 int main(int argc, char *argv[])
 {
     try

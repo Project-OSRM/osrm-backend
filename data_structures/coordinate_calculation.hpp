@@ -28,9 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef COORDINATE_CALCULATION
 #define COORDINATE_CALCULATION
 
-#include <osrm/coordinate.hpp>
+struct FixedPointCoordinate;
 
-#include <iosfwd> //for std::ostream
 #include <string>
 #include <utility>
 

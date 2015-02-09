@@ -27,6 +27,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "phantom_node.hpp"
 
+#include "../typedefs.h"
+#include "travel_mode.hpp"
+
+#include <osrm/coordinate.hpp>
+
+#include <limits>
+
 PhantomNode::PhantomNode(NodeID forward_node_id, NodeID reverse_node_id, unsigned name_id,
             int forward_weight, int reverse_weight, int forward_offset, int reverse_offset,
             unsigned packed_geometry_id, unsigned component_id, FixedPointCoordinate &location,

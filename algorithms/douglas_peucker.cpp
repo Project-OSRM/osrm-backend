@@ -28,13 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "douglas_peucker.hpp"
 
 #include "../data_structures/segment_information.hpp"
-#include "../util/integer_range.hpp"
 
 #include <boost/assert.hpp>
 #include <osrm/coordinate.hpp>
 
 #include <cmath>
 #include <algorithm>
+#include <iterator>
 
 namespace
 {

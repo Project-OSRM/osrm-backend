@@ -27,7 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "import_edge.hpp"
 
-#include <boost/assert.hpp>
+#include "travel_mode.hpp"
+#include "../typedefs.h"
 
 bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 {
