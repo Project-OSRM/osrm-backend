@@ -351,6 +351,9 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                                                              current_coordinate,
                                                              prev_unbroken_timestamps_list[s].first,
                                                              current_timestamps_list[s_prime].first);
+                    // very low probability transition -> prune
+                    if (d_t > 2000)
+                        continue;
 
                     const double transition_pr = log_transition_probability(d_t, beta);
                     new_value += transition_pr;
