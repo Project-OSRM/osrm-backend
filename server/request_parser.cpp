@@ -267,7 +267,7 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         }
         return osrm::tribool::no;
     default: // expecting_newline_3
-        return (input == '\n' ? osrm::tribool::yes : osrm::tribool::no);
+        return input == '\n' ? osrm::tribool::yes : osrm::tribool::no;
     }
 }
 
