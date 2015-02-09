@@ -52,18 +52,16 @@ struct DescriptorTable : public std::unordered_map<std::string, unsigned>
     }
 };
 
-
 struct DescriptorConfig
 {
     DescriptorConfig() : instructions(true), geometry(true), encode_geometry(true), zoom_level(18)
     {
     }
 
-    template<class OtherT>
-    DescriptorConfig(const OtherT &other) : instructions(other.print_instructions),
-                                            geometry(other.geometry),
-                                            encode_geometry(other.compression),
-                                            zoom_level(other.zoom_level)
+    template <class OtherT>
+    DescriptorConfig(const OtherT &other)
+        : instructions(other.print_instructions), geometry(other.geometry),
+          encode_geometry(other.compression), zoom_level(other.zoom_level)
     {
         BOOST_ASSERT(zoom_level >= 0);
     }
@@ -80,8 +78,8 @@ template <class DataFacadeT> class BaseDescriptor
     BaseDescriptor() {}
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() {}
-    virtual void Run(const InternalRouteResult &, JSON::Object &) = 0;
-    virtual void SetConfig(const DescriptorConfig &) = 0;
+    virtual void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) = 0;
+    virtual void SetConfig(const DescriptorConfig &c) = 0;
 };
 
 #endif // DESCRIPTOR_BASE_HPP
