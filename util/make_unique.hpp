@@ -34,24 +34,40 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace osrm
 {
-// Taken from http://msdn.microsoft.com/en-us/library/dn439780.asp
-// Note, that the snippet was broken there and needed minor massaging
+// Implement make_unique according to N3656. Taken from libcxx's implementation
 
-// make_unique<T>
-template <class T, class... Types> std::unique_ptr<T> make_unique(Types &&... Args)
+/// \brief Constructs a `new T()` with the given args and returns a
+///        `unique_ptr<T>` which owns the object.
+///
+/// Example:
+///
+///     auto p = make_unique<int>();
+///     auto p = make_unique<std::tuple<int, int>>(0, 1);
+template <class T, class... Args>
+typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type
+make_unique(Args &&... args)
 {
-    return (std::unique_ptr<T>(new T(std::forward<Types>(Args)...)));
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-// make_unique<T[]>
-template <class T> std::unique_ptr<T[]> make_unique(std::size_t Size)
+/// \brief Constructs a `new T[n]` with the given args and returns a
+///        `unique_ptr<T[]>` which owns the object.
+///
+/// \param n size of the new array.
+///
+/// Example:
+///
+///     auto p = make_unique<int[]>(2); // value-initializes the array with 0's.
+template <class T>
+typename std::enable_if<std::is_array<T>::value && std::extent<T>::value == 0,
+                        std::unique_ptr<T>>::type
+make_unique(size_t n)
 {
-    return (std::unique_ptr<T>(new T[Size]()));
+    return std::unique_ptr<T>(new typename std::remove_extent<T>::type[n]());
 }
 
-// make_unique<T[N]> disallowed
-template <class T, class... Types>
-typename std::enable_if<std::extent<T>::value != 0, void>::type make_unique(Types &&...) = delete;
+/// This function isn't used and is only here to provide better compile errors.
+template <class T, class... Args>
+typename std::enable_if<std::extent<T>::value != 0>::type make_unique(Args &&...) = delete;
 }
-
 #endif // MAKE_UNIQUE_H_
