@@ -236,8 +236,8 @@ class ShortestPathRouting final : public BasicRoutingInterface<DataFacadeT>
             std::vector<NodeID> temporary_packed_leg1;
             std::vector<NodeID> temporary_packed_leg2;
 
-            BOOST_ASSERT((unsigned)current_leg < packed_legs1.size());
-            BOOST_ASSERT((unsigned)current_leg < packed_legs2.size());
+            BOOST_ASSERT(current_leg < packed_legs1.size());
+            BOOST_ASSERT(current_leg < packed_legs2.size());
 
             if (INVALID_EDGE_WEIGHT != local_upper_bound1)
             {
