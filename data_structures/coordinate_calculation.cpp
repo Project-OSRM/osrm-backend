@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace
 {
-constexpr static const float RAD = 0.017453292519943295769236907684886;
+constexpr static const float RAD = 0.017453292519943295769236907684886f;
 // earth radius varies between 6,356.750-6,378.135 km (3,949.901-3,963.189mi)
 // The IUGG value for the equatorial radius is 6378.137 km (3963.19 miles)
 constexpr static const float earth_radius = 6372797.560856f;
@@ -68,9 +68,9 @@ double coordinate_calculation::great_circle_distance(const int lat1,
     const double dLong = dlong1 - dlong2;
     const double dLat = dlat1 - dlat2;
 
-    const double aHarv =
-        pow(sin(dLat / 2.0), 2.0) + cos(dlat1) * cos(dlat2) * pow(sin(dLong / 2.), 2);
-    const double cHarv = 2. * atan2(sqrt(aHarv), sqrt(1.0 - aHarv));
+    const double aHarv = std::pow(std::sin(dLat / 2.0), 2.0) +
+                         std::cos(dlat1) * std::cos(dlat2) * std::pow(std::sin(dLong / 2.), 2);
+    const double cHarv = 2. * std::atan2(std::sqrt(aHarv), std::sqrt(1.0 - aHarv));
     return earth_radius * cHarv;
 }
 
@@ -251,8 +251,9 @@ float coordinate_calculation::bearing(const FixedPointCoordinate &first_coordina
     const float lon_delta = deg_to_rad(lon_diff);
     const float lat1 = deg_to_rad(first_coordinate.lat / COORDINATE_PRECISION);
     const float lat2 = deg_to_rad(second_coordinate.lat / COORDINATE_PRECISION);
-    const float y = sin(lon_delta) * cos(lat2);
-    const float x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon_delta);
+    const float y = std::sin(lon_delta) * std::cos(lat2);
+    const float x =
+        std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
     float result = rad_to_deg(std::atan2(y, x));
     while (result < 0.f)
     {
