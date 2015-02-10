@@ -112,7 +112,7 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
             continue;
         }
 
-        edge.data.distance = (std::max)((int)import_edge.weight, 1);
+        edge.data.distance = (std::max)(static_cast<int>(import_edge.weight), 1);
         BOOST_ASSERT(edge.data.distance > 0);
         edge.data.shortcut = false;
         edge.data.roundabout = import_edge.roundabout;
@@ -171,7 +171,7 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         // merge edges (s,t) and (t,s) into bidirectional edge
         if (forward_edge.data.distance == reverse_edge.data.distance)
         {
-            if ((int)forward_edge.data.distance != std::numeric_limits<int>::max())
+            if (static_cast<int>(forward_edge.data.distance) != std::numeric_limits<int>::max())
             {
                 forward_edge.data.backward = true;
                 edges_list[edge_count++] = forward_edge;
@@ -179,11 +179,11 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         }
         else
         { // insert seperate edges
-            if (((int)forward_edge.data.distance) != std::numeric_limits<int>::max())
+            if (static_cast<int>(forward_edge.data.distance) != std::numeric_limits<int>::max())
             {
                 edges_list[edge_count++] = forward_edge;
             }
-            if ((int)reverse_edge.data.distance != std::numeric_limits<int>::max())
+            if (static_cast<int>(reverse_edge.data.distance) != std::numeric_limits<int>::max())
             {
                 edges_list[edge_count++] = reverse_edge;
             }
@@ -252,18 +252,18 @@ SimpleNodeBasedDynamicGraphFromEdges(int number_of_nodes, std::vector<SimpleEdge
         // merge edges (s,t) and (t,s) into bidirectional edge
         if (forward_edge.data.capacity == reverse_edge.data.capacity)
         {
-            if ((int)forward_edge.data.capacity != INVALID_EDGE_WEIGHT)
+            if (static_cast<int>(forward_edge.data.capacity) != INVALID_EDGE_WEIGHT)
             {
                 edges_list[edge_count++] = forward_edge;
             }
         }
         else
         { // insert seperate edges
-            if (((int)forward_edge.data.capacity) != INVALID_EDGE_WEIGHT)
+            if (static_cast<int>(forward_edge.data.capacity) != INVALID_EDGE_WEIGHT)
             {
                 edges_list[edge_count++] = forward_edge;
             }
-            if ((int)reverse_edge.data.capacity != INVALID_EDGE_WEIGHT)
+            if (static_cast<int>(reverse_edge.data.capacity) != INVALID_EDGE_WEIGHT)
             {
                 edges_list[edge_count++] = reverse_edge;
             }

@@ -32,12 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <limits>
 #include <utility>
 #include <vector>
 
 template <typename ElementT> struct DeallocatingVectorIteratorState
 {
-    DeallocatingVectorIteratorState() : index(-1), bucket_list(nullptr) {}
+    DeallocatingVectorIteratorState()
+        : index(std::numeric_limits<std::size_t>::max()), bucket_list(nullptr)
+    {
+    }
     explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r)
         : index(r.index), bucket_list(r.bucket_list)
     {

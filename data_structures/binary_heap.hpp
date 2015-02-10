@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -40,18 +40,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename NodeID, typename Key> class ArrayStorage
 {
   public:
-    explicit ArrayStorage(size_t size) : positions(size, 0)
-    {
-    }
+    explicit ArrayStorage(size_t size) : positions(size, 0) {}
 
-    ~ArrayStorage() { }
+    ~ArrayStorage() {}
 
     Key &operator[](NodeID node) { return positions[node]; }
 
-    Key peek_index(const NodeID node) const
-    {
-        return positions[node];
-    }
+    Key peek_index(const NodeID node) const { return positions[node]; }
 
     void Clear() {}
 
@@ -77,6 +72,7 @@ template <typename NodeID, typename Key> class MapStorage
         }
         return std::numeric_limits<Key>::max();
     }
+
   private:
     std::map<NodeID, Key> nodes;
 };
@@ -262,8 +258,7 @@ class BinaryHeap
         while (nextKey < heap_size)
         {
             const Key nextKeyOther = nextKey + 1;
-            if ((nextKeyOther < heap_size) &&
-                (heap[nextKey].weight > heap[nextKeyOther].weight))
+            if ((nextKeyOther < heap_size) && (heap[nextKey].weight > heap[nextKeyOther].weight))
             {
                 nextKey = nextKeyOther;
             }
@@ -302,7 +297,7 @@ class BinaryHeap
     void CheckHeap()
     {
 #ifndef NDEBUG
-        for (Key i = 2; i < (Key)heap.size(); ++i)
+        for (std::size_t i = 2; i < heap.size(); ++i)
         {
             BOOST_ASSERT(heap[i].weight >= heap[i >> 1].weight);
         }

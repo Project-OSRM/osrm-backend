@@ -90,7 +90,7 @@ template <typename EdgeDataT> class DynamicGraph
     template <class ContainerT> DynamicGraph(const NodeIterator nodes, const ContainerT &graph)
     {
         number_of_nodes = nodes;
-        number_of_edges = (EdgeIterator)graph.size();
+        number_of_edges = static_cast<EdgeIterator>(graph.size());
         node_list.reserve(number_of_nodes + 1);
         node_list.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;

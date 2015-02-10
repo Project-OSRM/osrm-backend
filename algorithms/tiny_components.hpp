@@ -102,7 +102,7 @@ template <typename GraphT> class TarjanSCC
         std::stack<NodeID> tarjan_stack;
         std::vector<TarjanNode> tarjan_node_list(m_node_based_graph->GetNumberOfNodes());
         unsigned component_index = 0, size_of_current_component = 0;
-        int index = 0;
+        unsigned index = 0;
         const NodeID last_node = m_node_based_graph->GetNumberOfNodes();
         std::vector<bool> processing_node_before_recursion(m_node_based_graph->GetNumberOfNodes(),
                                                            true);
@@ -226,7 +226,7 @@ template <typename GraphT> class TarjanSCC
 
     std::size_t get_number_of_components() const { return component_size_vector.size(); }
 
-    unsigned get_size_one_count() const { return size_one_counter; }
+    std::size_t get_size_one_count() const { return size_one_counter; }
 
     unsigned get_component_size(const NodeID node) const
     {
