@@ -51,7 +51,7 @@ struct ObjectEncoder
 
     template <class ObjectT> static void EncodeToBase64(const ObjectT &object, std::string &encoded)
     {
-        const char *char_ptr_to_object = (const char *)&object;
+        const char *char_ptr_to_object = reinterpret_cast<const char *>(&object);
         std::vector<unsigned char> data(sizeof(object));
         std::copy(char_ptr_to_object, char_ptr_to_object + sizeof(ObjectT), data.begin());
 
@@ -80,7 +80,7 @@ struct ObjectEncoder
             replaceAll(encoded, "_", "/");
 
             std::copy(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length() - 1),
-                      (char *)&object);
+                      reinterpret_cast<char *>(&object));
         }
         catch (...)
         {
