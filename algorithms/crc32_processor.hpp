@@ -49,7 +49,7 @@ class IteratorbasedCRC32
         while (iter != end)
         {
             using value_type = typename std::iterator_traits<Iterator>::value_type;
-            char *data = reinterpret_cast<char *>(&(*iter));
+            const char *data = reinterpret_cast<const char *>(&(*iter));
 
             if (use_hardware_implementation)
             {
@@ -73,14 +73,14 @@ class IteratorbasedCRC32
         return sse42_found;
     }
 
-    unsigned compute_in_software(char *str, unsigned len)
+    unsigned compute_in_software(const char *str, unsigned len)
     {
         crc_processor.process_bytes(str, len);
         return crc_processor.checksum();
     }
 
     // adapted from http://byteworm.com/2010/10/13/crc32/
-    unsigned compute_in_hardware(char *str, unsigned len)
+    unsigned compute_in_hardware(const char *str, unsigned len)
     {
 #if defined(__x86_64__)
         unsigned q = len / sizeof(unsigned);
