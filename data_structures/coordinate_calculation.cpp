@@ -103,7 +103,7 @@ float coordinate_calculation::euclidean_distance(const int lat1,
     const float float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
     const float float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
 
-    const float x_value = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.f);
+    const float x_value = (float_lon2 - float_lon1) * std::cos((float_lat1 + float_lat2) / 2.f);
     const float y_value = float_lat2 - float_lat1;
     return std::hypot(x_value, y_value) * earth_radius;
 }
