@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -49,7 +49,7 @@ class IteratorbasedCRC32
         while (iter != end)
         {
             using value_type = typename std::iterator_traits<Iterator>::value_type;
-            char *data = (char *)(&(*iter));
+            char *data = reinterpret_cast<char *>(&(*iter));
 
             if (use_hardware_implementation)
             {
@@ -96,7 +96,7 @@ class IteratorbasedCRC32
             ++p;
         }
 
-        str = (char *)p;
+        str = reinterpret_cast<char *>(p);
         while (r--)
         {
             __asm__ __volatile__(".byte 0xf2, 0xf, 0x38, 0xf1, 0xf1;"
@@ -131,8 +131,7 @@ class IteratorbasedCRC32
 
 struct RangebasedCRC32
 {
-    template<typename Iteratable>
-    unsigned operator()(const Iteratable &iterable)
+    template <typename Iteratable> unsigned operator()(const Iteratable &iterable)
     {
         return crc32(std::begin(iterable), std::end(iterable));
     }
