@@ -62,7 +62,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
 {
     const FingerPrint fingerprint_orig;
     FingerPrint fingerprint_loaded;
-    input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+    input_stream.read(reinterpret_cast<char *>(&fingerprint_loaded), sizeof(FingerPrint));
 
     if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
     {
@@ -73,13 +73,13 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     std::unordered_map<NodeID, NodeID> ext_to_int_id_map;
 
     NodeID n;
-    input_stream.read((char *)&n, sizeof(NodeID));
+    input_stream.read(reinterpret_cast<char *>(&n), sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
 
     ExternalMemoryNode current_node;
     for (NodeID i = 0; i < n; ++i)
     {
-        input_stream.read((char *)&current_node, sizeof(ExternalMemoryNode));
+        input_stream.read(reinterpret_cast<char *>(&current_node), sizeof(ExternalMemoryNode));
         int_to_ext_node_id_map->emplace_back(current_node.lat, current_node.lon,
                                              current_node.node_id);
         ext_to_int_id_map.emplace(current_node.node_id, i);
@@ -138,23 +138,23 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     TravelMode travel_mode;
 
     EdgeID m;
-    input_stream.read((char *)&m, sizeof(unsigned));
+    input_stream.read(reinterpret_cast<char *>(&m), sizeof(unsigned));
     edge_list.reserve(m);
     SimpleLogger().Write() << " and " << m << " edges ";
 
     for (EdgeID i = 0; i < m; ++i)
     {
-        input_stream.read((char *)&source, sizeof(unsigned));
-        input_stream.read((char *)&target, sizeof(unsigned));
-        input_stream.read((char *)&length, sizeof(int));
-        input_stream.read((char *)&dir, sizeof(short));
-        input_stream.read((char *)&weight, sizeof(int));
-        input_stream.read((char *)&nameID, sizeof(unsigned));
-        input_stream.read((char *)&is_roundabout, sizeof(bool));
-        input_stream.read((char *)&ignore_in_grid, sizeof(bool));
-        input_stream.read((char *)&is_access_restricted, sizeof(bool));
-        input_stream.read((char *)&travel_mode, sizeof(TravelMode));
-        input_stream.read((char *)&is_split, sizeof(bool));
+        input_stream.read(reinterpret_cast<char *>(&source), sizeof(unsigned));
+        input_stream.read(reinterpret_cast<char *>(&target), sizeof(unsigned));
+        input_stream.read(reinterpret_cast<char *>(&length), sizeof(int));
+        input_stream.read(reinterpret_cast<char *>(&dir), sizeof(short));
+        input_stream.read(reinterpret_cast<char *>(&weight), sizeof(int));
+        input_stream.read(reinterpret_cast<char *>(&nameID), sizeof(unsigned));
+        input_stream.read(reinterpret_cast<char *>(&is_roundabout), sizeof(bool));
+        input_stream.read(reinterpret_cast<char *>(&ignore_in_grid), sizeof(bool));
+        input_stream.read(reinterpret_cast<char *>(&is_access_restricted), sizeof(bool));
+        input_stream.read(reinterpret_cast<char *>(&travel_mode), sizeof(TravelMode));
+        input_stream.read(reinterpret_cast<char *>(&is_split), sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
         BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
@@ -286,7 +286,7 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
     boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);
 
     FingerPrint fingerprint_loaded, fingerprint_orig;
-    hsgr_input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+    hsgr_input_stream.read(reinterpret_cast<char *>(&fingerprint_loaded), sizeof(FingerPrint));
     if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
     {
         SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build.\n"
@@ -295,22 +295,24 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
 
     unsigned number_of_nodes = 0;
     unsigned number_of_edges = 0;
-    hsgr_input_stream.read((char *)check_sum, sizeof(unsigned));
-    hsgr_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
+    hsgr_input_stream.read(reinterpret_cast<char *>(check_sum), sizeof(unsigned));
+    hsgr_input_stream.read(reinterpret_cast<char *>(&number_of_nodes), sizeof(unsigned));
     BOOST_ASSERT_MSG(0 != number_of_nodes, "number of nodes is zero");
-    hsgr_input_stream.read((char *)&number_of_edges, sizeof(unsigned));
+    hsgr_input_stream.read(reinterpret_cast<char *>(&number_of_edges), sizeof(unsigned));
 
     SimpleLogger().Write() << "number_of_nodes: " << number_of_nodes
                            << ", number_of_edges: " << number_of_edges;
 
     // BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
     node_list.resize(number_of_nodes);
-    hsgr_input_stream.read((char *)&(node_list[0]), number_of_nodes * sizeof(NodeT));
+    hsgr_input_stream.read(reinterpret_cast<char *>(&node_list[0]),
+                           number_of_nodes * sizeof(NodeT));
 
     edge_list.resize(number_of_edges);
     if (number_of_edges > 0)
     {
-        hsgr_input_stream.read((char *)&(edge_list[0]), number_of_edges * sizeof(EdgeT));
+        hsgr_input_stream.read(reinterpret_cast<char *>(&edge_list[0]),
+                               number_of_edges * sizeof(EdgeT));
     }
     hsgr_input_stream.close();
 
