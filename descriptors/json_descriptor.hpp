@@ -77,7 +77,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
     {
     }
 
-    void SetConfig(const DescriptorConfig &c) override final { config = c; }
+    virtual void SetConfig(const DescriptorConfig &c) override final { config = c; }
 
     unsigned DescribeLeg(const std::vector<PathData> route_leg,
                          const PhantomNodes &leg_phantoms,
@@ -100,7 +100,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         return added_element_count;
     }
 
-    void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) override final
+    virtual void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) override final
     {
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
