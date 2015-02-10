@@ -345,7 +345,10 @@ template <class DataFacadeT> class MapMatching final
                     const double emission_pr = log_emission_probability(timestamp_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
+                    {
+                        _debug_row.values.push_back(JSON::Array());
                         continue;
+                    }
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = get_distance_difference(prev_coordinate,
@@ -353,8 +356,11 @@ template <class DataFacadeT> class MapMatching final
                                                              prev_unbroken_timestamps_list[s].first,
                                                              current_timestamps_list[s_prime].first);
                     // very low probability transition -> prune
-                    if (d_t > 2000)
+                    if (d_t > 500)
+                    {
+                        _debug_row.values.push_back(JSON::Array());
                         continue;
+                    }
 
                     const double transition_pr = log_transition_probability(d_t, beta);
                     new_value += transition_pr;
