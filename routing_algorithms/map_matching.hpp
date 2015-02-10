@@ -278,6 +278,8 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             {
                 JSON::Object _debug_state;
                 _debug_state.values["transitions"] = JSON::Array();
+                _debug_state.values["coordinate"] = makeJSONArray(l[i].first.location.lat / COORDINATE_PRECISION,
+                                                                  l[i].first.location.lon / COORDINATE_PRECISION);
                 _debug_timestamps.values.push_back(_debug_state);
             }
             _debug_states.values.push_back(_debug_timestamps);
