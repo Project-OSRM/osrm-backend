@@ -32,6 +32,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <fstream>
 
+using JSONVariantArray = mapbox::util::recursive_wrapper<JSON::Array>;
+using JSONVariantObject = mapbox::util::recursive_wrapper<JSON::Object>;
+
 template<typename T>
 T makeJSONSafe(T d)
 {
@@ -264,18 +267,25 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             viterbi.emplace_back(l.size(), -std::numeric_limits<double>::infinity());
             parents.emplace_back(l.size(), 0);
             pruned.emplace_back(l.size(), true);
+
         }
 
-        JSON::Array _debug_timestamps;
-        JSON::Array _debug_viterbi;
-        JSON::Array _debug_pruned;
+        JSON::Array _debug_states;
+        for (const auto& l : timestamp_list)
+        {
+            JSON::Array _debug_timestamps;
+            for (unsigned i = 0; i < l.size(); i++)
+            {
+                JSON::Object _debug_state;
+                _debug_state.values["transitions"] = JSON::Array();
+                _debug_timestamps.values.push_back(_debug_state);
+            }
+            _debug_states.values.push_back(_debug_timestamps);
+        }
 
         unsigned initial_timestamp = 0;
         do
         {
-            JSON::Array _debug_initial_viterbi;
-            JSON::Array _debug_initial_pruned;
-
             for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
             {
                 // this might need to be squared as pi_s is also defined as the emission
@@ -285,24 +295,13 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                 pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < -std::numeric_limits<double>::max();
 
                 breakage[initial_timestamp] = breakage[initial_timestamp] && pruned[initial_timestamp][s];
-            }
 
-            for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
-            {
-                _debug_initial_viterbi.values.push_back(makeJSONSafe(viterbi[initial_timestamp][s]));
-                _debug_initial_pruned.values.push_back(static_cast<unsigned>(pruned[initial_timestamp][s]));
-            }
-
-            _debug_viterbi.values.push_back(_debug_initial_viterbi);
-            _debug_pruned.values.push_back(_debug_initial_pruned);
-
-
-            if (initial_timestamp > 0) {
-                JSON::Array _debug_transition_rows;
-                for (auto s = 0u; s < viterbi[initial_timestamp-1].size(); ++s) {
-                    _debug_transition_rows.values.push_back(JSON::Array());
-                }
-                _debug_timestamps.values.push_back(_debug_transition_rows);
+                _debug_states.values[initial_timestamp]
+                    .get<JSONVariantArray>().get().values[s]
+                    .get<JSONVariantObject>().get().values["viterbi"] = makeJSONSafe(viterbi[initial_timestamp][s]);
+                _debug_states.values[initial_timestamp]
+                    .get<JSONVariantArray>().get().values[s]
+                    .get<JSONVariantObject>().get().values["pruned"] = static_cast<unsigned>(pruned[initial_timestamp][s]);
             }
 
             ++initial_timestamp;
@@ -327,16 +326,11 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             const auto& current_timestamps_list = timestamp_list[t];
             const auto& current_coordinate = coordinate_list[t];
 
-            JSON::Array _debug_transition_rows;
             // compute d_t for this timestamp and the next one
             for (auto s = 0u; s < prev_viterbi.size(); ++s)
             {
-                JSON::Array _debug_row;
                 if (prev_pruned[s])
-                {
-                    _debug_transition_rows.values.push_back(_debug_row);
                     continue;
-                }
 
                 for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
                 {
@@ -344,10 +338,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                     const double emission_pr = log_emission_probability(timestamp_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
-                    {
-                        _debug_row.values.push_back(JSON::Array());
                         continue;
-                    }
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = get_distance_difference(prev_coordinate,
@@ -356,23 +347,25 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                                                              current_timestamps_list[s_prime].first);
                     // very low probability transition -> prune
                     if (d_t > 500)
-                    {
-                        _debug_row.values.push_back(JSON::Array());
                         continue;
-                    }
 
                     const double transition_pr = log_transition_probability(d_t, beta);
                     new_value += transition_pr;
 
-                    JSON::Array _debug_element = makeJSONArray(
+                    JSON::Object _debug_transistion;
+                    _debug_transistion.values["to"] = makeJSONArray(t, s_prime);
+                    _debug_transistion.values["properties"] = makeJSONArray(
                         makeJSONSafe(prev_viterbi[s]),
                         makeJSONSafe(emission_pr),
                         makeJSONSafe(transition_pr),
                         get_network_distance(prev_unbroken_timestamps_list[s].first, current_timestamps_list[s_prime].first),
                         coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate)
                     );
+                    _debug_states.values[prev_unbroken_timestamp]
+                        .get<JSONVariantArray>().get().values[s]
+                        .get<JSONVariantObject>().get().values["transitions"]
+                        .get<JSONVariantArray>().get().values.push_back(_debug_transistion);
 
-                    _debug_row.values.push_back(_debug_element);
 
                     if (new_value > current_viterbi[s_prime])
                     {
@@ -382,30 +375,23 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                         breakage[t] = false;
                     }
                 }
-                _debug_transition_rows.values.push_back(_debug_row);
             }
-            _debug_timestamps.values.push_back(_debug_transition_rows);
 
-            JSON::Array _debug_viterbi_col;
-            JSON::Array _debug_pruned_col;
             for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
             {
-                _debug_viterbi_col.values.push_back(makeJSONSafe(current_viterbi[s_prime]));
-                _debug_pruned_col.values.push_back(static_cast<unsigned>(current_pruned[s_prime]));
+                _debug_states.values[t]
+                    .get<JSONVariantArray>().get().values[s_prime]
+                    .get<JSONVariantObject>().get().values["viterbi"] = makeJSONSafe(current_viterbi[s_prime]);
+                _debug_states.values[t]
+                    .get<JSONVariantArray>().get().values[s_prime]
+                    .get<JSONVariantObject>().get().values["pruned"]  = static_cast<unsigned>(current_pruned[s_prime]);
             }
-            _debug_viterbi.values.push_back(_debug_viterbi_col);
-            _debug_pruned.values.push_back(_debug_pruned_col);
 
             if (!breakage[t])
             {
                 prev_unbroken_timestamp = t;
             }
         }
-
-        _debug_info.values["transitions"] = _debug_timestamps;
-        _debug_info.values["viterbi"] = _debug_viterbi;
-        _debug_info.values["pruned"] = _debug_pruned;
-        _debug_info.values["beta"] = beta;
 
         // loop through the columns, and only compare the last entry
         auto max_element_iter = std::max_element(viterbi[prev_unbroken_timestamp].begin(), viterbi[prev_unbroken_timestamp].end());
@@ -428,41 +414,19 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             auto location_index = reconstructed_indices[i].second;
 
             matched_nodes[i] = timestamp_list[timestamp_index][location_index].first;
-        }
 
-        JSON::Array _debug_chosen_candidates;
-        auto _debug_candidate_iter = reconstructed_indices.begin();
-        for (auto i = 0u; i < timestamp_list.size(); ++i)
-        {
-            if (_debug_candidate_iter != reconstructed_indices.end() && _debug_candidate_iter->first == i)
-            {
-                _debug_chosen_candidates.values.push_back(_debug_candidate_iter->second);
-                _debug_candidate_iter = std::next(_debug_candidate_iter);
-            }
-            else
-            {
-                _debug_chosen_candidates.values.push_back(JSON::Null());
-            }
+            _debug_states.values[timestamp_index]
+                .get<JSONVariantArray>().get().values[location_index]
+                .get<JSONVariantObject>().get().values["chosen"] = true;
         }
-        _debug_info.values["chosen_candidates"] = _debug_chosen_candidates;
 
         JSON::Array _debug_breakage;
         for (auto b : breakage) {
             _debug_breakage.values.push_back(static_cast<unsigned>(b));
         }
-        _debug_info.values["breakage"] = _debug_breakage;
 
-        JSON::Array _debug_expanded_candidates;
-        for (const auto& l : timestamp_list) {
-            JSON::Array _debug_expanded_candidates_col;
-            for (const auto& pair : l) {
-                const auto& coord = pair.first.location;
-                _debug_expanded_candidates_col.values.push_back(makeJSONArray(coord.lat / COORDINATE_PRECISION,
-                                                                              coord.lon / COORDINATE_PRECISION));
-            }
-            _debug_expanded_candidates.values.push_back(_debug_expanded_candidates_col);
-        }
-        _debug_info.values["expanded_candidates"] = _debug_expanded_candidates;
+        _debug_info.values["breakage"] = _debug_breakage;
+        _debug_info.values["states"] = _debug_states;
     }
 };
 
