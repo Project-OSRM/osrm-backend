@@ -56,7 +56,7 @@ template <class DataFacadeT> class BasicRoutingInterface
     BasicRoutingInterface() = delete;
     BasicRoutingInterface(const BasicRoutingInterface &) = delete;
     explicit BasicRoutingInterface(DataFacadeT *facade) : facade(facade) {}
-    virtual ~BasicRoutingInterface(){};
+    virtual ~BasicRoutingInterface() {}
 
     inline void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
                             SearchEngineData::QueryHeap &reverse_heap,
