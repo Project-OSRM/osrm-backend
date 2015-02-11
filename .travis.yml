@@ -46,7 +46,7 @@ env:
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-4.8" OSRM_PORT=5000 OSRM_TIMEOUT=60
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++-4.8" OSRM_PORT=5010 OSRM_TIMEOUT=60
 notifications:
- slack: mapbox:cBzPx49r0dcpxSghmUfG3Wio
+ slack: mapbox:4A6euphDwfxAQnhLurXbu6A1
  irc:
   channels:
     - irc.oftc.net#osrm
