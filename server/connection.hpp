@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "http/compression_type.hpp"
 #include "http/reply.hpp"
 #include "http/request.hpp"
+#include "request_parser.hpp"
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
@@ -82,6 +83,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     boost::asio::io_service::strand strand;
     boost::asio::ip::tcp::socket TCP_socket;
     RequestHandler &request_handler;
+    RequestParser request_parser;
     boost::array<char, 8192> incoming_data_buffer;
     request current_request;
     reply current_reply;
