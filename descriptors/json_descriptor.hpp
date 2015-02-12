@@ -352,7 +352,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                         facade->GetEscapedNameForNameID(segment.name_id));
                     json_instruction_row.values.push_back(std::round(segment.length));
                     json_instruction_row.values.push_back(necessary_segments_running_index);
-                    json_instruction_row.values.push_back(round(segment.duration / 10));
+                    json_instruction_row.values.push_back(std::round(segment.duration / 10.));
                     json_instruction_row.values.push_back(
                         cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
                     const double bearing_value = (segment.bearing / 10.);
