@@ -68,7 +68,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     compression_type compression_type(no_compression);
     osrm::tribool result;
     std::tie(result, compression_type) =
-        RequestParser().parse(current_request, incoming_data_buffer.data(),
+        request_parser.parse(current_request, incoming_data_buffer.data(),
                               incoming_data_buffer.data() + bytes_transferred);
 
     // the request has been parsed
