@@ -156,7 +156,7 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
             }
             if (0 < reverse_heap1.Size())
             {
-                AlternativeRoutingStep<false>(reverse_heap1, forward_heap1, &middle_node,
+                AlternativeRoutingStep<false>(forward_heap1, reverse_heap1, &middle_node,
                                               &upper_bound_to_shortest_path_distance,
                                               via_node_candidate_list, reverse_search_space,
                                               min_edge_offset);
@@ -351,13 +351,13 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
 
   private:
     // unpack alternate <s,..,v,..,t> by exploring search spaces from v
-    inline void RetrievePackedAlternatePath(const QueryHeap &forward_heap1,
-                                            const QueryHeap &reverse_heap1,
-                                            const QueryHeap &forward_heap2,
-                                            const QueryHeap &reverse_heap2,
-                                            const NodeID s_v_middle,
-                                            const NodeID v_t_middle,
-                                            std::vector<NodeID> &packed_path) const
+    void RetrievePackedAlternatePath(const QueryHeap &forward_heap1,
+                                     const QueryHeap &reverse_heap1,
+                                     const QueryHeap &forward_heap2,
+                                     const QueryHeap &reverse_heap2,
+                                     const NodeID s_v_middle,
+                                     const NodeID v_t_middle,
+                                     std::vector<NodeID> &packed_path) const
     {
         // fetch packed path [s,v)
         std::vector<NodeID> packed_v_t_path;
@@ -375,11 +375,11 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
     // compute and unpack <s,..,v> and <v,..,t> by exploring search spaces
     // from v and intersecting against queues. only half-searches have to be
     // done at this stage
-    inline void ComputeLengthAndSharingOfViaPath(const NodeID via_node,
-                                                 int *real_length_of_via_path,
-                                                 int *sharing_of_via_path,
-                                                 const std::vector<NodeID> &packed_shortest_path,
-                                                 const EdgeWeight min_edge_offset)
+    void ComputeLengthAndSharingOfViaPath(const NodeID via_node,
+                                          int *real_length_of_via_path,
+                                          int *sharing_of_via_path,
+                                          const std::vector<NodeID> &packed_shortest_path,
+                                          const EdgeWeight min_edge_offset)
     {
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -522,7 +522,7 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
         // variable
     }
 
-    // inline int approximateAmountOfSharing(
+    // int approximateAmountOfSharing(
     //     const NodeID alternate_path_middle_node_id,
     //     QueryHeap & forward_heap,
     //     QueryHeap & reverse_heap,
@@ -569,14 +569,17 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
 
     // todo: reorder parameters
     template <bool is_forward_directed>
-    inline void AlternativeRoutingStep(QueryHeap &forward_heap,
-                                       QueryHeap &reverse_heap,
-                                       NodeID *middle_node,
-                                       int *upper_bound_to_shortest_path_distance,
-                                       std::vector<NodeID> &search_space_intersection,
-                                       std::vector<SearchSpaceEdge> &search_space,
-                                       const EdgeWeight min_edge_offset) const
+    void AlternativeRoutingStep(QueryHeap &heap1,
+                                QueryHeap &heap2,
+                                NodeID *middle_node,
+                                int *upper_bound_to_shortest_path_distance,
+                                std::vector<NodeID> &search_space_intersection,
+                                std::vector<SearchSpaceEdge> &search_space,
+                                const EdgeWeight min_edge_offset) const
     {
+        QueryHeap &forward_heap = (is_forward_directed ? heap1 : heap2);
+        QueryHeap &reverse_heap = (is_forward_directed ? heap2 : heap1);
+
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         // const NodeID parentnode = forward_heap.GetData(node).parent;
@@ -645,16 +648,16 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
     }
 
     // conduct T-Test
-    inline bool ViaNodeCandidatePassesTTest(QueryHeap &existing_forward_heap,
-                                            QueryHeap &existing_reverse_heap,
-                                            QueryHeap &new_forward_heap,
-                                            QueryHeap &new_reverse_heap,
-                                            const RankedCandidateNode &candidate,
-                                            const int length_of_shortest_path,
-                                            int *length_of_via_path,
-                                            NodeID *s_v_middle,
-                                            NodeID *v_t_middle,
-                                            const EdgeWeight min_edge_offset) const
+    bool ViaNodeCandidatePassesTTest(QueryHeap &existing_forward_heap,
+                                     QueryHeap &existing_reverse_heap,
+                                     QueryHeap &new_forward_heap,
+                                     QueryHeap &new_reverse_heap,
+                                     const RankedCandidateNode &candidate,
+                                     const int length_of_shortest_path,
+                                     int *length_of_via_path,
+                                     NodeID *s_v_middle,
+                                     NodeID *v_t_middle,
+                                     const EdgeWeight min_edge_offset) const
     {
         new_forward_heap.Clear();
         new_reverse_heap.Clear();
