@@ -72,16 +72,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    TraceClassification classify(double trace_length, const std::vector<PhantomNode>& matched_nodes, int removed_points) const
+    TraceClassification classify(float trace_length, float matched_length, int removed_points) const
     {
-        double matching_length = 0;
-        for (const auto current_node : osrm::irange<std::size_t>(0, matched_nodes.size()-1))
-        {
-                matching_length += coordinate_calculation::great_circle_distance(
-                    matched_nodes[current_node].location,
-                    matched_nodes[current_node + 1].location);
-        }
-        double distance_feature = -std::log(trace_length) + std::log(matching_length);
+        double distance_feature = -std::log(trace_length) + std::log(matched_length);
 
         // matched to the same point
         if (!std::isfinite(distance_feature))
@@ -189,11 +182,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         // call the actual map matching
         JSON::Object debug_info;
+        float matched_length;
         std::vector<PhantomNode> matched_nodes;
-        search_engine_ptr->map_matching(candidates_lists, input_coords, matched_nodes, debug_info);
+        search_engine_ptr->map_matching(candidates_lists, input_coords, matched_nodes, matched_length, debug_info);
 
         // classify result
-        TraceClassification classification = classify(trace_length, matched_nodes, input_coords.size() - matched_nodes.size());
+        TraceClassification classification = classify(trace_length, matched_length, input_coords.size() - matched_nodes.size());
         if (classification.first == ClassifierT::ClassLabel::POSITIVE)
         {
             json_result.values["confidence"] = classification.second;

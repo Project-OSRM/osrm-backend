@@ -144,23 +144,6 @@ template <class DataFacadeT> class MapMatching final
     // 29 32.21683062
     // 30 34.56991141
 
-    double get_distance_difference(const FixedPointCoordinate &location1,
-                                   const FixedPointCoordinate &location2,
-                                   const PhantomNode &source_phantom,
-                                   const PhantomNode &target_phantom) const
-    {
-        // great circle distance of two locations - median/avg dist table(candidate list1/2)
-        const auto network_distance = get_network_distance(source_phantom, target_phantom);
-        const auto great_circle_distance =
-            coordinate_calculation::great_circle_distance(location1, location2);
-
-        if (great_circle_distance > network_distance)
-        {
-            return great_circle_distance - network_distance;
-        }
-        return network_distance - great_circle_distance;
-    }
-
     double get_network_distance(const PhantomNode &source_phantom,
                                 const PhantomNode &target_phantom) const
     {
@@ -253,6 +236,7 @@ template <class DataFacadeT> class MapMatching final
     void operator()(const Matching::CandidateLists &timestamp_list,
                     const std::vector<FixedPointCoordinate> coordinate_list,
                     std::vector<PhantomNode>& matched_nodes,
+                    float& matched_length,
                     JSON::Object& _debug_info) const
     {
         std::vector<bool> breakage(timestamp_list.size(), true);
@@ -262,11 +246,13 @@ template <class DataFacadeT> class MapMatching final
         // TODO for the viterbi values we actually only need the current and last row
         std::vector<std::vector<double>> viterbi;
         std::vector<std::vector<std::size_t>> parents;
+        std::vector<std::vector<float>> segment_lengths;
         std::vector<std::vector<bool>> pruned;
         for (const auto& l : timestamp_list)
         {
             viterbi.emplace_back(l.size(), -std::numeric_limits<double>::infinity());
             parents.emplace_back(l.size(), 0);
+            segment_lengths.emplace_back(l.size(), 0);
             pruned.emplace_back(l.size(), true);
 
         }
@@ -326,6 +312,7 @@ template <class DataFacadeT> class MapMatching final
             auto& current_viterbi = viterbi[t];
             auto& current_pruned = pruned[t];
             auto& current_parents = parents[t];
+            auto& current_lengths = segment_lengths[t];
             const auto& current_timestamps_list = timestamp_list[t];
             const auto& current_coordinate = coordinate_list[t];
 
@@ -344,10 +331,14 @@ template <class DataFacadeT> class MapMatching final
                         continue;
 
                     // get distance diff between loc1/2 and locs/s_prime
-                    const auto d_t = get_distance_difference(prev_coordinate,
-                                                             current_coordinate,
-                                                             prev_unbroken_timestamps_list[s].first,
-                                                             current_timestamps_list[s_prime].first);
+                    const auto network_distance = get_network_distance(prev_unbroken_timestamps_list[s].first,
+                                                                       current_timestamps_list[s_prime].first);
+                    const auto great_circle_distance =
+                        coordinate_calculation::great_circle_distance(prev_coordinate,
+                                                                      current_coordinate);
+
+                    const auto d_t = std::abs(network_distance - great_circle_distance);
+
                     // very low probability transition -> prune
                     if (d_t > 500)
                         continue;
@@ -361,8 +352,8 @@ template <class DataFacadeT> class MapMatching final
                         makeJSONSafe(prev_viterbi[s]),
                         makeJSONSafe(emission_pr),
                         makeJSONSafe(transition_pr),
-                        get_network_distance(prev_unbroken_timestamps_list[s].first, current_timestamps_list[s_prime].first),
-                        coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate)
+                        network_distance,
+                        great_circle_distance
                     );
                     _debug_states.values[prev_unbroken_timestamp]
                         .get<JSONVariantArray>().get().values[s]
@@ -374,6 +365,7 @@ template <class DataFacadeT> class MapMatching final
                     {
                         current_viterbi[s_prime] = new_value;
                         current_parents[s_prime] = s;
+                        current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
                         breakage[t] = false;
                     }
@@ -410,6 +402,7 @@ template <class DataFacadeT> class MapMatching final
         }
         reconstructed_indices.emplace_front(initial_timestamp, parent_index);
 
+        matched_length = 0.0f;
         matched_nodes.resize(reconstructed_indices.size());
         for (auto i = 0u; i < reconstructed_indices.size(); ++i)
         {
@@ -417,6 +410,7 @@ template <class DataFacadeT> class MapMatching final
             auto location_index = reconstructed_indices[i].second;
 
             matched_nodes[i] = timestamp_list[timestamp_index][location_index].first;
+            matched_length += segment_lengths[timestamp_index][location_index];
 
             _debug_states.values[timestamp_index]
                 .get<JSONVariantArray>().get().values[location_index]
