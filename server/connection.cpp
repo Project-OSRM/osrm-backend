@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "connection.hpp"
 #include "request_handler.hpp"
 #include "request_parser.hpp"
-//#include "../util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
@@ -127,7 +126,6 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     else
     {
         // we don't have a result yet, so continue reading
-        //SimpleLogger().Write(logDEBUG) << "Continue reading...";
         TCP_socket.async_read_some(
             boost::asio::buffer(incoming_data_buffer),
             strand.wrap(boost::bind(&Connection::handle_read, this->shared_from_this(),
