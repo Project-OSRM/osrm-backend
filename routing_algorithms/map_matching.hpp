@@ -70,6 +70,7 @@ namespace Matching
 typedef std::vector<std::pair<PhantomNode, double>> CandidateList;
 typedef std::vector<CandidateList> CandidateLists;
 typedef std::pair<PhantomNodes, double> PhantomNodesWithProbability;
+constexpr static const unsigned max_number_of_candidates = 20;
 }
 
 // implements a hidden markov model map matching algorithm

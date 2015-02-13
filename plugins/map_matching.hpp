@@ -130,7 +130,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                     candidates,
                     last_distance/2.0,
                     5,
-                    20))
+                    Matching::max_number_of_candidates))
             {
                 return false;
             }
