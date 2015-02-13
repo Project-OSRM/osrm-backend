@@ -656,8 +656,9 @@ class StaticRTree
         unsigned number_of_elements_from_big_cc = 0;
         unsigned number_of_elements_from_tiny_cc = 0;
 
+#ifdef NDEBUG
         unsigned pruned_elements = 0;
-
+#endif
         std::pair<double, double> projected_coordinate = {
             mercator::lat2y(input_coordinate.lat / COORDINATE_PRECISION),
             input_coordinate.lon / COORDINATE_PRECISION};
@@ -701,10 +702,12 @@ class StaticRTree
                             pruning_bound.insert(current_perpendicular_distance);
                             traversal_queue.emplace(current_perpendicular_distance, current_edge);
                         }
+#ifdef NDEBUG
                         else
                         {
                             ++pruned_elements;
                         }
+#endif
                     }
                 }
                 else
@@ -749,14 +752,8 @@ class StaticRTree
                     projected_coordinate, foot_point_coordinate_on_segment, current_ratio);
 
                 // store phantom node in result vector
-                result_phantom_node_vector.emplace_back(
-                    current_segment.forward_edge_based_node_id,
-                    current_segment.reverse_edge_based_node_id, current_segment.name_id,
-                    current_segment.forward_weight, current_segment.reverse_weight,
-                    current_segment.forward_offset, current_segment.reverse_offset,
-                    current_segment.packed_geometry_id, current_segment.component_id,
-                    foot_point_coordinate_on_segment, current_segment.fwd_segment_position,
-                    current_segment.forward_travel_mode, current_segment.backward_travel_mode);
+                result_phantom_node_vector.emplace_back(current_segment,
+                                                        foot_point_coordinate_on_segment);
 
                 // Hack to fix rounding errors and wandering via nodes.
                 FixUpRoundingIssue(input_coordinate, result_phantom_node_vector.back());
@@ -784,17 +781,18 @@ class StaticRTree
                 traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
         }
-        // SimpleLogger().Write() << "result_phantom_node_vector.size(): " <<
-        // result_phantom_node_vector.size();
-        // SimpleLogger().Write() << "max_number_of_phantom_nodes: " << max_number_of_phantom_nodes;
-        // SimpleLogger().Write() << "number_of_elements_from_big_cc: " <<
-        // number_of_elements_from_big_cc;
-        // SimpleLogger().Write() << "number_of_elements_from_tiny_cc: " <<
-        // number_of_elements_from_tiny_cc;
-        // SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
-        // SimpleLogger().Write() << "max_checked_elements: " << max_checked_elements;
-        // SimpleLogger().Write() << "pruned_elements: " << pruned_elements;
-
+#ifdef NDEBUG
+// SimpleLogger().Write() << "result_phantom_node_vector.size(): " <<
+// result_phantom_node_vector.size();
+// SimpleLogger().Write() << "max_number_of_phantom_nodes: " << max_number_of_phantom_nodes;
+// SimpleLogger().Write() << "number_of_elements_from_big_cc: " <<
+// number_of_elements_from_big_cc;
+// SimpleLogger().Write() << "number_of_elements_from_tiny_cc: " <<
+// number_of_elements_from_tiny_cc;
+// SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
+// SimpleLogger().Write() << "max_checked_elements: " << max_checked_elements;
+// SimpleLogger().Write() << "pruned_elements: " << pruned_elements;
+#endif
         return !result_phantom_node_vector.empty();
     }
 
@@ -915,13 +913,9 @@ class StaticRTree
                     !osrm::epsilon_compare(current_perpendicular_distance, current_min_dist))
                 {
                     // store phantom node in result vector
-                    result_phantom_node_vector.emplace_back(
-                        current_segment.forward_edge_based_node_id,
-                        current_segment.reverse_edge_based_node_id, current_segment.name_id,
-                        current_segment.forward_weight, current_segment.reverse_weight,
-                        current_segment.forward_offset, current_segment.reverse_offset,
-                        current_segment.packed_geometry_id, foot_point_coordinate_on_segment,
-                        current_segment.fwd_segment_position, current_perpendicular_distance);
+                    result_phantom_node_vector.emplace_back(current_segment,
+                                                            foot_point_coordinate_on_segment,
+                                                            current_perpendicular_distance);
 
                     // Hack to fix rounding errors and wandering via nodes.
                     FixUpRoundingIssue(input_coordinate, result_phantom_node_vector.back());
