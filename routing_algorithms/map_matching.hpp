@@ -26,6 +26,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../util/simple_logger.hpp"
 
+#include <variant/variant.hpp>
+#include <osrm/json_container.hpp>
+
 #include <algorithm>
 #include <iomanip>
 #include <numeric>
@@ -87,24 +90,23 @@ template <class DataFacadeT> class MapMatching final
     constexpr static const double log_sigma_z = std::log(sigma_z);
     constexpr static const double log_2_pi = std::log(2 * M_PI);
 
-    // TODO: move to a probability util header and implement as normal distribution
-    constexpr double emission_probability(const double distance) const
+    constexpr static double emission_probability(const double distance)
     {
         return (1. / (std::sqrt(2. * M_PI) * sigma_z)) *
                std::exp(-0.5 * std::pow((distance / sigma_z), 2.));
     }
 
-    constexpr double transition_probability(const float d_t, const float beta) const
+    constexpr static double transition_probability(const float d_t, const float beta)
     {
         return (1. / beta) * std::exp(-d_t / beta);
     }
 
-    inline double log_emission_probability(const double distance) const {
-        const double normed_distance = distance / sigma_z;
-        return -0.5 * (log_2_pi + normed_distance * normed_distance) - log_sigma_z;
+    constexpr static double log_emission_probability(const double distance)
+    {
+        return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) - log_sigma_z;
     }
 
-    inline double log_transition_probability(const float d_t, const float beta) const
+    constexpr static double log_transition_probability(const float d_t, const float beta)
     {
         return -std::log(beta) - d_t / beta;
     }
@@ -228,11 +230,86 @@ template <class DataFacadeT> class MapMatching final
         return distance;
     }
 
+    struct HiddenMarkovModel
+    {
+        std::vector<std::vector<double>> viterbi;
+        std::vector<std::vector<std::size_t>> parents;
+        std::vector<std::vector<float>> path_lengths;
+        std::vector<std::vector<bool>> pruned;
+        std::vector<bool> breakage;
+
+        const Matching::CandidateLists& timestamp_list;
+
+        constexpr static double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
+        constexpr static double MINIMAL_LOG_PROB = -std::numeric_limits<double>::max();
+
+        HiddenMarkovModel(const Matching::CandidateLists& timestamp_list)
+        : breakage(timestamp_list.size())
+        , timestamp_list(timestamp_list)
+        {
+            for (const auto& l : timestamp_list)
+            {
+                viterbi.emplace_back(l.size());
+                parents.emplace_back(l.size());
+                path_lengths.emplace_back(l.size());
+                pruned.emplace_back(l.size());
+            }
+
+            clear(0);
+        }
+
+        void clear(unsigned initial_timestamp)
+        {
+            BOOST_ASSERT(viterbi.size() == parents.size()
+                      && parents.size() == path_lengths.size()
+                      && path_lengths.size() == pruned.size()
+                      && pruned.size() == breakage.size());
+
+            for (unsigned t = initial_timestamp; t < viterbi.size(); t++)
+            {
+                std::fill(viterbi[t].begin(), viterbi[t].end(), IMPOSSIBLE_LOG_PROB);
+                std::fill(parents[t].begin(), parents[t].end(), 0);
+                std::fill(path_lengths[t].begin(), path_lengths[t].end(), 0);
+                std::fill(pruned[t].begin(), pruned[t].end(), true);
+            }
+            std::fill(breakage.begin()+initial_timestamp, breakage.end(), true);
+        }
+
+        unsigned initialize(unsigned initial_timestamp)
+        {
+            BOOST_ASSERT(initial_timestamp < timestamp_list.size());
+
+            do
+            {
+                for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
+                {
+                    viterbi[initial_timestamp][s] = log_emission_probability(timestamp_list[initial_timestamp][s].second);
+                    parents[initial_timestamp][s] = s;
+                    pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < MINIMAL_LOG_PROB;
+
+                    breakage[initial_timestamp] = breakage[initial_timestamp] && pruned[initial_timestamp][s];
+
+                }
+
+                ++initial_timestamp;
+            } while (breakage[initial_timestamp - 1]);
+
+            BOOST_ASSERT(initial_timestamp > 0 && initial_timestamp < viterbi.size());
+            --initial_timestamp;
+
+            BOOST_ASSERT(breakage[initial_timestamp] == false);
+
+            return initial_timestamp;
+        }
+
+    };
+
   public:
     MapMatching(DataFacadeT *facade, SearchEngineData &engine_working_data)
         : super(facade), engine_working_data(engine_working_data)
     {
     }
+
 
     void operator()(const Matching::CandidateLists &timestamp_list,
                     const std::vector<FixedPointCoordinate> coordinate_list,
@@ -240,80 +317,52 @@ template <class DataFacadeT> class MapMatching final
                     float& matched_length,
                     JSON::Object& _debug_info) const
     {
-        std::vector<bool> breakage(timestamp_list.size(), true);
-
         BOOST_ASSERT(timestamp_list.size() > 0);
 
-        // TODO for the viterbi values we actually only need the current and last row
-        std::vector<std::vector<double>> viterbi;
-        std::vector<std::vector<std::size_t>> parents;
-        std::vector<std::vector<float>> segment_lengths;
-        std::vector<std::vector<bool>> pruned;
-        for (const auto& l : timestamp_list)
-        {
-            viterbi.emplace_back(l.size(), -std::numeric_limits<double>::infinity());
-            parents.emplace_back(l.size(), 0);
-            segment_lengths.emplace_back(l.size(), 0);
-            pruned.emplace_back(l.size(), true);
+        HiddenMarkovModel model(timestamp_list);
 
-        }
+        unsigned initial_timestamp = model.initialize(0);
 
         JSON::Array _debug_states;
-        for (const auto& l : timestamp_list)
+        for (unsigned t = 0; t < timestamp_list.size(); t++)
         {
             JSON::Array _debug_timestamps;
-            for (unsigned i = 0; i < l.size(); i++)
+            for (unsigned s = 0; s < timestamp_list[t].size(); s++)
             {
                 JSON::Object _debug_state;
                 _debug_state.values["transitions"] = JSON::Array();
-                _debug_state.values["coordinate"] = makeJSONArray(l[i].first.location.lat / COORDINATE_PRECISION,
-                                                                  l[i].first.location.lon / COORDINATE_PRECISION);
+                _debug_state.values["coordinate"] = makeJSONArray(timestamp_list[t][s].first.location.lat / COORDINATE_PRECISION,
+                                                                  timestamp_list[t][s].first.location.lon / COORDINATE_PRECISION);
+                if (t < initial_timestamp)
+                {
+                    _debug_state.values["viterbi"] = makeJSONSafe(HiddenMarkovModel::IMPOSSIBLE_LOG_PROB);
+                    _debug_state.values["pruned"] = 0u;
+                }
+                else if (t == initial_timestamp)
+                {
+                    _debug_state.values["viterbi"] = makeJSONSafe(model.viterbi[t][s]);
+                    _debug_state.values["pruned"] = static_cast<unsigned>(model.pruned[t][s]);
+                }
                 _debug_timestamps.values.push_back(_debug_state);
             }
             _debug_states.values.push_back(_debug_timestamps);
         }
 
-        unsigned initial_timestamp = 0;
-        do
-        {
-            for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
-            {
-                // this might need to be squared as pi_s is also defined as the emission
-                // probability in the paper.
-                viterbi[initial_timestamp][s] = log_emission_probability(timestamp_list[initial_timestamp][s].second);
-                parents[initial_timestamp][s] = s;
-                pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < -std::numeric_limits<double>::max();
-
-                breakage[initial_timestamp] = breakage[initial_timestamp] && pruned[initial_timestamp][s];
-
-                _debug_states.values[initial_timestamp]
-                    .get<JSONVariantArray>().get().values[s]
-                    .get<JSONVariantObject>().get().values["viterbi"] = makeJSONSafe(viterbi[initial_timestamp][s]);
-                _debug_states.values[initial_timestamp]
-                    .get<JSONVariantArray>().get().values[s]
-                    .get<JSONVariantObject>().get().values["pruned"] = static_cast<unsigned>(pruned[initial_timestamp][s]);
-            }
-
-            ++initial_timestamp;
-        } while (breakage[initial_timestamp - 1]);
-
-        BOOST_ASSERT(initial_timestamp > 0 && initial_timestamp < viterbi.size());
-        --initial_timestamp;
-
-        BOOST_ASSERT(breakage[initial_timestamp] == false);
-
-        unsigned prev_unbroken_timestamp = initial_timestamp;
+        std::vector<unsigned> prev_unbroken_timestamps;
+        prev_unbroken_timestamps.reserve(timestamp_list.size());
+        prev_unbroken_timestamps.push_back(initial_timestamp);
         for (auto t = initial_timestamp + 1; t < timestamp_list.size(); ++t)
         {
-            const auto& prev_viterbi = viterbi[prev_unbroken_timestamp];
-            const auto& prev_pruned = pruned[prev_unbroken_timestamp];
+            unsigned prev_unbroken_timestamp = prev_unbroken_timestamps.back();
+            const auto& prev_viterbi = model.viterbi[prev_unbroken_timestamp];
+            const auto& prev_pruned = model.pruned[prev_unbroken_timestamp];
             const auto& prev_unbroken_timestamps_list = timestamp_list[prev_unbroken_timestamp];
             const auto& prev_coordinate = coordinate_list[prev_unbroken_timestamp];
 
-            auto& current_viterbi = viterbi[t];
-            auto& current_pruned = pruned[t];
-            auto& current_parents = parents[t];
-            auto& current_lengths = segment_lengths[t];
+            auto& current_viterbi = model.viterbi[t];
+            auto& current_pruned = model.pruned[t];
+            auto& current_parents = model.parents[t];
+            auto& current_lengths = model.path_lengths[t];
             const auto& current_timestamps_list = timestamp_list[t];
             const auto& current_coordinate = coordinate_list[t];
 
@@ -361,14 +410,13 @@ template <class DataFacadeT> class MapMatching final
                         .get<JSONVariantObject>().get().values["transitions"]
                         .get<JSONVariantArray>().get().values.push_back(_debug_transistion);
 
-
                     if (new_value > current_viterbi[s_prime])
                     {
                         current_viterbi[s_prime] = new_value;
                         current_parents[s_prime] = s;
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
-                        breakage[t] = false;
+                        model.breakage[t] = false;
                     }
                 }
             }
@@ -383,23 +431,45 @@ template <class DataFacadeT> class MapMatching final
                     .get<JSONVariantObject>().get().values["pruned"]  = static_cast<unsigned>(current_pruned[s_prime]);
             }
 
-            if (!breakage[t])
+            if (model.breakage[t])
             {
-                prev_unbroken_timestamp = t;
+                if (prev_unbroken_timestamps.size() > 1)
+                {
+                    // remove both ends of the breakge
+                    prev_unbroken_timestamps.pop_back();
+                }
+                // we reached the beginning of the trace, discard the whole beginning
+                else
+                {
+                    model.clear(t);
+                    model.initialize(t);
+                }
+            }
+            else
+            {
+                prev_unbroken_timestamps.push_back(t);
             }
         }
 
+        if (prev_unbroken_timestamps.size() < 1)
+        {
+            return;
+        }
+
+        unsigned last_unbroken_timestamp = prev_unbroken_timestamps.back();
+
         // loop through the columns, and only compare the last entry
-        auto max_element_iter = std::max_element(viterbi[prev_unbroken_timestamp].begin(), viterbi[prev_unbroken_timestamp].end());
-        auto parent_index = std::distance(viterbi[prev_unbroken_timestamp].begin(), max_element_iter);
+        auto max_element_iter = std::max_element(model.viterbi[last_unbroken_timestamp].begin(),
+                                                 model.viterbi[last_unbroken_timestamp].end());
+        auto parent_index = std::distance(model.viterbi[last_unbroken_timestamp].begin(), max_element_iter);
         std::deque<std::pair<std::size_t, std::size_t>> reconstructed_indices;
 
-        for (auto i = prev_unbroken_timestamp; i > initial_timestamp; --i)
+        for (auto i = last_unbroken_timestamp; i > initial_timestamp; --i)
         {
-            if (breakage[i])
+            if (model.breakage[i])
                 continue;
             reconstructed_indices.emplace_front(i, parent_index);
-            parent_index = parents[i][parent_index];
+            parent_index = model.parents[i][parent_index];
         }
         reconstructed_indices.emplace_front(initial_timestamp, parent_index);
 
@@ -411,7 +481,7 @@ template <class DataFacadeT> class MapMatching final
             auto location_index = reconstructed_indices[i].second;
 
             matched_nodes[i] = timestamp_list[timestamp_index][location_index].first;
-            matched_length += segment_lengths[timestamp_index][location_index];
+            matched_length += model.path_lengths[timestamp_index][location_index];
 
             _debug_states.values[timestamp_index]
                 .get<JSONVariantArray>().get().values[location_index]
@@ -419,7 +489,7 @@ template <class DataFacadeT> class MapMatching final
         }
 
         JSON::Array _debug_breakage;
-        for (auto b : breakage) {
+        for (auto b : model.breakage) {
             _debug_breakage.values.push_back(static_cast<unsigned>(b));
         }
 
