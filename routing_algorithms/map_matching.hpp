@@ -70,9 +70,19 @@ JSON::Array makeJSONArray(Args... args)
 
 namespace Matching
 {
-typedef std::vector<std::pair<PhantomNode, double>> CandidateList;
-typedef std::vector<CandidateList> CandidateLists;
-typedef std::pair<PhantomNodes, double> PhantomNodesWithProbability;
+
+struct SubMatching
+{
+    std::vector<PhantomNode> nodes;
+    unsigned begin_idx;
+    unsigned end_idx;
+    double length;
+    double confidence;
+};
+
+using CandidateList =  std::vector<std::pair<PhantomNode, double>>;
+using CandidateLists = std::vector<CandidateList>;
+using SubMatchingList = std::vector<SubMatching>;
 constexpr static const unsigned max_number_of_candidates = 20;
 }
 
@@ -312,8 +322,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
 
     void operator()(const Matching::CandidateLists &timestamp_list,
                     const std::vector<FixedPointCoordinate> coordinate_list,
-                    std::vector<PhantomNode>& matched_nodes,
-                    float& matched_length,
+                    Matching::SubMatchingList& sub_matchings,
                     JSON::Object& _debug_info) const
     {
         BOOST_ASSERT(timestamp_list.size() > 0);
@@ -347,6 +356,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             _debug_states.values.push_back(_debug_timestamps);
         }
 
+        std::vector<unsigned> split_points;
         std::vector<unsigned> prev_unbroken_timestamps;
         prev_unbroken_timestamps.reserve(timestamp_list.size());
         prev_unbroken_timestamps.push_back(initial_timestamp);
@@ -364,6 +374,8 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             auto& current_lengths = model.path_lengths[t];
             const auto& current_timestamps_list = timestamp_list[t];
             const auto& current_coordinate = coordinate_list[t];
+
+            std::cout << " # " << prev_unbroken_timestamp << " -> " << t << std::endl;
 
             // compute d_t for this timestamp and the next one
             for (auto s = 0u; s < prev_viterbi.size(); ++s)
@@ -432,16 +444,24 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
 
             if (model.breakage[t])
             {
+                std::cout << "Broken!" << std::endl;
+                // TODO we actually don't need to go to the beginning.
+                // with temporal information we can split after _n_
+                // skipped states
                 if (prev_unbroken_timestamps.size() > 1)
                 {
                     // remove both ends of the breakge
                     prev_unbroken_timestamps.pop_back();
                 }
-                // we reached the beginning of the trace, discard the whole beginning
+                // we reached the beginning of the trace and it is still broken
+                // -> split the trace here
                 else
                 {
+                    split_points.push_back(t);
+                    // note this preserves everything before t
                     model.clear(t);
                     model.initialize(t);
+                    prev_unbroken_timestamps.push_back(t);
                 }
             }
             else
@@ -450,41 +470,61 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             }
         }
 
-        if (prev_unbroken_timestamps.size() < 1)
+        if (prev_unbroken_timestamps.size() > 1)
         {
-            return;
+            split_points.push_back(prev_unbroken_timestamps.back()+1);
         }
 
-        unsigned last_unbroken_timestamp = prev_unbroken_timestamps.back();
-
-        // loop through the columns, and only compare the last entry
-        auto max_element_iter = std::max_element(model.viterbi[last_unbroken_timestamp].begin(),
-                                                 model.viterbi[last_unbroken_timestamp].end());
-        auto parent_index = std::distance(model.viterbi[last_unbroken_timestamp].begin(), max_element_iter);
-        std::deque<std::pair<std::size_t, std::size_t>> reconstructed_indices;
-
-        for (auto i = last_unbroken_timestamp; i > initial_timestamp; --i)
+        unsigned sub_matching_begin = initial_timestamp;
+        for (const unsigned sub_matching_end : split_points)
         {
-            if (model.breakage[i])
+            Matching::SubMatching matching;
+
+            // matchings that only consist of one candidate are invalid
+            if (sub_matching_end - sub_matching_begin < 2)
+            {
+                sub_matching_begin = sub_matching_end;
                 continue;
-            reconstructed_indices.emplace_front(i, parent_index);
-            parent_index = model.parents[i][parent_index];
-        }
-        reconstructed_indices.emplace_front(initial_timestamp, parent_index);
+            }
 
-        matched_length = 0.0f;
-        matched_nodes.resize(reconstructed_indices.size());
-        for (auto i = 0u; i < reconstructed_indices.size(); ++i)
-        {
-            auto timestamp_index = reconstructed_indices[i].first;
-            auto location_index = reconstructed_indices[i].second;
+            std::cout << sub_matching_begin << " -> " << sub_matching_end << std::endl;
 
-            matched_nodes[i] = timestamp_list[timestamp_index][location_index].first;
-            matched_length += model.path_lengths[timestamp_index][location_index];
+            matching.begin_idx = sub_matching_begin;
+            matching.end_idx = sub_matching_end;
 
-            _debug_states.values[timestamp_index]
-                .get<JSONVariantArray>().get().values[location_index]
-                .get<JSONVariantObject>().get().values["chosen"] = true;
+            // loop through the columns, and only compare the last entry
+            auto max_element_iter = std::max_element(model.viterbi[sub_matching_end-1].begin(),
+                                                     model.viterbi[sub_matching_end-1].end());
+
+            auto parent_index = std::distance(model.viterbi[sub_matching_end-1].begin(), max_element_iter);
+            std::deque<std::pair<std::size_t, std::size_t>> reconstructed_indices;
+            for (auto i = sub_matching_end-1; i > sub_matching_begin; --i)
+            {
+                if (model.breakage[i])
+                    continue;
+                reconstructed_indices.emplace_front(i, parent_index);
+                parent_index = model.parents[i][parent_index];
+            }
+            reconstructed_indices.emplace_front(initial_timestamp, parent_index);
+
+            matching.length = 0.0f;
+            matching.nodes.resize(reconstructed_indices.size());
+            for (auto i = 0u; i < reconstructed_indices.size(); ++i)
+            {
+                auto timestamp_index = reconstructed_indices[i].first;
+                auto location_index = reconstructed_indices[i].second;
+
+                matching.nodes[i] = timestamp_list[timestamp_index][location_index].first;
+                matching.length += model.path_lengths[timestamp_index][location_index];
+
+                _debug_states.values[timestamp_index]
+                    .get<JSONVariantArray>().get().values[location_index]
+                    .get<JSONVariantObject>().get().values["chosen"] = true;
+            }
+
+            sub_matchings.push_back(matching);
+
+            sub_matching_begin = sub_matching_end;
         }
 
         JSON::Array _debug_breakage;
