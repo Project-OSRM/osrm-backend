@@ -98,7 +98,7 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   turn, path_point.travel_mode);
 }
 
-JSON::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
+osrm::json::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
 {
     if (return_encoded)
     {

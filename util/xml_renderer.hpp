@@ -32,7 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/json_container.hpp>
 
-namespace JSON
+namespace osrm
+{
+namespace json
 {
 
 struct XMLToArrayRenderer : mapbox::util::static_visitor<>
@@ -135,6 +137,6 @@ template <class JSONObject> inline void gpx_render(std::vector<char> &out, const
     const std::string footer{"</rte></gpx>"};
     out.insert(out.end(), footer.begin(), footer.end());
 }
-} // namespace JSON
-
+} // namespace json
+} // namespace osrm
 #endif // XML_RENDERER_HPP

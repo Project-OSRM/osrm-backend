@@ -50,7 +50,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     int HandleRequest(const RouteParameters &route_parameters,
-                      JSON::Object &json_result) override final
+                      osrm::json::Object &json_result) override final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() ||
@@ -75,14 +75,14 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
 
             if (number_of_results > 1)
             {
-                JSON::Array results;
+                osrm::json::Array results;
 
                 auto vector_length = phantom_node_vector.size();
                 for (const auto i :
                      osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                 {
-                    JSON::Array json_coordinate;
-                    JSON::Object result;
+                    osrm::json::Array json_coordinate;
+                    osrm::json::Object result;
                     json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
                                                      COORDINATE_PRECISION);
                     json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
@@ -97,7 +97,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
             }
             else
             {
-                JSON::Array json_coordinate;
+                osrm::json::Array json_coordinate;
                 json_coordinate.values.push_back(phantom_node_vector.front().location.lat /
                                                  COORDINATE_PRECISION);
                 json_coordinate.values.push_back(phantom_node_vector.front().location.lon /

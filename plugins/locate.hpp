@@ -45,7 +45,7 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     int HandleRequest(const RouteParameters &route_parameters,
-                      JSON::Object &json_result) override final
+                      osrm::json::Object &json_result) override final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() ||
@@ -63,7 +63,7 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
         else
         {
             json_result.values["status"] = 0;
-            JSON::Array json_coordinate;
+            osrm::json::Array json_coordinate;
             json_coordinate.values.push_back(result.lat / COORDINATE_PRECISION);
             json_coordinate.values.push_back(result.lon / COORDINATE_PRECISION);
             json_result.values["mapped_coordinate"] = json_coordinate;

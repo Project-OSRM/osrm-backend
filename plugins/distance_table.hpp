@@ -68,7 +68,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     int HandleRequest(const RouteParameters &route_parameters,
-                      JSON::Object &json_result) override final
+                      osrm::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
@@ -110,18 +110,18 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return 400;
         }
 
-        JSON::Array json_array;
+        osrm::json::Array json_array;
         const auto number_of_locations = phantom_node_vector.size();
         for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
         {
-            JSON::Array json_row;
+            osrm::json::Array json_row;
             auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
             auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
             json_array.values.push_back(json_row);
         }
         json_result.values["distance_table"] = json_array;
-        // JSON::render(reply.content, json_object);
+        // osrm::json::render(reply.content, json_object);
         return 200;
     }
 

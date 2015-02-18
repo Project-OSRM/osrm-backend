@@ -92,7 +92,7 @@ void RequestHandler::handle_request(const http::request &current_request,
         const bool result =
             boost::spirit::qi::parse(api_iterator, request_string.end(), api_parser);
 
-        JSON::Object json_result;
+        osrm::json::Object json_result;
         // check if the was an error with the request
         if (!result || (api_iterator != request_string.end()))
         {
@@ -104,7 +104,7 @@ void RequestHandler::handle_request(const http::request &current_request,
             std::string message = "Query string malformed close to position ";
             message += cast::integral_to_string(position);
             json_result.values["status_message"] = message;
-            JSON::render(current_reply.content, json_result);
+            osrm::json::render(current_reply.content, json_result);
             return;
         }
 
@@ -124,7 +124,7 @@ void RequestHandler::handle_request(const http::request &current_request,
             json_result.values["status"] = 400;
             std::string message = "Bad Request";
             json_result.values["status_message"] = message;
-            JSON::render(current_reply.content, json_result);
+            osrm::json::render(current_reply.content, json_result);
             return;
         }
         // set headers
@@ -132,7 +132,7 @@ void RequestHandler::handle_request(const http::request &current_request,
                                            cast::integral_to_string(current_reply.content.size()));
         if ("gpx" == route_parameters.output_format)
         { // gpx file
-            JSON::gpx_render(current_reply.content, json_result.values["route"]);
+            osrm::json::gpx_render(current_reply.content, json_result.values["route"]);
             current_reply.headers.emplace_back("Content-Type",
                                                "application/gpx+xml; charset=UTF-8");
             current_reply.headers.emplace_back("Content-Disposition",
@@ -140,14 +140,14 @@ void RequestHandler::handle_request(const http::request &current_request,
         }
         else if (route_parameters.jsonp_parameter.empty())
         { // json file
-            JSON::render(current_reply.content, json_result);
+            osrm::json::render(current_reply.content, json_result);
             current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
             current_reply.headers.emplace_back("Content-Disposition",
                                                "inline; filename=\"response.json\"");
         }
         else
         { // jsonp
-            JSON::render(current_reply.content, json_result);
+            osrm::json::render(current_reply.content, json_result);
             current_reply.headers.emplace_back("Content-Type", "text/javascript; charset=UTF-8");
             current_reply.headers.emplace_back("Content-Disposition",
                                                "inline; filename=\"response.js\"");

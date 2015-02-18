@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem.hpp>
 
+#include <exception>
+
 int main(int argc, char *argv[])
 {
     try

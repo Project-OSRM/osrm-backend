@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // based on
 // https://svn.apache.org/repos/asf/mesos/tags/release-0.9.0-incubating-RC0/src/common/json.hpp
 
-#ifndef JSON_CONTAINER_H
-#define JSON_CONTAINER_H
+#ifndef JSON_CONTAINER_HPP
+#define JSON_CONTAINER_HPP
 
 #include <variant/variant.hpp>
 
@@ -38,7 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <unordered_map>
 
-namespace JSON
+namespace osrm
+{
+namespace json
 {
 
 struct Object;
@@ -90,5 +92,5 @@ struct Array
 };
 
 } // namespace JSON
-
-#endif // JSON_CONTAINER_H
+} // namespace osrm
+#endif // JSON_CONTAINER_HPP

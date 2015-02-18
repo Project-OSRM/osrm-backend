@@ -104,7 +104,7 @@ void OSRM_impl::RegisterPlugin(BasePlugin *plugin)
     plugin_map.emplace(plugin->GetDescriptor(), plugin);
 }
 
-int OSRM_impl::RunQuery(RouteParameters &route_parameters, JSON::Object &json_result)
+int OSRM_impl::RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result)
 {
     const auto &plugin_iterator = plugin_map.find(route_parameters.service);
 
@@ -172,7 +172,7 @@ OSRM::OSRM(libosrm_config &lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl
 
 OSRM::~OSRM() { OSRM_pimpl_.reset(); }
 
-int OSRM::RunQuery(RouteParameters &route_parameters, JSON::Object &json_result)
+int OSRM::RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result)
 {
     return OSRM_pimpl_->RunQuery(route_parameters, json_result);
 }

@@ -72,7 +72,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     int HandleRequest(const RouteParameters &route_parameters,
-                      JSON::Object &json_result) override final
+                      osrm::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {

@@ -81,10 +81,10 @@ int main(int argc, const char *argv[])
         // target_coordinate
         route_parameters.coordinates.emplace_back(52.513191 * COORDINATE_PRECISION,
                                                   13.415852 * COORDINATE_PRECISION);
-        JSON::Object json_result;
+        osrm::json::Object json_result;
         const int result_code = routing_machine.RunQuery(route_parameters, json_result);
         SimpleLogger().Write() << "http code: " << result_code;
-        JSON::render(SimpleLogger().Write(), json_result);
+        osrm::json::render(SimpleLogger().Write(), json_result);
     }
     catch (std::exception &current_exception)
     {

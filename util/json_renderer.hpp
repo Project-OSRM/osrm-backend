@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/json_container.hpp>
 
-namespace JSON
+namespace osrm
+{
+namespace json
 {
 
 struct Renderer : mapbox::util::static_visitor<>
@@ -179,6 +181,6 @@ inline void render(std::vector<char> &out, const Object &object)
     mapbox::util::apply_visitor(ArrayRenderer(out), value);
 }
 
-} // namespace JSON
-
+} // namespace json
+} // namespace osrm
 #endif // JSON_RENDERER_HPP
