@@ -248,6 +248,13 @@ function way_function (way, result)
     return
   end
 
+  local width = math.huge
+  local width_string = way:get_value_by_key("width")
+  if width_string and tonumber(width_string:match("%d*")) then
+    width = tonumber(width_string:match("%d*"))
+    io.write("width: "..width.."\n")
+  end
+
   -- Check if we are allowed to access the way
   local access = find_access_tag(way, access_tags_hierachy)
   if access_tag_blacklist[access] then
@@ -385,12 +392,20 @@ function way_function (way, result)
     result.ignore_in_grid = true
   end
 
+
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
     result.forward_speed = result.forward_speed*speed_reduction + 11;
+    if width <= 3 then
+      result.forward_speed = result.forward_speed / 2;
+    end
   end
+
   if result.backward_speed > 0 then
     result.backward_speed = result.backward_speed*speed_reduction + 11;
+    if width <= 3 then
+      result.backward_speed = result.backward_speed / 2;
+    end
   end
 end
 
