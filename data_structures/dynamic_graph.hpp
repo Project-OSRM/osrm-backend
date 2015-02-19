@@ -67,13 +67,9 @@ template <typename EdgeDataT> class DynamicGraph
         {
         }
 
-        bool operator<(const InputEdge &right) const
+        bool operator<(const InputEdge &rhs) const
         {
-            if (source != right.source)
-            {
-                return source < right.source;
-            }
-            return target < right.target;
+            return std::tie(source, target) < std::tie(rhs.source, rhs.target);
         }
     };
 
