@@ -253,12 +253,19 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             descriptor->SetConfig(descriptor_config);
             descriptor->Run(raw_route, temp_result);
 
+            JSON::Array input_points;
+            for(const auto& n: sub.nodes) {
+                JSON::Array coord;
+                coord.values.emplace_back(n.location.lat / COORDINATE_PRECISION);
+                coord.values.emplace_back(n.location.lon / COORDINATE_PRECISION);
+                input_points.values.push_back(coord);
+            }
+
             JSON::Object subtrace;
-            // via_route compability
-            subtrace.values["route_geometry"] = temp_result.values["route_geometry"];
+            subtrace.values["geometry"] = temp_result.values["route_geometry"];
             subtrace.values["confidence"] = sub.confidence;
-            subtrace.values["via_indicies"] = temp_result.values["via_indicies"];
-            subtrace.values["via_points"] = temp_result.values["via_points"];
+            subtrace.values["input_points"] = input_points;
+            subtrace.values["matched_points"] = temp_result.values["via_points"];
 
             traces.values.push_back(subtrace);
         }
