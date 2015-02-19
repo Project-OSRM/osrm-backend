@@ -39,6 +39,7 @@ class named_mutex;
 #include "../plugins/distance_table.hpp"
 #include "../plugins/hello_world.hpp"
 #include "../plugins/locate.hpp"
+#include "../plugins/many_to_many.hpp"
 #include "../plugins/nearest.hpp"
 #include "../plugins/timestamp.hpp"
 #include "../plugins/viaroute.hpp"
@@ -78,6 +79,9 @@ OSRM_impl::OSRM_impl(libosrm_config &lib_config)
     // The following plugins handle all requests.
     RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(
         query_data_facade, lib_config.max_locations_distance_table));
+    RegisterPlugin(new many_to_many_plugin<BaseDataFacade<QueryEdge::EdgeData>>(
+        query_data_facade, lib_config.max_locations_distance_table));
+
     RegisterPlugin(new HelloWorldPlugin());
     RegisterPlugin(new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));

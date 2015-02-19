@@ -91,3 +91,15 @@ void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned n
         backwardHeap3.reset(new QueryHeap(number_of_nodes));
     }
 }
+
+void SearchEngineData::initialize_general_m2m_heap(const unsigned number_of_nodes)
+{
+    if (general_m2m_heap.get())
+    {
+        general_m2m_heap->Clear();
+    }
+    else
+    {
+        general_m2m_heap.reset(new many_to_many_heap(number_of_nodes));
+    }
+}

@@ -36,7 +36,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct HeapData
 {
     NodeID parent;
-    /* explicit */ HeapData(NodeID p) : parent(p) {}
+    HeapData(NodeID p) : parent(p) {}
+};
+
+struct many_to_many_heapdata
+{
+    NodeID parent;
+    unsigned distance;
+    many_to_many_heapdata(NodeID p, unsigned d) : parent(p), distance(d) {}
 };
 
 struct SearchEngineData
@@ -51,11 +58,18 @@ struct SearchEngineData
     static SearchEngineHeapPtr forwardHeap3;
     static SearchEngineHeapPtr backwardHeap3;
 
+    using many_to_many_heap =
+        BinaryHeap<NodeID, NodeID, int, many_to_many_heapdata, UnorderedMapStorage<NodeID, int>>;
+    using general_m2m_heap_ptr = boost::thread_specific_ptr<many_to_many_heap>;
+    static general_m2m_heap_ptr general_m2m_heap;
+
     void InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes);
 
     void InitializeOrClearSecondThreadLocalStorage(const unsigned number_of_nodes);
 
     void InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes);
+
+    void initialize_general_m2m_heap(const unsigned number_of_nodes);
 };
 
 #endif // SEARCH_ENGINE_DATA_HPP
