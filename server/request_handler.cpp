@@ -127,6 +127,11 @@ void RequestHandler::handle_request(const http::request &current_request,
             osrm::json::render(current_reply.content, json_result);
             return;
         }
+
+        current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
+        current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
+        current_reply.headers.emplace_back("Access-Control-Allow-Headers", "X-Requested-With");
+
         // set headers
         current_reply.headers.emplace_back("Content-Length",
                                            cast::integral_to_string(current_reply.content.size()));
