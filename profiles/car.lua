@@ -252,7 +252,6 @@ function way_function (way, result)
   local width_string = way:get_value_by_key("width")
   if width_string and tonumber(width_string:match("%d*")) then
     width = tonumber(width_string:match("%d*"))
-    io.write("width: "..width.."\n")
   end
 
   -- Check if we are allowed to access the way
