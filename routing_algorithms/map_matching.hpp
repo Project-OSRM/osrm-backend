@@ -83,7 +83,12 @@ struct SubMatching
 using CandidateList =  std::vector<std::pair<PhantomNode, double>>;
 using CandidateLists = std::vector<CandidateList>;
 using SubMatchingList = std::vector<SubMatching>;
-constexpr static const unsigned max_number_of_candidates = 20;
+constexpr static const unsigned max_number_of_candidates = 10;
+constexpr static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
+constexpr static const double MINIMAL_LOG_PROB = -std::numeric_limits<double>::max();
+constexpr static const unsigned INVALID_STATE = std::numeric_limits<unsigned>::max();
+// FIXME that should be a time threshold.
+constexpr static const unsigned MAX_BROKEN_STATES = 6;
 }
 
 // implements a hidden markov model map matching algorithm
@@ -243,15 +248,13 @@ template <class DataFacadeT> class MapMatching final
     struct HiddenMarkovModel
     {
         std::vector<std::vector<double>> viterbi;
-        std::vector<std::vector<std::size_t>> parents;
+        std::vector<std::vector<std::pair<unsigned, unsigned>>> parents;
         std::vector<std::vector<float>> path_lengths;
         std::vector<std::vector<bool>> pruned;
         std::vector<bool> breakage;
 
         const Matching::CandidateLists& timestamp_list;
 
-        constexpr static double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
-        constexpr static double MINIMAL_LOG_PROB = -std::numeric_limits<double>::max();
 
         HiddenMarkovModel(const Matching::CandidateLists& timestamp_list)
         : breakage(timestamp_list.size())
@@ -277,8 +280,8 @@ template <class DataFacadeT> class MapMatching final
 
             for (unsigned t = initial_timestamp; t < viterbi.size(); t++)
             {
-                std::fill(viterbi[t].begin(), viterbi[t].end(), IMPOSSIBLE_LOG_PROB);
-                std::fill(parents[t].begin(), parents[t].end(), 0);
+                std::fill(viterbi[t].begin(), viterbi[t].end(), Matching::IMPOSSIBLE_LOG_PROB);
+                std::fill(parents[t].begin(), parents[t].end(), std::make_pair(0u, 0u));
                 std::fill(path_lengths[t].begin(), path_lengths[t].end(), 0);
                 std::fill(pruned[t].begin(), pruned[t].end(), true);
             }
@@ -294,8 +297,8 @@ template <class DataFacadeT> class MapMatching final
                 for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
                 {
                     viterbi[initial_timestamp][s] = log_emission_probability(timestamp_list[initial_timestamp][s].second);
-                    parents[initial_timestamp][s] = s;
-                    pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < MINIMAL_LOG_PROB;
+                    parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
+                    pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < Matching::MINIMAL_LOG_PROB;
 
                     breakage[initial_timestamp] = breakage[initial_timestamp] && pruned[initial_timestamp][s];
 
@@ -304,7 +307,12 @@ template <class DataFacadeT> class MapMatching final
                 ++initial_timestamp;
             } while (breakage[initial_timestamp - 1]);
 
-            BOOST_ASSERT(initial_timestamp > 0 && initial_timestamp < viterbi.size());
+            if (initial_timestamp >= viterbi.size())
+            {
+                return Matching::INVALID_STATE;
+            }
+
+            BOOST_ASSERT(initial_timestamp > 0);
             --initial_timestamp;
 
             BOOST_ASSERT(breakage[initial_timestamp] == false);
@@ -331,6 +339,10 @@ template <class DataFacadeT> class MapMatching final
         HiddenMarkovModel model(timestamp_list);
 
         unsigned initial_timestamp = model.initialize(0);
+        if (initial_timestamp == Matching::INVALID_STATE)
+        {
+            return;
+        }
 
         JSON::Array _debug_states;
         for (unsigned t = 0; t < timestamp_list.size(); t++)
@@ -344,7 +356,7 @@ template <class DataFacadeT> class MapMatching final
                                                                   timestamp_list[t][s].first.location.lon / COORDINATE_PRECISION);
                 if (t < initial_timestamp)
                 {
-                    _debug_state.values["viterbi"] = makeJSONSafe(HiddenMarkovModel::IMPOSSIBLE_LOG_PROB);
+                    _debug_state.values["viterbi"] = makeJSONSafe(Matching::IMPOSSIBLE_LOG_PROB);
                     _debug_state.values["pruned"] = 0u;
                 }
                 else if (t == initial_timestamp)
@@ -375,8 +387,6 @@ template <class DataFacadeT> class MapMatching final
             auto& current_lengths = model.path_lengths[t];
             const auto& current_timestamps_list = timestamp_list[t];
             const auto& current_coordinate = coordinate_list[t];
-
-            std::cout << " # " << prev_unbroken_timestamp << " -> " << t << std::endl;
 
             // compute d_t for this timestamp and the next one
             for (auto s = 0u; s < prev_viterbi.size(); ++s)
@@ -425,7 +435,7 @@ template <class DataFacadeT> class MapMatching final
                     if (new_value > current_viterbi[s_prime])
                     {
                         current_viterbi[s_prime] = new_value;
-                        current_parents[s_prime] = s;
+                        current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
                         model.breakage[t] = false;
@@ -445,24 +455,25 @@ template <class DataFacadeT> class MapMatching final
 
             if (model.breakage[t])
             {
-                std::cout << "Broken!" << std::endl;
-                // TODO we actually don't need to go to the beginning.
-                // with temporal information we can split after _n_
-                // skipped states
-                if (prev_unbroken_timestamps.size() > 1)
-                {
-                    // remove both ends of the breakge
-                    prev_unbroken_timestamps.pop_back();
-                }
+                BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
+
+                // remove both ends of the breakage
+                prev_unbroken_timestamps.pop_back();
+
                 // we reached the beginning of the trace and it is still broken
                 // -> split the trace here
-                else
+                if (prev_unbroken_timestamps.size() < 1 || t - prev_unbroken_timestamps.back() > Matching::MAX_BROKEN_STATES)
                 {
                     split_points.push_back(t);
                     // note this preserves everything before t
                     model.clear(t);
-                    model.initialize(t);
-                    prev_unbroken_timestamps.push_back(t);
+                    unsigned new_start = model.initialize(t);
+                    // no new start was found -> stop viterbi calculation
+                    if (new_start == Matching::INVALID_STATE)
+                    {
+                        break;
+                    }
+                    prev_unbroken_timestamps.push_back(new_start);
                 }
             }
             else
@@ -471,7 +482,7 @@ template <class DataFacadeT> class MapMatching final
             }
         }
 
-        if (prev_unbroken_timestamps.size() > 1)
+        if (prev_unbroken_timestamps.size() > 0)
         {
             split_points.push_back(prev_unbroken_timestamps.back()+1);
         }
@@ -481,32 +492,45 @@ template <class DataFacadeT> class MapMatching final
         {
             Matching::SubMatching matching;
 
+            // find real end of trace
+            // not sure if this is really needed
+            unsigned parent_timestamp_index = sub_matching_end-1;
+            while (parent_timestamp_index >= sub_matching_begin && model.breakage[parent_timestamp_index])
+            {
+                parent_timestamp_index--;
+            }
+
             // matchings that only consist of one candidate are invalid
-            if (sub_matching_end - sub_matching_begin < 2)
+            if (parent_timestamp_index - sub_matching_begin < 2)
             {
                 sub_matching_begin = sub_matching_end;
                 continue;
             }
 
-            std::cout << sub_matching_begin << " -> " << sub_matching_end << std::endl;
-
             matching.begin_idx = sub_matching_begin;
-            matching.end_idx = sub_matching_end;
+            matching.end_idx = parent_timestamp_index;
 
             // loop through the columns, and only compare the last entry
-            auto max_element_iter = std::max_element(model.viterbi[sub_matching_end-1].begin(),
-                                                     model.viterbi[sub_matching_end-1].end());
+            auto max_element_iter = std::max_element(model.viterbi[parent_timestamp_index].begin(),
+                                                     model.viterbi[parent_timestamp_index].end());
 
-            auto parent_index = std::distance(model.viterbi[sub_matching_end-1].begin(), max_element_iter);
-            std::deque<std::pair<std::size_t, std::size_t>> reconstructed_indices;
-            for (auto i = sub_matching_end-1; i > sub_matching_begin; --i)
+            unsigned parent_candidate_index = std::distance(model.viterbi[parent_timestamp_index].begin(), max_element_iter);
+            std::deque<std::pair<unsigned, unsigned>> reconstructed_indices;
+            while (parent_timestamp_index > sub_matching_begin)
             {
-                if (model.breakage[i])
+                if (model.breakage[parent_timestamp_index])
+                {
                     continue;
-                reconstructed_indices.emplace_front(i, parent_index);
-                parent_index = model.parents[i][parent_index];
+                }
+                reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
+                parent_timestamp_index = model.parents[parent_timestamp_index][parent_candidate_index].first;
+                parent_candidate_index = model.parents[parent_timestamp_index][parent_candidate_index].second;
             }
-            reconstructed_indices.emplace_front(initial_timestamp, parent_index);
+            reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
+            if (reconstructed_indices.size() < 2)
+            {
+                continue;
+            }
 
             matching.length = 0.0f;
             matching.nodes.resize(reconstructed_indices.size());
