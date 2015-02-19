@@ -205,6 +205,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 sub.confidence = 1-classification.second;
             }
 
+            BOOST_ASSERT(sub.nodes.size() > 1);
+
             // FIXME this is a pretty bad hack. Geometries should obtained directly
             // from map_matching.
             // run shortest path routing to obtain geometry
