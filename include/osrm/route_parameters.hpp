@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM contributors
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ROUTE_PARAMETERS_H
-#define ROUTE_PARAMETERS_H
+#ifndef ROUTE_PARAMETERS_HPP
+#define ROUTE_PARAMETERS_HPP
 
 #include <osrm/coordinate.hpp>
 
@@ -69,7 +69,7 @@ struct RouteParameters
 
     void setCompressionFlag(const bool flag);
 
-    void addCoordinate(const boost::fusion::vector<double, double> &coordinates);
+    void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
 
     short zoom_level;
     bool print_instructions;
@@ -89,4 +89,4 @@ struct RouteParameters
     std::vector<FixedPointCoordinate> coordinates;
 };
 
-#endif // ROUTE_PARAMETERS_H
+#endif // ROUTE_PARAMETERS_HPP

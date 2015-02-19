@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM contributors
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -109,9 +109,9 @@ void RouteParameters::setGeometryFlag(const bool flag) { geometry = flag; }
 void RouteParameters::setCompressionFlag(const bool flag) { compression = flag; }
 
 void RouteParameters::addCoordinate(
-    const boost::fusion::vector<double, double> &transmitted_coordinates)
+    const boost::fusion::vector<double, double> &received_coordinates)
 {
     coordinates.emplace_back(
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(transmitted_coordinates)),
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(transmitted_coordinates)));
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
 }
