@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRAVEL_MODE_HPP
 #define TRAVEL_MODE_HPP
 
-namespace {
+namespace
+{
 using TravelMode = unsigned char;
 static const TravelMode TRAVEL_MODE_INACCESSIBLE = 0;
 static const TravelMode TRAVEL_MODE_DEFAULT = 1;

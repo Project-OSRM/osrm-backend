@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -51,7 +51,8 @@ template <class DataFacadeT> class SearchEngine
           alternative_path(facade, engine_working_data), distance_table(facade, engine_working_data)
     {
         static_assert(!std::is_pointer<DataFacadeT>::value, "don't instantiate with ptr type");
-        static_assert(std::is_object<DataFacadeT>::value, "don't instantiate with void, function, or reference");
+        static_assert(std::is_object<DataFacadeT>::value,
+                      "don't instantiate with void, function, or reference");
     }
 
     ~SearchEngine() {}

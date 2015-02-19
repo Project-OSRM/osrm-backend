@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -33,11 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 #include <unistd.h>
 #endif
-#include <cstdio>                     
-#include <iostream>                
-#include <mutex>                      
-#include <string>               
-
+#include <cstdio>
+#include <iostream>
+#include <mutex>
+#include <string>
 
 namespace
 {

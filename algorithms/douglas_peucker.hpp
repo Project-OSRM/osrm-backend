@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
-
 /* This class object computes the bitvector of indicating generalized input
  * points according to the (Ramer-)Douglas-Peucker algorithm.
  *
@@ -43,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * bit indicating if the points is present in the generalization.
  * Note: points may also be pre-selected*/
 
-static const std::array<int, 19> DOUGLAS_PEUCKER_THRESHOLDS {{
+static const std::array<int, 19> DOUGLAS_PEUCKER_THRESHOLDS{{
     512440, // z0
     256720, // z1
     122560, // z2

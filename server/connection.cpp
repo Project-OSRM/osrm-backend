@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -69,7 +69,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     osrm::tribool result;
     std::tie(result, compression_type) =
         request_parser.parse(current_request, incoming_data_buffer.data(),
-                              incoming_data_buffer.data() + bytes_transferred);
+                             incoming_data_buffer.data() + bytes_transferred);
 
     // the request has been parsed
     if (result == osrm::tribool::yes)

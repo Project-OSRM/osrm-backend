@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -52,8 +52,9 @@ void ConstructionTest(std::vector<unsigned> lengths, std::vector<unsigned> offse
     }
 }
 
-void
-ComputeLengthsOffsets(std::vector<unsigned> &lengths, std::vector<unsigned> &offsets, unsigned num)
+void ComputeLengthsOffsets(std::vector<unsigned> &lengths,
+                           std::vector<unsigned> &offsets,
+                           unsigned num)
 {
     lengths.resize(num);
     offsets.resize(num + 1);

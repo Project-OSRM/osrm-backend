@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -60,7 +60,6 @@ using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 #include <boost/iostreams/seek.hpp>
 
 #include <cstdint>
-
 
 #include <fstream>
 #include <string>
