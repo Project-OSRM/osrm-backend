@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM contributors
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,17 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RANGE_HPP_
-#define RANGE_HPP_
+#ifndef ITERATOR_RANGE_HPP
+#define ITERATOR_RANGE_HPP
 
 namespace osrm
 {
-namespace util
-{
-template <typename Iterator> class Range
+template <typename Iterator> class iter_range
 {
   public:
-    Range(Iterator begin, Iterator end) : begin_(begin), end_(end) {}
+    iter_range(Iterator begin, Iterator end) : begin_(begin), end_(end) {}
 
     Iterator begin() const { return begin_; }
     Iterator end() const { return end_; }
@@ -48,25 +46,25 @@ template <typename Iterator> class Range
 // Convenience functions for template parameter inference,
 // akin to std::make_pair.
 
-template <typename Iterator> Range<Iterator> range(Iterator begin, Iterator end)
+template <typename Iterator> iter_range<Iterator> integer_range(Iterator begin, Iterator end)
 {
-    return Range<Iterator>(begin, end);
+    return iter_range<Iterator>(begin, end);
 }
 
 template <typename Reversable>
-Range<typename Reversable::reverse_iterator> reverse(Reversable *reversable)
+iter_range<typename Reversable::reverse_iterator> reverse(Reversable *reversable)
 {
-    return Range<typename Reversable::reverse_iterator>(reversable->rbegin(), reversable->rend());
+    return iter_range<typename Reversable::reverse_iterator>(reversable->rbegin(),
+                                                             reversable->rend());
 }
 
 template <typename ConstReversable>
-Range<typename ConstReversable::const_reverse_iterator>
+iter_range<typename ConstReversable::const_reverse_iterator>
 const_reverse(const ConstReversable *const_reversable)
 {
-    return Range<typename ConstReversable::const_reverse_iterator>(const_reversable->crbegin(),
-                                                                   const_reversable->crend());
-}
+    return iter_range<typename ConstReversable::const_reverse_iterator>(const_reversable->crbegin(),
+                                                                        const_reversable->crend());
 }
 }
 
-#endif // RANGE_HPP_
+#endif // ITERATOR_RANGE_HPP
