@@ -511,6 +511,7 @@ template <class DataFacadeT> class MapMatching final
                                                      model.viterbi[parent_timestamp_index].end());
 
             unsigned parent_candidate_index = std::distance(model.viterbi[parent_timestamp_index].begin(), max_element_iter);
+
             std::deque<std::pair<unsigned, unsigned>> reconstructed_indices;
             while (parent_timestamp_index > sub_matching_begin)
             {
@@ -518,9 +519,11 @@ template <class DataFacadeT> class MapMatching final
                 {
                     continue;
                 }
+
                 reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
-                parent_timestamp_index = model.parents[parent_timestamp_index][parent_candidate_index].first;
-                parent_candidate_index = model.parents[parent_timestamp_index][parent_candidate_index].second;
+                const auto& next = model.parents[parent_timestamp_index][parent_candidate_index];
+                parent_timestamp_index = next.first;
+                parent_candidate_index = next.second;
             }
             reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
             if (reconstructed_indices.size() < 2)
