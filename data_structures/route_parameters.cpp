@@ -99,6 +99,15 @@ void RouteParameters::addHint(const std::string &hint)
     }
 }
 
+void RouteParameters::addTimestamp(const unsigned timestamp)
+{
+    timestamps.resize(coordinates.size());
+    if (!timestamps.empty())
+    {
+        timestamps.back() = timestamp;
+    }
+}
+
 void RouteParameters::setLanguage(const std::string &language_string)
 {
     language = language_string;

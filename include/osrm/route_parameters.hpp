@@ -63,6 +63,8 @@ struct RouteParameters
 
     void addHint(const std::string &hint);
 
+    void addTimestamp(const unsigned timestamp);
+
     void setLanguage(const std::string &language);
 
     void setGeometryFlag(const bool flag);
@@ -85,6 +87,7 @@ struct RouteParameters
     std::string jsonp_parameter;
     std::string language;
     std::vector<std::string> hints;
+    std::vector<unsigned> timestamps;
     std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
 };
