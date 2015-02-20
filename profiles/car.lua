@@ -394,17 +394,21 @@ function way_function (way, result)
 
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
-    result.forward_speed = result.forward_speed*speed_reduction + 11;
+    local scaled_speed = result.forward_speed*speed_reduction + 11;
+    local penalized_speed = math.huge
     if width <= 3 then
-      result.forward_speed = result.forward_speed / 2;
+      penalized_speed = result.forward_speed / 2;
     end
+    result.forward_speed = math.min(penalized_speed, scaled_speed)
   end
 
   if result.backward_speed > 0 then
-    result.backward_speed = result.backward_speed*speed_reduction + 11;
+    local scaled_speed = result.backward_speed*speed_reduction + 11;
+    local penalized_speed = math.huge
     if width <= 3 then
-      result.backward_speed = result.backward_speed / 2;
+      penalized_speed = result.backward_speed / 2;
     end
+    result.backward_speed = math.min(penalized_speed, scaled_speed)
   end
 end
 
