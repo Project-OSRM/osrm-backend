@@ -192,10 +192,10 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         for (auto& sub : sub_matchings)
         {
             // classify result
-            double trace_length = sub_trace_lengths[sub.end_idx-1] - sub_trace_lengths[sub.begin_idx];
+            double trace_length = sub_trace_lengths[sub.indices.back()] - sub_trace_lengths[sub.indices.front()];
             TraceClassification classification = classify(trace_length,
                                                           sub.length,
-                                                          (sub.end_idx - sub.begin_idx) - sub.nodes.size());
+                                                          (sub.indices.back() - sub.indices.front() + 1) - sub.nodes.size());
             if (classification.first == ClassifierT::ClassLabel::POSITIVE)
             {
                 sub.confidence = classification.second;
@@ -255,18 +255,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             descriptor->SetConfig(descriptor_config);
             descriptor->Run(raw_route, temp_result);
 
-            JSON::Array input_points;
-            for(const auto& n: sub.nodes) {
-                JSON::Array coord;
-                coord.values.emplace_back(n.location.lat / COORDINATE_PRECISION);
-                coord.values.emplace_back(n.location.lon / COORDINATE_PRECISION);
-                input_points.values.push_back(coord);
+            JSON::Array indices;
+            for (const auto& i : sub.indices)
+            {
+                indices.values.emplace_back(i);
             }
 
             JSON::Object subtrace;
             subtrace.values["geometry"] = temp_result.values["route_geometry"];
             subtrace.values["confidence"] = sub.confidence;
-            subtrace.values["input_points"] = input_points;
+            subtrace.values["indices"] = indices;
             subtrace.values["matched_points"] = temp_result.values["via_points"];
 
             traces.values.push_back(subtrace);
