@@ -74,8 +74,7 @@ namespace Matching
 struct SubMatching
 {
     std::vector<PhantomNode> nodes;
-    unsigned begin_idx;
-    unsigned end_idx;
+    std::vector<unsigned> indices;
     double length;
     double confidence;
 };
@@ -506,9 +505,6 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                 continue;
             }
 
-            matching.begin_idx = sub_matching_begin;
-            matching.end_idx = parent_timestamp_index;
-
             // loop through the columns, and only compare the last entry
             auto max_element_iter = std::max_element(model.viterbi[parent_timestamp_index].begin(),
                                                      model.viterbi[parent_timestamp_index].end());
@@ -533,11 +529,13 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
 
             matching.length = 0.0f;
             matching.nodes.resize(reconstructed_indices.size());
+            matching.indices.resize(reconstructed_indices.size());
             for (auto i = 0u; i < reconstructed_indices.size(); ++i)
             {
                 auto timestamp_index = reconstructed_indices[i].first;
                 auto location_index = reconstructed_indices[i].second;
 
+                matching.indices[i] = timestamp_index;
                 matching.nodes[i] = timestamp_list[timestamp_index][location_index].first;
                 matching.length += model.path_lengths[timestamp_index][location_index];
 
