@@ -483,7 +483,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                 if (trace_split)
                 {
                     split_points.push_back(breakage_begin);
-                    // note this preserves everything before t
+                    // note: this preserves everything before breakage_begin
                     model.clear(breakage_begin);
                     unsigned new_start = model.initialize(breakage_begin);
                     // no new start was found -> stop viterbi calculation
