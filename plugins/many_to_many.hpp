@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
+#include "../util/iterator_range.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/make_unique.hpp"
 #include "../util/string_util.hpp"
@@ -121,7 +122,15 @@ template <class DataFacadeT> class many_to_many_plugin final : public BasePlugin
             osrm::json::Array json_row;
             auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
             auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
-            json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
+            // json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
+            // std::transform(row_begin_iterator, row_end_iterator,
+            // std::back_inserter(json_row.values), [] (const distance_pair &pair) { return
+            // {pair.first, pair.second};} );
+            for (const auto entry : osrm::integer_range(row_begin_iterator, row_end_iterator))
+            {
+                json_row.values.push_back(entry.first);
+                json_row.values.push_back(entry.second);
+            }
             json_array.values.push_back(json_row);
         }
         json_result.values["distance_table"] = json_array;
