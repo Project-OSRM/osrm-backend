@@ -86,8 +86,8 @@ constexpr static const unsigned max_number_of_candidates = 10;
 constexpr static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
 constexpr static const double MINIMAL_LOG_PROB = -std::numeric_limits<double>::max();
 constexpr static const unsigned INVALID_STATE = std::numeric_limits<unsigned>::max();
-// FIXME that should be a time threshold.
 constexpr static const unsigned MAX_BROKEN_STATES = 6;
+constexpr static const unsigned MAX_BROKEN_TIME = 180;
 }
 
 // implements a hidden markov model map matching algorithm
@@ -251,14 +251,14 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
         std::vector<std::vector<bool>> pruned;
         std::vector<bool> breakage;
 
-        const Matching::CandidateLists& timestamp_list;
+        const Matching::CandidateLists& candidates_list;
 
 
-        HiddenMarkovModel(const Matching::CandidateLists& timestamp_list)
-        : breakage(timestamp_list.size())
-        , timestamp_list(timestamp_list)
+        HiddenMarkovModel(const Matching::CandidateLists& candidates_list)
+        : breakage(candidates_list.size())
+        , candidates_list(candidates_list)
         {
-            for (const auto& l : timestamp_list)
+            for (const auto& l : candidates_list)
             {
                 viterbi.emplace_back(l.size());
                 parents.emplace_back(l.size());
@@ -288,13 +288,13 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
 
         unsigned initialize(unsigned initial_timestamp)
         {
-            BOOST_ASSERT(initial_timestamp < timestamp_list.size());
+            BOOST_ASSERT(initial_timestamp < candidates_list.size());
 
             do
             {
                 for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
                 {
-                    viterbi[initial_timestamp][s] = log_emission_probability(timestamp_list[initial_timestamp][s].second);
+                    viterbi[initial_timestamp][s] = log_emission_probability(candidates_list[initial_timestamp][s].second);
                     parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
                     pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < Matching::MINIMAL_LOG_PROB;
 
@@ -327,14 +327,15 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
     }
 
 
-    void operator()(const Matching::CandidateLists &timestamp_list,
-                    const std::vector<FixedPointCoordinate> coordinate_list,
+    void operator()(const Matching::CandidateLists &candidates_list,
+                    const std::vector<FixedPointCoordinate>& trace_coordinates,
+                    const std::vector<unsigned>& trace_timestamps,
                     Matching::SubMatchingList& sub_matchings,
                     JSON::Object& _debug_info) const
     {
-        BOOST_ASSERT(timestamp_list.size() > 0);
+        BOOST_ASSERT(candidates_list.size() > 0);
 
-        HiddenMarkovModel model(timestamp_list);
+        HiddenMarkovModel model(candidates_list);
 
         unsigned initial_timestamp = model.initialize(0);
         if (initial_timestamp == Matching::INVALID_STATE)
@@ -343,15 +344,15 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
         }
 
         JSON::Array _debug_states;
-        for (unsigned t = 0; t < timestamp_list.size(); t++)
+        for (unsigned t = 0; t < candidates_list.size(); t++)
         {
             JSON::Array _debug_timestamps;
-            for (unsigned s = 0; s < timestamp_list[t].size(); s++)
+            for (unsigned s = 0; s < candidates_list[t].size(); s++)
             {
                 JSON::Object _debug_state;
                 _debug_state.values["transitions"] = JSON::Array();
-                _debug_state.values["coordinate"] = makeJSONArray(timestamp_list[t][s].first.location.lat / COORDINATE_PRECISION,
-                                                                  timestamp_list[t][s].first.location.lon / COORDINATE_PRECISION);
+                _debug_state.values["coordinate"] = makeJSONArray(candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
+                                                                  candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
                 if (t < initial_timestamp)
                 {
                     _debug_state.values["viterbi"] = makeJSONSafe(Matching::IMPOSSIBLE_LOG_PROB);
@@ -367,24 +368,25 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             _debug_states.values.push_back(_debug_timestamps);
         }
 
+        unsigned breakage_begin = std::numeric_limits<unsigned>::max();
         std::vector<unsigned> split_points;
         std::vector<unsigned> prev_unbroken_timestamps;
-        prev_unbroken_timestamps.reserve(timestamp_list.size());
+        prev_unbroken_timestamps.reserve(candidates_list.size());
         prev_unbroken_timestamps.push_back(initial_timestamp);
-        for (auto t = initial_timestamp + 1; t < timestamp_list.size(); ++t)
+        for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
         {
             unsigned prev_unbroken_timestamp = prev_unbroken_timestamps.back();
             const auto& prev_viterbi = model.viterbi[prev_unbroken_timestamp];
             const auto& prev_pruned = model.pruned[prev_unbroken_timestamp];
-            const auto& prev_unbroken_timestamps_list = timestamp_list[prev_unbroken_timestamp];
-            const auto& prev_coordinate = coordinate_list[prev_unbroken_timestamp];
+            const auto& prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
+            const auto& prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
 
             auto& current_viterbi = model.viterbi[t];
             auto& current_pruned = model.pruned[t];
             auto& current_parents = model.parents[t];
             auto& current_lengths = model.path_lengths[t];
-            const auto& current_timestamps_list = timestamp_list[t];
-            const auto& current_coordinate = coordinate_list[t];
+            const auto& current_timestamps_list = candidates_list[t];
+            const auto& current_coordinate = trace_coordinates[t];
 
             // compute d_t for this timestamp and the next one
             for (auto s = 0u; s < prev_viterbi.size(); ++s)
@@ -395,7 +397,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                 for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
                 {
                     // how likely is candidate s_prime at time t to be emitted?
-                    const double emission_pr = log_emission_probability(timestamp_list[t][s_prime].second);
+                    const double emission_pr = log_emission_probability(candidates_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
                         continue;
@@ -455,23 +457,47 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
             {
                 BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
 
+                // save start of breakage -> we need this as split point
+                if (t < breakage_begin)
+                {
+                    breakage_begin = t;
+                }
+
                 // remove both ends of the breakage
                 prev_unbroken_timestamps.pop_back();
 
+                bool trace_split = prev_unbroken_timestamps.size() < 1;
+
+                // use temporal information to determine a split if available
+                if (trace_timestamps.size() > 0)
+                {
+                    trace_split = trace_split || (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] > Matching::MAX_BROKEN_TIME);
+                }
+                else
+                {
+                    trace_split = trace_split || (t - prev_unbroken_timestamps.back() > Matching::MAX_BROKEN_STATES);
+                }
+
                 // we reached the beginning of the trace and it is still broken
                 // -> split the trace here
-                if (prev_unbroken_timestamps.size() < 1 || t - prev_unbroken_timestamps.back() > Matching::MAX_BROKEN_STATES)
+                if (trace_split)
                 {
-                    split_points.push_back(t);
+                    split_points.push_back(breakage_begin);
                     // note this preserves everything before t
-                    model.clear(t);
-                    unsigned new_start = model.initialize(t);
+                    model.clear(breakage_begin);
+                    unsigned new_start = model.initialize(breakage_begin);
                     // no new start was found -> stop viterbi calculation
                     if (new_start == Matching::INVALID_STATE)
                     {
                         break;
                     }
+                    prev_unbroken_timestamps.clear();
                     prev_unbroken_timestamps.push_back(new_start);
+                    // Important: We potentially go back here!
+                    // However since t+1 > new_start >= breakge_begin
+                    // we can only reset trace_coordindates.size() times.
+                    t = new_start;
+                    breakage_begin = std::numeric_limits<unsigned>::max();
                 }
             }
             else
@@ -539,7 +565,7 @@ template <class DataFacadeT> class MapMatching final : public BasicRoutingInterf
                 auto location_index = reconstructed_indices[i].second;
 
                 matching.indices[i] = timestamp_index;
-                matching.nodes[i] = timestamp_list[timestamp_index][location_index].first;
+                matching.nodes[i] = candidates_list[timestamp_index][location_index].first;
                 matching.length += model.path_lengths[timestamp_index][location_index];
 
                 _debug_states.values[timestamp_index]

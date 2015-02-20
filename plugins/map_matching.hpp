@@ -172,6 +172,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         std::vector<double> sub_trace_lengths;
         Matching::CandidateLists candidates_lists;
         const auto& input_coords = route_parameters.coordinates;
+        const auto& input_timestamps = route_parameters.timestamps;
+        if (input_timestamps.size() > 0 && input_coords.size() != input_timestamps.size())
+        {
+            return 400;
+        }
         bool found_candidates = get_candiates(input_coords, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
@@ -181,7 +186,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         // call the actual map matching
         JSON::Object debug_info;
         Matching::SubMatchingList sub_matchings;
-        search_engine_ptr->map_matching(candidates_lists, input_coords, sub_matchings, debug_info);
+        search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps, sub_matchings, debug_info);
 
         if (1 > sub_matchings.size())
         {
