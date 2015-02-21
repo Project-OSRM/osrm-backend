@@ -526,7 +526,7 @@ template <class DataFacadeT> class MapMatching final
             }
 
             // matchings that only consist of one candidate are invalid
-            if (parent_timestamp_index - sub_matching_begin < 2)
+            if (parent_timestamp_index - sub_matching_begin + 1 < 2)
             {
                 sub_matching_begin = sub_matching_end;
                 continue;
@@ -554,6 +554,7 @@ template <class DataFacadeT> class MapMatching final
             reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
             if (reconstructed_indices.size() < 2)
             {
+                sub_matching_begin = sub_matching_end;
                 continue;
             }
 
