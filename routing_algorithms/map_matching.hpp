@@ -35,8 +35,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <fstream>
 
-using JSONVariantArray = mapbox::util::recursive_wrapper<JSON::Array>;
-using JSONVariantObject = mapbox::util::recursive_wrapper<JSON::Object>;
+using JSONVariantArray = mapbox::util::recursive_wrapper<osrm::json::Array>;
+using JSONVariantObject = mapbox::util::recursive_wrapper<osrm::json::Object>;
 
 template<typename T>
 T makeJSONSafe(T d)
@@ -51,19 +51,19 @@ T makeJSONSafe(T d)
     return d;
 }
 
-void appendToJSONArray(JSON::Array& a) { }
+void appendToJSONArray(osrm::json::Array& a) { }
 
 template<typename T, typename... Args>
-void appendToJSONArray(JSON::Array& a, T value, Args... args)
+void appendToJSONArray(osrm::json::Array& a, T value, Args... args)
 {
     a.values.emplace_back(value);
     appendToJSONArray(a, args...);
 }
 
 template<typename... Args>
-JSON::Array makeJSONArray(Args... args)
+osrm::json::Array makeJSONArray(Args... args)
 {
-    JSON::Array a;
+    osrm::json::Array a;
     appendToJSONArray(a, args...);
     return a;
 }
@@ -332,7 +332,7 @@ template <class DataFacadeT> class MapMatching final
                     const std::vector<FixedPointCoordinate>& trace_coordinates,
                     const std::vector<unsigned>& trace_timestamps,
                     Matching::SubMatchingList& sub_matchings,
-                    JSON::Object& _debug_info) const
+                    osrm::json::Object& _debug_info) const
     {
         BOOST_ASSERT(candidates_list.size() > 0);
 
@@ -344,14 +344,14 @@ template <class DataFacadeT> class MapMatching final
             return;
         }
 
-        JSON::Array _debug_states;
+        osrm::json::Array _debug_states;
         for (unsigned t = 0; t < candidates_list.size(); t++)
         {
-            JSON::Array _debug_timestamps;
+            osrm::json::Array _debug_timestamps;
             for (unsigned s = 0; s < candidates_list[t].size(); s++)
             {
-                JSON::Object _debug_state;
-                _debug_state.values["transitions"] = JSON::Array();
+                osrm::json::Object _debug_state;
+                _debug_state.values["transitions"] = osrm::json::Array();
                 _debug_state.values["coordinate"] = makeJSONArray(candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
                                                                   candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
                 if (t < initial_timestamp)
@@ -419,7 +419,7 @@ template <class DataFacadeT> class MapMatching final
                     const double transition_pr = log_transition_probability(d_t, beta);
                     new_value += transition_pr;
 
-                    JSON::Object _debug_transistion;
+                    osrm::json::Object _debug_transistion;
                     _debug_transistion.values["to"] = makeJSONArray(t, s_prime);
                     _debug_transistion.values["properties"] = makeJSONArray(
                         makeJSONSafe(prev_viterbi[s]),
@@ -580,7 +580,7 @@ template <class DataFacadeT> class MapMatching final
             sub_matching_begin = sub_matching_end;
         }
 
-        JSON::Array _debug_breakage;
+        osrm::json::Array _debug_breakage;
         for (auto b : model.breakage) {
             _debug_breakage.values.push_back(static_cast<unsigned>(b));
         }
