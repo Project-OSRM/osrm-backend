@@ -161,7 +161,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return true;
     }
 
-    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
+    int HandleRequest(const RouteParameters &route_parameters, osrm::json::Object &json_result) final
     {
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))
@@ -184,7 +184,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
 
         // call the actual map matching
-        JSON::Object debug_info;
+        osrm::json::Object debug_info;
         Matching::SubMatchingList sub_matchings;
         search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps, sub_matchings, debug_info);
 
@@ -193,7 +193,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return 400;
         }
 
-        JSON::Array traces;
+        osrm::json::Array traces;
         for (auto& sub : sub_matchings)
         {
             // classify result
@@ -256,17 +256,17 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 break;
             }
 
-            JSON::Object temp_result;
+            osrm::json::Object temp_result;
             descriptor->SetConfig(descriptor_config);
             descriptor->Run(raw_route, temp_result);
 
-            JSON::Array indices;
+            osrm::json::Array indices;
             for (const auto& i : sub.indices)
             {
                 indices.values.emplace_back(i);
             }
 
-            JSON::Object subtrace;
+            osrm::json::Object subtrace;
             subtrace.values["geometry"] = temp_result.values["route_geometry"];
             subtrace.values["confidence"] = sub.confidence;
             subtrace.values["indices"] = indices;
