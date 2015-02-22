@@ -193,7 +193,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return 400;
         }
 
-        osrm::json::Array traces;
+        osrm::json::Array matchings;
         for (auto& sub : sub_matchings)
         {
             // classify result
@@ -272,11 +272,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             subtrace.values["indices"] = indices;
             subtrace.values["matched_points"] = temp_result.values["via_points"];
 
-            traces.values.push_back(subtrace);
+            matchings.values.push_back(subtrace);
         }
 
         json_result.values["debug"] = debug_info;
-        json_result.values["traces"] = traces;
+        json_result.values["matchings"] = matchings;
 
         return 200;
     }
