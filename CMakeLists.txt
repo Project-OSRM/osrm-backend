@@ -76,7 +76,7 @@ list(REMOVE_ITEM DatastructureGlob data_structures/Coordinate.cpp)
 file(GLOB CoordinateGlob data_structures/coordinate*.cpp)
 file(GLOB AlgorithmGlob algorithms/*.cpp)
 file(GLOB HttpGlob server/http/*.cpp)
-file(GLOB LibOSRMGlob library/*.cpp)
+file(GLOB LibOSRMGlob library/*.cpp util/compute_angle.cpp)
 file(GLOB DataStructureTestsGlob unit_tests/data_structures/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB AlgorithmTestsGlob unit_tests/algorithms/*.cpp)
 
