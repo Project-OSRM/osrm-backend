@@ -33,9 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/phantom_node.hpp"
-#include "../Util/bearing.hpp"
-#include "../Util/cast.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/bearing.hpp"
+#include "../util/cast.hpp"
+#include "../util/simple_logger.hpp"
 #include "../typedefs.h"
 
 #include <osrm/json_container.hpp>
@@ -210,7 +210,7 @@ public:
                     instruction.time = round(segment.duration / 10);
                     instruction.length_string = cast::integral_to_string(static_cast<int>(segment.length)) + "m";
                     const double bearing_value = (segment.bearing / 10.);
-                    instruction.bearing = Bearing::Get(bearing_value);
+                    instruction.bearing = bearing::get(bearing_value);
                     instruction.azimuth = static_cast<unsigned>(round(bearing_value));
                     instruction.travel_mode = segment.travel_mode;
 
@@ -236,7 +236,7 @@ public:
         instruction.position = necessary_segments_running_index - 1;
         instruction.time = 0;
         instruction.length_string = "0m";
-        instruction.bearing = Bearing::Get(0.0);
+        instruction.bearing = bearing::get(0.0);
         instruction.azimuth = 0.;
         instructions.push_back(instruction);
     }

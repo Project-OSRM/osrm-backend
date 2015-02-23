@@ -46,7 +46,7 @@ template <typename Iterator> class iter_range
 // Convenience functions for template parameter inference,
 // akin to std::make_pair.
 
-template <typename Iterator> iter_range<Iterator> integer_range(Iterator begin, Iterator end)
+template <typename Iterator> iter_range<Iterator> iterator_range(Iterator begin, Iterator end)
 {
     return iter_range<Iterator>(begin, end);
 }

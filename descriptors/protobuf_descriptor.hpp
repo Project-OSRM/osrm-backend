@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "descriptor_base.hpp"
 #include "response.pb.h"
 
-#include "../Util/simple_logger.hpp"
+#include "../util/simple_logger.hpp"
 
 template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFacadeT>
 {
@@ -72,9 +72,9 @@ template <class DataFacadeT> class PBFDescriptor : public BaseDescriptor<DataFac
   public:
     PBFDescriptor(DataFacadeT *facade) : super(facade) {}
 
-    void Run(const InternalRouteResult &raw_route, JSON::Object &json_result) final
+    void Run(const InternalRouteResult &raw_route, osrm::json::Object &json_result) final
     {
-        JSON::String result_string;
+        osrm::json::String result_string;
         protobuffer_response::route_response response;
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)

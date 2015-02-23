@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef NEAREST_PLUGIN_H
-#define NEAREST_PLUGIN_H
+#ifndef NEAREST_HPP
+#define NEAREST_HPP
 
 #include "plugin_base.hpp"
 
@@ -67,7 +67,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
         {
             if ("pbf" == route_parameters.output_format)
             {
-                JSON::String result_string;
+                osrm::json::String result_string;
                 protobuffer_response::nearest_response nearest_response;
                 nearest_response.set_status(207);
                 nearest_response.SerializeToString(&result_string.value);
@@ -97,7 +97,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                     nearest_response.add_location()->CopyFrom(location);
                 }
 
-                JSON::String result_string;
+                osrm::json::String result_string;
                 nearest_response.SerializeToString(&result_string.value);
                 json_result.values["pbf"] = result_string;
             } else {
@@ -105,13 +105,13 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
 
                 if (number_of_results > 1)
                 {
-                    JSON::Array results;
+                    osrm::json::Array results;
 
                     auto vector_length = phantom_node_vector.size();
                     for (const auto i : osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                     {
-                        JSON::Array json_coordinate;
-                        JSON::Object result;
+                        osrm::json::Array json_coordinate;
+                        osrm::json::Object result;
                         json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
                                                          COORDINATE_PRECISION);
                         json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
@@ -126,7 +126,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                 }
                 else
                 {
-                    JSON::Array json_coordinate;
+                    osrm::json::Array json_coordinate;
                     json_coordinate.values.push_back(phantom_node_vector.front().location.lat /
                                                      COORDINATE_PRECISION);
                     json_coordinate.values.push_back(phantom_node_vector.front().location.lon /
@@ -146,4 +146,4 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     std::string descriptor_string;
 };
 
-#endif /* NEAREST_PLUGIN_H */
+#endif /* NEAREST_HPP */

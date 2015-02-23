@@ -113,20 +113,6 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return 400;
         }
 
-<<<<<<< HEAD
-        osrm::json::Array json_array;
-        const auto number_of_locations = phantom_node_vector.size();
-        for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
-        {
-            osrm::json::Array json_row;
-            auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
-            auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
-            json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
-            json_array.values.push_back(json_row);
-        }
-        json_result.values["distance_table"] = json_array;
-        // osrm::json::render(reply.content, json_object);
-=======
         if ("pbf" == route_parameters.output_format)
         {
             const auto number_of_locations = phantom_node_vector.size();
@@ -136,23 +122,23 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 auto * matrix_row = distance_matrix.add_row();
                 auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
                 auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
-                for (const auto entry : osrm::make_iter_range(row_begin_iterator, row_end_iterator))
+                for (const auto entry : osrm::iterator_range(row_begin_iterator, row_end_iterator))
                 {
                     matrix_row->add_entry(entry);
                 }
             }
             protobuffer_response::route_response response;
 
-            JSON::String result_string;
+            osrm::json::String result_string;
             distance_matrix.SerializeToString(&result_string.value);
             json_result.values["pbf"] = result_string;
 
         } else {
-            JSON::Array json_array;
+            osrm::json::Array json_array;
             const auto number_of_locations = phantom_node_vector.size();
             for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
             {
-                JSON::Array json_row;
+                osrm::json::Array json_row;
                 auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
                 auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
                 json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
@@ -160,7 +146,6 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             }
             json_result.values["distance_table"] = json_array;
         }
->>>>>>> implement protobuffer encoded output for distance table queries
         return 200;
     }
 

@@ -72,12 +72,12 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
                 coordinate.set_lon(result.lon / COORDINATE_PRECISION);
                 locate_response.mutable_mapped_coordinate()->CopyFrom(coordinate);
             } else {
-            locate_response.set_status(207);
+                locate_response.set_status(207);
+            }
             locate_response.SerializeToString(&result_string.value);
             json_result.values["pbf"] = result_string;
-            }
-        return 200;
-        
+            return 200;
+        }
 
         if (found_coordinate)
         {
