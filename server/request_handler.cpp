@@ -130,7 +130,8 @@ void RequestHandler::handle_request(const http::request &current_request,
 
         current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
         current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
-        current_reply.headers.emplace_back("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+        current_reply.headers.emplace_back("Access-Control-Allow-Headers",
+                                           "X-Requested-With, Content-Type");
 
         // set headers
         current_reply.headers.emplace_back("Content-Length",
