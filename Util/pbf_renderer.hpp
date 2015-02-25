@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM contributors
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,25 +25,43 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef POLYLINE_FORMATTER_HPP
-#define POLYLINE_FORMATTER_HPP
+#ifndef PBF_RENDERER_HPP
+#define PBF_RENDERER_HPP
 
-struct SegmentInformation;
+#include "cast.hpp"
 
-#include <string>
-#include <vector>
+#include <osrm/json_container.hpp>
 
-struct PolylineFormatter
+#include <type_traits>
+
+namespace JSON {
+
+struct PBFToArrayRenderer : mapbox::util::static_visitor<>
 {
+    explicit PBFToArrayRenderer(std::vector<char> &_out) : out(_out) {}
+
+    void operator()(const String &string) const
+    {
+        out.insert(out.end(), string.value.begin(), string.value.end());
+    }
+
+    template<class Other>
+    typename std::enable_if<!std::is_same<Other, String>::value, void>::type
+    operator()(const Other &other) const
+    {
+    }
+
   private:
-    void encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output) const;
-
-    void encodeNumber(int number_to_encode, std::string &output) const;
-
-  public:
-    std::string printEncodedStr(const std::vector<SegmentInformation> &polyline) const;
-
-    std::vector<std::string> printUnencodedStr(const std::vector<SegmentInformation> &polyline) const;
+    std::vector<char> &out;
 };
 
-#endif /* POLYLINE_FORMATTER_HPP */
+template<class JSONObject>
+void pbf_render(std::vector<char> &out, const JSONObject &object)
+{
+    Value value = object;
+    mapbox::util::apply_visitor(PBFToArrayRenderer(out), value);
+}
+
+} // namespace JSON
+
+#endif // PBF_RENDERER_HPP

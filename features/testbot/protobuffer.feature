@@ -7,7 +7,7 @@ Feature: Importing protobuffer (.pbf) format
 
     Background:
         Given the profile "testbot"
-        And the import format "pbf"
+        And the input format "pbf"
 
     Scenario: Testbot - Protobuffer import, nodes and ways
         Given the node map
@@ -136,7 +136,7 @@ Feature: Importing protobuffer (.pbf) format
             | x    | h  | xh    | NE      | 45      |
 
 
-    Scenario: Testbot - Protobuffer import, rraffic signals should incur a delay
+    Scenario: Testbot - Protobuffer import, traffic signals should incur a delay
         Given the node map
             | a | b | c |
             | d | e | f |

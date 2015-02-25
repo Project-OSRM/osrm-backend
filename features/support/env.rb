@@ -1,6 +1,5 @@
 require 'rspec/expectations'
 
-
 DEFAULT_PORT = 5000
 DEFAULT_TIMEOUT = 2
 ROOT_FOLDER = Dir.pwd

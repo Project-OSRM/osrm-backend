@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../descriptors/descriptor_base.hpp"
 #include "../descriptors/gpx_descriptor.hpp"
 #include "../descriptors/json_descriptor.hpp"
+#include "../descriptors/protobuf_descriptor.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/make_unique.hpp"
@@ -52,7 +53,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 {
   private:
-    DescriptorTable descriptor_table;
     std::string descriptor_string;
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
     DataFacadeT *facade;
@@ -61,10 +61,6 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
     explicit ViaRoutePlugin(DataFacadeT *facade) : descriptor_string("viaroute"), facade(facade)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
-
-        descriptor_table.emplace("json", 0);
-        descriptor_table.emplace("gpx", 1);
-        // descriptor_table.emplace("geojson", 2);
     }
 
     virtual ~ViaRoutePlugin() {}
@@ -175,7 +171,10 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         case 1:
             descriptor = osrm::make_unique<GPXDescriptor<DataFacadeT>>(facade);
             break;
-        // case 2:
+        case 2:
+            descriptor = osrm::make_unique<PBFDescriptor<DataFacadeT>>(facade);
+            break;
+        // case 3:
         //      descriptor = osrm::make_unique<GEOJSONDescriptor<DataFacadeT>>();
         //      break;
         default:

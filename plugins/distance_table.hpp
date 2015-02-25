@@ -30,10 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "plugin_base.hpp"
 
+#include "response.pb.h"
+
 #include "../algorithms/object_encoder.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
+#include "../util/iterator_range.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/make_unique.hpp"
 #include "../util/string_util.hpp"
@@ -110,18 +113,39 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return 400;
         }
 
-        osrm::json::Array json_array;
-        const auto number_of_locations = phantom_node_vector.size();
-        for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
+        if ("pbf" == route_parameters.output_format)
         {
-            osrm::json::Array json_row;
-            auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
-            auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
-            json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
-            json_array.values.push_back(json_row);
+            const auto number_of_locations = phantom_node_vector.size();
+            protobuffer_response::distance_matrix distance_matrix;
+            for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
+            {
+                auto * matrix_row = distance_matrix.add_row();
+                auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
+                auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
+                for (const auto entry : osrm::iterator_range(row_begin_iterator, row_end_iterator))
+                {
+                    matrix_row->add_entry(entry);
+                }
+            }
+            protobuffer_response::route_response response;
+
+            osrm::json::String result_string;
+            distance_matrix.SerializeToString(&result_string.value);
+            json_result.values["pbf"] = result_string;
+
+        } else {
+            osrm::json::Array json_array;
+            const auto number_of_locations = phantom_node_vector.size();
+            for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
+            {
+                osrm::json::Array json_row;
+                auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
+                auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
+                json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
+                json_array.values.push_back(json_row);
+            }
+            json_result.values["distance_table"] = json_array;
         }
-        json_result.values["distance_table"] = json_array;
-        // osrm::json::render(reply.content, json_object);
         return 200;
     }
 
