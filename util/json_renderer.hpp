@@ -40,11 +40,33 @@ namespace osrm
 namespace json
 {
 
+
 struct Renderer : mapbox::util::static_visitor<>
 {
     explicit Renderer(std::ostream &_out) : out(_out) {}
 
-    void operator()(const String &string) const { out << "\"" << string.value << "\""; }
+    void operator()(const String &string) const {
+        out << "\"";
+
+        // check if we need escaping
+        std::size_t pos = string.value.find_first_of('\\');
+        if (pos != std::string::npos)
+        {
+            std::string escapedString(string.value);
+            do
+            {
+                escapedString.insert(pos, 1, '\\');
+                pos = escapedString.find_first_of('\\', pos);
+            } while (pos != std::string::npos);
+        }
+        // no need to escape
+        else
+        {
+            out << string.value;
+        }
+
+        out << "\"";
+    }
 
     void operator()(const Number &number) const
     {
@@ -101,7 +123,25 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
     void operator()(const String &string) const
     {
         out.push_back('\"');
-        out.insert(out.end(), string.value.begin(), string.value.end());
+
+        // check if we need escaping
+        std::size_t pos = string.value.find_first_of('\\');
+        if (pos != std::string::npos)
+        {
+            std::string escapedString(string.value);
+            do
+            {
+                escapedString.insert(pos, 1, '\\');
+                pos = escapedString.find_first_of('\\', pos+2);
+            } while (pos != std::string::npos);
+            out.insert(out.end(), escapedString.begin(), escapedString.end());
+        }
+        // no need to escape
+        else
+        {
+            out.insert(out.end(), string.value.begin(), string.value.end());
+        }
+
         out.push_back('\"');
     }
 
