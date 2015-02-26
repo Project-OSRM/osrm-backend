@@ -280,9 +280,7 @@ function way_function (way, result)
   -- handling movable bridges
   local bridge_speed = speed_profile[bridge]
   if (bridge_speed and bridge_speed > 0) then
-    io.write("-bridge: "..bridge.."\n")
     highway = bridge;
-    io.write("-highway: "..highway.."\n")
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 );
