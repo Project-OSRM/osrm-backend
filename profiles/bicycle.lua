@@ -219,7 +219,18 @@ function way_function (way, result)
   end
 
   -- speed
-  if route_speeds[route] then
+  local bridge_speed = speed_profile[bridge]
+  if (bridge_speed and bridge_speed > 0) then
+    highway = bridge;
+    local duration  = way:get_value_by_key("duration")
+    if duration and durationIsValid(duration) then
+      result.duration = max( parseDuration(duration), 1 );
+    end
+    result.forward_mode = mode_movable_bridge
+    result.backward_mode = mode_movable_bridge
+    result.forward_speed = bridge_speed
+    result.backward_speed = bridge_speed
+  elseif route_speeds[route] then
     -- ferries (doesn't cover routes tagged using relations)
     result.forward_mode = mode_ferry
     result.backward_mode = mode_ferry
