@@ -219,7 +219,7 @@ function way_function (way, result)
   end
 
   -- speed
-  local bridge_speed = speed_profile[bridge]
+  local bridge_speed = bicycle_speeds[bridge]
   if (bridge_speed and bridge_speed > 0) then
     highway = bridge;
     local duration  = way:get_value_by_key("duration")
