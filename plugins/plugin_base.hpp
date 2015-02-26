@@ -32,9 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/json_container.hpp>
 #include <osrm/route_parameters.hpp>
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 class BasePlugin
 {
