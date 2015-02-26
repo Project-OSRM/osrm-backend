@@ -56,19 +56,11 @@ std::string PolylineCompressor::encode_number(int number_to_encode) const
     {
         const int next_value = (0x20 | (number_to_encode & 0x1f)) + 63;
         output += static_cast<char>(next_value);
-        if (92 == next_value)
-        {
-            output += static_cast<char>(next_value);
-        }
         number_to_encode >>= 5;
     }
 
     number_to_encode += 63;
     output += static_cast<char>(number_to_encode);
-    if (92 == number_to_encode)
-    {
-        output += static_cast<char>(number_to_encode);
-    }
     return output;
 }
 

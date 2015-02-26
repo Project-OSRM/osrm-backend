@@ -77,10 +77,17 @@ inline void replaceAll(std::string &s, const std::string &sub, const std::string
     boost::replace_all(s, sub, other);
 }
 
-inline std::string EscapeJSONString(const std::string &input)
+inline std::string escape_JSON(const std::string &input)
 {
+    // return the input if no backslash can be found -> no allocations
+    if (input.find_first_of('\\') == std::string::npos)
+    {
+        return input;
+    }
+
+    // escape and skip reallocations if possible
     std::string output;
-    output.reserve(input.size());
+    output.reserve(input.size() + 4); // +4 assumes two backslashes on avg
     for (auto iter = input.begin(); iter != input.end(); ++iter)
     {
         switch (iter[0])

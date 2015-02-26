@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JSON_RENDERER_HPP
 
 #include "cast.hpp"
+#include "string_util.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -44,7 +45,12 @@ struct Renderer : mapbox::util::static_visitor<>
 {
     explicit Renderer(std::ostream &_out) : out(_out) {}
 
-    void operator()(const String &string) const { out << "\"" << string.value << "\""; }
+    void operator()(const String &string) const
+    {
+        out << "\"";
+        out << escape_JSON(string.value);
+        out << "\"";
+    }
 
     void operator()(const Number &number) const
     {
@@ -101,7 +107,8 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
     void operator()(const String &string) const
     {
         out.push_back('\"');
-        out.insert(out.end(), string.value.begin(), string.value.end());
+        const auto string_to_insert = escape_JSON(string.value);
+        out.insert(std::end(out), std::begin(string_to_insert), std::end(string_to_insert));
         out.push_back('\"');
     }
 

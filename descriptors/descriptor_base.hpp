@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/phantom_node.hpp"
 #include "../typedefs.h"
 
+#include <boost/assert.hpp>
+
 #include <osrm/json_container.hpp>
 
 #include <string>
