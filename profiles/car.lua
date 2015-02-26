@@ -279,7 +279,8 @@ function way_function (way, result)
 
   -- handling movable bridges
   local bridge_speed = speed_profile[bridge]
-  if (bridge_speed and bridge_speed > 0) then
+  local capacity_car = way:get_value_by_key("capacity:car")
+  if (bridge_speed and bridge_speed > 0) and (capacity_car ~= 0) then
     highway = bridge;
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
