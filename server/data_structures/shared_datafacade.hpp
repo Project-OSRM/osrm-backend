@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../util/simple_logger.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 
 template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<EdgeDataT>
@@ -409,22 +410,23 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return m_name_ID_list.at(id);
     };
 
-    void GetName(const unsigned name_id, std::string &result) const override final
+    std::string get_name_for_id(const unsigned name_id) const override final
     {
-        if (UINT_MAX == name_id)
+        if (std::numeric_limits<unsigned>::max() == name_id)
         {
-            result = "";
-            return;
+            return "";
         }
         auto range = m_name_table->GetRange(name_id);
 
-        result.clear();
+        std::string result;
+        result.reserve(range.size());
         if (range.begin() != range.end())
         {
             result.resize(range.back() - range.front() + 1);
             std::copy(m_names_char_list.begin() + range.front(),
                       m_names_char_list.begin() + range.back() + 1, result.begin());
         }
+        return result;
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }

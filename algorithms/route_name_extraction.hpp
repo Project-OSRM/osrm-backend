@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM contributors
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -147,15 +147,13 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         }
 
         // fetching names for the selected segments
-        route_names.shortest_path_name_1 =
-            facade->GetEscapedNameForNameID(shortest_segment_1.name_id);
-        route_names.shortest_path_name_2 =
-            facade->GetEscapedNameForNameID(shortest_segment_2.name_id);
+        route_names.shortest_path_name_1 = facade->get_name_for_id(shortest_segment_1.name_id);
+        route_names.shortest_path_name_2 = facade->get_name_for_id(shortest_segment_2.name_id);
 
         route_names.alternative_path_name_1 =
-            facade->GetEscapedNameForNameID(alternative_segment_1.name_id);
+            facade->get_name_for_id(alternative_segment_1.name_id);
         route_names.alternative_path_name_2 =
-            facade->GetEscapedNameForNameID(alternative_segment_2.name_id);
+            facade->get_name_for_id(alternative_segment_2.name_id);
 
         return route_names;
     }

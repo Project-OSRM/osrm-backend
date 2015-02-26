@@ -109,14 +109,7 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const = 0;
 
-    virtual void GetName(const unsigned name_id, std::string &result) const = 0;
-
-    std::string GetEscapedNameForNameID(const unsigned name_id) const
-    {
-        std::string temporary_string;
-        GetName(name_id, temporary_string);
-        return EscapeJSONString(temporary_string);
-    }
+    virtual std::string get_name_for_id(const unsigned name_id) const = 0;
 
     virtual std::string GetTimestamp() const = 0;
 };

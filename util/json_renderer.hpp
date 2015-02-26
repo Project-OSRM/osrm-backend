@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JSON_RENDERER_HPP
 
 #include "cast.hpp"
+#include "string_util.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -40,31 +41,14 @@ namespace osrm
 namespace json
 {
 
-
 struct Renderer : mapbox::util::static_visitor<>
 {
     explicit Renderer(std::ostream &_out) : out(_out) {}
 
-    void operator()(const String &string) const {
+    void operator()(const String &string) const
+    {
         out << "\"";
-
-        // check if we need escaping
-        std::size_t pos = string.value.find_first_of('\\');
-        if (pos != std::string::npos)
-        {
-            std::string escapedString(string.value);
-            do
-            {
-                escapedString.insert(pos, 1, '\\');
-                pos = escapedString.find_first_of('\\', pos);
-            } while (pos != std::string::npos);
-        }
-        // no need to escape
-        else
-        {
-            out << string.value;
-        }
-
+        out << escape_JSON(string.value);
         out << "\"";
     }
 
@@ -123,25 +107,8 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
     void operator()(const String &string) const
     {
         out.push_back('\"');
-
-        // check if we need escaping
-        std::size_t pos = string.value.find_first_of('\\');
-        if (pos != std::string::npos)
-        {
-            std::string escapedString(string.value);
-            do
-            {
-                escapedString.insert(pos, 1, '\\');
-                pos = escapedString.find_first_of('\\', pos+2);
-            } while (pos != std::string::npos);
-            out.insert(out.end(), escapedString.begin(), escapedString.end());
-        }
-        // no need to escape
-        else
-        {
-            out.insert(out.end(), string.value.begin(), string.value.end());
-        }
-
+        const auto string_to_insert = escape_JSON(string.value);
+        out.insert(std::end(out), std::begin(string_to_insert), std::end(string_to_insert));
         out.push_back('\"');
     }
 
