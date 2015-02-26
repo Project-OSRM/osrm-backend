@@ -66,6 +66,10 @@ route_speeds = {
   ["ferry"] = 5
 }
 
+bridge_speeds = {
+  ["movable"] = 5
+}
+
 surface_speeds = {
   ["asphalt"] = default_speed,
   ["cobblestone:flattened"] = 10,
@@ -102,7 +106,7 @@ mode_normal = 1
 mode_pushing = 2
 mode_ferry = 3
 mode_train = 4
-
+mode_movable_bridge = 5
 
 local function parse_maxspeed(source)
     if not source then
@@ -159,12 +163,14 @@ function way_function (way, result)
   local railway = way:get_value_by_key("railway")
   local amenity = way:get_value_by_key("amenity")
   local public_transport = way:get_value_by_key("public_transport")
+  local bridge = way:get_value_by_key("bridge")
   if (not highway or highway == '') and
   (not route or route == '') and
   (not railway or railway=='') and
   (not amenity or amenity=='') and
   (not man_made or man_made=='') and
-  (not public_transport or public_transport=='')
+  (not public_transport or public_transport=='') and
+  (not bridge or bridge=='')
   then
     return
   end
@@ -219,12 +225,11 @@ function way_function (way, result)
   end
 
   -- speed
-  local bridge_speed = bicycle_speeds[bridge]
+  local bridge_speed = bridge_speeds[bridge]
   if (bridge_speed and bridge_speed > 0) then
     highway = bridge;
-    local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
-      result.duration = max( parseDuration(duration), 1 );
+      result.duration = math.max( parseDuration(duration), 1 );
     end
     result.forward_mode = mode_movable_bridge
     result.backward_mode = mode_movable_bridge

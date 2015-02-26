@@ -18,14 +18,14 @@ Feature: Bicycle - Handle movable bridge
 
         When I route I should get
             | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,3,1 |
-            | b    | f  | abc,cde,efg | 1,3,1 |
-            | e    | c  | cde         | 3     |
-            | e    | b  | cde,abc     | 3,1   |
-            | e    | a  | cde,abc     | 3,1   |
-            | c    | e  | cde         | 3     |
-            | c    | f  | cde,efg     | 3,1   |
-            | c    | g  | cde,efg     | 3,1   |
+            | a    | g  | abc,cde,efg | 1,5,1 |
+            | b    | f  | abc,cde,efg | 1,5,1 |
+            | e    | c  | cde         | 5     |
+            | e    | b  | cde,abc     | 5,1   |
+            | e    | a  | cde,abc     | 5,1   |
+            | c    | e  | cde         | 5     |
+            | c    | f  | cde,efg     | 5,1   |
+            | c    | g  | cde,efg     | 5,1   |
 
     Scenario: Car - Properly handle durations
         Given the node map
@@ -41,7 +41,7 @@ Feature: Bicycle - Handle movable bridge
 
         When I route I should get
             | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,3,1 | 6 km/h |
-            | b    | f  | abc,cde,efg | 1,3,1 | 4 km/h |
-            | c    | e  | cde         | 3     | 2 km/h |
-            | e    | c  | cde         | 3     | 2 km/h |
+            | a    | g  | abc,cde,efg | 1,5,1 | 5 km/h |
+            | b    | f  | abc,cde,efg | 1,5,1 | 3 km/h |
+            | c    | e  | cde         | 5     | 2 km/h |
+            | e    | c  | cde         | 5     | 2 km/h |
