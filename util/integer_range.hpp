@@ -50,6 +50,7 @@ template <typename Integer> class range
     const range &end() const { return *this; }
     Integer front() const { return iter; }
     Integer back() const { return last - 1; }
+    Integer size() const { return last - iter; }
 
     // Iterator functions
     bool operator!=(const range &) const { return iter < last; }
