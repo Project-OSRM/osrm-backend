@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.8)
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
 Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
 This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
@@ -11,7 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
 
@@ -30,27 +30,27 @@ endif()
 option(WITH_TOOLS "Build OSRM tools" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 
-include_directories(${CMAKE_SOURCE_DIR}/include/)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/libosmium/include/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/util/fingerprint.cpp fingerprint.cpp.alwaysbuild
-  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/util/fingerprint.cpp fingerprint.cpp.alwaysbuild
+  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/util/fingerprint.cpp.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/fingerprint.cpp.in
   COMMENT "Configuring fingerprint.cpp"
   VERBATIM)
 
-add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/util/fingerprint.cpp)
+add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/util/fingerprint.cpp)
 add_custom_target(tests DEPENDS datastructure-tests algorithm-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
 
 configure_file(
-  ${CMAKE_SOURCE_DIR}/util/git_sha.cpp.in
-  ${CMAKE_SOURCE_DIR}/util/git_sha.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/util/git_sha.cpp.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/util/git_sha.cpp
 )
 file(GLOB ExtractorGlob extractor/*.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp)
@@ -361,7 +361,7 @@ foreach(lib ${Boost_LIBRARIES})
   set(BOOST_LIBRARY_LISTING "${BOOST_LIBRARY_LISTING} -l${BOOST_LIBRARY_NAME}")
 endforeach()
 
-configure_file(${CMAKE_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
 
 if(BUILD_DEBIAN_PACKAGE)
