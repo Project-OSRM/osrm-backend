@@ -28,6 +28,7 @@ speed_profile = {
   ["service"] = 15,
 --  ["track"] = 5,
   ["ferry"] = 5,
+  ["movable"] = 5,
   ["shuttle_train"] = 10,
   ["default"] = 10
 }
@@ -144,6 +145,7 @@ local speed_reduction = 0.8
 --modes
 local mode_normal = 1
 local mode_ferry = 2
+local mode_movable_bridge = 3
 
 local function find_access_tag(source, access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
@@ -221,8 +223,9 @@ end
 function way_function (way, result)
   local highway = way:get_value_by_key("highway")
   local route = way:get_value_by_key("route")
+  local bridge = way:get_value_by_key("bridge")
 
-  if not ((highway and highway ~= "") or (route and route ~= "")) then
+  if not ((highway and highway ~= "") or (route and route ~= "") or (bridge and bridge ~= "")) then
     return
   end
 
@@ -260,9 +263,9 @@ function way_function (way, result)
     return
   end
 
-  -- Handling ferries and piers
+  -- handling ferries and piers
   local route_speed = speed_profile[route]
-  if(route_speed and route_speed > 0) then
+  if (route_speed and route_speed > 0) then
     highway = route;
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
@@ -272,6 +275,22 @@ function way_function (way, result)
     result.backward_mode = mode_ferry
     result.forward_speed = route_speed
     result.backward_speed = route_speed
+  end
+
+  -- handling movable bridges
+  local bridge_speed = speed_profile[bridge]
+  if (bridge_speed and bridge_speed > 0) then
+    io.write("-bridge: "..bridge.."\n")
+    highway = bridge;
+    io.write("-highway: "..highway.."\n")
+    local duration  = way:get_value_by_key("duration")
+    if duration and durationIsValid(duration) then
+      result.duration = max( parseDuration(duration), 1 );
+    end
+    result.forward_mode = mode_movable_bridge
+    result.backward_mode = mode_movable_bridge
+    result.forward_speed = bridge_speed
+    result.backward_speed = bridge_speed
   end
 
   -- leave early of this way is not accessible
