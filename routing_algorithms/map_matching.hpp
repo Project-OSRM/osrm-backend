@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../util/simple_logger.hpp"
+#include "../util/json_util.hpp"
 
 #include <osrm/json_container.hpp>
 #include <variant/variant.hpp>
@@ -45,36 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using JSONVariantArray = mapbox::util::recursive_wrapper<osrm::json::Array>;
 using JSONVariantObject = mapbox::util::recursive_wrapper<osrm::json::Object>;
 
-template<typename T>
-T makeJSONSafe(T d)
-{
-    if (std::isnan(d) || std::numeric_limits<T>::infinity() == d) {
-        return std::numeric_limits<T>::max();
-    }
-    if (-std::numeric_limits<T>::infinity() == d) {
-        return -std::numeric_limits<T>::max();
-    }
-
-    return d;
-}
-
-void appendToJSONArray(osrm::json::Array& a) { }
-
-template<typename T, typename... Args>
-void appendToJSONArray(osrm::json::Array& a, T value, Args... args)
-{
-    a.values.emplace_back(value);
-    appendToJSONArray(a, args...);
-}
-
-template<typename... Args>
-osrm::json::Array makeJSONArray(Args... args)
-{
-    osrm::json::Array a;
-    appendToJSONArray(a, args...);
-    return a;
-}
-
 namespace Matching
 {
 
@@ -86,7 +57,7 @@ struct SubMatching
     double confidence;
 };
 
-using CandidateList =  std::vector<std::pair<PhantomNode, double>>;
+using CandidateList = std::vector<std::pair<PhantomNode, double>>;
 using CandidateLists = std::vector<CandidateList>;
 using SubMatchingList = std::vector<SubMatching>;
 constexpr static const unsigned max_number_of_candidates = 10;
@@ -133,8 +104,8 @@ template <class DataFacadeT> class MapMatching final
     }
 
     // TODO: needs to be estimated from the input locations
-    // FIXME These values seem wrong. Higher beta for more samples/minute? Should be inverse proportional.
-    //constexpr static const double beta = 1.;
+    // FIXME These values seem wrong. Higher beta for more samples/minute? Should be inverse
+    // proportional.
     // samples/min and beta
     // 1 0.49037673
     // 2 0.82918373
@@ -239,13 +210,15 @@ template <class DataFacadeT> class MapMatching final
             FixedPointCoordinate previous_coordinate = source_phantom.location;
             FixedPointCoordinate current_coordinate;
             distance = 0;
-            for (const auto& p : unpacked_path)
+            for (const auto &p : unpacked_path)
             {
                 current_coordinate = super::facade->GetCoordinateOfNode(p.node);
-                distance += coordinate_calculation::great_circle_distance(previous_coordinate, current_coordinate);
+                distance += coordinate_calculation::great_circle_distance(previous_coordinate,
+                                                                          current_coordinate);
                 previous_coordinate = current_coordinate;
             }
-            distance += coordinate_calculation::great_circle_distance(previous_coordinate, target_phantom.location);
+            distance += coordinate_calculation::great_circle_distance(previous_coordinate,
+                                                                      target_phantom.location);
         }
 
         return distance;
@@ -259,14 +232,12 @@ template <class DataFacadeT> class MapMatching final
         std::vector<std::vector<bool>> pruned;
         std::vector<bool> breakage;
 
-        const Matching::CandidateLists& candidates_list;
+        const Matching::CandidateLists &candidates_list;
 
-
-        HiddenMarkovModel(const Matching::CandidateLists& candidates_list)
-        : breakage(candidates_list.size())
-        , candidates_list(candidates_list)
+        HiddenMarkovModel(const Matching::CandidateLists &candidates_list)
+            : breakage(candidates_list.size()), candidates_list(candidates_list)
         {
-            for (const auto& l : candidates_list)
+            for (const auto &l : candidates_list)
             {
                 viterbi.emplace_back(l.size());
                 parents.emplace_back(l.size());
@@ -279,10 +250,9 @@ template <class DataFacadeT> class MapMatching final
 
         void clear(unsigned initial_timestamp)
         {
-            BOOST_ASSERT(viterbi.size() == parents.size()
-                      && parents.size() == path_lengths.size()
-                      && path_lengths.size() == pruned.size()
-                      && pruned.size() == breakage.size());
+            BOOST_ASSERT(viterbi.size() == parents.size() &&
+                         parents.size() == path_lengths.size() &&
+                         path_lengths.size() == pruned.size() && pruned.size() == breakage.size());
 
             for (unsigned t = initial_timestamp; t < viterbi.size(); t++)
             {
@@ -291,7 +261,7 @@ template <class DataFacadeT> class MapMatching final
                 std::fill(path_lengths[t].begin(), path_lengths[t].end(), 0);
                 std::fill(pruned[t].begin(), pruned[t].end(), true);
             }
-            std::fill(breakage.begin()+initial_timestamp, breakage.end(), true);
+            std::fill(breakage.begin() + initial_timestamp, breakage.end(), true);
         }
 
         unsigned initialize(unsigned initial_timestamp)
@@ -302,12 +272,14 @@ template <class DataFacadeT> class MapMatching final
             {
                 for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
                 {
-                    viterbi[initial_timestamp][s] = log_emission_probability(candidates_list[initial_timestamp][s].second);
+                    viterbi[initial_timestamp][s] =
+                        log_emission_probability(candidates_list[initial_timestamp][s].second);
                     parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
-                    pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < Matching::MINIMAL_LOG_PROB;
+                    pruned[initial_timestamp][s] =
+                        viterbi[initial_timestamp][s] < Matching::MINIMAL_LOG_PROB;
 
-                    breakage[initial_timestamp] = breakage[initial_timestamp] && pruned[initial_timestamp][s];
-
+                    breakage[initial_timestamp] =
+                        breakage[initial_timestamp] && pruned[initial_timestamp][s];
                 }
 
                 ++initial_timestamp;
@@ -325,7 +297,6 @@ template <class DataFacadeT> class MapMatching final
 
             return initial_timestamp;
         }
-
     };
 
   public:
@@ -334,12 +305,11 @@ template <class DataFacadeT> class MapMatching final
     {
     }
 
-
     void operator()(const Matching::CandidateLists &candidates_list,
-                    const std::vector<FixedPointCoordinate>& trace_coordinates,
-                    const std::vector<unsigned>& trace_timestamps,
-                    Matching::SubMatchingList& sub_matchings,
-                    osrm::json::Object& _debug_info) const
+                    const std::vector<FixedPointCoordinate> &trace_coordinates,
+                    const std::vector<unsigned> &trace_timestamps,
+                    Matching::SubMatchingList &sub_matchings,
+                    osrm::json::Object &_debug_info) const
     {
         BOOST_ASSERT(candidates_list.size() > 0);
 
@@ -359,16 +329,18 @@ template <class DataFacadeT> class MapMatching final
             {
                 osrm::json::Object _debug_state;
                 _debug_state.values["transitions"] = osrm::json::Array();
-                _debug_state.values["coordinate"] = makeJSONArray(candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
-                                                                  candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
+                _debug_state.values["coordinate"] = osrm::json::makeArray(
+                    candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
+                    candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
                 if (t < initial_timestamp)
                 {
-                    _debug_state.values["viterbi"] = makeJSONSafe(Matching::IMPOSSIBLE_LOG_PROB);
+                    _debug_state.values["viterbi"] =
+                        osrm::json::clampFloat(Matching::IMPOSSIBLE_LOG_PROB);
                     _debug_state.values["pruned"] = 0u;
                 }
                 else if (t == initial_timestamp)
                 {
-                    _debug_state.values["viterbi"] = makeJSONSafe(model.viterbi[t][s]);
+                    _debug_state.values["viterbi"] = osrm::json::clampFloat(model.viterbi[t][s]);
                     _debug_state.values["pruned"] = static_cast<unsigned>(model.pruned[t][s]);
                 }
                 _debug_timestamps.values.push_back(_debug_state);
@@ -384,17 +356,17 @@ template <class DataFacadeT> class MapMatching final
         for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
         {
             unsigned prev_unbroken_timestamp = prev_unbroken_timestamps.back();
-            const auto& prev_viterbi = model.viterbi[prev_unbroken_timestamp];
-            const auto& prev_pruned = model.pruned[prev_unbroken_timestamp];
-            const auto& prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
-            const auto& prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
+            const auto &prev_viterbi = model.viterbi[prev_unbroken_timestamp];
+            const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
+            const auto &prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
+            const auto &prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
 
-            auto& current_viterbi = model.viterbi[t];
-            auto& current_pruned = model.pruned[t];
-            auto& current_parents = model.parents[t];
-            auto& current_lengths = model.path_lengths[t];
-            const auto& current_timestamps_list = candidates_list[t];
-            const auto& current_coordinate = trace_coordinates[t];
+            auto &current_viterbi = model.viterbi[t];
+            auto &current_pruned = model.pruned[t];
+            auto &current_parents = model.parents[t];
+            auto &current_lengths = model.path_lengths[t];
+            const auto &current_timestamps_list = candidates_list[t];
+            const auto &current_coordinate = trace_coordinates[t];
 
             // compute d_t for this timestamp and the next one
             for (auto s = 0u; s < prev_viterbi.size(); ++s)
@@ -405,14 +377,16 @@ template <class DataFacadeT> class MapMatching final
                 for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
                 {
                     // how likely is candidate s_prime at time t to be emitted?
-                    const double emission_pr = log_emission_probability(candidates_list[t][s_prime].second);
+                    const double emission_pr =
+                        log_emission_probability(candidates_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
                         continue;
 
                     // get distance diff between loc1/2 and locs/s_prime
-                    const auto network_distance = get_network_distance(prev_unbroken_timestamps_list[s].first,
-                                                                       current_timestamps_list[s_prime].first);
+                    const auto network_distance =
+                        get_network_distance(prev_unbroken_timestamps_list[s].first,
+                                             current_timestamps_list[s_prime].first);
                     const auto great_circle_distance =
                         coordinate_calculation::great_circle_distance(prev_coordinate,
                                                                       current_coordinate);
@@ -427,18 +401,23 @@ template <class DataFacadeT> class MapMatching final
                     new_value += transition_pr;
 
                     osrm::json::Object _debug_transistion;
-                    _debug_transistion.values["to"] = makeJSONArray(t, s_prime);
-                    _debug_transistion.values["properties"] = makeJSONArray(
-                        makeJSONSafe(prev_viterbi[s]),
-                        makeJSONSafe(emission_pr),
-                        makeJSONSafe(transition_pr),
-                        network_distance,
-                        great_circle_distance
-                    );
+                    _debug_transistion.values["to"] = osrm::json::makeArray(t, s_prime);
+                    _debug_transistion.values["properties"] =
+                        osrm::json::makeArray(osrm::json::clampFloat(prev_viterbi[s]),
+                                              osrm::json::clampFloat(emission_pr),
+                                              osrm::json::clampFloat(transition_pr),
+                                              network_distance,
+                                              great_circle_distance);
                     _debug_states.values[prev_unbroken_timestamp]
-                        .get<JSONVariantArray>().get().values[s]
-                        .get<JSONVariantObject>().get().values["transitions"]
-                        .get<JSONVariantArray>().get().values.push_back(_debug_transistion);
+                        .get<JSONVariantArray>()
+                        .get()
+                        .values[s]
+                        .get<JSONVariantObject>()
+                        .get()
+                        .values["transitions"]
+                        .get<JSONVariantArray>()
+                        .get()
+                        .values.push_back(_debug_transistion);
 
                     if (new_value > current_viterbi[s_prime])
                     {
@@ -454,11 +433,19 @@ template <class DataFacadeT> class MapMatching final
             for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
             {
                 _debug_states.values[t]
-                    .get<JSONVariantArray>().get().values[s_prime]
-                    .get<JSONVariantObject>().get().values["viterbi"] = makeJSONSafe(current_viterbi[s_prime]);
+                    .get<JSONVariantArray>()
+                    .get()
+                    .values[s_prime]
+                    .get<JSONVariantObject>()
+                    .get()
+                    .values["viterbi"] = osrm::json::clampFloat(current_viterbi[s_prime]);
                 _debug_states.values[t]
-                    .get<JSONVariantArray>().get().values[s_prime]
-                    .get<JSONVariantObject>().get().values["pruned"]  = static_cast<unsigned>(current_pruned[s_prime]);
+                    .get<JSONVariantArray>()
+                    .get()
+                    .values[s_prime]
+                    .get<JSONVariantObject>()
+                    .get()
+                    .values["pruned"] = static_cast<unsigned>(current_pruned[s_prime]);
             }
 
             if (model.breakage[t])
@@ -479,11 +466,15 @@ template <class DataFacadeT> class MapMatching final
                 // use temporal information to determine a split if available
                 if (trace_timestamps.size() > 0)
                 {
-                    trace_split = trace_split || (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] > Matching::MAX_BROKEN_TIME);
+                    trace_split =
+                        trace_split ||
+                        (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
+                         Matching::MAX_BROKEN_TIME);
                 }
                 else
                 {
-                    trace_split = trace_split || (t - prev_unbroken_timestamps.back() > Matching::MAX_BROKEN_STATES);
+                    trace_split = trace_split || (t - prev_unbroken_timestamps.back() >
+                                                  Matching::MAX_BROKEN_STATES);
                 }
 
                 // we reached the beginning of the trace and it is still broken
@@ -516,7 +507,7 @@ template <class DataFacadeT> class MapMatching final
 
         if (prev_unbroken_timestamps.size() > 0)
         {
-            split_points.push_back(prev_unbroken_timestamps.back()+1);
+            split_points.push_back(prev_unbroken_timestamps.back() + 1);
         }
 
         unsigned sub_matching_begin = initial_timestamp;
@@ -526,8 +517,9 @@ template <class DataFacadeT> class MapMatching final
 
             // find real end of trace
             // not sure if this is really needed
-            unsigned parent_timestamp_index = sub_matching_end-1;
-            while (parent_timestamp_index >= sub_matching_begin && model.breakage[parent_timestamp_index])
+            unsigned parent_timestamp_index = sub_matching_end - 1;
+            while (parent_timestamp_index >= sub_matching_begin &&
+                   model.breakage[parent_timestamp_index])
             {
                 parent_timestamp_index--;
             }
@@ -543,7 +535,8 @@ template <class DataFacadeT> class MapMatching final
             auto max_element_iter = std::max_element(model.viterbi[parent_timestamp_index].begin(),
                                                      model.viterbi[parent_timestamp_index].end());
 
-            unsigned parent_candidate_index = std::distance(model.viterbi[parent_timestamp_index].begin(), max_element_iter);
+            unsigned parent_candidate_index =
+                std::distance(model.viterbi[parent_timestamp_index].begin(), max_element_iter);
 
             std::deque<std::pair<unsigned, unsigned>> reconstructed_indices;
             while (parent_timestamp_index > sub_matching_begin)
@@ -554,7 +547,7 @@ template <class DataFacadeT> class MapMatching final
                 }
 
                 reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
-                const auto& next = model.parents[parent_timestamp_index][parent_candidate_index];
+                const auto &next = model.parents[parent_timestamp_index][parent_candidate_index];
                 parent_timestamp_index = next.first;
                 parent_candidate_index = next.second;
             }
@@ -578,8 +571,12 @@ template <class DataFacadeT> class MapMatching final
                 matching.length += model.path_lengths[timestamp_index][location_index];
 
                 _debug_states.values[timestamp_index]
-                    .get<JSONVariantArray>().get().values[location_index]
-                    .get<JSONVariantObject>().get().values["chosen"] = true;
+                    .get<JSONVariantArray>()
+                    .get()
+                    .values[location_index]
+                    .get<JSONVariantObject>()
+                    .get()
+                    .values["chosen"] = true;
             }
 
             sub_matchings.push_back(matching);
@@ -588,7 +585,8 @@ template <class DataFacadeT> class MapMatching final
         }
 
         osrm::json::Array _debug_breakage;
-        for (auto b : model.breakage) {
+        for (auto b : model.breakage)
+        {
             _debug_breakage.values.push_back(static_cast<unsigned>(b));
         }
 
@@ -597,6 +595,7 @@ template <class DataFacadeT> class MapMatching final
     }
 };
 
-//[1] "Hidden Markov Map Matching Through Noise and Sparseness"; P. Newson and J. Krumm; 2009; ACM GIS
+//[1] "Hidden Markov Map Matching Through Noise and Sparseness"; P. Newson and J. Krumm; 2009; ACM
+//GIS
 
 #endif /* MAP_MATCHING_HPP */
