@@ -96,5 +96,15 @@ Function for_each_pair(ContainerT &container, Function function)
 {
     return for_each_pair(std::begin(container), std::end(container), function);
 }
+
+template <class Container> void append_to_container(Container &&a) {}
+
+template <class Container, typename T, typename... Args>
+void append_to_container(Container &&container, T value, Args &&... args)
+{
+    container.emplace_back(value);
+    append_to_container(std::forward<Container>(container), std::forward<Args>(args)...);
 }
+
+} // namespace osrm
 #endif /* CONTAINER_HPP */
