@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/compute_angle.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/simple_logger.hpp"
+#include "../util/json_logger.hpp"
 #include "../util/string_util.hpp"
 
 #include <cstdlib>
@@ -237,9 +238,10 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
 
         // call the actual map matching
-        osrm::json::Object debug_info;
+        if (osrm::json::Logger::get())
+            osrm::json::Logger::get()->initialize("matching");
         Matching::SubMatchingList sub_matchings;
-        search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps, sub_matchings, debug_info);
+        search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps, sub_matchings);
 
         if (1 > sub_matchings.size())
         {
@@ -283,7 +285,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
         }
 
-        json_result.values["debug"] = debug_info;
+        if (osrm::json::Logger::get())
+            osrm::json::Logger::get()->render("matching", json_result);
         json_result.values["matchings"] = matchings;
 
         return 200;

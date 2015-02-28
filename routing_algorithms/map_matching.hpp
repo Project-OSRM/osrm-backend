@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/json_util.hpp"
+#include "../util/json_logger.hpp"
 
 #include <osrm/json_container.hpp>
 #include <variant/variant.hpp>
@@ -42,9 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <iomanip>
 #include <numeric>
-
-using JSONVariantArray = mapbox::util::recursive_wrapper<osrm::json::Array>;
-using JSONVariantObject = mapbox::util::recursive_wrapper<osrm::json::Object>;
 
 namespace Matching
 {
@@ -299,6 +297,119 @@ template <class DataFacadeT> class MapMatching final
         }
     };
 
+    struct DebugInfo
+    {
+        DebugInfo(const osrm::json::Logger* logger)
+        : logger(logger)
+        {
+            if (logger)
+            {
+                object = &logger->map->at("matching");
+            }
+        }
+
+        void initialize(const HiddenMarkovModel& model,
+                        unsigned initial_timestamp,
+                        const Matching::CandidateLists& candidates_list)
+        {
+            // json logger not enabled
+            if (!logger)
+                return;
+
+            osrm::json::Array states;
+            for (unsigned t = 0; t < candidates_list.size(); t++)
+            {
+                osrm::json::Array timestamps;
+                for (unsigned s = 0; s < candidates_list[t].size(); s++)
+                {
+                    osrm::json::Object state;
+                    state.values["transitions"] = osrm::json::Array();
+                    state.values["coordinate"] = osrm::json::make_array(
+                        candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
+                        candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
+                    if (t < initial_timestamp)
+                    {
+                        state.values["viterbi"] = osrm::json::clamp_float(Matching::IMPOSSIBLE_LOG_PROB);
+                        state.values["pruned"] = 0u;
+                    }
+                    else if (t == initial_timestamp)
+                    {
+                        state.values["viterbi"] = osrm::json::clamp_float(model.viterbi[t][s]);
+                        state.values["pruned"] = static_cast<unsigned>(model.pruned[t][s]);
+                    }
+                    timestamps.values.push_back(state);
+                }
+                states.values.push_back(timestamps);
+            }
+            osrm::json::get(*object, "states") = states;
+        }
+
+        void add_transition_info(const unsigned prev_t,
+                                 const unsigned current_t,
+                                 const unsigned prev_state,
+                                 const unsigned current_state,
+                                 const double prev_viterbi,
+                                 const double emission_pr,
+                                 const double transition_pr,
+                                 const double network_distance,
+                                 const double great_circle_distance)
+        {
+            // json logger not enabled
+            if (!logger)
+                return;
+
+            osrm::json::Object transistion;
+            transistion.values["to"] = osrm::json::make_array(current_t, current_state);
+            transistion.values["properties"] =
+                osrm::json::make_array(osrm::json::clamp_float(prev_viterbi),
+                                       osrm::json::clamp_float(emission_pr),
+                                       osrm::json::clamp_float(transition_pr),
+                                       network_distance,
+                                       great_circle_distance);
+
+            osrm::json::get(*object, "states", prev_t, prev_state, "transitions")
+                .get<mapbox::util::recursive_wrapper<osrm::json::Array>>()
+                .get().values.push_back(transistion);
+
+        }
+
+        void add_viterbi(const unsigned t,
+                         const std::vector<double>& current_viterbi,
+                         const std::vector<bool>& current_pruned)
+        {
+            // json logger not enabled
+            if (!logger)
+                return;
+
+            for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
+            {
+                osrm::json::get(*object, "states", t, s_prime, "viterbi") = osrm::json::clamp_float(current_viterbi[s_prime]);
+                osrm::json::get(*object, "states", t, s_prime, "pruned") = static_cast<unsigned>(current_pruned[s_prime]);
+            }
+        }
+
+        void add_chosen(const unsigned t, const unsigned s)
+        {
+            // json logger not enabled
+            if (!logger)
+                return;
+
+            osrm::json::get(*object, "states", t, s, "chosen") = true;
+        }
+
+        void add_breakage(const std::vector<bool>& breakage)
+        {
+            // json logger not enabled
+            if (!logger)
+                return;
+
+            osrm::json::get(*object, "breakage") = osrm::json::make_array(breakage);
+        }
+
+        const osrm::json::Logger* logger;
+        osrm::json::Value* object;
+    };
+
   public:
     MapMatching(DataFacadeT *facade, SearchEngineData &engine_working_data)
         : super(facade), engine_working_data(engine_working_data)
@@ -308,8 +419,7 @@ template <class DataFacadeT> class MapMatching final
     void operator()(const Matching::CandidateLists &candidates_list,
                     const std::vector<FixedPointCoordinate> &trace_coordinates,
                     const std::vector<unsigned> &trace_timestamps,
-                    Matching::SubMatchingList &sub_matchings,
-                    osrm::json::Object &_debug_info) const
+                    Matching::SubMatchingList &sub_matchings) const
     {
         BOOST_ASSERT(candidates_list.size() > 0);
 
@@ -321,32 +431,8 @@ template <class DataFacadeT> class MapMatching final
             return;
         }
 
-        osrm::json::Array _debug_states;
-        for (unsigned t = 0; t < candidates_list.size(); t++)
-        {
-            osrm::json::Array _debug_timestamps;
-            for (unsigned s = 0; s < candidates_list[t].size(); s++)
-            {
-                osrm::json::Object _debug_state;
-                _debug_state.values["transitions"] = osrm::json::Array();
-                _debug_state.values["coordinate"] = osrm::json::makeArray(
-                    candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
-                    candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
-                if (t < initial_timestamp)
-                {
-                    _debug_state.values["viterbi"] =
-                        osrm::json::clampFloat(Matching::IMPOSSIBLE_LOG_PROB);
-                    _debug_state.values["pruned"] = 0u;
-                }
-                else if (t == initial_timestamp)
-                {
-                    _debug_state.values["viterbi"] = osrm::json::clampFloat(model.viterbi[t][s]);
-                    _debug_state.values["pruned"] = static_cast<unsigned>(model.pruned[t][s]);
-                }
-                _debug_timestamps.values.push_back(_debug_state);
-            }
-            _debug_states.values.push_back(_debug_timestamps);
-        }
+        DebugInfo debug(osrm::json::Logger::get());
+        debug.initialize(model, initial_timestamp, candidates_list);
 
         unsigned breakage_begin = std::numeric_limits<unsigned>::max();
         std::vector<unsigned> split_points;
@@ -400,24 +486,12 @@ template <class DataFacadeT> class MapMatching final
                     const double transition_pr = log_transition_probability(d_t, beta);
                     new_value += transition_pr;
 
-                    osrm::json::Object _debug_transistion;
-                    _debug_transistion.values["to"] = osrm::json::makeArray(t, s_prime);
-                    _debug_transistion.values["properties"] =
-                        osrm::json::makeArray(osrm::json::clampFloat(prev_viterbi[s]),
-                                              osrm::json::clampFloat(emission_pr),
-                                              osrm::json::clampFloat(transition_pr),
+                    debug.add_transition_info(prev_unbroken_timestamp, t, s, s_prime,
+                                              prev_viterbi[s],
+                                              emission_pr,
+                                              transition_pr,
                                               network_distance,
                                               great_circle_distance);
-                    _debug_states.values[prev_unbroken_timestamp]
-                        .get<JSONVariantArray>()
-                        .get()
-                        .values[s]
-                        .get<JSONVariantObject>()
-                        .get()
-                        .values["transitions"]
-                        .get<JSONVariantArray>()
-                        .get()
-                        .values.push_back(_debug_transistion);
 
                     if (new_value > current_viterbi[s_prime])
                     {
@@ -430,23 +504,7 @@ template <class DataFacadeT> class MapMatching final
                 }
             }
 
-            for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
-            {
-                _debug_states.values[t]
-                    .get<JSONVariantArray>()
-                    .get()
-                    .values[s_prime]
-                    .get<JSONVariantObject>()
-                    .get()
-                    .values["viterbi"] = osrm::json::clampFloat(current_viterbi[s_prime]);
-                _debug_states.values[t]
-                    .get<JSONVariantArray>()
-                    .get()
-                    .values[s_prime]
-                    .get<JSONVariantObject>()
-                    .get()
-                    .values["pruned"] = static_cast<unsigned>(current_pruned[s_prime]);
-            }
+            debug.add_viterbi(t, current_viterbi, current_pruned);
 
             if (model.breakage[t])
             {
@@ -570,13 +628,7 @@ template <class DataFacadeT> class MapMatching final
                 matching.nodes[i] = candidates_list[timestamp_index][location_index].first;
                 matching.length += model.path_lengths[timestamp_index][location_index];
 
-                _debug_states.values[timestamp_index]
-                    .get<JSONVariantArray>()
-                    .get()
-                    .values[location_index]
-                    .get<JSONVariantObject>()
-                    .get()
-                    .values["chosen"] = true;
+                debug.add_chosen(timestamp_index, location_index);
             }
 
             sub_matchings.push_back(matching);
@@ -584,14 +636,7 @@ template <class DataFacadeT> class MapMatching final
             sub_matching_begin = sub_matching_end;
         }
 
-        osrm::json::Array _debug_breakage;
-        for (auto b : model.breakage)
-        {
-            _debug_breakage.values.push_back(static_cast<unsigned>(b));
-        }
-
-        _debug_info.values["breakage"] = _debug_breakage;
-        _debug_info.values["states"] = _debug_states;
+        debug.add_breakage(model.breakage);
     }
 };
 

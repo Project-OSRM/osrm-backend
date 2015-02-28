@@ -41,7 +41,8 @@ namespace osrm
 namespace json
 {
 
-template <typename T> T clampFloat(T d)
+// Make sure we don't have inf and NaN values
+template <typename T> T clamp_float(T d)
 {
     if (std::isnan(d) || std::numeric_limits<T>::infinity() == d)
     {
@@ -55,19 +56,44 @@ template <typename T> T clampFloat(T d)
     return d;
 }
 
-void appendToArray(osrm::json::Array &a) {}
+void append_to_array(osrm::json::Array &a) {}
 template <typename T, typename... Args>
-void appendToArray(osrm::json::Array &a, T value, Args... args)
+void append_to_array(osrm::json::Array &a, T value, Args... args)
 {
     a.values.emplace_back(value);
-    appendToJSONArray(a, args...);
+    append_to_array(a, args...);
 }
 
-template <typename... Args> osrm::json::Array makeArray(Args... args)
+template <typename... Args> osrm::json::Array make_array(Args... args)
 {
     osrm::json::Array a;
-    appendToJSONArray(a, args...);
+    append_to_array(a, args...);
     return a;
+}
+
+template <typename T> osrm::json::Array make_array(const std::vector<T>& vector)
+{
+    osrm::json::Array a;
+    for (const auto& v : vector)
+        a.values.emplace_back(v);
+    return a;
+}
+
+// Easy acces to object hierachies
+osrm::json::Value& get(osrm::json::Value& value) { return value; }
+
+template<typename... Keys>
+osrm::json::Value& get(osrm::json::Value& value, const char* key, Keys... keys)
+{
+    using recursive_object_t = mapbox::util::recursive_wrapper<osrm::json::Object>;
+    return get(value.get<recursive_object_t>().get().values[key], keys...);
+}
+
+template<typename... Keys>
+osrm::json::Value& get(osrm::json::Value& value, unsigned key, Keys... keys)
+{
+    using recursive_array_t = mapbox::util::recursive_wrapper<osrm::json::Array>;
+    return get(value.get<recursive_array_t>().get().values[key], keys...);
 }
 
 } // namespace json
