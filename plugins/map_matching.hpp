@@ -34,13 +34,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../algorithms/object_encoder.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
-#include "../descriptors/gpx_descriptor.hpp"
 #include "../descriptors/json_descriptor.hpp"
 #include "../routing_algorithms/map_matching.hpp"
 #include "../util/compute_angle.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/json_logger.hpp"
+#include "../util/json_util.hpp"
 #include "../util/string_util.hpp"
 
 #include <cstdlib>
@@ -194,21 +194,14 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             subtrace.values["geometry"] = factory.AppendGeometryString(route_parameters.compression);
         }
 
-        osrm::json::Array indices;
-        for (const auto& i : sub.indices)
-        {
-            indices.values.emplace_back(i);
-        }
-        subtrace.values["indices"] = indices;
+        subtrace.values["indices"] = osrm::json::make_array(sub.indices);
 
 
         osrm::json::Array points;
         for (const auto& node : sub.nodes)
         {
-            osrm::json::Array coordinate;
-            coordinate.values.emplace_back(node.location.lat / COORDINATE_PRECISION);
-            coordinate.values.emplace_back(node.location.lon / COORDINATE_PRECISION);
-            points.values.emplace_back(coordinate);
+            points.values.emplace_back(osrm::json::make_array(node.location.lat / COORDINATE_PRECISION,
+                                                              node.location.lon / COORDINATE_PRECISION));
         }
         subtrace.values["matched_points"] = points;
 
