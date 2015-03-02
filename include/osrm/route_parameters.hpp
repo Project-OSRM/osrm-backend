@@ -49,6 +49,12 @@ struct RouteParameters
 
     void setAllUTurns(const bool flag);
 
+    void setClassify(const bool classify);
+
+    void setMatchingBeta(const double beta);
+
+    void setGPSPrecision(const double precision);
+
     void setDeprecatedAPIFlag(const std::string &);
 
     void setChecksum(const unsigned check_sum);
@@ -80,6 +86,9 @@ struct RouteParameters
     bool compression;
     bool deprecatedAPI;
     bool uturn_default;
+    bool classify;
+    double matching_beta;
+    double gps_precision;
     unsigned check_sum;
     short num_results;
     std::string service;

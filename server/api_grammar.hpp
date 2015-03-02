@@ -41,7 +41,8 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >>
                    *(query) >> -(uturns);
         query = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | timestamp | u | cmp |
-                            language | instruction | geometry | alt_route | old_API | num_results));
+                            language | instruction | geometry | alt_route | old_API | num_results |
+                            matching_beta | gps_precision | classify));
 
         zoom = (-qi::lit('&')) >> qi::lit('z') >> '=' >>
                qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
@@ -64,6 +65,12 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                stringwithDot[boost::bind(&HandlerT::addHint, handler, ::_1)];
         timestamp = (-qi::lit('&')) >> qi::lit("t") >> '=' >>
                qi::uint_[boost::bind(&HandlerT::addTimestamp, handler, ::_1)];
+        matching_beta = (-qi::lit('&')) >> qi::lit("matching_beta") >> '=' >>
+               qi::short_[boost::bind(&HandlerT::setMatchingBeta, handler, ::_1)];
+        gps_precision = (-qi::lit('&')) >> qi::lit("gps_precision") >> '=' >>
+               qi::short_[boost::bind(&HandlerT::setGPSPrecision, handler, ::_1)];
+        classify = (-qi::lit('&')) >> qi::lit("classify") >> '=' >>
+            qi::bool_[boost::bind(&HandlerT::setClassify, handler, ::_1)];
         u = (-qi::lit('&')) >> qi::lit("u") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::setUTurn, handler, ::_1)];
         uturns = (-qi::lit('&')) >> qi::lit("uturns") >> '=' >>
@@ -85,7 +92,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
 
     qi::rule<Iterator> api_call, query;
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
-        hint, timestamp, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
+        hint, timestamp, matching_beta, gps_precision, classify, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
         uturns, old_API, num_results;
 
     HandlerT *handler;

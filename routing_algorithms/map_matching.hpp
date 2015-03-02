@@ -75,67 +75,42 @@ template <class DataFacadeT> class MapMatching final
     SearchEngineData &engine_working_data;
 
     // FIXME this value should be a table based on samples/meter (or samples/min)
-    constexpr static const double beta = 10.0;
-    constexpr static const double sigma_z = 4.07;
-    constexpr static const double log_sigma_z = std::log(sigma_z);
+    constexpr static const double default_beta = 10.0;
+    constexpr static const double default_sigma_z = 4.07;
     constexpr static const double log_2_pi = std::log(2 * M_PI);
 
-    constexpr static double emission_probability(const double distance)
+    // closures to precompute log -> only simple floating point operations
+    struct EmissionLogProbability
     {
-        return (1. / (std::sqrt(2. * M_PI) * sigma_z)) *
-               std::exp(-0.5 * std::pow((distance / sigma_z), 2.));
-    }
+        double sigma_z;
+        double log_sigma_z;
 
-    constexpr static double transition_probability(const float d_t, const float beta)
+        EmissionLogProbability(const double sigma_z)
+        : sigma_z(sigma_z)
+        , log_sigma_z(std::log(sigma_z))
+        {
+        }
+
+        double operator()(const double distance) const
+        {
+            return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) - log_sigma_z;
+        }
+    };
+    struct TransitionLogProbability
     {
-        return (1. / beta) * std::exp(-d_t / beta);
-    }
+        double beta;
+        double log_beta;
+        TransitionLogProbability(const double beta)
+        : beta(beta)
+        , log_beta(std::log(beta))
+        {
+        }
 
-    constexpr static double log_emission_probability(const double distance)
-    {
-        return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) - log_sigma_z;
-    }
-
-    constexpr static double log_transition_probability(const float d_t, const float beta)
-    {
-        return -std::log(beta) - d_t / beta;
-    }
-
-    // TODO: needs to be estimated from the input locations
-    // FIXME These values seem wrong. Higher beta for more samples/minute? Should be inverse
-    // proportional.
-    // samples/min and beta
-    // 1 0.49037673
-    // 2 0.82918373
-    // 3 1.24364564
-    // 4 1.67079581
-    // 5 2.00719298
-    // 6 2.42513007
-    // 7 2.81248831
-    // 8 3.15745473
-    // 9 3.52645392
-    // 10 4.09511775
-    // 11 4.67319795
-    // 21 12.55107715
-    // 12 5.41088180
-    // 13 6.47666590
-    // 14 6.29010734
-    // 15 7.80752112
-    // 16 8.09074504
-    // 17 8.08550528
-    // 18 9.09405065
-    // 19 11.09090603
-    // 20 11.87752824
-    // 21 12.55107715
-    // 22 15.82820829
-    // 23 17.69496773
-    // 24 18.07655652
-    // 25 19.63438911
-    // 26 25.40832185
-    // 27 23.76001877
-    // 28 28.43289797
-    // 29 32.21683062
-    // 30 34.56991141
+        double operator()(const double d_t) const
+        {
+            return -log_beta - d_t / beta;
+        }
+    };
 
     double get_network_distance(const PhantomNode &source_phantom,
                                 const PhantomNode &target_phantom) const
@@ -231,9 +206,10 @@ template <class DataFacadeT> class MapMatching final
         std::vector<bool> breakage;
 
         const Matching::CandidateLists &candidates_list;
+        const EmissionLogProbability& emission_log_probability;
 
-        HiddenMarkovModel(const Matching::CandidateLists &candidates_list)
-            : breakage(candidates_list.size()), candidates_list(candidates_list)
+        HiddenMarkovModel(const Matching::CandidateLists &candidates_list, const EmissionLogProbability& emission_log_probability)
+            : breakage(candidates_list.size()), candidates_list(candidates_list), emission_log_probability(emission_log_probability)
         {
             for (const auto &l : candidates_list)
             {
@@ -271,7 +247,7 @@ template <class DataFacadeT> class MapMatching final
                 for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
                 {
                     viterbi[initial_timestamp][s] =
-                        log_emission_probability(candidates_list[initial_timestamp][s].second);
+                        emission_log_probability(candidates_list[initial_timestamp][s].second);
                     parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
                     pruned[initial_timestamp][s] =
                         viterbi[initial_timestamp][s] < Matching::MINIMAL_LOG_PROB;
@@ -297,6 +273,7 @@ template <class DataFacadeT> class MapMatching final
         }
     };
 
+    // Provides the debug interface for introspection tools
     struct DebugInfo
     {
         DebugInfo(const osrm::json::Logger* logger)
@@ -419,11 +396,17 @@ template <class DataFacadeT> class MapMatching final
     void operator()(const Matching::CandidateLists &candidates_list,
                     const std::vector<FixedPointCoordinate> &trace_coordinates,
                     const std::vector<unsigned> &trace_timestamps,
+                    const double matching_beta,
+                    const double gps_precision,
                     Matching::SubMatchingList &sub_matchings) const
     {
         BOOST_ASSERT(candidates_list.size() > 0);
 
-        HiddenMarkovModel model(candidates_list);
+        // TODO replace default values with table lookup based on sampling frequency
+        EmissionLogProbability emission_log_probability(gps_precision > 0 ? gps_precision : default_sigma_z);
+        TransitionLogProbability transition_log_probability(matching_beta > 0 ? matching_beta : default_beta);
+
+        HiddenMarkovModel model(candidates_list, emission_log_probability);
 
         unsigned initial_timestamp = model.initialize(0);
         if (initial_timestamp == Matching::INVALID_STATE)
@@ -464,7 +447,7 @@ template <class DataFacadeT> class MapMatching final
                 {
                     // how likely is candidate s_prime at time t to be emitted?
                     const double emission_pr =
-                        log_emission_probability(candidates_list[t][s_prime].second);
+                        emission_log_probability(candidates_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
                         continue;
@@ -483,7 +466,7 @@ template <class DataFacadeT> class MapMatching final
                     if (d_t > 500)
                         continue;
 
-                    const double transition_pr = log_transition_probability(d_t, beta);
+                    const double transition_pr = transition_log_probability(d_t);
                     new_value += transition_pr;
 
                     debug.add_transition_info(prev_unbroken_timestamp, t, s, s_prime,

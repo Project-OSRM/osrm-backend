@@ -33,7 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
-      compression(true), deprecatedAPI(false), uturn_default(false), check_sum(-1), num_results(1)
+      compression(true), deprecatedAPI(false), uturn_default(false), classify(false),
+      matching_beta(-1.0), gps_precision(-1.0), check_sum(-1), num_results(1)
 {
 }
 
@@ -82,6 +83,12 @@ void RouteParameters::setChecksum(const unsigned sum) { check_sum = sum; }
 void RouteParameters::setInstructionFlag(const bool flag) { print_instructions = flag; }
 
 void RouteParameters::setService(const std::string &service_string) { service = service_string; }
+
+void RouteParameters::setClassify(const bool flag) { classify = flag; }
+
+void RouteParameters::setMatchingBeta(const double beta) { matching_beta = beta; }
+
+void RouteParameters::setGPSPrecision(const double precision) { gps_precision = precision; }
 
 void RouteParameters::setOutputFormat(const std::string &format) { output_format = format; }
 

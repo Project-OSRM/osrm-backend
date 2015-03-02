@@ -171,7 +171,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     {
         osrm::json::Object subtrace;
 
-        subtrace.values["confidence"] = sub.confidence;
+        if (route_parameters.classify)
+            subtrace.values["confidence"] = sub.confidence;
 
         if (route_parameters.geometry)
         {
@@ -230,11 +231,18 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return 400;
         }
 
-        // call the actual map matching
+        // setup logging if enabled
         if (osrm::json::Logger::get())
             osrm::json::Logger::get()->initialize("matching");
+
+        // call the actual map matching
         Matching::SubMatchingList sub_matchings;
-        search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps, sub_matchings);
+        search_engine_ptr->map_matching(candidates_lists,
+                                        input_coords,
+                                        input_timestamps,
+                                        route_parameters.matching_beta,
+                                        route_parameters.gps_precision,
+                                        sub_matchings);
 
         if (1 > sub_matchings.size())
         {
@@ -245,17 +253,20 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         for (auto& sub : sub_matchings)
         {
             // classify result
-            double trace_length = sub_trace_lengths[sub.indices.back()] - sub_trace_lengths[sub.indices.front()];
-            TraceClassification classification = classify(trace_length,
-                                                          sub.length,
-                                                          (sub.indices.back() - sub.indices.front() + 1) - sub.nodes.size());
-            if (classification.first == ClassifierT::ClassLabel::POSITIVE)
+            if (route_parameters.classify)
             {
-                sub.confidence = classification.second;
-            }
-            else
-            {
-                sub.confidence = 1-classification.second;
+                double trace_length = sub_trace_lengths[sub.indices.back()] - sub_trace_lengths[sub.indices.front()];
+                TraceClassification classification = classify(trace_length,
+                                                              sub.length,
+                                                              (sub.indices.back() - sub.indices.front() + 1) - sub.nodes.size());
+                if (classification.first == ClassifierT::ClassLabel::POSITIVE)
+                {
+                    sub.confidence = classification.second;
+                }
+                else
+                {
+                    sub.confidence = 1-classification.second;
+                }
             }
 
             BOOST_ASSERT(sub.nodes.size() > 1);
