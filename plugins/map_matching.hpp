@@ -59,9 +59,10 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     using TraceClassification = ClassifierT::ClassificationT;
 
   public:
-    MapMatchingPlugin(DataFacadeT *facade)
+    MapMatchingPlugin(DataFacadeT *facade, const int max_locations_map_matching)
     : descriptor_string("match")
     , facade(facade)
+    , max_locations_map_matching(max_locations_map_matching)
     // the values where derived from fitting a laplace distribution
     // to the values of manually classified traces
     , classifier(LaplaceDistribution(0.0057154021891018675, 0.020294704891166186),
@@ -225,6 +226,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         {
             return 400;
         }
+
+        // enforce maximum number of locations for performance reasons
+        if (max_locations_map_matching > 0 && static_cast<int>(input_coords.size()) > max_locations_map_matching)
+        {
+            return 400;
+        }
+
         bool found_candidates = getCandiates(input_coords, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
@@ -299,6 +307,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
   private:
     std::string descriptor_string;
     DataFacadeT *facade;
+    int max_locations_map_matching;
     ClassifierT classifier;
 };
 

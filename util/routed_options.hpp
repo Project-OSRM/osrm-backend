@@ -151,7 +151,8 @@ inline unsigned GenerateServerProgramOptions(const int argc,
                                              int &requested_num_threads,
                                              bool &use_shared_memory,
                                              bool &trial,
-                                             int &max_locations_distance_table)
+                                             int &max_locations_distance_table,
+                                             int &max_locations_map_matching)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -165,34 +166,35 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "hsgrdata", boost::program_options::value<boost::filesystem::path>(&paths["hsgrdata"]),
-        ".hsgr file")("nodesdata",
-                      boost::program_options::value<boost::filesystem::path>(&paths["nodesdata"]),
-                      ".nodes file")(
-        "edgesdata", boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
-        ".edges file")("geometry",
-                       boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
-                       ".geometry file")(
-        "ramindex", boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
-        ".ramIndex file")(
-        "fileindex", boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
-        "File index file")(
-        "namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
-        ".names file")("timestamp",
-                       boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
-                       ".timestamp file")(
-        "ip,i", boost::program_options::value<std::string>(&ip_address)->default_value("0.0.0.0"),
-        "IP address")("port,p", boost::program_options::value<int>(&ip_port)->default_value(5000),
-                      "TCP/IP port")(
-        "threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
-        "Number of threads to use")(
-        "shared-memory,s",
-        boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
-        "Load data from shared memory")(
-        "max-table-size,m",
-        boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
-        "Max. locations supported in distance table query");
+    config_options.add_options()
+        ("hsgrdata", boost::program_options::value<boost::filesystem::path>(&paths["hsgrdata"]),
+            ".hsgr file")
+        ("nodesdata", boost::program_options::value<boost::filesystem::path>(&paths["nodesdata"]),
+            ".nodes file")
+        ("edgesdata", boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
+            ".edges file")
+        ("geometry", boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
+            ".geometry file")
+        ("ramindex", boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
+            ".ramIndex file")
+        ("fileindex", boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
+            "File index file")
+        ("namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
+            ".names file")
+        ("timestamp", boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
+           ".timestamp file")
+        ("ip,i", boost::program_options::value<std::string>(&ip_address)->default_value("0.0.0.0"),
+            "IP address")
+        ("port,p", boost::program_options::value<int>(&ip_port)->default_value(5000),
+            "TCP/IP port")
+        ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
+            "Number of threads to use")
+        ("shared-memory,s", boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
+            "Load data from shared memory")
+        ("max-table-size,m", boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
+            "Max. locations supported in distance table query")
+        ("max-matching-size,m", boost::program_options::value<int>(&max_locations_map_matching)->default_value(-1),
+            "Max. locations supported in map matching query");
 
     // hidden options, will be allowed both on command line and in config
     // file, but will not be shown to the user
@@ -268,6 +270,10 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     if (1 > max_locations_distance_table)
     {
         throw osrm::exception("Max location for distance table must be a positive number");
+    }
+    if (2 > max_locations_map_matching)
+    {
+        throw osrm::exception("Max location for map matching must be at least two");
     }
 
     SimpleLogger().Write() << visible_options;
