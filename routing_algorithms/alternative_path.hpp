@@ -45,9 +45,10 @@ const double VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
 const double VIAPATH_GAMMA = 0.75;   // alternative shares at most 75% with the shortest.
 
 template <class DataFacadeT>
-class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
+class AlternativeRouting final
+    : private BasicRoutingInterface<DataFacadeT, AlternativeRouting<DataFacadeT>>
 {
-    using super = BasicRoutingInterface<DataFacadeT>;
+    using super = BasicRoutingInterface<DataFacadeT, AlternativeRouting<DataFacadeT>>;
     using EdgeData = typename DataFacadeT::EdgeData;
     using QueryHeap = SearchEngineData::QueryHeap;
     using SearchSpaceEdge = std::pair<NodeID, NodeID>;
@@ -94,10 +95,10 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
         engine_working_data.InitializeOrClearThirdThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &forward_heap1 = *(engine_working_data.forwardHeap);
-        QueryHeap &reverse_heap1 = *(engine_working_data.backwardHeap);
-        QueryHeap &forward_heap2 = *(engine_working_data.forwardHeap2);
-        QueryHeap &reverse_heap2 = *(engine_working_data.backwardHeap2);
+        QueryHeap &forward_heap1 = *(engine_working_data.forward_heap_1);
+        QueryHeap &reverse_heap1 = *(engine_working_data.reverse_heap_1);
+        QueryHeap &forward_heap2 = *(engine_working_data.forward_heap_2);
+        QueryHeap &reverse_heap2 = *(engine_working_data.reverse_heap_2);
 
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
@@ -384,10 +385,10 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &existing_forward_heap = *engine_working_data.forwardHeap;
-        QueryHeap &existing_reverse_heap = *engine_working_data.backwardHeap;
-        QueryHeap &new_forward_heap = *engine_working_data.forwardHeap2;
-        QueryHeap &new_reverse_heap = *engine_working_data.backwardHeap2;
+        QueryHeap &existing_forward_heap = *engine_working_data.forward_heap_1;
+        QueryHeap &existing_reverse_heap = *engine_working_data.reverse_heap_1;
+        QueryHeap &new_forward_heap = *engine_working_data.forward_heap_2;
+        QueryHeap &new_reverse_heap = *engine_working_data.reverse_heap_2;
 
         std::vector<NodeID> packed_s_v_path;
         std::vector<NodeID> packed_v_t_path;
@@ -841,8 +842,8 @@ class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
         engine_working_data.InitializeOrClearThirdThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &forward_heap3 = *engine_working_data.forwardHeap3;
-        QueryHeap &reverse_heap3 = *engine_working_data.backwardHeap3;
+        QueryHeap &forward_heap3 = *engine_working_data.forward_heap_3;
+        QueryHeap &reverse_heap3 = *engine_working_data.reverse_heap_3;
         int upper_bound = INVALID_EDGE_WEIGHT;
         NodeID middle = SPECIAL_NODEID;
 

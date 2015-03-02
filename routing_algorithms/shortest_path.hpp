@@ -36,9 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 template <class DataFacadeT>
-class ShortestPathRouting final : public BasicRoutingInterface<DataFacadeT>
+class ShortestPathRouting final
+    : public BasicRoutingInterface<DataFacadeT, ShortestPathRouting<DataFacadeT>>
 {
-    using super = BasicRoutingInterface<DataFacadeT>;
+    using super = BasicRoutingInterface<DataFacadeT, ShortestPathRouting<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
@@ -70,10 +71,10 @@ class ShortestPathRouting final : public BasicRoutingInterface<DataFacadeT>
         engine_working_data.InitializeOrClearThirdThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &forward_heap1 = *(engine_working_data.forwardHeap);
-        QueryHeap &reverse_heap1 = *(engine_working_data.backwardHeap);
-        QueryHeap &forward_heap2 = *(engine_working_data.forwardHeap2);
-        QueryHeap &reverse_heap2 = *(engine_working_data.backwardHeap2);
+        QueryHeap &forward_heap1 = *(engine_working_data.forward_heap_1);
+        QueryHeap &reverse_heap1 = *(engine_working_data.reverse_heap_1);
+        QueryHeap &forward_heap2 = *(engine_working_data.forward_heap_2);
+        QueryHeap &reverse_heap2 = *(engine_working_data.reverse_heap_2);
 
         std::size_t current_leg = 0;
         // Get distance to next pair of target nodes.

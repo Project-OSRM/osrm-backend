@@ -37,17 +37,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stack>
 
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap3;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap3;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_1;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_1;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
 
-template <class DataFacadeT> class BasicRoutingInterface
+template <class DataFacadeT, class Derived> class BasicRoutingInterface
 {
   private:
-    typedef typename DataFacadeT::EdgeData EdgeData;
+    using EdgeData = typename DataFacadeT::EdgeData;
 
   protected:
     DataFacadeT *facade;
@@ -56,14 +56,14 @@ template <class DataFacadeT> class BasicRoutingInterface
     BasicRoutingInterface() = delete;
     BasicRoutingInterface(const BasicRoutingInterface &) = delete;
     explicit BasicRoutingInterface(DataFacadeT *facade) : facade(facade) {}
-    virtual ~BasicRoutingInterface() {}
+    ~BasicRoutingInterface() {}
 
-    inline void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
-                            SearchEngineData::QueryHeap &reverse_heap,
-                            NodeID *middle_node_id,
-                            int *upper_bound,
-                            const int min_edge_offset,
-                            const bool forward_direction) const
+    void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
+                     SearchEngineData::QueryHeap &reverse_heap,
+                     NodeID *middle_node_id,
+                     int *upper_bound,
+                     const int min_edge_offset,
+                     const bool forward_direction) const
     {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
@@ -148,9 +148,9 @@ template <class DataFacadeT> class BasicRoutingInterface
         }
     }
 
-    inline void UnpackPath(const std::vector<NodeID> &packed_path,
-                           const PhantomNodes &phantom_node_pair,
-                           std::vector<PathData> &unpacked_path) const
+    void UnpackPath(const std::vector<NodeID> &packed_path,
+                    const PhantomNodes &phantom_node_pair,
+                    std::vector<PathData> &unpacked_path) const
     {
         const bool start_traversed_in_reverse =
             (packed_path.front() != phantom_node_pair.source_phantom.forward_node_id);
@@ -331,7 +331,7 @@ template <class DataFacadeT> class BasicRoutingInterface
         }
     }
 
-    inline void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const
+    void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const
     {
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
         recursion_stack.emplace(s, t);
@@ -388,10 +388,10 @@ template <class DataFacadeT> class BasicRoutingInterface
         unpacked_path.emplace_back(t);
     }
 
-    inline void RetrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,
-                                           const SearchEngineData::QueryHeap &reverse_heap,
-                                           const NodeID middle_node_id,
-                                           std::vector<NodeID> &packed_path) const
+    void RetrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,
+                                    const SearchEngineData::QueryHeap &reverse_heap,
+                                    const NodeID middle_node_id,
+                                    std::vector<NodeID> &packed_path) const
     {
         RetrievePackedPathFromSingleHeap(forward_heap, middle_node_id, packed_path);
         std::reverse(packed_path.begin(), packed_path.end());
@@ -399,9 +399,9 @@ template <class DataFacadeT> class BasicRoutingInterface
         RetrievePackedPathFromSingleHeap(reverse_heap, middle_node_id, packed_path);
     }
 
-    inline void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
-                                                 const NodeID middle_node_id,
-                                                 std::vector<NodeID> &packed_path) const
+    void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
+                                          const NodeID middle_node_id,
+                                          std::vector<NodeID> &packed_path) const
     {
         NodeID current_node_id = middle_node_id;
         while (current_node_id != search_heap.GetData(current_node_id).parent)

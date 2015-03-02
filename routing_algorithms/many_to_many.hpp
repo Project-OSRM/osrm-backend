@@ -40,9 +40,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 template <class DataFacadeT>
-class ManyToManyRouting final : public BasicRoutingInterface<DataFacadeT>
+class ManyToManyRouting final
+    : public BasicRoutingInterface<DataFacadeT, ManyToManyRouting<DataFacadeT>>
 {
-    using super = BasicRoutingInterface<DataFacadeT>;
+    using super = BasicRoutingInterface<DataFacadeT, ManyToManyRouting<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
@@ -76,7 +77,7 @@ class ManyToManyRouting final : public BasicRoutingInterface<DataFacadeT>
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &query_heap = *(engine_working_data.forwardHeap);
+        QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
 
         SearchSpaceWithBuckets search_space_with_buckets;
 
