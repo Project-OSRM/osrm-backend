@@ -63,7 +63,7 @@ constexpr static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>
 constexpr static const double MINIMAL_LOG_PROB = -std::numeric_limits<double>::max();
 constexpr static const unsigned INVALID_STATE = std::numeric_limits<unsigned>::max();
 constexpr static const unsigned MAX_BROKEN_STATES = 6;
-constexpr static const unsigned MAX_BROKEN_TIME = 180;
+constexpr static const unsigned MAX_BROKEN_TIME = 30;
 }
 
 // implements a hidden markov model map matching algorithm
@@ -285,9 +285,7 @@ template <class DataFacadeT> class MapMatching final
             }
         }
 
-        void initialize(const HiddenMarkovModel& model,
-                        unsigned initial_timestamp,
-                        const Matching::CandidateLists& candidates_list)
+        void initialize(const Matching::CandidateLists& candidates_list)
         {
             // json logger not enabled
             if (!logger)
@@ -304,16 +302,8 @@ template <class DataFacadeT> class MapMatching final
                     state.values["coordinate"] = osrm::json::make_array(
                         candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
                         candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
-                    if (t < initial_timestamp)
-                    {
-                        state.values["viterbi"] = osrm::json::clamp_float(Matching::IMPOSSIBLE_LOG_PROB);
-                        state.values["pruned"] = 0u;
-                    }
-                    else if (t == initial_timestamp)
-                    {
-                        state.values["viterbi"] = osrm::json::clamp_float(model.viterbi[t][s]);
-                        state.values["pruned"] = static_cast<unsigned>(model.pruned[t][s]);
-                    }
+                    state.values["viterbi"] = osrm::json::clamp_float(Matching::IMPOSSIBLE_LOG_PROB);
+                    state.values["pruned"] = 0u;
                     timestamps.values.push_back(state);
                 }
                 states.values.push_back(timestamps);
@@ -350,18 +340,20 @@ template <class DataFacadeT> class MapMatching final
 
         }
 
-        void add_viterbi(const unsigned t,
-                         const std::vector<double>& current_viterbi,
-                         const std::vector<bool>& current_pruned)
+        void set_viterbi(const std::vector<std::vector<double>>& viterbi,
+                         const std::vector<std::vector<bool>>& pruned)
         {
             // json logger not enabled
             if (!logger)
                 return;
 
-            for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
+            for (auto t = 0u; t < viterbi.size(); t++)
             {
-                osrm::json::get(*object, "states", t, s_prime, "viterbi") = osrm::json::clamp_float(current_viterbi[s_prime]);
-                osrm::json::get(*object, "states", t, s_prime, "pruned") = static_cast<unsigned>(current_pruned[s_prime]);
+                for (auto s_prime = 0u; s_prime < viterbi[t].size(); ++s_prime)
+                {
+                    osrm::json::get(*object, "states", t, s_prime, "viterbi") = osrm::json::clamp_float(viterbi[t][s_prime]);
+                    osrm::json::get(*object, "states", t, s_prime, "pruned") = static_cast<unsigned>(pruned[t][s_prime]);
+                }
             }
         }
 
@@ -415,7 +407,7 @@ template <class DataFacadeT> class MapMatching final
         }
 
         DebugInfo debug(osrm::json::Logger::get());
-        debug.initialize(model, initial_timestamp, candidates_list);
+        debug.initialize(candidates_list);
 
         unsigned breakage_begin = std::numeric_limits<unsigned>::max();
         std::vector<unsigned> split_points;
@@ -424,7 +416,51 @@ template <class DataFacadeT> class MapMatching final
         prev_unbroken_timestamps.push_back(initial_timestamp);
         for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
         {
+            // breakage recover has removed all previous good points
+            bool trace_split = prev_unbroken_timestamps.size() < 1;
+
+            // use temporal information if available to determine a split
+            if (trace_timestamps.size() > 0)
+            {
+                trace_split =
+                    trace_split ||
+                    (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
+                     Matching::MAX_BROKEN_TIME);
+            }
+            else
+            {
+                trace_split = trace_split || (t - prev_unbroken_timestamps.back() >
+                                              Matching::MAX_BROKEN_STATES);
+            }
+
+            if (trace_split)
+            {
+                unsigned split_index = t;
+                if (breakage_begin != std::numeric_limits<unsigned>::max())
+                {
+                    split_index = breakage_begin;
+                    breakage_begin = std::numeric_limits<unsigned>::max();
+                }
+                split_points.push_back(split_index);
+
+                // note: this preserves everything before split_index
+                model.clear(split_index);
+                unsigned new_start = model.initialize(split_index);
+                // no new start was found -> stop viterbi calculation
+                if (new_start == Matching::INVALID_STATE)
+                {
+                    break;
+                }
+                prev_unbroken_timestamps.clear();
+                prev_unbroken_timestamps.push_back(new_start);
+                // Important: We potentially go back here!
+                // However since t > new_start >= breakge_begin
+                // we can only reset trace_coordindates.size() times.
+                t = new_start+1;
+            }
+
             unsigned prev_unbroken_timestamp = prev_unbroken_timestamps.back();
+
             const auto &prev_viterbi = model.viterbi[prev_unbroken_timestamp];
             const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
             const auto &prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
@@ -487,64 +523,26 @@ template <class DataFacadeT> class MapMatching final
                 }
             }
 
-            debug.add_viterbi(t, current_viterbi, current_pruned);
-
             if (model.breakage[t])
             {
-                BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
-
                 // save start of breakage -> we need this as split point
                 if (t < breakage_begin)
                 {
                     breakage_begin = t;
                 }
 
+                BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
+
                 // remove both ends of the breakage
                 prev_unbroken_timestamps.pop_back();
-
-                bool trace_split = prev_unbroken_timestamps.size() < 1;
-
-                // use temporal information to determine a split if available
-                if (trace_timestamps.size() > 0)
-                {
-                    trace_split =
-                        trace_split ||
-                        (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                         Matching::MAX_BROKEN_TIME);
-                }
-                else
-                {
-                    trace_split = trace_split || (t - prev_unbroken_timestamps.back() >
-                                                  Matching::MAX_BROKEN_STATES);
-                }
-
-                // we reached the beginning of the trace and it is still broken
-                // -> split the trace here
-                if (trace_split)
-                {
-                    split_points.push_back(breakage_begin);
-                    // note: this preserves everything before breakage_begin
-                    model.clear(breakage_begin);
-                    unsigned new_start = model.initialize(breakage_begin);
-                    // no new start was found -> stop viterbi calculation
-                    if (new_start == Matching::INVALID_STATE)
-                    {
-                        break;
-                    }
-                    prev_unbroken_timestamps.clear();
-                    prev_unbroken_timestamps.push_back(new_start);
-                    // Important: We potentially go back here!
-                    // However since t+1 > new_start >= breakge_begin
-                    // we can only reset trace_coordindates.size() times.
-                    t = new_start;
-                    breakage_begin = std::numeric_limits<unsigned>::max();
-                }
             }
             else
             {
                 prev_unbroken_timestamps.push_back(t);
             }
         }
+
+        debug.set_viterbi(model.viterbi, model.pruned);
 
         if (prev_unbroken_timestamps.size() > 0)
         {
