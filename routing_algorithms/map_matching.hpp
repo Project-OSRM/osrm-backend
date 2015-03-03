@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "routing_base.hpp"
 
 #include "../data_structures/coordinate_calculation.hpp"
+#include "../data_structures/hidden_markov_model.hpp"
+#include "../util/matching_debug_info.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/json_util.hpp"
 #include "../util/json_logger.hpp"
@@ -44,7 +46,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <numeric>
 
-namespace Matching
+namespace osrm
+{
+namespace matching
 {
 
 struct SubMatching
@@ -57,12 +61,15 @@ struct SubMatching
 
 using CandidateList = std::vector<std::pair<PhantomNode, double>>;
 using CandidateLists = std::vector<CandidateList>;
+using HMM = HiddenMarkovModel<CandidateLists>;
 using SubMatchingList = std::vector<SubMatching>;
-constexpr static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
-constexpr static const double MINIMAL_LOG_PROB = -std::numeric_limits<double>::max();
-constexpr static const unsigned INVALID_STATE = std::numeric_limits<unsigned>::max();
+
 constexpr static const unsigned MAX_BROKEN_STATES = 6;
 constexpr static const unsigned MAX_BROKEN_TIME = 30;
+
+constexpr static const double default_beta = 10.0;
+constexpr static const double default_sigma_z = 4.07;
+}
 }
 
 // implements a hidden markov model map matching algorithm
@@ -72,36 +79,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     using super = BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
-
-    // FIXME this value should be a table based on samples/meter (or samples/min)
-    constexpr static const double default_beta = 10.0;
-    constexpr static const double default_sigma_z = 4.07;
-    constexpr static const double log_2_pi = 1.837877066409346; // std::log(2. * M_PI);
-
-    // closures to precompute log -> only simple floating point operations
-    struct EmissionLogProbability
-    {
-        double sigma_z;
-        double log_sigma_z;
-
-        EmissionLogProbability(const double sigma_z)
-            : sigma_z(sigma_z), log_sigma_z(std::log(sigma_z))
-        {
-        }
-
-        double operator()(const double distance) const
-        {
-            return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) - log_sigma_z;
-        }
-    };
-    struct TransitionLogProbability
-    {
-        double beta;
-        double log_beta;
-        TransitionLogProbability(const double beta) : beta(beta), log_beta(std::log(beta)) {}
-
-        double operator()(const double d_t) const { return -log_beta - d_t / beta; }
-    };
 
     double get_network_distance(const PhantomNode &source_phantom,
                                 const PhantomNode &target_phantom) const
@@ -188,220 +165,37 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         return distance;
     }
 
-    struct HiddenMarkovModel
-    {
-        std::vector<std::vector<double>> viterbi;
-        std::vector<std::vector<std::pair<unsigned, unsigned>>> parents;
-        std::vector<std::vector<float>> path_lengths;
-        std::vector<std::vector<bool>> pruned;
-        std::vector<bool> breakage;
-
-        const Matching::CandidateLists &candidates_list;
-        const EmissionLogProbability &emission_log_probability;
-
-        HiddenMarkovModel(const Matching::CandidateLists &candidates_list,
-                          const EmissionLogProbability &emission_log_probability)
-            : breakage(candidates_list.size()), candidates_list(candidates_list),
-              emission_log_probability(emission_log_probability)
-        {
-            for (const auto &l : candidates_list)
-            {
-                viterbi.emplace_back(l.size());
-                parents.emplace_back(l.size());
-                path_lengths.emplace_back(l.size());
-                pruned.emplace_back(l.size());
-            }
-
-            clear(0);
-        }
-
-        void clear(unsigned initial_timestamp)
-        {
-            BOOST_ASSERT(viterbi.size() == parents.size() &&
-                         parents.size() == path_lengths.size() &&
-                         path_lengths.size() == pruned.size() && pruned.size() == breakage.size());
-
-            for (unsigned t = initial_timestamp; t < viterbi.size(); t++)
-            {
-                std::fill(viterbi[t].begin(), viterbi[t].end(), Matching::IMPOSSIBLE_LOG_PROB);
-                std::fill(parents[t].begin(), parents[t].end(), std::make_pair(0u, 0u));
-                std::fill(path_lengths[t].begin(), path_lengths[t].end(), 0);
-                std::fill(pruned[t].begin(), pruned[t].end(), true);
-            }
-            std::fill(breakage.begin() + initial_timestamp, breakage.end(), true);
-        }
-
-        unsigned initialize(unsigned initial_timestamp)
-        {
-            BOOST_ASSERT(initial_timestamp < candidates_list.size());
-
-            do
-            {
-                for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
-                {
-                    viterbi[initial_timestamp][s] =
-                        emission_log_probability(candidates_list[initial_timestamp][s].second);
-                    parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
-                    pruned[initial_timestamp][s] =
-                        viterbi[initial_timestamp][s] < Matching::MINIMAL_LOG_PROB;
-
-                    breakage[initial_timestamp] =
-                        breakage[initial_timestamp] && pruned[initial_timestamp][s];
-                }
-
-                ++initial_timestamp;
-            } while (breakage[initial_timestamp - 1]);
-
-            if (initial_timestamp >= viterbi.size())
-            {
-                return Matching::INVALID_STATE;
-            }
-
-            BOOST_ASSERT(initial_timestamp > 0);
-            --initial_timestamp;
-
-            BOOST_ASSERT(breakage[initial_timestamp] == false);
-
-            return initial_timestamp;
-        }
-    };
-
-    // Provides the debug interface for introspection tools
-    struct DebugInfo
-    {
-        DebugInfo(const osrm::json::Logger *logger) : logger(logger)
-        {
-            if (logger)
-            {
-                object = &logger->map->at("matching");
-            }
-        }
-
-        void initialize(const Matching::CandidateLists &candidates_list)
-        {
-            // json logger not enabled
-            if (!logger)
-                return;
-
-            osrm::json::Array states;
-            for (unsigned t = 0; t < candidates_list.size(); t++)
-            {
-                osrm::json::Array timestamps;
-                for (unsigned s = 0; s < candidates_list[t].size(); s++)
-                {
-                    osrm::json::Object state;
-                    state.values["transitions"] = osrm::json::Array();
-                    state.values["coordinate"] = osrm::json::make_array(
-                        candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
-                        candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
-                    state.values["viterbi"] =
-                        osrm::json::clamp_float(Matching::IMPOSSIBLE_LOG_PROB);
-                    state.values["pruned"] = 0u;
-                    timestamps.values.push_back(state);
-                }
-                states.values.push_back(timestamps);
-            }
-            osrm::json::get(*object, "states") = states;
-        }
-
-        void add_transition_info(const unsigned prev_t,
-                                 const unsigned current_t,
-                                 const unsigned prev_state,
-                                 const unsigned current_state,
-                                 const double prev_viterbi,
-                                 const double emission_pr,
-                                 const double transition_pr,
-                                 const double network_distance,
-                                 const double great_circle_distance)
-        {
-            // json logger not enabled
-            if (!logger)
-                return;
-
-            osrm::json::Object transistion;
-            transistion.values["to"] = osrm::json::make_array(current_t, current_state);
-            transistion.values["properties"] = osrm::json::make_array(
-                osrm::json::clamp_float(prev_viterbi), osrm::json::clamp_float(emission_pr),
-                osrm::json::clamp_float(transition_pr), network_distance, great_circle_distance);
-
-            osrm::json::get(*object, "states", prev_t, prev_state, "transitions")
-                .get<mapbox::util::recursive_wrapper<osrm::json::Array>>()
-                .get()
-                .values.push_back(transistion);
-        }
-
-        void set_viterbi(const std::vector<std::vector<double>> &viterbi,
-                         const std::vector<std::vector<bool>> &pruned)
-        {
-            // json logger not enabled
-            if (!logger)
-                return;
-
-            for (auto t = 0u; t < viterbi.size(); t++)
-            {
-                for (auto s_prime = 0u; s_prime < viterbi[t].size(); ++s_prime)
-                {
-                    osrm::json::get(*object, "states", t, s_prime, "viterbi") =
-                        osrm::json::clamp_float(viterbi[t][s_prime]);
-                    osrm::json::get(*object, "states", t, s_prime, "pruned") =
-                        static_cast<unsigned>(pruned[t][s_prime]);
-                }
-            }
-        }
-
-        void add_chosen(const unsigned t, const unsigned s)
-        {
-            // json logger not enabled
-            if (!logger)
-                return;
-
-            osrm::json::get(*object, "states", t, s, "chosen") = true;
-        }
-
-        void add_breakage(const std::vector<bool> &breakage)
-        {
-            // json logger not enabled
-            if (!logger)
-                return;
-
-            osrm::json::get(*object, "breakage") = osrm::json::make_array(breakage);
-        }
-
-        const osrm::json::Logger *logger;
-        osrm::json::Value *object;
-    };
-
   public:
     MapMatching(DataFacadeT *facade, SearchEngineData &engine_working_data)
         : super(facade), engine_working_data(engine_working_data)
     {
     }
 
-    void operator()(const Matching::CandidateLists &candidates_list,
+    void operator()(const osrm::matching::CandidateLists &candidates_list,
                     const std::vector<FixedPointCoordinate> &trace_coordinates,
                     const std::vector<unsigned> &trace_timestamps,
                     const double matching_beta,
                     const double gps_precision,
-                    Matching::SubMatchingList &sub_matchings) const
+                    osrm::matching::SubMatchingList &sub_matchings) const
     {
         BOOST_ASSERT(candidates_list.size() > 0);
 
         // TODO replace default values with table lookup based on sampling frequency
-        EmissionLogProbability emission_log_probability(gps_precision > 0 ? gps_precision
-                                                                          : default_sigma_z);
-        TransitionLogProbability transition_log_probability(matching_beta > 0 ? matching_beta
-                                                                              : default_beta);
+        EmissionLogProbability emission_log_probability(
+            gps_precision > 0 ? gps_precision : osrm::matching::default_sigma_z);
+        TransitionLogProbability transition_log_probability(
+            matching_beta > 0 ? matching_beta : osrm::matching::default_beta);
 
-        HiddenMarkovModel model(candidates_list, emission_log_probability);
+        osrm::matching::HMM model(candidates_list, emission_log_probability);
 
         unsigned initial_timestamp = model.initialize(0);
-        if (initial_timestamp == Matching::INVALID_STATE)
+        if (initial_timestamp == osrm::matching::INVALID_STATE)
         {
             return;
         }
 
-        DebugInfo debug(osrm::json::Logger::get());
-        debug.initialize(candidates_list);
+        MatchingDebugInfo matching_debug(osrm::json::Logger::get());
+        matching_debug.initialize(candidates_list);
 
         unsigned breakage_begin = std::numeric_limits<unsigned>::max();
         std::vector<unsigned> split_points;
@@ -419,12 +213,12 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 trace_split =
                     trace_split ||
                     (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                     Matching::MAX_BROKEN_TIME);
+                     osrm::matching::MAX_BROKEN_TIME);
             }
             else
             {
-                trace_split = trace_split ||
-                              (t - prev_unbroken_timestamps.back() > Matching::MAX_BROKEN_STATES);
+                trace_split = trace_split || (t - prev_unbroken_timestamps.back() >
+                                              osrm::matching::MAX_BROKEN_STATES);
             }
 
             if (trace_split)
@@ -441,7 +235,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 model.clear(split_index);
                 unsigned new_start = model.initialize(split_index);
                 // no new start was found -> stop viterbi calculation
-                if (new_start == Matching::INVALID_STATE)
+                if (new_start == osrm::matching::INVALID_STATE)
                 {
                     break;
                 }
@@ -499,9 +293,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const double transition_pr = transition_log_probability(d_t);
                     new_value += transition_pr;
 
-                    debug.add_transition_info(prev_unbroken_timestamp, t, s, s_prime,
-                                              prev_viterbi[s], emission_pr, transition_pr,
-                                              network_distance, great_circle_distance);
+                    matching_debug.add_transition_info(prev_unbroken_timestamp, t, s, s_prime,
+                                                       prev_viterbi[s], emission_pr, transition_pr,
+                                                       network_distance, great_circle_distance);
 
                     if (new_value > current_viterbi[s_prime])
                     {
@@ -533,7 +327,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }
 
-        debug.set_viterbi(model.viterbi, model.pruned);
+        matching_debug.set_viterbi(model.viterbi, model.pruned);
 
         if (prev_unbroken_timestamps.size() > 0)
         {
@@ -543,7 +337,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         unsigned sub_matching_begin = initial_timestamp;
         for (const unsigned sub_matching_end : split_points)
         {
-            Matching::SubMatching matching;
+            osrm::matching::SubMatching matching;
 
             // find real end of trace
             // not sure if this is really needed
@@ -600,7 +394,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 matching.nodes[i] = candidates_list[timestamp_index][location_index].first;
                 matching.length += model.path_lengths[timestamp_index][location_index];
 
-                debug.add_chosen(timestamp_index, location_index);
+                matching_debug.add_chosen(timestamp_index, location_index);
             }
 
             sub_matchings.push_back(matching);
@@ -608,7 +402,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             sub_matching_begin = sub_matching_end;
         }
 
-        debug.add_breakage(model.breakage);
+        matching_debug.add_breakage(model.breakage);
     }
 };
 
