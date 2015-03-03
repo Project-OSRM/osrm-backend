@@ -33,14 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/hidden_markov_model.hpp"
 #include "../util/matching_debug_info.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/json_util.hpp"
 #include "../util/json_logger.hpp"
 
-#include <osrm/json_container.hpp>
 #include <variant/variant.hpp>
-
-#include <fstream>
 
 #include <algorithm>
 #include <iomanip>
@@ -93,13 +88,13 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const double gps_precision,
                     osrm::matching::SubMatchingList &sub_matchings) const
     {
-        BOOST_ASSERT(candidates_list.size() > 0);
+        BOOST_ASSERT(!candidates_list.empty());
 
         // TODO replace default values with table lookup based on sampling frequency
         EmissionLogProbability emission_log_probability(
-            gps_precision > 0 ? gps_precision : osrm::matching::default_sigma_z);
+            gps_precision > 0. ? gps_precision : osrm::matching::default_sigma_z);
         TransitionLogProbability transition_log_probability(
-            matching_beta > 0 ? matching_beta : osrm::matching::default_beta);
+            matching_beta > 0. ? matching_beta : osrm::matching::default_beta);
 
         osrm::matching::HMM model(candidates_list, emission_log_probability);
 
@@ -120,10 +115,10 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
         {
             // breakage recover has removed all previous good points
-            bool trace_split = prev_unbroken_timestamps.size() < 1;
+            bool trace_split = prev_unbroken_timestamps.empty();
 
             // use temporal information if available to determine a split
-            if (trace_timestamps.size() > 0)
+            if (!trace_timestamps.empty())
             {
                 trace_split =
                     trace_split ||
@@ -162,7 +157,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 t = new_start + 1;
             }
 
-            unsigned prev_unbroken_timestamp = prev_unbroken_timestamps.back();
+            BOOST_ASSERT(!prev_unbroken_timestamps.empty());
+            const unsigned prev_unbroken_timestamp = prev_unbroken_timestamps.back();
 
             const auto &prev_viterbi = model.viterbi[prev_unbroken_timestamp];
             const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
@@ -185,12 +181,14 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
 
             // compute d_t for this timestamp and the next one
-            for (auto s = 0u; s < prev_viterbi.size(); ++s)
+            for (const auto s : osrm::irange<std::size_t>(0u, prev_viterbi.size()))
             {
                 if (prev_pruned[s])
+                {
                     continue;
+                }
 
-                for (auto s_prime = 0u; s_prime < current_viterbi.size(); ++s_prime)
+                for (const auto s_prime : osrm::irange<std::size_t>(0u, current_viterbi.size()))
                 {
                     // how likely is candidate s_prime at time t to be emitted?
                     const double emission_pr =
@@ -247,7 +245,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 }
 
                 BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
-
                 // remove both ends of the breakage
                 prev_unbroken_timestamps.pop_back();
             }
@@ -259,7 +256,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         matching_debug.set_viterbi(model.viterbi, model.pruned);
 
-        if (prev_unbroken_timestamps.size() > 0)
+        if (!prev_unbroken_timestamps.empty())
         {
             split_points.push_back(prev_unbroken_timestamps.back() + 1);
         }
@@ -286,8 +283,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
 
             // loop through the columns, and only compare the last entry
-            auto max_element_iter = std::max_element(model.viterbi[parent_timestamp_index].begin(),
-                                                     model.viterbi[parent_timestamp_index].end());
+            const auto max_element_iter =
+                std::max_element(model.viterbi[parent_timestamp_index].begin(),
+                                 model.viterbi[parent_timestamp_index].end());
 
             unsigned parent_candidate_index =
                 std::distance(model.viterbi[parent_timestamp_index].begin(), max_element_iter);
@@ -315,7 +313,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             matching.length = 0.0f;
             matching.nodes.resize(reconstructed_indices.size());
             matching.indices.resize(reconstructed_indices.size());
-            for (auto i = 0u; i < reconstructed_indices.size(); ++i)
+            for (const auto i : osrm::irange<std::size_t>(0u, reconstructed_indices.size()))
             {
                 auto timestamp_index = reconstructed_indices[i].first;
                 auto location_index = reconstructed_indices[i].second;
@@ -328,10 +326,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
 
             sub_matchings.push_back(matching);
-
             sub_matching_begin = sub_matching_end;
         }
-
         matching_debug.add_breakage(model.breakage);
     }
 };
