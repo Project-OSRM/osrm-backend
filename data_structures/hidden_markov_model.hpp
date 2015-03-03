@@ -124,7 +124,7 @@ template <class CandidateLists> struct HiddenMarkovModel
 
         do
         {
-            for (const auto s : osrm::irange(0u, viterbi[initial_timestamp].size()))
+            for (const auto s : osrm::irange<std::size_t>(0u, viterbi[initial_timestamp].size()))
             {
                 viterbi[initial_timestamp][s] =
                     emission_log_probability(candidates_list[initial_timestamp][s].second);
