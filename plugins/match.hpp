@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef MAP_MATCHING_PLUGIN_HPP
-#define MAP_MATCHING_PLUGIN_HPP
+#ifndef MATCH_HPP
+#define MATCH_HPP
 
 #include "plugin_base.hpp"
 
@@ -312,4 +312,4 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     ClassifierT classifier;
 };
 
-#endif /* MAP_MATCHING_HPP */
+#endif // MATCH_HPP

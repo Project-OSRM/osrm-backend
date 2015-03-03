@@ -42,7 +42,7 @@ class named_mutex;
 #include "../plugins/nearest.hpp"
 #include "../plugins/timestamp.hpp"
 #include "../plugins/viaroute.hpp"
-#include "../plugins/map_matching.hpp"
+#include "../plugins/match.hpp"
 #include "../server/data_structures/datafacade_base.hpp"
 #include "../server/data_structures/internal_datafacade.hpp"
 #include "../server/data_structures/shared_barriers.hpp"
