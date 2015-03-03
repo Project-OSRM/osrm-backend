@@ -793,12 +793,10 @@ class StaticRTree
         return !result_phantom_node_vector.empty();
     }
 
-    /**
-     * Returns elements within max_distance.
-     * If the minium of elements could not be found in the search radius, widen
-     * it until the minimum can be satisfied.
-     * At the number of returned nodes is capped at the given maximum.
-     */
+    // Returns elements within max_distance.
+    // If the minium of elements could not be found in the search radius, widen
+    // it until the minimum can be satisfied.
+    // At the number of returned nodes is capped at the given maximum.
     bool IncrementalFindPhantomNodeForCoordinateWithDistance(
         const FixedPointCoordinate &input_coordinate,
         std::vector<std::pair<PhantomNode, double>> &result_phantom_node_vector,
@@ -888,7 +886,7 @@ class StaticRTree
 
                 // continue searching for the first segment from a big component
                 if (number_of_elements_from_big_cc == 0 &&
-                    number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes-1 &&
+                    number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes - 1 &&
                     current_segment.is_in_tiny_cc())
                 {
                     continue;
@@ -899,14 +897,14 @@ class StaticRTree
                 FixedPointCoordinate foot_point_coordinate_on_segment;
 
                 const float current_perpendicular_distance =
-                coordinate_calculation::perpendicular_distance_from_projected_coordinate(
-                    m_coordinate_list->at(current_segment.u),
-                    m_coordinate_list->at(current_segment.v), input_coordinate,
-                    projected_coordinate, foot_point_coordinate_on_segment, current_ratio);
+                    coordinate_calculation::perpendicular_distance_from_projected_coordinate(
+                        m_coordinate_list->at(current_segment.u),
+                        m_coordinate_list->at(current_segment.v), input_coordinate,
+                        projected_coordinate, foot_point_coordinate_on_segment, current_ratio);
 
-                if (number_of_elements_from_big_cc > 0
-                && result_phantom_node_vector.size() >= min_number_of_phantom_nodes
-                && current_perpendicular_distance >= max_distance)
+                if (number_of_elements_from_big_cc > 0 &&
+                    result_phantom_node_vector.size() >= min_number_of_phantom_nodes &&
+                    current_perpendicular_distance >= max_distance)
                 {
                     traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
                     continue;
@@ -914,13 +912,14 @@ class StaticRTree
 
                 // store phantom node in result vector
                 result_phantom_node_vector.emplace_back(
-                    PhantomNode( current_segment.forward_edge_based_node_id,
-                     current_segment.reverse_edge_based_node_id, current_segment.name_id,
-                     current_segment.forward_weight, current_segment.reverse_weight,
-                     current_segment.forward_offset, current_segment.reverse_offset,
-                     current_segment.packed_geometry_id, current_segment.component_id,
-                     foot_point_coordinate_on_segment, current_segment.fwd_segment_position,
-                     current_segment.forward_travel_mode, current_segment.backward_travel_mode),
+                    PhantomNode(
+                        current_segment.forward_edge_based_node_id,
+                        current_segment.reverse_edge_based_node_id, current_segment.name_id,
+                        current_segment.forward_weight, current_segment.reverse_weight,
+                        current_segment.forward_offset, current_segment.reverse_offset,
+                        current_segment.packed_geometry_id, current_segment.component_id,
+                        foot_point_coordinate_on_segment, current_segment.fwd_segment_position,
+                        current_segment.forward_travel_mode, current_segment.backward_travel_mode),
                     current_perpendicular_distance);
 
                 // Hack to fix rounding errors and wandering via nodes.
