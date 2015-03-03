@@ -58,7 +58,6 @@ struct SubMatching
 using CandidateList = std::vector<std::pair<PhantomNode, double>>;
 using CandidateLists = std::vector<CandidateList>;
 using SubMatchingList = std::vector<SubMatching>;
-constexpr static const unsigned max_number_of_candidates = 10;
 constexpr static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
 constexpr static const double MINIMAL_LOG_PROB = -std::numeric_limits<double>::max();
 constexpr static const unsigned INVALID_STATE = std::numeric_limits<unsigned>::max();
@@ -67,8 +66,8 @@ constexpr static const unsigned MAX_BROKEN_TIME = 30;
 }
 
 // implements a hidden markov model map matching algorithm
-template <class DataFacadeT> class MapMatching final
-    : public BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>
+template <class DataFacadeT>
+class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>
 {
     using super = BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
@@ -77,7 +76,7 @@ template <class DataFacadeT> class MapMatching final
     // FIXME this value should be a table based on samples/meter (or samples/min)
     constexpr static const double default_beta = 10.0;
     constexpr static const double default_sigma_z = 4.07;
-    constexpr static const double log_2_pi = std::log(2 * M_PI);
+    constexpr static const double log_2_pi = 1.837877066409346; // std::log(2. * M_PI);
 
     // closures to precompute log -> only simple floating point operations
     struct EmissionLogProbability
@@ -86,8 +85,7 @@ template <class DataFacadeT> class MapMatching final
         double log_sigma_z;
 
         EmissionLogProbability(const double sigma_z)
-        : sigma_z(sigma_z)
-        , log_sigma_z(std::log(sigma_z))
+            : sigma_z(sigma_z), log_sigma_z(std::log(sigma_z))
         {
         }
 
@@ -100,16 +98,9 @@ template <class DataFacadeT> class MapMatching final
     {
         double beta;
         double log_beta;
-        TransitionLogProbability(const double beta)
-        : beta(beta)
-        , log_beta(std::log(beta))
-        {
-        }
+        TransitionLogProbability(const double beta) : beta(beta), log_beta(std::log(beta)) {}
 
-        double operator()(const double d_t) const
-        {
-            return -log_beta - d_t / beta;
-        }
+        double operator()(const double d_t) const { return -log_beta - d_t / beta; }
     };
 
     double get_network_distance(const PhantomNode &source_phantom,
@@ -159,13 +150,13 @@ template <class DataFacadeT> class MapMatching final
         {
             if (0 < forward_heap.Size())
             {
-                super::RoutingStep(
-                    forward_heap, reverse_heap, &middle_node, &upper_bound, edge_offset, true);
+                super::RoutingStep(forward_heap, reverse_heap, &middle_node, &upper_bound,
+                                   edge_offset, true);
             }
             if (0 < reverse_heap.Size())
             {
-                super::RoutingStep(
-                    reverse_heap, forward_heap, &middle_node, &upper_bound, edge_offset, false);
+                super::RoutingStep(reverse_heap, forward_heap, &middle_node, &upper_bound,
+                                   edge_offset, false);
             }
         }
 
@@ -206,10 +197,12 @@ template <class DataFacadeT> class MapMatching final
         std::vector<bool> breakage;
 
         const Matching::CandidateLists &candidates_list;
-        const EmissionLogProbability& emission_log_probability;
+        const EmissionLogProbability &emission_log_probability;
 
-        HiddenMarkovModel(const Matching::CandidateLists &candidates_list, const EmissionLogProbability& emission_log_probability)
-            : breakage(candidates_list.size()), candidates_list(candidates_list), emission_log_probability(emission_log_probability)
+        HiddenMarkovModel(const Matching::CandidateLists &candidates_list,
+                          const EmissionLogProbability &emission_log_probability)
+            : breakage(candidates_list.size()), candidates_list(candidates_list),
+              emission_log_probability(emission_log_probability)
         {
             for (const auto &l : candidates_list)
             {
@@ -276,8 +269,7 @@ template <class DataFacadeT> class MapMatching final
     // Provides the debug interface for introspection tools
     struct DebugInfo
     {
-        DebugInfo(const osrm::json::Logger* logger)
-        : logger(logger)
+        DebugInfo(const osrm::json::Logger *logger) : logger(logger)
         {
             if (logger)
             {
@@ -285,7 +277,7 @@ template <class DataFacadeT> class MapMatching final
             }
         }
 
-        void initialize(const Matching::CandidateLists& candidates_list)
+        void initialize(const Matching::CandidateLists &candidates_list)
         {
             // json logger not enabled
             if (!logger)
@@ -302,7 +294,8 @@ template <class DataFacadeT> class MapMatching final
                     state.values["coordinate"] = osrm::json::make_array(
                         candidates_list[t][s].first.location.lat / COORDINATE_PRECISION,
                         candidates_list[t][s].first.location.lon / COORDINATE_PRECISION);
-                    state.values["viterbi"] = osrm::json::clamp_float(Matching::IMPOSSIBLE_LOG_PROB);
+                    state.values["viterbi"] =
+                        osrm::json::clamp_float(Matching::IMPOSSIBLE_LOG_PROB);
                     state.values["pruned"] = 0u;
                     timestamps.values.push_back(state);
                 }
@@ -327,21 +320,18 @@ template <class DataFacadeT> class MapMatching final
 
             osrm::json::Object transistion;
             transistion.values["to"] = osrm::json::make_array(current_t, current_state);
-            transistion.values["properties"] =
-                osrm::json::make_array(osrm::json::clamp_float(prev_viterbi),
-                                       osrm::json::clamp_float(emission_pr),
-                                       osrm::json::clamp_float(transition_pr),
-                                       network_distance,
-                                       great_circle_distance);
+            transistion.values["properties"] = osrm::json::make_array(
+                osrm::json::clamp_float(prev_viterbi), osrm::json::clamp_float(emission_pr),
+                osrm::json::clamp_float(transition_pr), network_distance, great_circle_distance);
 
             osrm::json::get(*object, "states", prev_t, prev_state, "transitions")
                 .get<mapbox::util::recursive_wrapper<osrm::json::Array>>()
-                .get().values.push_back(transistion);
-
+                .get()
+                .values.push_back(transistion);
         }
 
-        void set_viterbi(const std::vector<std::vector<double>>& viterbi,
-                         const std::vector<std::vector<bool>>& pruned)
+        void set_viterbi(const std::vector<std::vector<double>> &viterbi,
+                         const std::vector<std::vector<bool>> &pruned)
         {
             // json logger not enabled
             if (!logger)
@@ -351,8 +341,10 @@ template <class DataFacadeT> class MapMatching final
             {
                 for (auto s_prime = 0u; s_prime < viterbi[t].size(); ++s_prime)
                 {
-                    osrm::json::get(*object, "states", t, s_prime, "viterbi") = osrm::json::clamp_float(viterbi[t][s_prime]);
-                    osrm::json::get(*object, "states", t, s_prime, "pruned") = static_cast<unsigned>(pruned[t][s_prime]);
+                    osrm::json::get(*object, "states", t, s_prime, "viterbi") =
+                        osrm::json::clamp_float(viterbi[t][s_prime]);
+                    osrm::json::get(*object, "states", t, s_prime, "pruned") =
+                        static_cast<unsigned>(pruned[t][s_prime]);
                 }
             }
         }
@@ -366,7 +358,7 @@ template <class DataFacadeT> class MapMatching final
             osrm::json::get(*object, "states", t, s, "chosen") = true;
         }
 
-        void add_breakage(const std::vector<bool>& breakage)
+        void add_breakage(const std::vector<bool> &breakage)
         {
             // json logger not enabled
             if (!logger)
@@ -375,8 +367,8 @@ template <class DataFacadeT> class MapMatching final
             osrm::json::get(*object, "breakage") = osrm::json::make_array(breakage);
         }
 
-        const osrm::json::Logger* logger;
-        osrm::json::Value* object;
+        const osrm::json::Logger *logger;
+        osrm::json::Value *object;
     };
 
   public:
@@ -395,8 +387,10 @@ template <class DataFacadeT> class MapMatching final
         BOOST_ASSERT(candidates_list.size() > 0);
 
         // TODO replace default values with table lookup based on sampling frequency
-        EmissionLogProbability emission_log_probability(gps_precision > 0 ? gps_precision : default_sigma_z);
-        TransitionLogProbability transition_log_probability(matching_beta > 0 ? matching_beta : default_beta);
+        EmissionLogProbability emission_log_probability(gps_precision > 0 ? gps_precision
+                                                                          : default_sigma_z);
+        TransitionLogProbability transition_log_probability(matching_beta > 0 ? matching_beta
+                                                                              : default_beta);
 
         HiddenMarkovModel model(candidates_list, emission_log_probability);
 
@@ -429,8 +423,8 @@ template <class DataFacadeT> class MapMatching final
             }
             else
             {
-                trace_split = trace_split || (t - prev_unbroken_timestamps.back() >
-                                              Matching::MAX_BROKEN_STATES);
+                trace_split = trace_split ||
+                              (t - prev_unbroken_timestamps.back() > Matching::MAX_BROKEN_STATES);
             }
 
             if (trace_split)
@@ -456,7 +450,7 @@ template <class DataFacadeT> class MapMatching final
                 // Important: We potentially go back here!
                 // However since t > new_start >= breakge_begin
                 // we can only reset trace_coordindates.size() times.
-                t = new_start+1;
+                t = new_start + 1;
             }
 
             unsigned prev_unbroken_timestamp = prev_unbroken_timestamps.back();
@@ -506,11 +500,8 @@ template <class DataFacadeT> class MapMatching final
                     new_value += transition_pr;
 
                     debug.add_transition_info(prev_unbroken_timestamp, t, s, s_prime,
-                                              prev_viterbi[s],
-                                              emission_pr,
-                                              transition_pr,
-                                              network_distance,
-                                              great_circle_distance);
+                                              prev_viterbi[s], emission_pr, transition_pr,
+                                              network_distance, great_circle_distance);
 
                     if (new_value > current_viterbi[s_prime])
                     {
@@ -622,6 +613,6 @@ template <class DataFacadeT> class MapMatching final
 };
 
 //[1] "Hidden Markov Map Matching Through Noise and Sparseness"; P. Newson and J. Krumm; 2009; ACM
-//GIS
+// GIS
 
 #endif /* MAP_MATCHING_HPP */
