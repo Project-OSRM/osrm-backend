@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HIDDEN_MARKOV_MODEL
 #define HIDDEN_MARKOV_MODEL
 
+#include "../util/integer_range.hpp"
+
 #include <boost/assert.hpp>
 
 #include <cmath>
@@ -44,7 +46,7 @@ constexpr static const double log_2_pi = 1.837877066409346; // std::log(2. * M_P
 
 constexpr static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
 constexpr static const double MINIMAL_LOG_PROB = std::numeric_limits<double>::lowest();
-constexpr static const unsigned INVALID_STATE = std::numeric_limits<unsigned>::max();
+constexpr static const std::size_t INVALID_STATE = std::numeric_limits<std::size_t>::max();
 } // namespace matching
 } // namespace osrm
 
@@ -101,12 +103,12 @@ template <class CandidateLists> struct HiddenMarkovModel
         clear(0);
     }
 
-    void clear(unsigned initial_timestamp)
+    void clear(std::size_t initial_timestamp)
     {
         BOOST_ASSERT(viterbi.size() == parents.size() && parents.size() == path_lengths.size() &&
                      path_lengths.size() == pruned.size() && pruned.size() == breakage.size());
 
-        for (unsigned t = initial_timestamp; t < viterbi.size(); t++)
+        for (const auto t : osrm::irange(initial_timestamp, viterbi.size()))
         {
             std::fill(viterbi[t].begin(), viterbi[t].end(), osrm::matching::IMPOSSIBLE_LOG_PROB);
             std::fill(parents[t].begin(), parents[t].end(), std::make_pair(0u, 0u));
@@ -116,13 +118,13 @@ template <class CandidateLists> struct HiddenMarkovModel
         std::fill(breakage.begin() + initial_timestamp, breakage.end(), true);
     }
 
-    unsigned initialize(unsigned initial_timestamp)
+    std::size_t initialize(std::size_t initial_timestamp)
     {
         BOOST_ASSERT(initial_timestamp < candidates_list.size());
 
         do
         {
-            for (auto s = 0u; s < viterbi[initial_timestamp].size(); ++s)
+            for (const auto s : osrm::irange(0u, viterbi[initial_timestamp].size()))
             {
                 viterbi[initial_timestamp][s] =
                     emission_log_probability(candidates_list[initial_timestamp][s].second);
