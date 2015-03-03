@@ -25,9 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-// based on
-// https://svn.apache.org/repos/asf/mesos/tags/release-0.9.0-incubating-RC0/src/common/json.hpp
-
 #ifndef JSON_UTIL_HPP
 #define JSON_UTIL_HPP
 
@@ -71,26 +68,39 @@ template <typename... Args> osrm::json::Array make_array(Args... args)
     return a;
 }
 
-template <typename T> osrm::json::Array make_array(const std::vector<T>& vector)
+template <typename T> osrm::json::Array make_array(const std::vector<T> &vector)
 {
     osrm::json::Array a;
-    for (const auto& v : vector)
+    for (const auto &v : vector)
+    {
         a.values.emplace_back(v);
+    }
+    return a;
+}
+
+// template specialization needed as clang does not play nice
+template <> osrm::json::Array make_array(const std::vector<bool> &vector)
+{
+    osrm::json::Array a;
+    for (const bool v : vector)
+    {
+        a.values.emplace_back(v);
+    }
     return a;
 }
 
 // Easy acces to object hierachies
-osrm::json::Value& get(osrm::json::Value& value) { return value; }
+osrm::json::Value &get(osrm::json::Value &value) { return value; }
 
-template<typename... Keys>
-osrm::json::Value& get(osrm::json::Value& value, const char* key, Keys... keys)
+template <typename... Keys>
+osrm::json::Value &get(osrm::json::Value &value, const char *key, Keys... keys)
 {
     using recursive_object_t = mapbox::util::recursive_wrapper<osrm::json::Object>;
     return get(value.get<recursive_object_t>().get().values[key], keys...);
 }
 
-template<typename... Keys>
-osrm::json::Value& get(osrm::json::Value& value, unsigned key, Keys... keys)
+template <typename... Keys>
+osrm::json::Value &get(osrm::json::Value &value, unsigned key, Keys... keys)
 {
     using recursive_array_t = mapbox::util::recursive_wrapper<osrm::json::Array>;
     return get(value.get<recursive_array_t>().get().values[key], keys...);
@@ -98,4 +108,4 @@ osrm::json::Value& get(osrm::json::Value& value, unsigned key, Keys... keys)
 
 } // namespace json
 } // namespace osrm
-#endif // JSON_RENDERER_HPP
+#endif // JSON_UTIL_HPP
