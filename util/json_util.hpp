@@ -47,7 +47,7 @@ template <typename T> T clamp_float(T d)
     }
     if (-std::numeric_limits<T>::infinity() == d)
     {
-        return -std::numeric_limits<T>::max();
+        return std::numeric_limits<T>::lowest();
     }
 
     return d;
