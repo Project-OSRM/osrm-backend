@@ -42,11 +42,10 @@ namespace osrm
 namespace matching
 {
 // FIXME this value should be a table based on samples/meter (or samples/min)
-constexpr static const double log_2_pi = 1.837877066409346; // std::log(2. * M_PI);
-
-constexpr static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
-constexpr static const double MINIMAL_LOG_PROB = std::numeric_limits<double>::lowest();
-constexpr static const std::size_t INVALID_STATE = std::numeric_limits<std::size_t>::max();
+static const double log_2_pi = std::log(2. * M_PI);
+static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
+static const double MINIMAL_LOG_PROB = std::numeric_limits<double>::lowest();
+static const std::size_t INVALID_STATE = std::numeric_limits<std::size_t>::max();
 } // namespace matching
 } // namespace osrm
 
