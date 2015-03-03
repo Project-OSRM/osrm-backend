@@ -80,91 +80,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
-    double get_network_distance(const PhantomNode &source_phantom,
-                                const PhantomNode &target_phantom) const
-    {
-        EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
-        NodeID middle_node = SPECIAL_NODEID;
-        EdgeWeight edge_offset = std::min(0, -source_phantom.GetForwardWeightPlusOffset());
-        edge_offset = std::min(edge_offset, -source_phantom.GetReverseWeightPlusOffset());
-
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            super::facade->GetNumberOfNodes());
-        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-            super::facade->GetNumberOfNodes());
-
-        QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
-        QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
-
-        if (source_phantom.forward_node_id != SPECIAL_NODEID)
-        {
-            forward_heap.Insert(source_phantom.forward_node_id,
-                                -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_node_id);
-        }
-        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
-        {
-            forward_heap.Insert(source_phantom.reverse_node_id,
-                                -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_node_id);
-        }
-
-        if (target_phantom.forward_node_id != SPECIAL_NODEID)
-        {
-            reverse_heap.Insert(target_phantom.forward_node_id,
-                                target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_node_id);
-        }
-        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
-        {
-            reverse_heap.Insert(target_phantom.reverse_node_id,
-                                target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_node_id);
-        }
-
-        // search from s and t till new_min/(1+epsilon) > length_of_shortest_path
-        while (0 < (forward_heap.Size() + reverse_heap.Size()))
-        {
-            if (0 < forward_heap.Size())
-            {
-                super::RoutingStep(forward_heap, reverse_heap, &middle_node, &upper_bound,
-                                   edge_offset, true);
-            }
-            if (0 < reverse_heap.Size())
-            {
-                super::RoutingStep(reverse_heap, forward_heap, &middle_node, &upper_bound,
-                                   edge_offset, false);
-            }
-        }
-
-        double distance = std::numeric_limits<double>::max();
-        if (upper_bound != INVALID_EDGE_WEIGHT)
-        {
-            std::vector<NodeID> packed_leg;
-            super::RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle_node, packed_leg);
-            std::vector<PathData> unpacked_path;
-            PhantomNodes nodes;
-            nodes.source_phantom = source_phantom;
-            nodes.target_phantom = target_phantom;
-            super::UnpackPath(packed_leg, nodes, unpacked_path);
-
-            FixedPointCoordinate previous_coordinate = source_phantom.location;
-            FixedPointCoordinate current_coordinate;
-            distance = 0;
-            for (const auto &p : unpacked_path)
-            {
-                current_coordinate = super::facade->GetCoordinateOfNode(p.node);
-                distance += coordinate_calculation::great_circle_distance(previous_coordinate,
-                                                                          current_coordinate);
-                previous_coordinate = current_coordinate;
-            }
-            distance += coordinate_calculation::great_circle_distance(previous_coordinate,
-                                                                      target_phantom.location);
-        }
-
-        return distance;
-    }
-
   public:
     MapMatching(DataFacadeT *facade, SearchEngineData &engine_working_data)
         : super(facade), engine_working_data(engine_working_data)
@@ -261,6 +176,14 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
+            engine_working_data.InitializeOrClearFirstThreadLocalStorage(
+                super::facade->GetNumberOfNodes());
+            engine_working_data.InitializeOrClearSecondThreadLocalStorage(
+                super::facade->GetNumberOfNodes());
+
+            QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
+            QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
+
             // compute d_t for this timestamp and the next one
             for (auto s = 0u; s < prev_viterbi.size(); ++s)
             {
@@ -274,12 +197,17 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         emission_log_probability(candidates_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
+                    {
                         continue;
+                    }
+
+                    forward_heap.Clear();
+                    reverse_heap.Clear();
 
                     // get distance diff between loc1/2 and locs/s_prime
-                    const auto network_distance =
-                        get_network_distance(prev_unbroken_timestamps_list[s].first,
-                                             current_timestamps_list[s_prime].first);
+                    const auto network_distance = super::get_network_distance(
+                        forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].first,
+                        current_timestamps_list[s_prime].first);
                     const auto great_circle_distance =
                         coordinate_calculation::great_circle_distance(prev_coordinate,
                                                                       current_coordinate);
@@ -288,7 +216,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                     // very low probability transition -> prune
                     if (d_t > 500)
+                    {
                         continue;
+                    }
 
                     const double transition_pr = transition_log_probability(d_t);
                     new_value += transition_pr;

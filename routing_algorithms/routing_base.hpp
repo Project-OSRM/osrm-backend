@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTING_BASE_HPP
 #define ROUTING_BASE_HPP
 
+#include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../data_structures/turn_instructions.hpp"
@@ -409,6 +410,84 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             current_node_id = search_heap.GetData(current_node_id).parent;
             packed_path.emplace_back(current_node_id);
         }
+    }
+
+    double get_network_distance(SearchEngineData::QueryHeap &forward_heap,
+                                SearchEngineData::QueryHeap &reverse_heap,
+                                const PhantomNode &source_phantom,
+                                const PhantomNode &target_phantom) const
+    {
+        EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
+        NodeID middle_node = SPECIAL_NODEID;
+        EdgeWeight edge_offset = std::min(0, -source_phantom.GetForwardWeightPlusOffset());
+        edge_offset = std::min(edge_offset, -source_phantom.GetReverseWeightPlusOffset());
+
+        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.forward_node_id,
+                                -source_phantom.GetForwardWeightPlusOffset(),
+                                source_phantom.forward_node_id);
+        }
+        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.reverse_node_id,
+                                -source_phantom.GetReverseWeightPlusOffset(),
+                                source_phantom.reverse_node_id);
+        }
+
+        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.forward_node_id,
+                                target_phantom.GetForwardWeightPlusOffset(),
+                                target_phantom.forward_node_id);
+        }
+        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.reverse_node_id,
+                                target_phantom.GetReverseWeightPlusOffset(),
+                                target_phantom.reverse_node_id);
+        }
+
+        // search from s and t till new_min/(1+epsilon) > length_of_shortest_path
+        while (0 < (forward_heap.Size() + reverse_heap.Size()))
+        {
+            if (0 < forward_heap.Size())
+            {
+                RoutingStep(forward_heap, reverse_heap, &middle_node, &upper_bound, edge_offset,
+                            true);
+            }
+            if (0 < reverse_heap.Size())
+            {
+                RoutingStep(reverse_heap, forward_heap, &middle_node, &upper_bound, edge_offset,
+                            false);
+            }
+        }
+
+        double distance = std::numeric_limits<double>::max();
+        if (upper_bound != INVALID_EDGE_WEIGHT)
+        {
+            std::vector<NodeID> packed_leg;
+            RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle_node, packed_leg);
+            std::vector<PathData> unpacked_path;
+            PhantomNodes nodes;
+            nodes.source_phantom = source_phantom;
+            nodes.target_phantom = target_phantom;
+            UnpackPath(packed_leg, nodes, unpacked_path);
+
+            FixedPointCoordinate previous_coordinate = source_phantom.location;
+            FixedPointCoordinate current_coordinate;
+            distance = 0;
+            for (const auto &p : unpacked_path)
+            {
+                current_coordinate = facade->GetCoordinateOfNode(p.node);
+                distance += coordinate_calculation::great_circle_distance(previous_coordinate,
+                                                                          current_coordinate);
+                previous_coordinate = current_coordinate;
+            }
+            distance += coordinate_calculation::great_circle_distance(previous_coordinate,
+                                                                      target_phantom.location);
+        }
+        return distance;
     }
 };
 
