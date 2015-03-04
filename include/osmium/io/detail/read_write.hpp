@@ -43,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
 # include <unistd.h>
 #else
 # include <io.h>
-typedef int ssize_t;
 #endif
 
 #include <osmium/io/overwrite.hpp>
@@ -123,9 +122,14 @@ namespace osmium {
              * @throws std::system_error On error.
              */
             inline void reliable_write(const int fd, const unsigned char* output_buffer, const size_t size) {
+                constexpr size_t max_write = 100 * 1024 * 1024; // Max 100 MByte per write
                 size_t offset = 0;
                 do {
-                    ssize_t length = ::write(fd, output_buffer + offset, size - offset);
+                    auto write_count = size - offset;
+                    if (write_count > max_write) {
+                        write_count = max_write;
+                    }
+                    auto length = ::write(fd, output_buffer + offset, static_cast<unsigned int>(write_count));
                     if (length < 0) {
                         throw std::system_error(errno, std::system_category(), "Write failed");
                     }

@@ -15,9 +15,7 @@
 
 // usually you only need one or two of these
 #include <osmium/index/map/dummy.hpp>
-#include <osmium/index/map/sparse_mem_table.hpp>
-#include <osmium/index/map/sparse_mem_map.hpp>
-#include <osmium/index/map/sparse_mmap_array.hpp>
+#include <osmium/index/map/sparse_mem_array.hpp>
 
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/visitor.hpp>
@@ -32,9 +30,7 @@
 
 typedef osmium::index::map::Dummy<osmium::unsigned_object_id_type, osmium::Location> index_neg_type;
 
-//typedef osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
-//typedef osmium::index::map::SparseMmapArray<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
-typedef osmium::index::map::SparseMemTable<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
+typedef osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location> index_pos_type;
 
 typedef osmium::handler::NodeLocationsForWays<index_pos_type, index_neg_type> location_handler_type;
 

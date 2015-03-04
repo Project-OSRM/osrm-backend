@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#ifdef OSMIUM_WITH_SPARSEHASH
+
 #include <cstddef>
 #include <utility>
 #include <vector>
@@ -138,5 +140,7 @@ namespace osmium {
     } // namespace index
 
 } // namespace osmium
+
+#endif // OSMIUM_WITH_SPARSEHASH
 
 #endif // OSMIUM_INDEX_BYID_SPARSE_MEM_TABLE_HPP

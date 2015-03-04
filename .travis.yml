@@ -20,6 +20,7 @@ before_install:
  - sudo apt-get update --yes --quiet
 
 install:
+ - cd ..
  # upgrade compilers
  - sudo apt-get install --yes gcc-4.8 g++-4.8
  # make sure 'cpp' is the just installed current one
@@ -35,6 +36,7 @@ install:
  - make
  - sudo make install
  - cd ../..
+ - cd libosmium
 
 before_script:
  - true
@@ -45,7 +47,5 @@ script:
  - cd build
  - cmake -LA -DCMAKE_BUILD_TYPE=${CONFIGURATION} ..
  - make VERBOSE=1
- # Disable multipolygon test because it needs ruby and the 'json' gem, but the
- # travis ruby installation doesn't find the gem it did install itself.
- - ctest -V -E testdata-multipolygon
+ - ctest --output-on-failure
 

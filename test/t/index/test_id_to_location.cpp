@@ -108,6 +108,8 @@ SECTION("DenseFileArray") {
     test_func_real<index_type>(index2);
 }
 
+#ifdef OSMIUM_WITH_SPARSEHASH
+
 SECTION("SparseMemTable") {
     typedef osmium::index::map::SparseMemTable<osmium::unsigned_object_id_type, osmium::Location> index_type;
 
@@ -117,6 +119,8 @@ SECTION("SparseMemTable") {
     index_type index2;
     test_func_real<index_type>(index2);
 }
+
+#endif
 
 SECTION("SparseMemMap") {
     typedef osmium::index::map::SparseMemMap<osmium::unsigned_object_id_type, osmium::Location> index_type;

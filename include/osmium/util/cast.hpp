@@ -33,36 +33,66 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cassert>
+#ifndef assert
+# include <cassert>
+#endif
+
 #include <limits>
 #include <type_traits>
 
 namespace osmium {
 
-    template <typename T, typename F, typename std::enable_if<std::is_integral<T>::value && std::is_integral<F>::value && std::is_signed<T>::value && std::is_signed<F>::value, int>::type = 0>
+    // These functions are wrappers around static_cast<>() that call assert()
+    // to check that there is no integer overflow happening before doing the
+    // cast. There are several versions of this templated function here
+    // depending on the types of the input and output. In any case, both input
+    // and output have to be integral types. If the cast can't overflow, no
+    // check is done.
+
+    template <typename A, typename B>
+    struct are_real_integers :
+        std::integral_constant<bool,
+            std::is_integral<A>::value &&
+            std::is_integral<B>::value &&
+            !std::is_same<A, bool>::value &&
+            !std::is_same<B, bool>::value> {
+    };
+
+    template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && std::is_same<T, F>::value, int>::type = 0>
     inline T static_cast_with_assert(const F value) {
-        static_assert(sizeof(T) < sizeof(F), "unnecessary static_cast_with_assert when casting into type of equal or larger size");
+        return value;
+    }
+
+    template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) > sizeof(F)), int>::type = 0>
+    inline T static_cast_with_assert(const F value) {
+        return static_cast<T>(value);
+    }
+
+    template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && std::is_signed<T>::value == std::is_signed<F>::value && (sizeof(T) == sizeof(F)), int>::type = 0>
+    inline T static_cast_with_assert(const F value) {
+        return static_cast<T>(value);
+    }
+
+    template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) < sizeof(F)) && std::is_signed<T>::value && std::is_signed<F>::value, int>::type = 0>
+    inline T static_cast_with_assert(const F value) {
         assert(value >= std::numeric_limits<T>::min() && value <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
     }
 
-    template <typename T, typename F, typename std::enable_if<std::is_integral<T>::value && std::is_integral<F>::value && std::is_unsigned<T>::value && std::is_signed<F>::value, int>::type = 0>
+    template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) <= sizeof(F)) && std::is_unsigned<T>::value && std::is_signed<F>::value, int>::type = 0>
     inline T static_cast_with_assert(const F value) {
-        static_assert(sizeof(T) <= sizeof(F), "unnecessary static_cast_with_assert when casting into type of larger size");
         assert(value >= 0 && static_cast<typename std::make_unsigned<F>::type>(value) <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
     }
 
-    template <typename T, typename F, typename std::enable_if<std::is_integral<T>::value && std::is_integral<F>::value && std::is_unsigned<T>::value && std::is_unsigned<F>::value, int>::type = 0>
+    template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) < sizeof(F)) && std::is_unsigned<T>::value && std::is_unsigned<F>::value, int>::type = 0>
     inline T static_cast_with_assert(const F value) {
-        static_assert(sizeof(T) < sizeof(F), "unnecessary static_cast_with_assert when casting into type of equal or larger size");
         assert(value <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
     }
 
-    template <typename T, typename F, typename std::enable_if<std::is_integral<T>::value && std::is_integral<F>::value && std::is_signed<T>::value && std::is_unsigned<F>::value, int>::type = 0>
+    template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) <= sizeof(F)) && std::is_signed<T>::value && std::is_unsigned<F>::value, int>::type = 0>
     inline T static_cast_with_assert(const F value) {
-        static_assert(sizeof(T) <= sizeof(F), "unnecessary static_cast_with_assert when casting into type of larger size");
         assert(value <= std::numeric_limits<T>::max());
         return static_cast<T>(value);
     }
