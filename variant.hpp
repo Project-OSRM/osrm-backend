@@ -601,7 +601,8 @@ public:
         type_index = detail::direct_type<T, Types...>::index;
     }
 
-    template<typename T>
+    // get<T>()
+    template<typename T, typename std::enable_if<(detail::direct_type<T, Types...>::index != detail::invalid_value)>::type* = nullptr>
     VARIANT_INLINE T& get()
     {
         if (type_index == detail::direct_type<T, Types...>::index)
@@ -610,11 +611,13 @@ public:
         }
         else
         {
-            throw std::runtime_error("in get()");
+            throw std::runtime_error("in get<T>()");
         }
     }
 
-    template<typename T>
+    template <typename T, typename std::enable_if<
+                          (detail::direct_type<T, Types...>::index != detail::invalid_value)
+                          >::type* = nullptr>
     VARIANT_INLINE T const& get() const
     {
         if (type_index == detail::direct_type<T, Types...>::index)
@@ -623,13 +626,48 @@ public:
         }
         else
         {
-            throw std::runtime_error("in get()");
+            throw std::runtime_error("in get<T>()");
         }
     }
 
+    // get<T>() - T stored as recursive_wrapper<T>
+    template <typename T, typename std::enable_if<
+                          (detail::direct_type<recursive_wrapper<T>, Types...>::index != detail::invalid_value)
+                          >::type* = nullptr>
+    VARIANT_INLINE T& get()
+    {
+        if (type_index == detail::direct_type<recursive_wrapper<T>, Types...>::index)
+        {
+            return (*reinterpret_cast<recursive_wrapper<T>*>(&data)).get();
+        }
+        else
+        {
+            throw std::runtime_error("in get<T>()");
+        }
+    }
+
+    template <typename T,typename std::enable_if<
+                         (detail::direct_type<recursive_wrapper<T>, Types...>::index != detail::invalid_value)
+                         >::type* = nullptr>
+    VARIANT_INLINE T const& get() const
+    {
+        if (type_index == detail::direct_type<recursive_wrapper<T>, Types...>::index)
+        {
+            return (*reinterpret_cast<recursive_wrapper<T> const*>(&data)).get();
+        }
+        else
+        {
+            throw std::runtime_error("in get<T>()");
+        }
+    }
     VARIANT_INLINE std::size_t get_type_index() const
     {
         return type_index;
+    }
+
+    VARIANT_INLINE int which() const noexcept
+    {
+        return static_cast<int>(sizeof...(Types) - type_index - 1);
     }
 
     // visitor
@@ -738,13 +776,13 @@ auto VARIANT_INLINE static apply_visitor(F f, V & v0, V & v1) -> decltype(V::bin
 
 // getter interface
 template<typename ResultType, typename T>
-ResultType &  get(T & var)
+ResultType & get(T & var)
 {
     return var.template get<ResultType>();
 }
 
 template<typename ResultType, typename T>
-ResultType const&  get(T const& var)
+ResultType const& get(T const& var)
 {
     return var.template get<ResultType>();
 }

@@ -4,6 +4,7 @@ An alternative to `boost::variant` for C++11.
 
 [![Build Status](https://secure.travis-ci.org/mapbox/variant.svg)](https://travis-ci.org/mapbox/variant)
 [![Build status](https://ci.appveyor.com/api/projects/status/v9tatx21j1k0fcgy)](https://ci.appveyor.com/project/Mapbox/variant)
+[![Coverage Status](https://coveralls.io/repos/mapbox/variant/badge.svg?branch=master)](https://coveralls.io/r/mapbox/variant?branch=master)
 
 # Why use Mapbox Variant?
 
