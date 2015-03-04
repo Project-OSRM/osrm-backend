@@ -272,7 +272,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             while (parent_timestamp_index >= sub_matching_begin &&
                    model.breakage[parent_timestamp_index])
             {
-                parent_timestamp_index--;
+                --parent_timestamp_index;
             }
 
             // matchings that only consist of one candidate are invalid

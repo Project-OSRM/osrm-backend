@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/json_container.hpp>
 
-#include <limits>
 #include <cmath>
+#include <limits>
 
 namespace osrm
 {
@@ -53,18 +53,10 @@ template <typename T> T clamp_float(T d)
     return d;
 }
 
-void append_to_array(osrm::json::Array &a) {}
-template <typename T, typename... Args>
-void append_to_array(osrm::json::Array &a, T value, Args... args)
-{
-    a.values.emplace_back(value);
-    append_to_array(a, args...);
-}
-
 template <typename... Args> osrm::json::Array make_array(Args... args)
 {
     osrm::json::Array a;
-    append_to_array(a, args...);
+    append_to_container(a.values, args...);
     return a;
 }
 

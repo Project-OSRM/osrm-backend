@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -37,6 +37,8 @@ namespace osrm
 namespace json
 {
 
+// Used to append additional debugging information to the JSON response in a
+// thread safe manner.
 class Logger
 {
     using MapT = std::unordered_map<std::string, osrm::json::Value>;
@@ -74,4 +76,4 @@ class Logger
 }
 }
 
-#endif /* SIMPLE_LOGGER_HPP */
+#endif /* JSON_LOGGER_HPP */
