@@ -214,7 +214,12 @@ namespace osmium {
                     if (!m_done || !m_queue.empty()) {
                         std::future<osmium::memory::Buffer> buffer_future;
                         m_queue.wait_and_pop(buffer_future);
-                        return buffer_future.get();
+                        try {
+                            return buffer_future.get();
+                        } catch (...) {
+                            m_done = true;
+                            throw;
+                        }
                     }
 
                     return osmium::memory::Buffer();

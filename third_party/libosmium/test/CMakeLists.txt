@@ -109,6 +109,9 @@ add_unit_test(tags test_filter)
 add_unit_test(tags test_operators)
 add_unit_test(tags test_tag_list)
 
+add_unit_test(thread test_pool ${Threads_FOUND} ${CMAKE_THREAD_LIBS_INIT})
+
+add_unit_test(util test_cast_with_assert)
 add_unit_test(util test_double)
 add_unit_test(util test_options)
 add_unit_test(util test_string)

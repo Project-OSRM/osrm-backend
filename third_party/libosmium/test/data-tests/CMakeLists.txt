@@ -87,31 +87,28 @@ set_tests_properties(testdata-overview PROPERTIES
 #  multipolygon
 #
 #-----------------------------------------------------------------------------
-add_executable(testdata-multipolygon testdata-multipolygon.cpp)
-target_link_libraries(testdata-multipolygon
-                      ${OSMIUM_XML_LIBRARIES}
-                      ${GDAL_LIBRARIES}
-)
 
-if(WIN32)
-    set(MULTIPOLYGON_TEST_SCRIPT "run-testdata-multipolygon.bat")
+find_package(Ruby 1.9)
+find_package(Gem COMPONENTS json)
+find_program(SPATIALITE spatialite)
+
+if(RUBY_FOUND AND GEM_json_FOUND AND SPATIALITE)
+    add_executable(testdata-multipolygon testdata-multipolygon.cpp)
+    target_link_libraries(testdata-multipolygon
+                        ${OSMIUM_XML_LIBRARIES}
+                        ${GDAL_LIBRARIES}
+    )
+
+    add_test(NAME testdata-multipolygon
+            COMMAND ${CMAKE_COMMAND}
+                -D OSM_TESTDATA=${OSM_TESTDATA}
+                -D RUBY=${RUBY_EXECUTABLE}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/run-testdata-multipolygon.cmake)
+
+    set_tests_properties(testdata-multipolygon PROPERTIES LABELS "data;slow")
 else()
-    set(MULTIPOLYGON_TEST_SCRIPT "run-testdata-multipolygon.sh")
+    message(WARNING "Disabled testdata-multipolygon test because 'ruby' and/or 'json' ruby gem and/or 'spatialite' was not found")
 endif()
-
-if(MSVC)
-    set(EXE_DIR ${CMAKE_BUILD_TYPE})
-else()
-    set(EXE_DIR .)
-endif()
-
-add_test(NAME testdata-multipolygon
-         COMMAND ${CMAKE_SOURCE_DIR}/test/data-tests/${MULTIPOLYGON_TEST_SCRIPT}
-         ${OSM_TESTDATA}
-         ${EXE_DIR}
-)
-set_tests_properties(testdata-multipolygon PROPERTIES
-    LABELS "data;slow")
 
 
 #-----------------------------------------------------------------------------

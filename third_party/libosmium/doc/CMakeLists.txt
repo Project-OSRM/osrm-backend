@@ -13,6 +13,7 @@ find_package(Doxygen)
 
 if(DOXYGEN_FOUND)
     message(STATUS "Looking for doxygen - found")
+    configure_file(header.html ${CMAKE_CURRENT_BINARY_DIR}/header.html @ONLY)
     configure_file(Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
     add_custom_target(doc
         ${DOXYGEN_EXECUTABLE}

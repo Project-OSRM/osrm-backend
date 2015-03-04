@@ -43,11 +43,13 @@ DEALINGS IN THE SOFTWARE.
 #include <thread>
 #include <utility>
 
+#include <osmium/util/compatibility.hpp>
+
 namespace osmium {
 
     namespace thread {
 
-        constexpr std::chrono::milliseconds full_queue_sleep_duration { 10 }; // XXX
+        OSMIUM_CONSTEXPR std::chrono::milliseconds full_queue_sleep_duration { 10 }; // XXX
 
         /**
          *  A thread-safe queue.

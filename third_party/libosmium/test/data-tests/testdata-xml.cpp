@@ -46,7 +46,7 @@ std::string read_file(const char* test_id) {
     assert(fd >= 0);
 
     std::string input(10000, '\0');
-    ssize_t n = ::read(fd, reinterpret_cast<unsigned char*>(const_cast<char*>(input.data())), 10000);
+    auto n = ::read(fd, reinterpret_cast<unsigned char*>(const_cast<char*>(input.data())), 10000);
     assert(n >= 0);
     input.resize(static_cast<std::string::size_type>(n));
 

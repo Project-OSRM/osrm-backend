@@ -75,7 +75,7 @@ namespace osmium {
 
         public:
 
-            static constexpr size_t input_buffer_size = 256 * 1024;
+            static constexpr unsigned int input_buffer_size = 1024 * 1024;
 
             Decompressor() = default;
 
@@ -245,11 +245,11 @@ namespace osmium {
                     }
                 } else {
                     buffer.resize(osmium::io::Decompressor::input_buffer_size);
-                    ssize_t nread = ::read(m_fd, const_cast<char*>(buffer.data()), buffer.size());
+                    auto nread = ::read(m_fd, const_cast<char*>(buffer.data()), osmium::io::Decompressor::input_buffer_size);
                     if (nread < 0) {
                         throw std::system_error(errno, std::system_category(), "Read failed");
                     }
-                    buffer.resize(static_cast<size_t>(nread));
+                    buffer.resize(nread);
                 }
 
                 return buffer;

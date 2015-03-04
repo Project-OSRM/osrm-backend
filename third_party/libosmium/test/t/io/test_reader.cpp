@@ -65,7 +65,7 @@ TEST_CASE("Reader") {
 
         const size_t buffer_size = 1000;
         char buffer[buffer_size];
-        ssize_t length = ::read(fd, buffer, buffer_size);
+        auto length = ::read(fd, buffer, buffer_size);
         REQUIRE(length > 0);
 
         osmium::io::File file(buffer, static_cast<size_t>(length), "osm");
@@ -83,7 +83,7 @@ TEST_CASE("Reader") {
 
         const size_t buffer_size = 1000;
         char buffer[buffer_size];
-        ssize_t length = ::read(fd, buffer, buffer_size);
+        auto length = ::read(fd, buffer, buffer_size);
         REQUIRE(length > 0);
 
         osmium::io::File file(buffer, static_cast<size_t>(length), "osm.gz");
@@ -101,7 +101,7 @@ TEST_CASE("Reader") {
 
         const size_t buffer_size = 1000;
         char buffer[buffer_size];
-        ssize_t length = ::read(fd, buffer, buffer_size);
+        auto length = ::read(fd, buffer, buffer_size);
         REQUIRE(length > 0);
 
         osmium::io::File file(buffer, static_cast<size_t>(length), "osm.bz2");
