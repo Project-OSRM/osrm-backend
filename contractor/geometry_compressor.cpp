@@ -35,8 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <string>
 
-int free_list_maximum = 0;
-int UniqueNumber() { return ++free_list_maximum; }
+//int UniqueNumber() { return ++free_list_maximum; }
 
 GeometryCompressor::GeometryCompressor()
 {
