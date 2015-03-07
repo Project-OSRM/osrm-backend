@@ -41,7 +41,6 @@ namespace osrm
 {
 namespace matching
 {
-// FIXME this value should be a table based on samples/meter (or samples/min)
 static const double log_2_pi = std::log(2. * M_PI);
 static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
 static const double MINIMAL_LOG_PROB = std::numeric_limits<double>::lowest();
