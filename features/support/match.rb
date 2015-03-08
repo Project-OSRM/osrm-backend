@@ -1,21 +1,17 @@
 require 'net/http'
 
 HOST = "http://127.0.0.1:#{OSRM_PORT}"
-DESTINATION_REACHED = 15      #OSRM instruction code
-
-class Hash
-  def to_param(namespace = nil)
-    collect do |key, value|
-      "#{key}=#{value}"
-    end.sort
-  end
-end
 
 def request_matching trace=[], timestamps=[], options={}
   defaults = { 'output' => 'json' }
-  locs = waypoints.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
+  locs = trace.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
   ts = timestamps.compact.map { |t| "t=#{t}" }
-  params = (locs + ts + defaults.merge(options).to_param).join('&')
+  if ts.length > 0
+    trace_params = locs.zip(ts).map { |a| a.join('&')}
+  else
+    trace_params = locs
+  end
+  params = (trace_params + defaults.merge(options).to_param).join('&')
   params = nil if params==""
   uri = URI.parse ["#{HOST}/match", params].compact.join('?')
   @query = uri.to_s

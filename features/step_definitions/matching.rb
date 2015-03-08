@@ -11,15 +11,18 @@ When /^I match I should get$/ do |table|
         trace = []
         timestamps = []
         if row['trace']
-          row['trace'].split(',').each do |n|
+          row['trace'].each_char do |n|
             node = find_node_by_name(n.strip)
             raise "*** unknown waypoint node '#{n.strip}" unless node
             trace << node
           end
+          if row['timestamps']
+              timestamps = row['timestamps'].split(" ").compact.map { |t| t.to_i}
+          end
           got = {'trace' => row['trace'] }
           response = request_matching trace, timestamps, params
         else
-          raise "*** no waypoints"
+          raise "*** no trace"
         end
       end
 
@@ -59,6 +62,10 @@ When /^I match I should get$/ do |table|
       encoded_result = ""
       extended_target = ""
       row['matchings'].split(',').each_with_index do |sub, sub_idx|
+        if sub_idx >= sub_matchings.length
+          ok = false
+          break
+        end
         sub.length.times do |node_idx|
           node = find_node_by_name(sub[node_idx])
           out_node = sub_matchings[sub_idx][node_idx]
@@ -66,17 +73,18 @@ When /^I match I should get$/ do |table|
             encoded_result += sub[node_idx]
             extended_target += sub[node_idx]
           else
-            encoded_result += "[#{out_node[0]},#{out_node[1]}]"
+            encoded_result += "? [#{out_node[0]},#{out_node[1]}]"
             extended_target += "#{sub[node_idx]} [#{node.lat},#{node.lon}]"
             ok = false
           end
         end
       end
       if ok
-          got['matchings'] = row['matchings']
+        got['matchings'] = row['matchings']
+        got['timestamps'] = row['timestamps']
       else
-          got['matchings'] = encoded_result
-          row['matchings'] = extended_target
+        got['matchings'] = encoded_result
+        row['matchings'] = extended_target
         log_fail row,got, { 'matching' => {:query => @query, :response => response} }
       end
 
