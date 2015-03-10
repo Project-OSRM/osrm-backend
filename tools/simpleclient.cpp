@@ -43,12 +43,13 @@ int main(int argc, const char *argv[])
     try
     {
         std::string ip_address;
-        int ip_port, requested_thread_num;
+        int ip_port, requested_thread_num, max_locations_map_matching;
         bool trial_run = false;
         libosrm_config lib_config;
         const unsigned init_result = GenerateServerProgramOptions(
             argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
-            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table);
+            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table,
+            max_locations_map_matching);
 
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {

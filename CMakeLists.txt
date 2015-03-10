@@ -59,15 +59,16 @@ add_library(LOGGER OBJECT util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
 add_library(EXCEPTION OBJECT util/osrm_exception.cpp)
 add_library(MERCATOR OBJECT util/mercator.cpp)
+add_library(ANGLE OBJECT util/compute_angle.cpp)
 
 set(ExtractorSources extract.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
 add_library(RESTRICTION OBJECT data_structures/restriction_map.cpp)
 
-file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp util/compute_angle.cpp {RestrictionMapGlob})
+file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp {RestrictionMapGlob})
 set(PrepareSources prepare.cpp ${PrepareGlob})
-add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
+add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
 file(GLOB ServerGlob server/*.cpp)
 file(GLOB DescriptorGlob descriptors/*.cpp)
@@ -93,7 +94,7 @@ set(
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(FINGERPRINT OBJECT util/fingerprint.cpp)
 add_library(GITDESCRIPTION OBJECT util/git_sha.cpp)
-add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
+add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 
 add_executable(osrm-routed routed.cpp ${ServerGlob} $<TARGET_OBJECTS:EXCEPTION>)

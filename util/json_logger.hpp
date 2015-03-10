@@ -25,30 +25,55 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVER_CONFIG_HPP
-#define SERVER_CONFIG_HPP
+#ifndef JSON_LOGGER_HPP
+#define JSON_LOGGER_HPP
 
-#include <osrm/server_paths.hpp>
+#include <osrm/json_container.hpp>
 
-struct libosrm_config
+#include <boost/thread.hpp>
+
+namespace osrm
 {
-    libosrm_config(const libosrm_config &) = delete;
-    libosrm_config()
-        : max_locations_distance_table(100), max_locations_map_matching(-1),
-          use_shared_memory(false)
+namespace json
+{
+
+// Used to append additional debugging information to the JSON response in a
+// thread safe manner.
+class Logger
+{
+    using MapT = std::unordered_map<std::string, osrm::json::Value>;
+
+  public:
+    static Logger* get()
     {
+        static Logger logger;
+
+#ifdef NDEBUG
+        return nullptr;
+#else
+        return &logger;
+#endif
     }
 
-    libosrm_config(const ServerPaths &paths, const bool flag, const int max_table, const int max_matching)
-        : server_paths(paths), max_locations_distance_table(max_table),
-          max_locations_map_matching(max_matching), use_shared_memory(flag)
+    void initialize(const std::string& name)
     {
+        if (!map.get())
+        {
+            map.reset(new MapT());
+        }
+        (*map)[name] = Object();
     }
 
-    ServerPaths server_paths;
-    int max_locations_distance_table;
-    int max_locations_map_matching;
-    bool use_shared_memory;
+    void render(const std::string& name, Object& obj) const
+    {
+        obj.values["debug"] = map->at(name);
+    }
+
+    boost::thread_specific_ptr<MapT> map;
 };
 
-#endif // SERVER_CONFIG_HPP
+
+}
+}
+
+#endif /* JSON_LOGGER_HPP */

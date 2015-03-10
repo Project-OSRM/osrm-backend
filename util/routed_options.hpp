@@ -151,7 +151,8 @@ inline unsigned GenerateServerProgramOptions(const int argc,
                                              int &requested_num_threads,
                                              bool &use_shared_memory,
                                              bool &trial,
-                                             int &max_locations_distance_table)
+                                             int &max_locations_distance_table,
+                                             int &max_locations_map_matching)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -192,7 +193,10 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         "Load data from shared memory")(
         "max-table-size,m",
         boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
-        "Max. locations supported in distance table query");
+        "Max. locations supported in distance table query")(
+        "max-matching-size,m",
+        boost::program_options::value<int>(&max_locations_map_matching)->default_value(2),
+        "Max. locations supported in map matching query");
 
     // hidden options, will be allowed both on command line and in config
     // file, but will not be shown to the user
@@ -268,6 +272,10 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     if (1 > max_locations_distance_table)
     {
         throw osrm::exception("Max location for distance table must be a positive number");
+    }
+    if (2 > max_locations_map_matching)
+    {
+        throw osrm::exception("Max location for map matching must be at least two");
     }
 
     SimpleLogger().Write() << visible_options;

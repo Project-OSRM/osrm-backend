@@ -49,6 +49,12 @@ struct RouteParameters
 
     void setAllUTurns(const bool flag);
 
+    void setClassify(const bool classify);
+
+    void setMatchingBeta(const double beta);
+
+    void setGPSPrecision(const double precision);
+
     void setDeprecatedAPIFlag(const std::string &);
 
     void setChecksum(const unsigned check_sum);
@@ -62,6 +68,8 @@ struct RouteParameters
     void setJSONpParameter(const std::string &parameter);
 
     void addHint(const std::string &hint);
+
+    void addTimestamp(const unsigned timestamp);
 
     void setLanguage(const std::string &language);
 
@@ -78,6 +86,9 @@ struct RouteParameters
     bool compression;
     bool deprecatedAPI;
     bool uturn_default;
+    bool classify;
+    double matching_beta;
+    double gps_precision;
     unsigned check_sum;
     short num_results;
     std::string service;
@@ -85,6 +96,7 @@ struct RouteParameters
     std::string jsonp_parameter;
     std::string language;
     std::vector<std::string> hints;
+    std::vector<unsigned> timestamps;
     std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
 };

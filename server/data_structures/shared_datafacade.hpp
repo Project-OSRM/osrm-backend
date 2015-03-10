@@ -386,6 +386,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             BOOST_ASSERT(!resulting_phantom_node_vector.empty());
             resulting_phantom_node = resulting_phantom_node_vector.front();
         }
+
         return result;
     }
 
@@ -401,6 +402,23 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
         return m_static_rtree->second->IncrementalFindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node_vector, number_of_results);
+    }
+
+    bool IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
+        const FixedPointCoordinate &input_coordinate,
+        std::vector<std::pair<PhantomNode, double>> &resulting_phantom_node_vector,
+        const double max_distance,
+        const unsigned min_number_of_phantom_nodes,
+        const unsigned max_number_of_phantom_nodes) override final
+    {
+        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
+        {
+            LoadRTree();
+        }
+
+        return m_static_rtree->second->IncrementalFindPhantomNodeForCoordinateWithDistance(
+            input_coordinate, resulting_phantom_node_vector, max_distance,
+            min_number_of_phantom_nodes, max_number_of_phantom_nodes);
     }
 
     unsigned GetCheckSum() const override final { return m_check_sum; }
