@@ -5,7 +5,7 @@ set -o pipefail
 
 docker run \
     -i \
-    -e "CXX=g++" \
+    -e "CXX=clang++" \
     -v `pwd`:/home/mapbox/osrm-backend \
     -t mapbox/osrm:linux \
     osrm-backend/docker/test.sh
