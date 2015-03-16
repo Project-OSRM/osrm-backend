@@ -10,6 +10,6 @@ docker build \
 docker run \
     -i \
     -e "CXX=g++" \
-    -v `pwd`:/home/mapbox/build \
+    -v `pwd`:/home/mapbox/osrm-backend \
     -t mapbox/osrm:linux \
-    build/docker/test.sh
+    osrm-backend/docker/test.sh

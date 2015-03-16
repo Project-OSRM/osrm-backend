@@ -1,13 +1,15 @@
 FROM ubuntu:14.04
 
-RUN apt-get update -y && \
-apt-get install -y build-essential git-core python-pip python-software-properties software-properties-common && \
-rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y
+RUN apt-get install -y build-essential git-core python-pip python-software-properties software-properties-common
 
-RUN apt-get -y install gcc-4.8 g++-4.8 curl automake gdb libtool make cmake pkg-config libboost1.55-dev llvm-3.4 \
-protobuf-compiler libprotoc-dev libprotobuf7 libprotobuf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev \
-libzip-dev lua5.1 liblua5.1-0-dev rubygems libtbb-dev libgdal-dev && \
-pip install awscli
+RUN apt-get -y install gcc-4.8 g++-4.8 libboost1.55-all-dev llvm-3.4
+RUN apt-get -y install protobuf-compiler libprotoc-dev libprotobuf-dev
+RUN apt-get -y install libbz2-dev libstxxl-dev libstxxl1 libxml2-dev
+RUN apt-get -y install libzip-dev lua5.1 liblua5.1-0-dev libtbb-dev libgdal-dev ruby1.9
+RUN apt-get -y install curl cmake
+
+RUN pip install awscli
 
 # luabind
 RUN curl https://gist.githubusercontent.com/DennisOSRM/f2eb7b948e6fe1ae319e/raw/install-luabind.sh | sudo bash
