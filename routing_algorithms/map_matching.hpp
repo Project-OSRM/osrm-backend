@@ -60,7 +60,7 @@ using HMM = HiddenMarkovModel<CandidateLists>;
 using SubMatchingList = std::vector<SubMatching>;
 
 constexpr static const unsigned MAX_BROKEN_STATES = 6;
-constexpr static const unsigned MAX_BROKEN_TIME = 30;
+constexpr static const unsigned MAX_BROKEN_TIME = 60;
 
 constexpr static const double default_beta = 10.0;
 constexpr static const double default_sigma_z = 4.07;
