@@ -16,7 +16,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace | timestamps | matchings |
-            | abcd  | 0 1 42 43  | ab,cd     |
+            | abcd  | 0 1 62 63  | ab,cd     |
 
     Scenario: Testbot - Map matching with small distortion
         Given the node map
