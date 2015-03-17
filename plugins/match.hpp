@@ -194,6 +194,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.target_traversed_in_reverse[i],
                                       raw_route.is_via_leg(i));
             }
+            // we need this because we don't run DP
+            for (auto& segment : factory.path_description)
+            {
+                segment.necessary = true;
+            }
             subtrace.values["geometry"] =
                 factory.AppendGeometryString(route_parameters.compression);
         }
