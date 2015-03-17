@@ -79,7 +79,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
 
     virtual void SetConfig(const DescriptorConfig &c) override final { config = c; }
 
-    unsigned DescribeLeg(const std::vector<PathData> route_leg,
+    unsigned DescribeLeg(const std::vector<PathData> &route_leg,
                          const PhantomNodes &leg_phantoms,
                          const bool target_traversed_in_reverse,
                          const bool is_via_leg)
