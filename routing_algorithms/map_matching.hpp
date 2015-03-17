@@ -62,6 +62,9 @@ using SubMatchingList = std::vector<SubMatching>;
 constexpr static const unsigned MAX_BROKEN_STATES = 6;
 constexpr static const unsigned MAX_BROKEN_TIME = 60;
 
+constexpr static const unsigned MAX_DISTANCE_DELTA = 500;
+constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
+
 constexpr static const double default_beta = 10.0;
 constexpr static const double default_sigma_z = 4.07;
 }
@@ -168,6 +171,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
             auto &current_viterbi = model.viterbi[t];
             auto &current_pruned = model.pruned[t];
+            auto &current_suspicious = model.suspicious[t];
             auto &current_parents = model.parents[t];
             auto &current_lengths = model.path_lengths[t];
             const auto &current_timestamps_list = candidates_list[t];
@@ -214,7 +218,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const auto d_t = std::abs(network_distance - great_circle_distance);
 
                     // very low probability transition -> prune
-                    if (d_t > 500)
+                    if (d_t > osrm::matching::MAX_DISTANCE_DELTA)
                     {
                         continue;
                     }
@@ -232,6 +236,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
+                        current_suspicious[s_prime] = d_t > osrm::matching::SUSPICIOUS_DISTANCE_DELTA;
                         model.breakage[t] = false;
                     }
                 }
@@ -255,7 +260,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }
 
-        matching_debug.set_viterbi(model.viterbi, model.pruned);
+        matching_debug.set_viterbi(model.viterbi, model.pruned, model.suspicious);
 
         if (!prev_unbroken_timestamps.empty())
         {

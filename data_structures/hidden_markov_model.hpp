@@ -80,6 +80,7 @@ template <class CandidateLists> struct HiddenMarkovModel
     std::vector<std::vector<std::pair<unsigned, unsigned>>> parents;
     std::vector<std::vector<float>> path_lengths;
     std::vector<std::vector<bool>> pruned;
+    std::vector<std::vector<bool>> suspicious;
     std::vector<bool> breakage;
 
     const CandidateLists &candidates_list;
@@ -95,6 +96,7 @@ template <class CandidateLists> struct HiddenMarkovModel
             viterbi.emplace_back(l.size());
             parents.emplace_back(l.size());
             path_lengths.emplace_back(l.size());
+            suspicious.emplace_back(l.size());
             pruned.emplace_back(l.size());
         }
 
@@ -111,6 +113,7 @@ template <class CandidateLists> struct HiddenMarkovModel
             std::fill(viterbi[t].begin(), viterbi[t].end(), osrm::matching::IMPOSSIBLE_LOG_PROB);
             std::fill(parents[t].begin(), parents[t].end(), std::make_pair(0u, 0u));
             std::fill(path_lengths[t].begin(), path_lengths[t].end(), 0);
+            std::fill(suspicious[t].begin(), suspicious[t].end(), true);
             std::fill(pruned[t].begin(), pruned[t].end(), true);
         }
         std::fill(breakage.begin() + initial_timestamp, breakage.end(), true);
@@ -129,6 +132,7 @@ template <class CandidateLists> struct HiddenMarkovModel
                 parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
                 pruned[initial_timestamp][s] =
                     viterbi[initial_timestamp][s] < osrm::matching::MINIMAL_LOG_PROB;
+                suspicious[initial_timestamp][s] = false;
 
                 breakage[initial_timestamp] =
                     breakage[initial_timestamp] && pruned[initial_timestamp][s];
