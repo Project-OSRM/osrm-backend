@@ -48,11 +48,20 @@ class Logger
     {
         static Logger logger;
 
+        bool return_logger = true;
 #ifdef NDEBUG
-        return nullptr;
-#else
-        return &logger;
+        return_logger = false;
 #endif
+#ifdef ENABLE_JSON_LOGGING
+        return_logger = true;
+#endif
+
+        if (return_logger)
+        {
+            return &logger;
+        }
+
+        return nullptr;
     }
 
     void initialize(const std::string& name)

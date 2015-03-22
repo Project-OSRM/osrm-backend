@@ -27,6 +27,7 @@ if(WIN32 AND MSVC_VERSION LESS 1800)
   message(FATAL_ERROR "Building with Microsoft compiler needs Visual Studio 2013 or later (Express version works too)")
 endif()
 
+option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
 option(WITH_TOOLS "Build OSRM tools" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 
@@ -297,6 +298,11 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${ZLIB_LIBRARY})
 target_link_libraries(osrm-routed ${ZLIB_LIBRARY})
+
+if (ENABLE_JSON_LOGGING)
+  message(STATUS "Enabling json logging")
+  add_definitions(-DENABLE_JSON_LOGGING)
+endif()
 
 if(WITH_TOOLS OR BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
