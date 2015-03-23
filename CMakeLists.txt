@@ -34,15 +34,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
 
-add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/util/fingerprint.cpp fingerprint.cpp.alwaysbuild
-  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+add_custom_target(FingerPrintConfigure ALL
+  ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
-  DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/fingerprint.cpp.in
-  COMMENT "Configuring fingerprint.cpp"
+  COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/util/fingerprint.cpp)
 add_custom_target(tests DEPENDS datastructure-tests algorithm-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
