@@ -52,10 +52,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 {
 
   private:
-    typedef BaseDataFacade<EdgeDataT> super;
-    typedef StaticGraph<typename super::EdgeData> QueryGraph;
-    typedef typename QueryGraph::InputEdge InputEdge;
-    typedef typename super::RTreeLeaf RTreeLeaf;
+    using super = BaseDataFacade<EdgeDataT>;
+    using QueryGraph = StaticGraph<typename super::EdgeData>;
+    using InputEdge = typename QueryGraph::InputEdge;
+    using RTreeLeaf = typename super::RTreeLeaf;
 
     InternalDataFacade() {}
 

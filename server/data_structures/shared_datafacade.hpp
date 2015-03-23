@@ -48,14 +48,14 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 {
 
   private:
-    typedef EdgeDataT EdgeData;
-    typedef BaseDataFacade<EdgeData> super;
-    typedef StaticGraph<EdgeData, true> QueryGraph;
-    typedef typename StaticGraph<EdgeData, true>::NodeArrayEntry GraphNode;
-    typedef typename StaticGraph<EdgeData, true>::EdgeArrayEntry GraphEdge;
-    typedef typename RangeTable<16, true>::BlockT NameIndexBlock;
-    typedef typename QueryGraph::InputEdge InputEdge;
-    typedef typename super::RTreeLeaf RTreeLeaf;
+    using EdgeData = EdgeDataT;
+    using super = BaseDataFacade<EdgeData>;
+    using QueryGraph = StaticGraph<EdgeData, true>;
+    using GraphNode = typename StaticGraph<EdgeData, true>::NodeArrayEntry;
+    using GraphEdge = typename StaticGraph<EdgeData, true>::EdgeArrayEntry;
+    using NameIndexBlock = typename RangeTable<16, true>::BlockT;
+    using InputEdge = typename QueryGraph::InputEdge;
+    using RTreeLeaf = typename super::RTreeLeaf;
     using SharedRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>;
     using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
     using RTreeNode = typename SharedRTree::TreeNode;
