@@ -88,9 +88,9 @@ inline std::string escape_JSON(const std::string &input)
     // escape and skip reallocations if possible
     std::string output;
     output.reserve(input.size() + 4); // +4 assumes two backslashes on avg
-    for (auto iter = input.begin(); iter != input.end(); ++iter)
+    for (const char letter : input)
     {
-        switch (iter[0])
+        switch (letter)
         {
         case '\\':
             output += "\\\\";
@@ -117,7 +117,7 @@ inline std::string escape_JSON(const std::string &input)
             output += "\\t";
             break;
         default:
-            output += *iter;
+            output.append(1, letter);
             break;
         }
     }
