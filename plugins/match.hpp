@@ -89,12 +89,6 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         const auto label_with_confidence = classifier.classify(distance_feature);
 
-        // "second stage classifier": if we need to remove points there is something fishy
-        if (removed_points > 0)
-        {
-            return std::make_pair(ClassifierT::ClassLabel::NEGATIVE, 1.0);
-        }
-
         return label_with_confidence;
     }
 
