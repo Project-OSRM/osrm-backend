@@ -316,8 +316,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             matching.indices.resize(reconstructed_indices.size());
             for (const auto i : osrm::irange<std::size_t>(0u, reconstructed_indices.size()))
             {
-                auto timestamp_index = reconstructed_indices[i].first;
-                auto location_index = reconstructed_indices[i].second;
+                const auto timestamp_index = reconstructed_indices[i].first;
+                const auto location_index = reconstructed_indices[i].second;
 
                 matching.indices[i] = timestamp_index;
                 matching.nodes[i] = candidates_list[timestamp_index][location_index].first;
