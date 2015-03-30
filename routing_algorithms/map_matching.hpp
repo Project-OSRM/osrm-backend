@@ -32,8 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/hidden_markov_model.hpp"
-#include "../util/matching_debug_info.hpp"
 #include "../util/json_logger.hpp"
+#include "../util/matching_debug_info.hpp"
 
 #include <variant/variant.hpp>
 
