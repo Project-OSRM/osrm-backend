@@ -38,7 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../routing_algorithms/map_matching.hpp"
 #include "../util/compute_angle.hpp"
 #include "../util/integer_range.hpp"
-#include "../util/simple_logger.hpp"
 #include "../util/json_logger.hpp"
 #include "../util/json_util.hpp"
 #include "../util/string_util.hpp"
