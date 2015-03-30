@@ -41,12 +41,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // work with negative values to prevent overflowing when taking -value
 template <int length, int precision> static inline char *printInt(char *buffer, int value)
 {
-    bool minus = true;
-    if (value >= 0)
-    {
-        minus = false;
-        value = -value;
-    }
+    static_assert(length > 0, "length must be positive");
+    static_assert(precision > 0, "precision must be positive");
+
+    const bool minus = [&value]{
+        if (value >= 0)
+        {
+            value = -value;
+            return false;
+        }
+        return true;
+    }();
+
     buffer += length - 1;
     for (int i = 0; i < precision; ++i)
     {
@@ -56,6 +62,7 @@ template <int length, int precision> static inline char *printInt(char *buffer, 
     }
     *buffer = '.';
     --buffer;
+
     for (int i = precision + 1; i < length; ++i)
     {
         *buffer = '0' - (value % 10);
@@ -66,6 +73,7 @@ template <int length, int precision> static inline char *printInt(char *buffer, 
         }
         --buffer;
     }
+
     if (minus)
     {
         --buffer;
@@ -128,10 +136,10 @@ inline std::string escape_JSON(const std::string &input)
 
 inline std::size_t URIDecode(const std::string &input, std::string &output)
 {
-    auto src_iter = input.begin();
+    auto src_iter = std::begin(input);
     output.resize(input.size() + 1);
     std::size_t decoded_length = 0;
-    for (decoded_length = 0; src_iter != input.end(); ++decoded_length)
+    for (decoded_length = 0; src_iter != std::end(input); ++decoded_length)
     {
         if (src_iter[0] == '%' && src_iter[1] && src_iter[2] && isxdigit(src_iter[1]) &&
             isxdigit(src_iter[2]))
