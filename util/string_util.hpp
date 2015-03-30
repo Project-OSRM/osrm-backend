@@ -126,10 +126,6 @@ inline std::string escape_JSON(const std::string &input)
     return output;
 }
 
-static std::string originals[] = {"&", "\"", "<", ">", "'", "[", "]", "\\"};
-static std::string entities[] = {
-    "&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;"};
-
 inline std::size_t URIDecode(const std::string &input, std::string &output)
 {
     auto src_iter = input.begin();
