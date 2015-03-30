@@ -42,31 +42,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <int length, int precision> static inline char *printInt(char *buffer, int value)
 {
     bool minus = true;
-    if (value > 0)
+    if (value >= 0)
     {
         minus = false;
         value = -value;
     }
     buffer += length - 1;
-    for (int i = 0; i < precision; i++)
+    for (int i = 0; i < precision; ++i)
     {
         *buffer = '0' - (value % 10);
         value /= 10;
-        buffer--;
+        --buffer;
     }
     *buffer = '.';
-    buffer--;
-    for (int i = precision + 1; i < length; i++)
+    --buffer;
+    for (int i = precision + 1; i < length; ++i)
     {
         *buffer = '0' - (value % 10);
         value /= 10;
         if (value == 0)
+        {
             break;
-        buffer--;
+        }
+        --buffer;
     }
     if (minus)
     {
-        buffer--;
+        --buffer;
         *buffer = '-';
     }
     return buffer;
