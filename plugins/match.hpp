@@ -257,7 +257,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                         route_parameters.matching_beta,
                                         route_parameters.gps_precision, sub_matchings);
 
-        if (1 > sub_matchings.size())
+        if (sub_matchings.empty())
         {
             return 400;
         }
