@@ -83,7 +83,6 @@ set(
   ${LibOSRMGlob}
   ${DescriptorGlob}
   ${DatastructureGlob}
-  ${CoordinateGlob}
   ${AlgorithmGlob}
   ${HttpGlob}
 )
