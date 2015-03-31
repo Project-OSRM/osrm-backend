@@ -61,13 +61,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
   public:
     MapMatchingPlugin(DataFacadeT *facade, const int max_locations_map_matching)
         : descriptor_string("match"), facade(facade),
-          max_locations_map_matching(max_locations_map_matching)
+          max_locations_map_matching(max_locations_map_matching),
           // the values where derived from fitting a laplace distribution
           // to the values of manually classified traces
-          ,
-          classifier(LaplaceDistribution(0.0057154021891018675, 0.020294704891166186),
-                     LaplaceDistribution(0.11467696742821254, 0.49918444000368756),
-                     0.7977883096366508) // valid apriori probability
+          classifier(LaplaceDistribution(0.005986, 0.016646),
+                     LaplaceDistribution(0.054385, 0.458432),
+                     0.696774) // valid apriori probability
     {
         search_engine_ptr = std::make_shared<SearchEngine<DataFacadeT>>(facade);
     }
