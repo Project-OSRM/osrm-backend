@@ -150,11 +150,11 @@ if(NOT WIN32)
 endif()
 
 # Configuring compilers
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
   # using Clang
   #  -Weverything -Wno-c++98-compat -Wno-shadow -Wno-exit-time-destructors
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wunreachable-code -pedantic -fPIC")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
   if(NOT HAS_COLOR_FLAG)
@@ -167,10 +167,10 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_definitions(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
   endif()
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
   # using Intel C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -ipo -fPIC")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   # using Visual Studio C++
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} date_time chrono zlib)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -183,7 +183,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 # Activate C++11
-if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 endif()
 
