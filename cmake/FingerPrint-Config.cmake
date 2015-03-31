@@ -1,4 +1,4 @@
-set(OLDFILE ${SOURCE_DIR}/util/fingerprint.cpp)
+set(OLDFILE ${SOURCE_DIR}/util/fingerprint_impl.hpp)
 if (EXISTS ${OLDFILE})
 	file(REMOVE_RECURSE ${OLDFILE})
 endif()
@@ -7,4 +7,4 @@ file(MD5 ${SOURCE_DIR}/data_structures/static_rtree.hpp MD5RTREE)
 file(MD5 ${SOURCE_DIR}/util/graph_loader.hpp MD5GRAPH)
 file(MD5 ${SOURCE_DIR}/server/data_structures/internal_datafacade.hpp MD5OBJECTS)
 
-CONFIGURE_FILE( ${SOURCE_DIR}/util/fingerprint.cpp.in ${SOURCE_DIR}/util/fingerprint.cpp )
+CONFIGURE_FILE(${SOURCE_DIR}/util/fingerprint_impl.hpp.in ${SOURCE_DIR}/util/fingerprint_impl.hpp)
