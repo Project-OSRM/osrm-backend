@@ -36,9 +36,9 @@ BOOST_AUTO_TEST_SUITE(string_util)
 
 BOOST_AUTO_TEST_CASE(replace_all_test)
 {
-    std::string input {"ababababababa"};
-    const std::string sub {"a"};
-    const std::string other {"c"};
+    std::string input{"ababababababa"};
+    const std::string sub{"a"};
+    const std::string other{"c"};
     replaceAll(input, sub, other);
 
     BOOST_CHECK_EQUAL(input, "cbcbcbcbcbcbc");
@@ -46,15 +46,19 @@ BOOST_AUTO_TEST_CASE(replace_all_test)
 
 BOOST_AUTO_TEST_CASE(json_escaping)
 {
-    const std::string input {"\b\\"};
-    const std::string output { escape_JSON(input) };
+    std::string input{"\b\\"};
+    std::string output{escape_JSON(input)};
 
     BOOST_CHECK_EQUAL(output, "\\b\\\\");
+
+    input = "Aleja \"Solidarnosci\"";
+    output = escape_JSON(input);
+    BOOST_CHECK_EQUAL(output, "Aleja \\\"Solidarnosci\\\"");
 }
 
 BOOST_AUTO_TEST_CASE(print_int)
 {
-    const std::string input {"\b\\"};
+    const std::string input{"\b\\"};
     char buffer[12];
     buffer[11] = 0; // zero termination
     std::string output = printInt<11, 8>(buffer, 314158976);
@@ -65,6 +69,7 @@ BOOST_AUTO_TEST_CASE(print_int)
     BOOST_CHECK_EQUAL(output, "0.00000000");
 
     output = printInt<11, 8>(buffer, -314158976);
-    BOOST_CHECK_EQUAL(output, "-3.14158976");}
+    BOOST_CHECK_EQUAL(output, "-3.14158976");
+}
 
 BOOST_AUTO_TEST_SUITE_END()

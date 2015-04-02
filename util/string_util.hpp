@@ -44,7 +44,8 @@ template <int length, int precision> static inline char *printInt(char *buffer, 
     static_assert(length > 0, "length must be positive");
     static_assert(precision > 0, "precision must be positive");
 
-    const bool minus = [&value]{
+    const bool minus = [&value]
+    {
         if (value >= 0)
         {
             value = -value;
@@ -89,12 +90,6 @@ inline void replaceAll(std::string &s, const std::string &sub, const std::string
 
 inline std::string escape_JSON(const std::string &input)
 {
-    // return the input if no backslash can be found -> no allocations
-    if (input.find_first_of('\\') == std::string::npos)
-    {
-        return input;
-    }
-
     // escape and skip reallocations if possible
     std::string output;
     output.reserve(input.size() + 4); // +4 assumes two backslashes on avg
