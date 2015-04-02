@@ -73,9 +73,7 @@ template <typename Container> void sort_unique_resize(Container &vector) noexcep
 // }
 
 template <typename ForwardIterator, typename Function>
-Function for_each_pair(ForwardIterator begin,
-                       ForwardIterator end,
-                       Function function) noexcept(noexcept(function))
+Function for_each_pair(ForwardIterator begin, ForwardIterator end, Function function)
 {
     if (begin == end)
     {
