@@ -109,7 +109,7 @@ struct cast
     }
 
     // source: http://tinodidriksen.com/2011/05/28/cpp-convert-string-to-double-speed/
-    static double string_to_double(const char *p)
+    static double string_to_double(const char *p) noexcept
     {
         double r = 0.0;
         bool neg = false;

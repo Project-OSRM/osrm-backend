@@ -40,29 +40,30 @@ template <typename Integer> class range
     Integer iter;
 
   public:
-    range(Integer start, Integer end) : last(end), iter(start)
+    range(Integer start, Integer end) noexcept : last(end), iter(start)
     {
         static_assert(std::is_integral<Integer>::value, "range type must be integral");
     }
 
     // Iterable functions
-    const range &begin() const { return *this; }
-    const range &end() const { return *this; }
-    Integer front() const { return iter; }
-    Integer back() const { return last - 1; }
-    Integer size() const { return last - iter; }
+    const range &begin() const noexcept { return *this; }
+    const range &end() const noexcept { return *this; }
+    Integer front() const noexcept { return iter; }
+    Integer back() const noexcept { return last - 1; }
+    Integer size() const noexcept { return last - iter; }
 
     // Iterator functions
-    bool operator!=(const range &) const { return iter < last; }
-    void operator++() { ++iter; }
-    Integer operator*() const { return iter; }
+    bool operator!=(const range &) const noexcept { return iter < last; }
+    void operator++() noexcept { ++iter; }
+    Integer operator*() const noexcept { return iter; }
 };
 
 // convenience function to construct an integer range with type deduction
 template <typename Integer>
-range<Integer> irange(const Integer first,
-                      const Integer last,
-                      typename std::enable_if<std::is_integral<Integer>::value>::type * = 0)
+range<Integer>
+irange(const Integer first,
+       const Integer last,
+       typename std::enable_if<std::is_integral<Integer>::value>::type * = 0) noexcept
 {
     return range<Integer>(first, last);
 }

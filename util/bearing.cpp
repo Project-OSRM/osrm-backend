@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "bearing.hpp"
 
-std::string bearing::get(const double heading)
+std::string bearing::get(const double heading) noexcept
 {
     if (heading <= 22.5)
     {

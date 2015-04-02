@@ -36,7 +36,7 @@ struct ComputeAngle
     // atan2 magic, formerly cosine theorem
     static double OfThreeFixedPointCoordinates(const FixedPointCoordinate &first,
                                                const FixedPointCoordinate &second,
-                                               const FixedPointCoordinate &third);
+                                               const FixedPointCoordinate &third) noexcept;
 };
 
 #endif // COMPUTE_ANGLE_HPP

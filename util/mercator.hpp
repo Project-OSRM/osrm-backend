@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct mercator
 {
-    static double y2lat(const double value);
+    static double y2lat(const double value) noexcept;
 
-    static double lat2y(const double latitude);
+    static double lat2y(const double latitude) noexcept;
 };
 
 #endif // MERCATOR_HPP

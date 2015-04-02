@@ -33,10 +33,10 @@ namespace osrm
 template <typename Iterator> class iter_range
 {
   public:
-    iter_range(Iterator begin, Iterator end) : begin_(begin), end_(end) {}
+    iter_range(Iterator begin, Iterator end) noexcept : begin_(begin), end_(end) {}
 
-    Iterator begin() const { return begin_; }
-    Iterator end() const { return end_; }
+    Iterator begin() const noexcept { return begin_; }
+    Iterator end() const noexcept { return end_; }
 
   private:
     Iterator begin_;
@@ -46,13 +46,14 @@ template <typename Iterator> class iter_range
 // Convenience functions for template parameter inference,
 // akin to std::make_pair.
 
-template <typename Iterator> iter_range<Iterator> integer_range(Iterator begin, Iterator end)
+template <typename Iterator>
+iter_range<Iterator> integer_range(Iterator begin, Iterator end) noexcept
 {
     return iter_range<Iterator>(begin, end);
 }
 
 template <typename Reversable>
-iter_range<typename Reversable::reverse_iterator> reverse(Reversable *reversable)
+iter_range<typename Reversable::reverse_iterator> reverse(Reversable *reversable) noexcept
 {
     return iter_range<typename Reversable::reverse_iterator>(reversable->rbegin(),
                                                              reversable->rend());
@@ -60,7 +61,7 @@ iter_range<typename Reversable::reverse_iterator> reverse(Reversable *reversable
 
 template <typename ConstReversable>
 iter_range<typename ConstReversable::const_reverse_iterator>
-const_reverse(const ConstReversable *const_reversable)
+const_reverse(const ConstReversable *const_reversable) noexcept
 {
     return iter_range<typename ConstReversable::const_reverse_iterator>(const_reversable->crbegin(),
                                                                         const_reversable->crend());

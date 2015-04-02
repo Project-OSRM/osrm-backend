@@ -37,16 +37,17 @@ namespace osrm
 namespace detail
 {
 // Culled by SFINAE if reserve does not exist or is not accessible
-template <typename T> constexpr auto has_resize_method(T &t) -> decltype(t.resize(0), bool())
+template <typename T>
+constexpr auto has_resize_method(T &t) noexcept -> decltype(t.resize(0), bool())
 {
     return true;
 }
 
 // Used as fallback when SFINAE culls the template method
-constexpr bool has_resize_method(...) { return false; }
+constexpr bool has_resize_method(...) noexcept { return false; }
 }
 
-template <typename Container> void sort_unique_resize(Container &vector)
+template <typename Container> void sort_unique_resize(Container &vector) noexcept
 {
     std::sort(std::begin(vector), std::end(vector));
     const auto number_of_unique_elements =
@@ -72,7 +73,9 @@ template <typename Container> void sort_unique_resize(Container &vector)
 // }
 
 template <typename ForwardIterator, typename Function>
-Function for_each_pair(ForwardIterator begin, ForwardIterator end, Function function)
+Function for_each_pair(ForwardIterator begin,
+                       ForwardIterator end,
+                       Function function) noexcept(noexcept(function))
 {
     if (begin == end)
     {

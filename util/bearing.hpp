@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct bearing
 {
-    static std::string get(const double heading);
+    static std::string get(const double heading) noexcept;
 };
 
 #endif // BEARING_HPP
