@@ -76,9 +76,10 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
     const std::string GetDescriptor() const final { return descriptor_string; }
 
-    TraceClassification classify(float trace_length, float matched_length, int removed_points) const
+    TraceClassification
+    classify(const float trace_length, const float matched_length, const int removed_points) const
     {
-        double distance_feature = -std::log(trace_length) + std::log(matched_length);
+        const double distance_feature = -std::log(trace_length) + std::log(matched_length);
 
         // matched to the same point
         if (!std::isfinite(distance_feature))
@@ -86,7 +87,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return std::make_pair(ClassifierT::ClassLabel::NEGATIVE, 1.0);
         }
 
-        auto label_with_confidence = classifier.classify(distance_feature);
+        const auto label_with_confidence = classifier.classify(distance_feature);
 
         // "second stage classifier": if we need to remove points there is something fishy
         if (removed_points > 0)
@@ -143,8 +144,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             }
             else
             {
-                unsigned compact_size = candidates.size();
-                for (const auto i : osrm::irange(0u, compact_size))
+                const auto compact_size = candidates.size();
+                for (const auto i : osrm::irange<std::size_t>(0, compact_size))
                 {
                     // Split edge if it is bidirectional and append reverse direction to end of list
                     if (candidates[i].first.forward_node_id != SPECIAL_NODEID &&
@@ -194,7 +195,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.is_via_leg(i));
             }
             // we need this because we don't run DP
-            for (auto& segment : factory.path_description)
+            for (auto &segment : factory.path_description)
             {
                 segment.necessary = true;
             }
@@ -241,7 +242,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return 400;
         }
 
-        bool found_candidates = getCandiates(input_coords, sub_trace_lengths, candidates_lists);
+        const bool found_candidates =
+            getCandiates(input_coords, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
             return 400;
