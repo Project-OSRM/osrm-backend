@@ -65,7 +65,7 @@ constexpr static const unsigned MAX_BROKEN_TIME = 60;
 constexpr static const unsigned MAX_DISTANCE_DELTA = 500;
 constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
 
-constexpr static const double default_beta = 10.0;
+constexpr static const double default_beta = 5.0;
 constexpr static const double default_sigma_z = 4.07;
 }
 }
