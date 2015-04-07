@@ -116,7 +116,7 @@ class IteratorbasedCRC32
         return ecx;
     }
 
-#if defined(__MINGW64__) || defined(_MSC_VER)
+#if defined(__MINGW64__) || defined(_MSC_VER) || !defined(__x86_64__)
     inline void
     __get_cpuid(int param, unsigned *eax, unsigned *ebx, unsigned *ecx, unsigned *edx) const
     {
