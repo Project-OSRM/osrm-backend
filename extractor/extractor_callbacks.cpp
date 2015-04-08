@@ -72,7 +72,15 @@ void ExtractorCallbacks::ProcessRestriction(
         //                           "y" : "n");
     }
 }
-/** warning: caller needs to take care of synchronization! */
+/**
+ * This function takes the geometry contained in the ```input_way``` and the tags
+ * computed by the lua profile inside ```parsed_way``` and computes all edge segments.
+ *
+ * Depending on the forward/backwards weights the edges are split into forward and backward
+ * edges.
+ *
+ * warning: caller needs to take care of synchronization!
+ */
 void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const ExtractionWay &parsed_way)
 {
     if (((0 >= parsed_way.forward_speed) ||
