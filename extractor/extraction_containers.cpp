@@ -301,6 +301,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         node_iterator = all_nodes_list.begin();
         edge_iterator = all_edges_list.begin();
 
+        // Also serializes the edges
         while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
         {
             if (edge_iterator->target < node_iterator->node_id)
@@ -329,6 +330,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 int integer_weight = std::max(
                     1, (int)std::floor(
                            (edge_iterator->is_duration_set ? edge_iterator->speed : weight) + .5));
+                // FIXME: This means we have a _minimum_ edge length of 1m
+                // maybe use dm as base unit?
                 const int integer_distance = std::max(1, (int)distance);
                 const short zero = 0;
                 const short one = 1;
