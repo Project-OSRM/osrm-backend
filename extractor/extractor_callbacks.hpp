@@ -43,6 +43,13 @@ class ExtractionContainers;
 struct InputRestrictionContainer;
 struct ExtractionNode;
 
+/**
+ * This class is uses by the extractor with the results of the
+ * osmium based parsing and the customization through the lua profile.
+ *
+ * It mediates between the multi-threaded extraction process and the external memory containers.
+ * Thus the synchronization is handled inside of the extractor.
+ */
 class ExtractorCallbacks
 {
   private:

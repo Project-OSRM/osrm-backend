@@ -47,7 +47,12 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 {
 }
 
-/** warning: caller needs to take care of synchronization! */
+/**
+ * Takes the node position from osmium and the filtered properties from the lua
+ * profile and saves them to external memory.
+ *
+ * warning: caller needs to take care of synchronization!
+ */
 void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
                                      const ExtractionNode &result_node)
 {
@@ -73,11 +78,11 @@ void ExtractorCallbacks::ProcessRestriction(
     }
 }
 /**
- * This function takes the geometry contained in the ```input_way``` and the tags
- * computed by the lua profile inside ```parsed_way``` and computes all edge segments.
+ * Takes the geometry contained in the ```input_way``` and the tags computed
+ * by the lua profile inside ```parsed_way``` and computes all edge segments.
  *
- * Depending on the forward/backwards weights the edges are split into forward and backward
- * edges.
+ * Depending on the forward/backwards weights the edges are split into forward
+ * and backward edges.
  *
  * warning: caller needs to take care of synchronization!
  */
