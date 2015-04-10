@@ -36,6 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stxxl/vector>
 
+/**
+ * Uses external memory containers from stxxl to store all the data that
+ * is collected by the extractor callbacks.
+ */
 class ExtractionContainers
 {
 #ifndef _MSC_VER

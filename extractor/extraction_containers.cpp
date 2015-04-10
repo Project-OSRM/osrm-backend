@@ -62,6 +62,17 @@ ExtractionContainers::~ExtractionContainers()
     way_start_end_id_list.clear();
 }
 
+/**
+ * Processes the collected data and serializes it.
+ * At this point nodes are still referenced by their OSM id.
+ *
+ * - map start-end nodes of ways to ways used int restrictions to compute compressed
+ *   trippe representation
+ * - filter nodes list to nodes that are referenced by ways
+ * - merge edges with nodes to include location of start/end points and serialize
+ *
+ * FIXME: Each of this step should be an own function for readability.
+ */
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name)
 {
