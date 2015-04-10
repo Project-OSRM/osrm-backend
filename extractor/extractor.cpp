@@ -101,13 +101,8 @@ int extractor::run(const ExtractorConfig &extractor_config)
         // setup scripting environment
         ScriptingEnvironment scripting_environment(extractor_config.profile_path.string().c_str());
 
-        // used to deduplicate street names: actually maps to name ids
-        std::unordered_map<std::string, NodeID> string_map;
-        string_map[""] = 0;
-
         ExtractionContainers extraction_containers;
-        auto extractor_callbacks =
-            osrm::make_unique<ExtractorCallbacks>(extraction_containers, string_map);
+        auto extractor_callbacks = osrm::make_unique<ExtractorCallbacks>(extraction_containers);
 
         const osmium::io::File input_file(extractor_config.input_path.string());
         osmium::io::Reader reader(input_file);

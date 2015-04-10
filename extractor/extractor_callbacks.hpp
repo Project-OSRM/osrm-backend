@@ -53,14 +53,14 @@ struct ExtractionNode;
 class ExtractorCallbacks
 {
   private:
-    std::unordered_map<std::string, NodeID> &string_map;
+    // used to deduplicate street names: actually maps to name ids
+    std::unordered_map<std::string, NodeID> string_map;
     ExtractionContainers &external_memory;
 
   public:
     ExtractorCallbacks() = delete;
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
-    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
-                                std::unordered_map<std::string, NodeID> &string_map);
+    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers);
 
     // warning: caller needs to take care of synchronization!
     void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);

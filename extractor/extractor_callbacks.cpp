@@ -41,10 +41,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers,
-                                       std::unordered_map<std::string, NodeID> &string_map)
-    : string_map(string_map), external_memory(extraction_containers)
+ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
+    : external_memory(extraction_containers)
 {
+    string_map[""] = 0;
 }
 
 /**
