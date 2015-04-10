@@ -44,7 +44,6 @@ class ScriptingEnvironment;
 class RestrictionParser
 {
   public:
-    // RestrictionParser(ScriptingEnvironment &scripting_environment);
     RestrictionParser(lua_State *lua_state);
     mapbox::util::optional<InputRestrictionContainer>
     TryParse(const osmium::Relation &relation) const;

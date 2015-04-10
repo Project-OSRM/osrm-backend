@@ -27,7 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "restriction_parser.hpp"
 #include "extraction_way.hpp"
-#include "scripting_environment.hpp"
 
 #include "../data_structures/external_memory_node.hpp"
 #include "../util/lua_util.hpp"
@@ -53,7 +52,7 @@ int lua_error_callback(lua_State *lua_state)
 }
 
 RestrictionParser::RestrictionParser(lua_State *lua_state)
-    : /*lua_state(scripting_environment.getLuaState()),*/ use_turn_restrictions(true)
+    : use_turn_restrictions(true)
 {
     ReadUseRestrictionsSetting(lua_state);
 
