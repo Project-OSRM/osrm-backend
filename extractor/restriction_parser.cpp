@@ -102,6 +102,13 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
     }
 }
 
+/**
+ * Tries to parse an relation as turn restriction. This can fail for a number of
+ * reasons, this the return type is a mapbox::util::optional<>.
+ *
+ * Some restrictions can also be ignored: See the ```get_exceptions``` function
+ * in the corresponding profile.
+ */
 mapbox::util::optional<InputRestrictionContainer>
 RestrictionParser::TryParse(const osmium::Relation &relation) const
 {

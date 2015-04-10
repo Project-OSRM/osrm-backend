@@ -79,9 +79,6 @@ struct TurnRestriction
 
 struct InputRestrictionContainer
 {
-    // EdgeID fromWay;
-    // EdgeID toWay;
-    // NodeID via_node;
     TurnRestriction restriction;
 
     InputRestrictionContainer(EdgeID fromWay, EdgeID toWay, EdgeID vw)
