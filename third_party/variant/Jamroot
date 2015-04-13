@@ -59,3 +59,17 @@ exe unique-ptr-test
     <cxxflags>-std=c++11
     <variant>release:<cxxflags>-march=native
     ;
+
+
+exe reference_wrapper_test
+    :
+    test/reference_wrapper_test.cpp
+    .//system
+    .//timer
+    .//chrono
+    :
+    <include>$(BOOST_DIR)/include
+    <include>./
+    <cxxflags>-std=c++11
+    <variant>release:<cxxflags>-march=native
+    ;

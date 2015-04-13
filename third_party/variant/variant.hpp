@@ -250,6 +250,17 @@ struct unwrapper<recursive_wrapper<T>>
     }
 };
 
+template <typename T>
+struct unwrapper<std::reference_wrapper<T>>
+{
+    auto operator() (std::reference_wrapper<T> const& obj) const
+        -> typename std::reference_wrapper<T>::type const&
+    {
+        return obj.get();
+    }
+
+};
+
 
 template <typename F, typename V, typename R, typename...Types>
 struct dispatcher;
@@ -660,6 +671,38 @@ public:
             throw std::runtime_error("in get<T>()");
         }
     }
+
+    // get<T>() - T stored as std::reference_wrapper<T>
+    template <typename T, typename std::enable_if<
+                          (detail::direct_type<std::reference_wrapper<T>, Types...>::index != detail::invalid_value)
+                          >::type* = nullptr>
+    VARIANT_INLINE T& get()
+    {
+        if (type_index == detail::direct_type<std::reference_wrapper<T>, Types...>::index)
+        {
+            return (*reinterpret_cast<std::reference_wrapper<T>*>(&data)).get();
+        }
+        else
+        {
+            throw std::runtime_error("in get<T>()");
+        }
+    }
+
+    template <typename T,typename std::enable_if<
+                         (detail::direct_type<std::reference_wrapper<T const>, Types...>::index != detail::invalid_value)
+                         >::type* = nullptr>
+    VARIANT_INLINE T const& get() const
+    {
+        if (type_index == detail::direct_type<std::reference_wrapper<T const>, Types...>::index)
+        {
+            return (*reinterpret_cast<std::reference_wrapper<T const> const*>(&data)).get();
+        }
+        else
+        {
+            throw std::runtime_error("in get<T>()");
+        }
+    }
+
     VARIANT_INLINE std::size_t get_type_index() const
     {
         return type_index;
