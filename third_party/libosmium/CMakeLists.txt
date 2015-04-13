@@ -9,6 +9,8 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 #-----------------------------------------------------------------------------
 #
@@ -23,9 +25,9 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev"
 
 project(libosmium)
 
-set(LIBOSMIUM_VERSION_MAJOR 0)
-set(LIBOSMIUM_VERSION_MINOR 0)
-set(LIBOSMIUM_VERSION_PATCH 1)
+set(LIBOSMIUM_VERSION_MAJOR 2)
+set(LIBOSMIUM_VERSION_MINOR 1)
+set(LIBOSMIUM_VERSION_PATCH 0)
 
 set(LIBOSMIUM_VERSION
     ${LIBOSMIUM_VERSION_MAJOR}.${LIBOSMIUM_VERSION_MINOR}.${LIBOSMIUM_VERSION_PATCH})

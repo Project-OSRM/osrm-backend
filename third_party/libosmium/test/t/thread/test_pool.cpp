@@ -36,7 +36,7 @@ TEST_CASE("thread") {
     SECTION("can send job to thread pool") {
         auto& pool = osmium::thread::Pool::instance();
         result = 0;
-        auto future = pool.submit(test_job_ok{});
+        auto future = pool.submit(test_job_ok {});
 
         // wait a bit for the other thread to get a chance to run
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -50,7 +50,7 @@ TEST_CASE("thread") {
 
     SECTION("can send job to thread pool") {
         auto& pool = osmium::thread::Pool::instance();
-        auto future = pool.submit(test_job_with_result{});
+        auto future = pool.submit(test_job_with_result {});
 
         REQUIRE(future.get() == 42);
     }
@@ -60,7 +60,7 @@ TEST_CASE("thread") {
         result = 0;
 
         bool got_exception = false;
-        auto future = pool.submit(test_job_throw{});
+        auto future = pool.submit(test_job_throw {});
 
         REQUIRE_THROWS_AS(future.get(), std::runtime_error);
     }

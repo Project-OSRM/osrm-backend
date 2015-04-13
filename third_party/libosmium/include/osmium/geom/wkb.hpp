@@ -161,7 +161,7 @@ namespace osmium {
                 typedef std::string multipolygon_type;
                 typedef std::string ring_type;
 
-                explicit WKBFactoryImpl(wkb_type wtype=wkb_type::wkb, out_type otype=out_type::binary) :
+                explicit WKBFactoryImpl(wkb_type wtype = wkb_type::wkb, out_type otype = out_type::binary) :
                     m_wkb_type(wtype),
                     m_out_type(otype) {
                 }

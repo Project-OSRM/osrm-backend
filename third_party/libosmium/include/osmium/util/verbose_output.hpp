@@ -87,7 +87,7 @@ namespace osmium {
 
         public:
 
-            explicit VerboseOutput(bool verbose=false) noexcept :
+            explicit VerboseOutput(bool verbose = false) noexcept :
                 m_start(time(NULL)),
                 m_verbose(verbose),
                 m_newline(true) {

@@ -82,7 +82,7 @@ namespace osmium {
 
         namespace detail {
 
-            OSMIUM_NORETURN inline void throw_bzip2_error(BZFILE* bzfile, const char* msg, int bzlib_error=0) {
+            OSMIUM_NORETURN inline void throw_bzip2_error(BZFILE* bzfile, const char* msg, int bzlib_error = 0) {
                 std::string error("bzip2 error: ");
                 error += msg;
                 error += ": ";

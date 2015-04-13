@@ -389,7 +389,7 @@ namespace osmium {
 
                 RelationMeta relation_meta(offset);
 
-                int n=0;
+                int n = 0;
                 for (auto& member : m_relations_buffer.get<osmium::Relation>(offset).members()) {
                     if (static_cast<TCollector*>(this)->keep_member(relation_meta, member)) {
                         member_meta(member.type()).emplace_back(member.ref(), m_relations.size(), n);

@@ -1,4 +1,2 @@
-core
 *.swp
-build*
 .ycm_extra_conf.pyc

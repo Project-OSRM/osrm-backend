@@ -50,8 +50,7 @@ namespace osmium {
             template <typename TId, typename TValue>
             class Multimap {
 
-                static_assert(std::is_integral<TId>::value && std::is_unsigned<TId>::value,
-                              "TId template parameter for class Multimap must be unsigned integral type");
+                static_assert(std::is_integral<TId>::value && std::is_unsigned<TId>::value, "TId template parameter for class Multimap must be unsigned integral type");
 
                 typedef typename std::pair<TId, TValue> element_type;
 

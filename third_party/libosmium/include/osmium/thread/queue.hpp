@@ -49,7 +49,7 @@ namespace osmium {
 
     namespace thread {
 
-        OSMIUM_CONSTEXPR std::chrono::milliseconds full_queue_sleep_duration { 10 }; // XXX
+        static const std::chrono::milliseconds full_queue_sleep_duration { 10 }; // XXX
 
         /**
          *  A thread-safe queue.
@@ -137,7 +137,7 @@ namespace osmium {
                 m_data_available.wait(lock, [this] {
                     return !m_queue.empty();
                 });
-                value=std::move(m_queue.front());
+                value = std::move(m_queue.front());
                 m_queue.pop();
             }
 
@@ -148,7 +148,7 @@ namespace osmium {
                 })) {
                     return;
                 }
-                value=std::move(m_queue.front());
+                value = std::move(m_queue.front());
                 m_queue.pop();
             }
 
@@ -157,7 +157,7 @@ namespace osmium {
                 if (m_queue.empty()) {
                     return false;
                 }
-                value=std::move(m_queue.front());
+                value = std::move(m_queue.front());
                 m_queue.pop();
                 return true;
             }

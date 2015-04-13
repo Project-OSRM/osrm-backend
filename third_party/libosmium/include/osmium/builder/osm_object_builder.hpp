@@ -61,7 +61,7 @@ namespace osmium {
 
         public:
 
-            explicit TagListBuilder(osmium::memory::Buffer& buffer, Builder* parent=nullptr) :
+            explicit TagListBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 ObjectBuilder<TagList>(buffer, parent) {
             }
 
@@ -97,7 +97,7 @@ namespace osmium {
 
         public:
 
-            explicit NodeRefListBuilder(osmium::memory::Buffer& buffer, Builder* parent=nullptr) :
+            explicit NodeRefListBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 ObjectBuilder<T>(buffer, parent) {
             }
 
@@ -110,7 +110,7 @@ namespace osmium {
                 static_cast<Builder*>(this)->add_size(sizeof(osmium::NodeRef));
             }
 
-            void add_node_ref(const object_id_type ref, const osmium::Location location=Location()) {
+            void add_node_ref(const object_id_type ref, const osmium::Location location = Location()) {
                 add_node_ref(NodeRef(ref, location));
             }
 
@@ -160,7 +160,7 @@ namespace osmium {
 
         public:
 
-            explicit RelationMemberListBuilder(osmium::memory::Buffer& buffer, Builder* parent=nullptr) :
+            explicit RelationMemberListBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 ObjectBuilder<RelationMemberList>(buffer, parent) {
             }
 
@@ -215,7 +215,7 @@ namespace osmium {
 
         public:
 
-            explicit OSMObjectBuilder(osmium::memory::Buffer& buffer, Builder* parent=nullptr) :
+            explicit OSMObjectBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 ObjectBuilder<T>(buffer, parent) {
                 static_cast<Builder*>(this)->reserve_space_for<string_size_type>();
                 static_cast<Builder*>(this)->add_size(sizeof(string_size_type));
@@ -237,7 +237,7 @@ namespace osmium {
 
         public:
 
-            explicit WayBuilder(osmium::memory::Buffer& buffer, Builder* parent=nullptr) :
+            explicit WayBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 OSMObjectBuilder<osmium::Way>(buffer, parent) {
             }
 
@@ -254,7 +254,7 @@ namespace osmium {
 
         public:
 
-            explicit AreaBuilder(osmium::memory::Buffer& buffer, Builder* parent=nullptr) :
+            explicit AreaBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
                 OSMObjectBuilder<osmium::Area>(buffer, parent) {
             }
 

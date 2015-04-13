@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 # include <cassert>
 #endif
 
+#include <cstdint>
 #include <limits>
 #include <type_traits>
 
@@ -93,7 +94,7 @@ namespace osmium {
 
     template <typename T, typename F, typename std::enable_if<are_real_integers<T, F>::value && !std::is_same<T, F>::value && (sizeof(T) <= sizeof(F)) && std::is_signed<T>::value && std::is_unsigned<F>::value, int>::type = 0>
     inline T static_cast_with_assert(const F value) {
-        assert(value <= std::numeric_limits<T>::max());
+        assert(static_cast<int64_t>(value) <= static_cast<int64_t>(std::numeric_limits<T>::max()));
         return static_cast<T>(value);
     }
 

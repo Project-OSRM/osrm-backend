@@ -298,8 +298,7 @@ namespace osmium {
 
     }; // class Changeset
 
-    static_assert(sizeof(Changeset) % osmium::memory::align_bytes == 0,
-        "Class osmium::Changeset has wrong size to be aligned properly!");
+    static_assert(sizeof(Changeset) % osmium::memory::align_bytes == 0, "Class osmium::Changeset has wrong size to be aligned properly!");
 
     /**
      * Changesets are equal if their IDs are equal.

@@ -113,6 +113,10 @@ namespace osmium {
             return static_cast<time_t>(m_timestamp);
         }
 
+        explicit constexpr operator uint32_t() const noexcept {
+            return m_timestamp;
+        }
+
         template <typename T>
         void operator+=(T time_difference) noexcept {
             m_timestamp += time_difference;

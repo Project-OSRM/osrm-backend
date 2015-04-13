@@ -694,7 +694,7 @@ CITE_BIB_FILES         =
 # messages are off.
 # The default value is: NO.
 
-QUIET                  = NO
+QUIET                  = YES
 
 # The WARNINGS tag can be used to turn on/off the warning messages that are
 # generated to standard error ( stderr) by doxygen. If WARNINGS is set to YES
@@ -860,7 +860,7 @@ IMAGE_PATH             =
 # code is scanned, but not when the output code is generated. If lines are added
 # or removed, the anchors will not be placed correctly.
 
-INPUT_FILTER           =
+INPUT_FILTER           = "grep -v static_assert"
 
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern
 # basis. Doxygen will compare the file name with each pattern and apply the
@@ -876,7 +876,7 @@ FILTER_PATTERNS        =
 # producing the source files to browse (i.e. when SOURCE_BROWSER is set to YES).
 # The default value is: NO.
 
-FILTER_SOURCE_FILES    = NO
+FILTER_SOURCE_FILES    = YES
 
 # The FILTER_SOURCE_PATTERNS tag can be used to specify source filters per file
 # pattern. A pattern will override the setting for FILTER_PATTERN (if any) and
@@ -1080,7 +1080,7 @@ HTML_STYLESHEET        =
 # see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_STYLESHEET  = doc/osmium.css
+HTML_EXTRA_STYLESHEET  = "@PROJECT_SOURCE_DIR@/doc/osmium.css"
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note

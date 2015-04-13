@@ -83,7 +83,7 @@ namespace osmium {
                 *                  The storage will grow by at least this size
                 *                  every time it runs out of space.
                 */
-                explicit SparseMemTable(const TId grow_size=10000) :
+                explicit SparseMemTable(const TId grow_size = 10000) :
                     m_grow_size(grow_size),
                     m_elements(grow_size) {
                 }
@@ -123,7 +123,7 @@ namespace osmium {
 
                 void dump_as_list(const int fd) override final {
                     std::vector<std::pair<TId, TValue>> v;
-                    int n=0;
+                    int n = 0;
                     for (const TValue value : m_elements) {
                         if (value != osmium::index::empty_value<TValue>()) {
                             v.emplace_back(n, value);

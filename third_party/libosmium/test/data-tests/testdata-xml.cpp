@@ -285,7 +285,6 @@ TEST_CASE("Reading OSM XML 121") {
         }, osmium::gzip_error);
     }
 
-#if 0
     SECTION("Using Reader") {
         REQUIRE_THROWS_AS({
             osmium::io::Reader reader(filename("121-truncated_gzip_file", "osm.gz"));
@@ -294,9 +293,104 @@ TEST_CASE("Reading OSM XML 121") {
             reader.close();
         }, osmium::gzip_error);
     }
-#endif
 
 }
+
+// =============================================
+
+TEST_CASE("Reading OSM XML 122") {
+
+    SECTION("Direct") {
+        REQUIRE_THROWS_AS( {
+            read_xml("122-no_osm_element");
+        }, osmium::xml_error);
+    }
+
+    SECTION("Using Reader") {
+        REQUIRE_THROWS_AS({
+            osmium::io::Reader reader(filename("122-no_osm_element"));
+            osmium::io::Header header = reader.header();
+            osmium::memory::Buffer buffer = reader.read();
+            reader.close();
+        }, osmium::xml_error);
+    }
+
+}
+
+// =============================================
+
+TEST_CASE("Reading OSM XML 140") {
+
+    SECTION("Using Reader") {
+        osmium::io::Reader reader(filename("140-unicode"));
+        osmium::memory::Buffer buffer = reader.read();
+        reader.close();
+
+        int count = 0;
+        for (auto it = buffer.begin<osmium::Node>(); it != buffer.end<osmium::Node>(); ++it) {
+            ++count;
+            REQUIRE(it->id() == count);
+            const osmium::TagList& t = it->tags();
+
+            const char* uc = t["unicode_char"];
+
+            auto len = atoi(t["unicode_utf8_length"]);
+            REQUIRE(len == strlen(uc));
+
+            REQUIRE(!strcmp(uc, t["unicode_xml"]));
+
+// workaround for missing support for u8 string literals on Windows
+#if !defined(_MSC_VER)
+            switch (count) {
+                case 1:
+                    REQUIRE(!strcmp(uc, u8"a"));
+                    break;
+                case 2:
+                    REQUIRE(!strcmp(uc, u8"\u00e4"));
+                    break;
+                case 3:
+                    REQUIRE(!strcmp(uc, u8"\u30dc"));
+                    break;
+                case 4:
+                    REQUIRE(!strcmp(uc, u8"\U0001d11e"));
+                    break;
+                case 5:
+                    REQUIRE(!strcmp(uc, u8"\U0001f6eb"));
+                    break;
+                default:
+                    REQUIRE(false); // should not be here
+            }
+#endif
+        }
+        REQUIRE(count == 5);
+    }
+
+}
+
+
+// =============================================
+
+TEST_CASE("Reading OSM XML 141") {
+
+    SECTION("Using Reader") {
+        osmium::io::Reader reader(filename("141-entities"));
+        osmium::memory::Buffer buffer = reader.read();
+        reader.close();
+        REQUIRE(buffer.committed() > 0);
+        REQUIRE(buffer.get<osmium::memory::Item>(0).type() == osmium::item_type::node);
+
+        const osmium::Node& node = buffer.get<osmium::Node>(0);
+        const osmium::TagList& tags = node.tags();
+
+        REQUIRE(!strcmp(tags["less-than"],    "<"));
+        REQUIRE(!strcmp(tags["greater-than"], ">"));
+        REQUIRE(!strcmp(tags["apostrophe"],   "'"));
+        REQUIRE(!strcmp(tags["ampersand"],    "&"));
+        REQUIRE(!strcmp(tags["quote"],        "\""));
+    }
+
+}
+
 
 // =============================================
 

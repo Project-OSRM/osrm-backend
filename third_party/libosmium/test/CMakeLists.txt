@@ -8,6 +8,7 @@
 
 message(STATUS "Configuring unit tests")
 
+include(CMakeParseArguments)
 include_directories(include)
 
 add_library(testlib STATIC test_main.cpp)
@@ -19,40 +20,62 @@ set(ALL_TESTS "")
 #
 #  Define function for adding tests
 #
-#  Call with parameters:
-#    TGROUP - test group (directory)
-#    TNAME  - name of test
-#    ARGV2  - flag to enable test (optional)
-#    ARGV3  - libraries to add (optional)
+#  add_unit_tests(group name [ENABLE_IF bool] [LIBS libs] [LABELS labels])
+#
+#  group  - test group (directory)
+#  name   - name of test
+#  bool   - boolean variable telling whether the test should be run (optional)
+#  libs   - lib or libs that should be used when compiling test (optional)
+#  labels - additional labels this test should get (optional)
 #
 #-----------------------------------------------------------------------------
-function(add_unit_test TGROUP TNAME)
-    set(ALL_TESTS "${ALL_TESTS};${TGROUP}/${TNAME}" PARENT_SCOPE)
-    if((${ARGC} EQUAL 2) OR (${ARGV2}))
+function(add_unit_test _tgroup _tname)
+    set(_testid "${_tgroup}_${_tname}")
+    set(_tpath "${_tgroup}/${_tname}")
+
+    set(ALL_TESTS "${ALL_TESTS};${_tpath}" PARENT_SCOPE)
+
+    cmake_parse_arguments(_param "" "ENABLE_IF" "LIBS;LABELS" ${ARGN})
+
+    if(Osmium_DEBUG)
+        message("${_testid} ENABLE_IF=[${_param_ENABLE_IF}] LIBS=[${_param_LIBS}] LABELS=[${_param_LABELS}]")
+    endif()
+
+    if((NOT(DEFINED _param_ENABLE_IF)) OR (_param_ENABLE_IF))
         if(Osmium_DEBUG)
-            message("Adding test ${TGROUP}/${TNAME}")
+            message("Adding test: ${_tpath}")
         endif()
-        set(TESTNAME "${TGROUP}_${TNAME}")
-        add_executable(${TESTNAME} t/${TGROUP}/${TNAME}.cpp)
-        target_link_libraries(${TESTNAME} testlib)
-        if((${ARGV2}) AND (DEFINED ARGV3))
+        add_executable(${_testid} t/${_tpath}.cpp)
+        target_link_libraries(${_testid} testlib)
+
+        if(DEFINED _param_LIBS)
             if(Osmium_DEBUG)
-                message("  Adding libs ${ARGV3}")
+                message("  Adding libs: ${_param_LIBS}")
             endif()
-            target_link_libraries(${TESTNAME} ${ARGV3})
+            target_link_libraries(${_testid} ${_param_LIBS})
         endif()
-        add_test(NAME ${TESTNAME}
+
+        add_test(NAME ${_testid}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                 COMMAND ${TESTNAME}
+                 COMMAND ${_testid}
         )
-        set_tests_properties(${TESTNAME} PROPERTIES
-            LABELS "unit;fast;${TGROUP}"
+
+        set(_labels "unit;fast;${_tgroup}")
+        if(DEFINED _param_LABELS)
+            if(Osmium_DEBUG)
+                message("  Adding labels: ${_param_LABELS}")
+            endif()
+            set(_labels "${_labels};${_param_LABELS}")
+        endif()
+
+        set_tests_properties(${_testid} PROPERTIES
+            LABELS "${_labels}"
             ENVIRONMENT "OSMIUM_TEST_DATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
         )
     else()
-        message("Skipped test ${TGROUP}/${TNAME} because a dependency was not found")
+        message("Skipped test ${_tpath} because a dependency was not found")
         set(OSMIUM_SKIPPED_TESTS
-            "${OSMIUM_SKIPPED_TESTS} ${TGROUP}/${TNAME}"
+            "${OSMIUM_SKIPPED_TESTS} ${_tpath}"
             CACHE STRING "Tests that were skipped because of missing dependecies")
     endif()
 endfunction()
@@ -85,31 +108,32 @@ else()
     set(GEOS_AND_PROJ_FOUND FALSE)
 endif()
 add_unit_test(geom test_factory_with_projection
-    ${GEOS_AND_PROJ_FOUND}
-    "${GEOS_LIBRARY};${PROJ_LIBRARY}")
+    ENABLE_IF ${GEOS_AND_PROJ_FOUND}
+    LIBS ${GEOS_LIBRARY} ${PROJ_LIBRARY})
 
 add_unit_test(geom test_geojson)
-add_unit_test(geom test_geos ${GEOS_FOUND} ${GEOS_LIBRARY})
-add_unit_test(geom test_geos_wkb ${GEOS_FOUND} ${GEOS_LIBRARY})
+add_unit_test(geom test_geos ENABLE_IF ${GEOS_FOUND} LIBS ${GEOS_LIBRARY})
+add_unit_test(geom test_geos_wkb ENABLE_IF ${GEOS_FOUND} LIBS ${GEOS_LIBRARY})
 add_unit_test(geom test_mercator)
-add_unit_test(geom test_ogr ${GDAL_FOUND} ${GDAL_LIBRARY})
-add_unit_test(geom test_projection ${PROJ_FOUND} ${PROJ_LIBRARY})
+add_unit_test(geom test_ogr ENABLE_IF ${GDAL_FOUND} LIBS ${GDAL_LIBRARY})
+add_unit_test(geom test_projection ENABLE_IF ${PROJ_FOUND} LIBS ${PROJ_LIBRARY})
 add_unit_test(geom test_wkb)
 add_unit_test(geom test_wkt)
 
-add_unit_test(index test_id_to_location ${SPARSEHASH_FOUND})
+add_unit_test(index test_id_to_location ENABLE_IF ${SPARSEHASH_FOUND})
 add_unit_test(index test_typed_mmap)
+add_unit_test(index test_typed_mmap_grow LABELS "fails_on_windows")
 
-add_unit_test(io test_bzip2 ${BZIP2_FOUND} ${BZIP2_LIBRARIES})
+add_unit_test(io test_bzip2 ENABLE_IF ${BZIP2_FOUND} LIBS ${BZIP2_LIBRARIES})
 add_unit_test(io test_file_formats)
-add_unit_test(io test_reader TRUE "${OSMIUM_XML_LIBRARIES}")
-add_unit_test(io test_output_iterator ${Threads_FOUND} ${CMAKE_THREAD_LIBS_INIT})
+add_unit_test(io test_reader LIBS "${OSMIUM_XML_LIBRARIES}")
+add_unit_test(io test_output_iterator ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 add_unit_test(tags test_filter)
 add_unit_test(tags test_operators)
 add_unit_test(tags test_tag_list)
 
-add_unit_test(thread test_pool ${Threads_FOUND} ${CMAKE_THREAD_LIBS_INIT})
+add_unit_test(thread test_pool ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 add_unit_test(util test_cast_with_assert)
 add_unit_test(util test_double)

@@ -53,12 +53,14 @@ namespace osmium {
     /**
      * An outer ring of an Area.
      */
-    class OuterRing : public NodeRefList<osmium::item_type::outer_ring> {
+    class OuterRing : public NodeRefList {
 
     public:
 
+        static constexpr osmium::item_type itemtype = osmium::item_type::outer_ring;
+
         OuterRing():
-            NodeRefList<osmium::item_type::outer_ring>() {
+            NodeRefList(itemtype) {
         }
 
     }; // class OuterRing
@@ -68,12 +70,14 @@ namespace osmium {
     /**
      * An inner ring of an Area.
      */
-    class InnerRing : public NodeRefList<osmium::item_type::inner_ring> {
+    class InnerRing : public NodeRefList {
 
     public:
 
+        static constexpr osmium::item_type itemtype = osmium::item_type::inner_ring;
+
         InnerRing():
-            NodeRefList<osmium::item_type::inner_ring>() {
+            NodeRefList(itemtype) {
         }
 
     }; // class InnerRing
@@ -87,7 +91,7 @@ namespace osmium {
      * @param type Type of object (way or relation)
      * @returns Area id
      */
-    inline osmium::object_id_type object_id_to_area_id(osmium::object_id_type id, osmium::item_type type) {
+    inline osmium::object_id_type object_id_to_area_id(osmium::object_id_type id, osmium::item_type type) noexcept {
         osmium::object_id_type area_id = std::abs(id) * 2;
         if (type == osmium::item_type::relation) {
             ++area_id;
@@ -101,7 +105,7 @@ namespace osmium {
      * @param id Area id
      * @returns Way or Relation id.
      */
-    inline osmium::object_id_type area_id_to_object_id(osmium::object_id_type id) {
+    inline osmium::object_id_type area_id_to_object_id(osmium::object_id_type id) noexcept {
         return id / 2;
     }
 
@@ -131,15 +135,17 @@ namespace osmium {
         /**
          * Return the Id of the way or relation this area was created from.
          */
-        osmium::object_id_type orig_id() const {
+        osmium::object_id_type orig_id() const noexcept {
             return osmium::area_id_to_object_id(id());
         }
 
         /**
          * Count the number of outer and inner rings of this area.
+         *
+         * @returns Pair (number outer rings, number inner rings)
          */
         std::pair<int, int> num_rings() const {
-            std::pair<int, int> counter;
+            std::pair<int, int> counter { 0, 0 };
 
             for (auto it = cbegin(); it != cend(); ++it) {
                 switch (it->type()) {
@@ -170,16 +176,31 @@ namespace osmium {
         }
 
         /**
-         * Is this area a multipolygon, ie. has it more than one outer ring?
+         * Check whether this area is a multipolygon, ie. whether it has more
+         * than one outer ring?
          */
         bool is_multipolygon() const {
             return num_rings().first > 1;
         }
 
+        /**
+         * Get iterator for iterating over all inner rings in a specified outer
+         * ring.
+         *
+         * @param it Iterator specifying outer ring.
+         * @returns Iterator to first inner ring in specified outer ring.
+         */
         osmium::memory::ItemIterator<const osmium::InnerRing> inner_ring_cbegin(const osmium::memory::ItemIterator<const osmium::OuterRing>& it) const {
             return it.cast<const osmium::InnerRing>();
         }
 
+        /**
+         * Get iterator for iterating over all inner rings in a specified outer
+         * ring.
+         *
+         * @param it Iterator specifying outer ring.
+         * @returns Iterator one past last inner ring in specified outer ring.
+         */
         osmium::memory::ItemIterator<const osmium::InnerRing> inner_ring_cend(const osmium::memory::ItemIterator<const osmium::OuterRing>& it) const {
             return std::next(it).cast<const osmium::InnerRing>();
         }

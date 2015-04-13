@@ -58,78 +58,78 @@ void check_node_2(osmium::Node& node) {
 
 TEST_CASE("Buffer_Node") {
 
-SECTION("buffer_node") {
-    constexpr size_t buffer_size = 10000;
-    unsigned char data[buffer_size];
+    SECTION("buffer_node") {
+        constexpr size_t buffer_size = 10000;
+        unsigned char data[buffer_size];
 
-    osmium::memory::Buffer buffer(data, buffer_size, 0);
-
-    {
-        // add node 1
-        osmium::builder::NodeBuilder node_builder(buffer);
-        osmium::Node& node = node_builder.object();
-        REQUIRE(osmium::item_type::node == node.type());
-
-        node.set_id(1);
-        node.set_version(3);
-        node.set_visible(true);
-        node.set_changeset(333);
-        node.set_uid(21);
-        node.set_timestamp(123);
-        node.set_location(osmium::Location(3.5, 4.7));
-
-        node_builder.add_user("testuser");
-
-        buffer.commit();
-    }
-
-    {
-        // add node 2
-        osmium::builder::NodeBuilder node_builder(buffer);
-        osmium::Node& node = node_builder.object();
-        REQUIRE(osmium::item_type::node == node.type());
-
-        node.set_id(2);
-        node.set_version(3);
-        node.set_visible(true);
-        node.set_changeset(333);
-        node.set_uid(21);
-        node.set_timestamp(123);
-        node.set_location(osmium::Location(3.5, 4.7));
-
-        node_builder.add_user("testuser");
+        osmium::memory::Buffer buffer(data, buffer_size, 0);
 
         {
-            osmium::builder::TagListBuilder tag_builder(buffer, &node_builder);
-            tag_builder.add_tag("amenity", "bank");
-            tag_builder.add_tag("name", "OSM Savings");
+            // add node 1
+            osmium::builder::NodeBuilder node_builder(buffer);
+            osmium::Node& node = node_builder.object();
+            REQUIRE(osmium::item_type::node == node.type());
+
+            node.set_id(1);
+            node.set_version(3);
+            node.set_visible(true);
+            node.set_changeset(333);
+            node.set_uid(21);
+            node.set_timestamp(123);
+            node.set_location(osmium::Location(3.5, 4.7));
+
+            node_builder.add_user("testuser");
+
+            buffer.commit();
         }
 
-        buffer.commit();
-    }
+        {
+            // add node 2
+            osmium::builder::NodeBuilder node_builder(buffer);
+            osmium::Node& node = node_builder.object();
+            REQUIRE(osmium::item_type::node == node.type());
 
-    REQUIRE(2 == std::distance(buffer.begin(), buffer.end()));
-    int item_no = 0;
-    for (osmium::memory::Item& item : buffer) {
-        REQUIRE(osmium::item_type::node == item.type());
+            node.set_id(2);
+            node.set_version(3);
+            node.set_visible(true);
+            node.set_changeset(333);
+            node.set_uid(21);
+            node.set_timestamp(123);
+            node.set_location(osmium::Location(3.5, 4.7));
 
-        osmium::Node& node = static_cast<osmium::Node&>(item);
+            node_builder.add_user("testuser");
 
-        switch (item_no) {
-            case 0:
-                check_node_1(node);
-                break;
-            case 1:
-                check_node_2(node);
-                break;
-            default:
-                break;
+            {
+                osmium::builder::TagListBuilder tag_builder(buffer, &node_builder);
+                tag_builder.add_tag("amenity", "bank");
+                tag_builder.add_tag("name", "OSM Savings");
+            }
+
+            buffer.commit();
         }
 
-        ++item_no;
+        REQUIRE(2 == std::distance(buffer.begin(), buffer.end()));
+        int item_no = 0;
+        for (osmium::memory::Item& item : buffer) {
+            REQUIRE(osmium::item_type::node == item.type());
+
+            osmium::Node& node = static_cast<osmium::Node&>(item);
+
+            switch (item_no) {
+                case 0:
+                    check_node_1(node);
+                    break;
+                case 1:
+                    check_node_2(node);
+                    break;
+                default:
+                    break;
+            }
+
+            ++item_no;
+
+        }
 
     }
-
-}
 
 }
