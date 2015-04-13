@@ -27,8 +27,9 @@ before_script:
  - cd build
  - cmake .. $CMAKEOPTIONS -DBUILD_TOOLS=1
 script:
- - make -j 2
- - make -j 2 tests
+ - make
+ - make tests
+ - make benchmarks
  - ./datastructure-tests
  - cd ..
  - cucumber -p verify
