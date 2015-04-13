@@ -118,6 +118,7 @@ void ScriptingEnvironment::init_lua_state(lua_State* lua_state)
         luabind::class_<osmium::Way>("Way")
         .def("get_value_by_key", &osmium::Way::get_value_by_key)
         .def("get_value_by_key", &get_value_by_key<osmium::Way>)
+				.def("id", &osmium::Way::id)
     ];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))
