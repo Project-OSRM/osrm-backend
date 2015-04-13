@@ -205,9 +205,7 @@ function node_function (node, result)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier and "" ~= barrier then
-      if barrier_whitelist[barrier] then
-        return
-      else
+      if not barrier_whitelist[barrier] then
         result.barrier = true
       end
     end
