@@ -44,51 +44,92 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     /**
-     * A vector of NodeRef objects. Usually this is not instatiated directly,
+     * A vector of NodeRef objects. Usually this is not instantiated directly,
      * but one of its subclasses are used.
      */
-    template <osmium::item_type TItemType>
     class NodeRefList : public osmium::memory::Item {
 
     public:
 
-        static constexpr osmium::item_type itemtype = TItemType;
-
-        NodeRefList() noexcept :
-            osmium::memory::Item(sizeof(NodeRefList), TItemType) {
+        NodeRefList(osmium::item_type itemtype) noexcept :
+            osmium::memory::Item(sizeof(NodeRefList), itemtype) {
         }
 
+        /**
+         * Checks whether the node list is empty.
+         */
         bool empty() const noexcept {
             return sizeof(NodeRefList) == byte_size();
         }
 
+        /**
+         * Returns the number of nodes in the list.
+         */
         size_t size() const noexcept {
-            assert((osmium::memory::Item::byte_size() - sizeof(NodeRefList)) % sizeof(NodeRef) == 0);
-            return (osmium::memory::Item::byte_size() - sizeof(NodeRefList)) / sizeof(NodeRef);
+            auto size_node_refs = osmium::memory::Item::byte_size() - sizeof(NodeRefList);
+            assert(size_node_refs % sizeof(NodeRef) == 0);
+            return size_node_refs / sizeof(NodeRef);
         }
 
-        const NodeRef& operator[](size_t n) const {
+        /**
+         * Access specified element.
+         *
+         * @param n Get this element of the list.
+         * @pre @code n < size() @endcode
+         */
+        const NodeRef& operator[](size_t n) const noexcept {
+            assert(n < size());
             const NodeRef* node_ref = &*(cbegin());
             return node_ref[n];
         }
 
-        const NodeRef& front() const {
+        /**
+         * Access the first element.
+         *
+         * @pre @code !empty() @endcode
+         */
+        const NodeRef& front() const noexcept {
+            assert(!empty());
             return operator[](0);
         }
 
-        const NodeRef& back() const {
+        /**
+         * Access the last element.
+         *
+         * @pre @code !empty() @endcode
+         */
+        const NodeRef& back() const noexcept {
+            assert(!empty());
             return operator[](size()-1);
         }
 
-        bool is_closed() const {
+        /**
+         * Checks whether the first and last node in the list have the same ID.
+         *
+         * @pre @code !empty() @endcode
+         */
+        bool is_closed() const noexcept {
             return front().ref() == back().ref();
         }
 
-        bool ends_have_same_id() const {
+        /**
+         * Checks whether the first and last node in the list have the same ID.
+         *
+         * @pre @code !empty() @endcode
+         */
+        bool ends_have_same_id() const noexcept {
             return front().ref() == back().ref();
         }
 
+        /**
+         * Checks whether the first and last node in the list have the same
+         * location. The ID is not checked.
+         *
+         * @pre @code !empty() @endcode
+         * @pre @code front().location() && back().location() @endcode
+         */
         bool ends_have_same_location() const {
+            assert(front().location() && back().location());
             return front().location() == back().location();
         }
 
@@ -96,35 +137,43 @@ namespace osmium {
         typedef const NodeRef* const_iterator;
         typedef std::reverse_iterator<const NodeRef*> const_reverse_iterator;
 
-        iterator begin() {
+        /// Returns an iterator to the beginning.
+        iterator begin() noexcept {
             return iterator(data() + sizeof(NodeRefList));
         }
 
-        iterator end() {
+        /// Returns an iterator to the end.
+        iterator end() noexcept {
             return iterator(data() + byte_size());
         }
 
-        const_iterator cbegin() const {
+        /// Returns an iterator to the beginning.
+        const_iterator cbegin() const noexcept {
             return const_iterator(data() + sizeof(NodeRefList));
         }
 
-        const_iterator cend() const {
+        /// Returns an iterator to the end.
+        const_iterator cend() const noexcept {
             return const_iterator(data() + byte_size());
         }
 
-        const_iterator begin() const {
+        /// Returns an iterator to the beginning.
+        const_iterator begin() const noexcept {
             return cbegin();
         }
 
-        const_iterator end() const {
+        /// Returns an iterator to the end.
+        const_iterator end() const noexcept {
             return cend();
         }
 
-        const_reverse_iterator crbegin() const {
+        /// Returns a reverse_iterator to the beginning.
+        const_reverse_iterator crbegin() const noexcept {
             return const_reverse_iterator(cend());
         }
 
-        const_reverse_iterator crend() const {
+        /// Returns a reverse_iterator to the end.
+        const_reverse_iterator crend() const noexcept {
             return const_reverse_iterator(cbegin());
         }
 

@@ -130,7 +130,7 @@ namespace osmium {
                 const bool m_write_change_ops;
 
                 void write_spaces(int num) {
-                    for (; num!=0; --num) {
+                    for (; num != 0; --num) {
                         *m_out += ' ';
                     }
                 }

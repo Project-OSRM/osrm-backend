@@ -74,7 +74,7 @@ namespace osmium {
              * Calculate length of way.
              */
             inline double distance(const osmium::WayNodeList& wnl) {
-                double sum_length=0;
+                double sum_length = 0;
 
                 for (auto it = wnl.begin(); it != wnl.end(); ++it) {
                     if (std::next(it) != wnl.end()) {

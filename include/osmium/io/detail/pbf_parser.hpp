@@ -106,7 +106,7 @@ namespace osmium {
                     m_date_factor = pbf_primitive_block.date_granularity() / 1000;
                     m_granularity = pbf_primitive_block.granularity();
 
-                    for (int i=0; i < pbf_primitive_block.primitivegroup_size(); ++i) {
+                    for (int i = 0; i < pbf_primitive_block.primitivegroup_size(); ++i) {
                         const OSMPBF::PrimitiveGroup& group = pbf_primitive_block.primitivegroup(i);
 
                         if (group.has_dense())  {
@@ -148,7 +148,7 @@ namespace osmium {
                 }
 
                 void parse_node_group(const OSMPBF::PrimitiveGroup& group) {
-                    for (int i=0; i < group.nodes_size(); ++i) {
+                    for (int i = 0; i < group.nodes_size(); ++i) {
                         osmium::builder::NodeBuilder builder(m_buffer);
                         const OSMPBF::Node& pbf_node = group.nodes(i);
                         parse_attributes(builder, pbf_node);
@@ -161,7 +161,7 @@ namespace osmium {
 
                         if (pbf_node.keys_size() > 0) {
                             osmium::builder::TagListBuilder tl_builder(m_buffer, &builder);
-                            for (int tag=0; tag < pbf_node.keys_size(); ++tag) {
+                            for (int tag = 0; tag < pbf_node.keys_size(); ++tag) {
                                 tl_builder.add_tag(m_stringtable->s(static_cast<int>(pbf_node.keys(tag))),
                                                    m_stringtable->s(static_cast<int>(pbf_node.vals(tag))));
                             }
@@ -172,7 +172,7 @@ namespace osmium {
                 }
 
                 void parse_way_group(const OSMPBF::PrimitiveGroup& group) {
-                    for (int i=0; i < group.ways_size(); ++i) {
+                    for (int i = 0; i < group.ways_size(); ++i) {
                         osmium::builder::WayBuilder builder(m_buffer);
                         const OSMPBF::Way& pbf_way = group.ways(i);
                         parse_attributes(builder, pbf_way);
@@ -180,7 +180,7 @@ namespace osmium {
                         if (pbf_way.refs_size() > 0) {
                             osmium::builder::WayNodeListBuilder wnl_builder(m_buffer, &builder);
                             int64_t ref = 0;
-                            for (int n=0; n < pbf_way.refs_size(); ++n) {
+                            for (int n = 0; n < pbf_way.refs_size(); ++n) {
                                 ref += pbf_way.refs(n);
                                 wnl_builder.add_node_ref(ref);
                             }
@@ -188,7 +188,7 @@ namespace osmium {
 
                         if (pbf_way.keys_size() > 0) {
                             osmium::builder::TagListBuilder tl_builder(m_buffer, &builder);
-                            for (int tag=0; tag < pbf_way.keys_size(); ++tag) {
+                            for (int tag = 0; tag < pbf_way.keys_size(); ++tag) {
                                 tl_builder.add_tag(m_stringtable->s(static_cast<int>(pbf_way.keys(tag))),
                                                    m_stringtable->s(static_cast<int>(pbf_way.vals(tag))));
                             }
@@ -199,7 +199,7 @@ namespace osmium {
                 }
 
                 void parse_relation_group(const OSMPBF::PrimitiveGroup& group) {
-                    for (int i=0; i < group.relations_size(); ++i) {
+                    for (int i = 0; i < group.relations_size(); ++i) {
                         osmium::builder::RelationBuilder builder(m_buffer);
                         const OSMPBF::Relation& pbf_relation = group.relations(i);
                         parse_attributes(builder, pbf_relation);
@@ -207,7 +207,7 @@ namespace osmium {
                         if (pbf_relation.types_size() > 0) {
                             osmium::builder::RelationMemberListBuilder rml_builder(m_buffer, &builder);
                             int64_t ref = 0;
-                            for (int n=0; n < pbf_relation.types_size(); ++n) {
+                            for (int n = 0; n < pbf_relation.types_size(); ++n) {
                                 ref += pbf_relation.memids(n);
                                 rml_builder.add_member(osmpbf_membertype_to_item_type(pbf_relation.types(n)), ref, m_stringtable->s(pbf_relation.roles_sid(n)));
                             }
@@ -215,7 +215,7 @@ namespace osmium {
 
                         if (pbf_relation.keys_size() > 0) {
                             osmium::builder::TagListBuilder tl_builder(m_buffer, &builder);
-                            for (int tag=0; tag < pbf_relation.keys_size(); ++tag) {
+                            for (int tag = 0; tag < pbf_relation.keys_size(); ++tag) {
                                 tl_builder.add_tag(m_stringtable->s(static_cast<int>(pbf_relation.keys(tag))),
                                                    m_stringtable->s(static_cast<int>(pbf_relation.vals(tag))));
                             }
@@ -264,7 +264,7 @@ namespace osmium {
 
                     const OSMPBF::DenseNodes& dense = group.dense();
 
-                    for (int i=0; i < dense.id_size(); ++i) {
+                    for (int i = 0; i < dense.id_size(); ++i) {
                         bool visible = true;
 
                         last_dense_id        += dense.id(i);
@@ -361,7 +361,7 @@ namespace osmium {
                 }
 
                 osmium::io::Header header;
-                for (int i=0; i < pbf_header_block.required_features_size(); ++i) {
+                for (int i = 0; i < pbf_header_block.required_features_size(); ++i) {
                     const std::string& feature = pbf_header_block.required_features(i);
 
                     if (feature == "OsmSchema-V0.6") continue;
@@ -377,7 +377,7 @@ namespace osmium {
                     throw osmium::pbf_error(std::string("required feature not supported: ") + feature);
                 }
 
-                for (int i=0; i < pbf_header_block.optional_features_size(); ++i) {
+                for (int i = 0; i < pbf_header_block.optional_features_size(); ++i) {
                     const std::string& feature = pbf_header_block.optional_features(i);
                     header.set("pbf_optional_feature_" + std::to_string(i), feature);
                 }

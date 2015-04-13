@@ -76,7 +76,7 @@ namespace osmium {
 
         namespace detail {
 
-            OSMIUM_NORETURN inline void throw_gzip_error(gzFile gzfile, const char* msg, int zlib_error=0) {
+            OSMIUM_NORETURN inline void throw_gzip_error(gzFile gzfile, const char* msg, int zlib_error = 0) {
                 std::string error("gzip error: ");
                 error += msg;
                 error += ": ";

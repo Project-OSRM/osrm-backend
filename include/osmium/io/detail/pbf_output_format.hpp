@@ -295,6 +295,14 @@ namespace osmium {
                 bool m_use_compression {true};
 
                 /**
+                 * Should the string tables in the data blocks be sorted?
+                 *
+                 * Not sorting the string tables makes writing PBF files
+                 * slightly faster.
+                 */
+                bool m_sort_stringtables { true };
+
+                /**
                  * While the .osm.pbf-format is able to carry all meta information, it is
                  * also able to omit this information to reduce size.
                  */
@@ -340,6 +348,21 @@ namespace osmium {
 
                 ///// Blob writing /////
 
+                void delta_encode_string_ids() {
+                    if (pbf_nodes && pbf_nodes->has_dense()) {
+                        OSMPBF::DenseNodes* dense = pbf_nodes->mutable_dense();
+
+                        if (dense->has_denseinfo()) {
+                            OSMPBF::DenseInfo* denseinfo = dense->mutable_denseinfo();
+
+                            for (int i = 0, l=denseinfo->user_sid_size(); i<l; ++i) {
+                                auto user_sid = denseinfo->user_sid(i);
+                                denseinfo->set_user_sid(i, m_delta_user_sid.update(user_sid));
+                            }
+                        }
+                    }
+                }
+
                 /**
                  * Before a PrimitiveBlock gets serialized, all interim StringTable-ids needs to be
                  * mapped to the associated real StringTable ids. This is done in this function.
@@ -351,7 +374,7 @@ namespace osmium {
                     // test, if the node-block has been allocated
                     if (pbf_nodes) {
                         // iterate over all nodes, passing them to the map_common_string_ids function
-                        for (int i=0, l=pbf_nodes->nodes_size(); i<l; ++i) {
+                        for (int i = 0, l=pbf_nodes->nodes_size(); i<l; ++i) {
                             map_common_string_ids(pbf_nodes->mutable_nodes(i));
                         }
 
@@ -363,7 +386,7 @@ namespace osmium {
                             // in the densenodes structure keys and vals are encoded in an intermixed
                             // array, individual nodes are seperated by a value of 0 (0 in the StringTable
                             // is always unused). String-ids of 0 are thus kept alone.
-                            for (int i=0, l=dense->keys_vals_size(); i<l; ++i) {
+                            for (int i = 0, l=dense->keys_vals_size(); i<l; ++i) {
                                 // map interim string-ids > 0 to real string ids
                                 auto sid = dense->keys_vals(i);
                                 if (sid > 0) {
@@ -377,7 +400,7 @@ namespace osmium {
                                 OSMPBF::DenseInfo* denseinfo = dense->mutable_denseinfo();
 
                                 // iterate over all username string-ids
-                                for (int i=0, l=denseinfo->user_sid_size(); i<l; ++i) {
+                                for (int i = 0, l=denseinfo->user_sid_size(); i<l; ++i) {
                                     // map interim string-ids > 0 to real string ids
                                     auto user_sid = string_table.map_string_id(denseinfo->user_sid(i));
 
@@ -391,7 +414,7 @@ namespace osmium {
                     // test, if the ways-block has been allocated
                     if (pbf_ways) {
                         // iterate over all ways, passing them to the map_common_string_ids function
-                        for (int i=0, l=pbf_ways->ways_size(); i<l; ++i) {
+                        for (int i = 0, l=pbf_ways->ways_size(); i<l; ++i) {
                             map_common_string_ids(pbf_ways->mutable_ways(i));
                         }
                     }
@@ -399,7 +422,7 @@ namespace osmium {
                     // test, if the relations-block has been allocated
                     if (pbf_relations) {
                         // iterate over all relations
-                        for (int i=0, l=pbf_relations->relations_size(); i<l; ++i) {
+                        for (int i = 0, l=pbf_relations->relations_size(); i<l; ++i) {
                             // get a pointer to the relation
                             OSMPBF::Relation* relation = pbf_relations->mutable_relations(i);
 
@@ -408,7 +431,7 @@ namespace osmium {
 
                             // iterate over all relation members, mapping the interim string-ids
                             // of the role to real string ids
-                            for (int mi=0; mi < relation->roles_sid_size(); ++mi) {
+                            for (int mi = 0; mi < relation->roles_sid_size(); ++mi) {
                                 relation->set_roles_sid(mi, string_table.map_string_id(relation->roles_sid(mi)));
                             }
                         }
@@ -431,7 +454,7 @@ namespace osmium {
                     }
 
                     // iterate over all tags and map the interim-ids of the key and the value to real ids
-                    for (int i=0, l=in->keys_size(); i<l; ++i) {
+                    for (int i = 0, l=in->keys_size(); i<l; ++i) {
                         in->set_keys(i, string_table.map_string_id(in->keys(i)));
                         in->set_vals(i, string_table.map_string_id(in->vals(i)));
                     }
@@ -518,11 +541,13 @@ namespace osmium {
                     pbf_primitive_block.set_granularity(location_granularity());
                     pbf_primitive_block.set_date_granularity(date_granularity());
 
-                    // store the interim StringTable into the protobuf object
-                    string_table.store_stringtable(pbf_primitive_block.mutable_stringtable());
+                    string_table.store_stringtable(pbf_primitive_block.mutable_stringtable(), m_sort_stringtables);
 
-                    // map all interim string ids to real ids
-                    map_string_ids();
+                    if (m_sort_stringtables) {
+                        map_string_ids();
+                    } else {
+                        delta_encode_string_ids();
+                    }
 
                     std::promise<std::string> promise;
                     m_output_queue.push(promise.get_future());
@@ -742,6 +767,9 @@ namespace osmium {
                     }
                     if (file.get("pbf_compression") == "none" || file.get("pbf_compression") == "false") {
                         m_use_compression = false;
+                    }
+                    if (file.get("pbf_sort_stringtables") == "false") {
+                        m_sort_stringtables = false;
                     }
                     if (file.get("pbf_add_metadata") == "false") {
                         m_should_add_metadata = false;

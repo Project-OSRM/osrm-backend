@@ -84,8 +84,7 @@ namespace osmium {
             template <typename TId, typename TValue>
             class Map {
 
-                static_assert(std::is_integral<TId>::value && std::is_unsigned<TId>::value,
-                              "TId template parameter for class Map must be unsigned integral type");
+                static_assert(std::is_integral<TId>::value && std::is_unsigned<TId>::value, "TId template parameter for class Map must be unsigned integral type");
 
                 Map(const Map&) = delete;
                 Map& operator=(const Map&) = delete;

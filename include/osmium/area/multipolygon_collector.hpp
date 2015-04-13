@@ -142,7 +142,7 @@ namespace osmium {
              * Overwritten from the base class.
              */
             void way_not_in_any_relation(const osmium::Way& way) {
-                if (way.ends_have_same_location() && way.nodes().size() > 3) {
+                if (way.nodes().size() > 3 && way.ends_have_same_location()) {
                     // way is closed and has enough nodes, build simple multipolygon
                     try {
                         TAssembler assembler(m_assembler_config);

@@ -84,8 +84,9 @@ namespace osmium {
             class PBFInputFormat : public osmium::io::detail::InputFormat {
 
                 bool m_use_thread_pool;
+                bool m_eof { false };
                 queue_type m_queue;
-                std::atomic<bool> m_done;
+                std::atomic<bool> m_quit_input_thread;
                 std::thread m_reader;
                 osmium::thread::Queue<std::string>& m_input_queue;
                 std::string m_input_buffer;
@@ -151,7 +152,7 @@ namespace osmium {
 
                 void parse_osm_data(osmium::osm_entity_bits::type read_types) {
                     osmium::thread::set_thread_name("_osmium_pbf_in");
-                    int n=0;
+                    int n = 0;
                     while (auto size = read_blob_header("OSMData")) {
 
                         if (m_use_thread_pool) {
@@ -164,11 +165,20 @@ namespace osmium {
                         }
                         ++n;
 
-                        if (m_done) {
+                        if (m_quit_input_thread) {
                             return;
                         }
                     }
-                    m_done = true;
+
+                    // Send an empty buffer to signal the reader that we are
+                    // done.
+                    std::promise<osmium::memory::Buffer> promise;
+                    m_queue.push(promise.get_future());
+                    promise.set_value(osmium::memory::Buffer{});
+                }
+
+                void signal_input_thread_to_quit() {
+                    m_quit_input_thread = true;
                 }
 
             public:
@@ -184,7 +194,7 @@ namespace osmium {
                     osmium::io::detail::InputFormat(file, read_which_entities),
                     m_use_thread_pool(osmium::config::use_pool_threads_for_pbf_parsing()),
                     m_queue(20, "pbf_parser_results"), // XXX
-                    m_done(false),
+                    m_quit_input_thread(false),
                     m_input_queue(input_queue),
                     m_input_buffer() {
                     GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -199,30 +209,37 @@ namespace osmium {
                 }
 
                 ~PBFInputFormat() {
-                    m_done = true;
+                    signal_input_thread_to_quit();
                     if (m_reader.joinable()) {
                         m_reader.join();
                     }
                 }
 
                 /**
-                 * Returns the next buffer with OSM data read from the PBF file.
-                 * Blocks if data is not available yet.
+                 * Returns the next buffer with OSM data read from the PBF
+                 * file. Blocks if data is not available yet.
                  * Returns an empty buffer at end of input.
                  */
                 osmium::memory::Buffer read() override {
-                    if (!m_done || !m_queue.empty()) {
-                        std::future<osmium::memory::Buffer> buffer_future;
-                        m_queue.wait_and_pop(buffer_future);
-                        try {
-                            return buffer_future.get();
-                        } catch (...) {
-                            m_done = true;
-                            throw;
-                        }
+                    osmium::memory::Buffer buffer;
+                    if (m_eof) {
+                        return buffer;
                     }
 
-                    return osmium::memory::Buffer();
+                    std::future<osmium::memory::Buffer> buffer_future;
+                    m_queue.wait_and_pop(buffer_future);
+
+                    try {
+                        buffer = std::move(buffer_future.get());
+                        if (!buffer) {
+                            m_eof = true;
+                        }
+                        return buffer;
+                    } catch (...) {
+                        m_eof = true;
+                        signal_input_thread_to_quit();
+                        throw;
+                    }
                 }
 
             }; // class PBFInputFormat

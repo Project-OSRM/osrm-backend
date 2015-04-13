@@ -214,7 +214,7 @@ namespace osmium {
                 return m_impl.linestring_finish(num_points);
             }
 
-            linestring_type create_linestring(const osmium::WayNodeList& wnl, use_nodes un=use_nodes::unique, direction dir=direction::forward) {
+            linestring_type create_linestring(const osmium::WayNodeList& wnl, use_nodes un = use_nodes::unique, direction dir = direction::forward) {
                 linestring_start();
                 size_t num_points = 0;
 

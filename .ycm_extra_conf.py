@@ -6,6 +6,10 @@
 #
 #-----------------------------------------------------------------------------
 
+from os.path import realpath, dirname
+
+basedir = dirname(realpath(__file__))
+
 # some default flags
 # for more information install clang-3.2-doc package and
 # check UsersManual.html
@@ -26,9 +30,9 @@ flags = [
 'c++',
 
 # libosmium include dirs
-'-Iinclude',
-'-Itest/include',
-'-Itest/data-test/include',
+'-I%s/include' % basedir,
+'-I%s/test/include' % basedir,
+'-I%s/test/data-test/include' % basedir,
 
 # include third party libraries
 '-I/usr/include/gdal',

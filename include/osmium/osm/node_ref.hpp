@@ -54,7 +54,7 @@ namespace osmium {
 
     public:
 
-        NodeRef(const osmium::object_id_type ref=0, const osmium::Location& location=Location()) noexcept :
+        NodeRef(const osmium::object_id_type ref = 0, const osmium::Location& location = Location()) noexcept :
             m_ref(ref),
             m_location(location) {
         }

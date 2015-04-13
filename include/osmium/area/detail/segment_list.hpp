@@ -99,7 +99,7 @@ namespace osmium {
                  * Enable or disable debug output to stderr. This is for Osmium
                  * developers only.
                  */
-                void enable_debug_output(bool debug=true) noexcept {
+                void enable_debug_output(bool debug = true) noexcept {
                     m_debug = debug;
                 }
 

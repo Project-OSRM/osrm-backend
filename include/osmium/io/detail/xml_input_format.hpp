@@ -74,8 +74,8 @@ namespace osmium {
 
     /**
      * Exception thrown when the XML parser failed. The exception contains
-     * information about the place where the error happened and the type of
-     * error.
+     * (if available) information about the place where the error happened
+     * and the type of error.
      */
     struct xml_error : public io_error {
 
@@ -84,7 +84,7 @@ namespace osmium {
         XML_Error error_code;
         std::string error_string;
 
-        xml_error(XML_Parser parser) :
+        explicit xml_error(XML_Parser parser) :
             io_error(std::string("XML parsing error at line ")
                     + std::to_string(XML_GetCurrentLineNumber(parser))
                     + ", column "
@@ -97,8 +97,20 @@ namespace osmium {
             error_string(XML_ErrorString(error_code)) {
         }
 
+        explicit xml_error(const std::string& message) :
+            io_error(message),
+            line(0),
+            column(0),
+            error_code(),
+            error_string(message) {
+        }
+
     }; // struct xml_error
 
+    /**
+     * Exception thrown when an OSM XML files contains no version attribute
+     * on the 'osm' element or if the version is unknown.
+     */
     struct format_version_error : public io_error {
 
         std::string version;
@@ -434,6 +446,8 @@ namespace osmium {
                                 if (m_header.get("version") == "") {
                                     throw osmium::format_version_error();
                                 }
+                            } else {
+                                throw osmium::xml_error(std::string("Unknown top-level element: ") + element);
                             }
                             m_context = context::top;
                             break;

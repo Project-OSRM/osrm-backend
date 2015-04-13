@@ -145,30 +145,44 @@ namespace osmium {
                  * implementation) is that the string table is sorted first by reverse count (ie descending)
                  * and then by reverse lexicographic order.
                  */
-                void store_stringtable(OSMPBF::StringTable* st) {
+                void store_stringtable(OSMPBF::StringTable* st, bool sort) {
                     // add empty StringTable entry at index 0
                     // StringTable index 0 is reserved as delimiter in the densenodes key/value list
                     // this line also ensures that there's always a valid StringTable
                     st->add_s("");
 
-                    std::multimap<string_info, std::string> sortedbycount;
+                    if (sort) {
+                        std::multimap<string_info, std::string> sortedbycount;
 
-                    m_id2id_map.resize(m_size+1);
+                        m_id2id_map.resize(m_size+1);
 
-                    std::transform(m_strings.begin(), m_strings.end(),
-                                std::inserter(sortedbycount, sortedbycount.begin()),
-                                [](const std::pair<std::string, string_info>& p) {
-                                        return std::pair<string_info, std::string>(p.second, p.first);
-                                });
+                        std::transform(m_strings.begin(), m_strings.end(),
+                                    std::inserter(sortedbycount, sortedbycount.begin()),
+                                    [](const std::pair<std::string, string_info>& p) {
+                                            return std::pair<string_info, std::string>(p.second, p.first);
+                                    });
 
-                    string_id_type n=0;
+                        string_id_type n = 0;
 
-                    for (const auto& mapping : sortedbycount) {
-                        // add the string of the current item to the pbf StringTable
-                        st->add_s(mapping.second);
+                        for (const auto& mapping : sortedbycount) {
+                            // add the string of the current item to the pbf StringTable
+                            st->add_s(mapping.second);
 
-                        // store the mapping from the interim-id to the real id
-                        m_id2id_map[mapping.first.interim_id] = ++n;
+                            // store the mapping from the interim-id to the real id
+                            m_id2id_map[mapping.first.interim_id] = ++n;
+                        }
+                    } else {
+                        std::vector<std::pair<string_id_type, const char*>> sortedbyid;
+                        sortedbyid.reserve(m_strings.size());
+
+                        for (const auto& p : m_strings) {
+                            sortedbyid.emplace_back(p.second.interim_id, p.first.c_str());
+                        }
+
+                        std::sort(sortedbyid.begin(), sortedbyid.end());
+                        for (const auto& mapping : sortedbyid) {
+                            st->add_s(mapping.second);
+                        }
                     }
                 }
 

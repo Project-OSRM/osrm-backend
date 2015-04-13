@@ -136,7 +136,7 @@ namespace osmium {
 
         public:
 
-            explicit Dump(std::ostream& out, bool with_size=true, const std::string& prefix="") :
+            explicit Dump(std::ostream& out, bool with_size = true, const std::string& prefix = "") :
                 m_out(&out),
                 m_with_size(with_size),
                 m_prefix(prefix) {

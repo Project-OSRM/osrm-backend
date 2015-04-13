@@ -49,12 +49,14 @@ namespace osmium {
     /**
      * List of node references (id and location) in a way.
      */
-    class WayNodeList : public NodeRefList<osmium::item_type::way_node_list> {
+    class WayNodeList : public NodeRefList {
 
     public:
 
+        static constexpr osmium::item_type itemtype = osmium::item_type::way_node_list;
+
         WayNodeList():
-            NodeRefList<osmium::item_type::way_node_list>() {
+            NodeRefList(itemtype) {
         }
 
     }; // class WayNodeList

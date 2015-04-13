@@ -107,7 +107,7 @@ namespace osmium {
                 m_data_available.wait(lock, [this] {
                     return !empty_intern();
                 });
-                value=std::move(m_queue.front());
+                value = std::move(m_queue.front());
                 m_queue.pop_front();
                 ++m_offset;
             }
@@ -122,7 +122,7 @@ namespace osmium {
                 if (empty_intern()) {
                     return false;
                 }
-                value=std::move(m_queue.front());
+                value = std::move(m_queue.front());
                 m_queue.pop_front();
                 ++m_offset;
                 return true;

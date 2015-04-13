@@ -109,7 +109,7 @@ namespace osmium {
                 }
                 if (pid == 0) { // child
                     // close all file descriptors except one end of the pipe
-                    for (int i=0; i < 32; ++i) {
+                    for (int i = 0; i < 32; ++i) {
                         if (i != pipefd[1]) {
                             ::close(i);
                         }
@@ -260,7 +260,7 @@ namespace osmium {
 
                 // m_input->read() can return an invalid buffer to signal EOF,
                 // or a valid buffer with or without data. A valid buffer
-                // without data is not an error, it just means we have to get
+                // without data is not an error, it just means we have to
                 // keep getting the next buffer until there is one with data.
                 while (true) {
                     osmium::memory::Buffer buffer = m_input->read();

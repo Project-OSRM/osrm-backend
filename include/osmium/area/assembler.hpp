@@ -65,7 +65,7 @@ namespace osmium {
             // Enables debug output to stderr
             bool debug;
 
-            explicit AssemblerConfig(osmium::area::ProblemReporter* pr = nullptr, bool d=false) :
+            explicit AssemblerConfig(osmium::area::ProblemReporter* pr = nullptr, bool d = false) :
                 problem_reporter(pr),
                 debug(d) {
             }
@@ -74,7 +74,7 @@ namespace osmium {
              * Enable or disable debug output to stderr. This is for Osmium
              * developers only.
              */
-            void enable_debug_output(bool d=true) {
+            void enable_debug_output(bool d = true) {
                 debug = d;
             }
 
@@ -445,7 +445,7 @@ namespace osmium {
             }
 
             bool add_to_existing_ring(osmium::area::detail::NodeRefSegment segment) {
-                int n=0;
+                int n = 0;
                 for (auto& ring : m_rings) {
                     if (debug()) {
                         std::cerr << "    check against ring " << n << " " << ring;
