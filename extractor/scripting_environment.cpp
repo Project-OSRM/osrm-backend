@@ -91,8 +91,10 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
 
         luabind::class_<osmium::Node>("Node")
             // .def<node_member_ptr_type>("tags", &osmium::Node::tags)
+            .def("location", &osmium::Node::location)
             .def("get_value_by_key", &osmium::Node::get_value_by_key)
-            .def("get_value_by_key", &get_value_by_key<osmium::Node>),
+            .def("get_value_by_key", &get_value_by_key<osmium::Node>)
+            .def("id", &osmium::Node::id),
 
         luabind::class_<ExtractionNode>("ResultNode")
             .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
