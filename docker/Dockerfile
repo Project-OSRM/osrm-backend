@@ -7,7 +7,7 @@ RUN apt-get -y install gcc-4.8 g++-4.8 libboost1.55-all-dev llvm-3.4
 RUN apt-get -y install protobuf-compiler libprotoc-dev libprotobuf-dev
 RUN apt-get -y install libbz2-dev libstxxl-dev libstxxl1 libxml2-dev
 RUN apt-get -y install libzip-dev lua5.1 liblua5.1-0-dev libtbb-dev libgdal-dev ruby1.9
-RUN apt-get -y install curl cmake
+RUN apt-get -y install curl cmake cmake-curses-gui
 
 RUN pip install awscli
 
