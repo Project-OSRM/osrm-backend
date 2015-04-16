@@ -76,8 +76,8 @@ template <typename EdgeDataT> class DynamicGraph
     // Constructs an empty graph with a given number of nodes.
     explicit DynamicGraph(NodeIterator nodes) : number_of_nodes(nodes), number_of_edges(0)
     {
-        node_list.reserve(number_of_nodes);
-        node_list.resize(number_of_nodes);
+        node_array.reserve(number_of_nodes);
+        node_array.resize(number_of_nodes);
 
         edge_list.reserve(number_of_nodes * 1.1);
         edge_list.resize(number_of_nodes);
@@ -87,29 +87,29 @@ template <typename EdgeDataT> class DynamicGraph
     {
         number_of_nodes = nodes;
         number_of_edges = static_cast<EdgeIterator>(graph.size());
-        node_list.reserve(number_of_nodes + 1);
-        node_list.resize(number_of_nodes + 1);
+        // node_array.reserve(number_of_nodes + 1);
+        node_array.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
         for (const auto node : osrm::irange(0u, number_of_nodes))
         {
-            EdgeIterator lastEdge = edge;
+            EdgeIterator last_edge = edge;
             while (edge < number_of_edges && graph[edge].source == node)
             {
                 ++edge;
             }
-            node_list[node].firstEdge = position;
-            node_list[node].edges = edge - lastEdge;
-            position += node_list[node].edges;
+            node_array[node].first_edge = position;
+            node_array[node].edges = edge - last_edge;
+            position += node_array[node].edges;
         }
-        node_list.back().firstEdge = position;
+        node_array.back().first_edge = position;
         edge_list.reserve(static_cast<std::size_t>(edge_list.size() * 1.1));
         edge_list.resize(position);
         edge = 0;
         for (const auto node : osrm::irange(0u, number_of_nodes))
         {
-            for (const auto i : osrm::irange(node_list[node].firstEdge,
-                                             node_list[node].firstEdge + node_list[node].edges))
+            for (const auto i : osrm::irange(node_array[node].first_edge,
+                                             node_array[node].first_edge + node_array[node].edges))
             {
                 edge_list[i].target = graph[edge].target;
                 edge_list[i].data = graph[edge].data;
@@ -124,7 +124,7 @@ template <typename EdgeDataT> class DynamicGraph
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
-    unsigned GetOutDegree(const NodeIterator n) const { return node_list[n].edges; }
+    unsigned GetOutDegree(const NodeIterator n) const { return node_array[n].edges; }
 
     unsigned GetDirectedOutDegree(const NodeIterator n) const
     {
@@ -149,12 +149,12 @@ template <typename EdgeDataT> class DynamicGraph
 
     EdgeIterator BeginEdges(const NodeIterator n) const
     {
-        return EdgeIterator(node_list[n].firstEdge);
+        return EdgeIterator(node_array[n].first_edge);
     }
 
     EdgeIterator EndEdges(const NodeIterator n) const
     {
-        return EdgeIterator(node_list[n].firstEdge + node_list[n].edges);
+        return EdgeIterator(node_array[n].first_edge + node_array[n].edges);
     }
 
     EdgeRange GetAdjacentEdgeRange(const NodeIterator node) const
@@ -164,7 +164,7 @@ template <typename EdgeDataT> class DynamicGraph
 
     NodeIterator InsertNode()
     {
-        node_list.emplace_back(node_list.back());
+        node_array.emplace_back(node_array.back());
         number_of_nodes += 1;
 
         return number_of_nodes;
@@ -173,14 +173,14 @@ template <typename EdgeDataT> class DynamicGraph
     // adds an edge. Invalidates edge iterators for the source node
     EdgeIterator InsertEdge(const NodeIterator from, const NodeIterator to, const EdgeDataT &data)
     {
-        Node &node = node_list[from];
-        EdgeIterator newFirstEdge = node.edges + node.firstEdge;
+        Node &node = node_array[from];
+        EdgeIterator newFirstEdge = node.edges + node.first_edge;
         if (newFirstEdge >= edge_list.size() || !isDummy(newFirstEdge))
         {
-            if (node.firstEdge != 0 && isDummy(node.firstEdge - 1))
+            if (node.first_edge != 0 && isDummy(node.first_edge - 1))
             {
-                node.firstEdge--;
-                edge_list[node.firstEdge] = edge_list[node.firstEdge + node.edges];
+                node.first_edge--;
+                edge_list[node.first_edge] = edge_list[node.first_edge + node.edges];
             }
             else
             {
@@ -195,32 +195,32 @@ template <typename EdgeDataT> class DynamicGraph
                 edge_list.resize(edge_list.size() + newSize);
                 for (const auto i : osrm::irange(0u, node.edges))
                 {
-                    edge_list[newFirstEdge + i] = edge_list[node.firstEdge + i];
-                    makeDummy(node.firstEdge + i);
+                    edge_list[newFirstEdge + i] = edge_list[node.first_edge + i];
+                    makeDummy(node.first_edge + i);
                 }
                 for (const auto i : osrm::irange(node.edges + 1, newSize))
                 {
                     makeDummy(newFirstEdge + i);
                 }
-                node.firstEdge = newFirstEdge;
+                node.first_edge = newFirstEdge;
             }
         }
-        Edge &edge = edge_list[node.firstEdge + node.edges];
+        Edge &edge = edge_list[node.first_edge + node.edges];
         edge.target = to;
         edge.data = data;
         ++number_of_edges;
         ++node.edges;
-        return EdgeIterator(node.firstEdge + node.edges);
+        return EdgeIterator(node.first_edge + node.edges);
     }
 
     // removes an edge. Invalidates edge iterators for the source node
     void DeleteEdge(const NodeIterator source, const EdgeIterator e)
     {
-        Node &node = node_list[source];
+        Node &node = node_array[source];
         --number_of_edges;
         --node.edges;
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != node.edges);
-        const unsigned last = node.firstEdge + node.edges;
+        const unsigned last = node.first_edge + node.edges;
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != last);
         // swap with last edge
         edge_list[e] = edge_list[last];
@@ -245,7 +245,7 @@ template <typename EdgeDataT> class DynamicGraph
         }
 
         number_of_edges -= deleted;
-        node_list[source].edges -= deleted;
+        node_array[source].edges -= deleted;
 
         return deleted;
     }
@@ -277,7 +277,7 @@ template <typename EdgeDataT> class DynamicGraph
     struct Node
     {
         // index of the first edge
-        EdgeIterator firstEdge;
+        EdgeIterator first_edge;
         // amount of edges
         unsigned edges;
     };
@@ -291,7 +291,7 @@ template <typename EdgeDataT> class DynamicGraph
     NodeIterator number_of_nodes;
     std::atomic_uint number_of_edges;
 
-    std::vector<Node> node_list;
+    std::vector<Node> node_array;
     DeallocatingVector<Edge> edge_list;
 };
 
