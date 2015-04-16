@@ -35,8 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
-#include <tbb/parallel_sort.h>
-
 #include <algorithm>
 #include <limits>
 #include <utility>
@@ -165,7 +163,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
                 return i;
             }
         }
-        return EndEdges(from);
+        return SPECIAL_EDGEID;
     }
 
     // searches for a specific edge

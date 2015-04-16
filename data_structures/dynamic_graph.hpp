@@ -262,7 +262,7 @@ template <typename EdgeDataT> class DynamicGraph
                 return i;
             }
         }
-        return EndEdges(from);
+        return SPECIAL_EDGEID;
     }
 
     // searches for a specific edge
