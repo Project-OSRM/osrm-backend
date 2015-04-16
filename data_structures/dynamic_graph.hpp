@@ -283,6 +283,27 @@ template <typename EdgeDataT> class DynamicGraph
         return smallest_edge;
     }
 
+    EdgeIterator FindEdgeInEitherDirection(const NodeIterator from, const NodeIterator to) const
+    {
+        EdgeIterator tmp = FindEdge(from, to);
+        return (SPECIAL_NODEID != tmp ? tmp : FindEdge(to, from));
+    }
+
+    EdgeIterator
+    FindEdgeIndicateIfReverse(const NodeIterator from, const NodeIterator to, bool &result) const
+    {
+        EdgeIterator current_iterator = FindEdge(from, to);
+        if (SPECIAL_NODEID == current_iterator)
+        {
+            current_iterator = FindEdge(to, from);
+            if (SPECIAL_NODEID != current_iterator)
+            {
+                result = true;
+            }
+        }
+        return current_iterator;
+    }
+
   protected:
     bool isDummy(const EdgeIterator edge) const
     {
