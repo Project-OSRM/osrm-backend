@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
             const auto dynamic_begin = dynamic_graph->BeginEdges(node);
 
             // check raw interface
-            for (int i = 0; i < static_range.size(); ++i)
+            for (const auto i : osrm::irange(0u, static_range.size()))
             {
                 const auto static_target = static_graph->GetTarget(static_begin + i);
                 const auto dynamic_target = dynamic_graph->GetTarget(dynamic_begin + i);
