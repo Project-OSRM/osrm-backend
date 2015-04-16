@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "deallocating_vector.hpp"
 #include "../util/integer_range.hpp"
+#include "../typedefs.h"
 
 #include <boost/assert.hpp>
 
@@ -262,6 +263,24 @@ template <typename EdgeDataT> class DynamicGraph
             }
         }
         return EndEdges(from);
+    }
+
+    // searches for a specific edge
+    EdgeIterator FindSmallestEdge(const NodeIterator from, const NodeIterator to) const
+    {
+        EdgeIterator smallest_edge = SPECIAL_EDGEID;
+        EdgeWeight smallest_weight = INVALID_EDGE_WEIGHT;
+        for (auto edge : GetAdjacentEdgeRange(from))
+        {
+            const NodeID target = GetTarget(edge);
+            const EdgeWeight weight = GetEdgeData(edge).distance;
+            if (target == to && weight < smallest_weight)
+            {
+                smallest_edge = edge;
+                smallest_weight = weight;
+            }
+        }
+        return smallest_edge;
     }
 
   protected:

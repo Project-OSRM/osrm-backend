@@ -158,6 +158,19 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     // searches for a specific edge
     EdgeIterator FindEdge(const NodeIterator from, const NodeIterator to) const
     {
+        for (const auto i : osrm::irange(BeginEdges(from), EndEdges(from)))
+        {
+            if (to == edge_array[i].target)
+            {
+                return i;
+            }
+        }
+        return EndEdges(from);
+    }
+
+    // searches for a specific edge
+    EdgeIterator FindSmallestEdge(const NodeIterator from, const NodeIterator to) const
+    {
         EdgeIterator smallest_edge = SPECIAL_EDGEID;
         EdgeWeight smallest_weight = INVALID_EDGE_WEIGHT;
         for (auto edge : GetAdjacentEdgeRange(from))
