@@ -36,9 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 
 #include <algorithm>
-#include <limits>
-#include <vector>
 #include <atomic>
+#include <limits>
+#include <tuple>
+#include <vector>
 
 template <typename EdgeDataT> class DynamicGraph
 {
