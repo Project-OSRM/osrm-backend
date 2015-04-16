@@ -173,8 +173,8 @@ int main(int argc, char *argv[])
 
         tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
         auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
-        edge_list.clear();
-        edge_list.shrink_to_fit();
+        graph_edge_list.clear();
+        graph_edge_list.shrink_to_fit();
 
         SimpleLogger().Write() << "Starting SCC graph traversal";
 
