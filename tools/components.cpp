@@ -64,8 +64,8 @@ struct TarjanEdgeData
     unsigned name_id;
 };
 
-using TarjanDynamicGraph = StaticGraph<TarjanEdgeData>;
-using TarjanEdge = TarjanDynamicGraph::InputEdge;
+using TarjanGraph = StaticGraph<TarjanEdgeData>;
+using TarjanEdge = TarjanGraph::InputEdge;
 
 void DeleteFileIfExists(const std::string &file_name)
 {
@@ -174,14 +174,14 @@ int main(int argc, char *argv[])
                          "input edge vector not properly deallocated");
 
         tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
-        const auto graph = std::make_shared<TarjanDynamicGraph>(number_of_nodes, graph_edge_list);
+        const auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
         graph_edge_list.clear();
         graph_edge_list.shrink_to_fit();
 
         SimpleLogger().Write() << "Starting SCC graph traversal";
 
         RestrictionMap restriction_map(restriction_list);
-        auto tarjan = osrm::make_unique<TarjanSCC<TarjanDynamicGraph>>(graph,
+        auto tarjan = osrm::make_unique<TarjanSCC<TarjanGraph>>(graph,
                                                                        restriction_map,
                                                                        bollard_node_list);
         tarjan->run();
@@ -236,9 +236,9 @@ int main(int argc, char *argv[])
             percentage.printIncrement();
             for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
             {
-                const TarjanDynamicGraph::NodeIterator target = graph->GetTarget(current_edge);
+                const TarjanGraph::NodeIterator target = graph->GetTarget(current_edge);
 
-                if (source < target || graph->EndEdges(target) >= graph->FindEdge(target, source))
+                if (source < target || SPECIAL_EDGEID == graph->FindEdge(target, source))
                 {
                     total_network_length +=
                         100 * coordinate_calculation::euclidean_distance(
