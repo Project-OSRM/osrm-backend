@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,20 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DISTANCE_TABLE_PLUGIN_H
-#define DISTANCE_TABLE_PLUGIN_H
+#ifndef DISTANCE_TABLE_HPP
+#define DISTANCE_TABLE_HPP
 
 #include "plugin_base.hpp"
 
 #include "../algorithms/object_encoder.hpp"
-#include "../data_structures/json_container.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/make_unique.hpp"
-#include "../Util/string_util.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/string_util.hpp"
+#include "../util/timing_util.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <cstdlib>
 
@@ -52,28 +53,33 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 {
   private:
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
+    int max_locations_distance_table;
 
   public:
-    explicit DistanceTablePlugin(DataFacadeT *facade) : descriptor_string("table"), facade(facade)
+    explicit DistanceTablePlugin(DataFacadeT *facade, const int max_locations_distance_table)
+        : max_locations_distance_table(max_locations_distance_table), descriptor_string("table"),
+          facade(facade)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
 
     virtual ~DistanceTablePlugin() {}
 
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &route_parameters,
+                      osrm::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
         unsigned max_locations =
-            std::min(100u, static_cast<unsigned>(route_parameters.coordinates.size()));
+            std::min(static_cast<unsigned>(max_locations_distance_table),
+                     static_cast<unsigned>(route_parameters.coordinates.size()));
+
         PhantomNodeArray phantom_node_vector(max_locations);
         for (const auto i : osrm::irange(0u, max_locations))
         {
@@ -89,8 +95,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 }
             }
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i],
-                                                            1);
+                                                            phantom_node_vector[i], 1);
 
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
@@ -102,23 +107,22 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
         if (!result_table)
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
 
-        JSON::Object json_object;
-        JSON::Array json_array;
+        osrm::json::Array json_array;
         const auto number_of_locations = phantom_node_vector.size();
         for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
         {
-            JSON::Array json_row;
+            osrm::json::Array json_row;
             auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
             auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
             json_array.values.push_back(json_row);
         }
-        json_object.values["distance_table"] = json_array;
-        JSON::render(reply.content, json_object);
+        json_result.values["distance_table"] = json_array;
+        // osrm::json::render(reply.content, json_object);
+        return 200;
     }
 
   private:
@@ -126,4 +130,4 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif // DISTANCE_TABLE_PLUGIN_H
+#endif // DISTANCE_TABLE_HPP

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,15 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <osrm/RouteParameters.h>
-
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic.hpp>
 #include <boost/fusion/include/at_c.hpp>
 
+#include <osrm/route_parameters.hpp>
+
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
-      compression(true), deprecatedAPI(false), uturn_default(false), check_sum(-1), num_results(1)
+      compression(true), deprecatedAPI(false), uturn_default(false), classify(false),
+      matching_beta(-1.0), gps_precision(-1.0), check_sum(-1), num_results(1)
 {
 }
 
@@ -83,6 +84,12 @@ void RouteParameters::setInstructionFlag(const bool flag) { print_instructions =
 
 void RouteParameters::setService(const std::string &service_string) { service = service_string; }
 
+void RouteParameters::setClassify(const bool flag) { classify = flag; }
+
+void RouteParameters::setMatchingBeta(const double beta) { matching_beta = beta; }
+
+void RouteParameters::setGPSPrecision(const double precision) { gps_precision = precision; }
+
 void RouteParameters::setOutputFormat(const std::string &format) { output_format = format; }
 
 void RouteParameters::setJSONpParameter(const std::string &parameter)
@@ -99,6 +106,15 @@ void RouteParameters::addHint(const std::string &hint)
     }
 }
 
+void RouteParameters::addTimestamp(const unsigned timestamp)
+{
+    timestamps.resize(coordinates.size());
+    if (!timestamps.empty())
+    {
+        timestamps.back() = timestamp;
+    }
+}
+
 void RouteParameters::setLanguage(const std::string &language_string)
 {
     language = language_string;
@@ -108,10 +124,10 @@ void RouteParameters::setGeometryFlag(const bool flag) { geometry = flag; }
 
 void RouteParameters::setCompressionFlag(const bool flag) { compression = flag; }
 
-void
-RouteParameters::addCoordinate(const boost::fusion::vector<double, double> &transmitted_coordinates)
+void RouteParameters::addCoordinate(
+    const boost::fusion::vector<double, double> &received_coordinates)
 {
     coordinates.emplace_back(
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(transmitted_coordinates)),
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(transmitted_coordinates)));
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
 }

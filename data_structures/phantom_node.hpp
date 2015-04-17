@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,11 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PHANTOM_NODES_H
 #define PHANTOM_NODES_H
 
-#include <osrm/Coordinate.h>
-#include "../data_structures/travel_mode.hpp"
+#include "travel_mode.hpp"
 #include "../typedefs.h"
 
+#include <osrm/coordinate.hpp>
+
 #include <iostream>
+#include <utility>
 #include <vector>
 
 struct PhantomNode
@@ -52,6 +54,28 @@ struct PhantomNode
                 TravelMode backward_travel_mode);
 
     PhantomNode();
+
+    template <class OtherT> PhantomNode(const OtherT &other, const FixedPointCoordinate &foot_point)
+    {
+        forward_node_id = other.forward_edge_based_node_id;
+        reverse_node_id = other.reverse_edge_based_node_id;
+        name_id = other.name_id;
+
+        forward_weight = other.forward_weight;
+        reverse_weight = other.reverse_weight;
+
+        forward_offset = other.forward_offset;
+        reverse_offset = other.reverse_offset;
+
+        packed_geometry_id = other.packed_geometry_id;
+        component_id = other.component_id;
+
+        location = foot_point;
+        fwd_segment_position = other.fwd_segment_position;
+
+        forward_travel_mode = other.forward_travel_mode;
+        backward_travel_mode = other.backward_travel_mode;
+    }
 
     NodeID forward_node_id;
     NodeID reverse_node_id;
@@ -81,14 +105,13 @@ struct PhantomNode
 
     bool is_in_tiny_component() const;
 
-    bool operator==(const PhantomNode & other) const;
+    bool operator==(const PhantomNode &other) const;
 };
 
 using PhantomNodeArray = std::vector<std::vector<PhantomNode>>;
 
 class phantom_node_pair : public std::pair<PhantomNode, PhantomNode>
 {
-
 };
 
 struct PhantomNodeLists
@@ -103,26 +126,26 @@ struct PhantomNodes
     PhantomNode target_phantom;
 };
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn)
+inline std::ostream &operator<<(std::ostream &out, const PhantomNodes &pn)
 {
     out << "source_coord: " << pn.source_phantom.location << "\n";
     out << "target_coord: " << pn.target_phantom.location << std::endl;
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn)
+inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
 {
-    out <<  "node1: " << pn.forward_node_id      << ", " <<
-            "node2: " << pn.reverse_node_id      << ", " <<
-            "name: "  << pn.name_id              << ", " <<
-            "fwd-w: " << pn.forward_weight       << ", " <<
-            "rev-w: " << pn.reverse_weight       << ", " <<
-            "fwd-o: " << pn.forward_offset       << ", " <<
-            "rev-o: " << pn.reverse_offset       << ", " <<
-            "geom: "  << pn.packed_geometry_id   << ", " <<
-            "comp: "  << pn.component_id         << ", " <<
-            "pos: "   << pn.fwd_segment_position << ", " <<
-            "loc: "   << pn.location;
+    out << "node1: " << pn.forward_node_id << ", "
+        << "node2: " << pn.reverse_node_id << ", "
+        << "name: " << pn.name_id << ", "
+        << "fwd-w: " << pn.forward_weight << ", "
+        << "rev-w: " << pn.reverse_weight << ", "
+        << "fwd-o: " << pn.forward_offset << ", "
+        << "rev-o: " << pn.reverse_offset << ", "
+        << "geom: " << pn.packed_geometry_id << ", "
+        << "comp: " << pn.component_id << ", "
+        << "pos: " << pn.fwd_segment_position << ", "
+        << "loc: " << pn.location;
     return out;
 }
 

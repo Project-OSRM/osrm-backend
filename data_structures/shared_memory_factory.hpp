@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_MEMORY_FACTORY_HPP
 #define SHARED_MEMORY_FACTORY_HPP
 
-#include "../Util/osrm_exception.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/osrm_exception.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -123,8 +123,8 @@ class SharedMemory
             {
                 Remove(key);
             }
-            shm = boost::interprocess::xsi_shared_memory(
-                boost::interprocess::open_or_create, key, size);
+            shm = boost::interprocess::xsi_shared_memory(boost::interprocess::open_or_create, key,
+                                                         size);
 #ifdef __linux__
             if (-1 == shmctl(shm.get_shmid(), SHM_LOCK, 0))
             {
@@ -150,7 +150,10 @@ class SharedMemory
             boost::interprocess::xsi_key key(lock_file().string().c_str(), id);
             result = RegionExists(key);
         }
-        catch (...) { result = false; }
+        catch (...)
+        {
+            result = false;
+        }
         return result;
     }
 
@@ -165,8 +168,14 @@ class SharedMemory
     static bool RegionExists(const boost::interprocess::xsi_key &key)
     {
         bool result = true;
-        try { boost::interprocess::xsi_shared_memory shm(boost::interprocess::open_only, key); }
-        catch (...) { result = false; }
+        try
+        {
+            boost::interprocess::xsi_shared_memory shm(boost::interprocess::open_only, key);
+        }
+        catch (...)
+        {
+            result = false;
+        }
         return result;
     }
 
@@ -198,12 +207,12 @@ class SharedMemory
 // Windows - specific code
 class SharedMemory
 {
-    SharedMemory(const SharedMemory&) = delete;
+    SharedMemory(const SharedMemory &) = delete;
     // Remove shared memory on destruction
     class shm_remove
     {
       private:
-        shm_remove(const shm_remove&) = delete;
+        shm_remove(const shm_remove &) = delete;
         char *m_shmid;
         bool m_initialized;
 
@@ -242,8 +251,7 @@ class SharedMemory
         if (0 == size)
         { // read_only
             shm = boost::interprocess::shared_memory_object(
-                boost::interprocess::open_only,
-                key,
+                boost::interprocess::open_only, key,
                 read_write ? boost::interprocess::read_write : boost::interprocess::read_only);
             region = boost::interprocess::mapped_region(
                 shm, read_write ? boost::interprocess::read_write : boost::interprocess::read_only);
@@ -255,8 +263,8 @@ class SharedMemory
             {
                 Remove(key);
             }
-            shm = boost::interprocess::shared_memory_object(
-                boost::interprocess::open_or_create, key, boost::interprocess::read_write);
+            shm = boost::interprocess::shared_memory_object(boost::interprocess::open_or_create,
+                                                            key, boost::interprocess::read_write);
             shm.truncate(size);
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
 
@@ -274,7 +282,10 @@ class SharedMemory
             build_key(id, k);
             result = RegionExists(k);
         }
-        catch (...) { result = false; }
+        catch (...)
+        {
+            result = false;
+        }
         return result;
     }
 
@@ -286,20 +297,20 @@ class SharedMemory
     }
 
   private:
-    static void build_key(int id, char *key)
-    {
-        sprintf(key, "%s.%d", "osrm.lock", id);
-    }
+    static void build_key(int id, char *key) { sprintf(key, "%s.%d", "osrm.lock", id); }
 
     static bool RegionExists(const char *key)
     {
         bool result = true;
         try
         {
-            boost::interprocess::shared_memory_object shm(
-                boost::interprocess::open_only, key, boost::interprocess::read_write);
+            boost::interprocess::shared_memory_object shm(boost::interprocess::open_only, key,
+                                                          boost::interprocess::read_write);
         }
-        catch (...) { result = false; }
+        catch (...)
+        {
+            result = false;
+        }
         return result;
     }
 

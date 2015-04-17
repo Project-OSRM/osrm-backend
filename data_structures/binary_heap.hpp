@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -36,24 +36,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <cstring>
 
 template <typename NodeID, typename Key> class ArrayStorage
 {
   public:
-    explicit ArrayStorage(size_t size) : positions(new Key[size])
-    {
-        memset(positions, 0, size * sizeof(Key));
-    }
+    explicit ArrayStorage(size_t size) : positions(size, 0) {}
 
-    ~ArrayStorage() { delete[] positions; }
+    ~ArrayStorage() {}
 
     Key &operator[](NodeID node) { return positions[node]; }
+
+    Key peek_index(const NodeID node) const { return positions[node]; }
 
     void Clear() {}
 
   private:
-    Key *positions;
+    std::vector<Key> positions;
 };
 
 template <typename NodeID, typename Key> class MapStorage
@@ -65,6 +63,16 @@ template <typename NodeID, typename Key> class MapStorage
 
     void Clear() { nodes.clear(); }
 
+    Key peek_index(const NodeID node) const
+    {
+        const auto iter = nodes.find(node);
+        if (nodes.end() != iter)
+        {
+            return iter->second;
+        }
+        return std::numeric_limits<Key>::max();
+    }
+
   private:
     std::map<NodeID, Key> nodes;
 };
@@ -75,6 +83,16 @@ template <typename NodeID, typename Key> class UnorderedMapStorage
     explicit UnorderedMapStorage(size_t) { nodes.rehash(1000); }
 
     Key &operator[](const NodeID node) { return nodes[node]; }
+
+    Key peek_index(const NodeID node) const
+    {
+        const auto iter = nodes.find(node);
+        if (std::end(nodes) != iter)
+        {
+            return iter->second;
+        }
+        return std::numeric_limits<Key>::max();
+    }
 
     Key const &operator[](const NodeID node) const
     {
@@ -132,13 +150,13 @@ class BinaryHeap
 
     Data &GetData(NodeID node)
     {
-        const Key index = node_index[node];
+        const Key index = node_index.peek_index(node);
         return inserted_nodes[index].data;
     }
 
     Data const &GetData(NodeID node) const
     {
-        const Key index = node_index[node];
+        const Key index = node_index.peek_index(node);
         return inserted_nodes[index].data;
     }
 
@@ -148,17 +166,17 @@ class BinaryHeap
         return inserted_nodes[index].weight;
     }
 
-    bool WasRemoved(const NodeID node)
+    bool WasRemoved(const NodeID node) const
     {
         BOOST_ASSERT(WasInserted(node));
-        const Key index = node_index[node];
+        const Key index = node_index.peek_index(node);
         return inserted_nodes[index].key == 0;
     }
 
-    bool WasInserted(const NodeID node)
+    bool WasInserted(const NodeID node) const
     {
-        const Key index = node_index[node];
-        if (index >= static_cast<Key>(inserted_nodes.size()))
+        const auto index = node_index.peek_index(node);
+        if (index >= static_cast<decltype(index)>(inserted_nodes.size()))
         {
             return false;
         }
@@ -200,7 +218,7 @@ class BinaryHeap
     void DecreaseKey(NodeID node, Weight weight)
     {
         BOOST_ASSERT(std::numeric_limits<NodeID>::max() != node);
-        const Key &index = node_index[node];
+        const Key &index = node_index.peek_index(node);
         Key &key = inserted_nodes[index].key;
         BOOST_ASSERT(key >= 0);
 
@@ -235,12 +253,12 @@ class BinaryHeap
     {
         const Key droppingIndex = heap[key].index;
         const Weight weight = heap[key].weight;
+        const Key heap_size = static_cast<Key>(heap.size());
         Key nextKey = key << 1;
-        while (nextKey < static_cast<Key>(heap.size()))
+        while (nextKey < heap_size)
         {
             const Key nextKeyOther = nextKey + 1;
-            if ((nextKeyOther < static_cast<Key>(heap.size())) &&
-                (heap[nextKey].weight > heap[nextKeyOther].weight))
+            if ((nextKeyOther < heap_size) && (heap[nextKey].weight > heap[nextKeyOther].weight))
             {
                 nextKey = nextKeyOther;
             }
@@ -279,7 +297,7 @@ class BinaryHeap
     void CheckHeap()
     {
 #ifndef NDEBUG
-        for (Key i = 2; i < (Key)heap.size(); ++i)
+        for (std::size_t i = 2; i < heap.size(); ++i)
         {
             BOOST_ASSERT(heap[i].weight >= heap[i >> 1].weight);
         }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -138,8 +138,8 @@ class StaticKDTree
                 continue;
 
             Iterator middle = tree.left + (tree.right - tree.left) / 2;
-            std::nth_element(
-                kdtree + tree.left, kdtree + middle, kdtree + tree.right, Less(tree.dimension));
+            std::nth_element(kdtree + tree.left, kdtree + middle, kdtree + tree.right,
+                             Less(tree.dimension));
             s.push(Tree(tree.left, middle, (tree.dimension + 1) % k));
             s.push(Tree(middle + 1, tree.right, (tree.dimension + 1) % k));
         }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -147,8 +147,8 @@ template <> class SharedMemoryWrapper<bool>
 template <typename DataT, bool UseSharedMemory> struct ShM
 {
     using vector = typename std::conditional<UseSharedMemory,
-                                      SharedMemoryWrapper<DataT>,
-                                      std::vector<DataT>>::type;
+                                             SharedMemoryWrapper<DataT>,
+                                             std::vector<DataT>>::type;
 };
 
 #endif // SHARED_MEMORY_VECTOR_WRAPPER_HPP

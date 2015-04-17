@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "polyline_compressor.hpp"
 #include "../data_structures/segment_information.hpp"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 std::string PolylineCompressor::encode_vector(std::vector<int> &numbers) const
 {
@@ -56,19 +56,11 @@ std::string PolylineCompressor::encode_number(int number_to_encode) const
     {
         const int next_value = (0x20 | (number_to_encode & 0x1f)) + 63;
         output += static_cast<char>(next_value);
-        if (92 == next_value)
-        {
-            output += static_cast<char>(next_value);
-        }
         number_to_encode >>= 5;
     }
 
     number_to_encode += 63;
     output += static_cast<char>(number_to_encode);
-    if (92 == number_to_encode)
-    {
-        output += static_cast<char>(number_to_encode);
-    }
     return output;
 }
 

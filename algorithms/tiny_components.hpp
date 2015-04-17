@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -37,17 +37,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/restriction_map.hpp"
 #include "../data_structures/turn_instructions.hpp"
 
-#include "../Util/integer_range.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/std_hash.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/std_hash.hpp"
+#include "../util/timing_util.hpp"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <boost/assert.hpp>
 
 #include <tbb/parallel_sort.h>
-
 
 #include <cstdint>
 
@@ -57,8 +56,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_set>
 #include <vector>
 
-template <typename GraphT>
-class TarjanSCC
+template <typename GraphT> class TarjanSCC
 {
     struct TarjanStackFrame
     {
@@ -80,16 +78,15 @@ class TarjanSCC
     std::shared_ptr<GraphT> m_node_based_graph;
     std::unordered_set<NodeID> barrier_node_set;
     RestrictionMap m_restriction_map;
-    unsigned size_one_counter;
+    std::size_t size_one_counter;
 
   public:
-    template<class ContainerT>
+    template <class ContainerT>
     TarjanSCC(std::shared_ptr<GraphT> graph,
               const RestrictionMap &restrictions,
               const ContainerT &barrier_node_list)
-        : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID),
-          m_node_based_graph(graph), m_restriction_map(restrictions),
-          size_one_counter(0)
+        : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID), m_node_based_graph(graph),
+          m_restriction_map(restrictions), size_one_counter(0)
     {
         barrier_node_set.insert(std::begin(barrier_node_list), std::end(barrier_node_list));
         BOOST_ASSERT(m_node_based_graph->GetNumberOfNodes() > 0);
@@ -98,17 +95,18 @@ class TarjanSCC
     void run()
     {
         TIMER_START(SCC_RUN);
+        const NodeID max_node_id = m_node_based_graph->GetNumberOfNodes();
+
         // The following is a hack to distinguish between stuff that happens
         // before the recursive call and stuff that happens after
         std::stack<TarjanStackFrame> recursion_stack;
         // true = stuff before, false = stuff after call
         std::stack<NodeID> tarjan_stack;
-        std::vector<TarjanNode> tarjan_node_list(m_node_based_graph->GetNumberOfNodes());
+        std::vector<TarjanNode> tarjan_node_list(max_node_id);
         unsigned component_index = 0, size_of_current_component = 0;
-        int index = 0;
-        const NodeID last_node = m_node_based_graph->GetNumberOfNodes();
-        std::vector<bool> processing_node_before_recursion(m_node_based_graph->GetNumberOfNodes(), true);
-        for(const NodeID node : osrm::irange(0u, last_node))
+        unsigned index = 0;
+        std::vector<bool> processing_node_before_recursion(max_node_id, true);
+        for (const NodeID node : osrm::irange(0u, max_node_id))
         {
             if (SPECIAL_NODEID == components_index[node])
             {
@@ -150,12 +148,10 @@ class TarjanSCC
                         const auto vprime = m_node_based_graph->GetTarget(current_edge);
 
                         // Traverse outgoing edges
-                        if (barrier_node_set.find(v) != barrier_node_set.end() &&
-                            u != vprime)
+                        if (barrier_node_set.find(v) != barrier_node_set.end() && u != vprime)
                         {
                             // continue;
                         }
-
 
                         if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
                             vprime == to_node_of_only_restriction)
@@ -219,35 +215,25 @@ class TarjanSCC
         }
 
         TIMER_STOP(SCC_RUN);
-        SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN)/1000. << "s";
+        SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN) / 1000. << "s";
 
-        size_one_counter = std::count_if(component_size_vector.begin(),
-                                         component_size_vector.end(),
+        size_one_counter = std::count_if(component_size_vector.begin(), component_size_vector.end(),
                                          [](unsigned value)
                                          {
-            return 1 == value;
-        });
+                                             return 1 == value;
+                                         });
     }
 
-    std::size_t get_number_of_components() const
-    {
-        return component_size_vector.size();
-    }
+    std::size_t get_number_of_components() const { return component_size_vector.size(); }
 
-    unsigned get_size_one_count() const
-    {
-        return size_one_counter;
-    }
+    std::size_t get_size_one_count() const { return size_one_counter; }
 
     unsigned get_component_size(const NodeID node) const
     {
         return component_size_vector[components_index[node]];
     }
 
-    unsigned get_component_id(const NodeID node) const
-    {
-        return components_index[node];
-    }
+    unsigned get_component_id(const NodeID node) const { return components_index[node]; }
 };
 
 #endif /* TINY_COMPONENTS_HPP */

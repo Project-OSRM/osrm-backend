@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -27,10 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/percent.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/static_graph.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/graph_loader.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/osrm_exception.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/graph_loader.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/osrm_exception.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -86,17 +86,17 @@ int main(int argc, char *argv[])
                 if (SPECIAL_EDGEID == edge_id_1)
                 {
                     throw osrm::exception("cannot find first segment of edge (" +
-                                        std::to_string(node_u) + "," + std::to_string(data.id) +
-                                        "," + std::to_string(node_v) + "), eid: " +
-                                        std::to_string(eid));
+                                          std::to_string(node_u) + "," + std::to_string(data.id) +
+                                          "," + std::to_string(node_v) + "), eid: " +
+                                          std::to_string(eid));
                 }
                 const EdgeID edge_id_2 = m_query_graph->FindEdgeInEitherDirection(data.id, node_v);
                 if (SPECIAL_EDGEID == edge_id_2)
                 {
                     throw osrm::exception("cannot find second segment of edge (" +
-                                        std::to_string(node_u) + "," + std::to_string(data.id) +
-                                        "," + std::to_string(node_v) + "), eid: " +
-                                        std::to_string(eid));
+                                          std::to_string(node_u) + "," + std::to_string(data.id) +
+                                          "," + std::to_string(node_v) + "), eid: " +
+                                          std::to_string(eid));
                 }
             }
             progress.printStatus(node_u);

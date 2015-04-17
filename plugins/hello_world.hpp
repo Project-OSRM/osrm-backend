@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,14 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef HELLO_WORLD_PLUGIN_H
-#define HELLO_WORLD_PLUGIN_H
+#ifndef HELLO_WORLD_HPP
+#define HELLO_WORLD_HPP
 
 #include "plugin_base.hpp"
 
-#include "../data_structures/json_container.hpp"
-#include "../Util/cast.hpp"
-#include "../Util/json_renderer.hpp"
+#include "../util/cast.hpp"
+#include "../util/json_renderer.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <string>
 
@@ -44,13 +45,11 @@ class HelloWorldPlugin final : public BasePlugin
   public:
     HelloWorldPlugin() : descriptor_string("hello") {}
     virtual ~HelloWorldPlugin() {}
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &routeParameters,
+                      osrm::json::Object &json_result) override final
     {
-        reply.status = http::Reply::ok;
-
-        JSON::Object json_result;
         std::string temp_string;
         json_result.values["title"] = "Hello World";
 
@@ -72,15 +71,17 @@ class HelloWorldPlugin final : public BasePlugin
         temp_string = cast::integral_to_string(routeParameters.coordinates.size());
         json_result.values["location_count"] = temp_string;
 
-        JSON::Array json_locations;
+        osrm::json::Array json_locations;
         unsigned counter = 0;
         for (const FixedPointCoordinate &coordinate : routeParameters.coordinates)
         {
-            JSON::Object json_location;
-            JSON::Array json_coordinates;
+            osrm::json::Object json_location;
+            osrm::json::Array json_coordinates;
 
-            json_coordinates.values.push_back(static_cast<double>(coordinate.lat / COORDINATE_PRECISION));
-            json_coordinates.values.push_back(static_cast<double>(coordinate.lon / COORDINATE_PRECISION));
+            json_coordinates.values.push_back(
+                static_cast<double>(coordinate.lat / COORDINATE_PRECISION));
+            json_coordinates.values.push_back(
+                static_cast<double>(coordinate.lon / COORDINATE_PRECISION));
             json_location.values[cast::integral_to_string(counter)] = json_coordinates;
             json_locations.values.push_back(json_location);
             ++counter;
@@ -88,7 +89,7 @@ class HelloWorldPlugin final : public BasePlugin
         json_result.values["locations"] = json_locations;
         json_result.values["hint_count"] = routeParameters.hints.size();
 
-        JSON::Array json_hints;
+        osrm::json::Array json_hints;
         counter = 0;
         for (const std::string &current_hint : routeParameters.hints)
         {
@@ -96,12 +97,11 @@ class HelloWorldPlugin final : public BasePlugin
             ++counter;
         }
         json_result.values["hints"] = json_hints;
-
-        JSON::render(reply.content, json_result);
+        return 200;
     }
 
   private:
     std::string descriptor_string;
 };
 
-#endif // HELLO_WORLD_PLUGIN_H
+#endif // HELLO_WORLD_HPP

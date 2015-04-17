@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "routing_base.hpp"
 #include "../data_structures/search_engine_data.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/container.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/container.hpp"
 
 #include <boost/assert.hpp>
 
@@ -44,9 +44,11 @@ const double VIAPATH_ALPHA = 0.10;
 const double VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
 const double VIAPATH_GAMMA = 0.75;   // alternative shares at most 75% with the shortest.
 
-template <class DataFacadeT> class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
+template <class DataFacadeT>
+class AlternativeRouting final
+    : private BasicRoutingInterface<DataFacadeT, AlternativeRouting<DataFacadeT>>
 {
-    using super = BasicRoutingInterface<DataFacadeT>;
+    using super = BasicRoutingInterface<DataFacadeT, AlternativeRouting<DataFacadeT>>;
     using EdgeData = typename DataFacadeT::EdgeData;
     using QueryHeap = SearchEngineData::QueryHeap;
     using SearchSpaceEdge = std::pair<NodeID, NodeID>;
@@ -78,7 +80,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
 
     virtual ~AlternativeRouting() {}
 
-    void operator()(const PhantomNodes &phantom_node_pair, RawRouteData &raw_route_data)
+    void operator()(const PhantomNodes &phantom_node_pair, InternalRouteResult &raw_route_data)
     {
         std::vector<NodeID> alternative_path;
         std::vector<NodeID> via_node_candidate_list;
@@ -93,17 +95,16 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         engine_working_data.InitializeOrClearThirdThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &forward_heap1 = *(engine_working_data.forwardHeap);
-        QueryHeap &reverse_heap1 = *(engine_working_data.backwardHeap);
-        QueryHeap &forward_heap2 = *(engine_working_data.forwardHeap2);
-        QueryHeap &reverse_heap2 = *(engine_working_data.backwardHeap2);
+        QueryHeap &forward_heap1 = *(engine_working_data.forward_heap_1);
+        QueryHeap &reverse_heap1 = *(engine_working_data.reverse_heap_1);
+        QueryHeap &forward_heap2 = *(engine_working_data.forward_heap_2);
+        QueryHeap &reverse_heap2 = *(engine_working_data.reverse_heap_2);
 
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
-        EdgeWeight min_edge_offset =
-            std::min(0, -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset());
-        min_edge_offset = std::min(min_edge_offset,
-                                   -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+        const EdgeWeight min_edge_offset =
+            std::min(phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
+                     phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
 
         if (phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
         {
@@ -148,22 +149,16 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         {
             if (0 < forward_heap1.Size())
             {
-                AlternativeRoutingStep<true>(forward_heap1,
-                                             reverse_heap1,
-                                             &middle_node,
+                AlternativeRoutingStep<true>(forward_heap1, reverse_heap1, &middle_node,
                                              &upper_bound_to_shortest_path_distance,
-                                             via_node_candidate_list,
-                                             forward_search_space,
+                                             via_node_candidate_list, forward_search_space,
                                              min_edge_offset);
             }
             if (0 < reverse_heap1.Size())
             {
-                AlternativeRoutingStep<false>(reverse_heap1,
-                                              forward_heap1,
-                                              &middle_node,
+                AlternativeRoutingStep<false>(forward_heap1, reverse_heap1, &middle_node,
                                               &upper_bound_to_shortest_path_distance,
-                                              via_node_candidate_list,
-                                              reverse_search_space,
+                                              via_node_candidate_list, reverse_search_space,
                                               min_edge_offset);
             }
         }
@@ -274,19 +269,16 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         std::vector<NodeID> &packed_shortest_path = packed_forward_path;
         std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
         packed_shortest_path.emplace_back(middle_node);
-        packed_shortest_path.insert(
-            packed_shortest_path.end(), packed_reverse_path.begin(), packed_reverse_path.end());
+        packed_shortest_path.insert(packed_shortest_path.end(), packed_reverse_path.begin(),
+                                    packed_reverse_path.end());
         std::vector<RankedCandidateNode> ranked_candidates_list;
 
         // prioritizing via nodes for deep inspection
         for (const NodeID node : preselected_node_list)
         {
             int length_of_via_path = 0, sharing_of_via_path = 0;
-            ComputeLengthAndSharingOfViaPath(node,
-                                             &length_of_via_path,
-                                             &sharing_of_via_path,
-                                             packed_shortest_path,
-                                             min_edge_offset);
+            ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path,
+                                             packed_shortest_path, min_edge_offset);
             const int maximum_allowed_sharing =
                 static_cast<int>(upper_bound_to_shortest_path_distance * VIAPATH_GAMMA);
             if (sharing_of_via_path <= maximum_allowed_sharing &&
@@ -302,16 +294,10 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         NodeID s_v_middle = SPECIAL_NODEID, v_t_middle = SPECIAL_NODEID;
         for (const RankedCandidateNode &candidate : ranked_candidates_list)
         {
-            if (ViaNodeCandidatePassesTTest(forward_heap1,
-                                            reverse_heap1,
-                                            forward_heap2,
-                                            reverse_heap2,
-                                            candidate,
-                                            upper_bound_to_shortest_path_distance,
-                                            &length_of_via_path,
-                                            &s_v_middle,
-                                            &v_t_middle,
-                                            min_edge_offset))
+            if (ViaNodeCandidatePassesTTest(
+                    forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate,
+                    upper_bound_to_shortest_path_distance, &length_of_via_path, &s_v_middle,
+                    &v_t_middle, min_edge_offset))
             {
                 // select first admissable
                 selected_via_node = candidate.node;
@@ -343,13 +329,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         {
             std::vector<NodeID> packed_alternate_path;
             // retrieve alternate path
-            RetrievePackedAlternatePath(forward_heap1,
-                                        reverse_heap1,
-                                        forward_heap2,
-                                        reverse_heap2,
-                                        s_v_middle,
-                                        v_t_middle,
-                                        packed_alternate_path);
+            RetrievePackedAlternatePath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2,
+                                        s_v_middle, v_t_middle, packed_alternate_path);
 
             raw_route_data.alt_source_traversed_in_reverse.push_back((
                 packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id));
@@ -357,8 +338,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
                 (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id));
 
             // unpack the alternate path
-            super::UnpackPath(
-                packed_alternate_path, phantom_node_pair, raw_route_data.unpacked_alternative);
+            super::UnpackPath(packed_alternate_path, phantom_node_pair,
+                              raw_route_data.unpacked_alternative);
 
             raw_route_data.alternative_path_length = length_of_via_path;
         }
@@ -370,13 +351,13 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
 
   private:
     // unpack alternate <s,..,v,..,t> by exploring search spaces from v
-    inline void RetrievePackedAlternatePath(const QueryHeap &forward_heap1,
-                                            const QueryHeap &reverse_heap1,
-                                            const QueryHeap &forward_heap2,
-                                            const QueryHeap &reverse_heap2,
-                                            const NodeID s_v_middle,
-                                            const NodeID v_t_middle,
-                                            std::vector<NodeID> &packed_path) const
+    void RetrievePackedAlternatePath(const QueryHeap &forward_heap1,
+                                     const QueryHeap &reverse_heap1,
+                                     const QueryHeap &forward_heap2,
+                                     const QueryHeap &reverse_heap2,
+                                     const NodeID s_v_middle,
+                                     const NodeID v_t_middle,
+                                     std::vector<NodeID> &packed_path) const
     {
         // fetch packed path [s,v)
         std::vector<NodeID> packed_v_t_path;
@@ -384,8 +365,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         packed_path.pop_back(); // remove middle node. It's in both half-paths
 
         // fetch patched path [v,t]
-        super::RetrievePackedPathFromHeap(
-            forward_heap2, reverse_heap1, v_t_middle, packed_v_t_path);
+        super::RetrievePackedPathFromHeap(forward_heap2, reverse_heap1, v_t_middle,
+                                          packed_v_t_path);
 
         packed_path.insert(packed_path.end(), packed_v_t_path.begin(), packed_v_t_path.end());
     }
@@ -394,19 +375,19 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
     // compute and unpack <s,..,v> and <v,..,t> by exploring search spaces
     // from v and intersecting against queues. only half-searches have to be
     // done at this stage
-    inline void ComputeLengthAndSharingOfViaPath(const NodeID via_node,
-                                                 int *real_length_of_via_path,
-                                                 int *sharing_of_via_path,
-                                                 const std::vector<NodeID> &packed_shortest_path,
-                                                 const EdgeWeight min_edge_offset)
+    void ComputeLengthAndSharingOfViaPath(const NodeID via_node,
+                                          int *real_length_of_via_path,
+                                          int *sharing_of_via_path,
+                                          const std::vector<NodeID> &packed_shortest_path,
+                                          const EdgeWeight min_edge_offset)
     {
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &existing_forward_heap = *engine_working_data.forwardHeap;
-        QueryHeap &existing_reverse_heap = *engine_working_data.backwardHeap;
-        QueryHeap &new_forward_heap = *engine_working_data.forwardHeap2;
-        QueryHeap &new_reverse_heap = *engine_working_data.backwardHeap2;
+        QueryHeap &existing_forward_heap = *engine_working_data.forward_heap_1;
+        QueryHeap &existing_reverse_heap = *engine_working_data.reverse_heap_1;
+        QueryHeap &new_forward_heap = *engine_working_data.forward_heap_2;
+        QueryHeap &new_reverse_heap = *engine_working_data.reverse_heap_2;
 
         std::vector<NodeID> packed_s_v_path;
         std::vector<NodeID> packed_v_t_path;
@@ -420,12 +401,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         // compute path <s,..,v> by reusing forward search from s
         while (!new_reverse_heap.Empty())
         {
-            super::RoutingStep(new_reverse_heap,
-                               existing_forward_heap,
-                               &s_v_middle,
-                               &upper_bound_s_v_path_length,
-                               min_edge_offset,
-                               false);
+            super::RoutingStep(new_reverse_heap, existing_forward_heap, &s_v_middle,
+                               &upper_bound_s_v_path_length, min_edge_offset, false);
         }
         // compute path <v,..,t> by reusing backward search from node t
         NodeID v_t_middle = SPECIAL_NODEID;
@@ -433,12 +410,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         new_forward_heap.Insert(via_node, 0, via_node);
         while (!new_forward_heap.Empty())
         {
-            super::RoutingStep(new_forward_heap,
-                               existing_reverse_heap,
-                               &v_t_middle,
-                               &upper_bound_of_v_t_path_length,
-                               min_edge_offset,
-                               true);
+            super::RoutingStep(new_forward_heap, existing_reverse_heap, &v_t_middle,
+                               &upper_bound_of_v_t_path_length, min_edge_offset, true);
         }
         *real_length_of_via_path = upper_bound_s_v_path_length + upper_bound_of_v_t_path_length;
 
@@ -448,10 +421,10 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         }
 
         // retrieve packed paths
-        super::RetrievePackedPathFromHeap(
-            existing_forward_heap, new_reverse_heap, s_v_middle, packed_s_v_path);
-        super::RetrievePackedPathFromHeap(
-            new_forward_heap, existing_reverse_heap, v_t_middle, packed_v_t_path);
+        super::RetrievePackedPathFromHeap(existing_forward_heap, new_reverse_heap, s_v_middle,
+                                          packed_s_v_path);
+        super::RetrievePackedPathFromHeap(new_forward_heap, existing_reverse_heap, v_t_middle,
+                                          packed_v_t_path);
 
         // partial unpacking, compute sharing
         // First partially unpack s-->v until paths deviate, note length of common path.
@@ -484,12 +457,11 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         const int64_t packed_path_length =
             std::min(partially_unpacked_via_path.size(), partially_unpacked_shortest_path.size()) -
             1;
-        for (int64_t current_node = 0;
-             (current_node < packed_path_length) &&
-                 (partially_unpacked_via_path[current_node] ==
-                      partially_unpacked_shortest_path[current_node] &&
-                  partially_unpacked_via_path[current_node + 1] ==
-                      partially_unpacked_shortest_path[current_node + 1]);
+        for (int64_t current_node = 0; (current_node < packed_path_length) &&
+                                           (partially_unpacked_via_path[current_node] ==
+                                                partially_unpacked_shortest_path[current_node] &&
+                                            partially_unpacked_via_path[current_node + 1] ==
+                                                partially_unpacked_shortest_path[current_node + 1]);
              ++current_node)
         {
             EdgeID selected_edge =
@@ -517,8 +489,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
                 if (packed_v_t_path[via_path_index] == packed_shortest_path[shortest_path_index])
                 {
                     super::UnpackEdge(packed_v_t_path[via_path_index - 1],
-                                      packed_v_t_path[via_path_index],
-                                      partially_unpacked_via_path);
+                                      packed_v_t_path[via_path_index], partially_unpacked_via_path);
                     super::UnpackEdge(packed_shortest_path[shortest_path_index - 1],
                                       packed_shortest_path[shortest_path_index],
                                       partially_unpacked_shortest_path);
@@ -551,7 +522,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         // variable
     }
 
-    // inline int approximateAmountOfSharing(
+    // int approximateAmountOfSharing(
     //     const NodeID alternate_path_middle_node_id,
     //     QueryHeap & forward_heap,
     //     QueryHeap & reverse_heap,
@@ -598,14 +569,17 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
 
     // todo: reorder parameters
     template <bool is_forward_directed>
-    inline void AlternativeRoutingStep(QueryHeap &forward_heap,
-                                       QueryHeap &reverse_heap,
-                                       NodeID *middle_node,
-                                       int *upper_bound_to_shortest_path_distance,
-                                       std::vector<NodeID> &search_space_intersection,
-                                       std::vector<SearchSpaceEdge> &search_space,
-                                       const EdgeWeight min_edge_offset) const
+    void AlternativeRoutingStep(QueryHeap &heap1,
+                                QueryHeap &heap2,
+                                NodeID *middle_node,
+                                int *upper_bound_to_shortest_path_distance,
+                                std::vector<NodeID> &search_space_intersection,
+                                std::vector<SearchSpaceEdge> &search_space,
+                                const EdgeWeight min_edge_offset) const
     {
+        QueryHeap &forward_heap = (is_forward_directed ? heap1 : heap2);
+        QueryHeap &reverse_heap = (is_forward_directed ? heap2 : heap1);
+
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         // const NodeID parentnode = forward_heap.GetData(node).parent;
@@ -674,16 +648,16 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
     }
 
     // conduct T-Test
-    inline bool ViaNodeCandidatePassesTTest(QueryHeap &existing_forward_heap,
-                                            QueryHeap &existing_reverse_heap,
-                                            QueryHeap &new_forward_heap,
-                                            QueryHeap &new_reverse_heap,
-                                            const RankedCandidateNode &candidate,
-                                            const int length_of_shortest_path,
-                                            int *length_of_via_path,
-                                            NodeID *s_v_middle,
-                                            NodeID *v_t_middle,
-                                            const EdgeWeight min_edge_offset) const
+    bool ViaNodeCandidatePassesTTest(QueryHeap &existing_forward_heap,
+                                     QueryHeap &existing_reverse_heap,
+                                     QueryHeap &new_forward_heap,
+                                     QueryHeap &new_reverse_heap,
+                                     const RankedCandidateNode &candidate,
+                                     const int length_of_shortest_path,
+                                     int *length_of_via_path,
+                                     NodeID *s_v_middle,
+                                     NodeID *v_t_middle,
+                                     const EdgeWeight min_edge_offset) const
     {
         new_forward_heap.Clear();
         new_reverse_heap.Clear();
@@ -696,12 +670,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         new_reverse_heap.Insert(candidate.node, 0, candidate.node);
         while (new_reverse_heap.Size() > 0)
         {
-            super::RoutingStep(new_reverse_heap,
-                               existing_forward_heap,
-                               s_v_middle,
-                               &upper_bound_s_v_path_length,
-                               min_edge_offset,
-                               false);
+            super::RoutingStep(new_reverse_heap, existing_forward_heap, s_v_middle,
+                               &upper_bound_s_v_path_length, min_edge_offset, false);
         }
 
         if (INVALID_EDGE_WEIGHT == upper_bound_s_v_path_length)
@@ -715,12 +685,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         new_forward_heap.Insert(candidate.node, 0, candidate.node);
         while (new_forward_heap.Size() > 0)
         {
-            super::RoutingStep(new_forward_heap,
-                               existing_reverse_heap,
-                               v_t_middle,
-                               &upper_bound_of_v_t_path_length,
-                               min_edge_offset,
-                               true);
+            super::RoutingStep(new_forward_heap, existing_reverse_heap, v_t_middle,
+                               &upper_bound_of_v_t_path_length, min_edge_offset, true);
         }
 
         if (INVALID_EDGE_WEIGHT == upper_bound_of_v_t_path_length)
@@ -731,11 +697,11 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         *length_of_via_path = upper_bound_s_v_path_length + upper_bound_of_v_t_path_length;
 
         // retrieve packed paths
-        super::RetrievePackedPathFromHeap(
-            existing_forward_heap, new_reverse_heap, *s_v_middle, packed_s_v_path);
+        super::RetrievePackedPathFromHeap(existing_forward_heap, new_reverse_heap, *s_v_middle,
+                                          packed_s_v_path);
 
-        super::RetrievePackedPathFromHeap(
-            new_forward_heap, existing_reverse_heap, *v_t_middle, packed_v_t_path);
+        super::RetrievePackedPathFromHeap(new_forward_heap, existing_reverse_heap, *v_t_middle,
+                                          packed_v_t_path);
 
         NodeID s_P = *s_v_middle, t_P = *v_t_middle;
         if (SPECIAL_NODEID == s_P)
@@ -815,8 +781,7 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         // Traverse path s-->v
         BOOST_ASSERT(!packed_v_t_path.empty());
         for (unsigned i = 0, packed_path_length = static_cast<unsigned>(packed_v_t_path.size() - 1);
-             (i < packed_path_length) && unpack_stack.empty();
-             ++i)
+             (i < packed_path_length) && unpack_stack.empty(); ++i)
         {
             const EdgeID edgeID =
                 facade->FindEdgeInEitherDirection(packed_v_t_path[i], packed_v_t_path[i + 1]);
@@ -876,8 +841,8 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         engine_working_data.InitializeOrClearThirdThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &forward_heap3 = *engine_working_data.forwardHeap3;
-        QueryHeap &reverse_heap3 = *engine_working_data.backwardHeap3;
+        QueryHeap &forward_heap3 = *engine_working_data.forward_heap_3;
+        QueryHeap &reverse_heap3 = *engine_working_data.reverse_heap_3;
         int upper_bound = INVALID_EDGE_WEIGHT;
         NodeID middle = SPECIAL_NODEID;
 
@@ -888,13 +853,13 @@ template <class DataFacadeT> class AlternativeRouting final : private BasicRouti
         {
             if (!forward_heap3.Empty())
             {
-                super::RoutingStep(
-                    forward_heap3, reverse_heap3, &middle, &upper_bound, min_edge_offset, true);
+                super::RoutingStep(forward_heap3, reverse_heap3, &middle, &upper_bound,
+                                   min_edge_offset, true);
             }
             if (!reverse_heap3.Empty())
             {
-                super::RoutingStep(
-                    reverse_heap3, forward_heap3, &middle, &upper_bound, min_edge_offset, false);
+                super::RoutingStep(reverse_heap3, forward_heap3, &middle, &upper_bound,
+                                   min_edge_offset, false);
             }
         }
         return (upper_bound <= t_test_path_length);

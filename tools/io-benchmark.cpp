@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/git_sha.hpp"
-#include "../Util/osrm_exception.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/osrm_exception.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -63,8 +63,8 @@ void RunStatistics(std::vector<double> &timings_vector, Statistics &stats)
     double primary_sum = std::accumulate(timings_vector.begin(), timings_vector.end(), 0.0);
     stats.mean = primary_sum / timings_vector.size();
 
-    double primary_sq_sum = std::inner_product(
-        timings_vector.begin(), timings_vector.end(), timings_vector.begin(), 0.0);
+    double primary_sq_sum = std::inner_product(timings_vector.begin(), timings_vector.end(),
+                                               timings_vector.begin(), 0.0);
     stats.dev = std::sqrt(primary_sq_sum / timings_vector.size() - (stats.mean * stats.mean));
 }
 
@@ -72,12 +72,12 @@ int main(int argc, char *argv[])
 {
 
 #ifdef __FreeBSD__
-        SimpleLogger().Write() << "Not supported on FreeBSD";
-        return 0;
+    SimpleLogger().Write() << "Not supported on FreeBSD";
+    return 0;
 #endif
 #ifdef _WIN32
-        SimpleLogger().Write() << "Not supported on Windows";
-        return 0;
+    SimpleLogger().Write() << "Not supported on Windows";
+    return 0;
 #else
 
     LogPolicy::GetInstance().Unmute();
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
             std::uniform_int_distribution<unsigned> uniform_dist(0, number_of_blocks - 1);
             for (unsigned i = 0; i < 1000; ++i)
             {
-                unsigned block_to_read =uniform_dist(e1);
+                unsigned block_to_read = uniform_dist(e1);
                 off_t current_offset = block_to_read * 4096;
                 TIMER_START(random_access);
 #ifdef __APPLE__

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -49,7 +49,7 @@ class IteratorbasedCRC32
         while (iter != end)
         {
             using value_type = typename std::iterator_traits<Iterator>::value_type;
-            char *data = (char *)(&(*iter));
+            const char *data = reinterpret_cast<const char *>(&(*iter));
 
             if (use_hardware_implementation)
             {
@@ -73,14 +73,14 @@ class IteratorbasedCRC32
         return sse42_found;
     }
 
-    unsigned compute_in_software(char *str, unsigned len)
+    unsigned compute_in_software(const char *str, unsigned len)
     {
         crc_processor.process_bytes(str, len);
         return crc_processor.checksum();
     }
 
     // adapted from http://byteworm.com/2010/10/13/crc32/
-    unsigned compute_in_hardware(char *str, unsigned len)
+    unsigned compute_in_hardware(const char *str, unsigned len)
     {
 #if defined(__x86_64__)
         unsigned q = len / sizeof(unsigned);
@@ -96,7 +96,7 @@ class IteratorbasedCRC32
             ++p;
         }
 
-        str = (char *)p;
+        str = reinterpret_cast<char *>(p);
         while (r--)
         {
             __asm__ __volatile__(".byte 0xf2, 0xf, 0x38, 0xf1, 0xf1;"
@@ -116,7 +116,7 @@ class IteratorbasedCRC32
         return ecx;
     }
 
-#if defined(__MINGW64__) || defined(_MSC_VER)
+#if defined(__MINGW64__) || defined(_MSC_VER) || !defined(__x86_64__)
     inline void
     __get_cpuid(int param, unsigned *eax, unsigned *ebx, unsigned *ecx, unsigned *edx) const
     {
@@ -131,8 +131,7 @@ class IteratorbasedCRC32
 
 struct RangebasedCRC32
 {
-    template<typename Iteratable>
-    unsigned operator()(const Iteratable &iterable)
+    template <typename Iteratable> unsigned operator()(const Iteratable &iterable)
     {
         return crc32(std::begin(iterable), std::end(iterable));
     }

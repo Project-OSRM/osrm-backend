@@ -1,9 +1,9 @@
 -- Begin of globals
 --require("lib/access") --function temporarily inlined
 
-barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["entrance"] = true }
+barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true }
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true }
+access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
@@ -28,6 +28,7 @@ speed_profile = {
   ["service"] = 15,
 --  ["track"] = 5,
   ["ferry"] = 5,
+  ["movable"] = 5,
   ["shuttle_train"] = 10,
   ["default"] = 10
 }
@@ -144,6 +145,7 @@ local speed_reduction = 0.8
 --modes
 local mode_normal = 1
 local mode_ferry = 2
+local mode_movable_bridge = 3
 
 local function find_access_tag(source, access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
@@ -203,9 +205,7 @@ function node_function (node, result)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier and "" ~= barrier then
-      if barrier_whitelist[barrier] then
-        return
-      else
+      if not barrier_whitelist[barrier] then
         result.barrier = true
       end
     end
@@ -221,8 +221,9 @@ end
 function way_function (way, result)
   local highway = way:get_value_by_key("highway")
   local route = way:get_value_by_key("route")
+  local bridge = way:get_value_by_key("bridge")
 
-  if not ((highway and highway ~= "") or (route and route ~= "")) then
+  if not ((highway and highway ~= "") or (route and route ~= "") or (bridge and bridge ~= "")) then
     return
   end
 
@@ -248,15 +249,21 @@ function way_function (way, result)
     return
   end
 
+  local width = math.huge
+  local width_string = way:get_value_by_key("width")
+  if width_string and tonumber(width_string:match("%d*")) then
+    width = tonumber(width_string:match("%d*"))
+  end
+
   -- Check if we are allowed to access the way
   local access = find_access_tag(way, access_tags_hierachy)
   if access_tag_blacklist[access] then
     return
   end
 
-  -- Handling ferries and piers
+  -- handling ferries and piers
   local route_speed = speed_profile[route]
-  if(route_speed and route_speed > 0) then
+  if (route_speed and route_speed > 0) then
     highway = route;
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
@@ -266,6 +273,21 @@ function way_function (way, result)
     result.backward_mode = mode_ferry
     result.forward_speed = route_speed
     result.backward_speed = route_speed
+  end
+
+  -- handling movable bridges
+  local bridge_speed = speed_profile[bridge]
+  local capacity_car = way:get_value_by_key("capacity:car")
+  if (bridge_speed and bridge_speed > 0) and (capacity_car ~= 0) then
+    highway = bridge;
+    local duration  = way:get_value_by_key("duration")
+    if duration and durationIsValid(duration) then
+      result.duration = max( parseDuration(duration), 1 );
+    end
+    result.forward_mode = mode_movable_bridge
+    result.backward_mode = mode_movable_bridge
+    result.forward_speed = bridge_speed
+    result.backward_speed = bridge_speed
   end
 
   -- leave early of this way is not accessible
@@ -385,12 +407,24 @@ function way_function (way, result)
     result.ignore_in_grid = true
   end
 
+
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
-    result.forward_speed = result.forward_speed*speed_reduction + 11;
+    local scaled_speed = result.forward_speed*speed_reduction + 11;
+    local penalized_speed = math.huge
+    if width <= 3 then
+      penalized_speed = result.forward_speed / 2;
+    end
+    result.forward_speed = math.min(penalized_speed, scaled_speed)
   end
+
   if result.backward_speed > 0 then
-    result.backward_speed = result.backward_speed*speed_reduction + 11;
+    local scaled_speed = result.backward_speed*speed_reduction + 11;
+    local penalized_speed = math.huge
+    if width <= 3 then
+      penalized_speed = result.backward_speed / 2;
+    end
+    result.backward_speed = math.min(penalized_speed, scaled_speed)
   end
 end
 

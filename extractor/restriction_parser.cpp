@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,14 +30,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "scripting_environment.hpp"
 
 #include "../data_structures/external_memory_node.hpp"
-#include "../Util/lua_util.hpp"
-#include "../Util/osrm_exception.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/lua_util.hpp"
+#include "../util/osrm_exception.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/ref.hpp>
 #include <boost/regex.hpp>
+
+#include <algorithm>
 
 namespace
 {
@@ -85,8 +87,8 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
     {
         luabind::set_pcall_callback(&lua_error_callback);
         // get list of turn restriction exceptions
-        luabind::call_function<void>(
-            lua_state, "get_exceptions", boost::ref(restriction_exceptions));
+        luabind::call_function<void>(lua_state, "get_exceptions",
+                                     boost::ref(restriction_exceptions));
         const unsigned exception_count = restriction_exceptions.size();
         SimpleLogger().Write() << "Found " << exception_count
                                << " exceptions to turn restrictions:";
@@ -166,9 +168,8 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
                 continue;
             }
             BOOST_ASSERT(0 == strcmp("via", role));
-            // set the via node id
-            // SimpleLogger().Write() << "via: " << member.ref();
 
+            // set via node id
             restriction_container.restriction.via.node = member.ref();
             break;
 
@@ -177,37 +178,26 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
                          0 == strcmp("via", role));
             if (0 == strcmp("from", role))
             {
-                // SimpleLogger().Write() << "from: " << member.ref();
                 restriction_container.restriction.from.way = member.ref();
             }
             else if (0 == strcmp("to", role))
             {
-                // SimpleLogger().Write() << "to: " << member.ref();
                 restriction_container.restriction.to.way = member.ref();
             }
-            else if (0 == strcmp("via", role))
-            {
-                // not yet suppported
-                // restriction_container.restriction.via.way = member.ref();
-            }
+            // else if (0 == strcmp("via", role))
+            // {
+            //     not yet suppported
+            //     restriction_container.restriction.via.way = member.ref();
+            // }
             break;
         case osmium::item_type::relation:
             // not yet supported, but who knows what the future holds...
-            continue;
             break;
         default:
-            BOOST_ASSERT(false);
+            // shouldn't ever happen
             break;
         }
     }
-
-    // SimpleLogger().Write() << (restriction_container.restriction.flags.is_only ? "only" : "no")
-    //                        << "-restriction "
-    //                        << "<" << restriction_container.restriction.from.node << "->"
-    //                        << restriction_container.restriction.via.node << "->" <<
-    //                        restriction_container.restriction.to.node
-    //                        << ">";
-
     return mapbox::util::optional<InputRestrictionContainer>(restriction_container);
 }
 
@@ -228,14 +218,16 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     // only a few exceptions are actually defined.
     std::vector<std::string> exceptions;
     boost::algorithm::split_regex(exceptions, except_tag_string, boost::regex("[;][ ]*"));
-    for (std::string &current_string : exceptions)
-    {
-        const auto string_iterator =
-            std::find(restriction_exceptions.begin(), restriction_exceptions.end(), current_string);
-        if (restriction_exceptions.end() != string_iterator)
-        {
-            return true;
-        }
-    }
-    return false;
+
+    return std::any_of(std::begin(exceptions), std::end(exceptions),
+                       [&](const std::string &current_string)
+                       {
+                           if (std::end(restriction_exceptions) !=
+                               std::find(std::begin(restriction_exceptions),
+                                         std::end(restriction_exceptions), current_string))
+                           {
+                               return true;
+                           }
+                           return false;
+                       });
 }

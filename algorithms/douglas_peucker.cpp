@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,15 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "douglas_peucker.hpp"
 
 #include "../data_structures/segment_information.hpp"
-#include "../Util/integer_range.hpp"
-
-#include <osrm/Coordinate.h>
 
 #include <boost/assert.hpp>
+#include <osrm/coordinate.hpp>
 
 #include <cmath>
-
 #include <algorithm>
+#include <iterator>
 
 namespace
 {
@@ -65,12 +63,12 @@ struct CoordinatePairCalculator
         // compute distance (a,c)
         const float x_value_1 = (first_lon - float_lon1) * cos((float_lat1 + first_lat) / 2.f);
         const float y_value_1 = first_lat - float_lat1;
-        const float dist1 = sqrt(std::pow(x_value_1, 2) + std::pow(y_value_1, 2)) * earth_radius;
+        const float dist1 = std::hypot(x_value_1, y_value_1) * earth_radius;
 
         // compute distance (b,c)
         const float x_value_2 = (second_lon - float_lon1) * cos((float_lat1 + second_lat) / 2.f);
         const float y_value_2 = second_lat - float_lat1;
-        const float dist2 = sqrt(std::pow(x_value_2, 2) + std::pow(y_value_2, 2)) * earth_radius;
+        const float dist2 = std::hypot(x_value_2, y_value_2) * earth_radius;
 
         // return the minimum
         return static_cast<int>(std::min(dist1, dist2));
@@ -90,7 +88,7 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
 
 void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level)
 {
-    unsigned size = std::distance(begin, end);
+    const auto size = std::distance(begin, end);
     if (size < 2)
     {
         return;

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -39,9 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
-template <class DataFacadeT> class ManyToManyRouting final : public BasicRoutingInterface<DataFacadeT>
+template <class DataFacadeT>
+class ManyToManyRouting final
+    : public BasicRoutingInterface<DataFacadeT, ManyToManyRouting<DataFacadeT>>
 {
-    using super = BasicRoutingInterface<DataFacadeT>;
+    using super = BasicRoutingInterface<DataFacadeT, ManyToManyRouting<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
@@ -64,8 +66,8 @@ template <class DataFacadeT> class ManyToManyRouting final : public BasicRouting
 
     ~ManyToManyRouting() {}
 
-    std::shared_ptr<std::vector<EdgeWeight>> operator()(const PhantomNodeArray &phantom_nodes_array)
-        const
+    std::shared_ptr<std::vector<EdgeWeight>>
+    operator()(const PhantomNodeArray &phantom_nodes_array) const
     {
         const auto number_of_locations = phantom_nodes_array.size();
         std::shared_ptr<std::vector<EdgeWeight>> result_table =
@@ -75,7 +77,7 @@ template <class DataFacadeT> class ManyToManyRouting final : public BasicRouting
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
-        QueryHeap &query_heap = *(engine_working_data.forwardHeap);
+        QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
 
         SearchSpaceWithBuckets search_space_with_buckets;
 
@@ -134,11 +136,8 @@ template <class DataFacadeT> class ManyToManyRouting final : public BasicRouting
             // explore search space
             while (!query_heap.Empty())
             {
-                ForwardRoutingStep(source_id,
-                                   number_of_locations,
-                                   query_heap,
-                                   search_space_with_buckets,
-                                   result_table);
+                ForwardRoutingStep(source_id, number_of_locations, query_heap,
+                                   search_space_with_buckets, result_table);
             }
 
             ++source_id;
@@ -237,8 +236,8 @@ template <class DataFacadeT> class ManyToManyRouting final : public BasicRouting
 
     // Stalling
     template <bool forward_direction>
-    inline bool StallAtNode(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap)
-        const
+    inline bool
+    StallAtNode(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap) const
     {
         for (auto edge : super::facade->GetAdjacentEdgeRange(node))
         {

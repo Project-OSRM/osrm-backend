@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,12 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_containers.hpp"
 #include "extraction_way.hpp"
 
+#include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/node_id.hpp"
 #include "../data_structures/range_table.hpp"
 
-#include "../Util/osrm_exception.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/osrm_exception.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -82,41 +83,34 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         TIMER_STOP(erasing_dups);
         std::cout << "ok, after " << TIMER_SEC(erasing_dups) << "s" << std::endl;
 
-
         std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
         TIMER_START(sorting_nodes);
-        stxxl::sort(all_nodes_list.begin(),
-                    all_nodes_list.end(),
-                    ExternalMemoryNodeSTXXLCompare(),
+        stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), ExternalMemoryNodeSTXXLCompare(),
                     stxxl_memory);
         TIMER_STOP(sorting_nodes);
         std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
 
-
         std::cout << "[extractor] Sorting used ways         ... " << std::flush;
         TIMER_START(sort_ways);
-        stxxl::sort(way_start_end_id_list.begin(),
-                    way_start_end_id_list.end(),
-                    FirstAndLastSegmentOfWayStxxlCompare(),
-                    stxxl_memory);
+        stxxl::sort(way_start_end_id_list.begin(), way_start_end_id_list.end(),
+                    FirstAndLastSegmentOfWayStxxlCompare(), stxxl_memory);
         TIMER_STOP(sort_ways);
         std::cout << "ok, after " << TIMER_SEC(sort_ways) << "s" << std::endl;
 
-        std::cout << "[extractor] Sorting " << restrictions_list.size() << " restrictions. by from... " << std::flush;
+        std::cout << "[extractor] Sorting " << restrictions_list.size()
+                  << " restrictions. by from... " << std::flush;
         TIMER_START(sort_restrictions);
-        stxxl::sort(restrictions_list.begin(),
-                    restrictions_list.end(),
-                    CmpRestrictionContainerByFrom(),
-                    stxxl_memory);
+        stxxl::sort(restrictions_list.begin(), restrictions_list.end(),
+                    CmpRestrictionContainerByFrom(), stxxl_memory);
         TIMER_STOP(sort_restrictions);
         std::cout << "ok, after " << TIMER_SEC(sort_restrictions) << "s" << std::endl;
 
         std::cout << "[extractor] Fixing restriction starts ... " << std::flush;
         TIMER_START(fix_restriction_starts);
         auto restrictions_iterator = restrictions_list.begin();
-        auto way_start_and_end_iterator = way_start_end_id_list.begin();
+        auto way_start_and_end_iterator = way_start_end_id_list.cbegin();
 
-        while (way_start_and_end_iterator != way_start_end_id_list.end() &&
+        while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
                restrictions_iterator != restrictions_list.end())
         {
             if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.from.way)
@@ -131,27 +125,19 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 continue;
             }
 
-            BOOST_ASSERT(way_start_and_end_iterator->way_id == restrictions_iterator->restriction.from.way);
+            BOOST_ASSERT(way_start_and_end_iterator->way_id ==
+                         restrictions_iterator->restriction.from.way);
             const NodeID via_node_id = restrictions_iterator->restriction.via.node;
 
             if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
                 restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->first_segment_source_id;
-            }
-            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
-            {
-                restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->first_segment_source_id;
-            }
-            else if (way_start_and_end_iterator->last_segment_source_id == via_node_id)
-            {
-                restrictions_iterator->restriction.from.node =
-                    way_start_and_end_iterator->last_segment_target_id;
+                    way_start_and_end_iterator->first_segment_target_id;
             }
             else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
             {
-                restrictions_iterator->restriction.from.node = way_start_and_end_iterator->last_segment_source_id;
+                restrictions_iterator->restriction.from.node =
+                    way_start_and_end_iterator->last_segment_source_id;
             }
             ++restrictions_iterator;
         }
@@ -161,19 +147,16 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         std::cout << "[extractor] Sorting restrictions. by to  ... " << std::flush;
         TIMER_START(sort_restrictions_to);
-        stxxl::sort(restrictions_list.begin(),
-                    restrictions_list.end(),
-                    CmpRestrictionContainerByTo(),
-                    stxxl_memory);
+        stxxl::sort(restrictions_list.begin(), restrictions_list.end(),
+                    CmpRestrictionContainerByTo(), stxxl_memory);
         TIMER_STOP(sort_restrictions_to);
         std::cout << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s" << std::endl;
 
-        unsigned number_of_useable_restrictions = 0;
         std::cout << "[extractor] Fixing restriction ends   ... " << std::flush;
         TIMER_START(fix_restriction_ends);
         restrictions_iterator = restrictions_list.begin();
-        way_start_and_end_iterator = way_start_end_id_list.begin();
-        while (way_start_and_end_iterator != way_start_end_id_list.end() &&
+        way_start_and_end_iterator = way_start_end_id_list.cbegin();
+        while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
                restrictions_iterator != restrictions_list.end())
         {
             if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.to.way)
@@ -186,51 +169,48 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 ++restrictions_iterator;
                 continue;
             }
-            NodeID via_node_id = restrictions_iterator->restriction.via.node;
-            if (way_start_and_end_iterator->last_segment_source_id == via_node_id)
+            BOOST_ASSERT(way_start_and_end_iterator->way_id ==
+                         restrictions_iterator->restriction.to.way);
+            const NodeID via_node_id = restrictions_iterator->restriction.via.node;
+
+            if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->last_segment_target_id;
+                restrictions_iterator->restriction.to.node =
+                    way_start_and_end_iterator->first_segment_target_id;
             }
             else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
             {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->last_segment_source_id;
-            }
-            else if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
-            {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_target_id;
-            }
-            else if (way_start_and_end_iterator->first_segment_target_id == via_node_id)
-            {
-                restrictions_iterator->restriction.to.node = way_start_and_end_iterator->first_segment_source_id;
-            }
-
-            if (std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.from.node &&
-                std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.to.node)
-            {
-                ++number_of_useable_restrictions;
+                restrictions_iterator->restriction.to.node =
+                    way_start_and_end_iterator->last_segment_source_id;
             }
             ++restrictions_iterator;
         }
         TIMER_STOP(fix_restriction_ends);
         std::cout << "ok, after " << TIMER_SEC(fix_restriction_ends) << "s" << std::endl;
 
-        SimpleLogger().Write() << "usable restrictions: " << number_of_useable_restrictions;
         // serialize restrictions
         std::ofstream restrictions_out_stream;
+        unsigned written_restriction_count = 0;
         restrictions_out_stream.open(restrictions_file_name.c_str(), std::ios::binary);
         restrictions_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
-        restrictions_out_stream.write((char *)&number_of_useable_restrictions, sizeof(unsigned));
+        const auto count_position = restrictions_out_stream.tellp();
+        restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
 
-        for(const auto & restriction_container : restrictions_list)
+        for (const auto &restriction_container : restrictions_list)
         {
-            if (std::numeric_limits<unsigned>::max() != restriction_container.restriction.from.node &&
-                std::numeric_limits<unsigned>::max() != restriction_container.restriction.to.node)
+            if (SPECIAL_NODEID != restriction_container.restriction.from.node &&
+                SPECIAL_NODEID != restriction_container.restriction.to.node)
             {
                 restrictions_out_stream.write((char *)&(restriction_container.restriction),
                                               sizeof(TurnRestriction));
+                ++written_restriction_count;
             }
         }
+        restrictions_out_stream.seekp(count_position);
+        restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
+
         restrictions_out_stream.close();
+        SimpleLogger().Write() << "usable restrictions: " << written_restriction_count;
 
         std::ofstream file_out_stream;
         file_out_stream.open(output_file_name.c_str(), std::ios::binary);
@@ -280,7 +260,6 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         TIMER_STOP(sort_edges_by_start);
         std::cout << "ok, after " << TIMER_SEC(sort_edges_by_start) << "s" << std::endl;
 
-
         std::cout << "[extractor] Setting start coords      ... " << std::flush;
         TIMER_START(set_start_coords);
         file_out_stream.write((char *)&number_of_used_edges, sizeof(unsigned));
@@ -311,7 +290,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         // Sort Edges by target
         std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
         TIMER_START(sort_edges_by_target);
-        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByTargetID(), stxxl_memory);
+        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByTargetID(),
+                    stxxl_memory);
         TIMER_STOP(sort_edges_by_target);
         std::cout << "ok, after " << TIMER_SEC(sort_edges_by_target) << "s" << std::endl;
 
@@ -341,20 +321,19 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 edge_iterator->target_coordinate.lat = node_iterator->lat;
                 edge_iterator->target_coordinate.lon = node_iterator->lon;
 
-                const double distance = FixedPointCoordinate::ApproximateEuclideanDistance(
-                    edge_iterator->source_coordinate.lat,
-                    edge_iterator->source_coordinate.lon,
-                    node_iterator->lat,
-                    node_iterator->lon);
+                const double distance = coordinate_calculation::euclidean_distance(
+                    edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
+                    node_iterator->lat, node_iterator->lon);
 
                 const double weight = (distance * 10.) / (edge_iterator->speed / 3.6);
                 int integer_weight = std::max(
-                    1,
-                    (int)std::floor(
-                        (edge_iterator->is_duration_set ? edge_iterator->speed : weight) + .5));
-                int integer_distance = std::max(1, (int)distance);
-                short zero = 0;
-                short one = 1;
+                    1, (int)std::floor(
+                           (edge_iterator->is_duration_set ? edge_iterator->speed : weight) + .5));
+                const int integer_distance = std::max(1, (int)distance);
+                const short zero = 0;
+                const short one = 1;
+                const bool yes = true;
+                const bool no = false;
 
                 file_out_stream.write((char *)&edge_iterator->start, sizeof(unsigned));
                 file_out_stream.write((char *)&edge_iterator->target, sizeof(unsigned));
@@ -379,15 +358,43 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
                 file_out_stream.write((char *)&integer_weight, sizeof(int));
                 file_out_stream.write((char *)&edge_iterator->name_id, sizeof(unsigned));
-                file_out_stream.write((char *)&edge_iterator->is_roundabout, sizeof(bool));
-                file_out_stream.write((char *)&edge_iterator->is_in_tiny_cc, sizeof(bool));
-                file_out_stream.write((char *)&edge_iterator->is_access_restricted, sizeof(bool));
+                if (edge_iterator->is_roundabout)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                }
+                else
+                {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
+                if (edge_iterator->is_in_tiny_cc)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                }
+                else
+                {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
+                if (edge_iterator->is_access_restricted)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                }
+                else
+                {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
 
                 // cannot take adress of bit field, so use local
-                const TravelMode  travel_mode = edge_iterator->travel_mode;
+                const TravelMode travel_mode = edge_iterator->travel_mode;
                 file_out_stream.write((char *)&travel_mode, sizeof(TravelMode));
 
-                file_out_stream.write((char *)&edge_iterator->is_split, sizeof(bool));
+                if (edge_iterator->is_split)
+                {
+                    file_out_stream.write((char *)&yes, sizeof(bool));
+                }
+                else
+                {
+                    file_out_stream.write((char *)&no, sizeof(bool));
+                }
                 ++number_of_used_edges;
             }
             ++edge_iterator;
@@ -411,7 +418,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::vector<unsigned> name_lengths;
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
+            const unsigned string_length =
+                std::min(static_cast<unsigned>(temp_string.length()), 255u);
             name_lengths.push_back(string_length);
             total_length += string_length;
         }
@@ -419,11 +427,12 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         RangeTable<> table(name_lengths);
         name_file_stream << table;
 
-        name_file_stream.write((char*) &total_length, sizeof(unsigned));
+        name_file_stream.write((char *)&total_length, sizeof(unsigned));
         // write all chars consecutively
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
+            const unsigned string_length =
+                std::min(static_cast<unsigned>(temp_string.length()), 255u);
             name_file_stream.write(temp_string.c_str(), string_length);
         }
 
@@ -434,5 +443,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         SimpleLogger().Write() << "Processed " << number_of_used_nodes << " nodes and "
                                << number_of_used_edges << " edges";
     }
-    catch (const std::exception &e) { std::cerr << "Caught Execption:" << e.what() << std::endl; }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Caught Execption:" << e.what() << std::endl;
+    }
 }

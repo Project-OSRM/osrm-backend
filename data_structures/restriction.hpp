@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -107,21 +107,19 @@ struct InputRestrictionContainer
 
 struct CmpRestrictionContainerByFrom
 {
-    typedef InputRestrictionContainer value_type;
-    inline bool operator()(const InputRestrictionContainer &a,
-                           const InputRestrictionContainer &b) const
+    using value_type = InputRestrictionContainer;
+    bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b) const
     {
         return a.restriction.from.way < b.restriction.from.way;
     }
-    inline value_type max_value() const { return InputRestrictionContainer::max_value(); }
-    inline value_type min_value() const { return InputRestrictionContainer::min_value(); }
+    value_type max_value() const { return InputRestrictionContainer::max_value(); }
+    value_type min_value() const { return InputRestrictionContainer::min_value(); }
 };
 
 struct CmpRestrictionContainerByTo
 {
-    typedef InputRestrictionContainer value_type;
-    inline bool operator()(const InputRestrictionContainer &a,
-                           const InputRestrictionContainer &b) const
+    using value_type = InputRestrictionContainer;
+    bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b) const
     {
         return a.restriction.to.way < b.restriction.to.way;
     }

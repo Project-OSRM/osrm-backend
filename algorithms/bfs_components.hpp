@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -95,8 +95,8 @@ template <typename GraphT> class BFSComponentExplorer
      * Explores the current component that starts at node using BFS.
      */
     unsigned ExploreComponent(std::queue<std::pair<NodeID, NodeID>> &bfs_queue,
-                                     NodeID node,
-                                     unsigned current_component)
+                              NodeID node,
+                              unsigned current_component)
     {
         /*
            Graphical representation of variables:
@@ -118,7 +118,7 @@ template <typename GraphT> class BFSComponentExplorer
             std::pair<NodeID, NodeID> current_queue_item = bfs_queue.front();
             bfs_queue.pop();
 
-            const NodeID v = current_queue_item.first; // current node
+            const NodeID v = current_queue_item.first;  // current node
             const NodeID u = current_queue_item.second; // parent
             // increment size counter of current component
             ++current_component_size;

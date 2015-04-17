@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,39 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Library/OSRM.h"
-#include "../Util/git_sha.hpp"
-#include "../Util/ProgramOptions.h"
-#include "../Util/simple_logger.hpp"
+#include "../library/osrm.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/routed_options.hpp"
+#include "../util/simple_logger.hpp"
 
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
-#include <osrm/ServerPaths.h>
+#include <osrm/json_container.hpp>
+#include <osrm/libosrm_config.hpp>
+#include <osrm/route_parameters.hpp>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-
-#include <iostream>
-#include <stack>
 #include <string>
-#include <sstream>
-
-// Dude, real recursions on the OS stack? You must be brave...
-void print_tree(boost::property_tree::ptree const &property_tree, const unsigned recursion_depth)
-{
-    auto end = property_tree.end();
-    for (auto tree_iterator = property_tree.begin(); tree_iterator != end; ++tree_iterator)
-    {
-        for (unsigned current_recursion = 0; current_recursion < recursion_depth;
-             ++current_recursion)
-        {
-            std::cout << " " << std::flush;
-        }
-        std::cout << tree_iterator->first << ": " << tree_iterator->second.get_value<std::string>()
-                  << std::endl;
-        print_tree(tree_iterator->second, recursion_depth + 1);
-    }
-}
 
 int main(int argc, const char *argv[])
 {
@@ -65,27 +43,25 @@ int main(int argc, const char *argv[])
     try
     {
         std::string ip_address;
-        int ip_port, requested_thread_num;
-        bool use_shared_memory = false, trial_run = false;
-        ServerPaths server_paths;
+        int ip_port, requested_thread_num, max_locations_map_matching;
+        bool trial_run = false;
+        libosrm_config lib_config;
+        const unsigned init_result = GenerateServerProgramOptions(
+            argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
+            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table,
+            max_locations_map_matching);
 
-        const unsigned init_result = GenerateServerProgramOptions(argc,
-                                                                  argv,
-                                                                  server_paths,
-                                                                  ip_address,
-                                                                  ip_port,
-                                                                  requested_thread_num,
-                                                                  use_shared_memory,
-                                                                  trial_run);
-
-        if (init_result == INIT_FAILED)
+        if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
             return 0;
         }
-
+        if (init_result == INIT_FAILED)
+        {
+            return 1;
+        }
         SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
 
-        OSRM routing_machine(server_paths, use_shared_memory);
+        OSRM routing_machine(lib_config);
 
         RouteParameters route_parameters;
         route_parameters.zoom_level = 18;           // no generalization
@@ -93,7 +69,7 @@ int main(int argc, const char *argv[])
         route_parameters.alternate_route = true;    // get an alternate route, too
         route_parameters.geometry = true;           // retrieve geometry of route
         route_parameters.compression = true;        // polyline encoding
-        route_parameters.check_sum = UINT_MAX;      // see wiki
+        route_parameters.check_sum = -1;            // see wiki
         route_parameters.service = "viaroute";      // that's routing
         route_parameters.output_format = "json";
         route_parameters.jsonp_parameter = ""; // set for jsonp wrapping
@@ -106,23 +82,10 @@ int main(int argc, const char *argv[])
         // target_coordinate
         route_parameters.coordinates.emplace_back(52.513191 * COORDINATE_PRECISION,
                                                   13.415852 * COORDINATE_PRECISION);
-        http::Reply osrm_reply;
-        routing_machine.RunQuery(route_parameters, osrm_reply);
-
-        // attention: super-inefficient hack below:
-
-        std::stringstream my_stream;
-        for (const auto &element : osrm_reply.content)
-        {
-            std::cout << element;
-            my_stream << element;
-        }
-        std::cout << std::endl;
-
-        boost::property_tree::ptree property_tree;
-        boost::property_tree::read_json(my_stream, property_tree);
-
-        print_tree(property_tree, 0);
+        osrm::json::Object json_result;
+        const int result_code = routing_machine.RunQuery(route_parameters, json_result);
+        SimpleLogger().Write() << "http code: " << result_code;
+        osrm::json::render(SimpleLogger().Write(), json_result);
     }
     catch (std::exception &current_exception)
     {

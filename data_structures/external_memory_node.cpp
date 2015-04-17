@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "external_memory_node.hpp"
+#include "query_node.hpp"
 
 #include <limits>
 
@@ -44,11 +45,8 @@ ExternalMemoryNode ExternalMemoryNode::min_value()
 
 ExternalMemoryNode ExternalMemoryNode::max_value()
 {
-    return ExternalMemoryNode(std::numeric_limits<int>::max(),
-                              std::numeric_limits<int>::max(),
-                              std::numeric_limits<unsigned>::max(),
-                              false,
-                              false);
+    return ExternalMemoryNode(std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
+                              std::numeric_limits<unsigned>::max(), false, false);
 }
 
 bool ExternalMemoryNodeSTXXLCompare::operator()(const ExternalMemoryNode &left,

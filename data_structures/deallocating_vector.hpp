@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,19 +25,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DEALLOCATINGVECTOR_H_
-#define DEALLOCATINGVECTOR_H_
+#ifndef DEALLOCATING_VECTOR_HPP
+#define DEALLOCATING_VECTOR_HPP
 
-#include "../Util/integer_range.hpp"
+#include "../util/integer_range.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <limits>
 #include <utility>
 #include <vector>
 
 template <typename ElementT> struct DeallocatingVectorIteratorState
 {
-    DeallocatingVectorIteratorState() : index(-1), bucket_list(nullptr) {}
+    DeallocatingVectorIteratorState()
+        : index(std::numeric_limits<std::size_t>::max()), bucket_list(nullptr)
+    {
+    }
     explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r)
         : index(r.index), bucket_list(r.bucket_list)
     {
@@ -50,7 +54,7 @@ template <typename ElementT> struct DeallocatingVectorIteratorState
     std::size_t index;
     std::vector<ElementT *> *bucket_list;
 
-    inline DeallocatingVectorIteratorState &operator=(const DeallocatingVectorIteratorState &other)
+    DeallocatingVectorIteratorState &operator=(const DeallocatingVectorIteratorState &other)
     {
         index = other.index;
         bucket_list = other.bucket_list;
@@ -171,17 +175,20 @@ class DeallocatingVector
     // this forward-only iterator deallocates all buckets that have been visited
     using deallocation_iterator = DeallocatingVectorRemoveIterator<ElementT, ELEMENTS_PER_BLOCK>;
 
-    DeallocatingVector() : current_size(0) { bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]); }
+    DeallocatingVector() : current_size(0)
+    {
+        bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]);
+    }
 
     ~DeallocatingVector() { clear(); }
 
-    inline void swap(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &other)
+    void swap(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &other)
     {
         std::swap(current_size, other.current_size);
         bucket_list.swap(other.bucket_list);
     }
 
-    inline void clear()
+    void clear()
     {
         // Delete[]'ing ptr's to all Buckets
         for (auto bucket : bucket_list)
@@ -192,11 +199,12 @@ class DeallocatingVector
                 bucket = nullptr;
             }
         }
-        bucket_list.clear(); bucket_list.shrink_to_fit();
+        bucket_list.clear();
+        bucket_list.shrink_to_fit();
         current_size = 0;
     }
 
-    inline void push_back(const ElementT &element)
+    void push_back(const ElementT &element)
     {
         const std::size_t current_capacity = capacity();
         if (current_size == current_capacity)
@@ -209,7 +217,7 @@ class DeallocatingVector
         ++current_size;
     }
 
-    template <typename... Ts> inline void emplace_back(Ts &&... element)
+    template <typename... Ts> void emplace_back(Ts &&... element)
     {
         const std::size_t current_capacity = capacity();
         if (current_size == current_capacity)
@@ -222,9 +230,9 @@ class DeallocatingVector
         ++current_size;
     }
 
-    inline void reserve(const std::size_t) const { /* don't do anything */ }
+    void reserve(const std::size_t) const { /* don't do anything */}
 
-    inline void resize(const std::size_t new_size)
+    void resize(const std::size_t new_size)
     {
         if (new_size >= current_size)
         {
@@ -234,9 +242,10 @@ class DeallocatingVector
             }
         }
         else
-        {   // down-size
+        { // down-size
             const std::size_t number_of_necessary_buckets = 1 + (new_size / ELEMENTS_PER_BLOCK);
-            for (const auto bucket_index : osrm::irange(number_of_necessary_buckets, bucket_list.size()))
+            for (const auto bucket_index :
+                 osrm::irange(number_of_necessary_buckets, bucket_list.size()))
             {
                 if (nullptr != bucket_list[bucket_index])
                 {
@@ -248,58 +257,50 @@ class DeallocatingVector
         current_size = new_size;
     }
 
-    inline std::size_t size() const { return current_size; }
+    std::size_t size() const { return current_size; }
 
-    inline std::size_t capacity() const { return bucket_list.size() * ELEMENTS_PER_BLOCK; }
+    std::size_t capacity() const { return bucket_list.size() * ELEMENTS_PER_BLOCK; }
 
-    inline iterator begin() { return iterator(static_cast<std::size_t>(0), &bucket_list); }
+    iterator begin() { return iterator(static_cast<std::size_t>(0), &bucket_list); }
 
-    inline iterator end() { return iterator(size(), &bucket_list); }
+    iterator end() { return iterator(size(), &bucket_list); }
 
-    inline deallocation_iterator dbegin()
+    deallocation_iterator dbegin()
     {
         return deallocation_iterator(static_cast<std::size_t>(0), &bucket_list);
     }
 
-    inline deallocation_iterator dend() { return deallocation_iterator(size(), &bucket_list); }
+    deallocation_iterator dend() { return deallocation_iterator(size(), &bucket_list); }
 
-    inline const_iterator begin() const
+    const_iterator begin() const
     {
         return const_iterator(static_cast<std::size_t>(0), &bucket_list);
     }
 
-    inline const_iterator end() const { return const_iterator(size(), &bucket_list); }
+    const_iterator end() const { return const_iterator(size(), &bucket_list); }
 
-    inline ElementT &operator[](const std::size_t index)
+    ElementT &operator[](const std::size_t index)
     {
         const std::size_t _bucket = index / ELEMENTS_PER_BLOCK;
         const std::size_t _index = index % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
 
-    const inline ElementT &operator[](const std::size_t index) const
+    ElementT &operator[](const std::size_t index) const
     {
         const std::size_t _bucket = index / ELEMENTS_PER_BLOCK;
         const std::size_t _index = index % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
 
-    inline ElementT &back()
+    ElementT &back() const
     {
         const std::size_t _bucket = current_size / ELEMENTS_PER_BLOCK;
         const std::size_t _index = current_size % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
 
-    const inline ElementT &back() const
-    {
-        const std::size_t _bucket = current_size / ELEMENTS_PER_BLOCK;
-        const std::size_t _index = current_size % ELEMENTS_PER_BLOCK;
-        return (bucket_list[_bucket][_index]);
-    }
-
-    template<class InputIterator>
-    const inline void append(InputIterator first, const InputIterator last)
+    template <class InputIterator> void append(InputIterator first, const InputIterator last)
     {
         InputIterator position = first;
         while (position != last)
@@ -310,4 +311,4 @@ class DeallocatingVector
     }
 };
 
-#endif /* DEALLOCATINGVECTOR_H_ */
+#endif /* DEALLOCATING_VECTOR_HPP */

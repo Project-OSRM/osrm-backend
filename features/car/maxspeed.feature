@@ -73,3 +73,23 @@ OSRM will use 4/5 of the projected free-flow speed.
             | runway    |         |        | 100      |                  |                   |       |
             | runway    |         |        |          | 100              |                   |       |
             | runway    |         |        |          |                  | 100               |       |
+
+    Scenario: Car - Too narrow streets should be ignored or incur a penalty
+        Then routability should be
+
+            | highway | maxspeed | width | maxspeed:forward | maxspeed:backward | forw    | backw   |
+            | primary |          |       |                  |                   | 63 km/h | 63 km/h |
+            | primary |          |   3   |                  |                   | 32 km/h | 32 km/h |
+            | primary | 60       |       |                  |                   | 59 km/h | 59 km/h |
+            | primary | 60       |   3   |                  |                   | 30 km/h | 30 km/h |
+            | primary |          |       | 60               |                   | 59 km/h | 63 km/h |
+            | primary |          |   3   | 60               |                   | 30 km/h | 32 km/h |
+            | primary |          |       |                  | 60                | 63 km/h | 59 km/h |
+            | primary |          |   3   |                  | 60                | 32 km/h | 30 km/h |
+            | primary | 15       |       | 60               |                   | 59 km/h | 23 km/h |
+            | primary | 15       |   3   | 60               |                   | 30 km/h |  7 km/h |
+            | primary | 15       |       |                  | 60                | 23 km/h | 59 km/h |
+            | primary | 15       |   3   |                  | 60                |  7 km/h | 30 km/h |
+            | primary | 15       |       | 30               | 60                | 34 km/h | 59 km/h |
+            | primary | 15       |   3   | 30               | 60                | 15 km/h | 30 km/h |
+

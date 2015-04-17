@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -86,7 +86,7 @@ template <typename KeyT, typename ValueT> class LRUCache
             result = e.value;
 
             // move to front
-            itemsInCache.splice(positionMap.find(key)->second, itemsInCache, itemsInCache.begin());
+            itemsInCache.splice(itemsInCache.begin(), itemsInCache, positionMap.find(key)->second);
             positionMap.find(key)->second = itemsInCache.begin();
             return true;
         }

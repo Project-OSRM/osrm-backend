@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -32,24 +32,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "first_and_last_segment_of_way.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
-#include "../Util/FingerPrint.h"
+#include "../util/fingerprint.hpp"
 
 #include <stxxl/vector>
 
 class ExtractionContainers
 {
 #ifndef _MSC_VER
-    constexpr static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? std::numeric_limits<int>::max() : std::numeric_limits<unsigned>::max());
+    constexpr static unsigned stxxl_memory =
+        ((sizeof(std::size_t) == 4) ? std::numeric_limits<int>::max()
+                                    : std::numeric_limits<unsigned>::max());
 #else
     const static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? INT_MAX : UINT_MAX);
 #endif
   public:
-    using  STXXLNodeIDVector = stxxl::vector<NodeID>;
-    using  STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
-    using  STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
-    using  STXXLStringVector = stxxl::vector<std::string>;
-    using  STXXLRestrictionsVector = stxxl::vector<InputRestrictionContainer>;
-    using  STXXLWayIDStartEndVector = stxxl::vector<FirstAndLastSegmentOfWay>;
+    using STXXLNodeIDVector = stxxl::vector<NodeID>;
+    using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
+    using STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
+    using STXXLStringVector = stxxl::vector<std::string>;
+    using STXXLRestrictionsVector = stxxl::vector<InputRestrictionContainer>;
+    using STXXLWayIDStartEndVector = stxxl::vector<FirstAndLastSegmentOfWay>;
 
     STXXLNodeIDVector used_node_id_list;
     STXXLNodeVector all_nodes_list;

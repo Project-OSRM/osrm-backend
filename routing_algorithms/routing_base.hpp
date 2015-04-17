@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,26 +28,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTING_BASE_HPP
 #define ROUTING_BASE_HPP
 
-#include "../data_structures/raw_route_data.hpp"
+#include "../data_structures/coordinate_calculation.hpp"
+#include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../data_structures/turn_instructions.hpp"
-// #include "../Util/simple_logger.hpp.h"
+// #include "../util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 
 #include <stack>
 
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap3;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap3;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_1;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_1;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
 
-template <class DataFacadeT> class BasicRoutingInterface
+template <class DataFacadeT, class Derived> class BasicRoutingInterface
 {
   private:
-    typedef typename DataFacadeT::EdgeData EdgeData;
+    using EdgeData = typename DataFacadeT::EdgeData;
 
   protected:
     DataFacadeT *facade;
@@ -56,20 +57,21 @@ template <class DataFacadeT> class BasicRoutingInterface
     BasicRoutingInterface() = delete;
     BasicRoutingInterface(const BasicRoutingInterface &) = delete;
     explicit BasicRoutingInterface(DataFacadeT *facade) : facade(facade) {}
-    virtual ~BasicRoutingInterface() {};
+    ~BasicRoutingInterface() {}
 
-    inline void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
-                            SearchEngineData::QueryHeap &reverse_heap,
-                            NodeID *middle_node_id,
-                            int *upper_bound,
-                            const int min_edge_offset,
-                            const bool forward_direction) const
+    void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
+                     SearchEngineData::QueryHeap &reverse_heap,
+                     NodeID *middle_node_id,
+                     int *upper_bound,
+                     const int min_edge_offset,
+                     const bool forward_direction) const
     {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
 
         // const NodeID parentnode = forward_heap.GetData(node).parent;
-        // SimpleLogger().Write() << (forward_direction ? "[fwd] " : "[rev] ") << "settled edge (" << parentnode << "," << node << "), dist: " << distance;
+        // SimpleLogger().Write() << (forward_direction ? "[fwd] " : "[rev] ") << "settled edge ("
+        // << parentnode << "," << node << "), dist: " << distance;
 
         if (reverse_heap.WasInserted(node))
         {
@@ -80,9 +82,11 @@ template <class DataFacadeT> class BasicRoutingInterface
                 {
                     *middle_node_id = node;
                     *upper_bound = new_distance;
-                //     SimpleLogger().Write() << "accepted middle node " << node << " at distance " << new_distance;
-                // } else {
-                //     SimpleLogger().Write() << "discared middle node " << node << " at distance " << new_distance;
+                    //     SimpleLogger().Write() << "accepted middle node " << node << " at
+                    //     distance " << new_distance;
+                    // } else {
+                    //     SimpleLogger().Write() << "discared middle node " << node << " at
+                    //     distance " << new_distance;
                 }
             }
         }
@@ -145,9 +149,9 @@ template <class DataFacadeT> class BasicRoutingInterface
         }
     }
 
-    inline void UnpackPath(const std::vector<NodeID> &packed_path,
-                           const PhantomNodes &phantom_node_pair,
-                           std::vector<PathData> &unpacked_path) const
+    void UnpackPath(const std::vector<NodeID> &packed_path,
+                    const PhantomNodes &phantom_node_pair,
+                    std::vector<PathData> &unpacked_path) const
     {
         const bool start_traversed_in_reverse =
             (packed_path.front() != phantom_node_pair.source_phantom.forward_node_id);
@@ -228,15 +232,11 @@ template <class DataFacadeT> class BasicRoutingInterface
                 const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
 
-
                 if (!facade->EdgeIsCompressed(ed.id))
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
-                    unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id),
-                                               name_index,
-                                               turn_instruction,
-                                               ed.distance,
-                                               travel_mode);
+                    unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id), name_index,
+                                               turn_instruction, ed.distance, travel_mode);
                 }
                 else
                 {
@@ -257,7 +257,8 @@ template <class DataFacadeT> class BasicRoutingInterface
                     BOOST_ASSERT(start_index <= end_index);
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
-                        unpacked_path.emplace_back(id_vector[i], name_index, TurnInstruction::NoTurn, 0, travel_mode);
+                        unpacked_path.emplace_back(id_vector[i], name_index,
+                                                   TurnInstruction::NoTurn, 0, travel_mode);
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().segment_duration = ed.distance;
@@ -294,18 +295,19 @@ template <class DataFacadeT> class BasicRoutingInterface
 
             if (start_index > end_index)
             {
-                start_index = std::min(start_index, id_vector.size()-1);
+                start_index = std::min(start_index, id_vector.size() - 1);
             }
 
             for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
             {
                 BOOST_ASSERT(i < id_vector.size());
-                BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode>0 );
-                unpacked_path.emplace_back(PathData{id_vector[i],
-                                                    phantom_node_pair.target_phantom.name_id,
-                                                    TurnInstruction::NoTurn,
-                                                    0,
-                                                    phantom_node_pair.target_phantom.forward_travel_mode});
+                BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
+                unpacked_path.emplace_back(
+                    PathData{id_vector[i],
+                             phantom_node_pair.target_phantom.name_id,
+                             TurnInstruction::NoTurn,
+                             0,
+                             phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
 
@@ -330,7 +332,7 @@ template <class DataFacadeT> class BasicRoutingInterface
         }
     }
 
-    inline void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const
+    void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const
     {
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
         recursion_stack.emplace(s, t);
@@ -367,7 +369,8 @@ template <class DataFacadeT> class BasicRoutingInterface
                     }
                 }
             }
-            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(), "edge weight invalid");
+            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(),
+                             "edge weight invalid");
 
             const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
             if (ed.shortcut)
@@ -386,10 +389,10 @@ template <class DataFacadeT> class BasicRoutingInterface
         unpacked_path.emplace_back(t);
     }
 
-    inline void RetrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,
-                                           const SearchEngineData::QueryHeap &reverse_heap,
-                                           const NodeID middle_node_id,
-                                           std::vector<NodeID> &packed_path) const
+    void RetrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,
+                                    const SearchEngineData::QueryHeap &reverse_heap,
+                                    const NodeID middle_node_id,
+                                    std::vector<NodeID> &packed_path) const
     {
         RetrievePackedPathFromSingleHeap(forward_heap, middle_node_id, packed_path);
         std::reverse(packed_path.begin(), packed_path.end());
@@ -397,9 +400,9 @@ template <class DataFacadeT> class BasicRoutingInterface
         RetrievePackedPathFromSingleHeap(reverse_heap, middle_node_id, packed_path);
     }
 
-    inline void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
-                                                 const NodeID middle_node_id,
-                                                 std::vector<NodeID> &packed_path) const
+    void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
+                                          const NodeID middle_node_id,
+                                          std::vector<NodeID> &packed_path) const
     {
         NodeID current_node_id = middle_node_id;
         while (current_node_id != search_heap.GetData(current_node_id).parent)
@@ -407,6 +410,84 @@ template <class DataFacadeT> class BasicRoutingInterface
             current_node_id = search_heap.GetData(current_node_id).parent;
             packed_path.emplace_back(current_node_id);
         }
+    }
+
+    double get_network_distance(SearchEngineData::QueryHeap &forward_heap,
+                                SearchEngineData::QueryHeap &reverse_heap,
+                                const PhantomNode &source_phantom,
+                                const PhantomNode &target_phantom) const
+    {
+        EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
+        NodeID middle_node = SPECIAL_NODEID;
+        EdgeWeight edge_offset = std::min(0, -source_phantom.GetForwardWeightPlusOffset());
+        edge_offset = std::min(edge_offset, -source_phantom.GetReverseWeightPlusOffset());
+
+        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.forward_node_id,
+                                -source_phantom.GetForwardWeightPlusOffset(),
+                                source_phantom.forward_node_id);
+        }
+        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.reverse_node_id,
+                                -source_phantom.GetReverseWeightPlusOffset(),
+                                source_phantom.reverse_node_id);
+        }
+
+        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.forward_node_id,
+                                target_phantom.GetForwardWeightPlusOffset(),
+                                target_phantom.forward_node_id);
+        }
+        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.reverse_node_id,
+                                target_phantom.GetReverseWeightPlusOffset(),
+                                target_phantom.reverse_node_id);
+        }
+
+        // search from s and t till new_min/(1+epsilon) > length_of_shortest_path
+        while (0 < (forward_heap.Size() + reverse_heap.Size()))
+        {
+            if (0 < forward_heap.Size())
+            {
+                RoutingStep(forward_heap, reverse_heap, &middle_node, &upper_bound, edge_offset,
+                            true);
+            }
+            if (0 < reverse_heap.Size())
+            {
+                RoutingStep(reverse_heap, forward_heap, &middle_node, &upper_bound, edge_offset,
+                            false);
+            }
+        }
+
+        double distance = std::numeric_limits<double>::max();
+        if (upper_bound != INVALID_EDGE_WEIGHT)
+        {
+            std::vector<NodeID> packed_leg;
+            RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle_node, packed_leg);
+            std::vector<PathData> unpacked_path;
+            PhantomNodes nodes;
+            nodes.source_phantom = source_phantom;
+            nodes.target_phantom = target_phantom;
+            UnpackPath(packed_leg, nodes, unpacked_path);
+
+            FixedPointCoordinate previous_coordinate = source_phantom.location;
+            FixedPointCoordinate current_coordinate;
+            distance = 0;
+            for (const auto &p : unpacked_path)
+            {
+                current_coordinate = facade->GetCoordinateOfNode(p.node);
+                distance += coordinate_calculation::great_circle_distance(previous_coordinate,
+                                                                          current_coordinate);
+                previous_coordinate = current_coordinate;
+            }
+            distance += coordinate_calculation::great_circle_distance(previous_coordinate,
+                                                                      target_phantom.location);
+        }
+        return distance;
     }
 };
 

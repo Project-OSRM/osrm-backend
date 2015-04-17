@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,14 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LOCATE_PLUGIN_H
-#define LOCATE_PLUGIN_H
+#ifndef LOCATE_HPP
+#define LOCATE_HPP
 
 #include "plugin_base.hpp"
 
-#include "../data_structures/json_container.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/string_util.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/string_util.hpp"
+
+#include <osrm/json_container.hpp>
 
 #include <string>
 
@@ -41,18 +42,18 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
 {
   public:
     explicit LocatePlugin(DataFacadeT *facade) : descriptor_string("locate"), facade(facade) {}
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply) final
+    int HandleRequest(const RouteParameters &route_parameters,
+                      osrm::json::Object &json_result) override final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().is_valid())
+        if (route_parameters.coordinates.empty() ||
+            !route_parameters.coordinates.front().is_valid())
         {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
+            return 400;
         }
 
-        JSON::Object json_result;
         FixedPointCoordinate result;
         if (!facade->LocateClosestEndPointForCoordinate(route_parameters.coordinates.front(),
                                                         result))
@@ -61,15 +62,13 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
         }
         else
         {
-            reply.status = http::Reply::ok;
             json_result.values["status"] = 0;
-            JSON::Array json_coordinate;
+            osrm::json::Array json_coordinate;
             json_coordinate.values.push_back(result.lat / COORDINATE_PRECISION);
             json_coordinate.values.push_back(result.lon / COORDINATE_PRECISION);
             json_result.values["mapped_coordinate"] = json_coordinate;
         }
-
-        JSON::render(reply.content, json_result);
+        return 200;
     }
 
   private:
@@ -77,4 +76,4 @@ template <class DataFacadeT> class LocatePlugin final : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif /* LOCATE_PLUGIN_H */
+#endif /* LOCATE_HPP */

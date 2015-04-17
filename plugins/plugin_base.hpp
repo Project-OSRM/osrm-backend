@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,13 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASEPLUGIN_H_
-#define BASEPLUGIN_H_
+#ifndef BASE_PLUGIN_HPP
+#define BASE_PLUGIN_HPP
 
-#include <osrm/Coordinate.h>
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
+#include <osrm/coordinate.hpp>
+#include <osrm/json_container.hpp>
+#include <osrm/route_parameters.hpp>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -42,16 +43,15 @@ class BasePlugin
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BasePlugin() {}
     virtual const std::string GetDescriptor() const = 0;
-    virtual void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply) = 0;
-    virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> coordinates) const final
+    virtual int HandleRequest(const RouteParameters &, osrm::json::Object &) = 0;
+    virtual bool
+    check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates) const final
     {
-        if (2 > coordinates.size() ||
-            std::any_of(std::begin(coordinates),
-                        std::end(coordinates),
-                        [](const FixedPointCoordinate &coordinate)
-                        {
-                return !coordinate.is_valid();
-            }))
+        if (2 > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
+                                                  [](const FixedPointCoordinate &coordinate)
+                                                  {
+                                                      return !coordinate.is_valid();
+                                                  }))
         {
             return false;
         }
@@ -59,4 +59,4 @@ class BasePlugin
     }
 };
 
-#endif /* BASEPLUGIN_H_ */
+#endif /* BASE_PLUGIN_HPP */

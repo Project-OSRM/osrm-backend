@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -29,10 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_node.hpp"
 #include "../data_structures/shared_memory_vector_wrapper.hpp"
 #include "../data_structures/static_rtree.hpp"
+#include "../util/boost_filesystem_2_fix.hpp"
 #include "../data_structures/edge_based_node.hpp"
-#include "../Util/BoostFileSystemFix.h"
 
-#include <osrm/Coordinate.h>
+#include <osrm/coordinate.hpp>
 
 #include <random>
 
@@ -88,11 +88,9 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         for (const auto &q : queries)
         {
             phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, phantom_node_vector, 3, num_results);
+            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 3, num_results);
             phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, phantom_node_vector, 17, num_results);
+            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 17, num_results);
         }
         TIMER_STOP(query_phantom);
 
@@ -130,8 +128,7 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
     }
     TIMER_STOP(query_node);
 
-    std::cout << "Took " << TIMER_MSEC(query_node) << " msec for " << num_queries
-              << " queries."
+    std::cout << "Took " << TIMER_MSEC(query_node) << " msec for " << num_queries << " queries."
               << "\n";
     std::cout << TIMER_MSEC(query_node) / ((double)num_queries) << " msec/query."
               << "\n";
@@ -147,11 +144,9 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         for (const auto &q : queries)
         {
             phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, phantom_node_vector, 3, num_results);
+            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 3, num_results);
             phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(
-                q, phantom_node_vector, 17, num_results);
+            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 17, num_results);
         }
         TIMER_STOP(query_phantom);
 

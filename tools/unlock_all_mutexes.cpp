@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,9 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/git_sha.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Server/DataStructures/SharedBarriers.h"
+#include "../util/git_sha.hpp"
+#include "../util/simple_logger.hpp"
+#include "../server/data_structures/shared_barriers.hpp"
 
 #include <iostream>
 

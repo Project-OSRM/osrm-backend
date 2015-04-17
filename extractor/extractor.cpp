@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,17 +31,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_node.hpp"
 #include "extraction_way.hpp"
 #include "extractor_callbacks.hpp"
-#include "extractor_options.hpp"
 #include "restriction_parser.hpp"
 #include "scripting_environment.hpp"
 
-#include "../Util/git_sha.hpp"
-#include "../Util/IniFileUtil.h"
-#include "../Util/simple_logger.hpp"
-#include "../Util/timing_util.hpp"
-#include "../Util/make_unique.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 
 #include "../typedefs.h"
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <luabind/luabind.hpp>
 
@@ -63,43 +64,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
-int Extractor::Run(int argc, char *argv[])
+int extractor::run(const ExtractorConfig &extractor_config)
 {
-    ExtractorConfig extractor_config;
-
     try
     {
         LogPolicy::GetInstance().Unmute();
         TIMER_START(extracting);
 
-        if (!ExtractorOptions::ParseArguments(argc, argv, extractor_config))
-        {
-            return 0;
-        }
-        ExtractorOptions::GenerateOutputFilesNames(extractor_config);
-
-        if (1 > extractor_config.requested_num_threads)
-        {
-            SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
-            return 1;
-        }
-
-        if (!boost::filesystem::is_regular_file(extractor_config.input_path))
-        {
-            SimpleLogger().Write(logWARNING)
-                << "Input file " << extractor_config.input_path.string() << " not found!";
-            return 1;
-        }
-
-        if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
-        {
-            SimpleLogger().Write(logWARNING) << "Profile " << extractor_config.profile_path.string()
-                                             << " not found!";
-            return 1;
-        }
-
         const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
-        const auto number_of_threads = std::min(recommended_num_threads, extractor_config.requested_num_threads);
+        const auto number_of_threads =
+            std::min(recommended_num_threads, extractor_config.requested_num_threads);
         tbb::task_scheduler_init init(number_of_threads);
 
         SimpleLogger().Write() << "Input file: " << extractor_config.input_path.filename().string();
@@ -120,10 +94,10 @@ int Extractor::Run(int argc, char *argv[])
         osmium::io::Reader reader(input_file);
         const osmium::io::Header header = reader.header();
 
-        std::atomic<unsigned> number_of_nodes {0};
-        std::atomic<unsigned> number_of_ways {0};
-        std::atomic<unsigned> number_of_relations {0};
-        std::atomic<unsigned> number_of_others {0};
+        std::atomic<unsigned> number_of_nodes{0};
+        std::atomic<unsigned> number_of_ways{0};
+        std::atomic<unsigned> number_of_relations{0};
+        std::atomic<unsigned> number_of_others{0};
 
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
@@ -160,7 +134,8 @@ int Extractor::Run(int argc, char *argv[])
         {
             // create a vector of iterators into the buffer
             std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
-            for (auto iter = std::begin(buffer); iter != std::end(buffer); ++iter) {
+            for (auto iter = std::begin(buffer); iter != std::end(buffer); ++iter)
+            {
                 osm_elements.push_back(iter);
             }
 
@@ -170,55 +145,56 @@ int Extractor::Run(int argc, char *argv[])
             resulting_restrictions.clear();
 
             // parse OSM entities in parallel, store in resulting vectors
-            tbb::parallel_for(tbb::blocked_range<std::size_t>(0, osm_elements.size()),
-                              [&](const tbb::blocked_range<std::size_t> &range)
-                              {
-                for (auto x = range.begin(); x != range.end(); ++x)
+            tbb::parallel_for(
+                tbb::blocked_range<std::size_t>(0, osm_elements.size()),
+                [&](const tbb::blocked_range<std::size_t> &range)
                 {
-                    const auto entity = osm_elements[x];
-
                     ExtractionNode result_node;
                     ExtractionWay result_way;
+                    lua_State *local_state = scripting_environment.get_lua_state();
 
-                    lua_State * local_state = scripting_environment.get_lua_state();
-
-                    switch (entity->type())
+                    for (auto x = range.begin(); x != range.end(); ++x)
                     {
-                    case osmium::item_type::node:
-                        ++number_of_nodes;
-                        luabind::call_function<void>(
-                            local_state,
-                            "node_function",
-                            boost::cref(static_cast<const osmium::Node &>(*entity)),
-                            boost::ref(result_node));
-                        resulting_nodes.push_back(std::make_pair(x, result_node));
-                        break;
-                    case osmium::item_type::way:
-                        ++number_of_ways;
-                        luabind::call_function<void>(
-                            local_state,
-                            "way_function",
-                            boost::cref(static_cast<const osmium::Way &>(*entity)),
-                            boost::ref(result_way));
-                        resulting_ways.push_back(std::make_pair(x, result_way));
-                        break;
-                    case osmium::item_type::relation:
-                        ++number_of_relations;
-                        resulting_restrictions.push_back(
-                            restriction_parser.TryParse(static_cast<const osmium::Relation &>(*entity)));
-                        break;
-                    default:
-                        ++number_of_others;
-                        break;
+                        const auto entity = osm_elements[x];
+
+                        switch (entity->type())
+                        {
+                        case osmium::item_type::node:
+                            result_node.clear();
+                            ++number_of_nodes;
+                            luabind::call_function<void>(
+                                local_state, "node_function",
+                                boost::cref(static_cast<const osmium::Node &>(*entity)),
+                                boost::ref(result_node));
+                            resulting_nodes.push_back(std::make_pair(x, result_node));
+                            break;
+                        case osmium::item_type::way:
+                            result_way.clear();
+                            ++number_of_ways;
+                            luabind::call_function<void>(
+                                local_state, "way_function",
+                                boost::cref(static_cast<const osmium::Way &>(*entity)),
+                                boost::ref(result_way));
+                            resulting_ways.push_back(std::make_pair(x, result_way));
+                            break;
+                        case osmium::item_type::relation:
+                            ++number_of_relations;
+                            resulting_restrictions.push_back(restriction_parser.TryParse(
+                                static_cast<const osmium::Relation &>(*entity)));
+                            break;
+                        default:
+                            ++number_of_others;
+                            break;
+                        }
                     }
-                }
-            });
+                });
 
             // put parsed objects thru extractor callbacks
             for (const auto &result : resulting_nodes)
             {
                 extractor_callbacks->ProcessNode(
-                    static_cast<const osmium::Node &>(*(osm_elements[result.first])), result.second);
+                    static_cast<const osmium::Node &>(*(osm_elements[result.first])),
+                    result.second);
             }
             for (const auto &result : resulting_ways)
             {
@@ -233,15 +209,10 @@ int Extractor::Run(int argc, char *argv[])
         TIMER_STOP(parsing);
         SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
 
-        unsigned nn = number_of_nodes;
-        unsigned nw = number_of_ways;
-        unsigned nr = number_of_relations;
-        unsigned no = number_of_others;
-        SimpleLogger().Write() << "Raw input contains "
-                               << nn << " nodes, "
-                               << nw << " ways, and "
-                               << nr << " relations, and "
-                               << no << " unknown entities";
+        SimpleLogger().Write() << "Raw input contains " << number_of_nodes.load() << " nodes, "
+                               << number_of_ways.load() << " ways, and "
+                               << number_of_relations.load() << " relations, and "
+                               << number_of_others.load() << " unknown entities";
 
         extractor_callbacks.reset();
 

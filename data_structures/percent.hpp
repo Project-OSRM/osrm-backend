@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -36,7 +36,7 @@ class Percent
   public:
     explicit Percent(unsigned max_value, unsigned step = 5) { reinit(max_value, step); }
 
-   // Reinitializes
+    // Reinitializes
     void reinit(unsigned max_value, unsigned step = 5)
     {
         m_max_value = max_value;

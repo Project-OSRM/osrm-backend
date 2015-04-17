@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTION_HELPER_FUNCTIONS_HPP
 #define EXTRACTION_HELPER_FUNCTIONS_HPP
 
-#include "../Util/cast.hpp"
+#include "../util/cast.hpp"
+#include "../util/iso_8601_duration_parser.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
@@ -37,53 +38,81 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-namespace qi = boost::spirit::qi;
-
-// TODO: Move into LUA
-
-bool durationIsValid(const std::string &s)
+bool simple_duration_is_valid(const std::string &s)
 {
-    boost::regex e(
+    boost::regex simple_format(
         "((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",
         boost::regex_constants::icase | boost::regex_constants::perl);
 
-    std::vector<std::string> result;
-    boost::algorithm::split_regex(result, s, boost::regex(":"));
-    const bool matched = regex_match(s, e);
-    return matched;
+    const bool simple_matched = regex_match(s, simple_format);
+
+    if (simple_matched)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool iso_8601_duration_is_valid(const std::string &s)
+{
+    iso_8601_grammar<std::string::const_iterator> iso_parser;
+    const bool result = qi::parse(s.begin(), s.end(), iso_parser);
+
+    // check if the was an error with the request
+    if (result && (0 != iso_parser.get_duration()))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool durationIsValid(const std::string &s)
+{
+    return simple_duration_is_valid(s) || iso_8601_duration_is_valid(s);
 }
 
 unsigned parseDuration(const std::string &s)
 {
-    unsigned hours = 0;
-    unsigned minutes = 0;
-    unsigned seconds = 0;
-    boost::regex e(
-        "((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",
-        boost::regex_constants::icase | boost::regex_constants::perl);
-
-    std::vector<std::string> result;
-    boost::algorithm::split_regex(result, s, boost::regex(":"));
-    const bool matched = regex_match(s, e);
-    if (matched)
+    if (simple_duration_is_valid(s))
     {
-        if (1 == result.size())
+        unsigned hours = 0;
+        unsigned minutes = 0;
+        unsigned seconds = 0;
+        boost::regex e(
+            "((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",
+            boost::regex_constants::icase | boost::regex_constants::perl);
+
+        std::vector<std::string> result;
+        boost::algorithm::split_regex(result, s, boost::regex(":"));
+        const bool matched = regex_match(s, e);
+        if (matched)
         {
-            minutes = cast::string_to_int(result[0]);
+            if (1 == result.size())
+            {
+                minutes = cast::string_to_int(result[0]);
+            }
+            if (2 == result.size())
+            {
+                minutes = cast::string_to_int(result[1]);
+                hours = cast::string_to_int(result[0]);
+            }
+            if (3 == result.size())
+            {
+                seconds = cast::string_to_int(result[2]);
+                minutes = cast::string_to_int(result[1]);
+                hours = cast::string_to_int(result[0]);
+            }
+            return 10 * (3600 * hours + 60 * minutes + seconds);
         }
-        if (2 == result.size())
-        {
-            minutes = cast::string_to_int(result[1]);
-            hours = cast::string_to_int(result[0]);
-        }
-        if (3 == result.size())
-        {
-            seconds = cast::string_to_int(result[2]);
-            minutes = cast::string_to_int(result[1]);
-            hours = cast::string_to_int(result[0]);
-        }
-        return 10 * (3600 * hours + 60 * minutes + seconds);
     }
+    else if (iso_8601_duration_is_valid(s))
+    {
+        iso_8601_grammar<std::string::const_iterator> iso_parser;
+        qi::parse(s.begin(), s.end(), iso_parser);
+
+        return iso_parser.get_duration();
+    }
+
     return std::numeric_limits<unsigned>::max();
 }
 
