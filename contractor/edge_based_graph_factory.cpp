@@ -93,15 +93,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
     // find reverse edge id and
     const EdgeID edge_id_2 = m_node_based_graph->FindEdge(node_v, node_u);
-
-#ifndef NDEBUG
-    if (edge_id_2 == m_node_based_graph->EndEdges(node_v))
-    {
-        SimpleLogger().Write(logWARNING) << "Did not find edge (" << node_v << "," << node_u << ")";
-    }
-#endif
     BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
-    BOOST_ASSERT(edge_id_2 < m_node_based_graph->EndEdges(node_v));
+
     const EdgeData &reverse_data = m_node_based_graph->GetEdgeData(edge_id_2);
 
     if (forward_data.edgeBasedNodeID == SPECIAL_NODEID &&
@@ -315,7 +308,6 @@ void EdgeBasedGraphFactory::CompressGeometry()
         BOOST_ASSERT(node_u != node_v);
 
         const EdgeID forward_e1 = m_node_based_graph->FindEdge(node_u, node_v);
-        BOOST_ASSERT(m_node_based_graph->EndEdges(node_u) != forward_e1);
         BOOST_ASSERT(SPECIAL_EDGEID != forward_e1);
         BOOST_ASSERT(node_v == m_node_based_graph->GetTarget(forward_e1));
         const EdgeID reverse_e1 = m_node_based_graph->FindEdge(node_w, node_v);
@@ -325,9 +317,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
         const EdgeData &fwd_edge_data1 = m_node_based_graph->GetEdgeData(forward_e1);
         const EdgeData &rev_edge_data1 = m_node_based_graph->GetEdgeData(reverse_e1);
 
-        if ((m_node_based_graph->FindEdge(node_u, node_w) !=
-             m_node_based_graph->EndEdges(node_u)) ||
-            (m_node_based_graph->FindEdge(node_w, node_u) != m_node_based_graph->EndEdges(node_w)))
+        if (m_node_based_graph->FindEdgeInEitherDirection(node_u, node_w) != SPECIAL_EDGEID)
         {
             continue;
         }

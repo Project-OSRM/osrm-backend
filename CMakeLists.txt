@@ -332,6 +332,8 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   target_link_libraries(osrm-check-hsgr ${Boost_LIBRARIES})
   add_executable(osrm-springclean tools/springclean.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:EXCEPTION>)
   target_link_libraries(osrm-springclean ${Boost_LIBRARIES})
+  add_executable(osrm-graph-compare tools/graph_compare.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
+  target_link_libraries(osrm-graph-compare ${Boost_LIBRARIES} ${TBB_LIBRARIES})
 
   install(TARGETS osrm-cli DESTINATION bin)
   install(TARGETS osrm-io-benchmark DESTINATION bin)

@@ -27,8 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../algorithms/tiny_components.hpp"
-#include "../data_structures/static_graph.hpp"
 #include "../data_structures/coordinate_calculation.hpp"
+#include "../data_structures/dynamic_graph.hpp"
+#include "../data_structures/static_graph.hpp"
 #include "../util/fingerprint.hpp"
 #include "../util/graph_loader.hpp"
 #include "../util/make_unique.hpp"
@@ -148,6 +149,7 @@ int main(int argc, char *argv[])
 
         // Building an node-based graph
         std::vector<TarjanEdge> graph_edge_list;
+//        DeallocatingVector<TarjanEdge> graph_edge_list;
         for (const auto &input_edge : edge_list)
         {
             if (input_edge.source == input_edge.target)
@@ -172,15 +174,16 @@ int main(int argc, char *argv[])
                          "input edge vector not properly deallocated");
 
         tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
-        auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
-        edge_list.clear();
-        edge_list.shrink_to_fit();
+        const auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
+        graph_edge_list.clear();
+        graph_edge_list.shrink_to_fit();
 
         SimpleLogger().Write() << "Starting SCC graph traversal";
 
         RestrictionMap restriction_map(restriction_list);
-        auto tarjan =
-            osrm::make_unique<TarjanSCC<TarjanGraph>>(graph, restriction_map, bollard_node_list);
+        auto tarjan = osrm::make_unique<TarjanSCC<TarjanGraph>>(graph,
+                                                                       restriction_map,
+                                                                       bollard_node_list);
         tarjan->run();
         SimpleLogger().Write() << "identified: " << tarjan->get_number_of_components()
                                << " many components";
@@ -235,7 +238,7 @@ int main(int argc, char *argv[])
             {
                 const TarjanGraph::NodeIterator target = graph->GetTarget(current_edge);
 
-                if (source < target || graph->EndEdges(target) == graph->FindEdge(target, source))
+                if (source < target || SPECIAL_EDGEID == graph->FindEdge(target, source))
                 {
                     total_network_length +=
                         100 * coordinate_calculation::euclidean_distance(
