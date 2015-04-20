@@ -55,7 +55,7 @@ class ScriptingEnvironment;
  * The restriction is represented by the osm id of the from way, the osm id of the
  * to way and the osm id of the via node. This representation must be post-processed
  * in the extractor to work with the edge-based data-model of OSRM:
- * Since the from and to way share the via-way as node a turn will have the following form:
+ * Since the from and to way share the via-node a turn will have the following form:
  * ...----(a)-----(via)------(b)----...
  * So it can be represented by the tripe (a, via, b).
  */
