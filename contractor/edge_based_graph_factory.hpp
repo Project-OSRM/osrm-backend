@@ -59,12 +59,12 @@ class EdgeBasedGraphFactory
 
     struct SpeedProfileProperties;
 
-    explicit EdgeBasedGraphFactory(const std::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
-                                   std::unique_ptr<RestrictionMap> restricion_map,
-                                   std::vector<NodeID> &barrier_node_list,
-                                   std::vector<NodeID> &traffic_light_node_list,
-                                   std::vector<QueryNode> &node_info_list,
-                                   SpeedProfileProperties &speed_profile);
+    explicit EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
+                                   std::shared_ptr<RestrictionMap> restricion_map,
+                                   std::unique_ptr<std::vector<NodeID>> barrier_node_list,
+                                   std::unique_ptr<std::vector<NodeID>> traffic_light_node_list,
+                                   const std::vector<QueryNode> &node_info_list,
+                                   const SpeedProfileProperties &speed_profile);
 
     void Run(const std::string &original_edge_data_filename,
              const std::string &geometry_filename,
@@ -97,15 +97,16 @@ class EdgeBasedGraphFactory
 
     unsigned m_number_of_edge_based_nodes;
 
-    std::vector<QueryNode> m_node_info_list;
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
+    const std::vector<QueryNode>& m_node_info_list;
     std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
+    std::shared_ptr<RestrictionMap> m_restriction_map;
+
     std::unordered_set<NodeID> m_barrier_nodes;
     std::unordered_set<NodeID> m_traffic_lights;
 
-    std::unique_ptr<RestrictionMap> m_restriction_map;
 
     GeometryCompressor m_geometry_compressor;
 

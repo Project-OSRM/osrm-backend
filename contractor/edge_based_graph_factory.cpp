@@ -40,21 +40,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <limits>
 
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(
-    const std::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
-    std::unique_ptr<RestrictionMap> restriction_map,
-    std::vector<NodeID> &barrier_node_list,
-    std::vector<NodeID> &traffic_light_node_list,
-    std::vector<QueryNode> &node_info_list,
-    SpeedProfileProperties &speed_profile)
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
+                                   std::shared_ptr<RestrictionMap> restriction_map,
+                                   std::unique_ptr<std::vector<NodeID>> barrier_node_list,
+                                   std::unique_ptr<std::vector<NodeID>> traffic_light_node_list,
+                                   const std::vector<QueryNode> &node_info_list,
+                                   const SpeedProfileProperties &speed_profile)
     : speed_profile(speed_profile),
       m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
-      m_node_info_list(node_info_list), m_node_based_graph(node_based_graph),
+      m_node_info_list(node_info_list),
+      m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), max_id(0), removed_node_count(0)
 {
     // insert into unordered sets for fast lookup
-    m_barrier_nodes.insert(barrier_node_list.begin(), barrier_node_list.end());
-    m_traffic_lights.insert(traffic_light_node_list.begin(), traffic_light_node_list.end());
+    m_barrier_nodes.insert(barrier_node_list->begin(), barrier_node_list->end());
+    m_traffic_lights.insert(traffic_light_node_list->begin(), traffic_light_node_list->end());
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &output_edge_list)
@@ -362,11 +362,11 @@ void EdgeBasedGraphFactory::CompressGeometry()
             // update any involved turn restrictions
             m_restriction_map->FixupStartingTurnRestriction(node_u, node_v, node_w);
             m_restriction_map->FixupArrivingTurnRestriction(node_u, node_v, node_w,
-                                                            m_node_based_graph);
+                                                            *m_node_based_graph);
 
             m_restriction_map->FixupStartingTurnRestriction(node_w, node_v, node_u);
             m_restriction_map->FixupArrivingTurnRestriction(node_w, node_v, node_u,
-                                                            m_node_based_graph);
+                                                            *m_node_based_graph);
 
             // store compressed geometry in container
             m_geometry_compressor.CompressEdge(
@@ -415,6 +415,7 @@ void EdgeBasedGraphFactory::RenumberEdges()
         for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
         {
             EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
+            // FIXME when does that happen? why can we skip here?
             if (!edge_data.forward)
             {
                 continue;
