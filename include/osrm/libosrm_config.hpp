@@ -35,7 +35,7 @@ struct libosrm_config
     libosrm_config(const libosrm_config &) = delete;
     libosrm_config()
         : max_locations_distance_table(100), max_locations_map_matching(-1),
-          use_shared_memory(false)
+          use_shared_memory(true)
     {
     }
 
