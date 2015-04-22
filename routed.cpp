@@ -74,6 +74,8 @@ int main(int argc, const char *argv[])
         int ip_port, requested_thread_num;
 
         libosrm_config lib_config;
+        // make the behaviour of routed backward compatible
+        lib_config.use_shared_memory = false;
 
         const unsigned init_result = GenerateServerProgramOptions(
             argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
