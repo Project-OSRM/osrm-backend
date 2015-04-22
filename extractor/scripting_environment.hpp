@@ -35,6 +35,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct lua_State;
 
+/**
+ * Creates a lua context and binds osmium way, node and relation objects and
+ * ExtractionWay and ExtractionNode to lua objects.
+ *
+ * Each thread has its own lua state which is implemented with thread specific
+ * storage from TBB.
+ */
 class ScriptingEnvironment
 {
   public:

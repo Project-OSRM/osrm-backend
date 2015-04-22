@@ -34,6 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
+/**
+ * This struct is the direct result of the call to ```way_function```
+ * in the lua based profile.
+ *
+ * It is split into multiple edge segments in the ExtractorCallback.
+ */
 struct ExtractionWay
 {
     ExtractionWay() { clear(); }

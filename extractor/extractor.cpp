@@ -64,6 +64,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
+/**
+ * TODO: Refactor this function into smaller functions for better readability.
+ *
+ * This function is the entry point for the whole extraction process. The goal of the extraction
+ * step is to filter and convert the OSM geometry to something more fitting for routing.
+ * That includes:
+ *  - extracting turn restrictions
+ *  - splitting ways into (directional!) edge segments
+ *  - checking if nodes are barriers or traffic signal
+ *  - discarding all tag information: All relevant type information for nodes/ways
+ *    is extracted at this point.
+ *
+ * The result of this process are the following files:
+ *  .names : Names of all streets, stored as long consecutive string with prefix sum based index
+ *  .osrm  : Nodes and edges in a intermediate format that easy to digest for osrm-prepare
+ *  .restrictions : Turn restrictions that are used my osrm-prepare to construct the edge-expanded graph
+ *
+ */
 int extractor::run(const ExtractorConfig &extractor_config)
 {
     try
@@ -83,12 +101,8 @@ int extractor::run(const ExtractorConfig &extractor_config)
         // setup scripting environment
         ScriptingEnvironment scripting_environment(extractor_config.profile_path.string().c_str());
 
-        std::unordered_map<std::string, NodeID> string_map;
-        string_map[""] = 0;
-
         ExtractionContainers extraction_containers;
-        auto extractor_callbacks =
-            osrm::make_unique<ExtractorCallbacks>(extraction_containers, string_map);
+        auto extractor_callbacks = osrm::make_unique<ExtractorCallbacks>(extraction_containers);
 
         const osmium::io::File input_file(extractor_config.input_path.string());
         osmium::io::Reader reader(input_file);

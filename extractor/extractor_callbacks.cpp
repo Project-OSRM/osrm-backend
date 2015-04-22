@@ -41,13 +41,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers,
-                                       std::unordered_map<std::string, NodeID> &string_map)
-    : string_map(string_map), external_memory(extraction_containers)
+ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
+    : external_memory(extraction_containers)
 {
+    string_map[""] = 0;
 }
 
-/** warning: caller needs to take care of synchronization! */
+/**
+ * Takes the node position from osmium and the filtered properties from the lua
+ * profile and saves them to external memory.
+ *
+ * warning: caller needs to take care of synchronization!
+ */
 void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
                                      const ExtractionNode &result_node)
 {
@@ -72,7 +77,15 @@ void ExtractorCallbacks::ProcessRestriction(
         //                           "y" : "n");
     }
 }
-/** warning: caller needs to take care of synchronization! */
+/**
+ * Takes the geometry contained in the ```input_way``` and the tags computed
+ * by the lua profile inside ```parsed_way``` and computes all edge segments.
+ *
+ * Depending on the forward/backwards weights the edges are split into forward
+ * and backward edges.
+ *
+ * warning: caller needs to take care of synchronization!
+ */
 void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const ExtractionWay &parsed_way)
 {
     if (((0 >= parsed_way.forward_speed) ||

@@ -62,6 +62,17 @@ ExtractionContainers::~ExtractionContainers()
     way_start_end_id_list.clear();
 }
 
+/**
+ * Processes the collected data and serializes it.
+ * At this point nodes are still referenced by their OSM id.
+ *
+ * - map start-end nodes of ways to ways used int restrictions to compute compressed
+ *   trippe representation
+ * - filter nodes list to nodes that are referenced by ways
+ * - merge edges with nodes to include location of start/end points and serialize
+ *
+ * FIXME: Each of this step should be an own function for readability.
+ */
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name)
 {
@@ -301,6 +312,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         node_iterator = all_nodes_list.begin();
         edge_iterator = all_edges_list.begin();
 
+        // Also serializes the edges
         while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
         {
             if (edge_iterator->target < node_iterator->node_id)
@@ -329,6 +341,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 int integer_weight = std::max(
                     1, (int)std::floor(
                            (edge_iterator->is_duration_set ? edge_iterator->speed : weight) + .5));
+                // FIXME: This means we have a _minimum_ edge length of 1m
+                // maybe use dm as base unit?
                 const int integer_distance = std::max(1, (int)distance);
                 const short zero = 0;
                 const short one = 1;
