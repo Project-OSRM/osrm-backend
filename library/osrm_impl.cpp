@@ -41,6 +41,7 @@ class named_mutex;
 #include "../plugins/locate.hpp"
 #include "../plugins/nearest.hpp"
 #include "../plugins/timestamp.hpp"
+#include "../plugins/round_trip.hpp"
 #include "../plugins/viaroute.hpp"
 #include "../plugins/match.hpp"
 #include "../server/data_structures/datafacade_base.hpp"
@@ -86,6 +87,7 @@ OSRM_impl::OSRM_impl(libosrm_config &lib_config)
         query_data_facade, lib_config.max_locations_map_matching));
     RegisterPlugin(new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
+    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
 }
 
 OSRM_impl::~OSRM_impl()
