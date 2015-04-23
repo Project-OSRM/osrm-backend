@@ -123,20 +123,18 @@ int Prepare::Process(int argc, char *argv[])
     rtree_nodes_output_path = osrm_input_path.string() + ".ramIndex";
     rtree_leafs_output_path = osrm_input_path.string() + ".fileIndex";
 
-    /*** Setup Scripting Environment ***/
     // Create a new lua state
-
 
     SimpleLogger().Write() << "Generating edge-expanded graph representation";
 
     TIMER_START(expansion);
 
-    std::vector<EdgeBasedNode> node_based_edge_list;
+    auto node_based_edge_list = osrm::make_unique<std::vector<EdgeBasedNode>>();;
     DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     auto internal_to_external_node_map = osrm::make_unique<std::vector<QueryNode>>();
     auto graph_size =
         BuildEdgeExpandedGraph(*internal_to_external_node_map,
-                               node_based_edge_list, edge_based_edge_list);
+                               *node_based_edge_list, edge_based_edge_list);
 
     auto number_of_node_based_nodes = graph_size.first;
     auto number_of_edge_based_nodes = graph_size.second;
@@ -146,49 +144,26 @@ int Prepare::Process(int argc, char *argv[])
     SimpleLogger().Write() << "building r-tree ...";
     TIMER_START(rtree);
 
-    BuildRTree(node_based_edge_list, *internal_to_external_node_map);
+    BuildRTree(*node_based_edge_list, *internal_to_external_node_map);
 
     TIMER_STOP(rtree);
 
-    RangebasedCRC32 crc32;
-    if (crc32.using_hardware())
-    {
-        SimpleLogger().Write() << "using hardware based CRC32 computation";
-    }
-    else
-    {
-        SimpleLogger().Write() << "using software based CRC32 computation";
-    }
 
-    const unsigned crc32_value = crc32(node_based_edge_list);
-    node_based_edge_list.clear();
-    node_based_edge_list.shrink_to_fit();
-    SimpleLogger().Write() << "CRC32: " << crc32_value;
+    const unsigned crc32_value = CalculateEdgeChecksum(std::move(node_based_edge_list));
 
     SimpleLogger().Write() << "writing node map ...";
     WriteNodeMapping(std::move(internal_to_external_node_map));
 
-    /***
-     * Contracting the edge-expanded graph
-     */
-
-    SimpleLogger().Write() << "initializing contractor";
-    auto contractor =
-        osrm::make_unique<Contractor>(number_of_edge_based_nodes, edge_based_edge_list);
+    // Contracting the edge-expanded graph
 
     TIMER_START(contraction);
-    contractor->Run();
+    DeallocatingVector<QueryEdge> contracted_edge_list;
+    ContractGraph(number_of_edge_based_nodes, edge_based_edge_list, contracted_edge_list);
     TIMER_STOP(contraction);
 
     SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
-    DeallocatingVector<QueryEdge> contracted_edge_list;
-    contractor->GetEdges(contracted_edge_list);
-    contractor.reset();
-
-    /***
-     * Sorting contracted edges in a way that the static query graph can read some in in-place.
-     */
+    // Sorting contracted edges in a way that the static query graph can read some in in-place.
 
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
     const unsigned contracted_edge_count = contracted_edge_list.size();
@@ -254,8 +229,8 @@ int Prepare::Process(int argc, char *argv[])
         hsgr_output_stream.write((char *)&node_array[0],
                                  sizeof(StaticGraph<EdgeData>::NodeArrayEntry) * node_array_size);
     }
-    // serialize all edges
 
+    // serialize all edges
     SimpleLogger().Write() << "Building edge array";
     edge = 0;
     int number_of_used_edges = 0;
@@ -307,6 +282,24 @@ int Prepare::Process(int argc, char *argv[])
     SimpleLogger().Write() << "finished preprocessing";
 
     return 0;
+}
+
+unsigned Prepare::CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list)
+{
+    RangebasedCRC32 crc32;
+    if (crc32.using_hardware())
+    {
+        SimpleLogger().Write() << "using hardware based CRC32 computation";
+    }
+    else
+    {
+        SimpleLogger().Write() << "using software based CRC32 computation";
+    }
+
+    const unsigned crc32_value = crc32(*node_based_edge_list);
+    SimpleLogger().Write() << "CRC32: " << crc32_value;
+
+    return crc32_value;
 }
 
 /**
@@ -540,6 +533,18 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
 
     return std::make_pair(number_of_node_based_nodes, number_of_edge_based_nodes);
+}
+
+/**
+ \brief Build contracted graph.
+ */
+void Prepare::ContractGraph(const std::size_t number_of_edge_based_nodes,
+                            DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
+                            DeallocatingVector<QueryEdge>& contracted_edge_list)
+{
+    Contractor contractor(number_of_edge_based_nodes, edge_based_edge_list);
+    contractor.Run();
+    contractor.GetEdges(contracted_edge_list);
 }
 
 /**
