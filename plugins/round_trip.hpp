@@ -34,10 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
+#include "../descriptors/json_descriptor.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/make_unique.hpp"
 #include "../util/string_util.hpp"
 #include "../util/timing_util.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -100,6 +102,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             }
 
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
+            // SimpleLogger().Write() << "In loop 1";
         }
 
         // compute the distance table of all phantom nodes
@@ -111,7 +114,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             return 400;
         }
 
-        SimpleLogger().Write() << "Distance Table Computed";
+        // SimpleLogger().Write() << "Distance Table Computed";
 
 
         //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,12 +131,14 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         InternalRouteResult raw_route;
         // 1. START WITH LOCATION 0 AS START POINT
         int curr_node = 0;   
+        std::vector<int> loc_permutation(number_of_locations, -1);
+        loc_permutation[0] = 0;
         std::vector<bool> visited(number_of_locations, false);
         visited[0] = true;
 
-        SimpleLogger().Write() << "Added an initial via";
-        SimpleLogger().Write() << "Started from location 0";
-        SimpleLogger().Write() << "Number of locs: " << number_of_locations;
+        // SimpleLogger().Write() << "Added an initial via";
+        // SimpleLogger().Write() << "Started from location 0";
+        // SimpleLogger().Write() << "Number of locs: " << number_of_locations;
 
         PhantomNodes subroute;
         // 3. REPEAT FOR EVERY UNVISITED NODE
@@ -147,26 +152,45 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             // 2. FIND NEAREST NEIGHBOUR
             for (auto it = row_begin_iterator; it != row_end_iterator; ++it) {
                 auto index = std::distance(row_begin_iterator, it); 
+                
                 if (!visited[index] && *it < min_dist)
                 {
                     min_dist = *it;
                     min_id = index;
                 }
+
+                // SimpleLogger().Write() << "In loop 2";
             }
-            visited[min_id] = true;
-            subroute = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]}
-            raw_route.segment_end_coordinates.emplace_back(subroute);
+            // SimpleLogger().Write() << "After loop 2";
+
             
-            SimpleLogger().Write() << "Found location " << curr_node;   
-            SimpleLogger().Write() << "Added a looped via" << curr_node << " " << min_id;
-            
-            curr_node = min_id;
+            // SimpleLogger().Write() << "visited size is " << visited.size();
+
+            if (min_id == -1)
+            {
+                SimpleLogger().Write() << "ALARM: NO ROUTE!";
+                break;
+            }
+            else
+            {
+                loc_permutation[min_id] = stopover;
+                visited[min_id] = true;
+                subroute = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
+                raw_route.segment_end_coordinates.emplace_back(subroute);
+                
+                // SimpleLogger().Write() << "Found location " << curr_node;   
+                // SimpleLogger().Write() << "Added a looped via" << curr_node << " " << min_id;
+                
+                curr_node = min_id;
+
+                // SimpleLogger().Write() << "In loop 3";
+            }
         }
 
         // 4. ROUTE BACK TO STARTING POINT
         // SimpleLogger().Write() << "Added a final via";
-        // subroute = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[0][0]};
-        // raw_route.segment_end_coordinates.emplace_back(subroute);
+        subroute = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[0][0]};
+        raw_route.segment_end_coordinates.emplace_back(subroute);
 
         // 5. COMPUTE ROUTE
         search_engine_ptr->shortest_path(raw_route.segment_end_coordinates,
@@ -178,6 +202,10 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         
         descriptor->SetConfig(route_parameters);
         descriptor->Run(raw_route, json_result);
+
+        osrm::json::Array json_loc_permutation;
+        json_loc_permutation.values.insert(json_loc_permutation.values.end(), loc_permutation.begin(), loc_permutation.end());
+        json_result.values["loc_permutation"] = json_loc_permutation;
 
         return 200;
     }
