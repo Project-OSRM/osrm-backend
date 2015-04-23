@@ -66,6 +66,9 @@ class Prepare
     void ContractGraph(const std::size_t number_of_edge_based_nodes,
                        DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
                        DeallocatingVector<QueryEdge>& contracted_edge_list);
+    std::size_t WriteContractedGraph(unsigned number_of_edge_based_nodes,
+                                     std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list,
+                                     std::unique_ptr<DeallocatingVector<QueryEdge>> contracted_edge_list);
     std::shared_ptr<NodeBasedDynamicGraph> LoadNodeBasedGraph(std::vector<NodeID> &barrier_node_list,
                                                std::vector<NodeID> &traffic_light_list,
                                                RestrictionMap &restriction_map,
