@@ -123,35 +123,38 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         //////////////////////////////////////////////////////////////////////////////////////////////////
 
         const auto number_of_locations = phantom_node_vector.size();
-        SimpleLogger().Write() << number_of_locations;
         InternalRouteResult min_route;
         std::vector<int> min_loc_permutation;
         min_route.shortest_path_length = std::numeric_limits<int>::max();
 
         std::vector<bool> lonely_island(number_of_locations, false);
+        std::vector<bool> connected_node(number_of_locations, false);
 
         int count_unreachables;
         // SET RANDOM START LOCATION
         for(int start_node = 0; start_node < number_of_locations; ++start_node)
         {
             // check whether this start node is a lonely island
-            if (lonely_island[start_node])
-                continue;
-            count_unreachables = 0;
-            auto start_dist_begin = result_table->begin() + (start_node * number_of_locations);
-            auto start_dist_end = result_table->begin() + ((start_node + 1) * number_of_locations);
-            for (auto it2 = start_dist_begin; it2 != start_dist_end; ++it2) {
-                SimpleLogger().Write() << *it2;
-                if (*it2 == 0 || *it2 == std::numeric_limits<int>::max()) {
-                    ++count_unreachables;
+            if (!connected_node[start_node])
+            {
+                if (lonely_island[start_node])
+                    continue;
+                count_unreachables = 0;
+                auto start_dist_begin = result_table->begin() + (start_node * number_of_locations);
+                auto start_dist_end = result_table->begin() + ((start_node + 1) * number_of_locations);
+                for (auto it2 = start_dist_begin; it2 != start_dist_end; ++it2) {
+                    if (*it2 == 0 || *it2 == std::numeric_limits<int>::max()) {
+                        ++count_unreachables;
+                    }
                 }
-            }
-            if (count_unreachables >= number_of_locations) {
-                lonely_island[start_node] = true;
-                continue;
+                if (count_unreachables >= number_of_locations) {
+                    lonely_island[start_node] = true;
+                    continue;
+                }
             }
 
             int curr_node = start_node;   
+            connected_node[curr_node] = true;
             InternalRouteResult raw_route;
             std::vector<int> loc_permutation(number_of_locations, -1);
             loc_permutation[start_node] = 0;
@@ -187,6 +190,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 }
                 else
                 {
+                    connected_node[min_id] = true;
                     loc_permutation[min_id] = stopover;
                     visited[min_id] = true;
                     subroute = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
