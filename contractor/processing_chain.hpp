@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PROCESSING_CHAIN_HPP
 #define PROCESSING_CHAIN_HPP
 
+#include "contractor_options.hpp"
 #include "edge_based_graph_factory.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/static_graph.hpp"
@@ -50,14 +51,14 @@ class Prepare
     using InputEdge = DynamicGraph<EdgeData>::InputEdge;
     using StaticEdge = StaticGraph<EdgeData>::InputEdge;
 
-    explicit Prepare();
+    explicit Prepare(const ContractorConfig& contractor_config)
+        : config(contractor_config) {}
     Prepare(const Prepare &) = delete;
     ~Prepare();
 
-    int Process(int argc, char *argv[]);
+    int Run();
 
   protected:
-    bool ParseArguments(int argc, char *argv[]);
     void SetupScriptingEnvironment(lua_State *myLuaState,
                                    EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
     void LoadRestrictionMap(const std::unordered_map<NodeID, NodeID> &external_to_internal_node_map,
@@ -80,22 +81,8 @@ class Prepare
     void WriteNodeMapping(std::unique_ptr<std::vector<QueryNode>> internal_to_external_node_map);
     void BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
                     const std::vector<QueryNode> &internal_to_external_node_map);
-
   private:
-
-    unsigned requested_num_threads;
-    boost::filesystem::path config_file_path;
-    boost::filesystem::path osrm_input_path;
-    boost::filesystem::path restrictions_path;
-    boost::filesystem::path preinfo_path;
-    boost::filesystem::path profile_path;
-
-    std::string node_output_path;
-    std::string edge_output_path;
-    std::string geometry_output_path;
-    std::string graph_output_path;
-    std::string rtree_nodes_output_path;
-    std::string rtree_leafs_output_path;
+    ContractorConfig config;
 };
 
 #endif // PROCESSING_CHAIN_HPP

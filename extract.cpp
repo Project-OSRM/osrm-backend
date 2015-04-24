@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
                                              << " not found!";
             return 1;
         }
-        return extractor().run(extractor_config);
+        return extractor(extractor_config).run();
     }
     catch (const std::exception &e)
     {

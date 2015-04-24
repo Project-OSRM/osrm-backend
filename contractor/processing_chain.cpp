@@ -48,7 +48,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>
 
-#include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_sort.h>
 
 #include <chrono>
@@ -57,11 +56,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <thread>
 #include <vector>
 
-Prepare::Prepare() : requested_num_threads(1) {}
-
 Prepare::~Prepare() {}
 
-int Prepare::Process(int argc, char *argv[])
+int Prepare::Run()
 {
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
@@ -72,54 +69,7 @@ int Prepare::Process(int argc, char *argv[])
                   "changing EdgeBasedEdge type has influence on memory consumption!");
 #endif
 
-    LogPolicy::GetInstance().Unmute();
     TIMER_START(preparing);
-
-    if (!ParseArguments(argc, argv))
-    {
-        return 0;
-    }
-    if (!boost::filesystem::is_regular_file(osrm_input_path))
-    {
-        SimpleLogger().Write(logWARNING) << "Input file " << osrm_input_path.string() << " not found!";
-        return 1;
-    }
-
-    if (!boost::filesystem::is_regular_file(profile_path))
-    {
-        SimpleLogger().Write(logWARNING) << "Profile " << profile_path.string() << " not found!";
-        return 1;
-    }
-
-    if (1 > requested_num_threads)
-    {
-        SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
-        return 1;
-    }
-
-    const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
-
-    SimpleLogger().Write() << "Input file: " << osrm_input_path.filename().string();
-    SimpleLogger().Write() << "Restrictions file: " << restrictions_path.filename().string();
-    SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
-    SimpleLogger().Write() << "Threads: " << requested_num_threads;
-    if (recommended_num_threads != requested_num_threads)
-    {
-        SimpleLogger().Write(logWARNING) << "The recommended number of threads is "
-                                         << recommended_num_threads
-                                         << "! This setting may have performance side-effects.";
-    }
-
-    tbb::task_scheduler_init init(requested_num_threads);
-
-    LogPolicy::GetInstance().Unmute();
-
-    node_output_path = osrm_input_path.string() + ".nodes";
-    edge_output_path = osrm_input_path.string() + ".edges";
-    geometry_output_path = osrm_input_path.string() + ".geometry";
-    graph_output_path = osrm_input_path.string() + ".hsgr";
-    rtree_nodes_output_path = osrm_input_path.string() + ".ramIndex";
-    rtree_leafs_output_path = osrm_input_path.string() + ".fileIndex";
 
     // Create a new lua state
 
@@ -192,7 +142,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
                            << " edges";
 
     FingerPrint fingerprint_orig;
-    boost::filesystem::ofstream hsgr_output_stream(graph_output_path, std::ios::binary);
+    boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint_orig, sizeof(FingerPrint));
     const unsigned max_used_node_id = 1 + [&contracted_edge_list]
     {
@@ -309,101 +259,6 @@ unsigned Prepare::CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedNod
 }
 
 /**
- \brief Parses command line arguments
- \param argc count of arguments
- \param argv array of arguments
- \param result [out] value for exit return value
- \return true if everything is ok, false if need to terminate execution
-*/
-bool Prepare::ParseArguments(int argc, char *argv[])
-{
-    // declare a group of options that will be allowed only on command line
-    boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path)
-                        ->default_value("contractor.ini"),
-        "Path to a configuration file.");
-
-    // declare a group of options that will be allowed both on command line and in config file
-    boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "restrictions,r",
-        boost::program_options::value<boost::filesystem::path>(&restrictions_path),
-        "Restrictions file in .osrm.restrictions format")(
-        "profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)
-                         ->default_value("profile.lua"),
-        "Path to LUA routing profile")(
-        "threads,t", boost::program_options::value<unsigned int>(&requested_num_threads)
-                         ->default_value(tbb::task_scheduler_init::default_num_threads()),
-        "Number of threads to use");
-
-    // hidden options, will be allowed both on command line and in config file, but will not be
-    // shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i", boost::program_options::value<boost::filesystem::path>(&osrm_input_path),
-        "Input file in .osm, .osm.bz2 or .osm.pbf format");
-
-    // positional option
-    boost::program_options::positional_options_description positional_options;
-    positional_options.add("input", 1);
-
-    // combine above options for parsing
-    boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
-
-    boost::program_options::options_description config_file_options;
-    config_file_options.add(config_options).add(hidden_options);
-
-    boost::program_options::options_description visible_options(
-        "Usage: " + boost::filesystem::basename(argv[0]) + " <input.osrm> [options]");
-    visible_options.add(generic_options).add(config_options);
-
-    // parse command line options
-    boost::program_options::variables_map option_variables;
-    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                      .options(cmdline_options)
-                                      .positional(positional_options)
-                                      .run(),
-                                  option_variables);
-
-    const auto &temp_config_path = option_variables["config"].as<boost::filesystem::path>();
-    if (boost::filesystem::is_regular_file(temp_config_path))
-    {
-        boost::program_options::store(boost::program_options::parse_config_file<char>(
-                                          temp_config_path.string().c_str(), cmdline_options, true),
-                                      option_variables);
-    }
-
-    if (option_variables.count("version"))
-    {
-        SimpleLogger().Write() << g_GIT_DESCRIPTION;
-        return false;
-    }
-
-    if (option_variables.count("help"))
-    {
-        SimpleLogger().Write() << "\n" << visible_options;
-        return false;
-    }
-
-    boost::program_options::notify(option_variables);
-
-    if (!option_variables.count("restrictions"))
-    {
-        restrictions_path = std::string(osrm_input_path.string() + ".restrictions");
-    }
-
-    if (!option_variables.count("input"))
-    {
-        SimpleLogger().Write() << "\n" << visible_options;
-        return false;
-    }
-
-    return true;
-}
-
-/**
     \brief Setups scripting environment (lua-scripting)
     Also initializes speed profile.
 */
@@ -414,10 +269,10 @@ void Prepare::SetupScriptingEnvironment(
     luaL_openlibs(lua_state);
 
     // adjust lua load path
-    luaAddScriptFolderToLoadPath(lua_state, profile_path.string().c_str());
+    luaAddScriptFolderToLoadPath(lua_state, config.profile_path.string().c_str());
 
     // Now call our function in a lua script
-    if (0 != luaL_dofile(lua_state, profile_path.string().c_str()))
+    if (0 != luaL_dofile(lua_state, config.profile_path.string().c_str()))
     {
         std::stringstream msg;
         msg << lua_tostring(lua_state, -1) << " occured in scripting block";
@@ -451,7 +306,7 @@ void Prepare::SetupScriptingEnvironment(
 void Prepare::LoadRestrictionMap(const std::unordered_map<NodeID, NodeID> &external_to_internal_node_map,
                                  RestrictionMap &restriction_map)
 {
-    boost::filesystem::ifstream input_stream(restrictions_path, std::ios::in | std::ios::binary);
+    boost::filesystem::ifstream input_stream(config.restrictions_path, std::ios::in | std::ios::binary);
 
     std::vector<TurnRestriction> restriction_list;
     loadRestrictionsFromFile(input_stream, external_to_internal_node_map, restriction_list);
@@ -473,7 +328,7 @@ Prepare::LoadNodeBasedGraph(std::vector<NodeID> &barrier_node_list,
     std::vector<ImportEdge> edge_list;
     std::unordered_map<NodeID, NodeID> external_to_internal_node_map;
 
-    boost::filesystem::ifstream input_stream(osrm_input_path, std::ios::in | std::ios::binary);
+    boost::filesystem::ifstream input_stream(config.osrm_input_path, std::ios::in | std::ios::binary);
 
     NodeID number_of_node_based_nodes = loadNodesFromFile(input_stream,
                                             barrier_node_list, traffic_light_list,
@@ -527,7 +382,7 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
                                                    internal_to_external_node_map,
                                                    speed_profile);
 
-    edge_based_graph_factory.Run(edge_output_path, geometry_output_path, lua_state);
+    edge_based_graph_factory.Run(config.edge_output_path, config.geometry_output_path, lua_state);
     lua_close(lua_state);
 
     const std::size_t number_of_edge_based_nodes =
@@ -558,7 +413,7 @@ void Prepare::ContractGraph(const std::size_t number_of_edge_based_nodes,
  */
 void Prepare::WriteNodeMapping(std::unique_ptr<std::vector<QueryNode>> internal_to_external_node_map)
 {
-    boost::filesystem::ofstream node_stream(node_output_path, std::ios::binary);
+    boost::filesystem::ofstream node_stream(config.node_output_path, std::ios::binary);
     const unsigned size_of_mapping = internal_to_external_node_map->size();
     node_stream.write((char *)&size_of_mapping, sizeof(unsigned));
     if (size_of_mapping > 0)
@@ -576,6 +431,6 @@ void Prepare::WriteNodeMapping(std::unique_ptr<std::vector<QueryNode>> internal_
  */
 void Prepare::BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list, const std::vector<QueryNode>& internal_to_external_node_map)
 {
-    StaticRTree<EdgeBasedNode>(node_based_edge_list, rtree_nodes_output_path.c_str(),
-                               rtree_leafs_output_path.c_str(), internal_to_external_node_map);
+    StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path.c_str(),
+                               config.rtree_leafs_output_path.c_str(), internal_to_external_node_map);
 }
