@@ -52,5 +52,5 @@ When /^I request a travel time matrix I should get$/ do |table|
       actual << r
     end
   end
-  table.routing_diff! actual
+  table.diff! actual
 end

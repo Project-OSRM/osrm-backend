@@ -39,7 +39,7 @@ When /^I request nearest I should get$/ do |table|
       actual << got
     end
   end
-  table.routing_diff! actual
+  table.diff! actual
 end
 
 When /^I request nearest (\d+) times I should get$/ do |n,table|

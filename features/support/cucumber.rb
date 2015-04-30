@@ -1,8 +1,8 @@
 #monkey patch cucumber table class to reorder output.
 #we always want failed rows to be shown right below the expected row.
 
-class Cucumber::Ast::Table
-  def routing_diff!(other_table, options={})
+class Cucumber::MultilineArgument::DataTable
+  def diff!(other_table, options={})
     options = {:missing_row => true, :surplus_row => true, :missing_col => true, :surplus_col => false}.merge(options)
 
     other_table = ensure_table(other_table)

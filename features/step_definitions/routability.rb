@@ -74,5 +74,5 @@ Then /^routability should be$/ do |table|
       actual << output_row
     end
   end
-  table.routing_diff! actual
+  table.diff! actual
 end
