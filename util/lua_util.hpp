@@ -59,7 +59,7 @@ inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_
     std::string folder = profile_path.parent_path().string();
     // TODO: This code is most probably not Windows safe since it uses UNIX'ish path delimiters
     const std::string lua_code =
-        "package.path = \"" + folder + "/?.lua;profiles/?.lua;\" .. package.path";
+        "package.path = \"" + folder + "/?.lua;" + folder + "/profiles/?.lua;profiles/?.lua;\" .. package.path";
     luaL_dostring(lua_state, lua_code.c_str());
 }
 
