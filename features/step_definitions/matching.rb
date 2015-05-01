@@ -91,6 +91,6 @@ When /^I match I should get$/ do |table|
       actual << got
     end
   end
-  table.routing_diff! actual
+  table.diff! actual
 end
 
