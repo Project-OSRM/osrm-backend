@@ -17,6 +17,10 @@ For instructions on how to [build](https://github.com/Project-OSRM/osrm-backend/
 
 To quickly try OSRM use our [free and daily updated online service](http://map.project-osrm.org)
 
+## Documentation
+
+See the Wiki's [server API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Server-api) as well as the [library API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Library-api)
+
 ## References in publications
 
 When using the code in a (scientific) publication, please cite
