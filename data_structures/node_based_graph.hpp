@@ -125,8 +125,15 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         }
     }
 
-    // remove duplicate edges
+    // sort edges by source node id
     tbb::parallel_sort(edges_list.begin(), edges_list.end());
+
+    // this code removes multi-edges
+    // my merging mutli-edges bi-directional edges can become directional again!
+    // Consider the following example:
+    // a --5-- b
+    //  `--1--^
+    // After merging we need to split {a, b, 5} into (a, b, 1) and (b, a, 5)
     NodeID edge_count = 0;
     for (NodeID i = 0; i < edges_list.size();)
     {
@@ -145,7 +152,7 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         forward_edge.data.backward = reverse_edge.data.forward = false;
         forward_edge.data.shortcut = reverse_edge.data.shortcut = false;
         forward_edge.data.distance = reverse_edge.data.distance = std::numeric_limits<int>::max();
-        // remove parallel edges
+        // remove parallel edges and set current distance values
         while (i < edges_list.size() && edges_list[i].source == source &&
                edges_list[i].target == target)
         {
@@ -167,17 +174,23 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
             if (static_cast<int>(forward_edge.data.distance) != std::numeric_limits<int>::max())
             {
                 forward_edge.data.backward = true;
+                BOOST_ASSERT(edge_count < i);
                 edges_list[edge_count++] = forward_edge;
             }
         }
         else
         { // insert seperate edges
+          // this case can only happen if we merged a bi-directional edge with a directional
+          // edge above, this incrementing i and making it safe to overwrite the next element
+          // as well
             if (static_cast<int>(forward_edge.data.distance) != std::numeric_limits<int>::max())
             {
+                BOOST_ASSERT(edge_count < i);
                 edges_list[edge_count++] = forward_edge;
             }
             if (static_cast<int>(reverse_edge.data.distance) != std::numeric_limits<int>::max())
             {
+                BOOST_ASSERT(edge_count < i);
                 edges_list[edge_count++] = reverse_edge;
             }
         }

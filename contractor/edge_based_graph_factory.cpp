@@ -290,12 +290,33 @@ void EdgeBasedGraphFactory::CompressGeometry()
             continue;
         }
 
+        /*
+         *    reverse_e2   forward_e2
+         * u <---------- v -----------> w
+         *    ----------> <-----------
+         *    forward_e1   reverse_e1
+         *
+         * Will be compressed to:
+         *
+         *    reverse_e1
+         * u <---------- w
+         *    ---------->
+         *    forward_e1
+         *
+         * If the edges are compatible.
+         *
+         */
+
         const bool reverse_edge_order =
             !(m_node_based_graph->GetEdgeData(m_node_based_graph->BeginEdges(node_v)).forward);
         const EdgeID forward_e2 = m_node_based_graph->BeginEdges(node_v) + reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != forward_e2);
+        BOOST_ASSERT(forward_e2 >= m_node_based_graph->BeginEdges(node_v) &&
+                     forward_e2 < m_node_based_graph->EndEdges(node_v));
         const EdgeID reverse_e2 = m_node_based_graph->BeginEdges(node_v) + 1 - reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != reverse_e2);
+        BOOST_ASSERT(reverse_e2 >= m_node_based_graph->BeginEdges(node_v) &&
+                     reverse_e2 < m_node_based_graph->EndEdges(node_v));
 
         const EdgeData &fwd_edge_data2 = m_node_based_graph->GetEdgeData(forward_e2);
         const EdgeData &rev_edge_data2 = m_node_based_graph->GetEdgeData(reverse_e2);
@@ -325,6 +346,11 @@ void EdgeBasedGraphFactory::CompressGeometry()
         if ( // TODO: rename to IsCompatibleTo
             fwd_edge_data1.IsEqualTo(fwd_edge_data2) && rev_edge_data1.IsEqualTo(rev_edge_data2))
         {
+            BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e1).nameID ==
+                         m_node_based_graph->GetEdgeData(reverse_e1).nameID);
+            BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e2).nameID ==
+                         m_node_based_graph->GetEdgeData(reverse_e2).nameID);
+
             // Get distances before graph is modified
             const int forward_weight1 = m_node_based_graph->GetEdgeData(forward_e1).distance;
             const int forward_weight2 = m_node_based_graph->GetEdgeData(forward_e2).distance;
@@ -336,7 +362,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
             const int reverse_weight2 = m_node_based_graph->GetEdgeData(reverse_e2).distance;
 
             BOOST_ASSERT(0 != reverse_weight1);
-            BOOST_ASSERT(0 != forward_weight2);
+            BOOST_ASSERT(0 != reverse_weight2);
 
             const bool has_node_penalty = m_traffic_lights.find(node_v) != m_traffic_lights.end();
 
@@ -378,8 +404,6 @@ void EdgeBasedGraphFactory::CompressGeometry()
                 reverse_weight2 + (has_node_penalty ? speed_profile.traffic_signal_penalty : 0));
             ++removed_node_count;
 
-            BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e1).nameID ==
-                         m_node_based_graph->GetEdgeData(reverse_e1).nameID);
         }
     }
     SimpleLogger().Write() << "removed " << removed_node_count << " nodes";
