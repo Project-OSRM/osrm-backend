@@ -74,16 +74,16 @@ struct NodeBasedEdgeData
 
 using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 
-// Factory method to create NodeBasedDynamicGraph from ImportEdges
+// Factory method to create NodeBasedDynamicGraph from NodeBasedEdges
 inline std::shared_ptr<NodeBasedDynamicGraph>
-NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge> &input_edge_list)
+NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<NodeBasedEdge> &input_edge_list)
 {
     static_assert(sizeof(NodeBasedEdgeData) == 16,
                   "changing node based edge data size changes memory consumption");
 
     DeallocatingVector<NodeBasedDynamicGraph::InputEdge> edges_list;
     NodeBasedDynamicGraph::InputEdge edge;
-    for (const ImportEdge &import_edge : input_edge_list)
+    for (const NodeBasedEdge &import_edge : input_edge_list)
     {
         if (import_edge.forward)
         {

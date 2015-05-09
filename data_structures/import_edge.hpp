@@ -86,6 +86,4 @@ struct EdgeBasedEdge
     bool backward : 1;
 };
 
-using ImportEdge = NodeBasedEdge;
-
 #endif /* IMPORT_EDGE_HPP */

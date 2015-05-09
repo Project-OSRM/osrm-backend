@@ -170,83 +170,56 @@ NodeID loadNodesFromFile(std::istream &input_stream,
  * Reads a .osrm file and produces the edges. Edges reference nodes in the old
  * OSM based format, we need to renumber it here.
  */
-template <typename EdgeT>
 NodeID loadEdgesFromFile(std::istream &input_stream,
                          const std::unordered_map<NodeID, NodeID> &ext_to_int_id_map,
-                         std::vector<EdgeT> &edge_list)
+                         std::vector<NodeBasedEdge> &edge_list)
 {
-    EdgeWeight weight;
-    NodeID source, target;
-    unsigned nameID;
-    int length;
-    short dir; // direction (0 = open, 1 = forward, 2+ = open)
-    bool is_roundabout, ignore_in_grid, is_access_restricted, is_split;
-    TravelMode travel_mode;
-
     EdgeID m;
     input_stream.read(reinterpret_cast<char *>(&m), sizeof(unsigned));
     edge_list.reserve(m);
     SimpleLogger().Write() << " and " << m << " edges ";
 
+    NodeBasedEdge edge(0, 0, 0, 0, false, false, false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
     for (EdgeID i = 0; i < m; ++i)
     {
-        input_stream.read(reinterpret_cast<char *>(&source), sizeof(unsigned));
-        input_stream.read(reinterpret_cast<char *>(&target), sizeof(unsigned));
-        input_stream.read(reinterpret_cast<char *>(&length), sizeof(int));
-        input_stream.read(reinterpret_cast<char *>(&dir), sizeof(short));
-        input_stream.read(reinterpret_cast<char *>(&weight), sizeof(int));
-        input_stream.read(reinterpret_cast<char *>(&nameID), sizeof(unsigned));
-        input_stream.read(reinterpret_cast<char *>(&is_roundabout), sizeof(bool));
-        input_stream.read(reinterpret_cast<char *>(&ignore_in_grid), sizeof(bool));
-        input_stream.read(reinterpret_cast<char *>(&is_access_restricted), sizeof(bool));
-        input_stream.read(reinterpret_cast<char *>(&travel_mode), sizeof(TravelMode));
-        input_stream.read(reinterpret_cast<char *>(&is_split), sizeof(bool));
-
-        BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
-        BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
-        BOOST_ASSERT_MSG(0 <= dir && dir <= 2, "loaded bogus direction");
-
-        bool forward = true;
-        bool backward = true;
-        if (1 == dir)
-        {
-            backward = false;
-        }
-        if (2 == dir)
-        {
-            forward = false;
-        }
+        input_stream.read(reinterpret_cast<char *>(&edge), sizeof(NodeBasedEdge));
+        BOOST_ASSERT_MSG(edge.weight > 0, "loaded null weight");
+        BOOST_ASSERT_MSG(edge.forward || edge.backward, "loaded null weight");
+        BOOST_ASSERT_MSG(edge.travel_mode != TRAVEL_MODE_INACCESSIBLE, "loaded null weight");
 
         // translate the external NodeIDs to internal IDs
-        auto internal_id_iter = ext_to_int_id_map.find(source);
-        if (ext_to_int_id_map.find(source) == ext_to_int_id_map.end())
+        auto internal_id_iter = ext_to_int_id_map.find(edge.source);
+        if (ext_to_int_id_map.find(edge.source) == ext_to_int_id_map.end())
         {
 #ifndef NDEBUG
-            SimpleLogger().Write(logWARNING) << " unresolved source NodeID: " << source;
+            SimpleLogger().Write(logWARNING) << " unresolved source NodeID: " << edge.source;
 #endif
             continue;
         }
-        source = internal_id_iter->second;
-        internal_id_iter = ext_to_int_id_map.find(target);
-        if (ext_to_int_id_map.find(target) == ext_to_int_id_map.end())
+        edge.source = internal_id_iter->second;
+        internal_id_iter = ext_to_int_id_map.find(edge.target);
+        if (ext_to_int_id_map.find(edge.target) == ext_to_int_id_map.end())
         {
 #ifndef NDEBUG
-            SimpleLogger().Write(logWARNING) << "unresolved target NodeID : " << target;
+            SimpleLogger().Write(logWARNING) << "unresolved target NodeID : " << edge.target;
 #endif
             continue;
         }
-        target = internal_id_iter->second;
-        BOOST_ASSERT_MSG(source != SPECIAL_NODEID && target != SPECIAL_NODEID,
+        edge.target = internal_id_iter->second;
+        BOOST_ASSERT_MSG(edge.source != SPECIAL_NODEID && edge.target != SPECIAL_NODEID,
                          "nonexisting source or target");
 
-        if (source > target)
+        if (edge.source > edge.target)
         {
-            std::swap(source, target);
-            std::swap(forward, backward);
+            std::swap(edge.source, edge.target);
+
+            // std::swap does not work with bit-fields
+            bool temp = edge.forward;
+            edge.forward = edge.backward;
+            edge.backward = temp;
         }
 
-        edge_list.emplace_back(source, target, nameID, weight, forward, backward, is_roundabout,
-                               ignore_in_grid, is_access_restricted, travel_mode, is_split);
+        edge_list.push_back(edge);
     }
 
     tbb::parallel_sort(edge_list.begin(), edge_list.end());
@@ -304,7 +277,7 @@ NodeID loadEdgesFromFile(std::istream &input_stream,
         }
     }
     const auto new_end_iter =
-        std::remove_if(edge_list.begin(), edge_list.end(), [](const EdgeT &edge)
+        std::remove_if(edge_list.begin(), edge_list.end(), [](const NodeBasedEdge &edge)
                        {
                            return edge.source == SPECIAL_NODEID || edge.target == SPECIAL_NODEID;
                        });

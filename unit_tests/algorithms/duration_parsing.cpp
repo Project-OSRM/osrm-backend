@@ -41,24 +41,24 @@ BOOST_AUTO_TEST_CASE(all_necessary_test)
 
 BOOST_AUTO_TEST_CASE(common_durations_get_translated)
 {
-    BOOST_CHECK_EQUAL(parseDuration("00:01"), 600);
-    BOOST_CHECK_EQUAL(parseDuration("00:01:01"), 610);
-    BOOST_CHECK_EQUAL(parseDuration("01:01"), 36600);
+    BOOST_CHECK_EQUAL(parseDuration("00:01"), 60);
+    BOOST_CHECK_EQUAL(parseDuration("00:01:01"), 61);
+    BOOST_CHECK_EQUAL(parseDuration("01:01"), 3660);
 
     // check all combinations of iso duration tokens
-    BOOST_CHECK_EQUAL(parseDuration("PT1M1S"), 610);
-    BOOST_CHECK_EQUAL(parseDuration("PT1H1S"), 36010);
-    BOOST_CHECK_EQUAL(parseDuration("PT15M"), 9000);
-    BOOST_CHECK_EQUAL(parseDuration("PT15S"), 150);
-    BOOST_CHECK_EQUAL(parseDuration("PT15H"), 540000);
-    BOOST_CHECK_EQUAL(parseDuration("PT1H15M"), 45000);
-    BOOST_CHECK_EQUAL(parseDuration("PT1H15M1S"), 45010);
+    BOOST_CHECK_EQUAL(parseDuration("PT1M1S"), 61);
+    BOOST_CHECK_EQUAL(parseDuration("PT1H1S"), 3601);
+    BOOST_CHECK_EQUAL(parseDuration("PT15M"), 900);
+    BOOST_CHECK_EQUAL(parseDuration("PT15S"), 15);
+    BOOST_CHECK_EQUAL(parseDuration("PT15H"), 54000);
+    BOOST_CHECK_EQUAL(parseDuration("PT1H15M"), 4500);
+    BOOST_CHECK_EQUAL(parseDuration("PT1H15M1S"), 4501);
 }
 
 BOOST_AUTO_TEST_CASE(iso_8601_durations_case_insensitive)
 {
-    BOOST_CHECK_EQUAL(parseDuration("PT15m"), 9000);
-    BOOST_CHECK_EQUAL(parseDuration("PT1h15m"), 45000);
+    BOOST_CHECK_EQUAL(parseDuration("PT15m"), 900);
+    BOOST_CHECK_EQUAL(parseDuration("PT1h15m"), 4500);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

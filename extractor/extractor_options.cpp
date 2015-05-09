@@ -135,6 +135,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
     boost::filesystem::path &input_path = extractor_config.input_path;
     extractor_config.output_file_name = input_path.string();
     extractor_config.restriction_file_name = input_path.string();
+    extractor_config.names_file_name = input_path.string();
     extractor_config.timestamp_file_name = input_path.string();
     std::string::size_type pos = extractor_config.output_file_name.find(".osm.bz2");
     if (pos == std::string::npos)
@@ -156,12 +157,14 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
         {
             extractor_config.output_file_name.append(".osrm");
             extractor_config.restriction_file_name.append(".osrm.restrictions");
+            extractor_config.names_file_name.append(".osrm.names");
             extractor_config.timestamp_file_name.append(".osrm.timestamp");
         }
         else
         {
             extractor_config.output_file_name.replace(pos, 5, ".osrm");
             extractor_config.restriction_file_name.replace(pos, 5, ".osrm.restrictions");
+            extractor_config.names_file_name.replace(pos, 5, ".osrm.names");
             extractor_config.timestamp_file_name.replace(pos, 5, ".osrm.timestamp");
         }
     }
@@ -169,6 +172,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
     {
         extractor_config.output_file_name.replace(pos, 8, ".osrm");
         extractor_config.restriction_file_name.replace(pos, 8, ".osrm.restrictions");
+        extractor_config.names_file_name.replace(pos, 8, ".osrm.names");
         extractor_config.timestamp_file_name.replace(pos, 8, ".osrm.timestamp");
     }
 }

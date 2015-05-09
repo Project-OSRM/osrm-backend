@@ -101,7 +101,7 @@ std::size_t LoadGraph(const char* path,
     }
 
     // load graph data
-    std::vector<ImportEdge> edge_list;
+    std::vector<NodeBasedEdge> edge_list;
     std::vector<NodeID> traffic_light_node_list;
 
     auto number_of_nodes = loadNodesFromFile(input_stream, barrier_node_list,
@@ -109,7 +109,7 @@ std::size_t LoadGraph(const char* path,
                                              coordinate_list,
                                              ext_to_int_id_map);
 
-    auto number_of_edges = loadEdgesFromFile(input_stream, ext_to_int_id_map, edge_list);
+    loadEdgesFromFile(input_stream, ext_to_int_id_map, edge_list);
 
     traffic_light_node_list.clear();
     traffic_light_node_list.shrink_to_fit();

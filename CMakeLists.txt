@@ -329,7 +329,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
     target_link_libraries(osrm-unlock-all rt)
   endif()
   add_executable(osrm-check-hsgr tools/check-hsgr.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:IMPORT>)
-  target_link_libraries(osrm-check-hsgr ${Boost_LIBRARIES})
+  target_link_libraries(osrm-check-hsgr ${Boost_LIBRARIES} ${TBB_LIBRARIES})
   add_executable(osrm-springclean tools/springclean.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:EXCEPTION>)
   target_link_libraries(osrm-springclean ${Boost_LIBRARIES})
 

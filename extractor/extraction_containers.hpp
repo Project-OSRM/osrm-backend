@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /**
  * Uses external memory containers from stxxl to store all the data that
  * is collected by the extractor callbacks.
+ *
+ * The data is the filtered, aggregated and finally written to disk.
  */
 class ExtractionContainers
 {
@@ -49,6 +51,14 @@ class ExtractionContainers
 #else
     const static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? INT_MAX : UINT_MAX);
 #endif
+    void PrepareNodes();
+    void PrepareRestrictions();
+    void PrepareEdges();
+
+    void WriteNodes(std::ofstream& file_out_stream) const;
+    void WriteRestrictions(const std::string& restrictions_file_name) const;
+    void WriteEdges(std::ofstream& file_out_stream) const;
+    void WriteNames(const std::string& names_file_name) const;
   public:
     using STXXLNodeIDVector = stxxl::vector<NodeID>;
     using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
@@ -70,7 +80,8 @@ class ExtractionContainers
     ~ExtractionContainers();
 
     void PrepareData(const std::string &output_file_name,
-                     const std::string &restrictions_file_name);
+                     const std::string &restrictions_file_name,
+                     const std::string &names_file_name);
 };
 
 #endif /* EXTRACTION_CONTAINERS_HPP */

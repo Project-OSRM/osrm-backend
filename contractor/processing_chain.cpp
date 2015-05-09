@@ -63,8 +63,8 @@ int Prepare::Run()
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
 #else
-    static_assert(sizeof(ImportEdge) == 20,
-                  "changing ImportEdge type has influence on memory consumption!");
+    static_assert(sizeof(NodeBasedEdge) == 20,
+                  "changing NodeBasedEdge type has influence on memory consumption!");
     static_assert(sizeof(EdgeBasedEdge) == 16,
                   "changing EdgeBasedEdge type has influence on memory consumption!");
 #endif
@@ -325,7 +325,7 @@ Prepare::LoadNodeBasedGraph(std::vector<NodeID> &barrier_node_list,
                             RestrictionMap &restriction_map,
                             std::vector<QueryNode>& internal_to_external_node_map)
 {
-    std::vector<ImportEdge> edge_list;
+    std::vector<NodeBasedEdge> edge_list;
     std::unordered_map<NodeID, NodeID> external_to_internal_node_map;
 
     boost::filesystem::ifstream input_stream(config.osrm_input_path, std::ios::in | std::ios::binary);

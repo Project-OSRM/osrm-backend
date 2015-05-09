@@ -237,7 +237,8 @@ int extractor::run()
         }
 
         extraction_containers.PrepareData(config.output_file_name,
-                                          config.restriction_file_name);
+                                          config.restriction_file_name,
+                                          config.names_file_name);
         TIMER_STOP(extracting);
         SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: "

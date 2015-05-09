@@ -90,7 +90,7 @@ template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator>
 
     unsigned get_duration() const
     {
-        unsigned temp = 10 * (3600 * hours + 60 * minutes + seconds);
+        unsigned temp = (3600 * hours + 60 * minutes + seconds);
         if (temp == 0)
         {
             temp = std::numeric_limits<unsigned>::max();

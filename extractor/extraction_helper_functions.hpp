@@ -102,7 +102,7 @@ unsigned parseDuration(const std::string &s)
                 minutes = cast::string_to_int(result[1]);
                 hours = cast::string_to_int(result[0]);
             }
-            return 10 * (3600 * hours + 60 * minutes + seconds);
+            return (3600 * hours + 60 * minutes + seconds);
         }
     }
     else if (iso_8601_duration_is_valid(s))
