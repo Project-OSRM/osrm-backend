@@ -100,13 +100,13 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
     if (option_variables.count("version"))
     {
         SimpleLogger().Write() << g_GIT_DESCRIPTION;
-        return return_code::fail;
+        return return_code::exit;
     }
 
     if (option_variables.count("help"))
     {
         SimpleLogger().Write() << "\n" << visible_options;
-        return return_code::fail;
+        return return_code::exit;
     }
 
     boost::program_options::notify(option_variables);
