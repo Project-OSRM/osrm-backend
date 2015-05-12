@@ -61,8 +61,7 @@ class Prepare
   protected:
     void SetupScriptingEnvironment(lua_State *myLuaState,
                                    EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
-    void LoadRestrictionMap(const std::unordered_map<NodeID, NodeID> &external_to_internal_node_map,
-                            RestrictionMap &restriction_map);
+    std::shared_ptr<RestrictionMap> LoadRestrictionMap();
     unsigned CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list);
     void ContractGraph(const std::size_t number_of_edge_based_nodes,
                        DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
@@ -72,7 +71,6 @@ class Prepare
                                      std::unique_ptr<DeallocatingVector<QueryEdge>> contracted_edge_list);
     std::shared_ptr<NodeBasedDynamicGraph> LoadNodeBasedGraph(std::vector<NodeID> &barrier_node_list,
                                                std::vector<NodeID> &traffic_light_list,
-                                               RestrictionMap &restriction_map,
                                                std::vector<QueryNode>& internal_to_external_node_map);
     std::pair<std::size_t, std::size_t>
     BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,

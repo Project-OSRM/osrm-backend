@@ -303,44 +303,38 @@ void Prepare::SetupScriptingEnvironment(
 /**
   \brief Build load restrictions from .restriction file
   */
-void Prepare::LoadRestrictionMap(const std::unordered_map<NodeID, NodeID> &external_to_internal_node_map,
-                                 RestrictionMap &restriction_map)
+std::shared_ptr<RestrictionMap> Prepare::LoadRestrictionMap()
 {
     boost::filesystem::ifstream input_stream(config.restrictions_path, std::ios::in | std::ios::binary);
 
     std::vector<TurnRestriction> restriction_list;
-    loadRestrictionsFromFile(input_stream, external_to_internal_node_map, restriction_list);
+    loadRestrictionsFromFile(input_stream, restriction_list);
 
     SimpleLogger().Write() << " - " << restriction_list.size() << " restrictions.";
 
-    restriction_map = RestrictionMap(restriction_list);
+    return std::make_shared<RestrictionMap>(restriction_list);
 }
 
 /**
-  \brief Build load node based graph from .osrm file and restrictions from .restrictions file
+  \brief Load node based graph from .osrm file
   */
 std::shared_ptr<NodeBasedDynamicGraph>
 Prepare::LoadNodeBasedGraph(std::vector<NodeID> &barrier_node_list,
                             std::vector<NodeID> &traffic_light_list,
-                            RestrictionMap &restriction_map,
                             std::vector<QueryNode>& internal_to_external_node_map)
 {
     std::vector<NodeBasedEdge> edge_list;
-    std::unordered_map<NodeID, NodeID> external_to_internal_node_map;
 
     boost::filesystem::ifstream input_stream(config.osrm_input_path, std::ios::in | std::ios::binary);
 
     NodeID number_of_node_based_nodes = loadNodesFromFile(input_stream,
                                             barrier_node_list, traffic_light_list,
-                                            internal_to_external_node_map,
-                                            external_to_internal_node_map);
+                                            internal_to_external_node_map);
 
     SimpleLogger().Write() << " - " << barrier_node_list.size() << " bollard nodes, "
                            << traffic_light_list.size() << " traffic lights";
 
-    loadEdgesFromFile(input_stream, external_to_internal_node_map, edge_list);
-
-    LoadRestrictionMap(external_to_internal_node_map, restriction_map);
+    loadEdgesFromFile(input_stream, edge_list);
 
     if (edge_list.empty())
     {
@@ -369,9 +363,9 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
 
     auto barrier_node_list = osrm::make_unique<std::vector<NodeID>>();
     auto traffic_light_list = osrm::make_unique<std::vector<NodeID>>();
-    auto restriction_map = std::make_shared<RestrictionMap>();
 
-    auto node_based_graph = LoadNodeBasedGraph(*barrier_node_list, *traffic_light_list, *restriction_map, internal_to_external_node_map);
+    auto restriction_map = LoadRestrictionMap();
+    auto node_based_graph = LoadNodeBasedGraph(*barrier_node_list, *traffic_light_list, internal_to_external_node_map);
 
     const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
 

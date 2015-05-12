@@ -47,6 +47,13 @@ bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
     return source < other.source;
 }
 
+NodeBasedEdge::NodeBasedEdge()
+    : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), forward(false),
+      backward(false), roundabout(false), in_tiny_cc(false),
+      access_restricted(false), is_split(false), travel_mode(false)
+{
+}
+
 NodeBasedEdge::NodeBasedEdge(NodeID source,
                              NodeID target,
                              NodeID name_id,

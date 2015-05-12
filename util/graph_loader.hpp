@@ -58,7 +58,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * we need to renumber it to the new internal id.
 */
 unsigned loadRestrictionsFromFile(std::istream& input_stream,
-                                  const std::unordered_map<NodeID, NodeID>& ext_to_int_id_map,
                                   std::vector<TurnRestriction>& restriction_list)
 {
     const FingerPrint fingerprint_orig;
@@ -79,38 +78,6 @@ unsigned loadRestrictionsFromFile(std::istream& input_stream,
                                 number_of_usable_restrictions * sizeof(TurnRestriction));
     }
 
-    // renumber ids referenced in restrictions
-    for (TurnRestriction &current_restriction : restriction_list)
-    {
-        auto internal_id_iter = ext_to_int_id_map.find(current_restriction.from.node);
-        if (internal_id_iter == ext_to_int_id_map.end())
-        {
-            SimpleLogger().Write(logDEBUG) << "Unmapped from node " << current_restriction.from.node
-                                           << " of restriction";
-            continue;
-        }
-        current_restriction.from.node = internal_id_iter->second;
-
-        internal_id_iter = ext_to_int_id_map.find(current_restriction.via.node);
-        if (internal_id_iter == ext_to_int_id_map.end())
-        {
-            SimpleLogger().Write(logDEBUG) << "Unmapped via node " << current_restriction.via.node
-                                           << " of restriction";
-            continue;
-        }
-
-        current_restriction.via.node = internal_id_iter->second;
-
-        internal_id_iter = ext_to_int_id_map.find(current_restriction.to.node);
-        if (internal_id_iter == ext_to_int_id_map.end())
-        {
-            SimpleLogger().Write(logDEBUG) << "Unmapped to node " << current_restriction.to.node
-                                           << " of restriction";
-            continue;
-        }
-        current_restriction.to.node = internal_id_iter->second;
-    }
-
     return number_of_usable_restrictions;
 }
 
@@ -119,14 +86,12 @@ unsigned loadRestrictionsFromFile(std::istream& input_stream,
  * Reads the beginning of an .osrm file and produces:
  *  - list of barrier nodes
  *  - list of traffic lights
- *  - index to original node id map
- *  - original node id to index map
+ *  - nodes indexed by their internal (non-osm) id
  */
 NodeID loadNodesFromFile(std::istream &input_stream,
                          std::vector<NodeID> &barrier_node_list,
                          std::vector<NodeID> &traffic_light_node_list,
-                         std::vector<QueryNode> &int_to_ext_node_id_map,
-                         std::unordered_map<NodeID, NodeID> &ext_to_int_id_map)
+                         std::vector<QueryNode> &node_array)
 {
     const FingerPrint fingerprint_orig;
     FingerPrint fingerprint_loaded;
@@ -146,9 +111,7 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     for (NodeID i = 0; i < n; ++i)
     {
         input_stream.read(reinterpret_cast<char *>(&current_node), sizeof(ExternalMemoryNode));
-        int_to_ext_node_id_map.emplace_back(current_node.lat, current_node.lon,
-                                             current_node.node_id);
-        ext_to_int_id_map.emplace(current_node.node_id, i);
+        node_array.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
         if (current_node.barrier)
         {
             barrier_node_list.emplace_back(i);
@@ -167,122 +130,27 @@ NodeID loadNodesFromFile(std::istream &input_stream,
 }
 
 /**
- * Reads a .osrm file and produces the edges. Edges reference nodes in the old
- * OSM based format, we need to renumber it here.
+ * Reads a .osrm file and produces the edges.
  */
 NodeID loadEdgesFromFile(std::istream &input_stream,
-                         const std::unordered_map<NodeID, NodeID> &ext_to_int_id_map,
                          std::vector<NodeBasedEdge> &edge_list)
 {
     EdgeID m;
     input_stream.read(reinterpret_cast<char *>(&m), sizeof(unsigned));
-    edge_list.reserve(m);
+    edge_list.resize(m);
     SimpleLogger().Write() << " and " << m << " edges ";
 
-    NodeBasedEdge edge(0, 0, 0, 0, false, false, false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
-    for (EdgeID i = 0; i < m; ++i)
+    input_stream.read((char *) edge_list.data(), m * sizeof(NodeBasedEdge));
+
+#ifndef NDEBUG
+    for (const auto& edge : edge_list)
     {
-        input_stream.read(reinterpret_cast<char *>(&edge), sizeof(NodeBasedEdge));
         BOOST_ASSERT_MSG(edge.weight > 0, "loaded null weight");
-        BOOST_ASSERT_MSG(edge.forward || edge.backward, "loaded null weight");
-        BOOST_ASSERT_MSG(edge.travel_mode != TRAVEL_MODE_INACCESSIBLE, "loaded null weight");
-
-        // translate the external NodeIDs to internal IDs
-        auto internal_id_iter = ext_to_int_id_map.find(edge.source);
-        if (ext_to_int_id_map.find(edge.source) == ext_to_int_id_map.end())
-        {
-#ifndef NDEBUG
-            SimpleLogger().Write(logWARNING) << " unresolved source NodeID: " << edge.source;
-#endif
-            continue;
-        }
-        edge.source = internal_id_iter->second;
-        internal_id_iter = ext_to_int_id_map.find(edge.target);
-        if (ext_to_int_id_map.find(edge.target) == ext_to_int_id_map.end())
-        {
-#ifndef NDEBUG
-            SimpleLogger().Write(logWARNING) << "unresolved target NodeID : " << edge.target;
-#endif
-            continue;
-        }
-        edge.target = internal_id_iter->second;
-        BOOST_ASSERT_MSG(edge.source != SPECIAL_NODEID && edge.target != SPECIAL_NODEID,
-                         "nonexisting source or target");
-
-        if (edge.source > edge.target)
-        {
-            std::swap(edge.source, edge.target);
-
-            // std::swap does not work with bit-fields
-            bool temp = edge.forward;
-            edge.forward = edge.backward;
-            edge.backward = temp;
-        }
-
-        edge_list.push_back(edge);
+        BOOST_ASSERT_MSG(edge.forward || edge.backward, "loaded invalid direction");
+        BOOST_ASSERT_MSG(edge.travel_mode != TRAVEL_MODE_INACCESSIBLE, "loaded non-accessible");
     }
+#endif
 
-    tbb::parallel_sort(edge_list.begin(), edge_list.end());
-
-    // Removes multi-edges between nodes
-    for (unsigned i = 1; i < edge_list.size(); ++i)
-    {
-        if ((edge_list[i - 1].target == edge_list[i].target) &&
-            (edge_list[i - 1].source == edge_list[i].source))
-        {
-            const bool edge_flags_equivalent = (edge_list[i - 1].forward == edge_list[i].forward) &&
-                                               (edge_list[i - 1].backward == edge_list[i].backward);
-            const bool edge_flags_are_superset1 =
-                (edge_list[i - 1].forward && edge_list[i - 1].backward) &&
-                (edge_list[i].forward != edge_list[i].backward);
-            const bool edge_flags_are_superset_2 =
-                (edge_list[i].forward && edge_list[i].backward) &&
-                (edge_list[i - 1].forward != edge_list[i - 1].backward);
-
-            if (edge_flags_equivalent)
-            {
-                edge_list[i].weight = std::min(edge_list[i - 1].weight, edge_list[i].weight);
-                edge_list[i - 1].source = SPECIAL_NODEID;
-            }
-            else if (edge_flags_are_superset1)
-            {
-                if (edge_list[i - 1].weight <= edge_list[i].weight)
-                {
-                    // edge i-1 is smaller and goes in both directions. Throw away the other edge
-                    edge_list[i].source = SPECIAL_NODEID;
-                }
-                else
-                {
-                    // edge i-1 is open in both directions, but edge i is smaller in one direction.
-                    // Close edge i-1 in this direction
-                    edge_list[i - 1].forward = !edge_list[i].forward;
-                    edge_list[i - 1].backward = !edge_list[i].backward;
-                }
-            }
-            else if (edge_flags_are_superset_2)
-            {
-                if (edge_list[i - 1].weight <= edge_list[i].weight)
-                {
-                    // edge i-1 is smaller for one direction. edge i is open in both. close edge i
-                    // in the other direction
-                    edge_list[i].forward = !edge_list[i - 1].forward;
-                    edge_list[i].backward = !edge_list[i - 1].backward;
-                }
-                else
-                {
-                    // edge i is smaller and goes in both direction. Throw away edge i-1
-                    edge_list[i - 1].source = SPECIAL_NODEID;
-                }
-            }
-        }
-    }
-    const auto new_end_iter =
-        std::remove_if(edge_list.begin(), edge_list.end(), [](const NodeBasedEdge &edge)
-                       {
-                           return edge.source == SPECIAL_NODEID || edge.target == SPECIAL_NODEID;
-                       });
-    edge_list.erase(new_end_iter, edge_list.end()); // remove excess candidates.
-    edge_list.shrink_to_fit();
     SimpleLogger().Write() << "Graph loaded ok and has " << edge_list.size() << " edges";
 
     return m;

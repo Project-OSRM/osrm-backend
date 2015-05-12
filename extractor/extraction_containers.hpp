@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/fingerprint.hpp"
 
 #include <stxxl/vector>
+#include <unordered_map>
 
 /**
  * Uses external memory containers from stxxl to store all the data that
@@ -73,6 +74,7 @@ class ExtractionContainers
     STXXLStringVector name_list;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
+    std::unordered_map<NodeID, NodeID> external_to_internal_node_id_map;
     const FingerPrint fingerprint;
 
     ExtractionContainers();

@@ -76,22 +76,19 @@ void DeleteFileIfExists(const std::string &file_name)
 }
 }
 
-void LoadRestrictions(const char* path,
-                      std::unique_ptr<std::unordered_map<NodeID, NodeID>> ext_to_int_id_map,
-                      std::vector<TurnRestriction>& restriction_list)
+void LoadRestrictions(const char* path, std::vector<TurnRestriction>& restriction_list)
 {
     std::ifstream input_stream(path, std::ios::binary);
     if (!input_stream.is_open())
     {
         throw osrm::exception("Cannot open restriction file");
     }
-    loadRestrictionsFromFile(input_stream, *ext_to_int_id_map, restriction_list);
+    loadRestrictionsFromFile(input_stream, restriction_list);
 }
 
 std::size_t LoadGraph(const char* path,
                       std::vector<QueryNode>& coordinate_list,
                       std::vector<NodeID>& barrier_node_list,
-                      std::unordered_map<NodeID, NodeID>& ext_to_int_id_map,
                       std::vector<TarjanEdge>& graph_edge_list)
 {
     std::ifstream input_stream(path, std::ifstream::in | std::ifstream::binary);
@@ -106,10 +103,9 @@ std::size_t LoadGraph(const char* path,
 
     auto number_of_nodes = loadNodesFromFile(input_stream, barrier_node_list,
                                              traffic_light_node_list,
-                                             coordinate_list,
-                                             ext_to_int_id_map);
+                                             coordinate_list);
 
-    loadEdgesFromFile(input_stream, ext_to_int_id_map, edge_list);
+    loadEdgesFromFile(input_stream, edge_list);
 
     traffic_light_node_list.clear();
     traffic_light_node_list.shrink_to_fit();
@@ -142,7 +138,6 @@ int main(int argc, char *argv[])
     std::vector<QueryNode> coordinate_list;
     std::vector<TurnRestriction> restriction_list;
     std::vector<NodeID> barrier_node_list;
-    auto ext_to_int_id_map = osrm::make_unique<std::unordered_map<NodeID, NodeID>>();
 
     LogPolicy::GetInstance().Unmute();
     try
@@ -158,8 +153,8 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "Using restrictions from file: " << argv[2];
 
         std::vector<TarjanEdge> graph_edge_list;
-        auto number_of_nodes = LoadGraph(argv[1], coordinate_list, barrier_node_list, *ext_to_int_id_map, graph_edge_list);
-        LoadRestrictions(argv[2], std::move(ext_to_int_id_map), restriction_list);
+        auto number_of_nodes = LoadGraph(argv[1], coordinate_list, barrier_node_list, graph_edge_list);
+        LoadRestrictions(argv[2], restriction_list);
 
         tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
         const auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);

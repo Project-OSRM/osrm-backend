@@ -64,7 +64,7 @@ struct NodeBasedEdgeData
         backward = temp_flag;
     }
 
-    bool IsEqualTo(const NodeBasedEdgeData &other) const
+    bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
         return (forward == other.forward) && (backward == other.backward) &&
                (nameID == other.nameID) && (ignore_in_grid == other.ignore_in_grid) &&
@@ -85,6 +85,7 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<NodeBasedE
     NodeBasedDynamicGraph::InputEdge edge;
     for (const NodeBasedEdge &import_edge : input_edge_list)
     {
+        BOOST_ASSERT(import_edge.forward || import_edge.backward);
         if (import_edge.forward)
         {
             edge.source = import_edge.source;

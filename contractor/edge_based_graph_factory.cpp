@@ -343,8 +343,14 @@ void EdgeBasedGraphFactory::CompressGeometry()
             continue;
         }
 
-        if ( // TODO: rename to IsCompatibleTo
-            fwd_edge_data1.IsEqualTo(fwd_edge_data2) && rev_edge_data1.IsEqualTo(rev_edge_data2))
+        // this case can happen if two ways with different names overlap
+        if (fwd_edge_data1.nameID != rev_edge_data1.nameID ||
+            fwd_edge_data2.nameID != rev_edge_data2.nameID)
+        {
+            continue;
+        }
+
+        if (fwd_edge_data1.IsCompatibleTo(fwd_edge_data2) && rev_edge_data1.IsCompatibleTo(rev_edge_data2))
         {
             BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e1).nameID ==
                          m_node_based_graph->GetEdgeData(reverse_e1).nameID);

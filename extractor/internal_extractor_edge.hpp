@@ -105,6 +105,20 @@ struct InternalExtractorEdge
     }
 };
 
+struct CmpEdgeByStartThenTargetID
+{
+    using value_type = InternalExtractorEdge;
+    bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
+    {
+        return (lhs.result.source <  rhs.result.source) ||
+              ((lhs.result.source == rhs.result.source) &&
+               (lhs.result.target <  rhs.result.target));
+    }
+
+    value_type max_value() { return InternalExtractorEdge::max_value(); }
+    value_type min_value() { return InternalExtractorEdge::min_value(); }
+};
+
 struct CmpEdgeByStartID
 {
     using value_type = InternalExtractorEdge;
