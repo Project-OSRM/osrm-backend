@@ -30,6 +30,7 @@ script:
  - make
  - make tests
  - make benchmarks
+ - ./algorithm-tests
  - ./datastructure-tests
  - cd ..
  - cucumber -p verify
