@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -44,12 +44,12 @@ struct SearchEngineData
     using QueryHeap = BinaryHeap<NodeID, NodeID, int, HeapData, UnorderedMapStorage<NodeID, int>>;
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
 
-    static SearchEngineHeapPtr forwardHeap;
-    static SearchEngineHeapPtr backwardHeap;
-    static SearchEngineHeapPtr forwardHeap2;
-    static SearchEngineHeapPtr backwardHeap2;
-    static SearchEngineHeapPtr forwardHeap3;
-    static SearchEngineHeapPtr backwardHeap3;
+    static SearchEngineHeapPtr forward_heap_1;
+    static SearchEngineHeapPtr reverse_heap_1;
+    static SearchEngineHeapPtr forward_heap_2;
+    static SearchEngineHeapPtr reverse_heap_2;
+    static SearchEngineHeapPtr forward_heap_3;
+    static SearchEngineHeapPtr reverse_heap_3;
 
     void InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes);
 

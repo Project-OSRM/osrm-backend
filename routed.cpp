@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,11 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "Library/OSRM.h"
-#include "Server/Server.h"
-#include "Util/git_sha.hpp"
-#include "Util/ProgramOptions.h"
-#include "Util/simple_logger.hpp"
+#include "library/osrm.hpp"
+#include "server/server.hpp"
+#include "util/git_sha.hpp"
+#include "util/routed_options.hpp"
+#include "util/simple_logger.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -74,16 +74,13 @@ int main(int argc, const char *argv[])
         int ip_port, requested_thread_num;
 
         libosrm_config lib_config;
+        // make the behaviour of routed backward compatible
+        lib_config.use_shared_memory = false;
 
-        const unsigned init_result = GenerateServerProgramOptions(argc,
-                                                                  argv,
-                                                                  lib_config.server_paths,
-                                                                  ip_address,
-                                                                  ip_port,
-                                                                  requested_thread_num,
-                                                                  lib_config.use_shared_memory,
-                                                                  trial_run,
-                                                                  lib_config.max_locations_distance_table);
+        const unsigned init_result = GenerateServerProgramOptions(
+            argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
+            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table,
+            lib_config.max_locations_map_matching);
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
             return 0;
@@ -119,8 +116,7 @@ int main(int argc, const char *argv[])
 #endif
 
         OSRM osrm_lib(lib_config);
-        auto routing_server =
-            Server::CreateServer(ip_address, ip_port, requested_thread_num);
+        auto routing_server = Server::CreateServer(ip_address, ip_port, requested_thread_num);
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
@@ -130,7 +126,11 @@ int main(int argc, const char *argv[])
         }
         else
         {
-            std::packaged_task<int()> server_task([&]()->int{ routing_server->Run(); return 0; });
+            std::packaged_task<int()> server_task([&]() -> int
+                                                  {
+                                                      routing_server->Run();
+                                                      return 0;
+                                                  });
             auto future = server_task.get_future();
             std::thread server_thread(std::move(server_task));
 
@@ -159,7 +159,7 @@ int main(int argc, const char *argv[])
 
             if (status == std::future_status::ready)
             {
-               server_thread.join();
+                server_thread.join();
             }
             else
             {

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,11 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Library/OSRM.h"
-#include "../Util/git_sha.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/ProgramOptions.h"
-#include "../Util/simple_logger.hpp"
+#include "../library/osrm.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/routed_options.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
 #include <osrm/libosrm_config.hpp>
@@ -43,18 +43,13 @@ int main(int argc, const char *argv[])
     try
     {
         std::string ip_address;
-        int ip_port, requested_thread_num;
+        int ip_port, requested_thread_num, max_locations_map_matching;
         bool trial_run = false;
         libosrm_config lib_config;
-        const unsigned init_result = GenerateServerProgramOptions(argc,
-                                                                  argv,
-                                                                  lib_config.server_paths,
-                                                                  ip_address,
-                                                                  ip_port,
-                                                                  requested_thread_num,
-                                                                  lib_config.use_shared_memory,
-                                                                  trial_run,
-                                                                  lib_config.max_locations_distance_table);
+        const unsigned init_result = GenerateServerProgramOptions(
+            argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
+            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table,
+            max_locations_map_matching);
 
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
@@ -87,10 +82,10 @@ int main(int argc, const char *argv[])
         // target_coordinate
         route_parameters.coordinates.emplace_back(52.513191 * COORDINATE_PRECISION,
                                                   13.415852 * COORDINATE_PRECISION);
-        JSON::Object json_result;
+        osrm::json::Object json_result;
         const int result_code = routing_machine.RunQuery(route_parameters, json_result);
         SimpleLogger().Write() << "http code: " << result_code;
-        JSON::render(SimpleLogger().Write(), json_result);
+        osrm::json::render(SimpleLogger().Write(), json_result);
     }
     catch (std::exception &current_exception)
     {

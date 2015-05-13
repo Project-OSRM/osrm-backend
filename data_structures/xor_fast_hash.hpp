@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -61,8 +61,8 @@ class XORFastHash
         table2.resize(2 << 16);
         for (unsigned i = 0; i < (2 << 16); ++i)
         {
-            table1[i] = i;
-            table2[i] = i;
+            table1[i] = static_cast<unsigned short>(i);
+            table2[i] = static_cast<unsigned short>(i);
         }
         std::random_shuffle(table1.begin(), table1.end());
         std::random_shuffle(table2.begin(), table2.end());
@@ -92,10 +92,10 @@ class XORMiniHash
         table4.resize(1 << 8);
         for (unsigned i = 0; i < (1 << 8); ++i)
         {
-            table1[i] = i;
-            table2[i] = i;
-            table3[i] = i;
-            table4[i] = i;
+            table1[i] = static_cast<unsigned char>(i);
+            table2[i] = static_cast<unsigned char>(i);
+            table3[i] = static_cast<unsigned char>(i);
+            table4[i] = static_cast<unsigned char>(i);
         }
         std::random_shuffle(table1.begin(), table1.end());
         std::random_shuffle(table2.begin(), table2.end());

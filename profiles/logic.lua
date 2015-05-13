@@ -120,7 +120,7 @@ function way_function (way, result)
     end
   end
 
-  -- Handling ferries and piers
+  -- handling ferries and piers
   local route_speed = speed_profile[route]
   if(route_speed and route_speed > 0) then
     highway = route;

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,12 +28,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_OPTIONS_HPP
 #define EXTRACTOR_OPTIONS_HPP
 
-#include "extractor.hpp"
+#include <boost/filesystem/path.hpp>
+
+#include <string>
+
+enum class return_code : unsigned
+{
+    ok,
+    fail,
+    exit
+};
 
 struct ExtractorConfig
 {
     ExtractorConfig() noexcept : requested_num_threads(0) {}
-    unsigned requested_num_threads;
     boost::filesystem::path config_file_path;
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;
@@ -41,11 +49,13 @@ struct ExtractorConfig
     std::string output_file_name;
     std::string restriction_file_name;
     std::string timestamp_file_name;
+
+    unsigned requested_num_threads;
 };
 
 struct ExtractorOptions
 {
-    static bool ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config);
+    static return_code ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config);
 
     static void GenerateOutputFilesNames(ExtractorConfig &extractor_config);
 };

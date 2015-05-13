@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "plugin_base.hpp"
 
-#include "../Util/json_renderer.hpp"
+#include "../util/json_renderer.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -43,8 +43,9 @@ template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
         : facade(facade), descriptor_string("timestamp")
     {
     }
-    const std::string GetDescriptor() const final { return descriptor_string; }
-    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
+    const std::string GetDescriptor() const override final { return descriptor_string; }
+    int HandleRequest(const RouteParameters &route_parameters,
+                      osrm::json::Object &json_result) override final
     {
         json_result.values["status"] = 0;
         const std::string timestamp = facade->GetTimestamp();

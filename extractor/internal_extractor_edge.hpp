@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -38,9 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct InternalExtractorEdge
 {
     InternalExtractorEdge()
-        : start(0), target(0), direction(0), speed(0), name_id(0), is_roundabout(false),
+        : start(0), target(0), speed(0), name_id(0), direction(0), is_roundabout(false),
           is_in_tiny_cc(false), is_duration_set(false), is_access_restricted(false),
-          travel_mode(TRAVEL_MODE_INACCESSIBLE), is_split(false)
+          is_split(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
@@ -55,35 +55,36 @@ struct InternalExtractorEdge
                                    bool is_access_restricted,
                                    TravelMode travel_mode,
                                    bool is_split)
-        : start(start), target(target), direction(direction), speed(speed),
-          name_id(name_id), is_roundabout(is_roundabout), is_in_tiny_cc(is_in_tiny_cc),
+        : start(start), target(target), speed(speed), name_id(name_id), direction(direction),
+          is_roundabout(is_roundabout), is_in_tiny_cc(is_in_tiny_cc),
           is_duration_set(is_duration_set), is_access_restricted(is_access_restricted),
-          travel_mode(travel_mode), is_split(is_split)
+          is_split(is_split), travel_mode(travel_mode)
     {
     }
 
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_value()
     {
-        return InternalExtractorEdge(0, 0, 0, 0, 0, false, false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
+        return InternalExtractorEdge(0, 0, 0, 0, 0, false, false, false, false,
+                                     TRAVEL_MODE_INACCESSIBLE, false);
     }
     static InternalExtractorEdge max_value()
     {
-        return InternalExtractorEdge(
-            SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, false, false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
+        return InternalExtractorEdge(SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, false, false, false,
+                                     false, TRAVEL_MODE_INACCESSIBLE, false);
     }
 
     NodeID start;
     NodeID target;
-    short direction;
     double speed;
     unsigned name_id;
-    bool is_roundabout;
-    bool is_in_tiny_cc;
-    bool is_duration_set;
-    bool is_access_restricted;
+    short direction;
+    bool is_roundabout : 1;
+    bool is_in_tiny_cc : 1;
+    bool is_duration_set : 1;
+    bool is_access_restricted : 1;
+    bool is_split : 1;
     TravelMode travel_mode : 4;
-    bool is_split;
 
     FixedPointCoordinate source_coordinate;
     FixedPointCoordinate target_coordinate;

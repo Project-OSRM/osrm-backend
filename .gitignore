@@ -36,8 +36,8 @@ Thumbs.db
 # build related files #
 #######################
 /build/
-/Util/fingerprint.cpp
-/Util/git_sha.cpp
+/util/fingerprint_impl.hpp
+/util/git_sha.cpp
 /cmake/postinst
 
 # Eclipse related files #
@@ -53,25 +53,8 @@ Thumbs.db
 stxxl.log
 stxxl.errlog
 
-# compiled protobuffers #
-#########################
-/DataStructures/pbf-proto/*.pb.h
-/DataStructures/pbf-proto/*.pb.cc
-
-# External Libs #
-#################
-/lib/
-/win/lib
-
-# Visual Studio Temp + build Files #
+# Compiled Binary Files #
 ####################################
-/win/*.user
-/win/*.ncb
-/win/*.suo
-/win/Debug/
-/win/Release/
-/win/bin/
-/win/bin-debug/
 /osrm-extract
 /osrm-io-benchmark
 /osrm-components

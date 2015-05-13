@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,10 +35,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../descriptors/descriptor_base.hpp"
 #include "../descriptors/gpx_descriptor.hpp"
 #include "../descriptors/json_descriptor.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/json_renderer.hpp"
-#include "../Util/make_unique.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/json_renderer.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -69,9 +69,10 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
     virtual ~ViaRoutePlugin() {}
 
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &route_parameters, JSON::Object &json_result) final
+    int HandleRequest(const RouteParameters &route_parameters,
+                      osrm::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {

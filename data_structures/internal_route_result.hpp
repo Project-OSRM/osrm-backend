@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -40,10 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct PathData
 {
     PathData()
-        : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT),
-          segment_duration(INVALID_EDGE_WEIGHT),
-          turn_instruction(TurnInstruction::NoTurn),
-          travel_mode(TRAVEL_MODE_INACCESSIBLE)
+        : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT), segment_duration(INVALID_EDGE_WEIGHT),
+          turn_instruction(TurnInstruction::NoTurn), travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
@@ -52,8 +50,8 @@ struct PathData
              TurnInstruction turn_instruction,
              EdgeWeight segment_duration,
              TravelMode travel_mode)
-        : node(node), name_id(name_id), segment_duration(segment_duration), turn_instruction(turn_instruction),
-          travel_mode(travel_mode)
+        : node(node), name_id(name_id), segment_duration(segment_duration),
+          turn_instruction(turn_instruction), travel_mode(travel_mode)
     {
     }
     NodeID node;
@@ -80,9 +78,8 @@ struct InternalRouteResult
         return (leg != unpacked_path_segments.size() - 1);
     }
 
-    InternalRouteResult() :
-          shortest_path_length(INVALID_EDGE_WEIGHT),
-          alternative_path_length(INVALID_EDGE_WEIGHT)
+    InternalRouteResult()
+        : shortest_path_length(INVALID_EDGE_WEIGHT), alternative_path_length(INVALID_EDGE_WEIGHT)
     {
     }
 };

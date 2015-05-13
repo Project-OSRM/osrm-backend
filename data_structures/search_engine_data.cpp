@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2013, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,63 +31,63 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
 {
-    if (forwardHeap.get())
+    if (forward_heap_1.get())
     {
-        forwardHeap->Clear();
+        forward_heap_1->Clear();
     }
     else
     {
-        forwardHeap.reset(new QueryHeap(number_of_nodes));
+        forward_heap_1.reset(new QueryHeap(number_of_nodes));
     }
 
-    if (backwardHeap.get())
+    if (reverse_heap_1.get())
     {
-        backwardHeap->Clear();
+        reverse_heap_1->Clear();
     }
     else
     {
-        backwardHeap.reset(new QueryHeap(number_of_nodes));
+        reverse_heap_1.reset(new QueryHeap(number_of_nodes));
     }
 }
 
 void SearchEngineData::InitializeOrClearSecondThreadLocalStorage(const unsigned number_of_nodes)
 {
-    if (forwardHeap2.get())
+    if (forward_heap_2.get())
     {
-        forwardHeap2->Clear();
+        forward_heap_2->Clear();
     }
     else
     {
-        forwardHeap2.reset(new QueryHeap(number_of_nodes));
+        forward_heap_2.reset(new QueryHeap(number_of_nodes));
     }
 
-    if (backwardHeap2.get())
+    if (reverse_heap_2.get())
     {
-        backwardHeap2->Clear();
+        reverse_heap_2->Clear();
     }
     else
     {
-        backwardHeap2.reset(new QueryHeap(number_of_nodes));
+        reverse_heap_2.reset(new QueryHeap(number_of_nodes));
     }
 }
 
 void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes)
 {
-    if (forwardHeap3.get())
+    if (forward_heap_3.get())
     {
-        forwardHeap3->Clear();
+        forward_heap_3->Clear();
     }
     else
     {
-        forwardHeap3.reset(new QueryHeap(number_of_nodes));
+        forward_heap_3.reset(new QueryHeap(number_of_nodes));
     }
 
-    if (backwardHeap3.get())
+    if (reverse_heap_3.get())
     {
-        backwardHeap3->Clear();
+        reverse_heap_3->Clear();
     }
     else
     {
-        backwardHeap3.reset(new QueryHeap(number_of_nodes));
+        reverse_heap_3.reset(new QueryHeap(number_of_nodes));
     }
 }

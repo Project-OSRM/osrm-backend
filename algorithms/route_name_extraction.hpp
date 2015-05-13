@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -54,7 +54,8 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
 
         for (const SegmentT &segment : segment_list)
         {
-            if (segment.name_id != blocked_name_id && segment.length > result_segment.length && segment.name_id != 0)
+            if (segment.name_id != blocked_name_id && segment.length > result_segment.length &&
+                segment.name_id != 0)
             {
                 result_segment = segment;
             }
@@ -73,9 +74,13 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         SegmentT alternative_segment_1, alternative_segment_2;
 
         auto length_comperator = [](const SegmentT &a, const SegmentT &b)
-        { return a.length > b.length; };
+        {
+            return a.length > b.length;
+        };
         auto name_id_comperator = [](const SegmentT &a, const SegmentT &b)
-        { return a.name_id < b.name_id; };
+        {
+            return a.name_id < b.name_id;
+        };
 
         if (shortest_path_segments.empty())
         {
@@ -87,8 +92,7 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         shortest_segment_1 = shortest_path_segments[0];
         if (!alternative_path_segments.empty())
         {
-            std::sort(alternative_path_segments.begin(),
-                      alternative_path_segments.end(),
+            std::sort(alternative_path_segments.begin(), alternative_path_segments.end(),
                       length_comperator);
 
             // also pick the longest segment for the alternative path
@@ -99,16 +103,13 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         // alternative
         std::vector<SegmentT> shortest_path_set_difference(shortest_path_segments.size());
         std::sort(shortest_path_segments.begin(), shortest_path_segments.end(), name_id_comperator);
-        std::sort(alternative_path_segments.begin(), alternative_path_segments.end(), name_id_comperator);
-        std::set_difference(shortest_path_segments.begin(),
-                            shortest_path_segments.end(),
-                            alternative_path_segments.begin(),
-                            alternative_path_segments.end(),
-                            shortest_path_set_difference.begin(),
-                            name_id_comperator);
+        std::sort(alternative_path_segments.begin(), alternative_path_segments.end(),
+                  name_id_comperator);
+        std::set_difference(shortest_path_segments.begin(), shortest_path_segments.end(),
+                            alternative_path_segments.begin(), alternative_path_segments.end(),
+                            shortest_path_set_difference.begin(), name_id_comperator);
 
-        std::sort(shortest_path_set_difference.begin(),
-                  shortest_path_set_difference.end(),
+        std::sort(shortest_path_set_difference.begin(), shortest_path_set_difference.end(),
                   length_comperator);
         shortest_segment_2 =
             PickNextLongestSegment(shortest_path_set_difference, shortest_segment_1.name_id);
@@ -116,29 +117,23 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         // compute the set difference (for alternative path) depending on names between shortest and
         // alternative
         // vectors are still sorted, no need to do again
-        BOOST_ASSERT(std::is_sorted(shortest_path_segments.begin(),
-                                    shortest_path_segments.end(),
+        BOOST_ASSERT(std::is_sorted(shortest_path_segments.begin(), shortest_path_segments.end(),
                                     name_id_comperator));
         BOOST_ASSERT(std::is_sorted(alternative_path_segments.begin(),
-                                    alternative_path_segments.end(),
-                                    name_id_comperator));
+                                    alternative_path_segments.end(), name_id_comperator));
 
         std::vector<SegmentT> alternative_path_set_difference(alternative_path_segments.size());
-        std::set_difference(alternative_path_segments.begin(),
-                            alternative_path_segments.end(),
-                            shortest_path_segments.begin(),
-                            shortest_path_segments.end(),
-                            alternative_path_set_difference.begin(),
-                            name_id_comperator);
+        std::set_difference(alternative_path_segments.begin(), alternative_path_segments.end(),
+                            shortest_path_segments.begin(), shortest_path_segments.end(),
+                            alternative_path_set_difference.begin(), name_id_comperator);
 
-        std::sort(alternative_path_set_difference.begin(),
-                  alternative_path_set_difference.end(),
+        std::sort(alternative_path_set_difference.begin(), alternative_path_set_difference.end(),
                   length_comperator);
 
         if (!alternative_path_segments.empty())
         {
             alternative_segment_2 = PickNextLongestSegment(alternative_path_set_difference,
-                                                       alternative_segment_1.name_id);
+                                                           alternative_segment_1.name_id);
         }
 
         // move the segments into the order in which they occur.
@@ -152,15 +147,13 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         }
 
         // fetching names for the selected segments
-        route_names.shortest_path_name_1 =
-            facade->GetEscapedNameForNameID(shortest_segment_1.name_id);
-        route_names.shortest_path_name_2 =
-            facade->GetEscapedNameForNameID(shortest_segment_2.name_id);
+        route_names.shortest_path_name_1 = facade->get_name_for_id(shortest_segment_1.name_id);
+        route_names.shortest_path_name_2 = facade->get_name_for_id(shortest_segment_2.name_id);
 
         route_names.alternative_path_name_1 =
-            facade->GetEscapedNameForNameID(alternative_segment_1.name_id);
+            facade->get_name_for_id(alternative_segment_1.name_id);
         route_names.alternative_path_name_2 =
-            facade->GetEscapedNameForNameID(alternative_segment_2.name_id);
+            facade->get_name_for_id(alternative_segment_2.name_id);
 
         return route_names;
     }

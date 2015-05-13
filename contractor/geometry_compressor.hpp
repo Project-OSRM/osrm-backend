@@ -58,6 +58,8 @@ class GeometryCompressor
     NodeID GetLastNodeIDOfBucket(const EdgeID edge_id) const;
 
   private:
+    int free_list_maximum = 0;
+    
     void IncreaseFreeList();
     std::vector<std::vector<CompressedNode>> m_compressed_geometries;
     std::vector<unsigned> m_free_list;

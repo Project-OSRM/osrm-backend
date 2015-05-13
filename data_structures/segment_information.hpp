@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SEGMENT_INFORMATION_H
-#define SEGMENT_INFORMATION_H
+#ifndef SEGMENT_INFORMATION_HPP
+#define SEGMENT_INFORMATION_HPP
 
 #include "turn_instructions.hpp"
 
@@ -75,4 +75,4 @@ struct SegmentInformation
     }
 };
 
-#endif /* SEGMENT_INFORMATION_H */
+#endif /* SEGMENT_INFORMATION_HPP */

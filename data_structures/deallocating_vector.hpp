@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,16 +28,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEALLOCATING_VECTOR_HPP
 #define DEALLOCATING_VECTOR_HPP
 
-#include "../Util/integer_range.hpp"
+#include "../util/integer_range.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <limits>
 #include <utility>
 #include <vector>
 
 template <typename ElementT> struct DeallocatingVectorIteratorState
 {
-    DeallocatingVectorIteratorState() : index(-1), bucket_list(nullptr) {}
+    DeallocatingVectorIteratorState()
+        : index(std::numeric_limits<std::size_t>::max()), bucket_list(nullptr)
+    {
+    }
     explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r)
         : index(r.index), bucket_list(r.bucket_list)
     {
@@ -171,7 +175,10 @@ class DeallocatingVector
     // this forward-only iterator deallocates all buckets that have been visited
     using deallocation_iterator = DeallocatingVectorRemoveIterator<ElementT, ELEMENTS_PER_BLOCK>;
 
-    DeallocatingVector() : current_size(0) { bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]); }
+    DeallocatingVector() : current_size(0)
+    {
+        bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]);
+    }
 
     ~DeallocatingVector() { clear(); }
 
@@ -192,7 +199,8 @@ class DeallocatingVector
                 bucket = nullptr;
             }
         }
-        bucket_list.clear(); bucket_list.shrink_to_fit();
+        bucket_list.clear();
+        bucket_list.shrink_to_fit();
         current_size = 0;
     }
 
@@ -222,7 +230,7 @@ class DeallocatingVector
         ++current_size;
     }
 
-    void reserve(const std::size_t) const { /* don't do anything */ }
+    void reserve(const std::size_t) const { /* don't do anything */}
 
     void resize(const std::size_t new_size)
     {
@@ -234,9 +242,10 @@ class DeallocatingVector
             }
         }
         else
-        {   // down-size
+        { // down-size
             const std::size_t number_of_necessary_buckets = 1 + (new_size / ELEMENTS_PER_BLOCK);
-            for (const auto bucket_index : osrm::irange(number_of_necessary_buckets, bucket_list.size()))
+            for (const auto bucket_index :
+                 osrm::irange(number_of_necessary_buckets, bucket_list.size()))
             {
                 if (nullptr != bucket_list[bucket_index])
                 {
@@ -291,8 +300,7 @@ class DeallocatingVector
         return (bucket_list[_bucket][_index]);
     }
 
-    template<class InputIterator>
-    void append(InputIterator first, const InputIterator last)
+    template <class InputIterator> void append(InputIterator first, const InputIterator last)
     {
         InputIterator position = first;
         while (position != last)

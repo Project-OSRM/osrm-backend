@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,9 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/xor_fast_hash.hpp"
 #include "../data_structures/xor_fast_hash_storage.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
@@ -92,9 +92,11 @@ class Contractor
     };
 
     using ContractorGraph = DynamicGraph<ContractorEdgeData>;
-    //    using ContractorHeap = BinaryHeap<NodeID, NodeID, int, ContractorHeapData, ArrayStorage<NodeID, NodeID>
+    //    using ContractorHeap = BinaryHeap<NodeID, NodeID, int, ContractorHeapData,
+    //    ArrayStorage<NodeID, NodeID>
     //    >;
-    using ContractorHeap = BinaryHeap<NodeID, NodeID, int, ContractorHeapData, XORFastHashStorage<NodeID, NodeID>>;
+    using ContractorHeap =
+        BinaryHeap<NodeID, NodeID, int, ContractorHeapData, XORFastHashStorage<NodeID, NodeID>>;
     using ContractorEdge = ContractorGraph::InputEdge;
 
     struct ContractorThreadData
@@ -131,15 +133,14 @@ class Contractor
         bool is_independent : 1;
     };
 
-
     struct ThreadDataContainer
     {
-        explicit ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes)  {}
+        explicit ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes) {}
 
-        inline ContractorThreadData* getThreadData()
+        inline ContractorThreadData *getThreadData()
         {
             bool exists = false;
-            auto& ref = data.local(exists);
+            auto &ref = data.local(exists);
             if (!exists)
             {
                 ref = std::make_shared<ContractorThreadData>(number_of_nodes);
@@ -149,7 +150,8 @@ class Contractor
         }
 
         int number_of_nodes;
-        using EnumerableThreadData = tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>>;
+        using EnumerableThreadData =
+            tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>>;
         EnumerableThreadData data;
     };
 
@@ -162,29 +164,25 @@ class Contractor
         const auto dend = input_edge_list.dend();
         for (auto diter = input_edge_list.dbegin(); diter != dend; ++diter)
         {
-            BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(diter->weight, 1)) > 0, "edge distance < 1");
+            BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(diter->weight, 1)) > 0,
+                             "edge distance < 1");
 #ifndef NDEBUG
             if (static_cast<unsigned int>(std::max(diter->weight, 1)) > 24 * 60 * 60 * 10)
             {
-                SimpleLogger().Write(logWARNING) << "Edge weight large -> "
-                                                 << static_cast<unsigned int>(std::max(diter->weight, 1));
+                SimpleLogger().Write(logWARNING)
+                    << "Edge weight large -> "
+                    << static_cast<unsigned int>(std::max(diter->weight, 1));
             }
 #endif
             edges.emplace_back(diter->source, diter->target,
-                static_cast<unsigned int>(std::max(diter->weight, 1)),
-                1,
-                diter->edge_id,
-                false,
-                diter->forward ? true : false,
-                diter->backward ? true : false);
+                               static_cast<unsigned int>(std::max(diter->weight, 1)), 1,
+                               diter->edge_id, false, diter->forward ? true : false,
+                               diter->backward ? true : false);
 
             edges.emplace_back(diter->target, diter->source,
-                static_cast<unsigned int>(std::max(diter->weight, 1)),
-                1,
-                diter->edge_id,
-                false,
-                diter->backward ? true : false,
-                diter->forward ? true : false);
+                               static_cast<unsigned int>(std::max(diter->weight, 1)), 1,
+                               diter->edge_id, false, diter->backward ? true : false,
+                               diter->forward ? true : false);
         }
         // clear input vector
         input_edge_list.clear();
@@ -282,20 +280,20 @@ class Contractor
         std::cout << "contractor finished initalization" << std::endl;
     }
 
-    ~Contractor() { }
+    ~Contractor() {}
 
     void Run()
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
-        constexpr size_t InitGrainSize        = 100000;
-        constexpr size_t PQGrainSize          = 100000;
+        constexpr size_t InitGrainSize = 100000;
+        constexpr size_t PQGrainSize = 100000;
         // auto_partitioner will automatically increase the blocksize if we have
         // a lot of data. It is *important* for the last loop iterations
         // (which have a very small dataset) that it is devisible.
         constexpr size_t IndependentGrainSize = 1;
-        constexpr size_t ContractGrainSize    = 1;
-        constexpr size_t NeighboursGrainSize  = 1;
-        constexpr size_t DeleteGrainSize      = 1;
+        constexpr size_t ContractGrainSize = 1;
+        constexpr size_t NeighboursGrainSize = 1;
+        constexpr size_t DeleteGrainSize = 1;
 
         const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
         Percent p(number_of_nodes);
@@ -307,30 +305,28 @@ class Contractor
         std::vector<float> node_priorities(number_of_nodes);
         std::vector<NodePriorityData> node_data(number_of_nodes);
 
-
         // initialize priorities in parallel
         tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, InitGrainSize),
-            [&remaining_nodes](const tbb::blocked_range<int>& range)
-            {
-                for (int x = range.begin(); x != range.end(); ++x)
-                {
-                    remaining_nodes[x].id = x;
-                }
-            }
-        );
-
+                          [&remaining_nodes](const tbb::blocked_range<int> &range)
+                          {
+                              for (int x = range.begin(); x != range.end(); ++x)
+                              {
+                                  remaining_nodes[x].id = x;
+                              }
+                          });
 
         std::cout << "initializing elimination PQ ..." << std::flush;
         tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, PQGrainSize),
-            [this, &node_priorities, &node_data, &thread_data_list](const tbb::blocked_range<int>& range)
-            {
-                ContractorThreadData *data = thread_data_list.getThreadData();
-                for (int x = range.begin(); x != range.end(); ++x)
-                {
-                    node_priorities[x] = this->EvaluateNodePriority(data, &node_data[x], x);
-                }
-            }
-        );
+                          [this, &node_priorities, &node_data, &thread_data_list](
+                              const tbb::blocked_range<int> &range)
+                          {
+                              ContractorThreadData *data = thread_data_list.getThreadData();
+                              for (int x = range.begin(); x != range.end(); ++x)
+                              {
+                                  node_priorities[x] =
+                                      this->EvaluateNodePriority(data, &node_data[x], x);
+                              }
+                          });
         std::cout << "ok" << std::endl << "preprocessing " << number_of_nodes << " nodes ..."
                   << std::flush;
 
@@ -368,7 +364,8 @@ class Contractor
                     remaining_nodes[new_node_id].id = new_node_id;
                 }
                 // walk over all nodes
-                for (const auto i : osrm::irange<std::size_t>(0, contractor_graph->GetNumberOfNodes()))
+                for (const auto i :
+                     osrm::irange<std::size_t>(0, contractor_graph->GetNumberOfNodes()))
                 {
                     const NodeID source = i;
                     for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
@@ -384,11 +381,9 @@ class Contractor
                         {
                             // node is not yet contracted.
                             // add (renumbered) outgoing edges to new DynamicGraph.
-                            ContractorEdge new_edge = {
-                                new_node_id_from_orig_id_map[source],
-                                new_node_id_from_orig_id_map[target],
-                                data
-                            };
+                            ContractorEdge new_edge = {new_node_id_from_orig_id_map[source],
+                                                       new_node_id_from_orig_id_map[target],
+                                                       data};
 
                             new_edge.data.is_original_via_node_ID = true;
                             BOOST_ASSERT_MSG(UINT_MAX != new_node_id_from_orig_id_map[source],
@@ -427,28 +422,30 @@ class Contractor
 
             const int last = (int)remaining_nodes.size();
             tbb::parallel_for(tbb::blocked_range<int>(0, last, IndependentGrainSize),
-                [this, &node_priorities, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int>& range)
-                {
-                    ContractorThreadData *data = thread_data_list.getThreadData();
-                    // determine independent node set
-                    for (int i = range.begin(); i != range.end(); ++i)
-                    {
-                        const NodeID node = remaining_nodes[i].id;
-                        remaining_nodes[i].is_independent =
-                            this->IsNodeIndependent(node_priorities, data, node);
-                    }
-                }
-            );
+                              [this, &node_priorities, &remaining_nodes, &thread_data_list](
+                                  const tbb::blocked_range<int> &range)
+                              {
+                                  ContractorThreadData *data = thread_data_list.getThreadData();
+                                  // determine independent node set
+                                  for (int i = range.begin(); i != range.end(); ++i)
+                                  {
+                                      const NodeID node = remaining_nodes[i].id;
+                                      remaining_nodes[i].is_independent =
+                                          this->IsNodeIndependent(node_priorities, data, node);
+                                  }
+                              });
 
-            const auto first = stable_partition(remaining_nodes.begin(),
-                                                remaining_nodes.end(),
+            const auto first = stable_partition(remaining_nodes.begin(), remaining_nodes.end(),
                                                 [](RemainingNodeData node_data)
-                                                { return !node_data.is_independent; });
+                                                {
+                                                    return !node_data.is_independent;
+                                                });
             const int first_independent_node = static_cast<int>(first - remaining_nodes.begin());
 
             // contract independent nodes
-            tbb::parallel_for(tbb::blocked_range<int>(first_independent_node, last, ContractGrainSize),
-                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int>& range)
+            tbb::parallel_for(
+                tbb::blocked_range<int>(first_independent_node, last, ContractGrainSize),
+                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
                     for (int position = range.begin(); position != range.end(); ++position)
@@ -456,19 +453,18 @@ class Contractor
                         const NodeID x = remaining_nodes[position].id;
                         this->ContractNode<false>(data, x);
                     }
-                }
-            );
+                });
             // make sure we really sort each block
-            tbb::parallel_for(thread_data_list.data.range(),
-                [&](const ThreadDataContainer::EnumerableThreadData::range_type& range)
+            tbb::parallel_for(
+                thread_data_list.data.range(),
+                [&](const ThreadDataContainer::EnumerableThreadData::range_type &range)
                 {
-                    for (auto& data : range)
-                        std::sort(data->inserted_edges.begin(),
-                                  data->inserted_edges.end());
-                }
-            );
-            tbb::parallel_for(tbb::blocked_range<int>(first_independent_node, last, DeleteGrainSize),
-                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int>& range)
+                    for (auto &data : range)
+                        std::sort(data->inserted_edges.begin(), data->inserted_edges.end());
+                });
+            tbb::parallel_for(
+                tbb::blocked_range<int>(first_independent_node, last, DeleteGrainSize),
+                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
                     for (int position = range.begin(); position != range.end(); ++position)
@@ -476,15 +472,15 @@ class Contractor
                         const NodeID x = remaining_nodes[position].id;
                         this->DeleteIncomingEdges(data, x);
                     }
-                }
-            );
+                });
 
             // insert new edges
-            for (auto& data : thread_data_list.data)
+            for (auto &data : thread_data_list.data)
             {
                 for (const ContractorEdge &edge : data->inserted_edges)
                 {
-                    const EdgeID current_edge_ID = contractor_graph->FindEdge(edge.source, edge.target);
+                    const EdgeID current_edge_ID =
+                        contractor_graph->FindEdge(edge.source, edge.target);
                     if (current_edge_ID < contractor_graph->EndEdges(edge.source))
                     {
                         ContractorGraph::EdgeData &current_data =
@@ -503,8 +499,10 @@ class Contractor
                 data->inserted_edges.clear();
             }
 
-            tbb::parallel_for(tbb::blocked_range<int>(first_independent_node, last, NeighboursGrainSize),
-                [this, &remaining_nodes, &node_priorities, &node_data, &thread_data_list](const tbb::blocked_range<int>& range)
+            tbb::parallel_for(
+                tbb::blocked_range<int>(first_independent_node, last, NeighboursGrainSize),
+                [this, &remaining_nodes, &node_priorities, &node_data, &thread_data_list](
+                    const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
                     for (int position = range.begin(); position != range.end(); ++position)
@@ -512,8 +510,7 @@ class Contractor
                         NodeID x = remaining_nodes[position].id;
                         this->UpdateNodeNeighbours(node_priorities, node_data, data, x);
                     }
-                }
-            );
+                });
 
             // remove contracted nodes from the pool
             number_of_contracted_nodes += last - first_independent_node;
@@ -774,17 +771,11 @@ class Contractor
                     {
                         inserted_edges.emplace_back(source, target, path_distance,
                                                     out_data.originalEdges + in_data.originalEdges,
-                                                    node,
-                                                    true,
-                                                    true,
-                                                    false);
+                                                    node, true, true, false);
 
                         inserted_edges.emplace_back(target, source, path_distance,
                                                     out_data.originalEdges + in_data.originalEdges,
-                                                    node,
-                                                    true,
-                                                    false,
-                                                    true);
+                                                    node, true, false, true);
                     }
                 }
             }
@@ -883,10 +874,9 @@ class Contractor
         return true;
     }
 
-    inline bool IsNodeIndependent(
-        const std::vector<float> &priorities,
-        ContractorThreadData *const data,
-        NodeID node) const
+    inline bool IsNodeIndependent(const std::vector<float> &priorities,
+                                  ContractorThreadData *const data,
+                                  NodeID node) const
     {
         const float priority = priorities[node];
 

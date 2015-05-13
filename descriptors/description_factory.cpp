@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,8 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "description_factory.hpp"
 
 #include "../algorithms/polyline_formatter.hpp"
+#include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/turn_instructions.hpp"
+#include "../util/container.hpp"
+#include "../util/integer_range.hpp"
 #include "../typedefs.h"
 
 DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }
@@ -43,9 +46,8 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
         (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
     const TravelMode travel_mode =
         (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
-    AppendSegment(
-        source.location,
-        PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration, travel_mode));
+    AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn,
+                                            segment_duration, travel_mode));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -58,15 +60,10 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     const TravelMode travel_mode =
         (traversed_in_reverse ? target.backward_travel_mode : target.forward_travel_mode);
-    path_description.emplace_back(target.location,
-                                  target.name_id,
-                                  segment_duration,
-                                  0.f,
+    path_description.emplace_back(target.location, target.name_id, segment_duration, 0.f,
                                   is_via_location ? TurnInstruction::ReachViaLocation
                                                   : TurnInstruction::NoTurn,
-                                  true,
-                                  true,
-                                  travel_mode);
+                                  true, true, travel_mode);
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -97,15 +94,11 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         return path_point.turn_instruction;
     }();
 
-    path_description.emplace_back(coordinate,
-                                  path_point.name_id,
-                                  path_point.segment_duration,
-                                  0.f,
-                                  turn,
-                                  path_point.travel_mode);
+    path_description.emplace_back(coordinate, path_point.name_id, path_point.segment_duration, 0.f,
+                                  turn, path_point.travel_mode);
 }
 
-JSON::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
+osrm::json::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)
 {
     if (return_encoded)
     {
@@ -129,12 +122,12 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     }
 
     /** starts at index 1 */
-    path_description[0].length = 0;
-    for (unsigned i = 1; i < path_description.size(); ++i)
+    path_description[0].length = 0.f;
+    for (const auto i : osrm::irange<std::size_t>(1, path_description.size()))
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
-        path_description[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(
+        path_description[i].length = coordinate_calculation::euclidean_distance(
             path_description[i - 1].location, path_description[i].location);
     }
 
@@ -182,10 +175,10 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     //    }
 
     float segment_length = 0.;
-    unsigned segment_duration = 0;
-    unsigned segment_start_index = 0;
+    EdgeWeight segment_duration = 0;
+    std::size_t segment_start_index = 0;
 
-    for (unsigned i = 1; i < path_description.size(); ++i)
+    for (const auto i : osrm::irange<std::size_t>(1, path_description.size()))
     {
         entire_length += path_description[i].length;
         segment_length += path_description[i].length;
@@ -203,48 +196,49 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     }
 
     // Post-processing to remove empty or nearly empty path segments
-    if (std::numeric_limits<double>::epsilon() > path_description.back().length)
+    if (path_description.size() > 2 &&
+        std::numeric_limits<float>::epsilon() > path_description.back().length)
     {
-        if (path_description.size() > 2)
-        {
-            path_description.pop_back();
-            path_description.back().necessary = true;
-            path_description.back().turn_instruction = TurnInstruction::NoTurn;
-            target_phantom.name_id = (path_description.end() - 2)->name_id;
-        }
+        path_description.pop_back();
+        path_description.back().necessary = true;
+        path_description.back().turn_instruction = TurnInstruction::NoTurn;
+        target_phantom.name_id = (path_description.end() - 2)->name_id;
     }
-    if (std::numeric_limits<double>::epsilon() > path_description.front().length)
+
+    if (path_description.size() > 2 &&
+        std::numeric_limits<float>::epsilon() > path_description.front().length)
     {
-        if (path_description.size() > 2)
-        {
-            path_description.erase(path_description.begin());
-            path_description.front().turn_instruction = TurnInstruction::HeadOn;
-            path_description.front().necessary = true;
-            start_phantom.name_id = path_description.front().name_id;
-        }
+        path_description.erase(path_description.begin());
+        path_description.front().turn_instruction = TurnInstruction::HeadOn;
+        path_description.front().necessary = true;
+        start_phantom.name_id = path_description.front().name_id;
     }
 
     // Generalize poly line
     polyline_generalizer.Run(path_description.begin(), path_description.end(), zoom_level);
 
     // fix what needs to be fixed else
-    unsigned necessary_pieces = 0; // a running index that counts the necessary pieces
-    for (unsigned i = 0; i < path_description.size() - 1 && path_description.size() >= 2; ++i)
-    {
-        if (path_description[i].necessary)
+    unsigned necessary_segments = 0; // a running index that counts the necessary pieces
+    osrm::for_each_pair(
+        path_description, [&](SegmentInformation &first, const SegmentInformation &second)
         {
-            ++necessary_pieces;
-            if (path_description[i].is_via_location)
-            { // mark the end of a leg
-                via_indices.push_back(necessary_pieces);
+            if (!first.necessary)
+            {
+                return;
             }
-            const double angle =
-                path_description[i + 1].location.GetBearing(path_description[i].location);
-            path_description[i].bearing = static_cast<unsigned>(angle * 10);
-        }
-    }
-    via_indices.push_back(necessary_pieces + 1);
+
+            ++necessary_segments;
+
+            if (first.is_via_location)
+            { // mark the end of a leg (of several segments)
+                via_indices.push_back(necessary_segments);
+            }
+
+            const double angle = coordinate_calculation::bearing(first.location, second.location);
+            first.bearing = static_cast<short>(angle * 10);
+        });
+
+    via_indices.push_back(necessary_segments + 1);
     BOOST_ASSERT(via_indices.size() >= 2);
-    // BOOST_ASSERT(0 != necessary_pieces || path_description.empty());
     return;
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "search_engine_data.hpp"
 #include "../routing_algorithms/alternative_path.hpp"
 #include "../routing_algorithms/many_to_many.hpp"
+#include "../routing_algorithms/map_matching.hpp"
 #include "../routing_algorithms/shortest_path.hpp"
 
 #include <type_traits>
@@ -45,13 +46,18 @@ template <class DataFacadeT> class SearchEngine
     ShortestPathRouting<DataFacadeT> shortest_path;
     AlternativeRouting<DataFacadeT> alternative_path;
     ManyToManyRouting<DataFacadeT> distance_table;
+    MapMatching<DataFacadeT> map_matching;
 
     explicit SearchEngine(DataFacadeT *facade)
-        : facade(facade), shortest_path(facade, engine_working_data),
-          alternative_path(facade, engine_working_data), distance_table(facade, engine_working_data)
+        : facade(facade),
+          shortest_path(facade, engine_working_data),
+          alternative_path(facade, engine_working_data),
+          distance_table(facade, engine_working_data),
+          map_matching(facade, engine_working_data)
     {
         static_assert(!std::is_pointer<DataFacadeT>::value, "don't instantiate with ptr type");
-        static_assert(std::is_object<DataFacadeT>::value, "don't instantiate with void, function, or reference");
+        static_assert(std::is_object<DataFacadeT>::value,
+                      "don't instantiate with void, function, or reference");
     }
 
     ~SearchEngine() {}

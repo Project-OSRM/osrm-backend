@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,11 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct ExtractionNode
 {
-    ExtractionNode() : traffic_lights(false), barrier(false) { }
-    void clear()
-    {
-        traffic_lights = barrier = false;
-    }
+    ExtractionNode() : traffic_lights(false), barrier(false) {}
+    void clear() { traffic_lights = barrier = false; }
     bool traffic_lights;
     bool barrier;
 };

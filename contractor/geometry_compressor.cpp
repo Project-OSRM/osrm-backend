@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "geometry_compressor.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -34,9 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 #include <string>
-
-int free_list_maximum = 0;
-int UniqueNumber() { return ++free_list_maximum; }
 
 GeometryCompressor::GeometryCompressor()
 {
@@ -174,8 +171,8 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
             m_compressed_geometries[list_to_remove_index];
 
         // found an existing list, append it to the list of edge_id_1
-        edge_bucket_list1.insert(
-            edge_bucket_list1.end(), edge_bucket_list2.begin(), edge_bucket_list2.end());
+        edge_bucket_list1.insert(edge_bucket_list1.end(), edge_bucket_list2.begin(),
+                                 edge_bucket_list2.end());
 
         // remove the list of edge_id_2
         m_edge_id_to_list_index_map.erase(edge_id_2);
@@ -211,9 +208,8 @@ void GeometryCompressor::PrintStatistics() const
                               "\n  compressed edges: " << compressed_edges
                            << "\n  compressed geometries: " << compressed_geometries
                            << "\n  longest chain length: " << longest_chain_length
-                           << "\n  cmpr ratio: "
-                           << ((float)compressed_edges /
-                               std::max(compressed_geometries, (uint64_t)1))
+                           << "\n  cmpr ratio: " << ((float)compressed_edges /
+                                                     std::max(compressed_geometries, (uint64_t)1))
                            << "\n  avg chain length: "
                            << (float)compressed_geometries /
                                   std::max((uint64_t)1, compressed_edges);
@@ -226,16 +222,15 @@ GeometryCompressor::GetBucketReference(const EdgeID edge_id) const
     return m_compressed_geometries.at(index);
 }
 
-    NodeID GeometryCompressor::GetFirstNodeIDOfBucket(const EdgeID edge_id) const
-    {
-        const auto &bucket = GetBucketReference(edge_id);
-        BOOST_ASSERT(bucket.size() >= 2);
-        return bucket[1].first;
-    }
-    NodeID GeometryCompressor::GetLastNodeIDOfBucket(const EdgeID edge_id) const
-    {
-        const auto &bucket = GetBucketReference(edge_id);
-        BOOST_ASSERT(bucket.size() >= 2);
-        return bucket[bucket.size()-2].first;
-    }
-
+NodeID GeometryCompressor::GetFirstNodeIDOfBucket(const EdgeID edge_id) const
+{
+    const auto &bucket = GetBucketReference(edge_id);
+    BOOST_ASSERT(bucket.size() >= 2);
+    return bucket[1].first;
+}
+NodeID GeometryCompressor::GetLastNodeIDOfBucket(const EdgeID edge_id) const
+{
+    const auto &bucket = GetBucketReference(edge_id);
+    BOOST_ASSERT(bucket.size() >= 2);
+    return bucket[bucket.size() - 2].first;
+}

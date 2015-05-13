@@ -34,15 +34,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/static_rtree.hpp"
 #include "../data_structures/restriction_map.hpp"
 
-#include "../Util/git_sha.hpp"
-#include "../Util/graph_loader.hpp"
-#include "../Util/integer_range.hpp"
-#include "../Util/lua_util.hpp"
-#include "../Util/make_unique.hpp"
-#include "../Util/osrm_exception.hpp"
-#include "../Util/simple_logger.hpp"
-#include "../Util/string_util.hpp"
-#include "../Util/timing_util.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/graph_loader.hpp"
+#include "../util/integer_range.hpp"
+#include "../util/lua_util.hpp"
+#include "../util/make_unique.hpp"
+#include "../util/osrm_exception.hpp"
+#include "../util/simple_logger.hpp"
+#include "../util/string_util.hpp"
+#include "../util/timing_util.hpp"
 #include "../typedefs.h"
 
 #include <boost/filesystem/fstream.hpp>
@@ -138,13 +138,9 @@ int Prepare::Process(int argc, char *argv[])
     static_assert(sizeof(ImportEdge) == 20,
                   "changing ImportEdge type has influence on memory consumption!");
 #endif
-    NodeID number_of_node_based_nodes =
-        readBinaryOSRMGraphFromStream(input_stream,
-                                      edge_list,
-                                      barrier_node_list,
-                                      traffic_light_list,
-                                      &internal_to_external_node_map,
-                                      restriction_list);
+    NodeID number_of_node_based_nodes = readBinaryOSRMGraphFromStream(
+        input_stream, edge_list, barrier_node_list, traffic_light_list,
+        &internal_to_external_node_map, restriction_list);
     input_stream.close();
 
     if (edge_list.empty())
@@ -162,11 +158,9 @@ int Prepare::Process(int argc, char *argv[])
     DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
 
     // init node_based_edge_list, edge_based_edge_list by edgeList
-    number_of_edge_based_nodes = BuildEdgeExpandedGraph(lua_state,
-                                                        number_of_node_based_nodes,
-                                                        node_based_edge_list,
-                                                        edge_based_edge_list,
-                                                        speed_profile);
+    number_of_edge_based_nodes =
+        BuildEdgeExpandedGraph(lua_state, number_of_node_based_nodes, node_based_edge_list,
+                               edge_based_edge_list, speed_profile);
     lua_close(lua_state);
 
     TIMER_STOP(expansion);
@@ -343,9 +337,8 @@ bool Prepare::ParseArguments(int argc, char *argv[])
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "config,c",
-        boost::program_options::value<boost::filesystem::path>(&config_file_path)
-            ->default_value("contractor.ini"),
+        "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path)
+                        ->default_value("contractor.ini"),
         "Path to a configuration file.");
 
     // declare a group of options that will be allowed both on command line and in config file
@@ -354,21 +347,18 @@ bool Prepare::ParseArguments(int argc, char *argv[])
         "restrictions,r",
         boost::program_options::value<boost::filesystem::path>(&restrictions_path),
         "Restrictions file in .osrm.restrictions format")(
-        "profile,p",
-        boost::program_options::value<boost::filesystem::path>(&profile_path)
-            ->default_value("profile.lua"),
+        "profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)
+                         ->default_value("profile.lua"),
         "Path to LUA routing profile")(
-        "threads,t",
-        boost::program_options::value<unsigned int>(&requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
+        "threads,t", boost::program_options::value<unsigned int>(&requested_num_threads)
+                         ->default_value(tbb::task_scheduler_init::default_num_threads()),
         "Number of threads to use");
 
     // hidden options, will be allowed both on command line and in config file, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<boost::filesystem::path>(&input_path),
+        "input,i", boost::program_options::value<boost::filesystem::path>(&input_path),
         "Input file in .osm, .osm.bz2 or .osm.pbf format");
 
     // positional option
@@ -394,10 +384,11 @@ bool Prepare::ParseArguments(int argc, char *argv[])
                                       .run(),
                                   option_variables);
 
-    const auto& temp_config_path = option_variables["config"].as<boost::filesystem::path>();
+    const auto &temp_config_path = option_variables["config"].as<boost::filesystem::path>();
     if (boost::filesystem::is_regular_file(temp_config_path))
     {
-        boost::program_options::store(boost::program_options::parse_config_file<char>(temp_config_path.string().c_str(), cmdline_options, true),
+        boost::program_options::store(boost::program_options::parse_config_file<char>(
+                                          temp_config_path.string().c_str(), cmdline_options, true),
                                       option_variables);
     }
 
@@ -458,9 +449,8 @@ void Prepare::CheckRestrictionsFile(FingerPrint &fingerprint_orig)
     \brief Setups scripting environment (lua-scripting)
     Also initializes speed profile.
 */
-bool
-Prepare::SetupScriptingEnvironment(lua_State *lua_state,
-                                   EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile)
+bool Prepare::SetupScriptingEnvironment(
+    lua_State *lua_state, EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile)
 {
     // open utility libraries string library;
     luaL_openlibs(lua_state);
@@ -509,14 +499,12 @@ Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
     SimpleLogger().Write() << "Generating edge-expanded graph representation";
     std::shared_ptr<NodeBasedDynamicGraph> node_based_graph =
         NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
-    std::unique_ptr<RestrictionMap> restriction_map = osrm::make_unique<RestrictionMap>(restriction_list);
+    std::unique_ptr<RestrictionMap> restriction_map =
+        osrm::make_unique<RestrictionMap>(restriction_list);
     std::shared_ptr<EdgeBasedGraphFactory> edge_based_graph_factory =
-        std::make_shared<EdgeBasedGraphFactory>(node_based_graph,
-                                                std::move(restriction_map),
-                                                barrier_node_list,
-                                                traffic_light_list,
-                                                internal_to_external_node_map,
-                                                speed_profile);
+        std::make_shared<EdgeBasedGraphFactory>(node_based_graph, std::move(restriction_map),
+                                                barrier_node_list, traffic_light_list,
+                                                internal_to_external_node_map, speed_profile);
     edge_list.clear();
     edge_list.shrink_to_fit();
 
@@ -574,8 +562,6 @@ void Prepare::WriteNodeMapping()
 void Prepare::BuildRTree(std::vector<EdgeBasedNode> &node_based_edge_list)
 {
     SimpleLogger().Write() << "building r-tree ...";
-    StaticRTree<EdgeBasedNode>(node_based_edge_list,
-                               rtree_nodes_path.c_str(),
-                               rtree_leafs_path.c_str(),
-                               internal_to_external_node_map);
+    StaticRTree<EdgeBasedNode>(node_based_edge_list, rtree_nodes_path.c_str(),
+                               rtree_leafs_path.c_str(), internal_to_external_node_map);
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -40,9 +40,10 @@ template <typename Data> class ConcurrentQueue
     inline void push(const Data &data)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_not_full.wait(lock,
-                        [this]
-                        { return m_internal_queue.size() < m_internal_queue.capacity(); });
+        m_not_full.wait(lock, [this]
+                        {
+                            return m_internal_queue.size() < m_internal_queue.capacity();
+                        });
         m_internal_queue.push_back(data);
         m_not_empty.notify_one();
     }
@@ -52,9 +53,10 @@ template <typename Data> class ConcurrentQueue
     inline void wait_and_pop(Data &popped_value)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_not_empty.wait(lock,
-                         [this]
-                         { return !m_internal_queue.empty(); });
+        m_not_empty.wait(lock, [this]
+                         {
+                             return !m_internal_queue.empty();
+                         });
         popped_value = m_internal_queue.front();
         m_internal_queue.pop_front();
         m_not_full.notify_one();

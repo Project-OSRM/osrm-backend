@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM, Dennis Luxen, others
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 
 #include "../data_structures/shared_memory_factory.hpp"
-#include "../Server/DataStructures/SharedDataType.h"
-#include "../Util/git_sha.hpp"
-#include "../Util/simple_logger.hpp"
+#include "../server/data_structures/shared_datatype.hpp"
+#include "../util/git_sha.hpp"
+#include "../util/simple_logger.hpp"
 
 void delete_region(const SharedDataType region)
 {
@@ -83,8 +83,8 @@ int main()
         SimpleLogger().Write() << "----------------------";
         SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
         SimpleLogger().Write() << "Type 'Y' to acknowledge that you know what your are doing.";
-        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated " <<
-                                  "by osrm-datastore? [type 'Y' to confirm]";
+        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated "
+                               << "by osrm-datastore? [type 'Y' to confirm]";
 
         const auto letter = getchar();
         if (letter != 'Y')

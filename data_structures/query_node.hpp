@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct QueryNode
 {
     using key_type = NodeID; // type of NodeID
-    using value_type = int; // type of lat,lons
+    using value_type = int;  // type of lat,lons
 
     explicit QueryNode(int lat, int lon, NodeID node_id) : lat(lat), lon(lon), node_id(node_id) {}
     QueryNode()
