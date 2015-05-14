@@ -646,7 +646,7 @@ class StaticRTree
         const FixedPointCoordinate &input_coordinate,
         std::vector<PhantomNode> &result_phantom_node_vector,
         const unsigned max_number_of_phantom_nodes,
-        const float max_distance = 1000)
+        const float max_distance = 1100)
     {
         unsigned inspected_elements = 0;
         unsigned number_of_elements_from_big_cc = 0;
