@@ -646,7 +646,7 @@ class StaticRTree
         const FixedPointCoordinate &input_coordinate,
         std::vector<PhantomNode> &result_phantom_node_vector,
         const unsigned max_number_of_phantom_nodes,
-        const unsigned max_checked_elements = 4 * LEAF_NODE_SIZE)
+        const float max_distance = 1000)
     {
         unsigned inspected_elements = 0;
         unsigned number_of_elements_from_big_cc = 0;
@@ -669,6 +669,10 @@ class StaticRTree
         while (!traversal_queue.empty())
         {
             const IncrementalQueryCandidate current_query_node = traversal_queue.top();
+            if (current_query_node.min_dist > max_distance)
+            {
+                break;
+            }
             traversal_queue.pop();
 
             if (current_query_node.node.template is<TreeNode>())
@@ -771,9 +775,8 @@ class StaticRTree
             }
 
             // stop the search by flushing the queue
-            if ((result_phantom_node_vector.size() >= max_number_of_phantom_nodes &&
-                 number_of_elements_from_big_cc > 0) ||
-                inspected_elements >= max_checked_elements)
+            if (result_phantom_node_vector.size() >= max_number_of_phantom_nodes &&
+                 number_of_elements_from_big_cc > 0)
             {
                 traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
