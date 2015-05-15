@@ -130,7 +130,7 @@ end
 
 function node_function (node, result)
   -- parse access and barrier tags
-  local access = find_access_tag(node, access_tags_hierachy)
+  local access = Access.find_access_tag(node, access_tags_hierachy)
   if access ~= "" then
     if access_tag_blacklist[access] then
       result.barrier = true
@@ -244,7 +244,7 @@ function way_function (way, result)
        result.backward_speed = route_speeds[route]
     end
   -- public transport
-  if use_public_transport and railway and platform_speeds[railway] then
+  elseif use_public_transport and railway and platform_speeds[railway] then
     -- railway platforms (old tagging scheme)
     result.forward_speed = platform_speeds[railway]
     result.backward_speed = platform_speeds[railway]
