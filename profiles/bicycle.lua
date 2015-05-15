@@ -269,8 +269,8 @@ function way_function (way, result)
     result.forward_speed = bicycle_speeds[highway]
     result.backward_speed = bicycle_speeds[highway]
     if unsafe_highway_list[highway] then
-      result.forward_speed *= safety_penalty
-      result.backward_speed *= safety_penalty
+      result.forward_speed = result.forward_speed * safety_penalty
+      result.backward_speed = result.backward_speed * safety_penalty
     end
   elseif access and access_tag_whitelist[access] then
     -- unknown way, but valid access tag
