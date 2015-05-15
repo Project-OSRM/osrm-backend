@@ -98,8 +98,9 @@ local u_turn_penalty            = 20
 local turn_penalty              = 60
 local turn_bias                 = 1.4
 -- reduce the driving speed by 30% for unsafe roads
-local safety_penalty            = 0.7
-local use_public_transport      = false
+-- local safety_penalty            = 0.7
+local safety_penalty            = 1.0
+local use_public_transport      = true
 
 --modes
 local mode_normal = 1
@@ -268,7 +269,7 @@ function way_function (way, result)
     -- regular ways
     result.forward_speed = bicycle_speeds[highway]
     result.backward_speed = bicycle_speeds[highway]
-    if unsafe_highway_list[highway] then
+    if safety_penalty < 1 and unsafe_highway_list[highway] then
       result.forward_speed = result.forward_speed * safety_penalty
       result.backward_speed = result.backward_speed * safety_penalty
     end
