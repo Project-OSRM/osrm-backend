@@ -171,7 +171,8 @@ class Contractor
             {
                 SimpleLogger().Write(logWARNING)
                     << "Edge weight large -> "
-                    << static_cast<unsigned int>(std::max(diter->weight, 1));
+                    << static_cast<unsigned int>(std::max(diter->weight, 1)) << " : "
+                    << static_cast<unsigned int>(diter->source) << " -> " << static_cast<unsigned int>(diter->target);
             }
 #endif
             edges.emplace_back(diter->source, diter->target,
