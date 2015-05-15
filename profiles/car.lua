@@ -190,7 +190,7 @@ end
 function node_function (node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, access_tags_hierachy)
-  if access ~= "" then
+  if access and access ~= "" then
     if access_tag_blacklist[access] then
       result.barrier = true
     end
