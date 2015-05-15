@@ -12,10 +12,10 @@ access_tags_hierachy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "bicycle", "vehicle", "access" }
+unsafe_highway_list = { ["primary"] = true, ["secondary"] = true, ["tertiary"] = true, ["primary_link"] = true, ["secondary_link"] = true, ["tertiary_link"] = true}
 
-default_speed = 15
-
-walking_speed = 6
+local default_speed = 15
+local walking_speed = 6
 
 bicycle_speeds = {
   ["cycleway"] = default_speed,
@@ -91,24 +91,22 @@ surface_speeds = {
   ["sand"] = 3
 }
 
-take_minimum_of_speeds  = true
-obey_oneway       = true
-obey_bollards       = false
-use_restrictions    = true
-ignore_areas      = true    -- future feature
-traffic_signal_penalty  = 5
-u_turn_penalty      = 20
-use_turn_restrictions   = false
-turn_penalty      = 60
-turn_bias         = 1.4
-
+local obey_oneway               = true
+local obey_bollards             = false
+local ignore_areas              = true
+local u_turn_penalty            = 20
+local turn_penalty              = 60
+local turn_bias                 = 1.4
+-- reduce the driving speed by 30% for unsafe roads
+local safety_penalty            = 0.7
+local use_public_transport      = false
 
 --modes
-mode_normal = 1
-mode_pushing = 2
-mode_ferry = 3
-mode_train = 4
-mode_movable_bridge = 5
+local mode_normal = 1
+local mode_pushing = 2
+local mode_ferry = 3
+local mode_train = 4
+local mode_movable_bridge = 5
 
 local function parse_maxspeed(source)
     if not source then
@@ -131,29 +129,26 @@ function get_exceptions(vector)
 end
 
 function node_function (node, result)
-  local barrier = node:get_value_by_key("barrier")
+  -- parse access and barrier tags
   local access = find_access_tag(node, access_tags_hierachy)
-  local traffic_signal = node:get_value_by_key("highway")
+  if access ~= "" then
+    if access_tag_blacklist[access] then
+      result.barrier = true
+    end
+  else
+    local barrier = node:get_value_by_key("barrier")
+    if barrier and "" ~= barrier then
+      if not barrier_whitelist[barrier] then
+        result.barrier = true
+      end
+    end
+  end
 
-	-- flag node if it carries a traffic light
-	if traffic_signal and traffic_signal == "traffic_signals" then
-		result.traffic_lights = true
-	end
-
-	-- parse access and barrier tags
-	if access and access ~= "" then
-		if access_tag_blacklist[access] then
-			result.barrier = true
-		else
-			result.barrier = false
-		end
-	elseif barrier and barrier ~= "" then
-		if barrier_whitelist[barrier] then
-			result.barrier = false
-		else
-			result.barrier = true
-		end
-	end
+  -- check if node is a traffic light
+  local tag = node:get_value_by_key("highway")
+  if tag and "traffic_signals" == tag then
+    result.traffic_lights = true;
+  end
 end
 
 function way_function (way, result)
@@ -166,8 +161,8 @@ function way_function (way, result)
   local public_transport = way:get_value_by_key("public_transport")
   local bridge = way:get_value_by_key("bridge")
   if (not highway or highway == '') and
-  (not route or route == '') and
-  (not railway or railway=='') and
+  (not use_public_transport or not route or route == '') and
+  (not use_public_transport or not railway or railway=='') and
   (not amenity or amenity=='') and
   (not man_made or man_made=='') and
   (not public_transport or public_transport=='') and
@@ -214,10 +209,11 @@ function way_function (way, result)
     result.name = ref
   elseif name and "" ~= name then
     result.name = name
-  elseif highway then
-    -- if no name exists, use way type
-    -- this encoding scheme is excepted to be a temporary solution
-    result.name = "{highway:"..highway.."}"
+--  TODO find a better solution for encoding way type
+--  elseif highway then
+--    -- if no name exists, use way type
+--    -- this encoding scheme is excepted to be a temporary solution
+--    result.name = "{highway:"..highway.."}"
   end
 
   -- roundabout handling
@@ -247,15 +243,16 @@ function way_function (way, result)
        result.forward_speed = route_speeds[route]
        result.backward_speed = route_speeds[route]
     end
-  elseif railway and platform_speeds[railway] then
+  -- public transport
+  if use_public_transport and railway and platform_speeds[railway] then
     -- railway platforms (old tagging scheme)
     result.forward_speed = platform_speeds[railway]
     result.backward_speed = platform_speeds[railway]
-  elseif platform_speeds[public_transport] then
+  elseif use_public_transport and platform_speeds[public_transport] then
     -- public_transport platforms (new tagging platform)
     result.forward_speed = platform_speeds[public_transport]
     result.backward_speed = platform_speeds[public_transport]
-    elseif railway and railway_speeds[railway] then
+  elseif use_public_transport and railway and railway_speeds[railway] then
       result.forward_mode = mode_train
       result.backward_mode = mode_train
      -- railways
@@ -271,6 +268,10 @@ function way_function (way, result)
     -- regular ways
     result.forward_speed = bicycle_speeds[highway]
     result.backward_speed = bicycle_speeds[highway]
+    if unsafe_highway_list[highway] then
+      result.forward_speed *= safety_penalty
+      result.backward_speed *= safety_penalty
+    end
   elseif access and access_tag_whitelist[access] then
     -- unknown way, but valid access tag
     result.forward_speed = default_speed
