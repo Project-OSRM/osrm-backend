@@ -1,5 +1,7 @@
-require("lib/access")
-require("lib/maxspeed")
+-- Bicycle profile
+
+local find_access_tag = require("lib/access").find_access_tag
+local limit = require("lib/maxspeed").limit
 
 -- Begin of globals
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true }
@@ -122,7 +124,6 @@ local function parse_maxspeed(source)
     return n
 end
 
-
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
     vector:Add(v)
@@ -131,7 +132,7 @@ end
 
 function node_function (node, result)
   local barrier = node:get_value_by_key("barrier")
-  local access = Access.find_access_tag(node, access_tags_hierachy)
+  local access = find_access_tag(node, access_tags_hierachy)
   local traffic_signal = node:get_value_by_key("highway")
 
 	-- flag node if it carries a traffic light
@@ -181,7 +182,7 @@ function way_function (way, result)
   end
 
   -- access
-  local access = Access.find_access_tag(way, access_tags_hierachy)
+  local access = find_access_tag(way, access_tags_hierachy)
   if access and access_tag_blacklist[access] then
     return
   end
@@ -391,7 +392,7 @@ function way_function (way, result)
   end
 
   -- maxspeed
-  MaxSpeed.limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
+  limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
 end
 
 function turn_function (angle)
