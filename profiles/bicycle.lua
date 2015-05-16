@@ -91,6 +91,9 @@ surface_speeds = {
   ["sand"] = 3
 }
 
+traffic_signal_penalty          = 2
+use_turn_restrictions           = false
+
 local obey_oneway               = true
 local obey_bollards             = false
 local ignore_areas              = true
@@ -101,6 +104,7 @@ local turn_bias                 = 1.4
 -- local safety_penalty            = 0.7
 local safety_penalty            = 1.0
 local use_public_transport      = true
+local fallback_names            = true
 
 --modes
 local mode_normal = 1
@@ -210,11 +214,11 @@ function way_function (way, result)
     result.name = ref
   elseif name and "" ~= name then
     result.name = name
---  TODO find a better solution for encoding way type
---  elseif highway then
---    -- if no name exists, use way type
---    -- this encoding scheme is excepted to be a temporary solution
---    result.name = "{highway:"..highway.."}"
+  -- TODO find a better solution for encoding way type
+  elseif fallback_names and highway then
+    -- if no name exists, use way type
+    -- this encoding scheme is excepted to be a temporary solution
+    result.name = "{highway:"..highway.."}"
   end
 
   -- roundabout handling
