@@ -54,7 +54,7 @@ Given /^the nodes$/ do |table|
   table.hashes.each do |row|
     name = row.delete 'node'
     node = find_node_by_name(name)
-    raise "*** unknown node '#{c}'" unless node
+    raise "*** unknown node '#{name}'" unless node
     node << row
   end
 end
