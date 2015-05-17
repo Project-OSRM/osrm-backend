@@ -132,10 +132,9 @@ maxspeed_table = {
 traffic_signal_penalty          = 2
 use_turn_restrictions           = true
 
-local take_minimum_of_speeds    = false
 local obey_oneway               = true
 local obey_bollards             = true
-local ignore_areas              = true     -- future feature
+local ignore_areas              = true
 local u_turn_penalty            = 20
 
 local abs = math.abs
@@ -179,6 +178,7 @@ local function parse_maxspeed(source)
   return n
 end
 
+-- FIXME Why was this commented out?
 -- function turn_function (angle)
 --   -- print ("called at angle " .. angle )
 --   local index = math.abs(math.floor(angle/10+0.5))+1 -- +1 'coz LUA starts as idx 1
@@ -190,7 +190,7 @@ end
 function node_function (node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, access_tags_hierachy)
-  if access ~= "" then
+  if access and access ~= "" then
     if access_tag_blacklist[access] then
       result.barrier = true
     end
@@ -420,9 +420,3 @@ function way_function (way, result)
   end
 end
 
--- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT
-function node_vector_function(vector)
-  for v in vector.nodes do
-    node_function(v)
-  end
-end
