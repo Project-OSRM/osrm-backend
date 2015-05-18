@@ -651,6 +651,9 @@ class StaticRTree
         unsigned inspected_elements = 0;
         unsigned number_of_elements_from_big_cc = 0;
         unsigned number_of_elements_from_tiny_cc = 0;
+        // is true if a big cc was added to the queue to we also have a lower bound
+        // for them. it actives pruning for big components
+        bool has_big_cc = false;
 
 #ifdef NDEBUG
         unsigned pruned_elements = 0;
@@ -697,10 +700,11 @@ class StaticRTree
                         BOOST_ASSERT(0.f <= current_perpendicular_distance);
 
                         if (pruning_bound.get() >= current_perpendicular_distance ||
-                            current_edge.is_in_tiny_cc())
+                            (!has_big_cc && !current_edge.is_in_tiny_cc()))
                         {
                             pruning_bound.insert(current_perpendicular_distance);
                             traversal_queue.emplace(current_perpendicular_distance, current_edge);
+                            has_big_cc = has_big_cc || !current_edge.is_in_tiny_cc();
                         }
 #ifdef NDEBUG
                         else
@@ -812,6 +816,10 @@ class StaticRTree
         unsigned number_of_elements_from_big_cc = 0;
         unsigned number_of_elements_from_tiny_cc = 0;
 
+        // is true if a big cc was added to the queue to we also have a lower bound
+        // for them. it actives pruning for big components
+        bool has_big_cc = false;
+
         unsigned pruned_elements = 0;
 
         std::pair<double, double> projected_coordinate = {
@@ -852,10 +860,11 @@ class StaticRTree
                         BOOST_ASSERT(0.f <= current_perpendicular_distance);
 
                         if (pruning_bound.get() >= current_perpendicular_distance ||
-                            current_edge.is_in_tiny_cc())
+                            (!has_big_cc && !current_edge.is_in_tiny_cc()))
                         {
                             pruning_bound.insert(current_perpendicular_distance);
                             traversal_queue.emplace(current_perpendicular_distance, current_edge);
+                            has_big_cc = has_big_cc || !current_edge.is_in_tiny_cc();
                         }
                         else
                         {
