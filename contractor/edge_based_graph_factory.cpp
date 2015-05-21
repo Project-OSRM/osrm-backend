@@ -40,6 +40,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <limits>
 
+
+bool checkInvariant(const NodeBasedDynamicGraph& graph, const NodeID source, const EdgeID edge)
+{
+    const auto& data = graph.GetEdgeData(edge);
+    if (!data.forward)
+    {
+        auto target = graph.GetTarget(edge);
+        if (target == SPECIAL_NODEID)
+        {
+            SimpleLogger().Write(logWARNING) << "Invalid target";
+            return false;
+        }
+
+        auto rev_edge = graph.FindEdge(target, source);
+        if (rev_edge == SPECIAL_EDGEID)
+        {
+            SimpleLogger().Write(logWARNING) << "Edge not found";
+            return false;
+        }
+
+        const auto& rev_data = graph.GetEdgeData(rev_edge);
+        if (!rev_data.forward)
+        {
+            SimpleLogger().Write(logWARNING) << "Reverse edge is not forward";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
                                    std::shared_ptr<RestrictionMap> restriction_map,
                                    std::unique_ptr<std::vector<NodeID>> barrier_node_list,
@@ -234,6 +265,31 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
                                 lua_State *lua_state)
 {
 
+#ifndef NDEBUG
+    SimpleLogger().Write() << "Verifying the graph structure before compression:";
+    for (const auto current_node : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+    {
+        for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
+        {
+            EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
+            if (!edge_data.forward)
+            {
+
+                auto target = m_node_based_graph->GetTarget(current_edge);
+                BOOST_ASSERT(target != SPECIAL_NODEID);
+
+                auto rev_edge = m_node_based_graph->FindEdge(target, current_node);
+                BOOST_ASSERT(rev_edge != SPECIAL_EDGEID);
+
+                const auto& rev_data = m_node_based_graph->GetEdgeData(rev_edge);
+                BOOST_ASSERT(rev_data.forward);
+                continue;
+            }
+        }
+    }
+    SimpleLogger().Write() << " -> graph is ok.";
+#endif
+
     TIMER_START(geometry);
     CompressGeometry();
     TIMER_STOP(geometry);
@@ -409,6 +465,27 @@ void EdgeBasedGraphFactory::CompressGeometry()
                 reverse_e1, reverse_e2, node_v, node_u, reverse_weight1,
                 reverse_weight2 + (has_node_penalty ? speed_profile.traffic_signal_penalty : 0));
             ++removed_node_count;
+
+#ifndef NDEBUG
+            if (!checkInvariant(*m_node_based_graph, node_u, forward_e1))
+            {
+                SimpleLogger().Write(logWARNING) << "Contracting " << node_u << " " << node_v << " " << node_w;
+                SimpleLogger().Write(logWARNING) << " coordinates "
+                    << "(" << m_node_info_list[node_u].lat << ", " << m_node_info_list[node_u].lon << ") "
+                    << "(" << m_node_info_list[node_v].lat << ", " << m_node_info_list[node_v].lon << ") "
+                    << "(" << m_node_info_list[node_w].lat << ", " << m_node_info_list[node_w].lon << ") ";
+                BOOST_ASSERT_MSG(false, "Graph invariant is not fulfilled.");
+            }
+            if (!checkInvariant(*m_node_based_graph, node_w, reverse_e1))
+            {
+                SimpleLogger().Write(logWARNING) << "Contracting " << node_u << " " << node_v << " " << node_w;
+                SimpleLogger().Write(logWARNING) << " coordinates "
+                    << "(" << m_node_info_list[node_u].lat << ", " << m_node_info_list[node_u].lon << ") "
+                    << "(" << m_node_info_list[node_v].lat << ", " << m_node_info_list[node_v].lon << ") "
+                    << "(" << m_node_info_list[node_w].lat << ", " << m_node_info_list[node_w].lon << ") ";
+                BOOST_ASSERT_MSG(false, "Graph invariant is not fulfilled.");
+            }
+#endif
 
         }
     }
