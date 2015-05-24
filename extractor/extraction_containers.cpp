@@ -419,7 +419,7 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
     file_out_stream.write((char *)&number_of_used_edges, sizeof(unsigned));
     std::cout << "ok" << std::endl;
 
-    SimpleLogger().Write() << "Processed " << number_of_used_edges << " nodes";
+    SimpleLogger().Write() << "Processed " << number_of_used_edges << " edges";
 }
 
 void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
