@@ -142,12 +142,26 @@ NodeID loadEdgesFromFile(std::istream &input_stream,
 
     input_stream.read((char *) edge_list.data(), m * sizeof(NodeBasedEdge));
 
+    BOOST_ASSERT(edge_list.size() > 0);
+
 #ifndef NDEBUG
-    for (const auto& edge : edge_list)
+    SimpleLogger().Write() << "Validating loaded edges...";
+    std::sort(edge_list.begin(), edge_list.end(),
+            [](const NodeBasedEdge& lhs, const NodeBasedEdge& rhs)
+            {
+                return (lhs.source < rhs.source) || (lhs.source == rhs.source && lhs.target < rhs.target);
+            });
+    for (auto i = 1u; i < edge_list.size(); ++i)
     {
+        const auto& edge = edge_list[i];
+        const auto& prev_edge = edge_list[i-1];
+
         BOOST_ASSERT_MSG(edge.weight > 0, "loaded null weight");
-        BOOST_ASSERT_MSG(edge.forward || edge.backward, "loaded invalid direction");
+        BOOST_ASSERT_MSG(edge.forward, "edge must be oriented in forward direction");
         BOOST_ASSERT_MSG(edge.travel_mode != TRAVEL_MODE_INACCESSIBLE, "loaded non-accessible");
+
+        BOOST_ASSERT_MSG(edge.source != edge.target, "loaded edges contain a loop");
+        BOOST_ASSERT_MSG(edge.source != prev_edge.source || edge.target != prev_edge.target, "loaded edges contain a multi edge");
     }
 #endif
 

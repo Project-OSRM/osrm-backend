@@ -74,7 +74,92 @@ struct NodeBasedEdgeData
 
 using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 
+inline bool validateNeighborHood(const NodeBasedDynamicGraph& graph, const NodeID source)
+{
+    for (auto edge = graph.BeginEdges(source); edge < graph.EndEdges(source); ++edge)
+    {
+        const auto& data = graph.GetEdgeData(edge);
+        if (!data.forward && !data.backward)
+        {
+            SimpleLogger().Write(logWARNING) << "Invalid edge directions";
+            return false;
+        }
+
+        auto target = graph.GetTarget(edge);
+        if (target == SPECIAL_NODEID)
+        {
+            SimpleLogger().Write(logWARNING) << "Invalid edge target";
+            return false;
+        }
+
+        bool found_reverse = false;
+        for (auto rev_edge = graph.BeginEdges(target); rev_edge < graph.EndEdges(target); ++rev_edge)
+        {
+            auto rev_target = graph.GetTarget(rev_edge);
+            if (rev_target == SPECIAL_NODEID)
+            {
+                SimpleLogger().Write(logWARNING) << "Invalid reverse edge target";
+                return false;
+            }
+
+            if (rev_target != source)
+            {
+                continue;
+            }
+
+            if (found_reverse)
+            {
+                SimpleLogger().Write(logWARNING) << "Found more than one reverse edge";
+                return false;
+            }
+
+            const auto& rev_data = graph.GetEdgeData(rev_edge);
+
+            // edge is incoming, this must be an outgoing edge
+            if (data.backward && !rev_data.forward)
+            {
+                SimpleLogger().Write(logWARNING) << "Found no outgoing edge to an incoming edge!";
+                return false;
+            }
+
+            // edge is bi-directional, reverse must be as well
+            if (data.forward && data.backward && (!rev_data.forward || !rev_data.backward))
+            {
+                SimpleLogger().Write(logWARNING) << "Found bi-directional edge that is not bi-directional to both ends";
+                return false;
+            }
+
+            found_reverse = true;
+
+        }
+
+        if (!found_reverse)
+        {
+            SimpleLogger().Write(logWARNING) << "Could not find reverse edge";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// This function checks if the overal graph is undirected (has an edge in each direction).
+inline bool validateNodeBasedGraph(const NodeBasedDynamicGraph& graph)
+{
+    for (auto source = 0u; source < graph.GetNumberOfNodes(); ++source)
+    {
+        if (!validateNeighborHood(graph, source))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // Factory method to create NodeBasedDynamicGraph from NodeBasedEdges
+// The since DynamicGraph expects directed edges, we need to insert
+// two edges for undirected edges.
 inline std::shared_ptr<NodeBasedDynamicGraph>
 NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<NodeBasedEdge> &input_edge_list)
 {
@@ -83,9 +168,27 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<NodeBasedE
 
     DeallocatingVector<NodeBasedDynamicGraph::InputEdge> edges_list;
     NodeBasedDynamicGraph::InputEdge edge;
+
+    // Since DynamicGraph assumes directed edges we have to make sure we transformed
+    // the compressed edge format into single directed edges. We do this to make sure
+    // every node also knows its incoming edges, not only its outgoing edges and use the backward=true
+    // flag to indicate which is which.
+    //
+    // We do the transformation in the following way:
+    //
+    // if the edge (a, b) is split:
+    //   1. this edge must be in only one direction, so its a --> b
+    //   2. there must be another directed edge b --> a somewhere in the data
+    // if the edge (a, b) is not split:
+    //   1. this edge be on of a --> b od a <-> b
+    //      (a <-- b gets reducted to b --> a)
+    //   2. a --> b will be transformed to a --> b and b <-- a
+    //   3. a <-> b will be transformed to a <-> b and b <-> a (I think a --> b and b <-- a would work as well though)
     for (const NodeBasedEdge &import_edge : input_edge_list)
     {
-        BOOST_ASSERT(import_edge.forward || import_edge.backward);
+        // edges that are not forward get converted by flipping the end points
+        BOOST_ASSERT(import_edge.forward);
+
         if (import_edge.forward)
         {
             edge.source = import_edge.source;
@@ -93,20 +196,10 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<NodeBasedE
             edge.data.forward = import_edge.forward;
             edge.data.backward = import_edge.backward;
         }
-        else
-        {
-            edge.source = import_edge.target;
-            edge.target = import_edge.source;
-            edge.data.backward = import_edge.forward;
-            edge.data.forward = import_edge.backward;
-        }
 
-        if (edge.source == edge.target)
-        {
-            continue;
-        }
+        BOOST_ASSERT(edge.source != edge.target);
 
-        edge.data.distance = (std::max)(static_cast<int>(import_edge.weight), 1);
+        edge.data.distance = static_cast<int>(import_edge.weight);
         BOOST_ASSERT(edge.data.distance > 0);
         edge.data.shortcut = false;
         edge.data.roundabout = import_edge.roundabout;
@@ -126,82 +219,17 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<NodeBasedE
         }
     }
 
-    // sort edges by source node id
     tbb::parallel_sort(edges_list.begin(), edges_list.end());
 
-    // this code removes multi-edges
-    // my merging mutli-edges bi-directional edges can become directional again!
-    // Consider the following example:
-    // a --5-- b
-    //  `--1--^
-    // After merging we need to split {a, b, 5} into (a, b, 1) and (b, a, 5)
-    NodeID edge_count = 0;
-    for (NodeID i = 0; i < edges_list.size();)
-    {
-        const NodeID source = edges_list[i].source;
-        const NodeID target = edges_list[i].target;
-        // remove eigenloops
-        if (source == target)
-        {
-            i++;
-            continue;
-        }
-        NodeBasedDynamicGraph::InputEdge forward_edge;
-        NodeBasedDynamicGraph::InputEdge reverse_edge;
-        forward_edge = reverse_edge = edges_list[i];
-        forward_edge.data.forward = reverse_edge.data.backward = true;
-        forward_edge.data.backward = reverse_edge.data.forward = false;
-        forward_edge.data.shortcut = reverse_edge.data.shortcut = false;
-        forward_edge.data.distance = reverse_edge.data.distance = std::numeric_limits<int>::max();
-        // remove parallel edges and set current distance values
-        while (i < edges_list.size() && edges_list[i].source == source &&
-               edges_list[i].target == target)
-        {
-            if (edges_list[i].data.forward)
-            {
-                forward_edge.data.distance =
-                    std::min(edges_list[i].data.distance, forward_edge.data.distance);
-            }
-            if (edges_list[i].data.backward)
-            {
-                reverse_edge.data.distance =
-                    std::min(edges_list[i].data.distance, reverse_edge.data.distance);
-            }
-            ++i;
-        }
-        // merge edges (s,t) and (t,s) into bidirectional edge
-        if (forward_edge.data.distance == reverse_edge.data.distance)
-        {
-            if (static_cast<int>(forward_edge.data.distance) != std::numeric_limits<int>::max())
-            {
-                forward_edge.data.backward = true;
-                BOOST_ASSERT(edge_count < i);
-                edges_list[edge_count++] = forward_edge;
-            }
-        }
-        else
-        { // insert seperate edges
-          // this case can only happen if we merged a bi-directional edge with a directional
-          // edge above, this incrementing i and making it safe to overwrite the next element
-          // as well
-            if (static_cast<int>(forward_edge.data.distance) != std::numeric_limits<int>::max())
-            {
-                BOOST_ASSERT(edge_count < i);
-                edges_list[edge_count++] = forward_edge;
-            }
-            if (static_cast<int>(reverse_edge.data.distance) != std::numeric_limits<int>::max())
-            {
-                BOOST_ASSERT(edge_count < i);
-                edges_list[edge_count++] = reverse_edge;
-            }
-        }
-    }
-    edges_list.resize(edge_count);
-    SimpleLogger().Write() << "merged " << edges_list.size() - edge_count << " edges out of "
-                           << edges_list.size();
-
-    return std::make_shared<NodeBasedDynamicGraph>(
+    auto graph = std::make_shared<NodeBasedDynamicGraph>(
         static_cast<NodeBasedDynamicGraph::NodeIterator>(number_of_nodes), edges_list);
+
+
+#ifndef NDEBUG
+    BOOST_ASSERT(validateNodeBasedGraph(*graph));
+#endif
+
+    return graph;
 }
 
 #endif // NODE_BASED_GRAPH_HPP
