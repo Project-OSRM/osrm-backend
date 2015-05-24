@@ -150,19 +150,19 @@ template <typename GraphT> class TarjanSCC
                         // Traverse outgoing edges
                         if (barrier_node_set.find(v) != barrier_node_set.end() && u != vprime)
                         {
-                            // continue;
+                            continue;
                         }
 
                         if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
                             vprime == to_node_of_only_restriction)
                         {
                             // At an only_-restriction but not at the right turn
-                            // continue;
+                            continue;
                         }
 
                         if (m_restriction_map.CheckIfTurnIsRestricted(u, v, vprime))
                         {
-                            // continue;
+                            continue;
                         }
 
                         if (SPECIAL_NODEID == tarjan_node_list[vprime].index)
