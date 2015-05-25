@@ -97,20 +97,20 @@ template <typename GraphT> class TarjanSCC
         TIMER_START(SCC_RUN);
         const NodeID max_node_id = m_node_based_graph->GetNumberOfNodes();
 
-        // The following is a hack to distinguish between stuff that happens
-        // before the recursive call and stuff that happens after
         std::stack<TarjanStackFrame> recursion_stack;
-        // true = stuff before, false = stuff after call
         std::stack<NodeID> tarjan_stack;
         std::vector<TarjanNode> tarjan_node_list(max_node_id);
         unsigned component_index = 0, size_of_current_component = 0;
         unsigned index = 0;
+        // The following is a hack to distinguish between stuff that happens
+        // before the recursive call and stuff that happens after
+        // true = stuff before, false = stuff after call
         std::vector<bool> processing_node_before_recursion(max_node_id, true);
         for (const NodeID node : osrm::irange(0u, max_node_id))
         {
             if (SPECIAL_NODEID == components_index[node])
             {
-                recursion_stack.emplace(TarjanStackFrame(node, node));
+                recursion_stack.emplace(node, node);
             }
 
             while (!recursion_stack.empty())
@@ -122,7 +122,7 @@ template <typename GraphT> class TarjanSCC
 
                 const bool before_recursion = processing_node_before_recursion[v];
 
-                if (before_recursion && tarjan_node_list[v].index != UINT_MAX)
+                if (before_recursion && tarjan_node_list[v].index != SPECIAL_NODEID)
                 {
                     continue;
                 }
@@ -167,6 +167,7 @@ template <typename GraphT> class TarjanSCC
 
                         if (SPECIAL_NODEID == tarjan_node_list[vprime].index)
                         {
+                            // recursively explore vprime
                             recursion_stack.emplace(TarjanStackFrame(vprime, v));
                         }
                         else
