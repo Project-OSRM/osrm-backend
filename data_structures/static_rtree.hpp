@@ -651,19 +651,10 @@ class StaticRTree
         unsigned inspected_elements = 0;
         unsigned number_of_elements_from_big_cc = 0;
         unsigned number_of_elements_from_tiny_cc = 0;
-        // is true if a big cc was added to the queue to we also have a lower bound
-        // for them. it actives pruning for big components
-        bool has_big_cc = false;
 
-#ifdef NDEBUG
-        unsigned pruned_elements = 0;
-#endif
         std::pair<double, double> projected_coordinate = {
             mercator::lat2y(input_coordinate.lat / COORDINATE_PRECISION),
             input_coordinate.lon / COORDINATE_PRECISION};
-
-        // upper bound pruning technique
-        upper_bound<float> pruning_bound(max_number_of_phantom_nodes);
 
         // initialize queue with root element
         std::priority_queue<IncrementalQueryCandidate> traversal_queue;
@@ -699,19 +690,7 @@ class StaticRTree
                         // distance must be non-negative
                         BOOST_ASSERT(0.f <= current_perpendicular_distance);
 
-                        if (pruning_bound.get() >= current_perpendicular_distance ||
-                            (!has_big_cc && !current_edge.is_in_tiny_cc()))
-                        {
-                            pruning_bound.insert(current_perpendicular_distance);
-                            traversal_queue.emplace(current_perpendicular_distance, current_edge);
-                            has_big_cc = has_big_cc || !current_edge.is_in_tiny_cc();
-                        }
-#ifdef NDEBUG
-                        else
-                        {
-                            ++pruned_elements;
-                        }
-#endif
+                        traversal_queue.emplace(current_perpendicular_distance, current_edge);
                     }
                 }
                 else
