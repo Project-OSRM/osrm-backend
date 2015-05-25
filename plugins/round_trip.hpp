@@ -119,25 +119,31 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // 3. repeat 2 until there is no unvisited location
         // 4. return route back to starting point
         // 5. compute route
+        // 6. repeat 1-5 with different starting points and choose iteration with shortest trip
         // 6. DONE!
         //////////////////////////////////////////////////////////////////////////////////////////////////
 
         const auto number_of_locations = phantom_node_vector.size();
+        // min_route is the shortest route found
         InternalRouteResult min_route;
-        std::vector<int> min_loc_permutation;
         min_route.shortest_path_length = std::numeric_limits<int>::max();
+        // min_loc_permutation stores the order of visited locations of the shortest route
+        std::vector<int> min_loc_permutation;
 
-        std::vector<bool> lonely_island(number_of_locations, false);
-        std::vector<bool> connected_node(number_of_locations, false);
-
+        // is_lonely_island[i] indicates whether node i is a node that cannot be reached from the other nodes
+        std::vector<bool> is_lonely_island(number_of_locations, false);
         int count_unreachables;
-        // SET RANDOM START LOCATION
+
+        std::vector<bool> is_connected_node(number_of_locations, false);
+
+        // ALWAYS START AT ANOTHER STARTING POINT
         for(int start_node = 0; start_node < number_of_locations; ++start_node)
         {
-            // check whether this start node is a lonely island
-            if (!connected_node[start_node])
+        
+            if (!is_connected_node[start_node])
             {
-                if (lonely_island[start_node])
+                // if node is a lonely island it is an unsuitable node to start from and shall be skipped
+                if (is_lonely_island[start_node])
                     continue;
                 count_unreachables = 0;
                 auto start_dist_begin = result_table->begin() + (start_node * number_of_locations);
@@ -148,75 +154,79 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                     }
                 }
                 if (count_unreachables >= number_of_locations) {
-                    lonely_island[start_node] = true;
+                    is_lonely_island[start_node] = true;
                     continue;
                 }
             }
 
             int curr_node = start_node;   
-            connected_node[curr_node] = true;
+            is_connected_node[curr_node] = true;
             InternalRouteResult raw_route;
+            //TODO: Should we always use the same vector or does it not matter at all because of loop scope?
             std::vector<int> loc_permutation(number_of_locations, -1);
             loc_permutation[start_node] = 0;
+            // visited[i] indicates whether node i was already visited by the salesman
             std::vector<bool> visited(number_of_locations, false);
             visited[start_node] = true;
 
-            PhantomNodes subroute;
+            PhantomNodes viapoint;
             // 3. REPEAT FOR EVERY UNVISITED NODE
             for(int stopover = 1; stopover < number_of_locations; ++stopover)
             {
-                auto row_begin_iterator = result_table->begin() + (curr_node * number_of_locations);
-                auto row_end_iterator = result_table->begin() + ((curr_node + 1) * number_of_locations);
                 int min_dist = std::numeric_limits<int>::max();
                 int min_id = -1;
 
                 // 2. FIND NEAREST NEIGHBOUR
+                auto row_begin_iterator = result_table->begin() + (curr_node * number_of_locations);
+                auto row_end_iterator = result_table->begin() + ((curr_node + 1) * number_of_locations);
                 for (auto it = row_begin_iterator; it != row_end_iterator; ++it) {
                     auto index = std::distance(row_begin_iterator, it); 
-                    if (!lonely_island[index] && !visited[index] && *it < min_dist)
+                    if (!is_lonely_island[index] && !visited[index] && *it < min_dist)
                     {
                         min_dist = *it;
                         min_id = index;
                     }
                 }
+                // in case there was no unvisited and reachable node found, it means that all remaining (unvisited) nodes must be lonely islands
                 if (min_id == -1)
                 {
                     for(int loc = 0; loc < visited.size(); ++loc) {
                         if (!visited[loc]) {
-                            lonely_island[loc] = true;
+                            is_lonely_island[loc] = true;
                         }
                     }
                     break;
                 }
+                // set the nearest unvisited location as the next stopover
                 else
                 {
-                    connected_node[min_id] = true;
+                    is_connected_node[min_id] = true;
                     loc_permutation[min_id] = stopover;
                     visited[min_id] = true;
-                    subroute = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
-                    raw_route.segment_end_coordinates.emplace_back(subroute);
+                    viapoint = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
+                    raw_route.segment_end_coordinates.emplace_back(viapoint);
                     curr_node = min_id;
                 }
             }
+            // TODO: merge is_connected_node and is_lonely_island
+            // TODO: rename stopover to via point
 
             // 4. ROUTE BACK TO STARTING POINT
-            subroute = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[start_node][0]};
-            raw_route.segment_end_coordinates.emplace_back(subroute);
+            viapoint = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[start_node][0]};
+            raw_route.segment_end_coordinates.emplace_back(viapoint);
 
             // 5. COMPUTE ROUTE
             search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
             // SimpleLogger().Write() << "Route starting at " << start_node << " with length " << raw_route.shortest_path_length;
+            
+            // check round trip with this starting point is shorter than the shortest round trip found till now
             if (raw_route.shortest_path_length < min_route.shortest_path_length) {
                 min_route = raw_route;
                 min_loc_permutation = loc_permutation;
             }
         }
-        // SimpleLogger().Write() << "Shortest route has length "  << min_route.shortest_path_length;
-        for(int loc = 0; loc < lonely_island.size(); ++loc) {
-            if (lonely_island[loc]) {
-                SimpleLogger().Write() << "Loc " << loc << " is a lonely island.";
-            }
-        }
+
+        SimpleLogger().Write() << "Shortest route " << min_route.shortest_path_length;
 
         // return result to json
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
