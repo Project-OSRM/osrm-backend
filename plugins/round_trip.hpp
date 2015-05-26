@@ -171,8 +171,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 min_loc_permutation = loc_permutation;
             }
         }
-
-        SimpleLogger().Write() << "Shortest route " << min_route.shortest_path_length;
     }
 
   public:
@@ -231,7 +229,12 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // compute TSP round trip
         InternalRouteResult min_route;
         std::vector<int> min_loc_permutation;
+        TIMER_START(tsp_nn);
         NearestNeighbour(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
+        TIMER_STOP(tsp_nn);
+
+        SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
+        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp_nn);
 
         // return result to json
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
@@ -242,7 +245,9 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         osrm::json::Array json_loc_permutation;
         json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
-        json_result.values["loc_permutation"] = json_loc_permutation;
+        json_result.values["nn_loc_permutation"] = json_loc_permutation;
+        json_result.values["nn_distance"] = min_route.shortest_path_length;
+        json_result.values["nn_runtime"] = TIMER_MSEC(tsp_nn);
 
         return 200;
     }
