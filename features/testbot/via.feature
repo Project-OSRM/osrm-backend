@@ -97,6 +97,6 @@ Feature: Via points
             | waypoints | route                      | distance  | turns                                                            |
             | 1,3       | ab                         | 200m +-1  | head,destination                                                 |
             | 3,1       | ab,bc,cd,da,ab             | 800m +-1  | head,right,right,right,right,destination                         |
-            | 1,2,3     | ab                         | 200m +-1  | head,destination                                                 |
+            | 1,2,3     | ab,ab                      | 200m +-1  | head,via,destination                                             |
             | 1,3,2     | ab,bc,cd,da,ab             | 1100m +-1 | head,right,right,right,right,destination                         |
             | 3,2,1     | ab,bc,cd,da,ab,bc,cd,da,ab | 1600m +-1 | head,right,right,right,right,right,right,right,right,destination |
