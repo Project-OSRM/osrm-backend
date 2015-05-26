@@ -130,17 +130,18 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // min_loc_permutation stores the order of visited locations of the shortest route
         std::vector<int> min_loc_permutation;
 
-        // is_lonely_island[i] indicates whether node i is a node that cannot be reached from the other nodes
-        std::vector<bool> is_lonely_island(number_of_locations, false);
+        // is_lonely_island[i] indicates whether node i is a node that cannot be reached from other nodes
+        //  1 means that node i is a lonely island
+        //  0 means that it is not known for node i
+        // -1 means that node i is not a lonely island but a reachable, connected node
+        std::vector<int> is_lonely_island(number_of_locations, 0);
         int count_unreachables;
-
-        std::vector<bool> is_connected_node(number_of_locations, false);
 
         // ALWAYS START AT ANOTHER STARTING POINT
         for(int start_node = 0; start_node < number_of_locations; ++start_node)
         {
         
-            if (!is_connected_node[start_node])
+            if (is_lonely_island[start_node] >= 0)
             {
                 // if node is a lonely island it is an unsuitable node to start from and shall be skipped
                 if (is_lonely_island[start_node])
@@ -154,13 +155,13 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                     }
                 }
                 if (count_unreachables >= number_of_locations) {
-                    is_lonely_island[start_node] = true;
+                    is_lonely_island[start_node] = 1;
                     continue;
                 }
             }
 
             int curr_node = start_node;   
-            is_connected_node[curr_node] = true;
+            is_lonely_island[curr_node] = -1;
             InternalRouteResult raw_route;
             //TODO: Should we always use the same vector or does it not matter at all because of loop scope?
             std::vector<int> loc_permutation(number_of_locations, -1);
@@ -181,7 +182,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 auto row_end_iterator = result_table->begin() + ((curr_node + 1) * number_of_locations);
                 for (auto it = row_begin_iterator; it != row_end_iterator; ++it) {
                     auto index = std::distance(row_begin_iterator, it); 
-                    if (!is_lonely_island[index] && !visited[index] && *it < min_dist)
+                    if (is_lonely_island[index] < 1 && !visited[index] && *it < min_dist)
                     {
                         min_dist = *it;
                         min_id = index;
@@ -192,7 +193,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 {
                     for(int loc = 0; loc < visited.size(); ++loc) {
                         if (!visited[loc]) {
-                            is_lonely_island[loc] = true;
+                            is_lonely_island[loc] = 1;
                         }
                     }
                     break;
@@ -200,7 +201,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 // set the nearest unvisited location as the next via_point
                 else
                 {
-                    is_connected_node[min_id] = true;
+                    is_lonely_island[min_id] = -1;
                     loc_permutation[min_id] = via_point;
                     visited[min_id] = true;
                     viapoint = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
@@ -208,7 +209,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                     curr_node = min_id;
                 }
             }
-            // TODO: merge is_connected_node and is_lonely_island
 
             // 4. ROUTE BACK TO STARTING POINT
             viapoint = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[start_node][0]};
