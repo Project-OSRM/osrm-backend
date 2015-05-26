@@ -61,7 +61,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
     void NearestNeighbour(const RouteParameters & route_parameters,
                           const PhantomNodeArray & phantom_node_vector,
-                          std::vector<EdgeWeight> & result_table, 
+                          std::vector<EdgeWeight> & dist_table, 
                           InternalRouteResult & min_route,
                           std::vector<int> & min_loc_permutation) {
         //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,8 +95,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 if (is_lonely_island[start_node])
                     continue;
                 count_unreachables = 0;
-                auto start_dist_begin = result_table.begin() + (start_node * number_of_locations);
-                auto start_dist_end = result_table.begin() + ((start_node + 1) * number_of_locations);
+                auto start_dist_begin = dist_table.begin() + (start_node * number_of_locations);
+                auto start_dist_end = dist_table.begin() + ((start_node + 1) * number_of_locations);
                 for (auto it2 = start_dist_begin; it2 != start_dist_end; ++it2) {
                     if (*it2 == 0 || *it2 == std::numeric_limits<int>::max()) {
                         ++count_unreachables;
@@ -126,8 +126,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 int min_id = -1;
 
                 // 2. FIND NEAREST NEIGHBOUR
-                auto row_begin_iterator = result_table.begin() + (curr_node * number_of_locations);
-                auto row_end_iterator = result_table.begin() + ((curr_node + 1) * number_of_locations);
+                auto row_begin_iterator = dist_table.begin() + (curr_node * number_of_locations);
+                auto row_end_iterator = dist_table.begin() + ((curr_node + 1) * number_of_locations);
                 for (auto it = row_begin_iterator; it != row_end_iterator; ++it) {
                     auto index = std::distance(row_begin_iterator, it); 
                     if (is_lonely_island[index] < 1 && !visited[index] && *it < min_dist)
