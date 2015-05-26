@@ -171,7 +171,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
             PhantomNodes viapoint;
             // 3. REPEAT FOR EVERY UNVISITED NODE
-            for(int stopover = 1; stopover < number_of_locations; ++stopover)
+            for(int via_point = 1; via_point < number_of_locations; ++via_point)
             {
                 int min_dist = std::numeric_limits<int>::max();
                 int min_id = -1;
@@ -197,11 +197,11 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                     }
                     break;
                 }
-                // set the nearest unvisited location as the next stopover
+                // set the nearest unvisited location as the next via_point
                 else
                 {
                     is_connected_node[min_id] = true;
-                    loc_permutation[min_id] = stopover;
+                    loc_permutation[min_id] = via_point;
                     visited[min_id] = true;
                     viapoint = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
                     raw_route.segment_end_coordinates.emplace_back(viapoint);
@@ -209,7 +209,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 }
             }
             // TODO: merge is_connected_node and is_lonely_island
-            // TODO: rename stopover to via point
 
             // 4. ROUTE BACK TO STARTING POINT
             viapoint = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[start_node][0]};
