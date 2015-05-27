@@ -59,6 +59,21 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     DataFacadeT *facade;
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
+    void FarthestInsertion(const RouteParameters & route_parameters,
+                           const PhantomNodeArray & phantom_node_vector,
+                           std::vector<EdgeWeight> & dist_table, 
+                           InternalRouteResult & min_route,
+                           std::vector<int> & min_loc_permutation) {
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+        // START FARTHEST INSERTION HERE
+        // 1. start at a random round trip of 2 locations
+        // 2. find the location that is the farthest away from the visited locations
+        // 3. add the found location to the current round trip such that round trip is the shortest
+        // 4. repeat 2-3 until all locations are visited
+        // 5. DONE!
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+
     void NearestNeighbour(const RouteParameters & route_parameters,
                           const PhantomNodeArray & phantom_node_vector,
                           std::vector<EdgeWeight> & dist_table, 
@@ -72,7 +87,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // 4. return route back to starting point
         // 5. compute route
         // 6. repeat 1-5 with different starting points and choose iteration with shortest trip
-        // 6. DONE!
+        // 7. DONE!
         //////////////////////////////////////////////////////////////////////////////////////////////////
 
         const auto number_of_locations = phantom_node_vector.size();
