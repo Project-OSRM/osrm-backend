@@ -80,11 +80,16 @@ class RequestParser
         space_before_header_value,
         header_value,
         expecting_newline_2,
-        expecting_newline_3
+        expecting_newline_3,
+        post_O,
+        post_S,
+        post_T,
+        post_request
     } state;
 
     header current_header;
     compression_type selected_compression;
+    bool is_post_header;
 };
 
 } // namespace http
