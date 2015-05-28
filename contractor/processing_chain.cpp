@@ -211,7 +211,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
     for (const auto edge : osrm::irange<std::size_t>(0, contracted_edge_list->size()))
     {
         // no eigen loops
-        BOOST_ASSERT(contracted_edge_list->(edge).source != contracted_edge_list->(edge).target);
+        BOOST_ASSERT((*contracted_edge_list)[edge].source != (*contracted_edge_list)[edge].target);
         current_edge.target = (*contracted_edge_list)[edge].target;
         current_edge.data = (*contracted_edge_list)[edge].data;
 
@@ -221,12 +221,12 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
         if (current_edge.data.distance <= 0)
         {
             SimpleLogger().Write(logWARNING) << "Edge: " << edge
-                                             << ",source: " << contracted_edge_list->at(edge).source
-                                             << ", target: " << contracted_edge_list->at(edge).target
+                                             << ",source: " << (*contracted_edge_list)[edge].source
+                                             << ", target: " << (*contracted_edge_list)[edge].target
                                              << ", dist: " << current_edge.data.distance;
 
             SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
-                                             << contracted_edge_list->at(edge).source << "/"
+                                             << (*contracted_edge_list)[edge].source << "/"
                                              << node_array.size() - 1;
             return 1;
         }
