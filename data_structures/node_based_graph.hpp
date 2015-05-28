@@ -72,14 +72,7 @@ struct NodeBasedEdgeData
     }
 };
 
-struct SimpleEdgeData
-{
-    SimpleEdgeData() : capacity(0) {}
-    EdgeWeight capacity;
-};
-
 using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
-using SimpleNodeBasedDynamicGraph = DynamicGraph<SimpleEdgeData>;
 
 // Factory method to create NodeBasedDynamicGraph from ImportEdges
 inline std::shared_ptr<NodeBasedDynamicGraph>
@@ -195,84 +188,6 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
 
     auto graph = std::make_shared<NodeBasedDynamicGraph>(
         static_cast<NodeBasedDynamicGraph::NodeIterator>(number_of_nodes), edges_list);
-    return graph;
-}
-
-template <class SimpleEdgeT>
-inline std::shared_ptr<SimpleNodeBasedDynamicGraph>
-SimpleNodeBasedDynamicGraphFromEdges(int number_of_nodes, std::vector<SimpleEdgeT> &input_edge_list)
-{
-    static_assert(sizeof(NodeBasedEdgeData) == 16,
-                  "changing node based edge data size changes memory consumption");
-    tbb::parallel_sort(input_edge_list.begin(), input_edge_list.end());
-
-    DeallocatingVector<SimpleNodeBasedDynamicGraph::InputEdge> edges_list;
-    SimpleNodeBasedDynamicGraph::InputEdge edge;
-    edge.data.capacity = 1;
-    for (const SimpleEdgeT &import_edge : input_edge_list)
-    {
-        if (import_edge.source == import_edge.target)
-        {
-            continue;
-        }
-        edge.source = import_edge.source;
-        edge.target = import_edge.target;
-        edges_list.push_back(edge);
-        std::swap(edge.source, edge.target);
-        edges_list.push_back(edge);
-    }
-
-    // remove duplicate edges
-    tbb::parallel_sort(edges_list.begin(), edges_list.end());
-    NodeID edge_count = 0;
-    for (NodeID i = 0; i < edges_list.size();)
-    {
-        const NodeID source = edges_list[i].source;
-        const NodeID target = edges_list[i].target;
-        // remove eigenloops
-        if (source == target)
-        {
-            i++;
-            continue;
-        }
-        SimpleNodeBasedDynamicGraph::InputEdge forward_edge;
-        SimpleNodeBasedDynamicGraph::InputEdge reverse_edge;
-        forward_edge = reverse_edge = edges_list[i];
-        forward_edge.data.capacity = reverse_edge.data.capacity = INVALID_EDGE_WEIGHT;
-        // remove parallel edges
-        while (i < edges_list.size() && edges_list[i].source == source &&
-               edges_list[i].target == target)
-        {
-            forward_edge.data.capacity =
-                std::min(edges_list[i].data.capacity, forward_edge.data.capacity);
-            reverse_edge.data.capacity =
-                std::min(edges_list[i].data.capacity, reverse_edge.data.capacity);
-            ++i;
-        }
-        // merge edges (s,t) and (t,s) into bidirectional edge
-        if (forward_edge.data.capacity == reverse_edge.data.capacity)
-        {
-            if (static_cast<int>(forward_edge.data.capacity) != INVALID_EDGE_WEIGHT)
-            {
-                edges_list[edge_count++] = forward_edge;
-            }
-        }
-        else
-        { // insert seperate edges
-            if (static_cast<int>(forward_edge.data.capacity) != INVALID_EDGE_WEIGHT)
-            {
-                edges_list[edge_count++] = forward_edge;
-            }
-            if (static_cast<int>(reverse_edge.data.capacity) != INVALID_EDGE_WEIGHT)
-            {
-                edges_list[edge_count++] = reverse_edge;
-            }
-        }
-    }
-    SimpleLogger().Write() << "merged " << edges_list.size() - edge_count << " edges out of "
-                           << edges_list.size();
-
-    auto graph = std::make_shared<SimpleNodeBasedDynamicGraph>(number_of_nodes, edges_list);
     return graph;
 }
 
