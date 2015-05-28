@@ -17,7 +17,7 @@ Feature: osrm-prepare command line options: help
         And stdout should contain "--profile"
         And stdout should contain "--threads"
         And stdout should contain 15 lines
-        And it should exit with code 0
+        And it should exit with code 1
 
     Scenario: osrm-prepare - Help, short
         When I run "osrm-prepare -h"

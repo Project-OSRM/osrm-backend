@@ -85,6 +85,9 @@ template <typename EdgeDataT> class DynamicGraph
         edge_list.resize(number_of_nodes);
     }
 
+    /**
+     * Constructs a DynamicGraph from a list of edges sorted by source node id.
+     */
     template <class ContainerT> DynamicGraph(const NodeIterator nodes, const ContainerT &graph)
     {
         number_of_nodes = nodes;

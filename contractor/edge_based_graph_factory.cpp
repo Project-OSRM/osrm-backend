@@ -40,21 +40,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <limits>
 
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(
-    const std::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
-    std::unique_ptr<RestrictionMap> restriction_map,
-    std::vector<NodeID> &barrier_node_list,
-    std::vector<NodeID> &traffic_light_node_list,
-    std::vector<QueryNode> &node_info_list,
-    SpeedProfileProperties &speed_profile)
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
+                                   std::shared_ptr<RestrictionMap> restriction_map,
+                                   std::unique_ptr<std::vector<NodeID>> barrier_node_list,
+                                   std::unique_ptr<std::vector<NodeID>> traffic_light_node_list,
+                                   const std::vector<QueryNode> &node_info_list,
+                                   const SpeedProfileProperties &speed_profile)
     : speed_profile(speed_profile),
       m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
-      m_node_info_list(node_info_list), m_node_based_graph(node_based_graph),
+      m_node_info_list(node_info_list),
+      m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), max_id(0), removed_node_count(0)
 {
     // insert into unordered sets for fast lookup
-    m_barrier_nodes.insert(barrier_node_list.begin(), barrier_node_list.end());
-    m_traffic_lights.insert(traffic_light_node_list.begin(), traffic_light_node_list.end());
+    m_barrier_nodes.insert(barrier_node_list->begin(), barrier_node_list->end());
+    m_traffic_lights.insert(traffic_light_node_list->begin(), traffic_light_node_list->end());
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &output_edge_list)
@@ -290,12 +290,33 @@ void EdgeBasedGraphFactory::CompressGeometry()
             continue;
         }
 
+        /*
+         *    reverse_e2   forward_e2
+         * u <---------- v -----------> w
+         *    ----------> <-----------
+         *    forward_e1   reverse_e1
+         *
+         * Will be compressed to:
+         *
+         *    reverse_e1
+         * u <---------- w
+         *    ---------->
+         *    forward_e1
+         *
+         * If the edges are compatible.
+         *
+         */
+
         const bool reverse_edge_order =
             !(m_node_based_graph->GetEdgeData(m_node_based_graph->BeginEdges(node_v)).forward);
         const EdgeID forward_e2 = m_node_based_graph->BeginEdges(node_v) + reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != forward_e2);
+        BOOST_ASSERT(forward_e2 >= m_node_based_graph->BeginEdges(node_v) &&
+                     forward_e2 < m_node_based_graph->EndEdges(node_v));
         const EdgeID reverse_e2 = m_node_based_graph->BeginEdges(node_v) + 1 - reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != reverse_e2);
+        BOOST_ASSERT(reverse_e2 >= m_node_based_graph->BeginEdges(node_v) &&
+                     reverse_e2 < m_node_based_graph->EndEdges(node_v));
 
         const EdgeData &fwd_edge_data2 = m_node_based_graph->GetEdgeData(forward_e2);
         const EdgeData &rev_edge_data2 = m_node_based_graph->GetEdgeData(reverse_e2);
@@ -325,6 +346,11 @@ void EdgeBasedGraphFactory::CompressGeometry()
         if ( // TODO: rename to IsCompatibleTo
             fwd_edge_data1.IsEqualTo(fwd_edge_data2) && rev_edge_data1.IsEqualTo(rev_edge_data2))
         {
+            BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e1).nameID ==
+                         m_node_based_graph->GetEdgeData(reverse_e1).nameID);
+            BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e2).nameID ==
+                         m_node_based_graph->GetEdgeData(reverse_e2).nameID);
+
             // Get distances before graph is modified
             const int forward_weight1 = m_node_based_graph->GetEdgeData(forward_e1).distance;
             const int forward_weight2 = m_node_based_graph->GetEdgeData(forward_e2).distance;
@@ -336,7 +362,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
             const int reverse_weight2 = m_node_based_graph->GetEdgeData(reverse_e2).distance;
 
             BOOST_ASSERT(0 != reverse_weight1);
-            BOOST_ASSERT(0 != forward_weight2);
+            BOOST_ASSERT(0 != reverse_weight2);
 
             const bool has_node_penalty = m_traffic_lights.find(node_v) != m_traffic_lights.end();
 
@@ -362,11 +388,11 @@ void EdgeBasedGraphFactory::CompressGeometry()
             // update any involved turn restrictions
             m_restriction_map->FixupStartingTurnRestriction(node_u, node_v, node_w);
             m_restriction_map->FixupArrivingTurnRestriction(node_u, node_v, node_w,
-                                                            m_node_based_graph);
+                                                            *m_node_based_graph);
 
             m_restriction_map->FixupStartingTurnRestriction(node_w, node_v, node_u);
             m_restriction_map->FixupArrivingTurnRestriction(node_w, node_v, node_u,
-                                                            m_node_based_graph);
+                                                            *m_node_based_graph);
 
             // store compressed geometry in container
             m_geometry_compressor.CompressEdge(
@@ -378,8 +404,6 @@ void EdgeBasedGraphFactory::CompressGeometry()
                 reverse_weight2 + (has_node_penalty ? speed_profile.traffic_signal_penalty : 0));
             ++removed_node_count;
 
-            BOOST_ASSERT(m_node_based_graph->GetEdgeData(forward_e1).nameID ==
-                         m_node_based_graph->GetEdgeData(reverse_e1).nameID);
         }
     }
     SimpleLogger().Write() << "removed " << removed_node_count << " nodes";
@@ -415,6 +439,7 @@ void EdgeBasedGraphFactory::RenumberEdges()
         for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
         {
             EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
+            // FIXME when does that happen? why can we skip here?
             if (!edge_data.forward)
             {
                 continue;

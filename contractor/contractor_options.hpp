@@ -25,18 +25,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTOR_HPP
-#define EXTRACTOR_HPP
+#ifndef CONTRACTOR_OPTIONS_HPP
+#define CONTRACTOR_OPTIONS_HPP
 
-#include "extractor_options.hpp"
+#include <boost/filesystem/path.hpp>
 
-class extractor
+#include <string>
+
+enum class return_code : unsigned
 {
-public:
-    extractor(const ExtractorConfig &extractor_config)
-        : config(extractor_config) {}
-    int run();
-private:
-   ExtractorConfig config;
+    ok,
+    fail,
+    exit
 };
-#endif /* EXTRACTOR_HPP */
+
+struct ContractorConfig
+{
+    ContractorConfig() noexcept : requested_num_threads(0) {}
+
+    boost::filesystem::path config_file_path;
+    boost::filesystem::path osrm_input_path;
+    boost::filesystem::path restrictions_path;
+    boost::filesystem::path profile_path;
+
+    std::string node_output_path;
+    std::string edge_output_path;
+    std::string geometry_output_path;
+    std::string graph_output_path;
+    std::string rtree_nodes_output_path;
+    std::string rtree_leafs_output_path;
+
+    unsigned requested_num_threads;
+};
+
+struct ContractorOptions
+{
+    static return_code ParseArguments(int argc, char *argv[], ContractorConfig &extractor_config);
+
+    static void GenerateOutputFilesNames(ContractorConfig &extractor_config);
+};
+
+#endif // EXTRACTOR_OPTIONS_HPP
