@@ -40,8 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <limits>
 
-
-
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
                                    std::shared_ptr<RestrictionMap> restriction_map,
                                    std::unique_ptr<std::vector<NodeID>> barrier_node_list,
@@ -413,18 +411,6 @@ void EdgeBasedGraphFactory::CompressGeometry()
 
 
         }
-
-#ifndef NDEBUG
-        if (!validateNeighborHood(*m_node_based_graph, node_v))
-        {
-            SimpleLogger().Write(logWARNING) << "Contracting " << node_u << " " << node_v << " " << node_w;
-            SimpleLogger().Write(logWARNING) << " coordinates "
-                << "(" << (m_node_info_list[node_u].lat/COORDINATE_PRECISION) << ", " << (m_node_info_list[node_u].lon/COORDINATE_PRECISION) << ") "
-                << "(" << (m_node_info_list[node_v].lat/COORDINATE_PRECISION) << ", " << (m_node_info_list[node_v].lon/COORDINATE_PRECISION) << ") "
-                << "(" << (m_node_info_list[node_w].lat/COORDINATE_PRECISION) << ", " << (m_node_info_list[node_w].lon/COORDINATE_PRECISION) << ") ";
-            BOOST_ASSERT_MSG(false, "Graph invariant is not fulfilled.");
-        }
-#endif
     }
     SimpleLogger().Write() << "removed " << removed_node_count << " nodes";
     m_geometry_compressor.PrintStatistics();
