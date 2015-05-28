@@ -272,11 +272,13 @@ class ShortestPathRouting final
                     if (start_id_of_leg1 != last_id_of_packed_legs1)
                     {
                         packed_legs1 = packed_legs2;
+                        distance1 = distance2;
                         BOOST_ASSERT(start_id_of_leg1 == temporary_packed_leg1.front());
                     }
                     else if (start_id_of_leg2 != last_id_of_packed_legs2)
                     {
                         packed_legs2 = packed_legs1;
+                        distance2 = distance1;
                         BOOST_ASSERT(start_id_of_leg2 == temporary_packed_leg2.front());
                     }
                 }
