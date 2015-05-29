@@ -91,7 +91,7 @@ template <> struct hash<RestrictionTarget>
 class RestrictionMap
 {
   public:
-    RestrictionMap() = default;
+    RestrictionMap() : m_count(0) {};
     RestrictionMap(const std::vector<TurnRestriction> &restriction_list);
 
     // Replace end v with w in each turn restriction containing u as via node
