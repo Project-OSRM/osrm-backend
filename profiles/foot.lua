@@ -60,6 +60,10 @@ surface_speeds = {
   ["sand"] =          walking_speed*0.5
 }
 
+leisure_speeds = {
+  ["track"] = walking_speed
+}
+
 traffic_signal_penalty   = 2
 u_turn_penalty       = 2
 use_turn_restrictions   = false
@@ -105,12 +109,14 @@ end
 function way_function (way, result)
   -- initial routability check, filters out buildings, boundaries, etc
   local highway = way:get_value_by_key("highway")
+  local leisure = way:get_value_by_key("leisure")
   local route = way:get_value_by_key("route")
   local man_made = way:get_value_by_key("man_made")
   local railway = way:get_value_by_key("railway")
   local amenity = way:get_value_by_key("amenity")
   local public_transport = way:get_value_by_key("public_transport")
   if (not highway or highway == '') and
+    (not leisure or leisure == '') and
     (not route or route == '') and
     (not railway or railway=='') and
     (not amenity or amenity=='') and
@@ -182,6 +188,10 @@ function way_function (way, result)
     -- parking areas
     result.forward_speed = amenity_speeds[amenity]
     result.backward_speed = amenity_speeds[amenity]
+  elseif leisure and leisure_speeds[leisure] then
+    -- running tracks
+    result.forward_speed = leisure_speeds[leisure]
+    result.backward_speed = leisure_speeds[leisure]
   elseif speeds[highway] then
     -- regular ways
     result.forward_speed = speeds[highway]
