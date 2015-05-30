@@ -36,10 +36,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
 #include "../util/fingerprint.hpp"
+#include "../util/lua_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/ref.hpp>
+
+#include <luabind/luabind.hpp>
 
 #include <stxxl/sort>
 
@@ -76,7 +80,8 @@ ExtractionContainers::~ExtractionContainers()
  */
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
-                                       const std::string &name_file_name)
+                                       const std::string &name_file_name,
+                                       lua_State *segment_state)
 {
     try
     {
@@ -87,7 +92,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         PrepareNodes();
         WriteNodes(file_out_stream);
-        PrepareEdges();
+        PrepareEdges(segment_state);
         WriteEdges(file_out_stream);
 
         file_out_stream.close();
@@ -168,7 +173,7 @@ void ExtractionContainers::PrepareNodes()
     std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
 }
 
-void ExtractionContainers::PrepareEdges()
+void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 {
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
@@ -263,6 +268,16 @@ void ExtractionContainers::PrepareEdges()
         const double distance = coordinate_calculation::euclidean_distance(
             edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
             node_iterator->lat, node_iterator->lon);
+
+        if (lua_function_exists(segment_state, "segment_function"))
+        {
+            luabind::call_function<void>(
+                segment_state, "segment_function",
+                boost::cref(edge_iterator->source_coordinate),
+                boost::cref(*node_iterator),
+                distance,
+                boost::ref(edge_iterator->weight_data));
+        }
 
         const double weight = [distance](const InternalExtractorEdge::WeightData& data) {
             switch (data.type)

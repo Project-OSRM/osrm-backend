@@ -134,6 +134,12 @@ Given /^the input file ([^"]*)$/ do |file|
   @osm_str = File.read file
 end
 
+Given /^the raster source$/ do |data|
+  Dir.chdir TEST_FOLDER do
+    File.open("rastersource.asc", "w") {|f| f.write(data)}
+  end
+end
+
 Given /^the data has been saved to disk$/ do
   begin
     write_input_data

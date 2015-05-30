@@ -14,6 +14,7 @@ DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
 PROFILES_PATH = File.join ROOT_FOLDER, 'profiles'
+FIXTURES_PATH = File.join ROOT_FOLDER, 'unit_tests/fixtures'
 BIN_PATH = File.join ROOT_FOLDER, 'build'
 DEFAULT_INPUT_FORMAT = 'osm'
 DEFAULT_ORIGIN = [1,1]
@@ -71,7 +72,7 @@ def verify_osrm_is_not_running
 end
 
 def verify_existance_of_binaries
-  ["osrm-extract", "osrm-prepare", "osrm-routed"].each do |bin|  
+  ["osrm-extract", "osrm-prepare", "osrm-routed"].each do |bin|
     unless File.exists? "#{BIN_PATH}/#{bin}#{EXE}"
       raise "*** #{BIN_PATH}/#{bin}#{EXE} is missing. Build failed?"
     end

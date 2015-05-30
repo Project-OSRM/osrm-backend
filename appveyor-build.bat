@@ -65,12 +65,14 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 SET PATH=c:\projects\osrm\osrm-deps\libs\bin;%PATH%
 
+CD ..
 ECHO running datastructure-tests.exe ...
-datastructure-tests.exe
+%Configuration%\datastructure-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO running algorithm-tests.exe ...
-algorithm-tests.exe
+%Configuration%\algorithm-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+cd %Configuration%
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE
 ECHO ========= CREATING PACKAGES ==========
