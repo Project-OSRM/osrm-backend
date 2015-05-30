@@ -345,9 +345,14 @@ function way_function (way, result)
   local service = way:get_value_by_key("service")
 
   -- Set the name that will be used for instructions
-  if ref and "" ~= ref then
+  local has_ref = ref and "" ~= ref
+  local has_name = name and "" ~= name
+
+  if has_name and has_ref then
+    result.name = name .. " (" .. ref .. ")"
+  elseif has_ref then
     result.name = ref
-  elseif name and "" ~= name then
+  elseif has_name then
     result.name = name
 --  else
       --    result.name = highway  -- if no name exists, use way type
