@@ -10,13 +10,13 @@ Feature: Car - Street names in instructions
             |   | c |
 
         And the ways
-            | nodes | name     |
-            | ab    | My Way   |
-            | bc    | Your Way |
+            | nodes | name     | ref |
+            | ab    | My Way   |     |
+            | bc    | Your Way | A1  |
 
         When I route I should get
-            | from | to | route           |
-            | a    | c  | My Way,Your Way |
+            | from | to | route                |
+            | a    | c  | My Way,Your Way (A1) |
 
     @todo
     Scenario: Car - Use way type to describe unnamed ways
