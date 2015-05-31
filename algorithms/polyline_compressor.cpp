@@ -88,3 +88,41 @@ PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &po
     }
     return encode_vector(delta_numbers);
 }
+
+std::vector<FixedPointCoordinate> PolylineCompressor::decode_string(const std::string geometry_string) const
+{
+    std::vector<FixedPointCoordinate> new_coordinates;
+    int index = 0, len = geometry_string.size();
+    int lat = 0, lng = 0;
+  
+    while (index < len) 
+    {
+        int b, shift = 0, result = 0;
+        do 
+        {
+            b = geometry_string.at(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+        int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+        lat += dlat;
+
+        shift = 0;
+        result = 0;
+        do 
+        {
+            b = geometry_string.at(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+        int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+        lng += dlng;
+
+        FixedPointCoordinate p;
+        p.lat = COORDINATE_PRECISION * (((double) lat / 1E5));
+        p.lon = COORDINATE_PRECISION * (((double) lng / 1E5));
+        new_coordinates.push_back(p);
+    }
+
+    return new_coordinates;
+}

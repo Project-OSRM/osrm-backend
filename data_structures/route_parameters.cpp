@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/route_parameters.hpp>
 
+#include "../algorithms/polyline_compressor.hpp"
+
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
       compression(true), deprecatedAPI(false), uturn_default(false), classify(false),
@@ -130,4 +132,10 @@ void RouteParameters::addCoordinate(
     coordinates.emplace_back(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
+}
+
+void RouteParameters::getCoordinatesFromGeometry(const std::string geometry_string)
+{
+    PolylineCompressor pc;
+    coordinates = pc.decode_string(geometry_string);
 }
