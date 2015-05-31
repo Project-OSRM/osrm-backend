@@ -160,7 +160,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
     osrm::json::Object submatchingToJSON(const osrm::matching::SubMatching &sub,
                                          const RouteParameters &route_parameters,
-                                         const InternalRouteResult &raw_route)
+                                         const InternalRouteResult &raw_route,
+                                         std::vector<std::pair<unsigned, PhantomNode>> indices_points)
     {
         osrm::json::Object subtrace;
 
@@ -196,15 +197,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 factory.AppendGeometryString(route_parameters.compression);
         }
 
-        subtrace.values["indices"] = osrm::json::make_array(sub.indices);
-
         osrm::json::Array points;
-        for (const auto &node : sub.nodes)
+        osrm::json::Array indices;
+        for (const auto &coords : indices_points)
         {
+            indices.values.emplace_back(coords.first);
             points.values.emplace_back(
-                osrm::json::make_array(node.location.lat / COORDINATE_PRECISION,
-                                       node.location.lon / COORDINATE_PRECISION));
+                osrm::json::make_array(coords.second.location.lat / COORDINATE_PRECISION,
+                                       coords.second.location.lon / COORDINATE_PRECISION));
         }
+        subtrace.values["indices"] = indices;
         subtrace.values["matched_points"] = points;
 
         return subtrace;
@@ -213,6 +215,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) final
     {
+        InternalRouteResult raw_route;
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))
         {
@@ -258,8 +261,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
 
         osrm::json::Array matchings;
+        std::vector<std::pair<unsigned, PhantomNode>> indices_points;
+        // if more than one splits are available the separate splits just connect
+        // to each other but they aren't mapped
+        unsigned cycle = 0;
         for (auto &sub : sub_matchings)
         {
+            ++cycle;
             // classify result
             if (route_parameters.classify)
             {
@@ -280,9 +288,14 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             BOOST_ASSERT(sub.nodes.size() > 1);
 
+            // Connect the last target phantom node with the first new one
+            if(cycle > 1)
+            {
+                raw_route.segment_end_coordinates.back().target_phantom = sub.nodes.front();
+            }
+
             // FIXME we only run this to obtain the geometry
             // The clean way would be to get this directly from the map matching plugin
-            InternalRouteResult raw_route;
             PhantomNodes current_phantom_node_pair;
             for (unsigned i = 0; i < sub.nodes.size() - 1; ++i)
             {
@@ -290,11 +303,23 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 current_phantom_node_pair.target_phantom = sub.nodes[i + 1];
                 raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
             }
-            search_engine_ptr->shortest_path(
-                raw_route.segment_end_coordinates,
-                std::vector<bool>(raw_route.segment_end_coordinates.size(), true), raw_route);
 
-            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
+            // now we have to build the indices & matched_points values before
+            // the submatchingToJSON call to collect all of them (and not only for the last split)
+            for (unsigned i = 0; i < sub.indices.size(); ++i)
+            {
+                indices_points.push_back(std::make_pair(sub.indices.at(i), 
+                                                        sub.nodes.at(i)));
+            }
+            
+            // at the last split we do the shortest path & put everything together
+            if(cycle == sub_matchings.size())
+            {
+                search_engine_ptr->shortest_path(
+                    raw_route.segment_end_coordinates,
+                    std::vector<bool>(raw_route.segment_end_coordinates.size(), true), raw_route);
+                matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route, indices_points));
+            }
         }
 
         if (osrm::json::Logger::get())
