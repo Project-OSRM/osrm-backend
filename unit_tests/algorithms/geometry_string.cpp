@@ -63,7 +63,12 @@ BOOST_AUTO_TEST_CASE(geometry_string)
 
     for(unsigned i = 0; i < cmp_coords.size(); ++i)
     {
-        BOOST_CHECK_CLOSE(cmp_coords.at(i).lat, coords.at(i).lat, 0.0001);
-        BOOST_CHECK_CLOSE(cmp_coords.at(i).lon, coords.at(i).lon, 0.0001);
+	const double cmp1_lat = coords.at(i).lat;
+	const double cmp2_lat = cmp_coords.at(i).lat;
+        BOOST_CHECK_CLOSE(cmp1_lat, cmp2_lat, 0.0001);
+	
+	const double cmp1_lon = coords.at(i).lon;
+	const double cmp2_lon = cmp_coords.at(i).lon;
+        BOOST_CHECK_CLOSE(cmp1_lon, cmp2_lon, 0.0001);
     }
 }
