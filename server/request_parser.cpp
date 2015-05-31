@@ -42,7 +42,8 @@ namespace http
 
 RequestParser::RequestParser()
     : state(internal_state::method_start), current_header({"", ""}),
-      selected_compression(no_compression), is_post_header(false)
+      selected_compression(no_compression), is_post_header(false),
+      content_length(0)
 {
 }
 
@@ -59,7 +60,7 @@ RequestParser::parse(request &current_request, char *begin, char *end)
     }
     osrm::tribool result = osrm::tribool::indeterminate;
     
-    if(is_post_header && (begin == end))
+    if(is_post_header && content_length == 0)
     {
         result = osrm::tribool::yes;
     }
@@ -106,6 +107,7 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         return osrm::tribool::no;
     case internal_state::post_request:
         current_request.uri.push_back(input);
+        --content_length;
         return osrm::tribool::indeterminate;
     case internal_state::method:
         if (input == ' ')
@@ -239,6 +241,17 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         {
             current_request.agent = current_header.value;
         }
+        if (boost::iequals(current_header.name, "Content-Length"))
+        {
+            try 
+            {
+                content_length = std::stoi(current_header.value);
+            }
+            catch (const std::exception &e)
+            {
+                // Ignore the header if the parameter isn't an int
+            }
+        }
 
         if (input == '\r')
         {
@@ -312,6 +325,7 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         {
             if(is_post_header)
             {
+                current_request.uri.push_back('?');
                 state = internal_state::post_request;
                 return osrm::tribool::indeterminate;
             }

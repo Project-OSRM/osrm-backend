@@ -90,6 +90,7 @@ class RequestParser
     header current_header;
     compression_type selected_compression;
     bool is_post_header;
+    int content_length;
 };
 
 } // namespace http
