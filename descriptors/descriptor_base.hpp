@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTOR_BASE_HPP
 #define DESCRIPTOR_BASE_HPP
 
+#include "description_factory.hpp"
 #include "../data_structures/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/phantom_node.hpp"
@@ -56,7 +57,8 @@ struct DescriptorTable : public std::unordered_map<std::string, unsigned>
 
 struct DescriptorConfig
 {
-    DescriptorConfig() : instructions(true), geometry(true), encode_geometry(true), zoom_level(18)
+    DescriptorConfig() : instructions(true), geometry(true), encode_geometry(true), zoom_level(18),
+                         map_matching(false)
     {
     }
 
@@ -72,6 +74,7 @@ struct DescriptorConfig
     bool geometry;
     bool encode_geometry;
     short zoom_level;
+    bool map_matching;
 };
 
 template <class DataFacadeT> class BaseDescriptor
@@ -82,6 +85,7 @@ template <class DataFacadeT> class BaseDescriptor
     virtual ~BaseDescriptor() {}
     virtual void Run(const InternalRouteResult &raw_route, osrm::json::Object &json_result) = 0;
     virtual void SetConfig(const DescriptorConfig &c) = 0;
+    virtual void setFactory(DescriptionFactory &factory) = 0;
 };
 
 #endif // DESCRIPTOR_BASE_HPP

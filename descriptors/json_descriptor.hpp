@@ -79,6 +79,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
 
     virtual void SetConfig(const DescriptorConfig &c) override final { config = c; }
 
+    virtual void setFactory(DescriptionFactory &factory) override final { description_factory = factory; }
+
     unsigned DescribeLeg(const std::vector<PathData> &route_leg,
                          const PhantomNodes &leg_phantoms,
                          const bool target_traversed_in_reverse,
@@ -116,22 +118,30 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         BOOST_ASSERT(raw_route.unpacked_path_segments.size() ==
                      raw_route.segment_end_coordinates.size());
 
-        description_factory.SetStartSegment(
-            raw_route.segment_end_coordinates.front().source_phantom,
-            raw_route.source_traversed_in_reverse.front());
-        json_result.values["status"] = 0;
-        json_result.values["status_message"] = "Found route between points";
-
-        // for each unpacked segment add the leg to the description
-        for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+        if(!config.map_matching)
         {
+            description_factory.SetStartSegment(
+                raw_route.segment_end_coordinates.front().source_phantom,
+                raw_route.source_traversed_in_reverse.front());
+            json_result.values["status"] = 0;
+            json_result.values["status_message"] = "Found route between points";
+
+            // for each unpacked segment add the leg to the description
+            for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+            {
 #ifndef NDEBUG
-            const int added_segments =
+                const int added_segments =
 #endif
-                DescribeLeg(raw_route.unpacked_path_segments[i],
-                            raw_route.segment_end_coordinates[i],
-                            raw_route.target_traversed_in_reverse[i], raw_route.is_via_leg(i));
-            BOOST_ASSERT(0 < added_segments);
+                    DescribeLeg(raw_route.unpacked_path_segments[i],
+                                raw_route.segment_end_coordinates[i],
+                                raw_route.target_traversed_in_reverse[i], raw_route.is_via_leg(i));
+                BOOST_ASSERT(0 < added_segments);
+            }
+        }
+        else
+        {
+            json_result.values["status"] = 0;
+            json_result.values["status_message"] = "Found route between points";
         }
         description_factory.Run(config.zoom_level);
 
@@ -148,8 +158,26 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                                     raw_route.shortest_path_length, shortest_path_segments);
             json_result.values["route_instructions"] = json_route_instructions;
         }
+        // the map matching algorithm seems to break the duration summary therefore we
+        // add all segments ourself
+        unsigned duration;
+        if(config.map_matching)
+        {
+            duration = 0;
+            for(const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+            {
+                for(PathData data : raw_route.unpacked_path_segments[i])
+                {
+                    duration += data.segment_duration;
+                }
+            }
+        }
+        else
+        {
+            duration = raw_route.shortest_path_length;
+        }
         description_factory.BuildRouteSummary(description_factory.get_entire_length(),
-                                              raw_route.shortest_path_length);
+                                              duration);
         osrm::json::Object json_route_summary;
         json_route_summary.values["total_distance"] = description_factory.summary.distance;
         json_route_summary.values["total_time"] = description_factory.summary.duration;
