@@ -67,6 +67,7 @@ struct DescriptorConfig
         : instructions(other.print_instructions), geometry(other.geometry),
           encode_geometry(other.compression), zoom_level(other.zoom_level)
     {
+        map_matching = false;
         BOOST_ASSERT(zoom_level >= 0);
     }
 
