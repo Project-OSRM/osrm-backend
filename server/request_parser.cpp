@@ -60,7 +60,7 @@ RequestParser::parse(request &current_request, char *begin, char *end)
     }
     osrm::tribool result = osrm::tribool::indeterminate;
     
-    if(is_post_header && content_length == 0)
+    if(state == internal_state::post_request && content_length <= 0)
     {
         result = osrm::tribool::yes;
     }
@@ -250,6 +250,13 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
             catch (const std::exception &e)
             {
                 // Ignore the header if the parameter isn't an int
+            }
+        }
+        if (boost::iequals(current_header.name, "Content-Type"))
+        {
+            if (!boost::icontains(current_header.value, "application/x-www-form-urlencoded"))
+            {
+                return osrm::tribool::no;
             }
         }
 
