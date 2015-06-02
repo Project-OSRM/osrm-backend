@@ -51,6 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <unordered_map>
 #include <vector>
+#include <iterator>
 
 /**
  * Reads the .restrictions file and loads it to a vector.
@@ -107,20 +108,18 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     input_stream.read(reinterpret_cast<char *>(&n), sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
 
-    ExternalMemoryNode current_node;
+    std::vector<ExternalMemoryNode> nodes(n);
+    input_stream.read(reinterpret_cast<char *>(nodes.data()), sizeof(ExternalMemoryNode) * n);
+
     for (NodeID i = 0; i < n; ++i)
     {
-        input_stream.read(reinterpret_cast<char *>(&current_node), sizeof(ExternalMemoryNode));
-        node_array.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
-        if (current_node.barrier)
-        {
+        if (nodes[i].barrier)
             barrier_node_list.emplace_back(i);
-        }
-        if (current_node.traffic_lights)
-        {
+        if (nodes[i].traffic_lights)
             traffic_light_node_list.emplace_back(i);
-        }
     }
+
+    std::move(begin(nodes), end(nodes), std::back_inserter(node_array));
 
     // tighten vector sizes
     barrier_node_list.shrink_to_fit();
