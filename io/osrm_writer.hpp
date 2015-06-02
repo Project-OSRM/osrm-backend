@@ -44,6 +44,8 @@ class OSRMWriter final
         count_ += written;
     }
 
+    std::size_t Count() const { return count_; }
+
   private:
     std::ostream &stream_;
     std::size_t segment_start_;

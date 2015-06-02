@@ -84,7 +84,6 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::ofstream file_out_stream{output_file_name, std::ios::binary};
 
         HeaderWriter out{file_out_stream, fingerprint};
-        //out.Write();
 
         PrepareNodes();
         WriteNodes(file_out_stream);
@@ -414,7 +413,7 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
     std::cout << "[extractor] setting number of edges   ... " << std::flush;
     std::cout << "ok" << std::endl;
 
-    //SimpleLogger().Write() << "Processed " << number_of_used_edges << " edges";
+    SimpleLogger().Write() << "Processed " << out.Count() << " edges";
 }
 
 void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
