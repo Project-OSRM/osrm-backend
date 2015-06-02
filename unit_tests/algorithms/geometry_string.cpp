@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BOOST_AUTO_TEST_CASE(geometry_string)
 {
     // Polyline string for the 5 coordinates
-    const std::string polyline = "_c`|@_c`|@o}@_pRo}@}oRm}@apRo}@_pR";
+    const std::string polyline = "_gjaR_gjaR_pR_ibE_pR_ibE_pR_ibE_pR_ibE";
     PolylineCompressor pc;
     std::vector<FixedPointCoordinate> coords = pc.decode_string(polyline);
 

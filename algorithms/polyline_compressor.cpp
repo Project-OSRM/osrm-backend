@@ -119,8 +119,8 @@ std::vector<FixedPointCoordinate> PolylineCompressor::decode_string(const std::s
         lng += dlng;
 
         FixedPointCoordinate p;
-        p.lat = COORDINATE_PRECISION * (((double) lat / 1E5));
-        p.lon = COORDINATE_PRECISION * (((double) lng / 1E5));
+        p.lat = COORDINATE_PRECISION * (((double) lat / 1E6));
+        p.lon = COORDINATE_PRECISION * (((double) lng / 1E6));
         new_coordinates.push_back(p);
     }
 
