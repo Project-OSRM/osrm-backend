@@ -89,7 +89,7 @@ PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &po
     return encode_vector(delta_numbers);
 }
 
-std::vector<FixedPointCoordinate> PolylineCompressor::decode_string(const std::string geometry_string) const
+std::vector<FixedPointCoordinate> PolylineCompressor::decode_string(const std::string &geometry_string) const
 {
     std::vector<FixedPointCoordinate> new_coordinates;
     int index = 0, len = geometry_string.size();
