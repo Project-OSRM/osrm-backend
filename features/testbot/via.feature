@@ -52,6 +52,21 @@ Feature: Via points
             | a,c,f     | ab,bcd,bcd,de,efg        |
             | a,c,f,h   | ab,bcd,bcd,de,efg,efg,gh |
 
+    Scenario: Duplicate via point
+        Given the node map
+            | x |   |   |   |   |   |
+            | a | 1 | 2 | 3 | 4 | b |
+            |   |   |   |   |   |   |
+
+        And the ways
+            | nodes |
+            | xa    |
+            | ab    |
+
+        When I route I should get
+            | waypoints | route | turns                |
+            | 1,1,4     | ab,ab | head,via,destination |
+
     Scenario: Via points on ring of oneways
     # xa it to avoid only having a single ring, which cna trigger edge cases
         Given the node map
