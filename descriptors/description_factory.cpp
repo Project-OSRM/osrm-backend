@@ -173,6 +173,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     //        }
     //        string0 = string1;
     //    }
+    //
 
     float segment_length = 0.;
     EdgeWeight segment_duration = 0;
@@ -197,7 +198,8 @@ void DescriptionFactory::Run(const unsigned zoom_level)
 
     // Post-processing to remove empty or nearly empty path segments
     if (path_description.size() > 2 &&
-        std::numeric_limits<float>::epsilon() > path_description.back().length)
+        std::numeric_limits<float>::epsilon() > path_description.back().length &&
+        !(path_description.end() - 2)->is_via_location)
     {
         path_description.pop_back();
         path_description.back().necessary = true;
@@ -206,7 +208,8 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     }
 
     if (path_description.size() > 2 &&
-        std::numeric_limits<float>::epsilon() > path_description.front().length)
+        std::numeric_limits<float>::epsilon() > path_description.front().length &&
+        !(path_description.begin() + 1)->is_via_location)
     {
         path_description.erase(path_description.begin());
         path_description.front().turn_instruction = TurnInstruction::HeadOn;
