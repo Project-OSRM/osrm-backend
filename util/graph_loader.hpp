@@ -79,6 +79,8 @@ unsigned loadRestrictionsFromFile(std::istream &input_stream,
                           number_of_usable_restrictions * sizeof(TurnRestriction));
     }
 
+    restriction_list.shrink_to_fit();
+
     return number_of_usable_restrictions;
 }
 
@@ -123,6 +125,7 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     // tighten vector sizes
     barrier_node_list.shrink_to_fit();
     traffic_light_node_list.shrink_to_fit();
+    node_array.shrink_to_fit();
 
     return n;
 }
@@ -165,6 +168,8 @@ NodeID loadEdgesFromFile(std::istream &input_stream, std::vector<NodeBasedEdge> 
 #endif
 
     SimpleLogger().Write() << "Graph loaded ok and has " << edge_list.size() << " edges";
+
+    edge_list.shrink_to_fit();
 
     return m;
 }
@@ -216,6 +221,9 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
                                number_of_edges * sizeof(EdgeT));
     }
     hsgr_input_stream.close();
+
+    node_list.shrink_to_fit();
+    edge_list.shrink_to_fit();
 
     return number_of_nodes;
 }
