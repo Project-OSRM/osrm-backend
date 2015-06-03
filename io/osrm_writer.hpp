@@ -10,12 +10,16 @@
 #include <cstddef>
 #include <type_traits>
 
-// The OSRMWriter is fully customizable by providing policies for
+// The OSRMWriter is fully customizable by providing policies for:
+//
 //  - a header, written once at the beginning
-//  - each item or no item at all
+//  - writing each item or no item at all
 //  - a finalizer, run once after writing is done
+//
+//  As of now the policies as stateless; this may change though
+//  in order to support e.g. profiling policies that hold timers.
 
-template <typename HeaderPolicy, typename TypeWritePolicy, typename FinalizePolicy>
+template <typename HeaderWritePolicy, typename TypeWritePolicy, typename FinalizeWritePolicy>
 class OSRMWriter final
 {
   public:
@@ -23,7 +27,7 @@ class OSRMWriter final
     OSRMWriter(std::ostream &stream, const Header &header)
         : stream_{stream}, segment_start_(stream_.tellp()), count_{0}
     {
-        header_offset_ = HeaderPolicy::Write(header, stream_, segment_start_, count_);
+        header_offset_ = HeaderWritePolicy::Write(header, stream_, segment_start_, count_);
 
         unsigned reserve_prefix = 0;
         const auto written =
@@ -33,7 +37,7 @@ class OSRMWriter final
 
     ~OSRMWriter()
     {
-        const auto len = FinalizePolicy::Write(stream_, segment_start_, header_offset_, count_);
+        const auto len = FinalizeWritePolicy::Write(stream_, segment_start_, header_offset_, count_);
         (void)len; // unused
     }
 
@@ -54,7 +58,7 @@ class OSRMWriter final
 };
 
 // Silent Policies
-struct NoHeaderPolicy final
+struct NoHeaderWritePolicy final
 {
     template <typename T>
     static std::size_t Write(const T &, std::ostream &, std::size_t, std::size_t)
@@ -72,7 +76,7 @@ struct NoTypeWritePolicy final
     }
 };
 
-struct NoFinalizePolicy final
+struct NoFinalizeWritePolicy final
 {
     static std::size_t Write(std::ostream &, std::size_t, std::size_t, std::size_t) { return 0; }
 };
@@ -80,7 +84,7 @@ struct NoFinalizePolicy final
 // TODO: Debug Policies, i.e. diagnostics to stderr
 
 // Concrete Policies
-struct TrivialHeaderPolicy final
+struct TrivialHeaderWritePolicy final
 {
     template <typename T>
     static std::size_t
@@ -110,7 +114,7 @@ struct TrivialTypeWritePolicy final
     }
 };
 
-struct LengthPrefixFinalizePolicy final
+struct LengthPrefixFinalizeWritePolicy final
 {
     static std::size_t Write(std::ostream &stream,
                              std::size_t segment_start,
@@ -127,8 +131,8 @@ struct LengthPrefixFinalizePolicy final
     }
 };
 
-using HeaderWriter = OSRMWriter<TrivialHeaderPolicy, NoTypeWritePolicy, NoFinalizePolicy>;
-using EdgeWriter = OSRMWriter<NoHeaderPolicy, TrivialTypeWritePolicy, LengthPrefixFinalizePolicy>;
-using NodeWriter = OSRMWriter<NoHeaderPolicy, TrivialTypeWritePolicy, LengthPrefixFinalizePolicy>;
+using HeaderWriter = OSRMWriter<TrivialHeaderWritePolicy, NoTypeWritePolicy, NoFinalizeWritePolicy>;
+using EdgeWriter = OSRMWriter<NoHeaderWritePolicy, TrivialTypeWritePolicy, LengthPrefixFinalizeWritePolicy>;
+using NodeWriter = OSRMWriter<NoHeaderWritePolicy, TrivialTypeWritePolicy, LengthPrefixFinalizeWritePolicy>;
 
 #endif
