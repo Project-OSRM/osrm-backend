@@ -53,3 +53,45 @@ Feature: Basic Map Matching
             | trace | matchings |
             | dcba  | hgfe      |
 
+    Scenario: Testbot - Map matching with small distortion
+        Given the node map
+            | a | b | c | d | e |
+            |   | f |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   | h |   |   | k |
+
+        # The second way does not need to be a oneway
+        # but the grid spacing triggers the uturn
+        # detection on f
+        And the ways
+            | nodes | oneway |
+            | abcde | no     |
+            | bfhke | yes    |
+
+        When I match I should get
+            | trace  | matchings |
+            | afcde  | abcde     |
+
+    Scenario: Testbot - Map matching with street names
+        Given the node map
+            | a | b | c | d | e |
+            |   | f |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   | h |   |   | k |
+
+        And the ways
+            | nodes | oneway |
+            | abcde | no     |
+            | bfh   | yes    |
+            | hke   | no     |
+
+        When I match I should get
+            | trace  | matchings | ways                              |
+            | afcde  | abcde     | abcde,abcde,abcde,abcde,abcde     |
+            | abfhk  | abfhk     | abcde,abcde,bfh,bfh,hke           |
+            | abcdek | abcdek    | abcde,abcde,abcde,abcde,abcde,hke |
+            | ekhf   | ekhf      | abcde,hke,hke,bfh                 |

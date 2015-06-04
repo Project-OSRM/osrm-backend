@@ -183,8 +183,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             break;
         }
 
-        DescriptorConfig config = route_parameters;
-        descriptor->SetConfig(config);
+        descriptor->SetConfig(route_parameters);
         descriptor->Run(raw_route, json_result);
         return 200;
     }

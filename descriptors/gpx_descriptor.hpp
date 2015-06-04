@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GPX_DESCRIPTOR_HPP
 
 #include "descriptor_base.hpp"
-#include "description_factory.hpp"
 #include "../util/xml_renderer.hpp"
 
 #include <osrm/json_container.hpp>
@@ -67,8 +66,6 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
     explicit GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
 
     virtual void SetConfig(const DescriptorConfig &c) final { config = c; }
-
-    virtual void setFactory(DescriptionFactory &factory) final { factory = factory; }
 
     virtual void Run(const InternalRouteResult &raw_route, osrm::json::Object &json_result) final
     {

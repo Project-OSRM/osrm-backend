@@ -3,7 +3,7 @@ require 'net/http'
 HOST = "http://127.0.0.1:#{OSRM_PORT}"
 
 def request_matching trace=[], timestamps=[], options={}
-  defaults = { 'output' => 'json', 'instructions' => 'true' }
+  defaults = { 'output' => 'json' }
   locs = trace.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
   ts = timestamps.compact.map { |t| "t=#{t}" }
   if ts.length > 0

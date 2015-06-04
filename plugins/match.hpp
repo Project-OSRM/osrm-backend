@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../algorithms/bayes_classifier.hpp"
 #include "../algorithms/object_encoder.hpp"
+#include "../algorithms/route_name_extraction.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
 #include "../descriptors/json_descriptor.hpp"
@@ -160,8 +161,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
     osrm::json::Object submatchingToJSON(const osrm::matching::SubMatching &sub,
                                          const RouteParameters &route_parameters,
-                                         const InternalRouteResult &raw_route,
-                                         DescriptionFactory &factory)
+                                         const InternalRouteResult &raw_route)
     {
         osrm::json::Object subtrace;
 
@@ -172,6 +172,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         if (route_parameters.geometry)
         {
+            DescriptionFactory factory;
             FixedPointCoordinate current_coordinate;
             factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
                                     raw_route.source_traversed_in_reverse.front());
@@ -187,25 +188,30 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.target_traversed_in_reverse[i],
                                       raw_route.is_via_leg(i));
             }
+
             // we need this because we don't run DP
             for (auto &segment : factory.path_description)
             {
                 segment.necessary = true;
             }
+
             subtrace.values["geometry"] =
                 factory.AppendGeometryString(route_parameters.compression);
         }
 
         subtrace.values["indices"] = osrm::json::make_array(sub.indices);
 
+        osrm::json::Array ways;
         osrm::json::Array points;
         for (const auto &node : sub.nodes)
         {
             points.values.emplace_back(
                 osrm::json::make_array(node.location.lat / COORDINATE_PRECISION,
                                        node.location.lon / COORDINATE_PRECISION));
+            ways.values.push_back(facade->get_name_for_id(node.name_id));
         }
         subtrace.values["matched_points"] = points;
+        subtrace.values["ways"] = ways;
 
         return subtrace;
     }
@@ -213,9 +219,6 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) final
     {
-        InternalRouteResult raw_route;
-        DescriptionFactory factory;
-
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))
         {
@@ -285,6 +288,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             // FIXME we only run this to obtain the geometry
             // The clean way would be to get this directly from the map matching plugin
+            InternalRouteResult raw_route;
             PhantomNodes current_phantom_node_pair;
             for (unsigned i = 0; i < sub.nodes.size() - 1; ++i)
             {
@@ -296,25 +300,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 raw_route.segment_end_coordinates,
                 std::vector<bool>(raw_route.segment_end_coordinates.size(), true), raw_route);
 
-            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route, factory));
+            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
         }
 
         if (osrm::json::Logger::get())
             osrm::json::Logger::get()->render("matching", json_result);
         json_result.values["matchings"] = matchings;
-
-        // Routing Instructions
-        if(route_parameters.print_instructions)
-        {
-            std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
-            descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
-            DescriptorConfig config = route_parameters;
-
-            config.map_matching = true;
-            descriptor->setFactory(factory);
-            descriptor->SetConfig(config);
-            descriptor->Run(raw_route, json_result);
-        }
 
         return 200;
     }
