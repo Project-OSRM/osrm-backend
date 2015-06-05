@@ -16,32 +16,12 @@ def request_path path, waypoints=[], options={}
   params = (locs + options.to_param).join('&')
   params = nil if params==""
   
-  if options.has_key?("post")
-    request_method = "POST"
-    options.delete("post")
+  if params == nil
+    uri = generate_request_url (path)
   else
-    request_method = "GET"
+    uri = generate_request_url (path + '?' + params)
   end
-  if request_method.eql? "GET"
-    uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
-  elsif request_method.eql? "POST"
-    uri = URI.parse "#{HOST}/#{path}"
-  end
-  @query = uri.to_s
-  Timeout.timeout(OSRM_TIMEOUT) do
-    if request_method.eql? "GET"
-      Net::HTTP.get_response uri
-    elsif request_method.eql? "POST"
-      datas = {}
-      datas[:loc] = waypoints.compact.map { |w| "#{w.lat},#{w.lon}" }
-      datas.merge! options
-      Net::HTTP.post_form uri, datas
-    end
-  end
-rescue Errno::ECONNREFUSED => e
-  raise "*** osrm-routed is not running."
-rescue Timeout::Error
-  raise "*** osrm-routed did not respond."
+  response = send_request uri, waypoints, {}, options
 end
 
 def request_url path

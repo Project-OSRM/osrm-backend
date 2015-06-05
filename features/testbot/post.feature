@@ -3,6 +3,7 @@ Feature: POST request
 
     Background:
         Given the profile "testbot"
+        And the HTTP method "POST"
 
     Scenario: Testbot - viaroute POST request
         Given the node locations
@@ -20,9 +21,6 @@ Feature: POST request
             | bc    |
             | xy    |
             | yz    |
-
-        And the query options
-            | post | true |
             
         When I route I should get
             | from | to | route | turns                  |
@@ -40,9 +38,6 @@ Feature: POST request
             | nodes | oneway |
             | abcd  | yes    |
             | hgfe  | yes    |
-            
-        And the query options
-            | post | true |
 
         When I match I should get
             | trace | matchings |
@@ -58,9 +53,6 @@ Feature: POST request
             | abeda | yes    |
             | xa    |        |
             | by    |        |
-            
-        And the query options
-            | post | true |
             
         When I request a travel time matrix I should get
             |   | x   | y   | d   | e   |
@@ -81,9 +73,6 @@ Feature: POST request
         And the ways
             | nodes |
             | abc   |
-            
-        And the query options
-            | post | true |
 
         When I request locate I should get
             | in | out |
@@ -103,9 +92,6 @@ Feature: POST request
         And the ways
             | nodes |
             | abc   |
-            
-        And the query options
-            | post | true |
 
         When I request nearest I should get
             | in | out |
