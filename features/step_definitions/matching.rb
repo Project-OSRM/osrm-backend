@@ -20,7 +20,7 @@ When /^I match I should get$/ do |table|
               timestamps = row['timestamps'].split(" ").compact.map { |t| t.to_i}
           end
           if row['ways']
-              ways = row['ways'].gsub(/[^a-z]/, "")
+              ways = row['ways'].split(",")
           end
           got = {'trace' => row['trace'] }
           response = request_matching trace, timestamps, params
@@ -62,15 +62,15 @@ When /^I match I should get$/ do |table|
         end
         if table.headers.include? 'ways'
           got['ways'] = json['matchings'].compact.map { |sub| sub['ways']}
-
-          way = ""
+          row_idx = 0
           got['ways'].each do |sub|
             sub.each do |x|
-              way << x
+              if x != ways[row_idx]
+                ok = false
+              else
+                row_idx = row_idx + 1
+              end
             end
-          end
-          if way != ways
-            ok = false
           end
         end
       end
