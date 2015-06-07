@@ -10,22 +10,6 @@ def generate_request_url path
   end
 end
 
-def send_simple_request uri, path
-  Timeout.timeout(OSRM_TIMEOUT) do
-    if @http_method.eql? "POST"
-      pos = path.index('=') + 1
-      path.slice!(0, pos)
-      response = Net::HTTP.post_form uri, "loc" => path
-    else
-      response = Net::HTTP.get_response uri
-    end
-  end
-rescue Errno::ECONNREFUSED => e
-  raise "*** osrm-routed is not running."
-rescue Timeout::Error
-  raise "*** osrm-routed did not respond."
-end
-
 def send_request uri, waypoints=[], options={}, timestamps=[]
   @query = uri.to_s
   Timeout.timeout(OSRM_TIMEOUT) do
