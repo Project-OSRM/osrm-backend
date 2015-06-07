@@ -21,7 +21,7 @@ def request_path path, waypoints=[], options={}
   else
     uri = generate_request_url (path + '?' + params)
   end
-  response = send_request uri, waypoints, {}, options
+  response = send_request uri, waypoints, options
 end
 
 def request_url path

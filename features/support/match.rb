@@ -15,6 +15,6 @@ def request_matching trace=[], timestamps=[], options={}
   params = nil if params==""
   
   uri = generate_request_url ("match" + '?' + params)
-  response = send_request uri, trace, timestamps, options
+  response = send_request uri, trace, options, timestamps
 end
 

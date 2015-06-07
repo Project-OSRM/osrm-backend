@@ -26,7 +26,7 @@ rescue Timeout::Error
   raise "*** osrm-routed did not respond."
 end
 
-def send_request uri, waypoints, timestamps, options
+def send_request uri, waypoints=[], options={}, timestamps=[]
   @query = uri.to_s
   Timeout.timeout(OSRM_TIMEOUT) do
     if @http_method.eql? "POST"
