@@ -58,6 +58,25 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     using ClassifierT = BayesClassifier<LaplaceDistribution, LaplaceDistribution, double>;
     using TraceClassification = ClassifierT::ClassificationT;
 
+    struct RoundAbout
+    {
+        RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
+        int start_index;
+        unsigned name_id;
+        int leave_at_exit;
+    } round_about;
+
+    struct Segment
+    {
+        Segment() : name_id(INVALID_NAMEID), length(-1), position(0) {}
+        Segment(unsigned n, int l, unsigned p) : name_id(n), length(l), position(p) {}
+        unsigned name_id;
+        int length;
+        unsigned position;
+    };
+    std::vector<Segment> shortest_path_segments;
+    unsigned entered_restricted_area_count;
+
   public:
     MapMatchingPlugin(DataFacadeT *facade, const int max_locations_map_matching)
         : descriptor_string("match"), facade(facade),
@@ -187,11 +206,111 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.target_traversed_in_reverse[i],
                                       raw_route.is_via_leg(i));
             }
-            // we need this because we don't run DP
+            // we run this to get the instructions
+            factory.Run(route_parameters.zoom_level);
+
+            osrm::json::Array json_instruction_array;
+            unsigned necessary_segments_running_index = 0;
+            round_about.leave_at_exit = 0;
+            round_about.name_id = 0;
+            std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
             for (auto &segment : factory.path_description)
             {
+                // we need this because we don't run DP
                 segment.necessary = true;
+
+                // get the routing instructions
+                if(route_parameters.print_instructions)
+                {
+                    osrm::json::Array json_instruction_row;
+                    TurnInstruction current_instruction = segment.turn_instruction;
+                    entered_restricted_area_count += (current_instruction != segment.turn_instruction);
+                    if (TurnInstructionsClass::TurnIsNecessary(current_instruction))
+                    {
+                        if (TurnInstruction::EnterRoundAbout == current_instruction)
+                        {
+                            round_about.name_id = segment.name_id;
+                            round_about.start_index = necessary_segments_running_index;
+                        }
+                        else
+                        {
+                            std::string current_turn_instruction;
+                            if (TurnInstruction::LeaveRoundAbout == current_instruction)
+                            {
+                                temp_instruction = cast::integral_to_string(
+                                    cast::enum_to_underlying(TurnInstruction::EnterRoundAbout));
+                                current_turn_instruction += temp_instruction;
+                                current_turn_instruction += "-";
+                                temp_instruction = cast::integral_to_string(round_about.leave_at_exit + 1);
+                                current_turn_instruction += temp_instruction;
+                                round_about.leave_at_exit = 0;
+                            }
+                            else
+                            {
+                                temp_instruction =
+                                    cast::integral_to_string(cast::enum_to_underlying(current_instruction));
+                                current_turn_instruction += temp_instruction;
+                            }
+                            json_instruction_row.values.push_back(current_turn_instruction);
+
+                            json_instruction_row.values.push_back(facade->get_name_for_id(segment.name_id));
+                            json_instruction_row.values.push_back(std::round(segment.length));
+                            json_instruction_row.values.push_back(necessary_segments_running_index);
+                            json_instruction_row.values.push_back(std::round(segment.duration / 10.));
+                            json_instruction_row.values.push_back(
+                                cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
+                            const double bearing_value = (segment.bearing / 10.);
+                            json_instruction_row.values.push_back(bearing::get(bearing_value));
+                            json_instruction_row.values.push_back(
+                                static_cast<unsigned>(round(bearing_value)));
+                            json_instruction_row.values.push_back(segment.travel_mode);
+
+                            shortest_path_segments.emplace_back(
+                                segment.name_id, static_cast<int>(segment.length),
+                                static_cast<unsigned>(shortest_path_segments.size()));
+                            json_instruction_array.values.push_back(json_instruction_row);
+                        }
+                    }
+                    else if (TurnInstruction::StayOnRoundAbout == current_instruction)
+                    {
+                        ++round_about.leave_at_exit;
+                    }
+                    if (segment.necessary)
+                    {
+                        ++necessary_segments_running_index;
+                    }
+	        }
             }
+            if(route_parameters.print_instructions)
+            {
+                // set destination point
+                osrm::json::Array json_last_instruction_row;
+                temp_instruction = cast::integral_to_string(
+                    cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
+                json_last_instruction_row.values.push_back(temp_instruction);
+                json_last_instruction_row.values.push_back("");
+                json_last_instruction_row.values.push_back(0);
+                json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
+                json_last_instruction_row.values.push_back(0);
+                json_last_instruction_row.values.push_back("0m");
+                json_last_instruction_row.values.push_back(bearing::get(0.0));
+                json_last_instruction_row.values.push_back(0.);
+                json_instruction_array.values.push_back(json_last_instruction_row);
+                subtrace.values["instructions"] = json_instruction_array;
+
+                // build summary
+                factory.BuildRouteSummary(factory.get_entire_length(),
+                                                      raw_route.shortest_path_length);
+                osrm::json::Object json_route_summary;
+                json_route_summary.values["total_distance"] = factory.summary.distance;
+                json_route_summary.values["total_time"] = factory.summary.duration;
+                json_route_summary.values["start_point"] =
+                    facade->get_name_for_id(factory.summary.source_name_id);
+                json_route_summary.values["end_point"] =
+                    facade->get_name_for_id(factory.summary.target_name_id);
+                subtrace.values["route_summary"] = json_route_summary;
+            }
+
             subtrace.values["geometry"] =
                 factory.AppendGeometryString(route_parameters.compression);
         }
