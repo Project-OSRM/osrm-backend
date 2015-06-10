@@ -58,6 +58,26 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     using ClassifierT = BayesClassifier<LaplaceDistribution, LaplaceDistribution, double>;
     using TraceClassification = ClassifierT::ClassificationT;
 
+    struct SavedCoordinates {
+      FixedPointCoordinate coordinate;
+      PathData data;
+      bool new_angle;   // calculate a new angle for this coordinate
+    };
+    const int DEFAULT_MAX_DISTANCE = 200;
+    const int DEFAULT_MIN_DELETE_DISTANCE = 30;
+
+    // we need these two to check if the iterator is on the first or last element
+    template <typename Iter, typename Cont>
+    bool is_last(Iter iter, const Cont& cont)
+    {
+        return (iter != cont.end()) && (next(iter) == cont.end());
+    }
+    template <typename Iter, typename Cont>
+    bool is_first(Iter iter, const Cont& cont)
+    {
+        return (iter != cont.begin()) && (prev(iter) == cont.begin());
+    }
+
   public:
     MapMatchingPlugin(DataFacadeT *facade, const int max_locations_map_matching)
         : descriptor_string("match"), facade(facade),
@@ -158,11 +178,205 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return true;
     }
 
+    double getNewAngle(typename std::list<SavedCoordinates>::iterator iterator,
+                       std::list<SavedCoordinates> coordinate_list)
+    {
+        typename std::list<SavedCoordinates>::iterator prev_coordinate = iterator;
+        typename std::list<SavedCoordinates>::iterator next_coordinate = iterator;
+        advance(prev_coordinate, -1);
+        advance(next_coordinate, 1);
+
+        double angle = ComputeAngle::OfThreeFixedPointCoordinates(prev_coordinate->coordinate, iterator->coordinate, next_coordinate->coordinate);
+        return angle;
+    }
+    
+    bool checkDeleteRoute(typename std::list<SavedCoordinates>::iterator start_iter, 
+                          typename std::list<SavedCoordinates>::iterator act_iter, 
+                          std::list<SavedCoordinates> coordinate_list) 
+    {
+        if(is_last(start_iter, coordinate_list) && is_first(act_iter, coordinate_list) &&
+           is_last(act_iter, coordinate_list) && is_first(start_iter, coordinate_list))
+        {
+            return false;
+        }
+
+        // special case: on every roundabout the map matching algorithm goes 2 times through it
+        // one time it goes completly around and the other one it goes through the matched route
+        if((start_iter->data.turn_instruction == TurnInstruction::EnterRoundAbout) || 
+           (act_iter->data.turn_instruction == TurnInstruction::EnterRoundAbout))
+        {
+            return true;
+        }
+
+        // How to delete a path:
+        // (the path goes through the coordinates x1, o, x2, x3, x2, o, x4)
+        //   |
+        //   x4   x3
+        //   |    |
+        //   o----x2 
+        //   |
+        //   x1
+        // o is the checked coordinate
+        // prev_point is described as: the previous coordinate of the iterator who is ahead (in the example: x2)
+        // next_point is described as: the next coordinate of the iterator who doesn't move (in the example: x2)
+        typename std::list<SavedCoordinates>::iterator prev_point = --act_iter;
+        typename std::list<SavedCoordinates>::iterator next_point = ++start_iter;
+        if(prev_point->coordinate.lon == next_point->coordinate.lon && prev_point->coordinate.lat == next_point->coordinate.lat)
+        {
+            // if both coordinates are equal change the positions and check again, but this 
+            // time if these coordinates are NOT the same
+            // example: prev_point is now the previous coordinate of the iterator who doesn't move (=> x1)
+            // next_point is the next coordinate of the iterator who is ahead (=> x4)
+            // this tells us that there is no new way which is created, but rather a unneccessary path
+            prev_point = start_iter;
+            next_point = act_iter;
+            advance(prev_point, -2);
+            advance(next_point, 2);
+
+            if(prev_point->coordinate.lon != next_point->coordinate.lon && prev_point->coordinate.lat != next_point->coordinate.lat)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    void createAndCutGeometry(const osrm::matching::SubMatching &sub,
+                              const RouteParameters &route_parameters,
+                              const InternalRouteResult &raw_route,
+                              DescriptionFactory &factory,
+                              std::list<SavedCoordinates> &coordinate_list)
+    {
+        FixedPointCoordinate current_coordinate (0, 0);
+        factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
+                                raw_route.source_traversed_in_reverse.front());
+        for (const auto i :
+                osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+        {
+            // add all coordinates from the segment
+            for (const PathData &path_data : raw_route.unpacked_path_segments[i])
+            {
+                FixedPointCoordinate previous_coordinate = current_coordinate;
+                current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+                SavedCoordinates coord = {current_coordinate, path_data, false};
+
+                // we don't need multiple same coordinates
+                if(previous_coordinate.lat != current_coordinate.lat && 
+                    previous_coordinate.lon != current_coordinate.lon)
+                {
+                    coordinate_list.push_back(coord);
+                }
+                else
+                {
+                    // since we ignore the last coordinate we need to calculate a new angle
+                    coordinate_list.back().new_angle = true;
+                }
+            }
+        }
+
+        // delete unneccessary paths
+        bool delete_flag;
+        for(typename std::list<SavedCoordinates>::iterator iter = coordinate_list.begin(); iter != coordinate_list.end(); )
+        {
+            delete_flag = false;
+            double act_distance, act_max_distance = 0;
+            typename std::list<SavedCoordinates>::iterator ii = iter;
+            // this iterator goes ahead and checks all the other coordinates to find possible candidates
+            // to remove (remove condition: both iterators have the same longitude and latitude value)
+            for(advance(ii, 1); ii != coordinate_list.end(); )
+            {
+                // get the greatest distance from the actual loop
+                act_distance = coordinate_calculation::great_circle_distance(iter->coordinate, ii->coordinate);
+                if(act_distance > act_max_distance)
+                {
+                    act_max_distance = act_distance;
+                }
+
+                if(iter->coordinate.lon == ii->coordinate.lon && iter->coordinate.lat == ii->coordinate.lat)
+                {
+                    if((checkDeleteRoute(iter, ii, coordinate_list) && (act_max_distance <= DEFAULT_MAX_DISTANCE)) || 
+                       (act_max_distance <= DEFAULT_MIN_DELETE_DISTANCE))
+                    {
+                        iter = coordinate_list.erase(iter, ii);
+                        iter->new_angle = true;
+                        delete_flag = true;
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    ++ii;
+                }
+            }
+            // if we deleted a path we have to check the same coordinate again,
+            // because there may be other paths to delete
+            if(!delete_flag)
+            {
+                ++iter;
+            }
+        }
+
+        // Append
+        for(typename std::list<SavedCoordinates>::iterator iter = coordinate_list.begin(); iter != coordinate_list.end(); ++iter)
+        {
+            current_coordinate = iter->coordinate;
+            PathData new_data = iter->data;
+
+            if(iter->new_angle)
+            {
+                // special case: current coordinate is first or last coordinate => we can't calculate a new angle
+                if(!is_last(iter, coordinate_list) && !is_first(iter, coordinate_list) &&
+                    iter != coordinate_list.begin() && iter != coordinate_list.end())
+                {
+                    double angle = getNewAngle(iter, coordinate_list);
+                    new_data.turn_instruction = TurnInstructionsClass::GetTurnDirectionOfInstruction(angle);
+                }
+                else
+                {
+                    new_data.turn_instruction = TurnInstruction::ReachViaLocation;
+                }
+            }
+            factory.AppendSegment(current_coordinate, new_data);
+        }
+        // to prevent a cut of the polyline at the end we need to set the end segment manually
+        factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom,
+                              raw_route.target_traversed_in_reverse.back(),
+                              raw_route.is_via_leg(raw_route.unpacked_path_segments.size()));
+    }
+
+    void createGeometry(const osrm::matching::SubMatching &sub,
+                        const RouteParameters &route_parameters,
+                        const InternalRouteResult &raw_route,
+                        DescriptionFactory &factory)
+    {
+        FixedPointCoordinate current_coordinate;
+        factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
+                                raw_route.source_traversed_in_reverse.front());
+        for (const auto i :
+             osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+        {
+            for (const PathData &path_data : raw_route.unpacked_path_segments[i])
+            {
+                current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+                factory.AppendSegment(current_coordinate, path_data);
+            }
+            factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
+                                  raw_route.target_traversed_in_reverse[i],
+                                  raw_route.is_via_leg(i));
+        }
+    }
+
     osrm::json::Object submatchingToJSON(const osrm::matching::SubMatching &sub,
                                          const RouteParameters &route_parameters,
                                          const InternalRouteResult &raw_route)
     {
         osrm::json::Object subtrace;
+        std::list<SavedCoordinates> coordinate_list;
 
         if (route_parameters.classify)
         {
@@ -172,21 +386,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (route_parameters.geometry)
         {
             DescriptionFactory factory;
-            FixedPointCoordinate current_coordinate;
-            factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
-                                    raw_route.source_traversed_in_reverse.front());
-            for (const auto i :
-                 osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+
+            if(route_parameters.cut)
             {
-                for (const PathData &path_data : raw_route.unpacked_path_segments[i])
-                {
-                    current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-                    factory.AppendSegment(current_coordinate, path_data);
-                }
-                factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
-                                      raw_route.target_traversed_in_reverse[i],
-                                      raw_route.is_via_leg(i));
+                createAndCutGeometry(sub, route_parameters, raw_route, factory, coordinate_list);
             }
+            else
+            {
+                createGeometry(sub, route_parameters, raw_route, factory);
+            }
+
             // we need this because we don't run DP
             for (auto &segment : factory.path_description)
             {
@@ -206,6 +415,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                        node.location.lon / COORDINATE_PRECISION));
         }
         subtrace.values["matched_points"] = points;
+
+        if(!coordinate_list.empty())
+        {
+            coordinate_list.clear();
+        }
 
         return subtrace;
     }

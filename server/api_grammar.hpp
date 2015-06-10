@@ -42,7 +42,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                    *(query) >> -(uturns);
         query = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | timestamp | u | cmp |
                             language | instruction | geometry | alt_route | old_API | num_results |
-                            matching_beta | gps_precision | classify));
+                            matching_beta | gps_precision | classify | cut));
 
         zoom = (-qi::lit('&')) >> qi::lit('z') >> '=' >>
                qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
@@ -83,6 +83,8 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                qi::short_[boost::bind(&HandlerT::setGPSPrecision, handler, ::_1)];
         classify = (-qi::lit('&')) >> qi::lit("classify") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::setClassify, handler, ::_1)];
+        cut = (-qi::lit('&')) >> qi::lit("cut") >> '=' >>
+            qi::bool_[boost::bind(&HandlerT::setCutFlag, handler, ::_1)];
 
         string = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));
@@ -93,7 +95,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     qi::rule<Iterator> api_call, query;
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
         hint, timestamp, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
-        uturns, old_API, num_results, matching_beta, gps_precision, classify;
+        uturns, old_API, num_results, matching_beta, gps_precision, classify, cut;
 
     HandlerT *handler;
 };
