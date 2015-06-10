@@ -187,7 +187,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             subtrace.values["confidence"] = sub.confidence;
         }
 
-        if (route_parameters.geometry)
+        JSONDescriptor<DataFacadeT> json_descriptor(facade);
+        json_descriptor.SetConfig(route_parameters);
+
+        subtrace.values["hint_data"] = json_descriptor.BuildHintData(raw_route);
+
+        if (route_parameters.geometry || route_parameters.print_instructions)
         {
             DescriptionFactory factory;
             FixedPointCoordinate current_coordinate;
@@ -205,13 +210,22 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.target_traversed_in_reverse[i],
                                       raw_route.is_via_leg(i));
             }
-            // we need this because we don't run DP
-            for (auto &segment : factory.path_description)
+
+            // we run this to get the instructions
+            factory.Run(route_parameters.zoom_level);
+
+            if (route_parameters.geometry)
             {
-                segment.necessary = true;
+                subtrace.values["geometry"] = factory.AppendGeometryString(route_parameters.compression);
             }
-            subtrace.values["geometry"] =
-                factory.AppendGeometryString(route_parameters.compression);
+
+
+            if (route_parameters.print_instructions)
+            {
+                std::vector<typename JSONDescriptor<DataFacadeT>::Segment> temp_segments;
+                subtrace.values["instructions"] = json_descriptor.BuildTextualDescription(factory, temp_segments);
+            }
+
         }
 
         subtrace.values["indices"] = osrm::json::make_array(sub.indices);
