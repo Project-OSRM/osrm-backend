@@ -51,7 +51,7 @@ Feature: Foot - Access tags on ways
             | no           |              |       |
             | private      |              |       |
             | agricultural |              |       |
-            | forestery    |              |       |
+            | forestry     |              |       |
             |              | yes          | x     |
             |              | permissive   | x     |
             |              | designated   | x     |
@@ -59,7 +59,7 @@ Feature: Foot - Access tags on ways
             |              | no           |       |
             |              | private      |       |
             |              | agricultural |       |
-            |              | forestery    |       |
+            |              | forestry     |       |
 
     Scenario: Foot - Access tags on both node and way
         Then routability should be

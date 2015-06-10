@@ -5,7 +5,7 @@ local find_access_tag = require("lib/access").find_access_tag
 -- Begin of globals
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true}
 access_tag_whitelist = { ["yes"] = true, ["foot"] = true, ["permissive"] = true, ["designated"] = true  }
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
+access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierachy = { "foot", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
@@ -55,7 +55,7 @@ man_made_speeds = {
 surface_speeds = {
   ["fine_gravel"] =   walking_speed*0.75,
   ["gravel"] =        walking_speed*0.75,
-  ["pebbelstone"] =   walking_speed*0.75,
+  ["pebblestone"] =   walking_speed*0.75,
   ["mud"] =           walking_speed*0.5,
   ["sand"] =          walking_speed*0.5
 }
