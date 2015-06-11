@@ -3,15 +3,11 @@ environment:
   - configuration: Debug
   - configuration: Release
 
-# branches to build
-branches:
-  # whitelist
-  only:
-    - develop
-
 # scripts that are called at very beginning, before repo cloning
 init:
   - git config --global core.autocrlf input
+
+os: Visual Studio 2015 Preview
 
 # clone directory
 clone_folder: c:\projects\osrm
@@ -35,9 +31,11 @@ build_script:
   - SET P=c:/projects/osrm
   - set TBB_INSTALL_DIR=%P%/tbb
   - set TBB_ARCH_PLATFORM=intel64/vc12
-  - cmake .. -G "Visual Studio 12 Win64" -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_INSTALL_PREFIX=%P%/libs -DBOOST_ROOT=%P%/boost_min -DBoost_ADDITIONAL_VERSIONS=1.57 -DBoost_USE_STATIC_LIBS=ON -T CTP_Nov2013
-  - msbuild /clp:Verbosity=minimal /nologo OSRM.sln
-  - msbuild /clp:Verbosity=minimal /nologo tests.vcxproj
+  - cmake .. -G "Visual Studio 14 Win64" -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_INSTALL_PREFIX=%P%/libs -DBOOST_ROOT=%P%/boost_min -DBoost_ADDITIONAL_VERSIONS=1.57 -DBoost_USE_STATIC_LIBS=ON
+  - SET PLATFORM_TOOLSET=v140
+  - SET TOOLS_VERSION=14.0
+  - msbuild /p:Platform=x64 /clp:Verbosity=minimal /toolsversion:%TOOLS_VERSION% /p:PlatformToolset=%PLATFORM_TOOLSET% /nologo OSRM.sln
+  - msbuild /p:Platform=x64 /clp:Verbosity=minimal /toolsversion:%TOOLS_VERSION% /p:PlatformToolset=%PLATFORM_TOOLSET% /nologo tests.vcxproj
   - cd %Configuration%
   - if "%APPVEYOR_REPO_BRANCH%"=="develop" (7z a %P%/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip)
   - cd ..\..\profiles
