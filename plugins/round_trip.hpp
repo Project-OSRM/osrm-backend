@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include <limits> 
+#include <limits>
 
 template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 {
@@ -61,7 +61,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
     void FarthestInsertion(const RouteParameters & route_parameters,
                            const PhantomNodeArray & phantom_node_vector,
-                           std::vector<EdgeWeight> & dist_table, 
+                           std::vector<EdgeWeight> & dist_table,
                            InternalRouteResult & min_route,
                            std::vector<int> & min_loc_permutation) {
         //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,11 +72,102 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // 4. repeat 2-3 until all locations are visited
         // 5. DONE!
         //////////////////////////////////////////////////////////////////////////////////////////////////
+
+        const auto number_of_locations = phantom_node_vector.size();
+        std::list<int> current_trip;
+        std::vector<bool> visited(number_of_locations, false);
+        std::vector<std::list<int>::iterator> list_loc(number_of_locations);
+        InternalRouteResult raw_route;
+        PhantomNodes viapoint;
+
+        // find two locations that have max distance
+        auto max_dist = -1;
+        int max_from = -1;
+        int max_to = -1;
+
+        auto i = 0;
+        for (auto it = dist_table.begin(); it != dist_table.end(); ++it) {
+            if (*it > max_dist) {
+                max_dist = *it;
+                max_from = i / number_of_locations;
+                max_to = i % number_of_locations;
+            }
+            ++i;
+        }
+
+        visited[max_from] = true;
+        visited[max_to] = true;
+
+        // SimpleLogger().Write() << "Start with " << max_from << " " << max_to;
+
+        current_trip.push_back(max_from);
+        list_loc[max_from] = current_trip.begin();
+
+        current_trip.push_back(max_to);
+        list_loc[max_to] = current_trip.begin();
+
+        for (int j = 2; j < number_of_locations; ++j) {
+            auto max_min_dist = -1;
+            int next_node = -1;
+            auto min_max_insert = current_trip.begin();
+
+            // look for loc i that is the farthest away from all other visited locs
+            for (int i = 0; i < number_of_locations; ++i) {
+                if (!visited[i]) {
+                    // SimpleLogger().Write() << "- node " << i << " is not visited yet";
+
+                    auto min_insert = std::numeric_limits<int>::max();
+                    auto min_to = current_trip.begin();
+
+                    for (auto from_node = current_trip.begin(); from_node != current_trip.end(); ++from_node) {
+
+                        auto to_node = std::next(from_node);
+                        if (std::next(from_node) == current_trip.end()) {
+                            to_node = current_trip.begin();
+                        }
+
+                        auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + i);
+                        auto dist_to = *(dist_table.begin() + (i * number_of_locations) + *to_node);
+
+                        // SimpleLogger().Write() << "   From " << *from_node << " to " << i << " to " << *to_node << " is " << dist_to + dist_from;
+
+                        if (dist_from + dist_to < min_insert) {
+                            min_insert = dist_from + dist_to;
+                            min_to = to_node;
+                        }
+                    }
+                    if (min_insert > max_min_dist) {
+                        max_min_dist = min_insert;
+                        next_node = i;
+                        min_max_insert = min_to;
+                    }
+                }
+            }
+            // SimpleLogger().Write() << "- Insert new node " << next_node;
+            visited[next_node] = true;
+
+            current_trip.insert(min_max_insert, next_node);
+        }
+
+        for (auto it = current_trip.begin(); it != current_trip.end(); ++it) {
+            SimpleLogger().Write() << "- Visit location " << *it;
+
+            auto from_node = *it;
+            auto to_node = *std::next(it);
+            if (std::next(it) == current_trip.end()) {
+                to_node = current_trip.front();
+            }
+            viapoint = PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
+            raw_route.segment_end_coordinates.emplace_back(viapoint);
+        }
+        search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
+
+        //TODO min_loc_permutation
     }
 
     void NearestNeighbour(const RouteParameters & route_parameters,
                           const PhantomNodeArray & phantom_node_vector,
-                          std::vector<EdgeWeight> & dist_table, 
+                          std::vector<EdgeWeight> & dist_table,
                           InternalRouteResult & min_route,
                           std::vector<int> & min_loc_permutation) {
         //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +194,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // ALWAYS START AT ANOTHER STARTING POINT
         for(int start_node = 0; start_node < number_of_locations; ++start_node)
         {
-        
+
             if (is_lonely_island[start_node] >= 0)
             {
                 // if node is a lonely island it is an unsuitable node to start from and shall be skipped
@@ -123,7 +214,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 }
             }
 
-            int curr_node = start_node;   
+            int curr_node = start_node;
             is_lonely_island[curr_node] = -1;
             InternalRouteResult raw_route;
             //TODO: Should we always use the same vector or does it not matter at all because of loop scope?
@@ -144,7 +235,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 auto row_begin_iterator = dist_table.begin() + (curr_node * number_of_locations);
                 auto row_end_iterator = dist_table.begin() + ((curr_node + 1) * number_of_locations);
                 for (auto it = row_begin_iterator; it != row_end_iterator; ++it) {
-                    auto index = std::distance(row_begin_iterator, it); 
+                    auto index = std::distance(row_begin_iterator, it);
                     if (is_lonely_island[index] < 1 && !visited[index] && *it < min_dist)
                     {
                         min_dist = *it;
@@ -179,7 +270,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
             // 5. COMPUTE ROUTE
             search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
-            
+
             // check round trip with this starting point is shorter than the shortest round trip found till now
             if (raw_route.shortest_path_length < min_route.shortest_path_length) {
                 min_route = raw_route;
@@ -244,17 +335,23 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // compute TSP round trip
         InternalRouteResult min_route;
         std::vector<int> min_loc_permutation;
+
         TIMER_START(tsp_nn);
         NearestNeighbour(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
         TIMER_STOP(tsp_nn);
-
         SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
         SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp_nn);
+
+        TIMER_START(tsp_fi);
+        FarthestInsertion(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
+        TIMER_STOP(tsp_fi);
+        SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
+        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp_fi);
 
         // return result to json
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
         descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
-        
+
         descriptor->SetConfig(route_parameters);
         descriptor->Run(min_route, json_result);
 
