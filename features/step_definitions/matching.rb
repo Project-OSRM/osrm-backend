@@ -149,13 +149,13 @@ When /^I match with turns I should get$/ do |table|
       end
       if response.body.empty? == false
         if response.code == "200"
-          instructions = way_list json['matchings'][0]['instructions']
-          bearings = bearing_list json['matchings'][0]['instructions']
-          compasses = compass_list json['matchings'][0]['instructions']
-          turns = turn_list json['matchings'][0]['instructions']
-          modes = mode_list json['matchings'][0]['instructions']
-          times = time_list json['matchings'][0]['instructions']
-          distances = distance_list json['matchings'][0]['instructions']
+          instructions = way_list json['route_instructions']
+          bearings = bearing_list json['route_instructions']
+          compasses = compass_list json['route_instructions']
+          turns = turn_list json['route_instructions']
+          modes = mode_list json['route_instructions']
+          times = time_list json['route_instructions']
+          distances = distance_list json['route_instructions']
         end
       end
       
