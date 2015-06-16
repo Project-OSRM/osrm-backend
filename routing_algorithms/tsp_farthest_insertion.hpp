@@ -93,11 +93,8 @@ void FarthestInsertion(const RouteParameters & route_parameters,
                 std::list<int>::iterator following_loc;
 
                 // for all nodes in the current trip find the best insertion resulting in the shortest path
-                for (auto from_node = current_trip.begin(); from_node != current_trip.end(); ++from_node) {
+                for (auto from_node = current_trip.begin(); from_node != std::prev(current_trip.end()); ++from_node) {
                     auto to_node = std::next(from_node);
-                    if (std::next(from_node) == current_trip.end()) {
-                        to_node = current_trip.begin();
-                    }
 
                     auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + i);
                     auto dist_to = *(dist_table.begin() + (i * number_of_locations) + *to_node);
@@ -109,6 +106,19 @@ void FarthestInsertion(const RouteParameters & route_parameters,
                         following_loc = to_node;
                     }
                 }
+                {   // check insertion between last and first location too
+                    auto from_node = std::prev(current_trip.end());
+                    auto to_node = current_trip.begin();
+
+                    auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + i);
+                    auto dist_to = *(dist_table.begin() + (i * number_of_locations) + *to_node);
+                    auto trip_dist = dist_from + dist_to - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node);
+                    if (trip_dist < longest_min_tour) {
+                        longest_min_tour = trip_dist;
+                        following_loc = to_node;
+                    }
+                }
+
                 // add the location to the current trip such that it results in the shortest total tour
                 if (longest_min_tour > shortest_max_tour) {
                     shortest_max_tour = longest_min_tour;
@@ -125,18 +135,20 @@ void FarthestInsertion(const RouteParameters & route_parameters,
     // given he final trip, compute total distance and return the route and location permutation
     PhantomNodes viapoint;
     int perm = 0;
-    for (auto it = current_trip.begin(); it != current_trip.end(); ++it) {
+    for (auto it = current_trip.begin(); it != std::prev(current_trip.end()); ++it) {
         auto from_node = *it;
         auto to_node = *std::next(it);
-        if (std::next(it) == current_trip.end()) {
-            to_node = current_trip.front();
-        }
 
         viapoint = PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
         min_route.segment_end_coordinates.emplace_back(viapoint);
 
         min_loc_permutation[from_node] = perm;
         ++perm;
+    }
+    {   // check dist between last and first location too
+        viapoint = PhantomNodes{phantom_node_vector[*std::prev(current_trip.end())][0], phantom_node_vector[current_trip.front()][0]};
+        min_route.segment_end_coordinates.emplace_back(viapoint);
+        min_loc_permutation[*std::prev(current_trip.end())] = perm;
     }
 }
 
