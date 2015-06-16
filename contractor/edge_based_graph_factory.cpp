@@ -193,15 +193,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         {
             BOOST_ASSERT(forward_data.forward);
         }
+        else
+        {
+            BOOST_ASSERT(!forward_data.forward);
+        }
+
         if (reverse_data.edgeBasedNodeID != SPECIAL_NODEID)
         {
             BOOST_ASSERT(reverse_data.forward);
         }
-        if (forward_data.edgeBasedNodeID == SPECIAL_NODEID)
-        {
-            BOOST_ASSERT(!forward_data.forward);
-        }
-        if (reverse_data.edgeBasedNodeID == SPECIAL_NODEID)
+        else
         {
             BOOST_ASSERT(!reverse_data.forward);
         }
@@ -433,9 +434,8 @@ void EdgeBasedGraphFactory::CompressGeometry()
                            << new_edge_count / (double)original_number_of_edges;
 }
 
-/**
- * Writes the id of the edge in the edge expanded graph (into the edge in the node based graph)
- */
+/// Renumbers all _forward_ edges and sets the edgeBasedNodeID.
+/// A specific numbering is not important. Any unique ID will do.
 void EdgeBasedGraphFactory::RenumberEdges()
 {
     // renumber edge based node of outgoing edges
@@ -498,7 +498,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
             const NodeID node_v = m_node_based_graph->GetTarget(e1);
 
             BOOST_ASSERT(SPECIAL_NODEID != node_v);
-            // pick only every other edge
+            // pick only every other edge, since we have every edge as an outgoing
+            // and incoming egde
             if (node_u > node_v)
             {
                 continue;
@@ -524,6 +525,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
             const bool component_is_tiny = size_of_component < 1000;
 
+            // we only set edgeBasedNodeID for forward edges
             if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
             {
                 InsertEdgeBasedNode(node_v, node_u,
