@@ -122,13 +122,9 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
                         auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + i);
                         auto dist_to = *(dist_table.begin() + (i * number_of_locations) + *to_node);
+                        auto trip_dist = dist_from + dist_to - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node);
 
-
-
-                        auto trip_dist = RoundTripDist(current_trip, dist_table, number_of_locations);
-                        trip_dist = trip_dist - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node) + dist_to + dist_from;
-
-                        SimpleLogger().Write() << "   From " << *from_node << " to " << i << " to " << *to_node << " is " << trip_dist;
+                        // SimpleLogger().Write() << "   From " << *from_node << " to " << i << " to " << *to_node << " is " << trip_dist;
 
                         if (trip_dist < min_insert) {
                             min_insert = trip_dist;
@@ -165,21 +161,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
         search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
     }
-
-    int RoundTripDist(const std::list<int> trip, const std::vector<EdgeWeight> & dist_table, const size_t number_of_locations) {
-        int dist = 0;
-        for (auto it = trip.begin(); it != trip.end(); ++it) {
-            auto from_node = *it;
-            auto to_node = *std::next(it);
-            if (std::next(it) == trip.end()) {
-                to_node = trip.front();
-            }
-            dist += *(dist_table.begin() + (from_node * number_of_locations) + to_node);
-        }
-        return dist;
-    }
-
-
 
     void NearestNeighbour(const RouteParameters & route_parameters,
                           const PhantomNodeArray & phantom_node_vector,
