@@ -61,7 +61,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
     void FarthestInsertion(const RouteParameters & route_parameters,
                            const PhantomNodeArray & phantom_node_vector,
-                           std::vector<EdgeWeight> & dist_table,
+                           const std::vector<EdgeWeight> & dist_table,
                            InternalRouteResult & min_route,
                            std::vector<int> & min_loc_permutation) {
         //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,9 +76,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         const auto number_of_locations = phantom_node_vector.size();
         std::list<int> current_trip;
         std::vector<bool> visited(number_of_locations, false);
-        std::vector<std::list<int>::iterator> list_loc(number_of_locations);
-        InternalRouteResult raw_route;
-        PhantomNodes viapoint;
 
         // find two locations that have max distance
         auto max_dist = -1;
@@ -101,10 +98,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // SimpleLogger().Write() << "Start with " << max_from << " " << max_to;
 
         current_trip.push_back(max_from);
-        list_loc[max_from] = current_trip.begin();
-
         current_trip.push_back(max_to);
-        list_loc[max_to] = current_trip.begin();
 
         for (int j = 2; j < number_of_locations; ++j) {
             auto max_min_dist = -1;
@@ -129,10 +123,15 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                         auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + i);
                         auto dist_to = *(dist_table.begin() + (i * number_of_locations) + *to_node);
 
-                        // SimpleLogger().Write() << "   From " << *from_node << " to " << i << " to " << *to_node << " is " << dist_to + dist_from;
 
-                        if (dist_from + dist_to < min_insert) {
-                            min_insert = dist_from + dist_to;
+
+                        auto trip_dist = RoundTripDist(current_trip, dist_table, number_of_locations);
+                        trip_dist = trip_dist - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node) + dist_to + dist_from;
+
+                        SimpleLogger().Write() << "   From " << *from_node << " to " << i << " to " << *to_node << " is " << trip_dist;
+
+                        if (trip_dist < min_insert) {
+                            min_insert = trip_dist;
                             min_to = to_node;
                         }
                     }
@@ -149,25 +148,42 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             current_trip.insert(min_max_insert, next_node);
         }
 
+        int perm = 0;
         for (auto it = current_trip.begin(); it != current_trip.end(); ++it) {
-            SimpleLogger().Write() << "- Visit location " << *it;
+            // SimpleLogger().Write() << "- Visit location " << *it;
 
             auto from_node = *it;
             auto to_node = *std::next(it);
             if (std::next(it) == current_trip.end()) {
                 to_node = current_trip.front();
             }
+            PhantomNodes viapoint;
             viapoint = PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
-            raw_route.segment_end_coordinates.emplace_back(viapoint);
+            min_route.segment_end_coordinates.emplace_back(viapoint);
+            min_loc_permutation[from_node] = perm;
+            ++perm;
         }
-        search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
-
-        //TODO min_loc_permutation
+        search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
     }
+
+    int RoundTripDist(const std::list<int> trip, const std::vector<EdgeWeight> & dist_table, const size_t number_of_locations) {
+        int dist = 0;
+        for (auto it = trip.begin(); it != trip.end(); ++it) {
+            auto from_node = *it;
+            auto to_node = *std::next(it);
+            if (std::next(it) == trip.end()) {
+                to_node = trip.front();
+            }
+            dist += *(dist_table.begin() + (from_node * number_of_locations) + to_node);
+        }
+        return dist;
+    }
+
+
 
     void NearestNeighbour(const RouteParameters & route_parameters,
                           const PhantomNodeArray & phantom_node_vector,
-                          std::vector<EdgeWeight> & dist_table,
+                          const std::vector<EdgeWeight> & dist_table,
                           InternalRouteResult & min_route,
                           std::vector<int> & min_loc_permutation) {
         //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -291,6 +307,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
+        TIMER_START(tsp_pre);
         // check if all inputs are coordinates
         if (!check_all_coordinates(route_parameters.coordinates))
         {
@@ -333,33 +350,52 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
 
         // compute TSP round trip
-        InternalRouteResult min_route;
-        std::vector<int> min_loc_permutation;
+        InternalRouteResult min_route_nn;
+        InternalRouteResult min_route_fi;
+        std::vector<int> min_loc_permutation_nn(phantom_node_vector.size(), -1);
+        std::vector<int> min_loc_permutation_fi(phantom_node_vector.size(), -1);
+        TIMER_STOP(tsp_pre);
 
         TIMER_START(tsp_nn);
-        NearestNeighbour(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
+        NearestNeighbour(route_parameters, phantom_node_vector, *result_table, min_route_nn, min_loc_permutation_nn);
         TIMER_STOP(tsp_nn);
-        SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp_nn);
+        SimpleLogger().Write() << "Distance " << min_route_nn.shortest_path_length;
+        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp_nn) + TIMER_MSEC(tsp_pre);
+
+        // std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+        // descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
+
+        // descriptor->SetConfig(route_parameters);
+        // descriptor->Run(min_route_nn, json_result);
+
+        osrm::json::Array json_loc_permutation_nn;
+        json_loc_permutation_nn.values.insert(json_loc_permutation_nn.values.end(), min_loc_permutation_nn.begin(), min_loc_permutation_nn.end());
+        json_result.values["nn_loc_permutation"] = json_loc_permutation_nn;
+        json_result.values["nn_distance"] = min_route_nn.shortest_path_length;
+        json_result.values["nn_runtime"] = TIMER_MSEC(tsp_nn) + TIMER_MSEC(tsp_pre);
 
         TIMER_START(tsp_fi);
-        FarthestInsertion(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
+        FarthestInsertion(route_parameters, phantom_node_vector, *result_table, min_route_fi, min_loc_permutation_fi);
         TIMER_STOP(tsp_fi);
-        SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp_fi);
+        SimpleLogger().Write() << "Distance " << min_route_fi.shortest_path_length;
+        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp_fi) + TIMER_MSEC(tsp_pre);
 
         // return result to json
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
         descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
 
         descriptor->SetConfig(route_parameters);
-        descriptor->Run(min_route, json_result);
+        descriptor->Run(min_route_fi, json_result);
 
-        osrm::json::Array json_loc_permutation;
-        json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
-        json_result.values["nn_loc_permutation"] = json_loc_permutation;
-        json_result.values["nn_distance"] = min_route.shortest_path_length;
-        json_result.values["nn_runtime"] = TIMER_MSEC(tsp_nn);
+        osrm::json::Array json_loc_permutation_fi;
+        json_loc_permutation_fi.values.insert(json_loc_permutation_fi.values.end(), min_loc_permutation_fi.begin(), min_loc_permutation_fi.end());
+        json_result.values["fi_loc_permutation"] = json_loc_permutation_fi;
+        json_result.values["fi_distance"] = min_route_fi.shortest_path_length;
+        json_result.values["fi_runtime"] = TIMER_MSEC(tsp_fi) + TIMER_MSEC(tsp_pre);
+
+        // for (int i = 0; i < min_loc_permutation_fi.size(); ++i) {
+        //     SimpleLogger().Write() << min_loc_permutation_nn[i] << " " << min_loc_permutation_fi[i];
+        // }
 
         return 200;
     }
