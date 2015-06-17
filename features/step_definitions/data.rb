@@ -174,3 +174,7 @@ end
 Given /^data is loaded with datastore$/ do
   @load_method = 'datastore'
 end
+
+Given /^the HTTP method "([^"]*)"$/ do |method|
+  @http_method = method
+end
