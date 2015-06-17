@@ -128,6 +128,11 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         // TODO: move to lambda function with C++11
         int temp_sum = 0;
 
+        // u-----------------------------------v
+        //    0     1      i-1    i        n-1
+        // x --> x --> ... --> x --> x ... --> x
+        // |-------------------|
+        // forward_dist_prefix_sum[i]
         for (const auto i : osrm::irange(0u, geometry_size))
         {
             forward_dist_prefix_sum[i] = temp_sum;
@@ -135,14 +140,22 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
             BOOST_ASSERT(forward_data.distance >= temp_sum);
         }
+        BOOST_ASSERT(forward_dist_prefix_sum.back() + forward_geometry.back().second == forward_data.distance);
 
+        // v-----------------------------------u
+        //    0     1      i-1    i        n-1
+        // x --> x --> ... --> x --> x ... --> x
+        // |-------------------|
+        // reverse_dist_prefix_sum[i]
         temp_sum = 0;
         for (const auto i : osrm::irange(0u, geometry_size))
         {
-            temp_sum += reverse_geometry[reverse_geometry.size() - 1 - i].second;
-            reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
-            // BOOST_ASSERT(reverse_data.distance >= temp_sum);
+            reverse_dist_prefix_sum[i] = temp_sum;
+            temp_sum += reverse_geometry[i].second;
+
+            BOOST_ASSERT(reverse_data.distance >= temp_sum);
         }
+        BOOST_ASSERT(reverse_dist_prefix_sum.back() + reverse_geometry.back().second == reverse_data.distance);
 
         NodeID current_edge_source_coordinate_id = node_u;
 
@@ -168,8 +181,10 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 forward_data.edgeBasedNodeID, reverse_data.edgeBasedNodeID,
                 current_edge_source_coordinate_id, current_edge_target_coordinate_id,
                 forward_data.nameID, forward_geometry[i].second,
-                reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
-                reverse_dist_prefix_sum[i], m_geometry_compressor.GetPositionForID(edge_id_1),
+                reverse_geometry[geometry_size - 1 - i].second,
+                forward_dist_prefix_sum[i],
+                reverse_dist_prefix_sum[geometry_size - 1 - i],
+                m_geometry_compressor.GetPositionForID(edge_id_1),
                 component_id, i, forward_data.travel_mode, reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
@@ -193,15 +208,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         {
             BOOST_ASSERT(forward_data.forward);
         }
+        else
+        {
+            BOOST_ASSERT(!forward_data.forward);
+        }
+
         if (reverse_data.edgeBasedNodeID != SPECIAL_NODEID)
         {
             BOOST_ASSERT(reverse_data.forward);
         }
-        if (forward_data.edgeBasedNodeID == SPECIAL_NODEID)
-        {
-            BOOST_ASSERT(!forward_data.forward);
-        }
-        if (reverse_data.edgeBasedNodeID == SPECIAL_NODEID)
+        else
         {
             BOOST_ASSERT(!reverse_data.forward);
         }
@@ -433,9 +449,8 @@ void EdgeBasedGraphFactory::CompressGeometry()
                            << new_edge_count / (double)original_number_of_edges;
 }
 
-/**
- * Writes the id of the edge in the edge expanded graph (into the edge in the node based graph)
- */
+/// Renumbers all _forward_ edges and sets the edgeBasedNodeID.
+/// A specific numbering is not important. Any unique ID will do.
 void EdgeBasedGraphFactory::RenumberEdges()
 {
     // renumber edge based node of outgoing edges
@@ -498,7 +513,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
             const NodeID node_v = m_node_based_graph->GetTarget(e1);
 
             BOOST_ASSERT(SPECIAL_NODEID != node_v);
-            // pick only every other edge
+            // pick only every other edge, since we have every edge as an outgoing
+            // and incoming egde
             if (node_u > node_v)
             {
                 continue;
@@ -524,6 +540,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
             const bool component_is_tiny = size_of_component < 1000;
 
+            // we only set edgeBasedNodeID for forward edges
             if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
             {
                 InsertEdgeBasedNode(node_v, node_u,
