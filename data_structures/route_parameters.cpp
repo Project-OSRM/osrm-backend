@@ -131,3 +131,5 @@ void RouteParameters::addCoordinate(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
 }
+
+void RouteParameters::setCutFlag(const bool flag) { cut = flag; }

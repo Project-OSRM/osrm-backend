@@ -78,6 +78,8 @@ struct RouteParameters
     void setCompressionFlag(const bool flag);
 
     void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
+    
+    void setCutFlag(const bool flag);
 
     short zoom_level;
     bool print_instructions;
@@ -87,6 +89,7 @@ struct RouteParameters
     bool deprecatedAPI;
     bool uturn_default;
     bool classify;
+    bool cut;
     double matching_beta;
     double gps_precision;
     unsigned check_sum;
