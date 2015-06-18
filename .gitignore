@@ -1,3 +1,7 @@
+# pre compiled dependencies #
+#############################
+osrm-deps
+
 # Compiled source #
 ###################
 *.com
