@@ -33,7 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/static_graph.hpp"
 
-class FingerPrint;
 struct EdgeBasedNode;
 struct lua_State;
 

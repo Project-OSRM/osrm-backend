@@ -34,18 +34,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class FingerPrint
 {
   public:
-    FingerPrint();
-    FingerPrint(const FingerPrint &) = delete;
-    ~FingerPrint();
+    static FingerPrint GetValid();
     const boost::uuids::uuid &GetFingerPrint() const;
-    bool IsMagicNumberOK() const;
+    bool IsMagicNumberOK(const FingerPrint &other) const;
     bool TestGraphUtil(const FingerPrint &other) const;
     bool TestPrepare(const FingerPrint &other) const;
     bool TestRTree(const FingerPrint &other) const;
     bool TestQueryObjects(const FingerPrint &other) const;
 
   private:
-    const unsigned magic_number;
+    unsigned magic_number;
     char md5_prepare[33];
     char md5_tree[33];
     char md5_graph[33];

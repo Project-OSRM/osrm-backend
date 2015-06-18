@@ -141,9 +141,9 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
     SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
                            << " edges";
 
-    FingerPrint fingerprint_orig;
+    const FingerPrint fingerprint = FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
-    hsgr_output_stream.write((char *)&fingerprint_orig, sizeof(FingerPrint));
+    hsgr_output_stream.write((char *)&fingerprint, sizeof(FingerPrint));
     const unsigned max_used_node_id = 1 + [&contracted_edge_list]
     {
         unsigned tmp_max = 0;

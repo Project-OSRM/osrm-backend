@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "first_and_last_segment_of_way.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
-#include "../util/fingerprint.hpp"
 
 #include <stxxl/vector>
 #include <unordered_map>
@@ -75,7 +74,6 @@ class ExtractionContainers
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<NodeID, NodeID> external_to_internal_node_id_map;
-    const FingerPrint fingerprint;
 
     ExtractionContainers();
 

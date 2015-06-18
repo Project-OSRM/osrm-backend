@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/osrm_exception.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
+#include "../util/fingerprint.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -81,6 +82,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     {
         std::ofstream file_out_stream;
         file_out_stream.open(output_file_name.c_str(), std::ios::binary);
+        const FingerPrint fingerprint = FingerPrint::GetValid();
         file_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
 
         PrepareNodes();
@@ -471,6 +473,7 @@ void ExtractionContainers::WriteRestrictions(const std::string& path) const
     std::ofstream restrictions_out_stream;
     unsigned written_restriction_count = 0;
     restrictions_out_stream.open(path.c_str(), std::ios::binary);
+    const FingerPrint fingerprint = FingerPrint::GetValid();
     restrictions_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
     const auto count_position = restrictions_out_stream.tellp();
     restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));

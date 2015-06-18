@@ -60,11 +60,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 unsigned loadRestrictionsFromFile(std::istream& input_stream,
                                   std::vector<TurnRestriction>& restriction_list)
 {
-    const FingerPrint fingerprint_orig;
+    const FingerPrint fingerprint_valid = FingerPrint::GetValid();
     FingerPrint fingerprint_loaded;
     unsigned number_of_usable_restrictions = 0;
     input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
-    if (!fingerprint_loaded.TestPrepare(fingerprint_orig))
+    if (!fingerprint_loaded.TestPrepare(fingerprint_valid))
     {
         SimpleLogger().Write(logWARNING) << ".restrictions was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
@@ -93,11 +93,11 @@ NodeID loadNodesFromFile(std::istream &input_stream,
                          std::vector<NodeID> &traffic_light_node_list,
                          std::vector<QueryNode> &node_array)
 {
-    const FingerPrint fingerprint_orig;
+    const FingerPrint fingerprint_valid = FingerPrint::GetValid();
     FingerPrint fingerprint_loaded;
     input_stream.read(reinterpret_cast<char *>(&fingerprint_loaded), sizeof(FingerPrint));
 
-    if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
+    if (!fingerprint_loaded.TestPrepare(fingerprint_valid))
     {
         SimpleLogger().Write(logWARNING) << ".osrm was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
@@ -187,9 +187,10 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
 
     boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);
 
-    FingerPrint fingerprint_loaded, fingerprint_orig;
+    const FingerPrint fingerprint_valid = FingerPrint::GetValid();
+    FingerPrint fingerprint_loaded;
     hsgr_input_stream.read(reinterpret_cast<char *>(&fingerprint_loaded), sizeof(FingerPrint));
-    if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
+    if (!fingerprint_loaded.TestGraphUtil(fingerprint_valid))
     {
         SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
