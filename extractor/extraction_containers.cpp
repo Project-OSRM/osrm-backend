@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/node_id.hpp"
 #include "../data_structures/range_table.hpp"
 
+#include "../io/osrm_writer.hpp"
+
 #include "../util/osrm_exception.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
@@ -79,16 +81,14 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 {
     try
     {
-        std::ofstream file_out_stream;
-        file_out_stream.open(output_file_name.c_str(), std::ios::binary);
-        file_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
+        std::ofstream file_out_stream{output_file_name, std::ios::binary};
+
+        HeaderWriter out{file_out_stream, fingerprint};
 
         PrepareNodes();
         WriteNodes(file_out_stream);
         PrepareEdges();
         WriteEdges(file_out_stream);
-
-        file_out_stream.close();
 
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
@@ -393,13 +393,10 @@ void ExtractionContainers::PrepareEdges()
 
 void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
 {
+    EdgeWriter out{file_out_stream, fingerprint};
+
     std::cout << "[extractor] Writing used egdes       ... " << std::flush;
     TIMER_START(write_edges);
-    // Traverse list of edges and nodes in parallel and set target coord
-    unsigned number_of_used_edges = 0;
-
-    auto start_position = file_out_stream.tellp();
-    file_out_stream.write((char *)&number_of_used_edges, sizeof(unsigned));
 
     for (const auto& edge : all_edges_list)
     {
@@ -408,25 +405,21 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
             continue;
         }
 
-        file_out_stream.write((char*) &edge.result, sizeof(NodeBasedEdge));
-        number_of_used_edges++;
+        out.Write(edge.result);
     }
     TIMER_STOP(write_edges);
     std::cout << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
 
     std::cout << "[extractor] setting number of edges   ... " << std::flush;
-    file_out_stream.seekp(start_position);
-    file_out_stream.write((char *)&number_of_used_edges, sizeof(unsigned));
     std::cout << "ok" << std::endl;
 
-    SimpleLogger().Write() << "Processed " << number_of_used_edges << " edges";
+    SimpleLogger().Write() << "Processed " << out.Count() << " edges";
 }
 
 void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
 {
-    unsigned number_of_used_nodes = 0;
-    // write dummy value, will be overwritten later
-    file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
+    NodeWriter out{file_out_stream, fingerprint};
+
     std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
     TIMER_START(write_nodes);
     // identify all used nodes by a merging step of two sorted lists
@@ -446,9 +439,8 @@ void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
         }
         BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
 
-        file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
+        out.Write(*node_iterator);
 
-        ++number_of_used_nodes;
         ++node_id_iterator;
         ++node_iterator;
     }
@@ -456,13 +448,9 @@ void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
     std::cout << "ok, after " << TIMER_SEC(write_nodes) << "s" << std::endl;
 
     std::cout << "[extractor] setting number of nodes   ... " << std::flush;
-    std::ios::pos_type previous_file_position = file_out_stream.tellp();
-    file_out_stream.seekp(std::ios::beg + sizeof(FingerPrint));
-    file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
-    file_out_stream.seekp(previous_file_position);
     std::cout << "ok" << std::endl;
 
-    SimpleLogger().Write() << "Processed " << number_of_used_nodes << " nodes";
+    //SimpleLogger().Write() << "Processed " << number_of_used_nodes << " nodes";
 }
 
 void ExtractionContainers::WriteRestrictions(const std::string& path) const

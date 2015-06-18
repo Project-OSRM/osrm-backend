@@ -57,7 +57,7 @@ uint64_t HilbertCode::BitInterleaving(const uint32_t latitude, const uint32_t lo
 
 void HilbertCode::TransposeCoordinate(uint32_t *X) const
 {
-    uint32_t M = 1 << (32 - 1), P, Q, t;
+    uint32_t M = 1u << (32 - 1), P, Q, t;
     int i;
     // Inverse undo
     for (Q = M; Q > 1; Q >>= 1)
