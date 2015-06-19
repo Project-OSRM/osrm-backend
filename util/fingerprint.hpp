@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FINGERPRINT_H
 
 #include <boost/uuid/uuid.hpp>
+#include <type_traits>
 
 // implements a singleton, i.e. there is one and only one conviguration object
 class FingerPrint
@@ -52,6 +53,10 @@ class FingerPrint
     // initialize to {6ba7b810-9dad-11d1-80b4-00c04fd430c8}
     boost::uuids::uuid named_uuid;
     bool has_64_bits;
+
 };
+
+static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
+
 
 #endif /* FingerPrint_H */
