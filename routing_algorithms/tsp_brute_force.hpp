@@ -57,14 +57,21 @@ void BruteForce(const RouteParameters & route_parameters,
                 std::vector<int> & min_loc_permutation) {
 
     const auto number_of_locations = phantom_node_vector.size();
+    // fill a vector with node ids
     std::vector<int> location_ids(number_of_locations);
     std::iota(location_ids.begin(), location_ids.end(), 0);
 
     int min_route_dist = std::numeric_limits<int>::max();
+
+    // check length of all possible permutation of the location ids
     do {
         int route_dist = 0;
-        for (int i = 0; i < number_of_locations - 1; ++i) {
+        int i = 0;
+
+        // compute length and stop if length is longer than route already found
+        while (i < number_of_locations - 1 && route_dist < min_route_dist) {
             route_dist += *(dist_table.begin() + (location_ids[i] * number_of_locations) + location_ids[i+1]);
+            ++i;
         }
         route_dist += *(dist_table.begin() + (location_ids[number_of_locations-1] * number_of_locations) + location_ids[0]);
 
