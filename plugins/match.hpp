@@ -199,11 +199,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         subtrace.values["indices"] = osrm::json::make_array(sub.indices);
 
         osrm::json::Array points;
-        std::unordered_map<NodeID, bool> segment_ids;
+        std::unordered_set<NodeID> segment_ids;
 
         for (const auto &node : sub.nodes)
         {
-            segment_ids[node.name_id] = true;
+            segment_ids.insert(node.name_id);
             points.values.emplace_back(
                 osrm::json::make_array(node.location.lat / COORDINATE_PRECISION,
                                        node.location.lon / COORDINATE_PRECISION));
@@ -211,8 +211,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         subtrace.values["matched_points"] = points;
 
         osrm::json::Array segments;
-        for (const auto &pair :  segment_ids) {
-          segments.values.emplace_back( pair.first );
+        for (const auto node_id :  segment_ids) {
+          segments.values.emplace_back( node_id );
         }
 
         subtrace.values["matched_segments"] = segments;
