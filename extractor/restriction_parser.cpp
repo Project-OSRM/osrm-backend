@@ -44,7 +44,7 @@ namespace
 {
 int lua_error_callback(lua_State *lua_state)
 {
-    luabind::object error_msg(luabind::from_stack(lua_state, -1));
+    std::string error_msg = lua_tostring(lua_state, -1);
     std::ostringstream error_stream;
     error_stream << error_msg;
     throw osrm::exception("ERROR occured in profile script:\n" + error_stream.str());

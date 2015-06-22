@@ -22,10 +22,10 @@ SHUTDOWN_TIMEOUT = 10
 DEFAULT_LOAD_METHOD = 'datastore'
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
-if ENV['OS']==/Windows.*/ then
-  TERMSIGNAL='TERM'
-else
+if ENV['OS']=~/Windows.*/ then
   TERMSIGNAL=9
+else
+  TERMSIGNAL='TERM'
 end
 
 
@@ -72,8 +72,8 @@ end
 
 def verify_existance_of_binaries
   ["osrm-extract", "osrm-prepare", "osrm-routed"].each do |bin|  
-    unless File.exists? "#{BIN_PATH}/#{bin}"
-      raise "*** #{BIN_PATH}/#{bin} is missing. Build failed?"
+    unless File.exists? "#{BIN_PATH}/#{bin}#{EXE}"
+      raise "*** #{BIN_PATH}/#{bin}#{EXE} is missing. Build failed?"
     end
   end
 end

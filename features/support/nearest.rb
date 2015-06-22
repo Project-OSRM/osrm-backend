@@ -1,17 +1,12 @@
 require 'net/http'
 
-def request_nearest_url path
+def request_nearest_url path, node
   @query = path
-  uri = URI.parse "#{HOST}/#{path}"
-  Timeout.timeout(OSRM_TIMEOUT) do
-    Net::HTTP.get_response uri
-  end
-rescue Errno::ECONNREFUSED => e
-  raise "*** osrm-routed is not running."
-rescue Timeout::Error
-  raise "*** osrm-routed did not respond."
+  
+  uri = generate_request_url path
+  response = send_request uri, [node]
 end
 
-def request_nearest a
-  request_nearest_url "nearest?loc=#{a}"
+def request_nearest node
+  request_nearest_url "nearest?loc=#{node.lat},#{node.lon}", node
 end

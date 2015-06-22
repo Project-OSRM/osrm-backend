@@ -30,6 +30,7 @@ script:
  - make
  - make tests
  - make benchmarks
+ - ./algorithm-tests
  - ./datastructure-tests
  - cd ..
  - cucumber -p verify
@@ -58,7 +59,7 @@ notifications:
   skip_join: false
 
   recipients:
-    - dennis@mapbox.com
+    - patrick@mapbox.com
   email:
     on_success: change
     on_failure: always

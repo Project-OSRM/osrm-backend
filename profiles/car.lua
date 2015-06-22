@@ -1,6 +1,8 @@
--- Begin of globals
---require("lib/access") --function temporarily inlined
+-- Car profile
 
+local find_access_tag = require("lib/access").find_access_tag
+
+-- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
@@ -130,10 +132,9 @@ maxspeed_table = {
 traffic_signal_penalty          = 2
 use_turn_restrictions           = true
 
-local take_minimum_of_speeds    = false
 local obey_oneway               = true
 local obey_bollards             = true
-local ignore_areas              = true     -- future feature
+local ignore_areas              = true
 local u_turn_penalty            = 20
 
 local abs = math.abs
@@ -146,16 +147,6 @@ local speed_reduction = 0.8
 local mode_normal = 1
 local mode_ferry = 2
 local mode_movable_bridge = 3
-
-local function find_access_tag(source, access_tags_hierachy)
-  for i,v in ipairs(access_tags_hierachy) do
-    local access_tag = source:get_value_by_key(v)
-    if access_tag and "" ~= access_tag then
-      return access_tag
-    end
-  end
-  return ""
-end
 
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
@@ -187,6 +178,7 @@ local function parse_maxspeed(source)
   return n
 end
 
+-- FIXME Why was this commented out?
 -- function turn_function (angle)
 --   -- print ("called at angle " .. angle )
 --   local index = math.abs(math.floor(angle/10+0.5))+1 -- +1 'coz LUA starts as idx 1
@@ -198,7 +190,7 @@ end
 function node_function (node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, access_tags_hierachy)
-  if access ~= "" then
+  if access and access ~= "" then
     if access_tag_blacklist[access] then
       result.barrier = true
     end
@@ -247,12 +239,6 @@ function way_function (way, result)
   local status = way:get_value_by_key("status")
   if status and "impassable" == status then
     return
-  end
-
-  local width = math.huge
-  local width_string = way:get_value_by_key("width")
-  if width_string and tonumber(width_string:match("%d*")) then
-    width = tonumber(width_string:match("%d*"))
   end
 
   -- Check if we are allowed to access the way
@@ -353,9 +339,14 @@ function way_function (way, result)
   local service = way:get_value_by_key("service")
 
   -- Set the name that will be used for instructions
-  if ref and "" ~= ref then
+  local has_ref = ref and "" ~= ref
+  local has_name = name and "" ~= name
+
+  if has_name and has_ref then
+    result.name = name .. " (" .. ref .. ")"
+  elseif has_ref then
     result.name = ref
-  elseif name and "" ~= name then
+  elseif has_name then
     result.name = name
 --  else
       --    result.name = highway  -- if no name exists, use way type
@@ -407,12 +398,25 @@ function way_function (way, result)
     result.ignore_in_grid = true
   end
 
+  local width = math.huge
+  local lanes = math.huge
+  if result.forward_speed > 0 or result.backward_speed > 0 then
+    local width_string = way:get_value_by_key("width")
+    if width_string and tonumber(width_string:match("%d*")) then
+      width = tonumber(width_string:match("%d*"))
+    end
+
+    local lanes_string = way:get_value_by_key("lanes")
+    if lanes_string and tonumber(lanes_string:match("%d*")) then
+      lanes = tonumber(lanes_string:match("%d*"))
+    end
+  end
 
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
     local scaled_speed = result.forward_speed*speed_reduction + 11;
     local penalized_speed = math.huge
-    if width <= 3 then
+    if width <= 3 or lanes <= 1 then
       penalized_speed = result.forward_speed / 2;
     end
     result.forward_speed = math.min(penalized_speed, scaled_speed)
@@ -421,16 +425,10 @@ function way_function (way, result)
   if result.backward_speed > 0 then
     local scaled_speed = result.backward_speed*speed_reduction + 11;
     local penalized_speed = math.huge
-    if width <= 3 then
+    if width <= 3 or lanes <= 1 then
       penalized_speed = result.backward_speed / 2;
     end
     result.backward_speed = math.min(penalized_speed, scaled_speed)
   end
 end
 
--- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT
-function node_vector_function(vector)
-  for v in vector.nodes do
-    node_function(v)
-  end
-end

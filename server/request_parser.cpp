@@ -42,7 +42,8 @@ namespace http
 
 RequestParser::RequestParser()
     : state(internal_state::method_start), current_header({"", ""}),
-      selected_compression(no_compression)
+      selected_compression(no_compression), is_post_header(false),
+      content_length(0)
 {
 }
 
@@ -58,6 +59,11 @@ RequestParser::parse(request &current_request, char *begin, char *end)
         }
     }
     osrm::tribool result = osrm::tribool::indeterminate;
+    
+    if(state == internal_state::post_request && content_length <= 0)
+    {
+        result = osrm::tribool::yes;
+    }
     return std::make_tuple(result, selected_compression);
 }
 
@@ -70,7 +76,38 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         {
             return osrm::tribool::no;
         }
+        if(input == 'P')
+        {
+            state = internal_state::post_O;
+            return osrm::tribool::indeterminate;
+        }
         state = internal_state::method;
+        return osrm::tribool::indeterminate;
+    case internal_state::post_O:
+        if(input == 'O')
+        {
+          state = internal_state::post_S;
+          return osrm::tribool::indeterminate;
+        }
+        return osrm::tribool::no;
+    case internal_state::post_S:
+        if(input == 'S')
+        {
+          state = internal_state::post_T;
+          return osrm::tribool::indeterminate;
+        }
+        return osrm::tribool::no;
+    case internal_state::post_T:
+        if(input == 'T')
+        {
+          is_post_header = true;
+          state = internal_state::method;
+          return osrm::tribool::indeterminate;
+        }
+        return osrm::tribool::no;
+    case internal_state::post_request:
+        current_request.uri.push_back(input);
+        --content_length;
         return osrm::tribool::indeterminate;
     case internal_state::method:
         if (input == ' ')
@@ -204,6 +241,24 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         {
             current_request.agent = current_header.value;
         }
+        if (boost::iequals(current_header.name, "Content-Length"))
+        {
+            try 
+            {
+                content_length = std::stoi(current_header.value);
+            }
+            catch (const std::exception &e)
+            {
+                // Ignore the header if the parameter isn't an int
+            }
+        }
+        if (boost::iequals(current_header.name, "Content-Type"))
+        {
+            if (!boost::icontains(current_header.value, "application/x-www-form-urlencoded"))
+            {
+                return osrm::tribool::no;
+            }
+        }
 
         if (input == '\r')
         {
@@ -272,7 +327,19 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
             return osrm::tribool::indeterminate;
         }
         return osrm::tribool::no;
-    default: // expecting_newline_3
+    case internal_state::expecting_newline_3:
+        if(input == '\n')
+        {
+            if(is_post_header)
+            {
+                current_request.uri.push_back('?');
+                state = internal_state::post_request;
+                return osrm::tribool::indeterminate;
+            }
+            return osrm::tribool::yes;
+        }
+        return osrm::tribool::no;
+    default: // should never be reached
         return input == '\n' ? osrm::tribool::yes : osrm::tribool::no;
     }
 }

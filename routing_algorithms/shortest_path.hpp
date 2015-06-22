@@ -93,8 +93,8 @@ class ShortestPathRouting final
             const bool allow_u_turn = current_leg > 0 && uturn_indicators.size() > current_leg &&
                                       uturn_indicators[current_leg - 1];
             const EdgeWeight min_edge_offset =
-                std::min(phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
-                         phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+                std::min(-phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
+                         -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
 
             // insert new starting nodes into forward heap, adjusted by previous distances.
             if ((allow_u_turn || search_from_1st_node) &&
@@ -272,11 +272,13 @@ class ShortestPathRouting final
                     if (start_id_of_leg1 != last_id_of_packed_legs1)
                     {
                         packed_legs1 = packed_legs2;
+                        distance1 = distance2;
                         BOOST_ASSERT(start_id_of_leg1 == temporary_packed_leg1.front());
                     }
                     else if (start_id_of_leg2 != last_id_of_packed_legs2)
                     {
                         packed_legs2 = packed_legs1;
+                        distance2 = distance1;
                         BOOST_ASSERT(start_id_of_leg2 == temporary_packed_leg2.front());
                     }
                 }

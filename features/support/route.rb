@@ -15,15 +15,13 @@ def request_path path, waypoints=[], options={}
   locs = waypoints.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
   params = (locs + options.to_param).join('&')
   params = nil if params==""
-  uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
-  @query = uri.to_s
-  Timeout.timeout(OSRM_TIMEOUT) do
-    Net::HTTP.get_response uri
+  
+  if params == nil
+    uri = generate_request_url (path)
+  else
+    uri = generate_request_url (path + '?' + params)
   end
-rescue Errno::ECONNREFUSED => e
-  raise "*** osrm-routed is not running."
-rescue Timeout::Error
-  raise "*** osrm-routed did not respond."
+  response = send_request uri, waypoints, options
 end
 
 def request_url path

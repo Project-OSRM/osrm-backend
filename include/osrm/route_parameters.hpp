@@ -78,6 +78,8 @@ struct RouteParameters
     void setCompressionFlag(const bool flag);
 
     void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
+    
+    void getCoordinatesFromGeometry(const std::string geometry_string);
 
     short zoom_level;
     bool print_instructions;

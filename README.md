@@ -1,12 +1,25 @@
-# Readme
+## About
 
-For instructions on how to compile and run OSRM, please consult the Wiki at
+The Open Source Routing Machine is a high performance routing engine written in C++11 designed to run on OpenStreetMap data.
 
-https://github.com/Project-OSRM/osrm-backend/wiki
+## Current build status
 
-or use our free and daily updated online service at
+| build config |  branch | status |
+|:-------------|:--------|:------------|
+| Linux        | master  | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) |
+| Linux        | develop | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=develop)](https://travis-ci.org/Project-OSRM/osrm-backend) |
+| Windows      | master/develop | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
+| LUAbind fork | master  | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |
 
-http://map.project-osrm.org
+## Building
+
+For instructions on how to [build](https://github.com/Project-OSRM/osrm-backend/wiki/Building-OSRM) and [run OSRM](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM), please consult [the Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
+
+To quickly try OSRM use our [free and daily updated online service](http://map.project-osrm.org)
+
+## Documentation
+
+See the Wiki's [server API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Server-api) as well as the [library API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Library-api)
 
 ## References in publications
 
@@ -31,11 +44,3 @@ When using the code in a (scientific) publication, please cite
 }
 ```
 
-## Current build status
-
-| build config |  branch | status |
-|:-------------|:--------|:------------|
-| Linux        | master  | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
-| Linux        | develop | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=develop)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
-| Windows      | master/develop | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
-| LUAbind fork | master  | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |

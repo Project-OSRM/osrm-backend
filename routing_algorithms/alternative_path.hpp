@@ -103,8 +103,8 @@ class AlternativeRouting final
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
         const EdgeWeight min_edge_offset =
-            std::min(phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
-                     phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+            std::min(-phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
+                     -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
 
         if (phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
         {

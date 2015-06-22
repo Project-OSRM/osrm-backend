@@ -39,7 +39,7 @@ Feature: Foot - Access tags on nodes
             | no           |              |       |
             | private      |              |       |
             | agricultural |              |       |
-            | forestery    |              |       |
+            | forestry     |              |       |
             | no           | yes          | x     |
             | no           | permissive   | x     |
             | no           | designated   | x     |
@@ -47,4 +47,4 @@ Feature: Foot - Access tags on nodes
             | yes          | no           |       |
             | yes          | private      |       |
             | yes          | agricultural |       |
-            | yes          | forestery    |       |
+            | yes          | forestry     |       |

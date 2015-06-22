@@ -35,6 +35,7 @@ struct NodeBasedEdge
 {
     bool operator<(const NodeBasedEdge &e) const;
 
+    NodeBasedEdge();
     explicit NodeBasedEdge(NodeID source,
                            NodeID target,
                            NodeID name_id,
@@ -58,8 +59,6 @@ struct NodeBasedEdge
     bool access_restricted : 1;
     bool is_split : 1;
     TravelMode travel_mode : 4;
-
-    NodeBasedEdge() = delete;
 };
 
 struct EdgeBasedEdge
@@ -85,7 +84,5 @@ struct EdgeBasedEdge
     bool forward : 1;
     bool backward : 1;
 };
-
-using ImportEdge = NodeBasedEdge;
 
 #endif /* IMPORT_EDGE_HPP */

@@ -171,7 +171,8 @@ class Contractor
             {
                 SimpleLogger().Write(logWARNING)
                     << "Edge weight large -> "
-                    << static_cast<unsigned int>(std::max(diter->weight, 1));
+                    << static_cast<unsigned int>(std::max(diter->weight, 1)) << " : "
+                    << static_cast<unsigned int>(diter->source) << " -> " << static_cast<unsigned int>(diter->target);
             }
 #endif
             edges.emplace_back(diter->source, diter->target,
@@ -186,6 +187,7 @@ class Contractor
         }
         // clear input vector
         input_edge_list.clear();
+        // FIXME not sure if we need this
         edges.shrink_to_fit();
 
         tbb::parallel_sort(edges.begin(), edges.end());
@@ -953,7 +955,6 @@ class Contractor
     }
 
     std::shared_ptr<ContractorGraph> contractor_graph;
-    std::vector<ContractorGraph::InputEdge> contracted_edge_list;
     stxxl::vector<QueryEdge> external_edge_list;
     std::vector<NodeID> orig_node_id_to_new_id_map;
     XORFastHash fast_hash;

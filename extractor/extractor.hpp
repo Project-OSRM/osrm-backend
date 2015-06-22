@@ -30,8 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor_options.hpp"
 
-struct extractor
+class extractor
 {
-    int run(const ExtractorConfig &extractor_config);
+public:
+    extractor(const ExtractorConfig &extractor_config)
+        : config(extractor_config) {}
+    int run();
+private:
+   ExtractorConfig config;
 };
 #endif /* EXTRACTOR_HPP */

@@ -91,6 +91,7 @@ template <> struct hash<RestrictionTarget>
 class RestrictionMap
 {
   public:
+    RestrictionMap() : m_count(0) {};
     RestrictionMap(const std::vector<TurnRestriction> &restriction_list);
 
     // Replace end v with w in each turn restriction containing u as via node
@@ -98,7 +99,7 @@ class RestrictionMap
     void FixupArrivingTurnRestriction(const NodeID node_u,
                                       const NodeID node_v,
                                       const NodeID node_w,
-                                      const std::shared_ptr<GraphT> &graph)
+                                      const GraphT &graph)
     {
         BOOST_ASSERT(node_u != SPECIAL_NODEID);
         BOOST_ASSERT(node_v != SPECIAL_NODEID);
@@ -112,9 +113,9 @@ class RestrictionMap
         // find all potential start edges. It is more efficent to get a (small) list
         // of potential start edges than iterating over all buckets
         std::vector<NodeID> predecessors;
-        for (const EdgeID current_edge_id : graph->GetAdjacentEdgeRange(node_u))
+        for (const EdgeID current_edge_id : graph.GetAdjacentEdgeRange(node_u))
         {
-            const NodeID target = graph->GetTarget(current_edge_id);
+            const NodeID target = graph.GetTarget(current_edge_id);
             if (node_v != target)
             {
                 predecessors.push_back(target);

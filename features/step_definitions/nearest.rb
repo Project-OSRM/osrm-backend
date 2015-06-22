@@ -9,7 +9,7 @@ When /^I request nearest I should get$/ do |table|
       out_node = find_node_by_name row['out']
       raise "*** unknown out-node '#{row['out']}" unless out_node
 
-      response = request_nearest("#{in_node.lat},#{in_node.lon}")
+      response = request_nearest(in_node)
       if response.code == "200" && response.body.empty? == false
         json = JSON.parse response.body
         if json['status'] == 0
@@ -39,7 +39,7 @@ When /^I request nearest I should get$/ do |table|
       actual << got
     end
   end
-  table.routing_diff! actual
+  table.diff! actual
 end
 
 When /^I request nearest (\d+) times I should get$/ do |n,table|

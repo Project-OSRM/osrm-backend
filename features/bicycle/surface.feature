@@ -16,7 +16,7 @@ Feature: Bike - Surfaces
             | cycleway | unpaved               | 120s  |
             | cycleway | fine_gravel           | 120s  |
             | cycleway | gravel                | 120s  |
-            | cycleway | pebbelstone           | 120s  |
+            | cycleway | pebblestone           | 120s  |
             | cycleway | dirt                  | 120s  |
             | cycleway | earth                 | 120s  |
             | cycleway | grass                 | 120s  |

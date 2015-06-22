@@ -173,3 +173,33 @@ Feature: Testbot - Handle ferry routes
             | from | to | route   | time       |
             | a    | g  | abcdefg | 23400s +-2 |
             | g    | a  | abcdefg | 23400s +-2 |
+
+    @todo
+    Scenario: Testbot - Ferry duration formats
+        Given the node map
+            | a | c | e | g | i | k | m | o | q | s |
+            | b | d | f | h | j | l | n | p | r | t |
+
+        And the ways
+            | nodes | route | duration |
+            | ab    | ferry | 0:01     |
+            | cd    | ferry | 00:01    |
+            | ef    | ferry | 1:00     |
+            | gh    | ferry | 01:00    |
+            | ij    | ferry | 02:20    |
+            | kl    | ferry | 10:00    |
+            | mn    | ferry | 100:00   |
+            | op    | ferry | 1000:00  |
+            | qr    | ferry | 10000:00 |
+
+        When I route I should get
+            | from | to | route | time          |
+            | a    | b  | ab    | 60s +-1       |
+            | c    | d  | cd    | 60s +-1       |
+            | e    | f  | ef    | 3600s +-1     |
+            | g    | h  | gh    | 3600s +-1     |
+            | i    | j  | ij    | 8400s +-1     |
+            | k    | l  | kl    | 36000s +-1    |
+            | m    | n  | mn    | 360000s +-1   |
+            | o    | p  | mn    | 3600000s +-1  |
+            | q    | r  | mn    | 36000000s +-1 |

@@ -25,38 +25,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef FINGERPRINT_H
-#define FINGERPRINT_H
+#ifndef CONTRACTOR_OPTIONS_HPP
+#define CONTRACTOR_OPTIONS_HPP
 
-#include <boost/uuid/uuid.hpp>
-#include <type_traits>
+#include <boost/filesystem/path.hpp>
 
-// implements a singleton, i.e. there is one and only one conviguration object
-class FingerPrint
+#include <string>
+
+enum class return_code : unsigned
 {
-  public:
-    static FingerPrint GetValid();
-    const boost::uuids::uuid &GetFingerPrint() const;
-    bool IsMagicNumberOK(const FingerPrint &other) const;
-    bool TestGraphUtil(const FingerPrint &other) const;
-    bool TestPrepare(const FingerPrint &other) const;
-    bool TestRTree(const FingerPrint &other) const;
-    bool TestQueryObjects(const FingerPrint &other) const;
-
-  private:
-    unsigned magic_number;
-    char md5_prepare[33];
-    char md5_tree[33];
-    char md5_graph[33];
-    char md5_objects[33];
-
-    // initialize to {6ba7b810-9dad-11d1-80b4-00c04fd430c8}
-    boost::uuids::uuid named_uuid;
-    bool has_64_bits;
-
+    ok,
+    fail,
+    exit
 };
 
-static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
+struct ContractorConfig
+{
+    ContractorConfig() noexcept : requested_num_threads(0) {}
 
+    boost::filesystem::path config_file_path;
+    boost::filesystem::path osrm_input_path;
+    boost::filesystem::path restrictions_path;
+    boost::filesystem::path profile_path;
 
-#endif /* FingerPrint_H */
+    std::string node_output_path;
+    std::string edge_output_path;
+    std::string geometry_output_path;
+    std::string graph_output_path;
+    std::string rtree_nodes_output_path;
+    std::string rtree_leafs_output_path;
+
+    unsigned requested_num_threads;
+};
+
+struct ContractorOptions
+{
+    static return_code ParseArguments(int argc, char *argv[], ContractorConfig &extractor_config);
+
+    static void GenerateOutputFilesNames(ContractorConfig &extractor_config);
+};
+
+#endif // EXTRACTOR_OPTIONS_HPP
