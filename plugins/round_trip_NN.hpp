@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ROUND_TRIP_HPP
-#define ROUND_TRIP_HPP
+#ifndef ROUND_TRIP_NN_HPP
+#define ROUND_TRIP_NN_HPP
 
 #include "plugin_base.hpp"
 
@@ -54,7 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <limits>
 
-template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
+template <class DataFacadeT> class RoundTripPluginNN final : public BasePlugin
 {
   private:
     std::string descriptor_string;
@@ -62,8 +62,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
   public:
-    explicit RoundTripPlugin(DataFacadeT *facade)
-        : descriptor_string("trip"), facade(facade)
+    explicit RoundTripPluginNN(DataFacadeT *facade)
+        : descriptor_string("tripNN"), facade(facade)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
@@ -120,72 +120,18 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         std::vector<int> min_loc_permutation(phantom_node_vector.size(), -1);
         TIMER_STOP(tsp_pre);
 
-
-
-
         //######################### NEAREST NEIGHBOUR ###############################//
         TIMER_START(tsp);
-        osrm::tsp::NearestNeighbour(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
+        osrm::tsp::NearestNeighbourTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
         search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
         TIMER_STOP(tsp);
-        SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp) + TIMER_MSEC(tsp_pre);
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
 
         osrm::json::Array json_loc_permutation;
         json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
         json_result.values["loc_permutation"] = json_loc_permutation;
         json_result.values["distance"] = min_route.shortest_path_length;
         json_result.values["runtime"] = TIMER_MSEC(tsp);
-
-
-
-        // if (route_parameters.tsp_algo.compare("NN"))
-        //     //######################### NEAREST NEIGHBOUR ###############################//
-        //     TIMER_START(tsp);
-        //     osrm::tsp::NearestNeighbour(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
-        //     search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
-        //     TIMER_STOP(tsp);
-        //     SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-        //     SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp) + TIMER_MSEC(tsp_pre);
-
-        //     osrm::json::Array json_loc_permutation;
-        //     json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
-        //     json_result.values["loc_permutation"] = json_loc_permutation;
-        //     json_result.values["distance"] = min_route.shortest_path_length;
-        //     json_result.values["runtime"] = TIMER_MSEC(tsp);
-        // else if (route_parameters.tsp_algo.compare("BF")
-        //     //########################### BRUTE FORCE ####################################//
-        //     if (route_parameters.coordinates.size() < 12) {
-        //         TIMER_START(tsp);
-        //         osrm::tsp::BruteForce(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
-        //         search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
-        //         TIMER_STOP(tsp);
-        //         SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-        //         SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp);
-
-        //         osrm::json::Array json_loc_permutation;
-        //         json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
-        //         json_result.values["loc_permutation"] = json_loc_permutation;
-        //         json_result.values["distance"] = min_route.shortest_path_length;
-        //         json_result.values["runtime"] = TIMER_MSEC(tsp);
-        //     } else {
-        //         json_result.values["distance"] = -1;
-        //         json_result.values["runtime"] = -1;
-        //     }
-        // else
-        //     //######################## FARTHEST INSERTION ###############################//
-        //     TIMER_START(tsp);
-        //     osrm::tsp::FarthestInsertion(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
-        //     search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
-        //     TIMER_STOP(tsp);
-        //     SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-        //     SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp);
-
-        //     osrm::json::Array json_loc_permutation;
-        //     json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
-        //     json_result.values["loc_permutation"] = json_loc_permutation;
-        //     json_result.values["distance"] = min_route.shortest_path_length;
-        //     json_result.values["runtime"] = TIMER_MSEC(tsp);
 
         // return geometry result to json
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
@@ -201,4 +147,4 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
 };
 
-#endif // ROUND_TRIP_HPP
+#endif // ROUND_TRIP_NN_HPP
