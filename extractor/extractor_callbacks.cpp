@@ -147,19 +147,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return;
     }
 
-    // Get the unique identifier for the street name
-    const auto &string_map_iterator = string_map.find(parsed_way.name);
-    unsigned name_id = external_memory.name_list.size();
-    if (string_map.end() == string_map_iterator)
-    {
-        external_memory.name_list.push_back(parsed_way.name);
-        string_map.insert(std::make_pair(parsed_way.name, name_id));
-    }
-    else
-    {
-        name_id = string_map_iterator->second;
-    }
-
     const bool split_edge = (parsed_way.forward_speed > 0) &&
                             (TRAVEL_MODE_INACCESSIBLE != parsed_way.forward_travel_mode) &&
                             (parsed_way.backward_speed > 0) &&
@@ -171,6 +158,10 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     auto pair_wise_segment_split_forward =
         [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
     {
+        // Generate a unique ID for this edge, using the name_id field
+        unsigned name_id = external_memory.name_list.size();
+        external_memory.name_list.push_back(parsed_way.name);
+
         const bool forward_only = split_edge || TRAVEL_MODE_INACCESSIBLE == parsed_way.backward_travel_mode;
         external_memory.all_edges_list.push_back(InternalExtractorEdge(
             first_node.ref(), last_node.ref(), name_id, forward_weight_data,
@@ -212,6 +203,10 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         auto pair_wise_segment_split_2 =
             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
         {
+            // Generate a unique ID for this edge, using the name_id field
+            unsigned name_id = external_memory.name_list.size();
+            external_memory.name_list.push_back(parsed_way.name);
+
             external_memory.all_edges_list.push_back(InternalExtractorEdge(
                 last_node.ref(), first_node.ref(), name_id, backward_weight_data,
                 true, false, parsed_way.roundabout, parsed_way.ignore_in_grid,
