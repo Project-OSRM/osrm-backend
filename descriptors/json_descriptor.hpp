@@ -144,9 +144,17 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         if (config.instructions)
         {
             osrm::json::Array json_route_instructions;
+            osrm::json::Array json_segment_ids;
             BuildTextualDescription(description_factory, json_route_instructions,
                                     raw_route.shortest_path_length, shortest_path_segments);
+
+            for (auto const &segment : shortest_path_segments)
+            {
+                json_segment_ids.values.push_back(segment.name_id);
+            }
+
             json_result.values["route_instructions"] = json_route_instructions;
+            json_result.values["route_segment_ids"] = json_segment_ids;
         }
         description_factory.BuildRouteSummary(description_factory.get_entire_length(),
                                               raw_route.shortest_path_length);

@@ -160,7 +160,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     {
         // Generate a unique ID for this edge, using the name_id field
         unsigned name_id = external_memory.name_list.size();
-        external_memory.name_list.push_back(parsed_way.name);
+        external_memory.name_list.push_back(parsed_way.name + "(" + std::to_string(first_node.ref()) + "->" + std::to_string(last_node.ref()) + ")" );
 
         const bool forward_only = split_edge || TRAVEL_MODE_INACCESSIBLE == parsed_way.backward_travel_mode;
         external_memory.all_edges_list.push_back(InternalExtractorEdge(
@@ -205,7 +205,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         {
             // Generate a unique ID for this edge, using the name_id field
             unsigned name_id = external_memory.name_list.size();
-            external_memory.name_list.push_back(parsed_way.name);
+            external_memory.name_list.push_back(parsed_way.name + "(" + std::to_string(first_node.ref()) + "->" + std::to_string(last_node.ref()) + ")" );
 
             external_memory.all_edges_list.push_back(InternalExtractorEdge(
                 last_node.ref(), first_node.ref(), name_id, backward_weight_data,

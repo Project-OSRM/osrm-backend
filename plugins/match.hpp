@@ -199,23 +199,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         subtrace.values["indices"] = osrm::json::make_array(sub.indices);
 
         osrm::json::Array points;
-        std::unordered_set<NodeID> segment_ids;
-
         for (const auto &node : sub.nodes)
         {
-            segment_ids.insert(node.name_id);
             points.values.emplace_back(
                 osrm::json::make_array(node.location.lat / COORDINATE_PRECISION,
                                        node.location.lon / COORDINATE_PRECISION));
         }
         subtrace.values["matched_points"] = points;
-
-        osrm::json::Array segments;
-        for (const auto node_id :  segment_ids) {
-          segments.values.emplace_back( node_id );
-        }
-
-        subtrace.values["matched_segments"] = segments;
 
         return subtrace;
     }
@@ -267,6 +257,14 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return 400;
         }
 
+        std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+        descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
+
+        // copy the parameters so we can turn on the instructions flag
+        RouteParameters writeableParams = route_parameters;
+        writeableParams.setInstructionFlag(true);
+        descriptor->SetConfig(writeableParams);
+
         osrm::json::Array matchings;
         for (auto &sub : sub_matchings)
         {
@@ -304,7 +302,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 raw_route.segment_end_coordinates,
                 std::vector<bool>(raw_route.segment_end_coordinates.size(), true), raw_route);
 
-            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
+            osrm::json::Object submatching = submatchingToJSON(sub, route_parameters, raw_route);
+            osrm::json::Object route;
+            descriptor->Run(raw_route, route);
+            submatching.values["route"] = route;
+
+            matchings.values.emplace_back(submatching);
+
         }
 
         if (osrm::json::Logger::get())
