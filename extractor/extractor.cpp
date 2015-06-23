@@ -236,9 +236,11 @@ int extractor::run()
             return 1;
         }
 
+        lua_State *segment_state = scripting_environment.get_lua_state();
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
-                                          config.names_file_name);
+                                          config.names_file_name,
+                                          segment_state);
         TIMER_STOP(extracting);
         SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: "

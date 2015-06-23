@@ -432,3 +432,7 @@ function way_function (way, result)
   end
 end
 
+
+function segment_speed_function (edge)
+   print ("segment " .. edge.result.name_id .. " speed: " .. edge.weight_data.speed)
+end

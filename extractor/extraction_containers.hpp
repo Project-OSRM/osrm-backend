@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
 
+#include <luabind/luabind.hpp>
+
 #include <stxxl/vector>
 #include <unordered_map>
 
@@ -53,7 +55,7 @@ class ExtractionContainers
 #endif
     void PrepareNodes();
     void PrepareRestrictions();
-    void PrepareEdges();
+    void PrepareEdges(lua_State *segment_state);
 
     void WriteNodes(std::ofstream& file_out_stream) const;
     void WriteRestrictions(const std::string& restrictions_file_name) const;
@@ -81,7 +83,8 @@ class ExtractionContainers
 
     void PrepareData(const std::string &output_file_name,
                      const std::string &restrictions_file_name,
-                     const std::string &names_file_name);
+                     const std::string &names_file_name,
+                     lua_State *segment_state);
 };
 
 #endif /* EXTRACTION_CONTAINERS_HPP */

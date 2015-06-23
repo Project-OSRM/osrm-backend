@@ -30,7 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_helper_functions.hpp"
 #include "extraction_node.hpp"
 #include "extraction_way.hpp"
+#include "internal_extractor_edge.hpp"
 #include "../data_structures/external_memory_node.hpp"
+#include "../data_structures/import_edge.hpp"
 #include "../util/lua_util.hpp"
 #include "../util/osrm_exception.hpp"
 #include "../util/simple_logger.hpp"
@@ -65,6 +67,8 @@ ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_
     SimpleLogger().Write() << "Using script " << file_name;
 }
 
+void segmentSpeedNoOp(InternalExtractorEdge &edge) {}
+
 void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
 {
     typedef double (osmium::Location::*location_member_ptr_type)() const;
@@ -80,6 +84,7 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::def("print", LUA_print<std::string>),
         luabind::def("durationIsValid", durationIsValid),
         luabind::def("parseDuration", parseDuration),
+        luabind::def("segment_speed_function", segmentSpeedNoOp),
 
         luabind::class_<std::vector<std::string>>("vector")
             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(
@@ -122,7 +127,18 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::class_<osmium::Way>("Way")
             .def("get_value_by_key", &osmium::Way::get_value_by_key)
             .def("get_value_by_key", &get_value_by_key<osmium::Way>)
-            .def("id", &osmium::Way::id)
+            .def("id", &osmium::Way::id),
+
+        luabind::class_<InternalExtractorEdge>("EdgeSource")
+          .property("result", &InternalExtractorEdge::result)
+          .property("weight_data", &InternalExtractorEdge::weight_data),
+
+        luabind::class_<InternalExtractorEdge::WeightData>("WeightData")
+          .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
+
+        luabind::class_<NodeBasedEdge>("NodeBasedEdge")
+          .def_readwrite("name_id", &NodeBasedEdge::name_id)
+
     ];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))
