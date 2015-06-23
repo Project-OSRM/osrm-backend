@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "processing_chain.hpp"
 
 #include "contractor.hpp"
+#include "geometry_compressor.hpp"
+#include "graph_compressor.hpp"
 
 #include "../algorithms/crc32_processor.hpp"
 #include "../data_structures/deallocating_vector.hpp"
@@ -263,7 +265,7 @@ unsigned Prepare::CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedNod
     Also initializes speed profile.
 */
 void Prepare::SetupScriptingEnvironment(
-    lua_State *lua_state, EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile)
+    lua_State *lua_state, SpeedProfileProperties &speed_profile)
 {
     // open utility libraries string library;
     luaL_openlibs(lua_state);
@@ -319,20 +321,31 @@ std::shared_ptr<RestrictionMap> Prepare::LoadRestrictionMap()
   \brief Load node based graph from .osrm file
   */
 std::shared_ptr<NodeBasedDynamicGraph>
-Prepare::LoadNodeBasedGraph(std::vector<NodeID> &barrier_node_list,
-                            std::vector<NodeID> &traffic_light_list,
+Prepare::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
+                            std::unordered_set<NodeID> &traffic_lights,
                             std::vector<QueryNode>& internal_to_external_node_map)
 {
     std::vector<NodeBasedEdge> edge_list;
 
     boost::filesystem::ifstream input_stream(config.osrm_input_path, std::ios::in | std::ios::binary);
 
+    std::vector<NodeID> barrier_list;
+    std::vector<NodeID> traffic_light_list;
     NodeID number_of_node_based_nodes = loadNodesFromFile(input_stream,
-                                            barrier_node_list, traffic_light_list,
+                                            barrier_list, traffic_light_list,
                                             internal_to_external_node_map);
 
-    SimpleLogger().Write() << " - " << barrier_node_list.size() << " bollard nodes, "
+    SimpleLogger().Write() << " - " << barrier_list.size() << " bollard nodes, "
                            << traffic_light_list.size() << " traffic lights";
+
+    // insert into unordered sets for fast lookup
+    barrier_nodes.insert(barrier_list.begin(), barrier_list.end());
+    traffic_lights.insert(traffic_light_list.begin(), traffic_light_list.end());
+
+    barrier_list.clear();
+    barrier_list.shrink_to_fit();
+    traffic_light_list.clear();
+    traffic_light_list.shrink_to_fit();
 
     loadEdgesFromFile(input_stream, edge_list);
 
@@ -357,37 +370,38 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
     lua_State *lua_state = luaL_newstate();
     luabind::open(lua_state);
 
-    EdgeBasedGraphFactory::SpeedProfileProperties speed_profile;
-
+    SpeedProfileProperties speed_profile;
     SetupScriptingEnvironment(lua_state, speed_profile);
 
-    auto barrier_node_list = osrm::make_unique<std::vector<NodeID>>();
-    auto traffic_light_list = osrm::make_unique<std::vector<NodeID>>();
+    std::unordered_set<NodeID> barrier_nodes;
+    std::unordered_set<NodeID> traffic_lights;
 
     auto restriction_map = LoadRestrictionMap();
-    auto node_based_graph = LoadNodeBasedGraph(*barrier_node_list, *traffic_light_list, internal_to_external_node_map);
+    auto node_based_graph = LoadNodeBasedGraph(barrier_nodes, traffic_lights, internal_to_external_node_map);
 
-    const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
+
+    GeometryCompressor geometry_compressor;
+    GraphCompressor graph_compressor(speed_profile);
+    graph_compressor.Compress(barrier_nodes, traffic_lights, *restriction_map, *node_based_graph, geometry_compressor);
 
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
-                                                   restriction_map,
-                                                   std::move(barrier_node_list),
-                                                   std::move(traffic_light_list),
+                                                   geometry_compressor,
+                                                   barrier_nodes,
+                                                   traffic_lights,
+                                                   std::const_pointer_cast<RestrictionMap const>(restriction_map),
                                                    internal_to_external_node_map,
                                                    speed_profile);
 
-    edge_based_graph_factory.Run(config.edge_output_path, config.geometry_output_path, lua_state);
+    geometry_compressor.SerializeInternalVector(config.geometry_output_path);
+
+    edge_based_graph_factory.Run(config.edge_output_path, lua_state);
     lua_close(lua_state);
-
-    const std::size_t number_of_edge_based_nodes =
-        edge_based_graph_factory.GetNumberOfEdgeBasedNodes();
-
-    BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
 
-    return std::make_pair(number_of_node_based_nodes, number_of_edge_based_nodes);
+    const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
+    return std::make_pair(number_of_node_based_nodes, node_based_edge_list.size());
 }
 
 /**
