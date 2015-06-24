@@ -183,10 +183,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                     current_coordinate = facade->GetCoordinateOfNode(path_data.node);
                     factory.AppendSegment(current_coordinate, path_data);
                 }
-                factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
-                                      raw_route.target_traversed_in_reverse[i],
-                                      raw_route.is_via_leg(i));
             }
+            auto last = raw_route.unpacked_path_segments.size() - 1;
+            factory.SetEndSegment(raw_route.segment_end_coordinates[last].target_phantom,
+                                  raw_route.target_traversed_in_reverse[last],
+                                  raw_route.is_via_leg(last));
             // we need this because we don't run DP
             for (auto &segment : factory.path_description)
             {
