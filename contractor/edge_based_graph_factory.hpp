@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
 #include "speed_profile.hpp"
-#include "geometry_compressor.hpp"
 #include "../typedefs.h"
+#include "../data_structures/compressed_edge_container.hpp"
 #include "../data_structures/deallocating_vector.hpp"
 #include "../data_structures/edge_based_node.hpp"
 #include "../data_structures/original_edge_data.hpp"
@@ -60,7 +60,7 @@ class EdgeBasedGraphFactory
 
 
     explicit EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
-                                   const GeometryCompressor& geometry_compressor,
+                                   const CompressedEdgeContainer& compressed_edge_container,
                                    const std::unordered_set<NodeID>& barrier_nodes,
                                    const std::unordered_set<NodeID>& traffic_lights,
                                    std::shared_ptr<const RestrictionMap> restriction_map,
@@ -92,7 +92,7 @@ class EdgeBasedGraphFactory
 
     const std::unordered_set<NodeID>& m_barrier_nodes;
     const std::unordered_set<NodeID>& m_traffic_lights;
-    const GeometryCompressor& m_geometry_compressor;
+    const CompressedEdgeContainer& m_compressed_edge_container;
 
     SpeedProfileProperties speed_profile;
 

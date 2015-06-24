@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <unordered_set>
 
-class GeometryCompressor;
+class CompressedEdgeContainer;
 class RestrictionMap;
 
 class GraphCompressor
@@ -49,7 +49,7 @@ public:
                   const std::unordered_set<NodeID>& traffic_lights,
                   RestrictionMap& restriction_map,
                   NodeBasedDynamicGraph& graph,
-                  GeometryCompressor& geometry_compressor);
+                  CompressedEdgeContainer& geometry_compressor);
 private:
 
    void PrintStatistics(unsigned original_number_of_nodes,

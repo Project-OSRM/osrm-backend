@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
-                                             const GeometryCompressor& geometry_compressor,
+                                             const CompressedEdgeContainer& compressed_edge_container,
                                              const std::unordered_set<NodeID>& barrier_nodes,
                                              const std::unordered_set<NodeID>& traffic_lights,
                                              std::shared_ptr<const RestrictionMap> restriction_map,
@@ -52,7 +52,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGra
       m_restriction_map(restriction_map),
       m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights),
-      m_geometry_compressor(geometry_compressor),
+      m_compressed_edge_container(compressed_edge_container),
       speed_profile(speed_profile)
 {
 }
@@ -103,17 +103,15 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         return;
     }
 
-    BOOST_ASSERT(m_geometry_compressor.HasEntryForID(edge_id_1) ==
-                 m_geometry_compressor.HasEntryForID(edge_id_2));
-    if (m_geometry_compressor.HasEntryForID(edge_id_1))
+    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
+                 m_compressed_edge_container.HasEntryForID(edge_id_2));
+    if (m_compressed_edge_container.HasEntryForID(edge_id_1))
     {
-        BOOST_ASSERT(m_geometry_compressor.HasEntryForID(edge_id_2));
+        BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
 
         // reconstruct geometry and put in each individual edge with its offset
-        const std::vector<GeometryCompressor::CompressedNode> &forward_geometry =
-            m_geometry_compressor.GetBucketReference(edge_id_1);
-        const std::vector<GeometryCompressor::CompressedNode> &reverse_geometry =
-            m_geometry_compressor.GetBucketReference(edge_id_2);
+        const auto& forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
+        const auto& reverse_geometry = m_compressed_edge_container.GetBucketReference(edge_id_2);
         BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
         BOOST_ASSERT(0 != forward_geometry.size());
         const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
@@ -160,7 +158,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 current_edge_source_coordinate_id, current_edge_target_coordinate_id,
                 forward_data.nameID, forward_geometry[i].second,
                 reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
-                reverse_dist_prefix_sum[i], m_geometry_compressor.GetPositionForID(edge_id_1),
+                reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
                 component_id, i, forward_data.travel_mode, reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
@@ -178,7 +176,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
     }
     else
     {
-        BOOST_ASSERT(!m_geometry_compressor.HasEntryForID(edge_id_2));
+        BOOST_ASSERT(!m_compressed_edge_container.HasEntryForID(edge_id_2));
 
         if (forward_data.edgeBasedNodeID != SPECIAL_NODEID)
         {
@@ -454,14 +452,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 // unpack last node of first segment if packed
                 const auto first_coordinate =
-                    m_node_info_list[(m_geometry_compressor.HasEntryForID(e1)
-                                          ? m_geometry_compressor.GetLastNodeIDOfBucket(e1)
+                    m_node_info_list[(m_compressed_edge_container.HasEntryForID(e1)
+                                          ? m_compressed_edge_container.GetLastEdgeSourceID(e1)
                                           : node_u)];
 
                 // unpack first node of second segment if packed
                 const auto third_coordinate =
-                    m_node_info_list[(m_geometry_compressor.HasEntryForID(e2)
-                                          ? m_geometry_compressor.GetFirstNodeIDOfBucket(e2)
+                    m_node_info_list[(m_compressed_edge_container.HasEntryForID(e2)
+                                          ? m_compressed_edge_container.GetFirstEdgeTargetID(e2)
                                           : node_w)];
 
                 const double turn_angle = ComputeAngle::OfThreeFixedPointCoordinates(
@@ -475,7 +473,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
                 distance += turn_penalty;
 
-                const bool edge_is_compressed = m_geometry_compressor.HasEntryForID(e1);
+                const bool edge_is_compressed = m_compressed_edge_container.HasEntryForID(e1);
 
                 if (edge_is_compressed)
                 {
@@ -483,7 +481,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
 
                 original_edge_data_vector.emplace_back(
-                    (edge_is_compressed ? m_geometry_compressor.GetPositionForID(e1) : node_v),
+                    (edge_is_compressed ? m_compressed_edge_container.GetPositionForID(e1) : node_v),
                     edge_data1.nameID, turn_instruction, edge_is_compressed,
                     edge_data2.travel_mode);
 

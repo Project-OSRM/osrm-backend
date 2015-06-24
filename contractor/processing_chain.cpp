@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "processing_chain.hpp"
 
 #include "contractor.hpp"
-#include "geometry_compressor.hpp"
 #include "graph_compressor.hpp"
 
 #include "../algorithms/crc32_processor.hpp"
+#include "../data_structures/compressed_edge_container.hpp"
 #include "../data_structures/deallocating_vector.hpp"
 #include "../data_structures/static_rtree.hpp"
 #include "../data_structures/restriction_map.hpp"
@@ -380,19 +380,19 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
     auto node_based_graph = LoadNodeBasedGraph(barrier_nodes, traffic_lights, internal_to_external_node_map);
 
 
-    GeometryCompressor geometry_compressor;
+    CompressedEdgeContainer compressed_edge_container;
     GraphCompressor graph_compressor(speed_profile);
-    graph_compressor.Compress(barrier_nodes, traffic_lights, *restriction_map, *node_based_graph, geometry_compressor);
+    graph_compressor.Compress(barrier_nodes, traffic_lights, *restriction_map, *node_based_graph, compressed_edge_container);
 
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
-                                                   geometry_compressor,
+                                                   compressed_edge_container,
                                                    barrier_nodes,
                                                    traffic_lights,
                                                    std::const_pointer_cast<RestrictionMap const>(restriction_map),
                                                    internal_to_external_node_map,
                                                    speed_profile);
 
-    geometry_compressor.SerializeInternalVector(config.geometry_output_path);
+    compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
 
     edge_based_graph_factory.Run(config.edge_output_path, lua_state);
     lua_close(lua_state);

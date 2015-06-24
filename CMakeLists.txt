@@ -64,7 +64,7 @@ add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<T
 
 add_library(RESTRICTION OBJECT data_structures/restriction_map.cpp)
 
-file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp {RestrictionMapGlob})
+file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp data_structures/compressed_edge_container.cpp {RestrictionMapGlob})
 set(PrepareSources prepare.cpp ${PrepareGlob})
 add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
@@ -76,7 +76,7 @@ file(GLOB CoordinateGlob data_structures/coordinate*.cpp)
 file(GLOB AlgorithmGlob algorithms/*.cpp)
 file(GLOB HttpGlob server/http/*.cpp)
 file(GLOB LibOSRMGlob library/*.cpp)
-file(GLOB DataStructureTestsGlob unit_tests/data_structures/*.cpp data_structures/hilbert_value.cpp)
+file(GLOB DataStructureTestsGlob unit_tests/data_structures/*.cpp data_structures/hilbert_value.cpp data_structures/compressed_edge_container.cpp)
 file(GLOB AlgorithmTestsGlob unit_tests/algorithms/*.cpp)
 
 set(

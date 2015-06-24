@@ -1,6 +1,6 @@
 #include "graph_compressor.hpp"
 
-#include "geometry_compressor.hpp"
+#include "../data_structures/compressed_edge_container.hpp"
 #include "../data_structures/dynamic_graph.hpp"
 #include "../data_structures/node_based_graph.hpp"
 #include "../data_structures/restriction_map.hpp"
@@ -16,7 +16,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
                                const std::unordered_set<NodeID>& traffic_lights,
                                RestrictionMap& restriction_map,
                                NodeBasedDynamicGraph& graph,
-                               GeometryCompressor& geometry_compressor)
+                               CompressedEdgeContainer& geometry_compressor)
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();

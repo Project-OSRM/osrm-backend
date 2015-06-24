@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "geometry_compressor.hpp"
+#include "compressed_edge_container.hpp"
 #include "../util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
@@ -35,13 +35,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <string>
 
-GeometryCompressor::GeometryCompressor()
+#include <iostream>
+
+CompressedEdgeContainer::CompressedEdgeContainer()
 {
     m_free_list.reserve(100);
     IncreaseFreeList();
 }
 
-void GeometryCompressor::IncreaseFreeList()
+void CompressedEdgeContainer::IncreaseFreeList()
 {
     m_compressed_geometries.resize(m_compressed_geometries.size() + 100);
     for (unsigned i = 100; i > 0; --i)
@@ -51,13 +53,13 @@ void GeometryCompressor::IncreaseFreeList()
     }
 }
 
-bool GeometryCompressor::HasEntryForID(const EdgeID edge_id) const
+bool CompressedEdgeContainer::HasEntryForID(const EdgeID edge_id) const
 {
     auto iter = m_edge_id_to_list_index_map.find(edge_id);
     return iter != m_edge_id_to_list_index_map.end();
 }
 
-unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const
+unsigned CompressedEdgeContainer::GetPositionForID(const EdgeID edge_id) const
 {
     auto map_iterator = m_edge_id_to_list_index_map.find(edge_id);
     BOOST_ASSERT(map_iterator != m_edge_id_to_list_index_map.end());
@@ -65,7 +67,7 @@ unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const
     return map_iterator->second;
 }
 
-void GeometryCompressor::SerializeInternalVector(const std::string &path) const
+void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) const
 {
 
     boost::filesystem::fstream geometry_out_stream(path, std::ios::binary | std::ios::out);
@@ -108,7 +110,7 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
     geometry_out_stream.close();
 }
 
-void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
+void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
                                       const EdgeID edge_id_2,
                                       const NodeID via_node_id,
                                       const NodeID target_node_id,
@@ -153,6 +155,8 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
 
     std::vector<CompressedNode> &edge_bucket_list1 = m_compressed_geometries[edge_bucket_id1];
 
+    // note we don't save the start coordinate: it is implicitly given by edge 1
+    // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
         edge_bucket_list1.emplace_back(via_node_id, weight1);
@@ -190,7 +194,7 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
     }
 }
 
-void GeometryCompressor::PrintStatistics() const
+void CompressedEdgeContainer::PrintStatistics() const
 {
     const uint64_t compressed_edges = m_compressed_geometries.size();
     BOOST_ASSERT(0 == compressed_edges % 2);
@@ -215,20 +219,20 @@ void GeometryCompressor::PrintStatistics() const
                                   std::max((uint64_t)1, compressed_edges);
 }
 
-const std::vector<GeometryCompressor::CompressedNode> &
-GeometryCompressor::GetBucketReference(const EdgeID edge_id) const
+const CompressedEdgeContainer::EdgeBucket&
+CompressedEdgeContainer::GetBucketReference(const EdgeID edge_id) const
 {
     const unsigned index = m_edge_id_to_list_index_map.at(edge_id);
     return m_compressed_geometries.at(index);
 }
 
-NodeID GeometryCompressor::GetFirstNodeIDOfBucket(const EdgeID edge_id) const
+NodeID CompressedEdgeContainer::GetFirstEdgeTargetID(const EdgeID edge_id) const
 {
     const auto &bucket = GetBucketReference(edge_id);
     BOOST_ASSERT(bucket.size() >= 2);
-    return bucket[1].first;
+    return bucket.front().first;
 }
-NodeID GeometryCompressor::GetLastNodeIDOfBucket(const EdgeID edge_id) const
+NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
 {
     const auto &bucket = GetBucketReference(edge_id);
     BOOST_ASSERT(bucket.size() >= 2);
