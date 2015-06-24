@@ -50,6 +50,30 @@ namespace osrm
 {
 namespace tsp
 {
+
+
+
+int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector<int> location_order, const int min_route_dist, const int number_of_locations) {
+    int route_dist = 0;
+    int i = 0;
+
+    // compute length and stop if length is longer than route already found
+    while (i < number_of_locations - 1 && route_dist < min_route_dist) {
+        //get distance from location i to location i+1
+        route_dist += *(dist_table.begin() + (location_order[i] * number_of_locations) + location_order[i+1]);
+        ++i;
+    }
+    //get distance from last location to first location
+    route_dist += *(dist_table.begin() + (location_order[number_of_locations-1] * number_of_locations) + location_order[0]);
+
+    if (route_dist >= min_route_dist) {
+        return -1;
+    }
+    else {
+        return route_dist;
+    }
+}
+
 void BruteForce(const RouteParameters & route_parameters,
                 const PhantomNodeArray & phantom_node_vector,
                 const std::vector<EdgeWeight> & dist_table,
@@ -65,18 +89,9 @@ void BruteForce(const RouteParameters & route_parameters,
 
     // check length of all possible permutation of the location ids
     do {
-        int route_dist = 0;
-        int i = 0;
-
-        // compute length and stop if length is longer than route already found
-        while (i < number_of_locations - 1 && route_dist < min_route_dist) {
-            route_dist += *(dist_table.begin() + (location_ids[i] * number_of_locations) + location_ids[i+1]);
-            ++i;
-        }
-        route_dist += *(dist_table.begin() + (location_ids[number_of_locations-1] * number_of_locations) + location_ids[0]);
-
-        if (route_dist < min_route_dist) {
-            min_route_dist = route_dist;
+        int new_distance = ReturnDistance(dist_table, location_ids, min_route_dist, number_of_locations);
+        if (new_distance != -1) {
+            min_route_dist = new_distance;
             //TODO: this gets copied right? fix this
             min_loc_permutation = location_ids;
         }
