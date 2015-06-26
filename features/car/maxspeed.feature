@@ -112,3 +112,11 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary | 15       |       | 30               | 60                | 34 km/h | 59 km/h |
             | primary | 15       |   1   | 30               | 60                | 15 km/h | 30 km/h |
 
+    Scenario: Car - Single lane streets only incure a penalty for two-way streets
+        Then routability should be
+            | highway | maxspeed | lanes  | oneway | forw    | backw   |
+            | primary |   30     |   1    | yes    | 34 km/h |         |
+            | primary |   30     |   1    | -1     |         | 34 km/h |
+            | primary |   30     |   1    |        | 15 km/h | 15 km/h |
+            | primary |   30     |   2    |        | 34 km/h | 34 km/h |
+
