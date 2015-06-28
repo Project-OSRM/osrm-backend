@@ -62,7 +62,7 @@ struct InternalExtractorEdge
     };
 
     explicit InternalExtractorEdge()
-        : result(0, 0, 0, 0, false, false, false, false, false,
+        : result(0, 0, 0, 0, false, false, false, false,
                 TRAVEL_MODE_INACCESSIBLE, false)
     {
     }
@@ -74,12 +74,11 @@ struct InternalExtractorEdge
                            bool forward,
                            bool backward,
                            bool roundabout,
-                           bool in_tiny_cc,
                            bool access_restricted,
                            TravelMode travel_mode,
                            bool is_split)
         : result(source, target, name_id, 0, forward, backward, roundabout,
-                 in_tiny_cc, access_restricted, travel_mode, is_split),
+                 access_restricted, travel_mode, is_split),
           weight_data(weight_data)
     {
     }
@@ -96,11 +95,11 @@ struct InternalExtractorEdge
     static InternalExtractorEdge min_value()
     {
         return InternalExtractorEdge(0, 0, 0, WeightData(), false, false, false,
-                                     false, false, TRAVEL_MODE_INACCESSIBLE, false);
+                                     false, TRAVEL_MODE_INACCESSIBLE, false);
     }
     static InternalExtractorEdge max_value()
     {
-        return InternalExtractorEdge(SPECIAL_NODEID, SPECIAL_NODEID, 0, WeightData(), false, false,
+        return InternalExtractorEdge(SPECIAL_NODEID, SPECIAL_NODEID, 0, WeightData(), false,
                                      false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
     }
 };

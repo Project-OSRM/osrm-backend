@@ -96,18 +96,18 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
         }
 
         // this case can happen if two ways with different names overlap
-        if (fwd_edge_data1.nameID != rev_edge_data1.nameID ||
-            fwd_edge_data2.nameID != rev_edge_data2.nameID)
+        if (fwd_edge_data1.name_id != rev_edge_data1.name_id ||
+            fwd_edge_data2.name_id != rev_edge_data2.name_id)
         {
             continue;
         }
 
         if (fwd_edge_data1.IsCompatibleTo(fwd_edge_data2) && rev_edge_data1.IsCompatibleTo(rev_edge_data2))
         {
-            BOOST_ASSERT(graph.GetEdgeData(forward_e1).nameID ==
-                         graph.GetEdgeData(reverse_e1).nameID);
-            BOOST_ASSERT(graph.GetEdgeData(forward_e2).nameID ==
-                         graph.GetEdgeData(reverse_e2).nameID);
+            BOOST_ASSERT(graph.GetEdgeData(forward_e1).name_id ==
+                         graph.GetEdgeData(reverse_e1).name_id);
+            BOOST_ASSERT(graph.GetEdgeData(forward_e2).name_id ==
+                         graph.GetEdgeData(reverse_e2).name_id);
 
             // Get distances before graph is modified
             const int forward_weight1 = graph.GetEdgeData(forward_e1).distance;

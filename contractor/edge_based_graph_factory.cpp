@@ -97,8 +97,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
     const EdgeData &reverse_data = m_node_based_graph->GetEdgeData(edge_id_2);
 
-    if (forward_data.edgeBasedNodeID == SPECIAL_NODEID &&
-        reverse_data.edgeBasedNodeID == SPECIAL_NODEID)
+    if (forward_data.edge_id == SPECIAL_NODEID &&
+        reverse_data.edge_id == SPECIAL_NODEID)
     {
         return;
     }
@@ -154,9 +154,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
             // build edges
             m_edge_based_node_list.emplace_back(
-                forward_data.edgeBasedNodeID, reverse_data.edgeBasedNodeID,
+                forward_data.edge_id, reverse_data.edge_id,
                 current_edge_source_coordinate_id, current_edge_target_coordinate_id,
-                forward_data.nameID, forward_geometry[i].second,
+                forward_data.name_id, forward_geometry[i].second,
                 reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
                 reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
                 component_id, i, forward_data.travel_mode, reverse_data.travel_mode);
@@ -178,7 +178,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
     {
         BOOST_ASSERT(!m_compressed_edge_container.HasEntryForID(edge_id_2));
 
-        if (forward_data.edgeBasedNodeID != SPECIAL_NODEID)
+        if (forward_data.edge_id != SPECIAL_NODEID)
         {
             BOOST_ASSERT(forward_data.forward);
         }
@@ -187,7 +187,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
             BOOST_ASSERT(!forward_data.forward);
         }
 
-        if (reverse_data.edgeBasedNodeID != SPECIAL_NODEID)
+        if (reverse_data.edge_id != SPECIAL_NODEID)
         {
             BOOST_ASSERT(reverse_data.forward);
         }
@@ -196,12 +196,12 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
             BOOST_ASSERT(!reverse_data.forward);
         }
 
-        BOOST_ASSERT(forward_data.edgeBasedNodeID != SPECIAL_NODEID ||
-                     reverse_data.edgeBasedNodeID != SPECIAL_NODEID);
+        BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID ||
+                     reverse_data.edge_id != SPECIAL_NODEID);
 
         m_edge_based_node_list.emplace_back(
-            forward_data.edgeBasedNodeID, reverse_data.edgeBasedNodeID, node_u, node_v,
-            forward_data.nameID, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
+            forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
+            forward_data.name_id, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
             component_id, 0, forward_data.travel_mode, reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
@@ -241,7 +241,7 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
 }
 
 
-/// Renumbers all _forward_ edges and sets the edgeBasedNodeID.
+/// Renumbers all _forward_ edges and sets the edge_id.
 /// A specific numbering is not important. Any unique ID will do.
 void EdgeBasedGraphFactory::RenumberEdges()
 {
@@ -260,10 +260,10 @@ void EdgeBasedGraphFactory::RenumberEdges()
             }
 
             BOOST_ASSERT(numbered_edges_count < m_node_based_graph->GetNumberOfEdges());
-            edge_data.edgeBasedNodeID = numbered_edges_count;
+            edge_data.edge_id = numbered_edges_count;
             ++numbered_edges_count;
 
-            BOOST_ASSERT(SPECIAL_NODEID != edge_data.edgeBasedNodeID);
+            BOOST_ASSERT(SPECIAL_NODEID != edge_data.edge_id);
         }
     }
 }
@@ -329,8 +329,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
             const bool component_is_tiny = size_of_component < 1000;
 
-            // we only set edgeBasedNodeID for forward edges
-            if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
+            // we only set edge_id for forward edges
+            if (edge_data.edge_id == SPECIAL_NODEID)
             {
                 InsertEdgeBasedNode(node_v, node_u,
                                     (component_is_tiny ? id_of_smaller_component + 1 : 0));
@@ -438,7 +438,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 const EdgeData &edge_data1 = m_node_based_graph->GetEdgeData(e1);
                 const EdgeData &edge_data2 = m_node_based_graph->GetEdgeData(e2);
 
-                BOOST_ASSERT(edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID);
+                BOOST_ASSERT(edge_data1.edge_id != edge_data2.edge_id);
                 BOOST_ASSERT(edge_data1.forward);
                 BOOST_ASSERT(edge_data2.forward);
 
@@ -481,7 +481,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 original_edge_data_vector.emplace_back(
                     (edge_is_compressed ? m_compressed_edge_container.GetPositionForID(e1) : node_v),
-                    edge_data1.nameID, turn_instruction, edge_is_compressed,
+                    edge_data1.name_id, turn_instruction, edge_is_compressed,
                     edge_data2.travel_mode);
 
                 ++original_edges_counter;
@@ -491,12 +491,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     FlushVectorToStream(edge_data_file, original_edge_data_vector);
                 }
 
-                BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edgeBasedNodeID);
-                BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edgeBasedNodeID);
+                BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
+                BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
 
-                m_edge_based_edge_list.emplace_back(
-                    EdgeBasedEdge(edge_data1.edgeBasedNodeID, edge_data2.edgeBasedNodeID,
-                                  m_edge_based_edge_list.size(), distance, true, false));
+                m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
+                                  m_edge_based_edge_list.size(), distance, true, false);
             }
         }
     }
@@ -579,11 +578,11 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
 
     // If street names stay the same and if we are certain that it is not a
     // a segment of a roundabout, we skip it.
-    if (data1.nameID == data2.nameID)
+    if (data1.name_id == data2.name_id)
     {
         // TODO: Here we should also do a small graph exploration to check for
         //      more complex situations
-        if (0 != data1.nameID || m_node_based_graph->GetOutDegree(node_v) <= 2)
+        if (0 != data1.name_id || m_node_based_graph->GetOutDegree(node_v) <= 2)
         {
             return TurnInstruction::NoTurn;
         }

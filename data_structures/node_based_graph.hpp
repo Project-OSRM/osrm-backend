@@ -39,32 +39,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID),
-          nameID(std::numeric_limits<unsigned>::max()), isAccessRestricted(false), shortcut(false),
-          forward(false), backward(false), roundabout(false), ignore_in_grid(false),
-          travel_mode(TRAVEL_MODE_INACCESSIBLE)
+        : distance(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
+          name_id(std::numeric_limits<unsigned>::max()), access_restricted(false),
+          forward(false), backward(false), roundabout(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
-    NodeBasedEdgeData(int distance, unsigned edgeBasedNodeID, unsigned nameID,
-            bool isAccessRestricted, bool shortcut, bool forward, bool backward,
-            bool roundabout, bool ignore_in_grid, TravelMode travel_mode)
-        : distance(distance), edgeBasedNodeID(edgeBasedNodeID),
-          nameID(nameID), isAccessRestricted(isAccessRestricted), shortcut(shortcut),
-          forward(forward), backward(backward), roundabout(roundabout), ignore_in_grid(ignore_in_grid),
-          travel_mode(travel_mode)
+    NodeBasedEdgeData(int distance, unsigned edge_id, unsigned name_id,
+            bool access_restricted, bool forward, bool backward,
+            bool roundabout, TravelMode travel_mode)
+        : distance(distance), edge_id(edge_id),
+          name_id(name_id), access_restricted(access_restricted),
+          forward(forward), backward(backward), roundabout(roundabout), travel_mode(travel_mode)
     {
     }
 
     int distance;
-    unsigned edgeBasedNodeID;
-    unsigned nameID;
-    bool isAccessRestricted : 1;
-    bool shortcut : 1;
+    unsigned edge_id;
+    unsigned name_id;
+    bool access_restricted : 1;
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;
-    bool ignore_in_grid : 1;
     TravelMode travel_mode : 4;
 
     void SwapDirectionFlags()
@@ -77,8 +73,7 @@ struct NodeBasedEdgeData
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
         return (forward == other.forward) && (backward == other.backward) &&
-               (nameID == other.nameID) && (ignore_in_grid == other.ignore_in_grid) &&
-               (travel_mode == other.travel_mode);
+               (name_id == other.name_id) && (travel_mode == other.travel_mode);
     }
 };
 
@@ -211,11 +206,9 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<NodeBasedE
 
         edge.data.distance = static_cast<int>(import_edge.weight);
         BOOST_ASSERT(edge.data.distance > 0);
-        edge.data.shortcut = false;
         edge.data.roundabout = import_edge.roundabout;
-        edge.data.ignore_in_grid = import_edge.in_tiny_cc;
-        edge.data.nameID = import_edge.name_id;
-        edge.data.isAccessRestricted = import_edge.access_restricted;
+        edge.data.name_id = import_edge.name_id;
+        edge.data.access_restricted = import_edge.access_restricted;
         edge.data.travel_mode = import_edge.travel_mode;
 
         edges_list.push_back(edge);

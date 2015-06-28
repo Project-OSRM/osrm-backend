@@ -43,7 +43,6 @@ struct NodeBasedEdge
                            bool forward,
                            bool backward,
                            bool roundabout,
-                           bool in_tiny_cc,
                            bool access_restricted,
                            TravelMode travel_mode,
                            bool is_split);
@@ -55,7 +54,6 @@ struct NodeBasedEdge
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;
-    bool in_tiny_cc : 1;
     bool access_restricted : 1;
     bool is_split : 1;
     TravelMode travel_mode : 4;

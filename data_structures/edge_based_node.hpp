@@ -37,6 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
+/// This is what StaticRTree serialized and stores on disk
+/// It is generated in EdgeBasedGraphFactory.
 struct EdgeBasedNode
 {
     EdgeBasedNode()
