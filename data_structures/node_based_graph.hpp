@@ -46,6 +46,16 @@ struct NodeBasedEdgeData
     {
     }
 
+    NodeBasedEdgeData(int distance, unsigned edgeBasedNodeID, unsigned nameID,
+            bool isAccessRestricted, bool shortcut, bool forward, bool backward,
+            bool roundabout, bool ignore_in_grid, TravelMode travel_mode)
+        : distance(distance), edgeBasedNodeID(edgeBasedNodeID),
+          nameID(nameID), isAccessRestricted(isAccessRestricted), shortcut(shortcut),
+          forward(forward), backward(backward), roundabout(roundabout), ignore_in_grid(ignore_in_grid),
+          travel_mode(travel_mode)
+    {
+    }
+
     int distance;
     unsigned edgeBasedNodeID;
     unsigned nameID;

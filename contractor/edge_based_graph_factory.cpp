@@ -266,7 +266,6 @@ void EdgeBasedGraphFactory::RenumberEdges()
             BOOST_ASSERT(SPECIAL_NODEID != edge_data.edgeBasedNodeID);
         }
     }
-    m_number_of_edge_based_nodes = numbered_edges_count;
 }
 
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.

@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 
-#include "speed_profile.hpp"
+#include "../contractor/speed_profile.hpp"
 #include "../data_structures/node_based_graph.hpp"
 
 #include <memory>

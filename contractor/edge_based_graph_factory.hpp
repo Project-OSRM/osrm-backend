@@ -81,8 +81,6 @@ class EdgeBasedGraphFactory
   private:
     using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
-    unsigned m_number_of_edge_based_nodes;
-
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 

@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "processing_chain.hpp"
 
 #include "contractor.hpp"
-#include "graph_compressor.hpp"
+#include "../algorithms/graph_compressor.hpp"
 
 #include "../algorithms/crc32_processor.hpp"
 #include "../data_structures/compressed_edge_container.hpp"
