@@ -355,7 +355,7 @@ Prepare::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
         return std::shared_ptr<NodeBasedDynamicGraph>();
     }
 
-    return NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
+    return NodeBasedDynamicGraphFromEdges(number_of_node_based_nodes, edge_list);
 }
 
 

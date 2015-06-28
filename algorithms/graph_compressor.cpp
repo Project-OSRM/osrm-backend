@@ -6,6 +6,8 @@
 #include "../data_structures/restriction_map.hpp"
 #include "../data_structures/percent.hpp"
 
+#include "../util/simple_logger.hpp"
+
 GraphCompressor::GraphCompressor(const SpeedProfileProperties& speed_profile)
     : speed_profile(speed_profile)
 {
@@ -59,8 +61,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
         //
         // If the edges are compatible.
 
-        const bool reverse_edge_order =
-            !(graph.GetEdgeData(graph.BeginEdges(node_v)).forward);
+        const bool reverse_edge_order = graph.GetEdgeData(graph.BeginEdges(node_v)).reversed;
         const EdgeID forward_e2 = graph.BeginEdges(node_v) + reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != forward_e2);
         BOOST_ASSERT(forward_e2 >= graph.BeginEdges(node_v) &&

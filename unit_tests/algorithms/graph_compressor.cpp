@@ -12,25 +12,6 @@
 
 BOOST_AUTO_TEST_SUITE(graph_compressor)
 
-void dumpGraph(const NodeBasedDynamicGraph& graph)
-{
-    for (auto i = 0u; i < graph.GetNumberOfNodes(); ++i)
-    {
-        std::cout << "## node " << i << " degree: " << graph.GetOutDegree(i) << std::endl;
-        for (auto e = graph.BeginEdges(i); e < graph.EndEdges(i); ++e)
-        {
-            const auto& data = graph.GetEdgeData(e);
-            auto target = graph.GetTarget(e);
-            if (data.forward && !data.backward)
-                std::cout << i << "->" << target << std::endl;
-            if (!data.forward && data.backward)
-                std::cout << i << "<-" << target << std::endl;
-            if (data.forward && data.backward)
-                std::cout << i << "--" << target << std::endl;
-        }
-    }
-}
-
 BOOST_AUTO_TEST_CASE(long_road_test)
 {
     //
@@ -46,15 +27,15 @@ BOOST_AUTO_TEST_CASE(long_road_test)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, forward, backward, roundabout, travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {2, 3, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {3, 2, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {3, 4, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {4, 3, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT}
+        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {2, 3, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {3, 2, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {3, 4, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT}
     };
 
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[2].data));
@@ -89,18 +70,18 @@ BOOST_AUTO_TEST_CASE(loop_test)
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
         // source, target, distance, edge_id, name_id, access_restricted, forward, backward, roundabout, travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {0, 5, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {2, 3, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {3, 2, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {3, 4, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {4, 3, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {4, 5, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {5, 0, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {5, 4, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {0, 5, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {2, 3, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {3, 2, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {3, 4, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {4, 5, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {5, 0, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {5, 4, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
     };
 
     BOOST_ASSERT(edges.size() == 12);
@@ -145,13 +126,13 @@ BOOST_AUTO_TEST_CASE(t_intersection)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, forward, backward, roundabout, travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 3, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {3, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
+        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 3, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {3, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
     };
 
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[1].data));
@@ -184,10 +165,10 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
         // source, target, distance, edge_id, name_id, access_restricted, forward, backward, roundabout, travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 1, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 1, false, true, true, false, TRAVEL_MODE_DEFAULT},
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 2, 1, SPECIAL_EDGEID, 1, false, false, false, TRAVEL_MODE_DEFAULT},
+        {2, 1, 1, SPECIAL_EDGEID, 1, false, false, false, TRAVEL_MODE_DEFAULT},
     };
 
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[1].data));
@@ -215,11 +196,11 @@ BOOST_AUTO_TEST_CASE(direction_changes)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, forward, backward, roundabout, travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, true, false, false, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, true, false, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, true, true, false, TRAVEL_MODE_DEFAULT},
+        // source, target, distance, edge_id, name_id, access_restricted, reverse, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, true,  false, TRAVEL_MODE_DEFAULT},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, TRAVEL_MODE_DEFAULT},
     };
 
     NodeBasedDynamicGraph graph(5, edges);

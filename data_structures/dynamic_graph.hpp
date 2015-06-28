@@ -138,7 +138,7 @@ template <typename EdgeDataT> class DynamicGraph
         unsigned degree = 0;
         for (const auto edge : osrm::irange(BeginEdges(n), EndEdges(n)))
         {
-            if (GetEdgeData(edge).forward)
+            if (!GetEdgeData(edge).reversed)
             {
                 ++degree;
             }

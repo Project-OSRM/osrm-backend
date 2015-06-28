@@ -180,20 +180,20 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
         if (forward_data.edge_id != SPECIAL_NODEID)
         {
-            BOOST_ASSERT(forward_data.forward);
+            BOOST_ASSERT(!forward_data.reversed);
         }
         else
         {
-            BOOST_ASSERT(!forward_data.forward);
+            BOOST_ASSERT(forward_data.reversed);
         }
 
         if (reverse_data.edge_id != SPECIAL_NODEID)
         {
-            BOOST_ASSERT(reverse_data.forward);
+            BOOST_ASSERT(!reverse_data.reversed);
         }
         else
         {
-            BOOST_ASSERT(!reverse_data.forward);
+            BOOST_ASSERT(reverse_data.reversed);
         }
 
         BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID ||
@@ -253,8 +253,8 @@ void EdgeBasedGraphFactory::RenumberEdges()
         {
             EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
 
-            // this edge is an incoming edge
-            if (!edge_data.forward)
+            // only number incoming edges
+            if (edge_data.reversed)
             {
                 continue;
             }
@@ -379,7 +379,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         progress.printStatus(node_u);
         for (const EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
-            if (!m_node_based_graph->GetEdgeData(e1).forward)
+            if (m_node_based_graph->GetEdgeData(e1).reversed)
             {
                 continue;
             }
@@ -392,7 +392,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             for (const EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(node_v))
             {
-                if (!m_node_based_graph->GetEdgeData(e2).forward)
+                if (m_node_based_graph->GetEdgeData(e2).reversed)
                 {
                     continue;
                 }
@@ -439,8 +439,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 const EdgeData &edge_data2 = m_node_based_graph->GetEdgeData(e2);
 
                 BOOST_ASSERT(edge_data1.edge_id != edge_data2.edge_id);
-                BOOST_ASSERT(edge_data1.forward);
-                BOOST_ASSERT(edge_data2.forward);
+                BOOST_ASSERT(!edge_data1.reversed);
+                BOOST_ASSERT(!edge_data2.reversed);
 
                 // the following is the core of the loop.
                 unsigned distance = edge_data1.distance;
