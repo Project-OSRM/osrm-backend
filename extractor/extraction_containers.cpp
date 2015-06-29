@@ -320,6 +320,7 @@ void ExtractionContainers::PrepareEdges()
         // skip invalid edges
         if (all_edges_list[i].result.target == SPECIAL_NODEID)
         {
+            ++i;
             continue;
         }
 
