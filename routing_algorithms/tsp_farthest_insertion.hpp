@@ -47,11 +47,10 @@ namespace osrm
 namespace tsp
 {
 
-void FarthestInsertion(const RouteParameters & route_parameters,
-                       const PhantomNodeArray & phantom_node_vector,
-                       const std::vector<EdgeWeight> & dist_table,
-                       InternalRouteResult & min_route,
-                       std::vector<int> & min_loc_permutation) {
+void FarthestInsertionTSP(const PhantomNodeArray & phantom_node_vector,
+                          const std::vector<EdgeWeight> & dist_table,
+                          InternalRouteResult & min_route,
+                          std::vector<int> & min_loc_permutation) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
     // 1. start at a random round trip of 2 locations
@@ -66,6 +65,8 @@ void FarthestInsertion(const RouteParameters & route_parameters,
     std::list<int> current_trip;
     // tracks which nodes have been already visited
     std::vector<bool> visited(number_of_locations, false);
+
+    // PrintDistTable(dist_table, number_of_locations);
 
 
     // find the pair of location with the biggest distance and make the pair the initial start trip

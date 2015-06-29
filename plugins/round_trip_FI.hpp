@@ -122,16 +122,17 @@ template <class DataFacadeT> class RoundTripPluginFI final : public BasePlugin
 
         //######################## FARTHEST INSERTION ###############################//
         TIMER_START(tsp);
-        osrm::tsp::FarthestInsertion(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
+        osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
         search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
         TIMER_STOP(tsp);
-        SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-        SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp);
+
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
 
         osrm::json::Array json_loc_permutation;
         json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
         json_result.values["loc_permutation"] = json_loc_permutation;
         json_result.values["distance"] = min_route.shortest_path_length;
+        SimpleLogger().Write() << "FI GEOM DISTANCE " << min_route.shortest_path_length;
         json_result.values["runtime"] = TIMER_MSEC(tsp);
 
         // return geometry result to json

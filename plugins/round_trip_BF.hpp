@@ -119,23 +119,23 @@ template <class DataFacadeT> class RoundTripPluginBF final : public BasePlugin
         InternalRouteResult min_route;
         std::vector<int> min_loc_permutation(phantom_node_vector.size(), -1);
         TIMER_STOP(tsp_pre);
-        SimpleLogger().Write() << route_parameters.coordinates.size();
+
         //########################### BRUTE FORCE ####################################//
-        if (route_parameters.coordinates.size() < 13) {
+        if (route_parameters.coordinates.size() < 11) {
             TIMER_START(tsp);
-            osrm::tsp::BruteForce(route_parameters, phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            osrm::tsp::BruteForceTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
             search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
             TIMER_STOP(tsp);
-            SimpleLogger().Write() << "Distance " << min_route.shortest_path_length;
-            SimpleLogger().Write() << "Time " << TIMER_MSEC(tsp);
+
+            BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
 
             osrm::json::Array json_loc_permutation;
             json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
             json_result.values["loc_permutation"] = json_loc_permutation;
             json_result.values["distance"] = min_route.shortest_path_length;
+            SimpleLogger().Write() << "BF GEOM DISTANCE " << min_route.shortest_path_length;
             json_result.values["runtime"] = TIMER_MSEC(tsp);
         } else {
-            SimpleLogger().Write() << "???";
             json_result.values["distance"] = -1;
             json_result.values["runtime"] = -1;
         }

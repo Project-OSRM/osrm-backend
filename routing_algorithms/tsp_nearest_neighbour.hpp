@@ -48,11 +48,10 @@ namespace osrm
 namespace tsp
 {
 
-void NearestNeighbour(const RouteParameters & route_parameters,
-                      const PhantomNodeArray & phantom_node_vector,
-                      const std::vector<EdgeWeight> & dist_table,
-                      InternalRouteResult & min_route,
-                      std::vector<int> & min_loc_permutation) {
+void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
+                         const std::vector<EdgeWeight> & dist_table,
+                         InternalRouteResult & min_route,
+                         std::vector<int> & min_loc_permutation) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
     // 1. grab a random location and mark as starting point
