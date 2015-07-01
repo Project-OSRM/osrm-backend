@@ -74,6 +74,8 @@ class EdgeBasedGraphFactory
 
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
 
+    unsigned GetHighestEdgeID();
+
     TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, const double angle) const;
 
     int GetTurnPenalty(double angle, lua_State *lua_state) const;
@@ -83,6 +85,7 @@ class EdgeBasedGraphFactory
 
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
+    unsigned m_max_edge_id;
 
     const std::vector<QueryNode>& m_node_info_list;
     std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
@@ -95,7 +98,7 @@ class EdgeBasedGraphFactory
     SpeedProfileProperties speed_profile;
 
     void CompressGeometry();
-    void RenumberEdges();
+    unsigned RenumberEdges();
     void GenerateEdgeExpandedNodes();
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    lua_State *lua_state);

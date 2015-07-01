@@ -62,7 +62,7 @@ class Prepare
     void SetupScriptingEnvironment(lua_State *myLuaState,
                                    SpeedProfileProperties &speed_profile);
     unsigned CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list);
-    void ContractGraph(const std::size_t number_of_edge_based_nodes,
+    void ContractGraph(const unsigned max_edge_id,
                        DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
                        DeallocatingVector<QueryEdge>& contracted_edge_list);
     std::size_t WriteContractedGraph(unsigned number_of_edge_based_nodes,

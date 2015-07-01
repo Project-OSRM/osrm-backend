@@ -87,7 +87,7 @@ int Prepare::Run()
                                *node_based_edge_list, edge_based_edge_list);
 
     auto number_of_node_based_nodes = graph_size.first;
-    auto number_of_edge_based_nodes = graph_size.second;
+    auto max_edge_id = graph_size.second;
 
     TIMER_STOP(expansion);
 
@@ -105,12 +105,12 @@ int Prepare::Run()
 
     TIMER_START(contraction);
     auto contracted_edge_list = osrm::make_unique<DeallocatingVector<QueryEdge>>();
-    ContractGraph(number_of_edge_based_nodes, edge_based_edge_list, *contracted_edge_list);
+    ContractGraph(max_edge_id, edge_based_edge_list, *contracted_edge_list);
     TIMER_STOP(contraction);
 
     SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
-    std::size_t number_of_used_edges = WriteContractedGraph(number_of_edge_based_nodes,
+    std::size_t number_of_used_edges = WriteContractedGraph(max_edge_id,
                                                             std::move(node_based_edge_list),
                                                             std::move(contracted_edge_list));
 
@@ -119,10 +119,10 @@ int Prepare::Run()
     SimpleLogger().Write() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
     SimpleLogger().Write() << "Expansion  : " << (number_of_node_based_nodes / TIMER_SEC(expansion))
                            << " nodes/sec and "
-                           << (number_of_edge_based_nodes / TIMER_SEC(expansion)) << " edges/sec";
+                           << ((max_edge_id+1) / TIMER_SEC(expansion)) << " edges/sec";
 
     SimpleLogger().Write() << "Contraction: "
-                           << (number_of_edge_based_nodes / TIMER_SEC(contraction))
+                           << ((max_edge_id+1) / TIMER_SEC(contraction))
                            << " nodes/sec and " << number_of_used_edges / TIMER_SEC(contraction)
                            << " edges/sec";
 
@@ -131,7 +131,7 @@ int Prepare::Run()
     return 0;
 }
 
-std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
+std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
                                           std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list,
                                           std::unique_ptr<DeallocatingVector<QueryEdge>> contracted_edge_list)
 {
@@ -146,7 +146,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
     const FingerPrint fingerprint = FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint, sizeof(FingerPrint));
-    const unsigned max_used_node_id = 1 + [&contracted_edge_list]
+    const unsigned max_used_node_id = [&contracted_edge_list]
     {
         unsigned tmp_max = 0;
         for (const QueryEdge &edge : *contracted_edge_list)
@@ -159,11 +159,12 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
         return tmp_max;
     }();
 
-    SimpleLogger().Write(logDEBUG) << "input graph has " << number_of_edge_based_nodes << " nodes";
-    SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
+    SimpleLogger().Write(logDEBUG) << "input graph has " << (max_node_id+1) << " nodes";
+    SimpleLogger().Write(logDEBUG) << "contracted graph has " << (max_used_node_id+1) << " nodes";
 
     std::vector<StaticGraph<EdgeData>::NodeArrayEntry> node_array;
-    node_array.resize(number_of_edge_based_nodes + 1);
+    // make sure we have at least one sentinel
+    node_array.resize(max_node_id + 2);
 
     SimpleLogger().Write() << "Building node array";
     StaticGraph<EdgeData>::EdgeIterator edge = 0;
@@ -171,7 +172,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
     StaticGraph<EdgeData>::EdgeIterator last_edge = edge;
 
     // initializing 'first_edge'-field of nodes:
-    for (const auto node : osrm::irange(0u, max_used_node_id))
+    for (const auto node : osrm::irange(0u, max_used_node_id+1))
     {
         last_edge = edge;
         while ((edge < contracted_edge_count) && ((*contracted_edge_list)[edge].source == node))
@@ -182,7 +183,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
         position += edge - last_edge;           // remove
     }
 
-    for (const auto sentinel_counter : osrm::irange<unsigned>(max_used_node_id, node_array.size()))
+    for (const auto sentinel_counter : osrm::irange<unsigned>(max_used_node_id+1, node_array.size()))
     {
         // sentinel element, guarded against underflow
         node_array[sentinel_counter].first_edge = contracted_edge_count;
@@ -218,7 +219,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned number_of_edge_based_nodes,
         current_edge.data = (*contracted_edge_list)[edge].data;
 
         // every target needs to be valid
-        BOOST_ASSERT(current_edge.target < max_used_node_id);
+        BOOST_ASSERT(current_edge.target <= max_used_node_id);
 #ifndef NDEBUG
         if (current_edge.data.distance <= 0)
         {
@@ -399,19 +400,20 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
+    auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
 
     const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
-    return std::make_pair(number_of_node_based_nodes, node_based_edge_list.size());
+    return std::make_pair(number_of_node_based_nodes, max_edge_id);
 }
 
 /**
  \brief Build contracted graph.
  */
-void Prepare::ContractGraph(const std::size_t number_of_edge_based_nodes,
+void Prepare::ContractGraph(const unsigned max_edge_id,
                             DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
                             DeallocatingVector<QueryEdge>& contracted_edge_list)
 {
-    Contractor contractor(number_of_edge_based_nodes, edge_based_edge_list);
+    Contractor contractor(max_edge_id + 1, edge_based_edge_list);
     contractor.Run();
     contractor.GetEdges(contracted_edge_list);
 }

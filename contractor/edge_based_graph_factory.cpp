@@ -77,6 +77,11 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
     nodes.swap(m_edge_based_node_list);
 }
 
+unsigned EdgeBasedGraphFactory::GetHighestEdgeID()
+{
+    return m_max_edge_id;
+}
+
 void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                                                 const NodeID node_v,
                                                 const unsigned component_id)
@@ -223,7 +228,7 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
                                 lua_State *lua_state)
 {
     TIMER_START(renumber);
-    RenumberEdges();
+    m_max_edge_id = RenumberEdges() - 1;
     TIMER_STOP(renumber);
 
     TIMER_START(generate_nodes);
@@ -243,7 +248,8 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
 
 /// Renumbers all _forward_ edges and sets the edge_id.
 /// A specific numbering is not important. Any unique ID will do.
-void EdgeBasedGraphFactory::RenumberEdges()
+/// Returns the number of edge based nodes.
+unsigned EdgeBasedGraphFactory::RenumberEdges()
 {
     // renumber edge based node of outgoing edges
     unsigned numbered_edges_count = 0;
@@ -266,6 +272,8 @@ void EdgeBasedGraphFactory::RenumberEdges()
             BOOST_ASSERT(SPECIAL_NODEID != edge_data.edge_id);
         }
     }
+
+    return numbered_edges_count;
 }
 
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.
