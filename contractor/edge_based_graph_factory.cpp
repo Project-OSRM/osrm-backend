@@ -282,8 +282,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     SimpleLogger().Write() << "Identifying components of the (compressed) road network";
 
     // Run a BFS on the undirected graph and identify small components
-    TarjanSCC<NodeBasedDynamicGraph> component_explorer(m_node_based_graph, *m_restriction_map,
-                                                        m_barrier_nodes);
+    TarjanSCC<NodeBasedDynamicGraph> component_explorer(m_node_based_graph);
 
     component_explorer.run();
 
