@@ -71,25 +71,14 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &route_parameters,
-                      osrm::json::Object &json_result) override final
-    {
-        TIMER_START(tsp_pre);
-        // check if all inputs are coordinates
-        if (!check_all_coordinates(route_parameters.coordinates))
-        {
-            return 400;
-        }
+    void GetPhantomNodes(const RouteParameters &route_parameters, PhantomNodeArray & phantom_node_vector) {
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
         // find phantom nodes for all input coords
-        PhantomNodeArray phantom_node_vector(route_parameters.coordinates.size());
-        for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
-        {
+        for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size())) {
             // if client hints are helpful, encode hints
             if (checksum_OK && i < route_parameters.hints.size() &&
-                !route_parameters.hints[i].empty())
-            {
+                !route_parameters.hints[i].empty()) {
                 PhantomNode current_phantom_node;
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
@@ -100,62 +89,85 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             }
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
                                                             phantom_node_vector[i], 1);
-            if (phantom_node_vector[i].size() > 1)
-            {
+            if (phantom_node_vector[i].size() > 1) {
                 phantom_node_vector[i].erase(phantom_node_vector[i].begin());
             }
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
+    }
 
-        // compute the distance table of all phantom nodes
-        const std::shared_ptr<std::vector<EdgeWeight>> result_table =
-            search_engine_ptr->distance_table(phantom_node_vector);
-
-        if (!result_table)
-        {
-            return 400;
-        }
-
+    void SplitUnaccessibleLocations(PhantomNodeArray & phantom_node_vector, std::vector<EdgeWeight> & result_table) {
         auto number_of_locations = phantom_node_vector.size();
         const auto maxint = std::numeric_limits<int>::max();
 
         //////////////////////////////////// DELETE UNACCESSIBLE LOCATIONS /////////////////////////////////////////
-
-        if (*std::max_element(result_table->begin(), result_table->end()) == maxint) {
+        if (*std::max_element(result_table.begin(), result_table.end()) == maxint) {
             const int half = number_of_locations / 2;
             std::vector<int> to_delete;
 
             for (int i = number_of_locations - 1; i >= 0; --i) {
                 // if the location is unaccessible by most of the other locations, remember the location
-                if (std::count(result_table->begin() + i * number_of_locations, result_table->begin() + (i+1) * number_of_locations, maxint) > half) {
+                if (std::count(result_table.begin() + i * number_of_locations, result_table.begin() + (i+1) * number_of_locations, maxint) > half) {
                     to_delete.push_back(i);
                 }
             }
             //delete all unaccessible locations
             for (int k = 0; k < to_delete.size(); ++k) {
                 // delete its row
-                result_table->erase(result_table->begin() + to_delete[k] * number_of_locations, result_table->begin() + (to_delete[k]+1) * number_of_locations);
+                result_table.erase(result_table.begin() + to_delete[k] * number_of_locations, result_table.begin() + (to_delete[k]+1) * number_of_locations);
                 --number_of_locations;
                 // delete its column
                 for (int j = 0; j < number_of_locations; ++j) {
-                    result_table->erase(result_table->begin() + j * number_of_locations + to_delete[k]);
+                    result_table.erase(result_table.begin() + j * number_of_locations + to_delete[k]);
                 }
+                // delete its PhantomNode
+                phantom_node_vector.erase(phantom_node_vector.begin() + to_delete[k]);
             }
         }
-        //todo: delete
-        if (*std::max_element(result_table->begin(), result_table->end()) == maxint) {
-            SimpleLogger().Write() << "SOMETHING WENT WRONG";
+    }
+
+    void SetJSONOutput (const RouteParameters &route_parameters,
+                        int tsp_time,
+                        InternalRouteResult & min_route,
+                        std::vector<int> & min_loc_permutation,
+                        osrm::json::Object & json_result){
+        osrm::json::Array json_loc_permutation;
+        json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
+        json_result.values["loc_permutation"] = json_loc_permutation;
+        json_result.values["distance"] = min_route.shortest_path_length;
+        json_result.values["runtime"] = tsp_time;
+
+        // return geometry result to json
+        std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+        descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
+
+        descriptor->SetConfig(route_parameters);
+        descriptor->Run(min_route, json_result);
+    }
+
+    int HandleRequest(const RouteParameters &route_parameters,
+                      osrm::json::Object &json_result) override final
+    {
+        // check if all inputs are coordinates
+        if (!check_all_coordinates(route_parameters.coordinates)) {
+            return 400;
         }
 
-        // compute TSP round trip
+        PhantomNodeArray phantom_node_vector(route_parameters.coordinates.size());
+        GetPhantomNodes(route_parameters, phantom_node_vector);
+
+        // compute the distance table of all phantom nodes
+        const std::shared_ptr<std::vector<EdgeWeight>> result_table =
+            search_engine_ptr->distance_table(phantom_node_vector);
+        if (!result_table){
+            return 400;
+        }
+
+        SplitUnaccessibleLocations(phantom_node_vector, *result_table);
+
+        auto number_of_locations = phantom_node_vector.size();
         InternalRouteResult min_route;
         std::vector<int> min_loc_permutation(number_of_locations, -1);
-        TIMER_STOP(tsp_pre);
-
-        std::vector<int> mst;
-        mst.reserve(number_of_locations - 1);
-        osrm::tsp::JarnikPrim(route_parameters, number_of_locations, *result_table, mst);
-
         //######################## FARTHEST INSERTION ###############################//
         TIMER_START(tsp);
         osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
@@ -164,18 +176,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
 
-        osrm::json::Array json_loc_permutation;
-        json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
-        json_result.values["loc_permutation"] = json_loc_permutation;
-        json_result.values["distance"] = min_route.shortest_path_length;
-        json_result.values["runtime"] = TIMER_MSEC(tsp);
-
-        // return geometry result to json
-        std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
-        descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
-
-        descriptor->SetConfig(route_parameters);
-        descriptor->Run(min_route, json_result);
+        SetJSONOutput(route_parameters, TIMER_MSEC(tsp), min_route, min_loc_permutation, json_result);
 
         return 200;
     }
