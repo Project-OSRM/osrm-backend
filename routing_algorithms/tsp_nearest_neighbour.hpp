@@ -66,38 +66,10 @@ void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
     const auto number_of_locations = phantom_node_vector.size();
     min_route.shortest_path_length = std::numeric_limits<int>::max();
 
-    // is_lonely_island[i] indicates whether node i is a node that cannot be reached from other nodes
-    //  1 means that node i is a lonely island
-    //  0 means that it is not known for node i
-    // -1 means that node i is not a lonely island but a reachable, connected node
-    std::vector<int> is_lonely_island(number_of_locations, 0);
-    int count_unreachables;
-
     // ALWAYS START AT ANOTHER STARTING POINT
     for(int start_node = 0; start_node < number_of_locations; ++start_node)
     {
-
-        if (is_lonely_island[start_node] >= 0)
-        {
-            // if node is a lonely island it is an unsuitable node to start from and shall be skipped
-            if (is_lonely_island[start_node])
-                continue;
-            count_unreachables = 0;
-            auto start_dist_begin = dist_table.begin() + (start_node * number_of_locations);
-            auto start_dist_end = dist_table.begin() + ((start_node + 1) * number_of_locations);
-            for (auto it2 = start_dist_begin; it2 != start_dist_end; ++it2) {
-                if (*it2 == 0 || *it2 == std::numeric_limits<int>::max()) {
-                    ++count_unreachables;
-                }
-            }
-            if (count_unreachables >= number_of_locations) {
-                is_lonely_island[start_node] = 1;
-                continue;
-            }
-        }
-
         int curr_node = start_node;
-        is_lonely_island[curr_node] = -1;
         InternalRouteResult raw_route;
         //TODO: Should we always use the same vector or does it not matter at all because of loop scope?
         std::vector<int> loc_permutation(number_of_locations, -1);
@@ -119,33 +91,18 @@ void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
             auto row_end_iterator = dist_table.begin() + ((curr_node + 1) * number_of_locations);
             for (auto it = row_begin_iterator; it != row_end_iterator; ++it) {
                 auto index = std::distance(row_begin_iterator, it);
-                if (is_lonely_island[index] < 1 && !visited[index] && *it < min_dist)
+                if (!visited[index] && *it < min_dist)
                 {
                     min_dist = *it;
                     min_id = index;
                 }
             }
-            // in case there was no unvisited and reachable node found, it means that all remaining (unvisited) nodes must be lonely islands
-            if (min_id == -1)
-            {
-                for(int loc = 0; loc < visited.size(); ++loc) {
-                    if (!visited[loc]) {
-                        is_lonely_island[loc] = 1;
-                    }
-                }
-                break;
-            }
-            // set the nearest unvisited location as the next via_point
-            else
-            {
-                is_lonely_island[min_id] = -1;
-                loc_permutation[min_id] = via_point;
-                visited[min_id] = true;
-                viapoint = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
-                raw_route.segment_end_coordinates.emplace_back(viapoint);
-                trip_dist += min_dist;
-                curr_node = min_id;
-            }
+            loc_permutation[min_id] = via_point;
+            visited[min_id] = true;
+            viapoint = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
+            raw_route.segment_end_coordinates.emplace_back(viapoint);
+            trip_dist += min_dist;
+            curr_node = min_id;
         }
 
         // 4. ROUTE BACK TO STARTING POINT
