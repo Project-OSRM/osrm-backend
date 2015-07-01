@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../algorithms/bayes_classifier.hpp"
 #include "../algorithms/object_encoder.hpp"
+#include "../algorithms/route_name_extraction.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../descriptors/descriptor_base.hpp"
 #include "../descriptors/json_descriptor.hpp"
@@ -187,25 +188,30 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.target_traversed_in_reverse[i],
                                       raw_route.is_via_leg(i));
             }
+
             // we need this because we don't run DP
             for (auto &segment : factory.path_description)
             {
                 segment.necessary = true;
             }
+
             subtrace.values["geometry"] =
                 factory.AppendGeometryString(route_parameters.compression);
         }
 
         subtrace.values["indices"] = osrm::json::make_array(sub.indices);
 
+        osrm::json::Array ways;
         osrm::json::Array points;
         for (const auto &node : sub.nodes)
         {
             points.values.emplace_back(
                 osrm::json::make_array(node.location.lat / COORDINATE_PRECISION,
                                        node.location.lon / COORDINATE_PRECISION));
+            ways.values.push_back(facade->get_name_for_id(node.name_id));
         }
         subtrace.values["matched_points"] = points;
+        subtrace.values["ways"] = ways;
 
         return subtrace;
     }

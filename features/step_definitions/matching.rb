@@ -19,6 +19,9 @@ When /^I match I should get$/ do |table|
           if row['timestamps']
               timestamps = row['timestamps'].split(" ").compact.map { |t| t.to_i}
           end
+          if row['ways']
+              ways = row['ways'].split(",")
+          end
           got = {'trace' => row['trace'] }
           response = request_matching trace, timestamps, params
         else
@@ -51,14 +54,27 @@ When /^I match I should get$/ do |table|
         got['#'] = row['#']           # copy value so it always match
       end
 
+      ok = true
       sub_matchings = []
       if response.code == "200"
         if table.headers.include? 'matchings'
           sub_matchings = json['matchings'].compact.map { |sub| sub['matched_points']}
         end
+        if table.headers.include? 'ways'
+          got['ways'] = json['matchings'].compact.map { |sub| sub['ways']}
+          row_idx = 0
+          got['ways'].each do |sub|
+            sub.each do |x|
+              if x != ways[row_idx]
+                ok = false
+              else
+                row_idx = row_idx + 1
+              end
+            end
+          end
+        end
       end
 
-      ok = true
       encoded_result = ""
       extended_target = ""
       row['matchings'].split(',').each_with_index do |sub, sub_idx|
@@ -82,6 +98,7 @@ When /^I match I should get$/ do |table|
       if ok
         got['matchings'] = row['matchings']
         got['timestamps'] = row['timestamps']
+        got['ways'] = row['ways']
       else
         got['matchings'] = encoded_result
         row['matchings'] = extended_target
@@ -93,4 +110,3 @@ When /^I match I should get$/ do |table|
   end
   table.diff! actual
 end
-
