@@ -95,47 +95,41 @@ template <class DataFacadeT> class RoundTripPluginFI final : public BasePlugin
         }
     }
 
-    void SplitUnaccessibleLocations(PhantomNodeArray & phantom_node_vector, std::vector<EdgeWeight> & result_table) {
+    void SplitUnaccessibleLocations(PhantomNodeArray & phantom_node_vector,
+                                    std::vector<EdgeWeight> & result_table,
+                                    std::vector<std::vector<unsigned>> & components) {
+        // Run TarjanSCC
         auto number_of_locations = phantom_node_vector.size();
-        const auto maxint = std::numeric_limits<int>::max();
+        auto wrapper = std::make_shared<MatrixGraphWrapper<EdgeWeight>>(result_table, number_of_locations);
+        auto empty_restriction = RestrictionMap(std::vector<TurnRestriction>());
+        auto empty_vector = std::vector<bool>();
+        auto scc = TarjanSCC<MatrixGraphWrapper<EdgeWeight>>(wrapper, empty_restriction, empty_vector);
+        scc.run();
 
-        //////////////////////////////////// DELETE UNACCESSIBLE LOCATIONS /////////////////////////////////////////
-        if (*std::max_element(result_table.begin(), result_table.end()) == maxint) {
-            const int half = number_of_locations / 2;
-            std::vector<int> to_delete;
+        for (int j = 0; j < scc.get_number_of_components(); ++j){
+            components.push_back(std::vector<unsigned>());
+        }
 
-            for (int i = number_of_locations - 1; i >= 0; --i) {
-                // if the location is unaccessible by most of the other locations, remember the location
-                if (std::count(result_table.begin() + i * number_of_locations, result_table.begin() + (i+1) * number_of_locations, maxint) > half) {
-                    to_delete.push_back(i);
-                }
-            }
-            //delete all unaccessible locations
-            for (int k = 0; k < to_delete.size(); ++k) {
-                // delete its row
-                result_table.erase(result_table.begin() + to_delete[k] * number_of_locations, result_table.begin() + (to_delete[k]+1) * number_of_locations);
-                --number_of_locations;
-                // delete its column
-                for (int j = 0; j < number_of_locations; ++j) {
-                    result_table.erase(result_table.begin() + j * number_of_locations + to_delete[k]);
-                }
-                // delete its PhantomNode
-                phantom_node_vector.erase(phantom_node_vector.begin() + to_delete[k]);
-            }
+        for (int i = 0; i < number_of_locations; ++i) {
+            components[scc.get_component_id(i)].push_back(i);
         }
     }
 
-    void SetJSONOutput (const RouteParameters &route_parameters,
-                        int tsp_time,
-                        InternalRouteResult & min_route,
-                        std::vector<int> & min_loc_permutation,
-                        osrm::json::Object & json_result){
+    void SetLocPermutationOutput(const std::vector<int> & loc_permutation, osrm::json::Object & json_result){
         osrm::json::Array json_loc_permutation;
-        json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
+        json_loc_permutation.values.insert(json_loc_permutation.values.end(), loc_permutation.begin(), loc_permutation.end());
         json_result.values["loc_permutation"] = json_loc_permutation;
-        json_result.values["distance"] = min_route.shortest_path_length;
-        json_result.values["runtime"] = tsp_time;
+    }
 
+    void SetDistanceOutput(const int distance, osrm::json::Object & json_result) {
+        json_result.values["distance"] = distance;
+    }
+
+    void SetRuntimeOutput(const float runtime, osrm::json::Object & json_result) {
+        json_result.values["runtime"] = runtime;
+    }
+
+    void SetGeometry(const RouteParameters &route_parameters, const InternalRouteResult & min_route, osrm::json::Object & json_result) {
         // return geometry result to json
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
         descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
@@ -162,19 +156,48 @@ template <class DataFacadeT> class RoundTripPluginFI final : public BasePlugin
             return 400;
         }
 
-        SplitUnaccessibleLocations(phantom_node_vector, *result_table);
+        const auto maxint = std::numeric_limits<int>::max();
+        if (*std::max_element(result_table->begin(), result_table->end()) == maxint) {
+            std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+            descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
+            descriptor->SetConfig(route_parameters);
 
-        InternalRouteResult min_route;
-        std::vector<int> min_loc_permutation(phantom_node_vector.size(), -1);
-        //######################## FARTHEST INSERTION ###############################//
-        TIMER_START(tsp);
-        osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
-        search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
-        TIMER_STOP(tsp);
+            std::vector<std::vector<unsigned>> components;
+            TIMER_START(tsp);
+            SplitUnaccessibleLocations(phantom_node_vector, *result_table, components);
+            auto number_of_locations = phantom_node_vector.size();
+            std::vector<int> min_loc_permutation(number_of_locations, -1);
+            auto min_dist = 0;
+            for(auto k = 0; k < components.size(); ++k) {
+                if (components[k].size() > 1) {
+                    InternalRouteResult min_route;
+                    osrm::tsp::FarthestInsertionTSP(components[k], phantom_node_vector, *result_table, min_route, min_loc_permutation);
+                    search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
+                    min_dist += min_route.shortest_path_length;
+                    descriptor->Run(min_route, json_result);
+                }
+            }
+            TIMER_STOP(tsp);
 
-        BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
+            SetRuntimeOutput(TIMER_MSEC(tsp), json_result);
+            SetDistanceOutput(min_dist, json_result);
+            SetLocPermutationOutput(min_loc_permutation, json_result);
+        } else {
+            auto number_of_locations = phantom_node_vector.size();
+            InternalRouteResult min_route;
+            std::vector<int> min_loc_permutation(number_of_locations, -1);
+            //######################## FARTHEST INSERTION ###############################//
+            TIMER_START(tsp);
+            osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
+            TIMER_STOP(tsp);
 
-        SetJSONOutput(route_parameters, TIMER_MSEC(tsp), min_route, min_loc_permutation, json_result);
+            BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
+            SetLocPermutationOutput(min_loc_permutation, json_result);
+            SetDistanceOutput(min_route.shortest_path_length, json_result);
+            SetRuntimeOutput(TIMER_MSEC(tsp), json_result);
+            SetGeometry(route_parameters, min_route, json_result);
+        }
 
         return 200;
     }
