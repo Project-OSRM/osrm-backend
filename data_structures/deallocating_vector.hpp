@@ -36,6 +36,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
+template <typename ElementT> struct ConstDeallocatingVectorIteratorState
+{
+    ConstDeallocatingVectorIteratorState()
+        : index(std::numeric_limits<std::size_t>::max()), bucket_list(nullptr)
+    {
+    }
+    explicit ConstDeallocatingVectorIteratorState(const ConstDeallocatingVectorIteratorState &r)
+        : index(r.index), bucket_list(r.bucket_list)
+    {
+    }
+    explicit ConstDeallocatingVectorIteratorState(const std::size_t idx,
+                                             const std::vector<ElementT *> *input_list)
+        : index(idx), bucket_list(input_list)
+    {
+    }
+    std::size_t index;
+    const std::vector<ElementT *> *bucket_list;
+
+    ConstDeallocatingVectorIteratorState &operator=(const ConstDeallocatingVectorIteratorState &other)
+    {
+        index = other.index;
+        bucket_list = other.bucket_list;
+        return *this;
+    }
+};
+
 template <typename ElementT> struct DeallocatingVectorIteratorState
 {
     DeallocatingVectorIteratorState()
@@ -59,6 +85,55 @@ template <typename ElementT> struct DeallocatingVectorIteratorState
         index = other.index;
         bucket_list = other.bucket_list;
         return *this;
+    }
+};
+
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
+class ConstDeallocatingVectorIterator
+    : public boost::iterator_facade<ConstDeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>,
+                                    ElementT,
+                                    std::random_access_iterator_tag>
+{
+    ConstDeallocatingVectorIteratorState<ElementT> current_state;
+
+  public:
+    ConstDeallocatingVectorIterator() {}
+    ConstDeallocatingVectorIterator(std::size_t idx, const std::vector<ElementT *> *input_list)
+        : current_state(idx, input_list)
+    {
+    }
+
+    friend class boost::iterator_core_access;
+
+    void advance(std::size_t n) { current_state.index += n; }
+
+    void increment() { advance(1); }
+
+    void decrement() { advance(-1); }
+
+    bool equal(ConstDeallocatingVectorIterator const &other) const
+    {
+        return current_state.index == other.current_state.index;
+    }
+
+    std::ptrdiff_t distance_to(ConstDeallocatingVectorIterator const &other) const
+    {
+        // it is important to implement it 'other minus this'. otherwise sorting breaks
+        return other.current_state.index - current_state.index;
+    }
+
+    ElementT &dereference() const
+    {
+        const std::size_t current_bucket = current_state.index / ELEMENTS_PER_BLOCK;
+        const std::size_t current_index = current_state.index % ELEMENTS_PER_BLOCK;
+        return (current_state.bucket_list->at(current_bucket)[current_index]);
+    }
+
+    ElementT &operator[](const std::size_t index) const
+    {
+        const std::size_t current_bucket = (index + current_state.index) / ELEMENTS_PER_BLOCK;
+        const std::size_t current_index = (index + current_state.index) % ELEMENTS_PER_BLOCK;
+        return (current_state.bucket_list->at(current_bucket)[current_index]);
     }
 };
 
@@ -170,7 +245,7 @@ class DeallocatingVector
 
   public:
     using iterator = DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
-    using const_iterator = DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
+    using const_iterator = ConstDeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
 
     // this forward-only iterator deallocates all buckets that have been visited
     using deallocation_iterator = DeallocatingVectorRemoveIterator<ElementT, ELEMENTS_PER_BLOCK>;
