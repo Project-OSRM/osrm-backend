@@ -78,6 +78,7 @@ class Prepare
                                        std::vector<EdgeBasedNode> &node_based_edge_list,
                                        DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
     void WriteNodeMapping(std::unique_ptr<std::vector<QueryNode>> internal_to_external_node_map);
+    void FindComponents(unsigned max_edge_id, const DeallocatingVector<EdgeBasedEdge>& edges, std::vector<EdgeBasedNode>& nodes) const;
     void BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
                     const std::vector<QueryNode> &internal_to_external_node_map);
   private:

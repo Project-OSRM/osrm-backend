@@ -26,7 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "edge_based_graph_factory.hpp"
-#include "../algorithms/tiny_components.hpp"
 #include "../data_structures/percent.hpp"
 #include "../util/compute_angle.hpp"
 #include "../util/integer_range.hpp"
@@ -83,8 +82,7 @@ unsigned EdgeBasedGraphFactory::GetHighestEdgeID()
 }
 
 void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
-                                                const NodeID node_v,
-                                                const unsigned component_id)
+                                                const NodeID node_v)
 {
     // merge edges together into one EdgeBasedNode
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
@@ -164,7 +162,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 forward_data.name_id, forward_geometry[i].second,
                 reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
                 reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
-                component_id, i, forward_data.travel_mode, reverse_data.travel_mode);
+                INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -207,7 +205,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
             forward_data.name_id, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
-            component_id, 0, forward_data.travel_mode, reverse_data.travel_mode);
+            INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -279,21 +277,6 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.
 void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 {
-    SimpleLogger().Write() << "Identifying components of the (compressed) road network";
-
-    // Run a BFS on the undirected graph and identify small components
-    TarjanSCC<NodeBasedDynamicGraph> component_explorer(m_node_based_graph);
-
-    component_explorer.run();
-
-    SimpleLogger().Write() << "identified: "
-                           << component_explorer.get_number_of_components()
-                           << " (compressed) components";
-    SimpleLogger().Write() << "identified "
-                           << component_explorer.get_size_one_count()
-                           << " (compressed) SCCs of size 1";
-    SimpleLogger().Write() << "generating edge-expanded nodes";
-
     Percent progress(m_node_based_graph->GetNumberOfNodes());
 
     // loop over all edges and generate new set of nodes
@@ -318,34 +301,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
             BOOST_ASSERT(node_u < node_v);
 
-            // Note: edges that end on barrier nodes or on a turn restriction
-            // may actually be in two distinct components. We choose the smallest
-            const unsigned size_of_component =
-                std::min(component_explorer.get_component_size(node_u),
-                         component_explorer.get_component_size(node_v));
-
-            const unsigned id_of_smaller_component = [node_u, node_v, &component_explorer]
-            {
-                if (component_explorer.get_component_size(node_u) <
-                    component_explorer.get_component_size(node_v))
-                {
-                    return component_explorer.get_component_id(node_u);
-                }
-                return component_explorer.get_component_id(node_v);
-            }();
-
-            const bool component_is_tiny = size_of_component < 1000;
-
-            // we only set edge_id for forward edges
+            // if we found a non-forward edge reverse and try again
             if (edge_data.edge_id == SPECIAL_NODEID)
             {
-                InsertEdgeBasedNode(node_v, node_u,
-                                    (component_is_tiny ? id_of_smaller_component + 1 : 0));
+                InsertEdgeBasedNode(node_v, node_u);
             }
             else
             {
-                InsertEdgeBasedNode(node_u, node_v,
-                                    (component_is_tiny ? id_of_smaller_component + 1 : 0));
+                InsertEdgeBasedNode(node_u, node_v);
             }
         }
     }

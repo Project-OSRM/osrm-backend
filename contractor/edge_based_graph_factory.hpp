@@ -103,7 +103,7 @@ class EdgeBasedGraphFactory
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    lua_State *lua_state);
 
-    void InsertEdgeBasedNode(const NodeID u, const NodeID v, const unsigned component_id);
+    void InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
