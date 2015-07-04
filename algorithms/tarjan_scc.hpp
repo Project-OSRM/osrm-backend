@@ -201,6 +201,11 @@ template <typename GraphT> class TarjanSCC
         return component_size_vector[component_id];
     }
 
+    unsigned get_component_size_by_id(const unsigned component_id) const
+    {
+        return component_size_vector[component_id];
+    }
+
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
 };
 

@@ -31,12 +31,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "plugin_base.hpp"
 
 #include "../algorithms/object_encoder.hpp"
+#include "../algorithms/tiny_components.hpp"
 #include "../routing_algorithms/tsp_nearest_neighbour.hpp"
 #include "../routing_algorithms/tsp_farthest_insertion.hpp"
 #include "../routing_algorithms/tsp_brute_force.hpp"
 #include "../routing_algorithms/tsp_jarnik_prim.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
+#include "../data_structures/matrix_graph_wrapper.hpp"
 #include "../descriptors/descriptor_base.hpp"
 #include "../descriptors/json_descriptor.hpp"
 #include "../util/json_renderer.hpp"
@@ -96,47 +98,59 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
     }
 
-    void SplitUnaccessibleLocations(PhantomNodeArray & phantom_node_vector, std::vector<EdgeWeight> & result_table) {
+    void SplitUnaccessibleLocations(PhantomNodeArray & phantom_node_vector,
+                                    std::vector<EdgeWeight> & result_table,
+                                    std::vector<unsigned> & component_number_of_locations,
+                                    std::vector<PhantomNodeArray> & component_phantom_node_vector,
+                                    std::vector<std::vector<EdgeWeight>> & component_table) {
+
         auto number_of_locations = phantom_node_vector.size();
-        const auto maxint = std::numeric_limits<int>::max();
+        auto wrapper = std::make_shared<MatrixGraphWrapper<EdgeWeight>>(result_table, number_of_locations);
+        auto empty_restriction = RestrictionMap(std::vector<TurnRestriction>());
+        auto empty_vector = std::vector<bool>();
+        auto scc = TarjanSCC<MatrixGraphWrapper<EdgeWeight>>(wrapper, empty_restriction, empty_vector);
+        scc.run();
 
-        //////////////////////////////////// DELETE UNACCESSIBLE LOCATIONS /////////////////////////////////////////
-        if (*std::max_element(result_table.begin(), result_table.end()) == maxint) {
-            const int half = number_of_locations / 2;
-            std::vector<int> to_delete;
+        //prepare distance tables, number of locations and phantom node vectors for each SCC
+        component_table.reserve(scc.get_number_of_components());
+        component_phantom_node_vector.reserve(scc.get_number_of_components());
+        for (auto i = 0; i < scc.get_number_of_components(); ++i) {
+            std::vector<EdgeWeight> table;
+            table.reserve(scc.get_component_size_by_id(i));
+            component_table.push_back(table);
+            component_number_of_locations.push_back(scc.get_component_size_by_id(i));
+            component_phantom_node_vector.push_back(PhantomNodeArray());
+        }
 
-            for (int i = number_of_locations - 1; i >= 0; --i) {
-                // if the location is unaccessible by most of the other locations, remember the location
-                if (std::count(result_table.begin() + i * number_of_locations, result_table.begin() + (i+1) * number_of_locations, maxint) > half) {
-                    to_delete.push_back(i);
-                }
+        //split the distance table according to the component id of the nodes
+        for (auto j = 0; j < result_table.size(); ++j) {
+            auto from = j / number_of_locations;
+            auto to = j % number_of_locations;
+            auto comp_id = scc.get_component_id(from);
+            if (comp_id == scc.get_component_id(to)) {
+                component_table[comp_id].push_back(result_table[j]);
             }
-            //delete all unaccessible locations
-            for (int k = 0; k < to_delete.size(); ++k) {
-                // delete its row
-                result_table.erase(result_table.begin() + to_delete[k] * number_of_locations, result_table.begin() + (to_delete[k]+1) * number_of_locations);
-                --number_of_locations;
-                // delete its column
-                for (int j = 0; j < number_of_locations; ++j) {
-                    result_table.erase(result_table.begin() + j * number_of_locations + to_delete[k]);
-                }
-                // delete its PhantomNode
-                phantom_node_vector.erase(phantom_node_vector.begin() + to_delete[k]);
+            if (from == to){
+                component_phantom_node_vector[comp_id].push_back(phantom_node_vector[from]);
             }
         }
     }
 
-    void SetJSONOutput (const RouteParameters &route_parameters,
-                        int tsp_time,
-                        InternalRouteResult & min_route,
-                        std::vector<int> & min_loc_permutation,
-                        osrm::json::Object & json_result){
+    void SetLocPermutationOutput(const std::vector<int> & loc_permutation, osrm::json::Object & json_result){
         osrm::json::Array json_loc_permutation;
-        json_loc_permutation.values.insert(json_loc_permutation.values.end(), min_loc_permutation.begin(), min_loc_permutation.end());
+        json_loc_permutation.values.insert(json_loc_permutation.values.end(), loc_permutation.begin(), loc_permutation.end());
         json_result.values["loc_permutation"] = json_loc_permutation;
-        json_result.values["distance"] = min_route.shortest_path_length;
-        json_result.values["runtime"] = tsp_time;
+    }
 
+    void SetDistanceOutput(const int distance, osrm::json::Object & json_result) {
+        json_result.values["distance"] = distance;
+    }
+
+    void SetRuntimeOutput(const float runtime, osrm::json::Object & json_result) {
+        json_result.values["runtime"] = runtime;
+    }
+
+    void SetGeometry(const RouteParameters &route_parameters, const InternalRouteResult & min_route, osrm::json::Object & json_result) {
         // return geometry result to json
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
         descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
@@ -163,20 +177,60 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             return 400;
         }
 
-        SplitUnaccessibleLocations(phantom_node_vector, *result_table);
 
-        auto number_of_locations = phantom_node_vector.size();
-        InternalRouteResult min_route;
-        std::vector<int> min_loc_permutation(number_of_locations, -1);
-        //######################## FARTHEST INSERTION ###############################//
-        TIMER_START(tsp);
-        osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
-        search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
-        TIMER_STOP(tsp);
+        const auto maxint = std::numeric_limits<int>::max();
+        if (*std::max_element(result_table->begin(), result_table->end()) == maxint) {
+            std::vector<unsigned> component_number_of_locations;
+            std::vector<PhantomNodeArray> component_phantom_node_vector;
+            std::vector<std::vector<EdgeWeight>> component_table;
+            SplitUnaccessibleLocations(phantom_node_vector, *result_table, component_number_of_locations, component_phantom_node_vector, component_table);
 
-        BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
+            std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+            descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
+            descriptor->SetConfig(route_parameters);
 
-        SetJSONOutput(route_parameters, TIMER_MSEC(tsp), min_route, min_loc_permutation, json_result);
+
+
+            TIMER_START(tsp);
+            auto min_dist = 0;
+            for(auto k = 0; k < component_table.size(); ++k) {
+                if (component_number_of_locations[k] > 1) {
+                    auto number_of_locations = component_number_of_locations[k];
+                    InternalRouteResult min_route;
+                    std::vector<int> min_loc_permutation(number_of_locations, -1);
+                    //######################## FARTHEST INSERTION ###############################//
+                    osrm::tsp::FarthestInsertionTSP(component_phantom_node_vector[k], component_table[k], min_route, min_loc_permutation);
+                    search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
+                    min_dist += min_route.shortest_path_length;
+
+                    SetLocPermutationOutput(min_loc_permutation, json_result);
+                    // SetGeometry(route_parameters, min_route, json_result);
+                    descriptor->Run(min_route, json_result);
+                }
+            }
+            TIMER_STOP(tsp);
+            SetRuntimeOutput(TIMER_MSEC(tsp), json_result);
+            SetDistanceOutput(min_dist, json_result);
+        } else {
+            auto number_of_locations = phantom_node_vector.size();
+            InternalRouteResult min_route;
+            std::vector<int> min_loc_permutation(number_of_locations, -1);
+            //######################## FARTHEST INSERTION ###############################//
+            TIMER_START(tsp);
+            osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
+            TIMER_STOP(tsp);
+            // //######################### NEAREST NEIGHBOUR ###############################//
+            // TIMER_START(tsp);
+            // osrm::tsp::NearestNeighbourTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            // search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
+            // TIMER_STOP(tsp);
+            BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
+            SetLocPermutationOutput(min_loc_permutation, json_result);
+            SetDistanceOutput(min_route.shortest_path_length, json_result);
+            SetRuntimeOutput(TIMER_MSEC(tsp), json_result);
+            SetGeometry(route_parameters, min_route, json_result);
+        }
 
         return 200;
     }

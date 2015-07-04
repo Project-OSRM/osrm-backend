@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 #include <limits>
-
+#include <math.h>
 
 namespace osrm
 {
@@ -60,7 +60,8 @@ void FarthestInsertionTSP(const PhantomNodeArray & phantom_node_vector,
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    const auto number_of_locations = phantom_node_vector.size();
+    // const auto number_of_locations = phantom_node_vector.size();
+    const int number_of_locations = sqrt(dist_table.size());
     // list of the trip that will be found incrementally
     std::list<int> current_trip;
     // tracks which nodes have been already visited
