@@ -48,6 +48,128 @@ namespace osrm
 namespace tsp
 {
 
+void NearestNeighbourTSP(const std::vector<unsigned> & locations,
+                         const PhantomNodeArray & phantom_node_vector,
+                         const std::vector<EdgeWeight> & dist_table,
+                         InternalRouteResult & min_route,
+                         std::vector<int> & min_loc_permutation) {
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // START GREEDY NEAREST NEIGHBOUR HERE
+    // 1. grab a random location and mark as starting point
+    // 2. find the nearest unvisited neighbour, set it as the current location and mark as visited
+    // 3. repeat 2 until there is no unvisited location
+    // 4. return route back to starting point
+    // 5. compute route
+    // 6. repeat 1-5 with different starting points and choose iteration with shortest trip
+    // 7. DONE!
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    const auto number_of_locations = phantom_node_vector.size();
+    const int size_of_component = locations.size();
+    min_route.shortest_path_length = std::numeric_limits<int>::max();
+
+    // ALWAYS START AT ANOTHER STARTING POINT
+    for(auto start_node : locations)
+    {
+        int curr_node = start_node;
+        InternalRouteResult raw_route;
+        //TODO: Should we always use the same vector or does it not matter at all because of loop scope?
+        std::vector<int> loc_permutation(number_of_locations, -1);
+        loc_permutation[start_node] = 0;
+        // visited[i] indicates whether node i was already visited by the salesman
+        std::vector<bool> visited(number_of_locations, false);
+        visited[start_node] = true;
+
+        PhantomNodes viapoint;
+        // 3. REPEAT FOR EVERY UNVISITED NODE
+        int trip_dist = 0;
+        for(int via_point = 1; via_point < size_of_component; ++via_point)
+        {
+            int min_dist = std::numeric_limits<int>::max();
+            int min_id = -1;
+
+            // 2. FIND NEAREST NEIGHBOUR
+            for (auto next : locations) {
+                if(!visited[next] &&
+                   *(dist_table.begin() + curr_node * number_of_locations + next) < min_dist) {
+                    min_dist = *(dist_table.begin() + curr_node * number_of_locations + next);
+                    min_id = next;
+                }
+            }
+            loc_permutation[min_id] = via_point;
+            visited[min_id] = true;
+            viapoint = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
+            raw_route.segment_end_coordinates.emplace_back(viapoint);
+            trip_dist += min_dist;
+            curr_node = min_id;
+        }
+
+        // 4. ROUTE BACK TO STARTING POINT
+        viapoint = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[start_node][0]};
+        raw_route.segment_end_coordinates.emplace_back(viapoint);
+
+        // check round trip with this starting point is shorter than the shortest round trip found till now
+        if (trip_dist < min_route.shortest_path_length) {
+            min_route = raw_route;
+            min_route.shortest_path_length = trip_dist;
+            //TODO: this gets copied right? fix this
+            min_loc_permutation = loc_permutation;
+        }
+    }
+
+    // // ALWAYS START AT ANOTHER STARTING POINT
+    // for(auto start_node : locations) {
+    //     SimpleLogger().Write() << "STARTING AT " << start_node;
+    //     int curr_node = start_node;
+    //     InternalRouteResult raw_route;
+    //     //TODO: Should we always use the same vector or does it not matter at all because of loop scope?
+    //     std::vector<int> loc_permutation(number_of_locations, -1);
+
+    //     // visited[i] indicates whether node i was already visited by the salesman
+    //     std::vector<bool> visited(number_of_locations, false);
+    //     visited[start_node] = true;
+    //     loc_permutation[start_node] = 0;
+
+    //     PhantomNodes viapoint;
+    //     // 3. REPEAT FOR EVERY UNVISITED NODE
+    //     int trip_dist = 0;
+    //     for(int via_point = 1; via_point < size_of_component; ++via_point)
+    //     {
+    //         int min_dist = std::numeric_limits<int>::max();
+    //         int min_id = -1;
+
+    //         // 2. FIND NEAREST NEIGHBOUR
+    //         for (auto next : locations) {
+    //             if(!visited[next] &&
+    //                *(dist_table.begin() + curr_node * number_of_locations + next) < min_dist) {
+    //                 min_dist = *(dist_table.begin() + curr_node * number_of_locations + next);
+    //                 min_id = next;
+    //             }
+    //         }
+
+    //         loc_permutation[min_id] = via_point;
+    //         visited[min_id] = true;
+    //         SimpleLogger().Write() << "MOVING TO " << min_id;
+    //         viapoint = PhantomNodes{phantom_node_vector[curr_node][0], phantom_node_vector[min_id][0]};
+    //         raw_route.segment_end_coordinates.emplace_back(viapoint);
+    //         trip_dist += min_dist;
+    //         curr_node = min_id;
+    //     }
+
+    //     // 4. ROUTE BACK TO STARTING POINT
+    //     viapoint = PhantomNodes{raw_route.segment_end_coordinates.back().target_phantom, phantom_node_vector[start_node][0]};
+    //     raw_route.segment_end_coordinates.emplace_back(viapoint);
+
+    //     // check round trip with this starting point is shorter than the shortest round trip found till now
+    //     if (trip_dist < min_route.shortest_path_length) {
+    //         min_route = raw_route;
+    //         min_route.shortest_path_length = trip_dist;
+    //         //TODO: this gets copied right? fix this
+    //         min_loc_permutation = loc_permutation;
+    //     }
+    // }
+}
+
 void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
                          const std::vector<EdgeWeight> & dist_table,
                          InternalRouteResult & min_route,

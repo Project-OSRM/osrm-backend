@@ -51,13 +51,13 @@ namespace osrm
 namespace tsp
 {
 
-
-int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector<int> location_order, const int min_route_dist, const int number_of_locations) {
+template <typename number>
+int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector<number> location_order, const int min_route_dist, const int number_of_locations, const int component_size) {
     int i = 0;
     int route_dist = 0;
 
     // compute length and stop if length is longer than route already found
-    while (i < number_of_locations - 1 && route_dist < min_route_dist) {
+    while (i < component_size - 1 && route_dist < min_route_dist) {
         //get distance from location i to location i+1
         route_dist += *(dist_table.begin() + (location_order[i] * number_of_locations) + location_order[i+1]);
         ++i;
@@ -71,6 +71,37 @@ int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector
     else {
         return -1;
     }
+}
+
+void BruteForceTSP(std::vector<unsigned> & locations,
+                   const PhantomNodeArray & phantom_node_vector,
+                   const std::vector<EdgeWeight> & dist_table,
+                   InternalRouteResult & min_route,
+                   std::vector<int> & min_loc_permutation) {
+
+    const auto number_of_locations = phantom_node_vector.size();
+    const int component_size = locations.size();
+    int min_route_dist = std::numeric_limits<int>::max();
+    SimpleLogger().Write() << component_size;
+
+    std::vector<unsigned> min_locations;
+
+    // check length of all possible permutation of the location ids
+    do {
+        int new_distance = ReturnDistance(dist_table, locations, min_route_dist, number_of_locations, component_size);
+        if (new_distance != -1) {
+            min_route_dist = new_distance;
+            min_locations = locations;
+        }
+    } while(std::next_permutation(locations.begin(), locations.end()));
+
+    PhantomNodes viapoint;
+    for (int i = 0; i < component_size - 1; ++i) {
+        viapoint = PhantomNodes{phantom_node_vector[min_locations[i]][0], phantom_node_vector[min_locations[i + 1]][0]};
+        min_route.segment_end_coordinates.emplace_back(viapoint);
+    }
+    viapoint = PhantomNodes{phantom_node_vector[min_locations[component_size - 1]][0], phantom_node_vector[min_locations[0]][0]};
+    min_route.segment_end_coordinates.emplace_back(viapoint);
 }
 
 void BruteForceTSP(const PhantomNodeArray & phantom_node_vector,
@@ -87,7 +118,7 @@ void BruteForceTSP(const PhantomNodeArray & phantom_node_vector,
 
     // check length of all possible permutation of the location ids
     do {
-        int new_distance = ReturnDistance(dist_table, location_ids, min_route_dist, number_of_locations);
+        int new_distance = ReturnDistance(dist_table, location_ids, min_route_dist, number_of_locations, number_of_locations);
         if (new_distance != -1) {
             min_route_dist = new_distance;
             //TODO: this gets copied right? fix this
