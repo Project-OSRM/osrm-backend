@@ -52,7 +52,7 @@ namespace tsp
 {
 
 template <typename number>
-int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector<number> location_order, const int min_route_dist, const int number_of_locations, const int component_size) {
+int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector<number> & location_order, const int min_route_dist, const int number_of_locations, const int component_size) {
     int i = 0;
     int route_dist = 0;
 
@@ -63,7 +63,7 @@ int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector
         ++i;
     }
     //get distance from last location to first location
-    route_dist += *(dist_table.begin() + (location_order[number_of_locations-1] * number_of_locations) + location_order[0]);
+    route_dist += *(dist_table.begin() + (location_order[component_size-1] * number_of_locations) + location_order[0]);
 
     if (route_dist < min_route_dist) {
         return route_dist;
@@ -73,34 +73,36 @@ int ReturnDistance(const std::vector<EdgeWeight> & dist_table, const std::vector
     }
 }
 
-void BruteForceTSP(std::vector<unsigned> & locations,
+void BruteForceTSP(std::vector<unsigned> & location,
                    const PhantomNodeArray & phantom_node_vector,
                    const std::vector<EdgeWeight> & dist_table,
                    InternalRouteResult & min_route,
                    std::vector<int> & min_loc_permutation) {
 
-    const auto number_of_locations = phantom_node_vector.size();
-    const int component_size = locations.size();
+    const auto number_of_location = phantom_node_vector.size();
+    const int component_size = location.size();
     int min_route_dist = std::numeric_limits<int>::max();
-    SimpleLogger().Write() << component_size;
 
-    std::vector<unsigned> min_locations;
+    std::vector<unsigned> min_location;
 
     // check length of all possible permutation of the location ids
     do {
-        int new_distance = ReturnDistance(dist_table, locations, min_route_dist, number_of_locations, component_size);
+        // int new_distance = ReturnDistance(dist_table, location, min_route_dist, number_of_location, component_size);
+        int new_distance = 4;
         if (new_distance != -1) {
             min_route_dist = new_distance;
-            min_locations = locations;
+            min_location = location;
         }
-    } while(std::next_permutation(locations.begin(), locations.end()));
+    } while(std::next_permutation(location.begin(), location.end()));
 
     PhantomNodes viapoint;
     for (int i = 0; i < component_size - 1; ++i) {
-        viapoint = PhantomNodes{phantom_node_vector[min_locations[i]][0], phantom_node_vector[min_locations[i + 1]][0]};
+        viapoint = PhantomNodes{phantom_node_vector[min_location[i]][0], phantom_node_vector[min_location[i + 1]][0]};
         min_route.segment_end_coordinates.emplace_back(viapoint);
+        min_loc_permutation[min_location[i]] = i;
     }
-    viapoint = PhantomNodes{phantom_node_vector[min_locations[component_size - 1]][0], phantom_node_vector[min_locations[0]][0]};
+    min_loc_permutation[min_location[component_size - 1]] = component_size - 1;
+    viapoint = PhantomNodes{phantom_node_vector[min_location[component_size - 1]][0], phantom_node_vector[min_location[0]][0]};
     min_route.segment_end_coordinates.emplace_back(viapoint);
 }
 
