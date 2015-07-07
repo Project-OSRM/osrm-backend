@@ -137,7 +137,11 @@ void Prepare::FindComponents(unsigned max_edge_id, const DeallocatingVector<Edge
                              std::vector<EdgeBasedNode>& input_nodes) const
 {
     struct UncontractedEdgeData { };
-    using InputEdge = StaticGraph<UncontractedEdgeData>::InputEdge;
+    struct InputEdge {
+        unsigned source;
+        unsigned target;
+        UncontractedEdgeData data;
+    };
     using UncontractedGraph = StaticGraph<UncontractedEdgeData>;
     std::vector<InputEdge> edges;
     edges.reserve(input_edge_list.size() * 2);
@@ -148,12 +152,12 @@ void Prepare::FindComponents(unsigned max_edge_id, const DeallocatingVector<Edge
                          "edge distance < 1");
         if (edge.forward)
         {
-            edges.emplace_back(edge.source, edge.target);
+            edges.push_back({edge.source, edge.target, {}});
         }
 
         if (edge.backward)
         {
-            edges.emplace_back(edge.target, edge.source);
+            edges.push_back({edge.target, edge.source, {}});
         }
     }
 
@@ -162,12 +166,23 @@ void Prepare::FindComponents(unsigned max_edge_id, const DeallocatingVector<Edge
     {
         if (node.reverse_edge_based_node_id != SPECIAL_NODEID)
         {
-            edges.emplace_back(node.forward_edge_based_node_id, node.reverse_edge_based_node_id);
-            edges.emplace_back(node.reverse_edge_based_node_id, node.forward_edge_based_node_id);
+            edges.push_back({node.forward_edge_based_node_id, node.reverse_edge_based_node_id, {}});
+            edges.push_back({node.reverse_edge_based_node_id, node.forward_edge_based_node_id, {}});
         }
     }
 
-    tbb::parallel_sort(edges.begin(), edges.end());
+    tbb::parallel_sort(edges.begin(), edges.end(),
+                       [](const InputEdge& lhs, const InputEdge& rhs)
+                       {
+                            return lhs.source < rhs.source || (lhs.source == rhs.source && lhs.target < rhs.target);
+                       });
+    auto new_end = std::unique(edges.begin(), edges.end(),
+                       [](const InputEdge& lhs, const InputEdge& rhs)
+                       {
+                            return lhs.source == rhs.source && lhs.target == rhs.target;
+                       });
+    edges.resize(new_end - edges.begin());
+
     auto uncontractor_graph = std::make_shared<UncontractedGraph>(max_edge_id+1, edges);
 
     TarjanSCC<UncontractedGraph> component_search(std::const_pointer_cast<const UncontractedGraph>(uncontractor_graph));

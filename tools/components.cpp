@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
                     BOOST_ASSERT(target != SPECIAL_NODEID);
 
                     const unsigned size_of_containing_component = std::min(
-                        tarjan->get_component_size(source), tarjan->get_component_size(target));
+                        tarjan->get_component_size(tarjan->get_component_id(source)), tarjan->get_component_size(tarjan->get_component_id(target)));
 
                     // edges that end on bollard nodes may actually be in two distinct components
                     if (size_of_containing_component < 1000)

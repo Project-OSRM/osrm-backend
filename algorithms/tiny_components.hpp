@@ -196,9 +196,9 @@ template <typename GraphT> class TarjanSCC
 
     std::size_t get_size_one_count() const { return size_one_counter; }
 
-    unsigned get_component_size(const NodeID node) const
+    unsigned get_component_size(const unsigned component_id) const
     {
-        return component_size_vector[components_index[node]];
+        return component_size_vector[component_id];
     }
 
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
