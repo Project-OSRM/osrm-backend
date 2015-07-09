@@ -85,7 +85,7 @@ function node_function (node, result)
 
   -- flag node if it carries a traffic light
   if traffic_signal and traffic_signal == "traffic_signals" then
-    result.traffic_light = true
+    result.traffic_lights = true
   end
 
   -- parse access and barrier tags
