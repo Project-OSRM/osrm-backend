@@ -158,9 +158,10 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             return 400;
         }
 
-
+        //check if locations are in different strongly connected components (SCC)
         const auto maxint = std::numeric_limits<int>::max();
         if (*std::max_element(result_table->begin(), result_table->end()) == maxint) {
+            //run TSP computation for every SCC
             std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
             descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
             descriptor->SetConfig(route_parameters);
@@ -170,35 +171,49 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             SplitUnaccessibleLocations(phantom_node_vector, *result_table, components);
             auto number_of_locations = phantom_node_vector.size();
             std::vector<int> min_loc_permutation(number_of_locations, -1);
+
             auto min_dist = 0;
             for(auto k = 0; k < components.size(); ++k) {
                 if (components[k].size() > 1) {
+                    // Compute the TSP with the given algorithm
                     InternalRouteResult min_route;
-                    osrm::tsp::FarthestInsertionTSP(components[k], phantom_node_vector, *result_table, min_route, min_loc_permutation);
+                    if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < 14) {
+                        osrm::tsp::BruteForceTSP(components[k], phantom_node_vector, *result_table, min_route, min_loc_permutation);
+                    } else if (route_parameters.tsp_algo == "NN") {
+                        osrm::tsp::NearestNeighbourTSP(components[k], phantom_node_vector, *result_table, min_route, min_loc_permutation);
+                    } else if (route_parameters.tsp_algo == "FI") {
+                        osrm::tsp::FarthestInsertionTSP(components[k], phantom_node_vector, *result_table, min_route, min_loc_permutation);
+                    } else{
+                        osrm::tsp::FarthestInsertionTSP(components[k], phantom_node_vector, *result_table, min_route, min_loc_permutation);
+                    }
                     search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
                     min_dist += min_route.shortest_path_length;
                     descriptor->Run(min_route, json_result);
                 }
             }
-            TIMER_STOP(tsp);
 
+            TIMER_STOP(tsp);
             SetRuntimeOutput(TIMER_MSEC(tsp), json_result);
             SetDistanceOutput(min_dist, json_result);
             SetLocPermutationOutput(min_loc_permutation, json_result);
-        } else {
+        } else { //run TSP computation for all locations
             auto number_of_locations = phantom_node_vector.size();
             InternalRouteResult min_route;
             std::vector<int> min_loc_permutation(number_of_locations, -1);
-            //######################## FARTHEST INSERTION ###############################//
+
+            // Compute the TSP with the given algorithm
             TIMER_START(tsp);
-            osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < 14) {
+                osrm::tsp::BruteForceTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            } else if (route_parameters.tsp_algo == "NN") {
+                osrm::tsp::NearestNeighbourTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            } else if (route_parameters.tsp_algo == "FI") {
+                osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            } else {
+                osrm::tsp::FarthestInsertionTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
+            }
             search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
             TIMER_STOP(tsp);
-            // //######################### NEAREST NEIGHBOUR ###############################//
-            // TIMER_START(tsp);
-            // osrm::tsp::NearestNeighbourTSP(phantom_node_vector, *result_table, min_route, min_loc_permutation);
-            // search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
-            // TIMER_STOP(tsp);
             BOOST_ASSERT(min_route.segment_end_coordinates.size() == route_parameters.coordinates.size());
             SetLocPermutationOutput(min_loc_permutation, json_result);
             SetDistanceOutput(min_route.shortest_path_length, json_result);
