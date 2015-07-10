@@ -79,7 +79,6 @@ void BruteForceTSP(std::vector<unsigned> & location,
                    InternalRouteResult & min_route,
                    std::vector<int> & min_loc_permutation) {
 
-    const auto number_of_location = phantom_node_vector.size();
     const int component_size = location.size();
     int min_route_dist = std::numeric_limits<int>::max();
 
