@@ -7,7 +7,7 @@ ECHO platform^: %platform%
 SET DEPSPKG=osrm-deps-win-x64-14.0.7z
 
 :: local development
-IF "%computername%"=="MBX" GOTO SKIPDL
+IF "%computername%"=="WIN-2G2NPH4S5B8" GOTO SKIPDL
 
 IF EXIST %DEPSPKG% DEL %DEPSPKG%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
@@ -75,15 +75,19 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE
 ECHO ========= CREATING PACKAGES ==========
 
-SET P=c:/projects/osrm
-7z a %P%/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip
+SET P=c:\projects\osrm
+SET ZIP= %P%\osrm_%Configuration%.zip
+IF EXIST %ZIP% ECHO deleting %ZIP% && DEL /F /Q %ZIP%
+IF %ERRORLEVEL% NEQ 0 ECHO deleting %ZIP% FAILED && GOTO ERROR
+
+7z a %ZIP% *.exe *.pdb %P%/osrm-deps/libs/bin/*.dll -tzip
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 CD ..\..\profiles
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO disk=c:\temp\stxxl,10000,wincall > .stxxl.txt
-7z a %P%/osrm_%Configuration%.zip * -tzip
+7z a %ZIP% * -tzip
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 GOTO DONE
@@ -93,6 +97,6 @@ SET EL=%ERRORLEVEL%
 ECHO ============== ERROR ===============
 
 :DONE
-ECHO ============= DONE ===============
+ECHO ============== DONE ================
 CD C:\projects\osrm
 EXIT /b %EL%
