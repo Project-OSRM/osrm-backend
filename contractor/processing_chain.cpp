@@ -414,7 +414,7 @@ void Prepare::ContractGraph(const unsigned max_edge_id,
                             DeallocatingVector<QueryEdge>& contracted_edge_list)
 {
     Contractor contractor(max_edge_id + 1, edge_based_edge_list);
-    contractor.Run();
+    contractor.Run(config.core_factor);
     contractor.GetEdges(contracted_edge_list);
 }
 

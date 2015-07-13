@@ -189,6 +189,11 @@ class BinaryHeap
         return inserted_nodes[heap[1].index].node;
     }
 
+    Weight MinKey() const {
+      BOOST_ASSERT(heap.size() > 1);
+      return heap[1].weight;
+    }
+
     NodeID DeleteMin()
     {
         BOOST_ASSERT(heap.size() > 1);

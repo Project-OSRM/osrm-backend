@@ -284,7 +284,7 @@ class Contractor
 
     ~Contractor() {}
 
-    void Run()
+    void Run( double core_factor = 1.0 )
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
         constexpr size_t InitGrainSize = 100000;
@@ -333,9 +333,9 @@ class Contractor
                   << std::flush;
 
         bool flushed_contractor = false;
-        while (number_of_nodes > 2 && number_of_contracted_nodes < number_of_nodes)
+        while (number_of_nodes > 2 && number_of_contracted_nodes < static_cast<NodeID>(number_of_nodes * core_factor) )
         {
-            if (!flushed_contractor && (number_of_contracted_nodes > (number_of_nodes * 0.65)))
+            if (!flushed_contractor && (number_of_contracted_nodes > static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
             {
                 DeallocatingVector<ContractorEdge> new_edge_set; // this one is not explicitely
                                                                  // cleared since it goes out of
@@ -524,7 +524,7 @@ class Contractor
             //            unsigned quaddegree = 0;
             //
             //            for(unsigned i = 0; i < remaining_nodes.size(); ++i) {
-            //                unsigned degree = contractor_graph->EndEdges(remaining_nodes[i].first)
+            //                unsigned degree = contractor_graph->EndEdges(remaining_nodes[i].id)
             //                -
             //                contractor_graph->BeginEdges(remaining_nodes[i].first);
             //                if(degree > maxdegree)
@@ -545,6 +545,8 @@ class Contractor
 
             p.printStatus(number_of_contracted_nodes);
         }
+
+        SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes " << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
 
         thread_data_list.data.clear();
     }
