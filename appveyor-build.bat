@@ -7,7 +7,7 @@ ECHO platform^: %platform%
 SET DEPSPKG=osrm-deps-win-x64-14.0.7z
 
 :: local development
-IF "%computername%"=="MB" GOTO SKIPDL
+IF "%computername%"=="MBX" GOTO SKIPDL
 
 IF EXIST %DEPSPKG% DEL %DEPSPKG%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
@@ -60,8 +60,6 @@ msbuild OSRM.sln ^
 /flp2:logfile=build_warnings.txt;warningsonly
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO ========= TODO^: CREATE PACKAGES ==========
-
 CD c:\projects\osrm\build\%Configuration%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
@@ -74,6 +72,20 @@ ECHO running algorithm-tests.exe ...
 algorithm-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE
+ECHO ========= CREATING PACKAGES ==========
+
+SET P=c:/projects/osrm
+7z a %P%/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+CD ..\..\profiles
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+ECHO disk=c:\temp\stxxl,10000,wincall > .stxxl.txt
+7z a %P%/osrm_%Configuration%.zip * -tzip
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
 GOTO DONE
 
 :ERROR
@@ -84,30 +96,3 @@ ECHO ============== ERROR ===============
 ECHO ============= DONE ===============
 CD C:\projects\osrm
 EXIT /b %EL%
-
-
-
-
-  - cd c:/projects/osrm
-  - mkdir build
-  - cd build
-  - echo Running cmake...
-  - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
-  - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
-  - SET P=c:/projects/osrm
-  - set TBB_INSTALL_DIR=%P%/tbb
-  - set TBB_ARCH_PLATFORM=intel64/vc12
-  - cmake .. -G "Visual Studio 14 Win64" -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_INSTALL_PREFIX=%P%/libs -DBOOST_ROOT=%P%/boost_min -DBoost_ADDITIONAL_VERSIONS=1.57 -DBoost_USE_STATIC_LIBS=ON
-  - SET PLATFORM_TOOLSET=v140
-  - SET TOOLS_VERSION=14.0
-  - msbuild /p:Platform=x64 /clp:Verbosity=minimal /toolsversion:%TOOLS_VERSION% /p:PlatformToolset=%PLATFORM_TOOLSET% /nologo OSRM.sln
-  - msbuild /p:Platform=x64 /clp:Verbosity=minimal /toolsversion:%TOOLS_VERSION% /p:PlatformToolset=%PLATFORM_TOOLSET% /nologo tests.vcxproj
-  - cd %Configuration%
-  - if "%APPVEYOR_REPO_BRANCH%"=="develop" (7z a %P%/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip)
-  - cd ..\..\profiles
-  - echo disk=c:\temp\stxxl,10000,wincall > .stxxl.txt
-  - if "%APPVEYOR_REPO_BRANCH%"=="develop" (7z a %P%/osrm_%Configuration%.zip * -tzip)
-  - set PATH=%PATH%;c:/projects/osrm/libs/bin
-  - cd c:/projects/osrm/build/%Configuration%
-  - datastructure-tests.exe
-  - algorithm-tests.exe
