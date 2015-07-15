@@ -141,6 +141,16 @@ void Prepare::FindComponents(unsigned max_edge_id, const DeallocatingVector<Edge
         unsigned source;
         unsigned target;
         UncontractedEdgeData data;
+
+        bool operator<(const InputEdge& rhs) const
+        {
+            return source < rhs.source || (source == rhs.source && target < rhs.target);
+        }
+
+        bool operator==(const InputEdge& rhs) const
+        {
+             return source == rhs.source && target == rhs.target;
+        }
     };
     using UncontractedGraph = StaticGraph<UncontractedEdgeData>;
     std::vector<InputEdge> edges;
@@ -171,16 +181,8 @@ void Prepare::FindComponents(unsigned max_edge_id, const DeallocatingVector<Edge
         }
     }
 
-    tbb::parallel_sort(edges.begin(), edges.end(),
-                       [](const InputEdge& lhs, const InputEdge& rhs)
-                       {
-                            return lhs.source < rhs.source || (lhs.source == rhs.source && lhs.target < rhs.target);
-                       });
-    auto new_end = std::unique(edges.begin(), edges.end(),
-                       [](const InputEdge& lhs, const InputEdge& rhs)
-                       {
-                            return lhs.source == rhs.source && lhs.target == rhs.target;
-                       });
+    tbb::parallel_sort(edges.begin(), edges.end());
+    auto new_end = std::unique(edges.begin(), edges.end());
     edges.resize(new_end - edges.begin());
 
     auto uncontractor_graph = std::make_shared<UncontractedGraph>(max_edge_id+1, edges);
