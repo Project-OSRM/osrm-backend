@@ -278,6 +278,28 @@ Feature: Car - Turn restrictions
             | s    | a  | sj,aj |
             | s    | b  | sj,bj |
 
+    @bug
+    Scenario: Car - Component exploration test, is breaks with TarjanSCC
+        Given the node map
+            | a | b | c |
+            |   |   |   |
+            |   | d |   |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | no     |
+            | bc    | no     |
+            | bd    | no     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction      |
+            | restriction | ab       | bc     | b        | only_straight_on |
+
+        When I route I should get
+            | from | to | route                            |
+            | a    | d  | ab,bc,bc,bd                      |
+            | c    | d  | bc,bd                            |
+
     @except
     Scenario: Car - Several only_ restrictions at the same segment
         Given the node map
