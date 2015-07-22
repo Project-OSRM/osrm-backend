@@ -112,6 +112,7 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
 
         luabind::class_<ExtractionWay>("ResultWay")
             // .def(luabind::constructor<>())
+            .def_readwrite("traffic_segment_code", &ExtractionWay::traffic_segment_code)
             .def_readwrite("forward_speed", &ExtractionWay::forward_speed)
             .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
             .def_readwrite("name", &ExtractionWay::name)

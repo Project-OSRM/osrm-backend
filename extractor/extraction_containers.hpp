@@ -59,7 +59,6 @@ class ExtractionContainers
     void WriteNodes(std::ofstream& file_out_stream) const;
     void WriteRestrictions(const std::string& restrictions_file_name) const;
     void WriteEdges(std::ofstream& file_out_stream) const;
-    void WriteNames(const std::string& names_file_name) const;
   public:
     using STXXLNodeIDVector = stxxl::vector<NodeID>;
     using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
@@ -72,6 +71,7 @@ class ExtractionContainers
     STXXLNodeVector all_nodes_list;
     STXXLEdgeVector all_edges_list;
     STXXLStringVector name_list;
+    STXXLStringVector traffic_segment_code_list;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<NodeID, NodeID> external_to_internal_node_id_map;
@@ -84,7 +84,10 @@ class ExtractionContainers
     void PrepareData(const std::string &output_file_name,
                      const std::string &restrictions_file_name,
                      const std::string &names_file_name,
-                     lua_State *segment_state);
+                     lua_State *segment_state,
+                     const std::string &traffic_segment_codes_file_name);
+  private:
+    void WriteStrings(const std::string& file_name, const STXXLStringVector& string_vector, const std::string& description);
 };
 
 #endif /* EXTRACTION_CONTAINERS_HPP */

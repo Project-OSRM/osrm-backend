@@ -41,11 +41,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using NodeID = unsigned int;
 using EdgeID = unsigned int;
 using EdgeWeight = int;
+using TrafficSegmentID = unsigned int;
 
 static const NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
 static const EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();
 static const unsigned INVALID_NAMEID = std::numeric_limits<unsigned>::max();
 static const unsigned INVALID_COMPONENTID = std::numeric_limits<unsigned>::max();
+static const TrafficSegmentID INVALID_TRAFFIC_SEGMENT = std::numeric_limits<unsigned>::max();
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
 
 #endif /* TYPEDEFS_H */

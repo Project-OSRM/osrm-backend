@@ -64,7 +64,7 @@ int Prepare::Run()
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
 #else
-    static_assert(sizeof(NodeBasedEdge) == 20,
+    static_assert(sizeof(NodeBasedEdge) == 24,
                   "changing NodeBasedEdge type has influence on memory consumption!");
     static_assert(sizeof(EdgeBasedEdge) == 16,
                   "changing EdgeBasedEdge type has influence on memory consumption!");

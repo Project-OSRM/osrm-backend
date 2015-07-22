@@ -55,6 +55,7 @@ ExtractionContainers::ExtractionContainers()
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
     name_list.push_back("");
+    traffic_segment_code_list.push_back("");
 }
 
 ExtractionContainers::~ExtractionContainers()
@@ -64,6 +65,7 @@ ExtractionContainers::~ExtractionContainers()
     all_nodes_list.clear();
     all_edges_list.clear();
     name_list.clear();
+    traffic_segment_code_list.clear();
     restrictions_list.clear();
     way_start_end_id_list.clear();
 }
@@ -81,7 +83,8 @@ ExtractionContainers::~ExtractionContainers()
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
-                                       lua_State *segment_state)
+                                       lua_State *segment_state,
+                                       const std::string &traffic_segment_code_file_name)
 {
     try
     {
@@ -100,7 +103,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteNames(name_file_name);
+        WriteStrings(name_file_name, name_list, "street names");
+        WriteStrings(traffic_segment_code_file_name, traffic_segment_code_list, "traffic segment codes");
     }
     catch (const std::exception &e)
     {
@@ -108,38 +112,38 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     }
 }
 
-void ExtractionContainers::WriteNames(const std::string& names_file_name) const
+void ExtractionContainers::WriteStrings(const std::string& strings_file_name, const STXXLStringVector& string_vector, const std::string& description)
 {
-    std::cout << "[extractor] writing street name index ... " << std::flush;
-    TIMER_START(write_name_index);
-    boost::filesystem::ofstream name_file_stream(names_file_name, std::ios::binary);
+    std::cout << "[extractor] writing " << description << " index ... " << std::flush;
+    TIMER_START(write_string_index);
+    boost::filesystem::ofstream string_file_stream(strings_file_name, std::ios::binary);
 
     unsigned total_length = 0;
-    std::vector<unsigned> name_lengths;
-    for (const std::string &temp_string : name_list)
+    std::vector<unsigned> string_lengths;
+    for (const std::string &temp_string : string_vector)
     {
         const unsigned string_length =
             std::min(static_cast<unsigned>(temp_string.length()), 255u);
-        name_lengths.push_back(string_length);
+        string_lengths.push_back(string_length);
         total_length += string_length;
     }
 
     // builds and writes the index
-    RangeTable<> name_index_range(name_lengths);
-    name_file_stream << name_index_range;
+    RangeTable<> string_index_range(string_lengths);
+    string_file_stream << string_index_range;
 
-    name_file_stream.write((char *)&total_length, sizeof(unsigned));
+    string_file_stream.write((char *)&total_length, sizeof(unsigned));
     // write all chars consecutively
-    for (const std::string &temp_string : name_list)
+    for (const std::string &temp_string : string_vector)
     {
         const unsigned string_length =
             std::min(static_cast<unsigned>(temp_string.length()), 255u);
-        name_file_stream.write(temp_string.c_str(), string_length);
+        string_file_stream.write(temp_string.c_str(), string_length);
     }
 
-    name_file_stream.close();
-    TIMER_STOP(write_name_index);
-    std::cout << "ok, after " << TIMER_SEC(write_name_index) << "s" << std::endl;
+    string_file_stream.close();
+    TIMER_STOP(write_string_index);
+    std::cout << "ok, after " << TIMER_SEC(write_string_index) << "s" << std::endl;
 }
 
 void ExtractionContainers::PrepareNodes()

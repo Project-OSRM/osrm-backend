@@ -49,6 +49,7 @@ struct ExtractorConfig
     std::string output_file_name;
     std::string restriction_file_name;
     std::string names_file_name;
+    std::string traffic_segment_codes_file_name;
     std::string timestamp_file_name;
 
     unsigned requested_num_threads;

@@ -160,6 +160,19 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         name_id = string_map_iterator->second;
     }
 
+    // Get a unique identifier for the traffic segment code
+    const auto &string_map_iterator2 = string_map.find(parsed_way.traffic_segment_code);
+    unsigned traffic_segment_id = external_memory.traffic_segment_code_list.size();
+    if (string_map.end() == string_map_iterator2)
+    {
+        external_memory.traffic_segment_code_list.push_back(parsed_way.traffic_segment_code);
+        string_map.insert(std::make_pair(parsed_way.traffic_segment_code, traffic_segment_id));
+    }
+    else
+    {
+        traffic_segment_id = string_map_iterator2->second;
+    }
+
     const bool split_edge = (parsed_way.forward_speed > 0) &&
                             (TRAVEL_MODE_INACCESSIBLE != parsed_way.forward_travel_mode) &&
                             (parsed_way.backward_speed > 0) &&
@@ -182,7 +195,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    first_node.ref(), last_node.ref(), name_id, backward_weight_data,
+                                    first_node.ref(), last_node.ref(), name_id, traffic_segment_id, backward_weight_data,
                                     true, false, parsed_way.roundabout, parsed_way.is_access_restricted,
                                     parsed_way.backward_travel_mode, false));
                             });
@@ -204,7 +217,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    first_node.ref(), last_node.ref(), name_id, forward_weight_data,
+                                    first_node.ref(), last_node.ref(), name_id, traffic_segment_id, forward_weight_data,
                                     true, !forward_only, parsed_way.roundabout, parsed_way.is_access_restricted,
                                     parsed_way.forward_travel_mode, split_edge));
                             });
@@ -215,7 +228,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                 [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                                 {
                                     external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                        first_node.ref(), last_node.ref(), name_id, backward_weight_data,
+                                        first_node.ref(), last_node.ref(), name_id, traffic_segment_id, backward_weight_data,
                                         false, true, parsed_way.roundabout, parsed_way.is_access_restricted,
                                         parsed_way.backward_travel_mode, true));
                                 });

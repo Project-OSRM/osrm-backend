@@ -40,6 +40,7 @@ struct NodeBasedEdge
                            NodeID target,
                            NodeID name_id,
                            EdgeWeight weight,
+                           TrafficSegmentID traffic_segment_id,
                            bool forward,
                            bool backward,
                            bool roundabout,
@@ -51,6 +52,7 @@ struct NodeBasedEdge
     NodeID target;
     NodeID name_id;
     EdgeWeight weight;
+    TrafficSegmentID traffic_segment_id;
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;

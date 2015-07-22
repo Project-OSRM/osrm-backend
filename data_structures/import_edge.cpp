@@ -58,13 +58,14 @@ NodeBasedEdge::NodeBasedEdge(NodeID source,
                              NodeID target,
                              NodeID name_id,
                              EdgeWeight weight,
+                             TrafficSegmentID traffic_segment_id,
                              bool forward,
                              bool backward,
                              bool roundabout,
                              bool access_restricted,
                              TravelMode travel_mode,
                              bool is_split)
-    : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
+    : source(source), target(target), name_id(name_id), weight(weight), traffic_segment_id(traffic_segment_id), forward(forward),
       backward(backward), roundabout(roundabout),
       access_restricted(access_restricted), is_split(is_split), travel_mode(travel_mode)
 {

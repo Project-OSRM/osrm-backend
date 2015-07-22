@@ -52,6 +52,7 @@ struct ExtractionWay
         roundabout = false;
         is_access_restricted = false;
         name.clear();
+        traffic_segment_code.clear();
         forward_travel_mode = TRAVEL_MODE_DEFAULT;
         backward_travel_mode = TRAVEL_MODE_DEFAULT;
     }
@@ -118,6 +119,7 @@ struct ExtractionWay
     double backward_speed;
     double duration;
     std::string name;
+    std::string traffic_segment_code;
     bool roundabout;
     bool is_access_restricted;
     TravelMode forward_travel_mode : 4;
