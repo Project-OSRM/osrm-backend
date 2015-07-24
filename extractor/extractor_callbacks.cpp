@@ -160,12 +160,13 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         name_id = string_map_iterator->second;
     }
 
-    // Get a unique identifier for the traffic segment code
+    // Get a unique identifier for the traffic segment code, note that it goes into
+    // the same lookup table as the street names
     const auto &string_map_iterator2 = string_map.find(parsed_way.traffic_segment_code);
-    unsigned traffic_segment_id = external_memory.traffic_segment_code_list.size();
+    unsigned traffic_segment_id = external_memory.name_list.size();
     if (string_map.end() == string_map_iterator2)
     {
-        external_memory.traffic_segment_code_list.push_back(parsed_way.traffic_segment_code);
+        external_memory.name_list.push_back(parsed_way.traffic_segment_code);
         string_map.insert(std::make_pair(parsed_way.traffic_segment_code, traffic_segment_id));
     }
     else

@@ -59,6 +59,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     using SharedRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>;
     using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
     using RTreeNode = typename SharedRTree::TreeNode;
+    using TrafficSegmentCodeIndexBlock = typename RangeTable<16, true>::BlockT;
 
     SharedDataLayout *data_layout;
     char *shared_memory;
@@ -77,6 +78,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     std::shared_ptr<ShM<FixedPointCoordinate, true>::vector> m_coordinate_list;
     ShM<NodeID, true>::vector m_via_node_list;
     ShM<unsigned, true>::vector m_name_ID_list;
+    ShM<TrafficSegmentID, true>::vector m_traffic_segment_ID_list;
     ShM<TurnInstruction, true>::vector m_turn_instruction_list;
     ShM<TravelMode, true>::vector m_travel_mode_list;
     ShM<char, true>::vector m_names_char_list;
@@ -162,6 +164,14 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         typename ShM<unsigned, true>::vector name_id_list(
             name_id_list_ptr, data_layout->num_entries[SharedDataLayout::NAME_ID_LIST]);
         m_name_ID_list.swap(name_id_list);
+
+        // Load traffic segment IDs, they're last in the file
+        TrafficSegmentID *traffic_segment_id_list_ptr =
+            data_layout->GetBlockPtr<unsigned>(shared_memory, SharedDataLayout::TRAFFIC_SEGMENT_ID_LIST);
+        typename ShM<TrafficSegmentID, true>::vector traffic_segment_id_list(
+                traffic_segment_id_list_ptr, data_layout->num_entries[SharedDataLayout::TRAFFIC_SEGMENT_ID_LIST]);
+        m_traffic_segment_ID_list.swap(traffic_segment_id_list);
+
     }
 
     void LoadViaNodeList()
@@ -442,6 +452,11 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return m_name_ID_list.at(id);
     };
 
+    TrafficSegmentID GetTrafficSegmentIDFromEdgeID(const unsigned id) const override final
+    {
+        return m_traffic_segment_ID_list.at(id);
+    };
+
     std::string get_name_for_id(const unsigned name_id) const override final
     {
         if (std::numeric_limits<unsigned>::max() == name_id)
@@ -469,6 +484,11 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         }
 
         return false;
+    }
+
+    std::string get_traffic_segment_code_for_id(const TrafficSegmentID traffic_segment_id) const override final
+    {
+        return get_name_for_id(traffic_segment_id);
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }

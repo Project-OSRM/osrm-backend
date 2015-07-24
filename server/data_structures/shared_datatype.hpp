@@ -63,6 +63,7 @@ struct SharedDataLayout
         TIMESTAMP,
         FILE_INDEX_PATH,
         CORE_MARKER,
+        TRAFFIC_SEGMENT_ID_LIST,
         NUM_BLOCKS
     };
 
@@ -109,6 +110,8 @@ struct SharedDataLayout
                                        << ": " << GetBlockSize(FILE_INDEX_PATH);
         SimpleLogger().Write(logDEBUG) << "CORE_MARKER          "
                                        << ": " << GetBlockSize(CORE_MARKER);
+        SimpleLogger().Write(logDEBUG) << "TRAFFIC_SEGMENT_ID_LIST         "
+                                       << ": " << GetBlockSize(TRAFFIC_SEGMENT_ID_LIST);
     }
 
     template <typename T> inline void SetBlockSize(BlockID bid, uint64_t entries)

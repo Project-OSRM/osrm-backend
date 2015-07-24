@@ -265,6 +265,8 @@ int main(const int argc, const char *argv[])
                                                     number_of_original_edges);
         shared_layout_ptr->SetBlockSize<TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
                                                          number_of_original_edges);
+        shared_layout_ptr->SetBlockSize<TrafficSegmentID>(SharedDataLayout::TRAFFIC_SEGMENT_ID_LIST,
+                                                         number_of_original_edges);
         // note: there are 32 geometry indicators in one unsigned block
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDICATORS,
                                                   number_of_original_edges);

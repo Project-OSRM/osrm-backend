@@ -46,13 +46,14 @@ PhantomNode::PhantomNode(NodeID forward_node_id,
                          FixedPointCoordinate &location,
                          unsigned short fwd_segment_position,
                          TravelMode forward_travel_mode,
-                         TravelMode backward_travel_mode)
+                         TravelMode backward_travel_mode,
+                         TrafficSegmentID traffic_segment_id)
     : forward_node_id(forward_node_id), reverse_node_id(reverse_node_id), name_id(name_id),
       forward_weight(forward_weight), reverse_weight(reverse_weight),
       forward_offset(forward_offset), reverse_offset(reverse_offset),
       packed_geometry_id(packed_geometry_id), component_id(component_id), location(location),
       fwd_segment_position(fwd_segment_position), forward_travel_mode(forward_travel_mode),
-      backward_travel_mode(backward_travel_mode)
+      backward_travel_mode(backward_travel_mode), traffic_segment_id(traffic_segment_id)
 {
 }
 
@@ -62,7 +63,7 @@ PhantomNode::PhantomNode()
       reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0), reverse_offset(0),
       packed_geometry_id(SPECIAL_EDGEID), component_id(std::numeric_limits<unsigned>::max()),
       fwd_segment_position(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
-      backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
+      backward_travel_mode(TRAVEL_MODE_INACCESSIBLE), traffic_segment_id(INVALID_TRAFFIC_SEGMENT)
 {
 }
 

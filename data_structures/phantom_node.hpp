@@ -51,7 +51,8 @@ struct PhantomNode
                 FixedPointCoordinate &location,
                 unsigned short fwd_segment_position,
                 TravelMode forward_travel_mode,
-                TravelMode backward_travel_mode);
+                TravelMode backward_travel_mode,
+                TrafficSegmentID traffic_segment_id);
 
     PhantomNode();
 
@@ -75,6 +76,8 @@ struct PhantomNode
 
         forward_travel_mode = other.forward_travel_mode;
         backward_travel_mode = other.backward_travel_mode;
+
+        traffic_segment_id = other.traffic_segment_id;
     }
 
     NodeID forward_node_id;
@@ -92,6 +95,7 @@ struct PhantomNode
     // but the saved byte would be padding anyway
     TravelMode forward_travel_mode;
     TravelMode backward_travel_mode;
+    TrafficSegmentID traffic_segment_id;
 
     int GetForwardWeightPlusOffset() const;
 
@@ -149,7 +153,8 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
         << "geom: " << pn.packed_geometry_id << ", "
         << "comp: " << pn.component_id << ", "
         << "pos: " << pn.fwd_segment_position << ", "
-        << "loc: " << pn.location;
+        << "loc: " << pn.location
+        << "traffic: " << pn.traffic_segment_id;
     return out;
 }
 

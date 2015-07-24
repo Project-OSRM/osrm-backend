@@ -115,7 +115,11 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const = 0;
 
+    virtual unsigned GetTrafficSegmentIDFromEdgeID(const unsigned id) const = 0;
+
     virtual std::string get_name_for_id(const unsigned name_id) const = 0;
+
+    virtual std::string get_traffic_segment_code_for_id(const unsigned name_id) const = 0;
 
     virtual std::string GetTimestamp() const = 0;
 };

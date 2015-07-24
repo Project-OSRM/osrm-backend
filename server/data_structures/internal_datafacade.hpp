@@ -67,6 +67,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     std::shared_ptr<ShM<FixedPointCoordinate, false>::vector> m_coordinate_list;
     ShM<NodeID, false>::vector m_via_node_list;
     ShM<unsigned, false>::vector m_name_ID_list;
+    ShM<unsigned, false>::vector m_traffic_segment_ID_list;
     ShM<TurnInstruction, false>::vector m_turn_instruction_list;
     ShM<TravelMode, false>::vector m_travel_mode_list;
     ShM<char, false>::vector m_names_char_list;
@@ -151,6 +152,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         m_turn_instruction_list.resize(number_of_edges);
         m_travel_mode_list.resize(number_of_edges);
         m_edge_is_compressed.resize(number_of_edges);
+        m_traffic_segment_ID_list.resize(number_of_edges);
 
         unsigned compressed = 0;
 
@@ -339,9 +341,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         AssertPathExists(file_index_path);
         SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(timestamp_path);
-        SimpleLogger().Write() << "loading street names";
+        SimpleLogger().Write() << "loading street names/traffic segment codes";
         AssertPathExists(names_data_path);
         LoadStreetNames(names_data_path);
+
     }
 
     // search graph access
@@ -471,6 +474,11 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_name_ID_list.at(id);
     }
 
+    unsigned GetTrafficSegmentIDFromEdgeID(const unsigned id) const override final
+    {
+        return m_traffic_segment_ID_list.at(id);
+    }
+
     std::string get_name_for_id(const unsigned name_id) const override final
     {
         if (std::numeric_limits<unsigned>::max() == name_id)
@@ -488,6 +496,11 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
                       m_names_char_list.begin() + range.back() + 1, result.begin());
         }
         return result;
+    }
+
+    std::string get_traffic_segment_code_for_id(const TrafficSegmentID traffic_segment_id) const override final
+    {
+        return get_name_for_id(traffic_segment_id);
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final

@@ -890,7 +890,8 @@ class StaticRTree
                         current_segment.forward_offset, current_segment.reverse_offset,
                         current_segment.packed_geometry_id, current_segment.component_id,
                         foot_point_coordinate_on_segment, current_segment.fwd_segment_position,
-                        current_segment.forward_travel_mode, current_segment.backward_travel_mode),
+                        current_segment.forward_travel_mode, current_segment.backward_travel_mode,
+                        current_segment.traffic_segment_id),
                     current_perpendicular_distance);
 
                 // Hack to fix rounding errors and wandering via nodes.

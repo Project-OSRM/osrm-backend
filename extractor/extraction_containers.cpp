@@ -55,7 +55,6 @@ ExtractionContainers::ExtractionContainers()
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
     name_list.push_back("");
-    traffic_segment_code_list.push_back("");
 }
 
 ExtractionContainers::~ExtractionContainers()
@@ -65,7 +64,6 @@ ExtractionContainers::~ExtractionContainers()
     all_nodes_list.clear();
     all_edges_list.clear();
     name_list.clear();
-    traffic_segment_code_list.clear();
     restrictions_list.clear();
     way_start_end_id_list.clear();
 }
@@ -83,8 +81,7 @@ ExtractionContainers::~ExtractionContainers()
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
-                                       lua_State *segment_state,
-                                       const std::string &traffic_segment_code_file_name)
+                                       lua_State *segment_state)
 {
     try
     {
@@ -103,8 +100,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteStrings(name_file_name, name_list, "street names");
-        WriteStrings(traffic_segment_code_file_name, traffic_segment_code_list, "traffic segment codes");
+        WriteStrings(name_file_name, name_list, "street names and traffic segment codes");
     }
     catch (const std::exception &e)
     {

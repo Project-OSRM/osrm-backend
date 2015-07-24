@@ -56,11 +56,12 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
   public:
     struct Segment
     {
-        Segment() : name_id(INVALID_NAMEID), length(-1), position(0) {}
-        Segment(unsigned n, int l, unsigned p) : name_id(n), length(l), position(p) {}
+        Segment() : name_id(INVALID_NAMEID), length(-1), position(0), traffic_segment_id(INVALID_TRAFFIC_SEGMENT) {}
+        Segment(unsigned n, int l, unsigned p, TrafficSegmentID t) : name_id(n), length(l), position(p), traffic_segment_id(t) {}
         unsigned name_id;
         int length;
         unsigned position;
+		TrafficSegmentID traffic_segment_id;
     };
   private:
     std::vector<Segment> shortest_path_segments, alternative_path_segments;
@@ -138,7 +139,14 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         if (config.instructions)
         {
             osrm::json::Array json_route_instructions = BuildTextualDescription(description_factory, shortest_path_segments);
+            osrm::json::Array json_traffic_segment_codes;
             json_result.values["route_instructions"] = json_route_instructions;
+
+            for (auto const& segment : shortest_path_segments) {
+              // TODO: lookup actual code
+              json_traffic_segment_codes.values.push_back(segment.traffic_segment_id);
+            }
+            json_result.values["route_traffic_codes"] = json_traffic_segment_codes;
         }
         description_factory.BuildRouteSummary(description_factory.get_entire_length(),
                                               raw_route.shortest_path_length);
@@ -354,10 +362,12 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     json_instruction_row.values.push_back(
                         static_cast<unsigned>(round(bearing_value)));
                     json_instruction_row.values.push_back(segment.travel_mode);
+                    json_instruction_row.values.push_back(facade->get_traffic_segment_code_for_id(segment.traffic_segment_id));
 
                     route_segments_list.emplace_back(
                         segment.name_id, static_cast<int>(segment.length),
-                        static_cast<unsigned>(route_segments_list.size()));
+                        static_cast<unsigned>(route_segments_list.size()),
+                        segment.traffic_segment_id);
                     json_instruction_array.values.push_back(json_instruction_row);
                 }
             }

@@ -48,7 +48,8 @@ struct EdgeBasedNode
           forward_offset(0), reverse_offset(0), packed_geometry_id(SPECIAL_EDGEID),
           component_id(-1), fwd_segment_position(std::numeric_limits<unsigned short>::max()),
           forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
-          backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          backward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          traffic_segment_id(INVALID_TRAFFIC_SEGMENT)
     {
     }
 
@@ -65,14 +66,15 @@ struct EdgeBasedNode
                            unsigned component_id,
                            unsigned short fwd_segment_position,
                            TravelMode forward_travel_mode,
-                           TravelMode backward_travel_mode)
+                           TravelMode backward_travel_mode,
+                           TrafficSegmentID traffic_segment_id)
         : forward_edge_based_node_id(forward_edge_based_node_id),
           reverse_edge_based_node_id(reverse_edge_based_node_id), u(u), v(v), name_id(name_id),
           forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
           packed_geometry_id(packed_geometry_id), component_id(component_id),
           fwd_segment_position(fwd_segment_position), forward_travel_mode(forward_travel_mode),
-          backward_travel_mode(backward_travel_mode)
+          backward_travel_mode(backward_travel_mode), traffic_segment_id(traffic_segment_id)
     {
         BOOST_ASSERT((forward_edge_based_node_id != SPECIAL_NODEID) ||
                      (reverse_edge_based_node_id != SPECIAL_NODEID));
@@ -106,6 +108,7 @@ struct EdgeBasedNode
     unsigned short fwd_segment_position; // segment id in a compressed geometry
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
+    TrafficSegmentID traffic_segment_id;
 };
 
 #endif // EDGE_BASED_NODE_HPP
