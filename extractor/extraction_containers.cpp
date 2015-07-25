@@ -100,7 +100,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteStrings(name_file_name, name_list, "street names and traffic segment codes");
+        WriteNames(name_file_name);
     }
     catch (const std::exception &e)
     {
@@ -108,38 +108,38 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     }
 }
 
-void ExtractionContainers::WriteStrings(const std::string& strings_file_name, const STXXLStringVector& string_vector, const std::string& description)
+void ExtractionContainers::WriteNames(const std::string& names_file_name) const
 {
-    std::cout << "[extractor] writing " << description << " index ... " << std::flush;
-    TIMER_START(write_string_index);
-    boost::filesystem::ofstream string_file_stream(strings_file_name, std::ios::binary);
+    std::cout << "[extractor] writing street name & traffic code index ... " << std::flush;
+    TIMER_START(write_name_index);
+    boost::filesystem::ofstream name_file_stream(names_file_name, std::ios::binary);
 
     unsigned total_length = 0;
-    std::vector<unsigned> string_lengths;
-    for (const std::string &temp_string : string_vector)
+    std::vector<unsigned> name_lengths;
+    for (const std::string &temp_string : name_list)
     {
         const unsigned string_length =
             std::min(static_cast<unsigned>(temp_string.length()), 255u);
-        string_lengths.push_back(string_length);
+        name_lengths.push_back(string_length);
         total_length += string_length;
     }
 
     // builds and writes the index
-    RangeTable<> string_index_range(string_lengths);
-    string_file_stream << string_index_range;
+    RangeTable<> string_index_range(name_lengths);
+    name_file_stream << string_index_range;
 
-    string_file_stream.write((char *)&total_length, sizeof(unsigned));
+    name_file_stream.write((char *)&total_length, sizeof(unsigned));
     // write all chars consecutively
-    for (const std::string &temp_string : string_vector)
+    for (const std::string &temp_string : name_list)
     {
         const unsigned string_length =
             std::min(static_cast<unsigned>(temp_string.length()), 255u);
-        string_file_stream.write(temp_string.c_str(), string_length);
+        name_file_stream.write(temp_string.c_str(), string_length);
     }
 
-    string_file_stream.close();
-    TIMER_STOP(write_string_index);
-    std::cout << "ok, after " << TIMER_SEC(write_string_index) << "s" << std::endl;
+    name_file_stream.close();
+    TIMER_STOP(write_name_index);
+    std::cout << "ok, after " << TIMER_SEC(write_name_index) << "s" << std::endl;
 }
 
 void ExtractionContainers::PrepareNodes()
