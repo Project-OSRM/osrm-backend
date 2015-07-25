@@ -221,7 +221,8 @@ function way_function (way, result)
   local highway = way:get_value_by_key("highway")
   local route = way:get_value_by_key("route")
   local bridge = way:get_value_by_key("bridge")
-  local traffic_segment_code = way:get_value_by_key("traffic_segment_code")
+  -- This is the key on the way that's the stable traffic identifier
+  local traffic_segment_code = way:get_value_by_key("tmc_code")
 
   if not ((highway and highway ~= "") or (route and route ~= "") or (bridge and bridge ~= "")) then
     return
