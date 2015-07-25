@@ -329,9 +329,17 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         auto& edge = edge_iterator->result;
         edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
+
         // We save the original length in case we need to recalculate the edge weight
         // when we do traffic lookups just before contraction.
-        edge.original_length = distance;
+        // We only set it for ::SPEED types.  Other edge types are fixed (ferries, moveable
+        // bridges, etc), so are not candidates for later updates.
+        // This value defaults to INVALID_LENGTH, and the update code later on skips
+        // the traffic lookup if that value is found.
+        if (edge_iterator->weight_data.type == InternalExtractorEdge::WeightType::SPEED)
+        {
+            edge.original_length = distance;
+        }
 
         // assign new node id
         auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);

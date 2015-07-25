@@ -111,10 +111,12 @@ int Prepare::Run()
 
     // This is where we make updates to the edge weights for traffic data,
     // right before we contract the graph.
-    //
+    SimpleLogger().Write() << "Updating edges with traffic data ...";
+
     TIMER_START(traffic);
     UpdateEdgesWithTrafficData(edge_based_edge_list, lua_state, speed_profile);
     TIMER_STOP(traffic);
+    SimpleLogger().Write() << "Traffic lookups " << TIMER_SEC(traffic) << " sec";
 
     lua_close(lua_state);
 
@@ -489,20 +491,24 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
 {
     if (!speed_profile.has_traffic_segment_function)
     {
+        SimpleLogger().Write() << "  No traffic_segment_function found in the lua profile";
         return;
     }
+    unsigned long updated_count = 0;
     for (auto & edge : edge_based_edge_list) 
     {
         if (edge.original_length != INVALID_LENGTH)
         {
             // TODO: get original traffic_segment_code here from the edge.
             const double new_speed = luabind::call_function<int>(lua, "traffic_segment_function", edge.traffic_segment_id);
-            if (new_speed > 0)
+            if (new_speed >= 0)
             {
                 edge.weight = (edge.original_length * 10.) / (new_speed / 3.6);
+                ++updated_count;
             }
         }
     }
+    SimpleLogger().Write() << "  Updated " << updated_count << " of " << edge_based_edge_list.size() << " edge-based-edges with traffic data";
 }
 
 /**
