@@ -35,6 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/deallocating_vector.hpp"
 #include "../data_structures/static_rtree.hpp"
 #include "../data_structures/restriction_map.hpp"
+#include "../data_structures/range_table.hpp"
+
 
 #include "../util/git_sha.hpp"
 #include "../util/graph_loader.hpp"
@@ -494,13 +496,50 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
         SimpleLogger().Write() << "  No traffic_segment_function found in the lua profile";
         return;
     }
+
+    // TODO: this should be turned into a function, having this code inline is a bit of a smell
+    // Load up the names table so that we can lookup the original traffic_segment_code values
+    // to pass to Lua
+    //
+    // This is copied from server/data_structures/internal_data_facade.cpp, it would be nice
+    // to reuse that code, but the code isn't decoupled enough to integrate here.
+    ShM<char, false>::vector m_names_char_list;
+    RangeTable<16, false> m_name_table;
+    boost::filesystem::ifstream name_stream(config.names_path, std::ios::binary);
+    name_stream >> m_name_table;
+    unsigned number_of_chars = 0;
+    name_stream.read((char *)&number_of_chars, sizeof(unsigned));
+    m_names_char_list.resize(number_of_chars + 1); //+1 gives sentinel element
+    name_stream.read((char *)&m_names_char_list[0], number_of_chars * sizeof(char));
+    name_stream.close();
+
+    auto name_lookup_lambda = [&m_name_table, &m_names_char_list](TrafficSegmentID &traffic_segment_id) 
+    {
+        if (std::numeric_limits<unsigned>::max() == traffic_segment_id)
+        {
+            return std::string("");
+        }
+        auto range = m_name_table.GetRange(traffic_segment_id);
+
+        std::string result;
+        result.reserve(range.size());
+        if (range.begin() != range.end())
+        {
+            result.resize(range.back() - range.front() + 1);
+            std::copy(m_names_char_list.begin() + range.front(),
+                      m_names_char_list.begin() + range.back() + 1, result.begin());
+        }
+        return result;
+    };
+
     unsigned long updated_count = 0;
     for (auto & edge : edge_based_edge_list) 
     {
-        if (edge.original_length != INVALID_LENGTH)
+        if (edge.traffic_segment_id != INVALID_TRAFFIC_SEGMENT && edge.original_length != INVALID_LENGTH)
         {
+            const std::string traffic_segment_name(name_lookup_lambda(edge.traffic_segment_id));
             // TODO: get original traffic_segment_code here from the edge.
-            const double new_speed = luabind::call_function<int>(lua, "traffic_segment_function", edge.traffic_segment_id);
+            const double new_speed = luabind::call_function<int>(lua, "traffic_segment_function", traffic_segment_name);
             if (new_speed >= 0)
             {
                 edge.weight = (edge.original_length * 10.) / (new_speed / 3.6);

@@ -55,6 +55,7 @@ struct ContractorConfig
     std::string graph_output_path;
     std::string rtree_nodes_output_path;
     std::string rtree_leafs_output_path;
+    std::string names_path;
 
     unsigned requested_num_threads;
 

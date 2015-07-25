@@ -137,4 +137,5 @@ void ContractorOptions::GenerateOutputFilesNames(ContractorConfig &contractor_co
     contractor_config.graph_output_path = contractor_config.osrm_input_path.string() + ".hsgr";
     contractor_config.rtree_nodes_output_path = contractor_config.osrm_input_path.string() + ".ramIndex";
     contractor_config.rtree_leafs_output_path = contractor_config.osrm_input_path.string() + ".fileIndex";
+    contractor_config.names_path = contractor_config.osrm_input_path.string() + ".names";
 }
