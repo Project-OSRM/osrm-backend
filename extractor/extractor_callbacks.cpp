@@ -161,17 +161,22 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     }
 
     // Get a unique identifier for the traffic segment code, note that it goes into
-    // the same lookup table as the street names
-    const auto &string_map_iterator2 = string_map.find(parsed_way.traffic_segment_code);
-    unsigned traffic_segment_id = external_memory.name_list.size();
-    if (string_map.end() == string_map_iterator2)
-    {
-        external_memory.name_list.push_back(parsed_way.traffic_segment_code);
-        string_map.insert(std::make_pair(parsed_way.traffic_segment_code, traffic_segment_id));
-    }
-    else
-    {
-        traffic_segment_id = string_map_iterator2->second;
+    // the same lookup table as the street names, they're all just strings we want
+    // to convert to shorter index values for efficiency
+    unsigned traffic_segment_id = INVALID_TRAFFIC_SEGMENT;
+    // If it's the empty string, don't bother doing a lookup, it's invalid
+    if (!parsed_way.traffic_segment_code.empty()) {
+        const auto &string_map_iterator2 = string_map.find(parsed_way.traffic_segment_code);
+        traffic_segment_id = external_memory.name_list.size();
+        if (string_map.end() == string_map_iterator2)
+        {
+            external_memory.name_list.push_back(parsed_way.traffic_segment_code);
+            string_map.insert(std::make_pair(parsed_way.traffic_segment_code, traffic_segment_id));
+        }
+        else
+        {
+            traffic_segment_id = string_map_iterator2->second;
+        }
     }
 
     const bool split_edge = (parsed_way.forward_speed > 0) &&
