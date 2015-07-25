@@ -464,8 +464,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
 
+                // If this edge is later updated by the ingestion of traffic data,
+                // the edge will be re-weighted to (length * new_speed) plus the
+                // penalties added here.  Thus, we need to save them.
+                unsigned added_penalties = distance - edge_data1.distance;
+
                 m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
-                                  m_edge_based_edge_list.size(), distance, true, false);
+                                  m_edge_based_edge_list.size(), distance, true, false,
+                                  edge_data1.traffic_segment_id, edge_data1.original_length,
+                                  added_penalties);
             }
         }
     }

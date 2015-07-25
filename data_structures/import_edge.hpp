@@ -40,25 +40,27 @@ struct NodeBasedEdge
                            NodeID target,
                            NodeID name_id,
                            EdgeWeight weight,
-                           TrafficSegmentID traffic_segment_id,
                            bool forward,
                            bool backward,
                            bool roundabout,
                            bool access_restricted,
                            TravelMode travel_mode,
-                           bool is_split);
+                           bool is_split,
+                           TrafficSegmentID traffic_segment_id,
+                           Metres original_length);
 
     NodeID source;
     NodeID target;
     NodeID name_id;
     EdgeWeight weight;
-    TrafficSegmentID traffic_segment_id;
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;
     bool access_restricted : 1;
     bool is_split : 1;
     TravelMode travel_mode : 4;
+    TrafficSegmentID traffic_segment_id;
+    Metres original_length;
 };
 
 struct EdgeBasedEdge
@@ -76,13 +78,19 @@ struct EdgeBasedEdge
                            const NodeID edge_id,
                            const EdgeWeight weight,
                            const bool forward,
-                           const bool backward);
+                           const bool backward,
+                           TrafficSegmentID traffic_segment_id,
+                           Metres original_length,
+                           EdgeWeight added_penalties);
     NodeID source;
     NodeID target;
     NodeID edge_id;
     EdgeWeight weight : 30;
     bool forward : 1;
     bool backward : 1;
+    TrafficSegmentID traffic_segment_id;
+    Metres original_length;
+    EdgeWeight added_penalties;
 };
 
 #endif /* IMPORT_EDGE_HPP */

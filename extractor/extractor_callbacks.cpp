@@ -196,9 +196,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    first_node.ref(), last_node.ref(), name_id, traffic_segment_id, backward_weight_data,
+                                    first_node.ref(), last_node.ref(), name_id, backward_weight_data,
                                     true, false, parsed_way.roundabout, parsed_way.is_access_restricted,
-                                    parsed_way.backward_travel_mode, false));
+                                    parsed_way.backward_travel_mode, traffic_segment_id, INVALID_LENGTH, false));
                             });
 
         external_memory.way_start_end_id_list.push_back(
@@ -218,9 +218,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    first_node.ref(), last_node.ref(), name_id, traffic_segment_id, forward_weight_data,
+                                    first_node.ref(), last_node.ref(), name_id, forward_weight_data,
                                     true, !forward_only, parsed_way.roundabout, parsed_way.is_access_restricted,
-                                    parsed_way.forward_travel_mode, split_edge));
+                                    parsed_way.forward_travel_mode, split_edge, traffic_segment_id, INVALID_LENGTH));
                             });
         if (split_edge)
         {
@@ -229,9 +229,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                 [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                                 {
                                     external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                        first_node.ref(), last_node.ref(), name_id, traffic_segment_id, backward_weight_data,
+                                        first_node.ref(), last_node.ref(), name_id, backward_weight_data,
                                         false, true, parsed_way.roundabout, parsed_way.is_access_restricted,
-                                        parsed_way.backward_travel_mode, true));
+                                        parsed_way.backward_travel_mode, true, traffic_segment_id, INVALID_LENGTH));
                                 });
         }
 

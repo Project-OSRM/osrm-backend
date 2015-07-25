@@ -450,3 +450,11 @@ function turn_function (angle)
     return angle*angle*k*turn_bias
   end
 end
+
+-- This is called during the "prepare" phase (not extract).  It takes a traffic_segment_code
+-- parameter, and returns a speed for that segment, or a negative value if there is no data
+-- for the requested traffic_segment_code
+function traffic_segment_function(traffic_segment_code)
+    -- TODO: perform a real lookup here
+    return 0.5
+end

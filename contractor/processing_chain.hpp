@@ -76,13 +76,18 @@ class Prepare
     std::pair<std::size_t, std::size_t>
     BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
-                           DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
+                           DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+                           lua_State *lua_state,
+                           const SpeedProfileProperties& speed_profile);
     void WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map);
     void FindComponents(unsigned max_edge_id,
                         const DeallocatingVector<EdgeBasedEdge> &edges,
                         std::vector<EdgeBasedNode> &nodes) const;
     void BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
                     const std::vector<QueryNode> &internal_to_external_node_map);
+    void UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+                                    lua_State *lua_state,
+                                    const SpeedProfileProperties& speed_profile);
 
   private:
     ContractorConfig config;

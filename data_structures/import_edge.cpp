@@ -50,7 +50,8 @@ bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 NodeBasedEdge::NodeBasedEdge()
     : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), forward(false),
       backward(false), roundabout(false),
-      access_restricted(false), is_split(false), travel_mode(false)
+      access_restricted(false), is_split(false), travel_mode(false),
+      traffic_segment_id(INVALID_TRAFFIC_SEGMENT), original_length(INVALID_LENGTH)
 {
 }
 
@@ -58,16 +59,18 @@ NodeBasedEdge::NodeBasedEdge(NodeID source,
                              NodeID target,
                              NodeID name_id,
                              EdgeWeight weight,
-                             TrafficSegmentID traffic_segment_id,
                              bool forward,
                              bool backward,
                              bool roundabout,
                              bool access_restricted,
                              TravelMode travel_mode,
-                             bool is_split)
-    : source(source), target(target), name_id(name_id), weight(weight), traffic_segment_id(traffic_segment_id), forward(forward),
+                             bool is_split,
+                             TrafficSegmentID traffic_segment_id,
+                             Metres original_length)
+    : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
       backward(backward), roundabout(roundabout),
-      access_restricted(access_restricted), is_split(is_split), travel_mode(travel_mode)
+      access_restricted(access_restricted), is_split(is_split), travel_mode(travel_mode),
+      traffic_segment_id(traffic_segment_id), original_length(original_length)
 {
 }
 
@@ -106,8 +109,11 @@ EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                              const NodeID edge_id,
                              const EdgeWeight weight,
                              const bool forward,
-                             const bool backward)
+                             const bool backward,
+                             TrafficSegmentID traffic_segment_id,
+                             Metres original_length,
+                             EdgeWeight added_penalties)
     : source(source), target(target), edge_id(edge_id), weight(weight), forward(forward),
-      backward(backward)
+      backward(backward), traffic_segment_id(traffic_segment_id), original_length(original_length), added_penalties(added_penalties)
 {
 }

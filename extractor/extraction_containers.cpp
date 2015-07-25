@@ -317,6 +317,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
                 case InternalExtractorEdge::WeightType::WAY_DURATION:
                     return data.duration * 10.;
                     break;
+                // NOTE: This is where we convert the length and speed of an edge into the final weight
                 case InternalExtractorEdge::WeightType::SPEED:
                     return (distance * 10.) / (data.speed / 3.6);
                     break;
@@ -328,6 +329,9 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         auto& edge = edge_iterator->result;
         edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
+        // We save the original length in case we need to recalculate the edge weight
+        // when we do traffic lookups just before contraction.
+        edge.original_length = distance;
 
         // assign new node id
         auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
