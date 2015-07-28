@@ -542,7 +542,7 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
             const double new_speed = luabind::call_function<int>(lua, "traffic_segment_function", traffic_segment_name);
             if (new_speed >= 0)
             {
-                edge.weight = (edge.original_length * 10.) / (new_speed / 3.6);
+                edge.weight = (edge.original_length * 10.) / (new_speed / 3.6) + edge.added_penalties;
                 ++updated_count;
             }
         }
