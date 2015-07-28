@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(douglas_peucker)
 SegmentInformation getTestInfo(int lat, int lon, bool necessary)
 {
     return SegmentInformation(FixedPointCoordinate(lat, lon), 0, 0, 0, TurnInstruction::HeadOn,
-                              necessary, false, 0);
+                              necessary, false, 0, INVALID_TRAFFIC_SEGMENT);
 }
 
 BOOST_AUTO_TEST_CASE(all_necessary_test)
