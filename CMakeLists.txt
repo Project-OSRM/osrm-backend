@@ -216,7 +216,7 @@ find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 if(NOT Boost_FOUND)
   message(FATAL_ERROR "Fatal error: Boost (version >= 1.49.0) required.\n")
 endif()
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(OSRM ${Boost_LIBRARIES})
 target_link_libraries(osrm-extract ${Boost_LIBRARIES})
