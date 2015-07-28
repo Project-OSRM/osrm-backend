@@ -973,7 +973,8 @@ class StaticRTree
                                                    nearest,
                                                    current_edge.fwd_segment_position,
                                                    current_edge.forward_travel_mode,
-                                                   current_edge.backward_travel_mode};
+                                                   current_edge.backward_travel_mode,
+                                                   current_edge.traffic_segment_id};
                             nearest_edge = current_edge;
                         }
                     }

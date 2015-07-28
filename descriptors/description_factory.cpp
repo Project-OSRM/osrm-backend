@@ -78,6 +78,7 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         {
             path_description.front().name_id = path_point.name_id;
             path_description.front().travel_mode = path_point.travel_mode;
+            path_description.front().traffic_segment_id = path_point.traffic_segment_id;
         }
         return;
     }
@@ -127,6 +128,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
+        path_description[i - 1].traffic_segment_id = path_description[i].traffic_segment_id;
         path_description[i].length = coordinate_calculation::euclidean_distance(
             path_description[i - 1].location, path_description[i].location);
     }
@@ -205,6 +207,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
         path_description.back().necessary = true;
         path_description.back().turn_instruction = TurnInstruction::NoTurn;
         target_phantom.name_id = (path_description.end() - 2)->name_id;
+        target_phantom.name_id = (path_description.end() - 2)->traffic_segment_id;
     }
 
     if (path_description.size() > 2 &&
@@ -215,6 +218,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
         path_description.front().turn_instruction = TurnInstruction::HeadOn;
         path_description.front().necessary = true;
         start_phantom.name_id = path_description.front().name_id;
+        start_phantom.traffic_segment_id = path_description.front().traffic_segment_id;
     }
 
     // Generalize poly line

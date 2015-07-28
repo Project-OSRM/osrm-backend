@@ -457,5 +457,6 @@ end
 -- for the requested traffic_segment_code
 function traffic_segment_function(traffic_segment_code)
     -- TODO: perform a real lookup here
-    return 0.5
+    -- return 0.5
+    return -1
 end

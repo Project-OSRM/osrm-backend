@@ -431,6 +431,9 @@ int main(const int argc, const char *argv[])
         unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
             shared_memory_ptr, SharedDataLayout::NAME_ID_LIST);
 
+        TrafficSegmentID *traffic_segment_id_ptr = shared_layout_ptr->GetBlockPtr<TrafficSegmentID, true>(
+            shared_memory_ptr, SharedDataLayout::TRAFFIC_SEGMENT_ID_LIST);
+
         TravelMode *travel_mode_ptr = shared_layout_ptr->GetBlockPtr<TravelMode, true>(
             shared_memory_ptr, SharedDataLayout::TRAVEL_MODE);
 
@@ -447,6 +450,7 @@ int main(const int argc, const char *argv[])
             edges_input_stream.read((char *)&(current_edge_data), sizeof(OriginalEdgeData));
             via_node_ptr[i] = current_edge_data.via_node;
             name_id_ptr[i] = current_edge_data.name_id;
+            traffic_segment_id_ptr[i] = current_edge_data.traffic_segment_id;
             travel_mode_ptr[i] = current_edge_data.travel_mode;
             turn_instructions_ptr[i] = current_edge_data.turn_instruction;
 

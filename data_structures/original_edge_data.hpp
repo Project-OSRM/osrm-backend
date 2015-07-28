@@ -40,16 +40,19 @@ struct OriginalEdgeData
                               unsigned name_id,
                               TurnInstruction turn_instruction,
                               bool compressed_geometry,
-                              TravelMode travel_mode)
+                              TravelMode travel_mode,
+                              TrafficSegmentID traffic_segment_id)
         : via_node(via_node), name_id(name_id), turn_instruction(turn_instruction),
-          compressed_geometry(compressed_geometry), travel_mode(travel_mode)
+          compressed_geometry(compressed_geometry), travel_mode(travel_mode),
+          traffic_segment_id(traffic_segment_id)
     {
     }
 
     OriginalEdgeData()
         : via_node(std::numeric_limits<unsigned>::max()),
           name_id(std::numeric_limits<unsigned>::max()), turn_instruction(TurnInstruction::NoTurn),
-          compressed_geometry(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          compressed_geometry(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          traffic_segment_id(INVALID_TRAFFIC_SEGMENT)
     {
     }
 
@@ -58,6 +61,7 @@ struct OriginalEdgeData
     TurnInstruction turn_instruction;
     bool compressed_geometry;
     TravelMode travel_mode;
+    TrafficSegmentID traffic_segment_id;
 };
 
 #endif // ORIGINAL_EDGE_DATA_HPP

@@ -165,6 +165,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
             m_travel_mode_list[i] = current_edge_data.travel_mode;
             m_edge_is_compressed[i] = current_edge_data.compressed_geometry;
+            m_traffic_segment_ID_list[i] = current_edge_data.traffic_segment_id;
             if (m_edge_is_compressed[i])
             {
                 ++compressed;
@@ -500,7 +501,11 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     std::string get_traffic_segment_code_for_id(const TrafficSegmentID traffic_segment_id) const override final
     {
-        return get_name_for_id(traffic_segment_id);
+        if (traffic_segment_id == INVALID_TRAFFIC_SEGMENT) {
+            return "__NO IDENTIFIER ON THIS SEGMENT__";
+        }
+        return get_name_for_id(traffic_segment_id) + "|" + std::to_string(traffic_segment_id);
+
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final

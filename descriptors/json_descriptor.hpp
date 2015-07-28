@@ -392,6 +392,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_last_instruction_row.values.push_back("0m");
         json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
+        json_last_instruction_row.values.push_back("");
         json_instruction_array.values.push_back(json_last_instruction_row);
 
         return json_instruction_array;
