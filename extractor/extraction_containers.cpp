@@ -125,8 +125,8 @@ void ExtractionContainers::WriteNames(const std::string& names_file_name) const
     }
 
     // builds and writes the index
-    RangeTable<> string_index_range(name_lengths);
-    name_file_stream << string_index_range;
+    RangeTable<> name_index_range(name_lengths);
+    name_file_stream << name_index_range;
 
     name_file_stream.write((char *)&total_length, sizeof(unsigned));
     // write all chars consecutively
