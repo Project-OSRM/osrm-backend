@@ -502,7 +502,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     std::string get_traffic_segment_code_for_id(const TrafficSegmentID traffic_segment_id) const override final
     {
         if (traffic_segment_id == INVALID_TRAFFIC_SEGMENT) {
-            return "__NO IDENTIFIER ON THIS SEGMENT__";
+            return "__OSRM_UNDEFINED__";
         }
         return get_name_for_id(traffic_segment_id) + "|" + std::to_string(traffic_segment_id);
 
