@@ -214,7 +214,6 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             factory.Run(route_parameters.zoom_level);
 
             // we need because we don't run path simplification
-            osrm::json::Array points;
             for (auto &segment : factory.path_description)
             {
                 segment.necessary = true;
@@ -225,12 +224,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 subtrace.values["geometry"] = factory.AppendGeometryString(route_parameters.compression);
             }
 
-
             if (route_parameters.print_instructions)
             {
                 std::vector<typename JSONDescriptor<DataFacadeT>::Segment> path_segments;
                 subtrace.values["instructions"] = json_descriptor.BuildTextualDescription(factory, path_segments);
 
+                osrm::json::Array json_traffic_segment_codes;
                 for (auto const& segment : path_segments) {
                   json_traffic_segment_codes.values.push_back(facade->get_traffic_segment_code_for_id(segment.traffic_segment_id));
                 }
