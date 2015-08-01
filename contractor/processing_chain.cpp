@@ -539,7 +539,7 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
         {
             const std::string traffic_segment_name(name_lookup_lambda(edge.traffic_segment_id));
             // TODO: get original traffic_segment_code here from the edge.
-            const double new_speed = luabind::call_function<int>(lua, "traffic_segment_function", traffic_segment_name);
+            const double new_speed = luabind::call_function<double>(lua, "traffic_segment_function", traffic_segment_name);
             if (new_speed >= 0)
             {
                 edge.weight = (edge.original_length * 10.) / (new_speed / 3.6) + edge.added_penalties;

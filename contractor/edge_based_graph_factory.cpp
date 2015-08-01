@@ -452,7 +452,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 original_edge_data_vector.emplace_back(
                     (edge_is_compressed ? m_compressed_edge_container.GetPositionForID(e1) : node_v),
                     edge_data1.name_id, turn_instruction, edge_is_compressed,
-                    edge_data2.travel_mode);
+                    edge_data2.travel_mode, edge_data1.traffic_segment_id);
 
                 ++original_edges_counter;
 
