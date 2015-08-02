@@ -355,7 +355,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     const double bearing_value = (segment.bearing / 10.);
                     json_instruction_row.values.push_back(bearing::get(bearing_value));
                     json_instruction_row.values.push_back(
-                        static_cast<unsigned>(round(bearing_value)));
+                        static_cast<unsigned>(std::round(bearing_value)));
                     json_instruction_row.values.push_back(segment.travel_mode);
 
                     route_segments_list.emplace_back(
@@ -385,6 +385,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_last_instruction_row.values.push_back("0m");
         json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
+        json_last_instruction_row.values.push_back(TRAVEL_MODE_DEFAULT);
         json_instruction_array.values.push_back(json_last_instruction_row);
     }
 };
