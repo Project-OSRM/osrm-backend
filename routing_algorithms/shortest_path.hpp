@@ -61,8 +61,12 @@ class ShortestPathRouting final
         bool search_from_2nd_node = true;
         NodeID middle1 = SPECIAL_NODEID;
         NodeID middle2 = SPECIAL_NODEID;
-        std::vector<std::vector<NodeID>> packed_legs1(phantom_nodes_vector.size());
-        std::vector<std::vector<NodeID>> packed_legs2(phantom_nodes_vector.size());
+        // path to the current forward node of the segment source
+        std::vector<NodeID> packed_route1;
+        // path to the current reverse node of the segment source
+        std::vector<NodeID> packed_route2;
+        std::vector<std::size_t> packed_leg_ends1;
+        std::vector<std::size_t> packed_leg_ends2;
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -80,8 +84,10 @@ class ShortestPathRouting final
         // Get distance to next pair of target nodes.
         for (const PhantomNodes &phantom_node_pair : phantom_nodes_vector)
         {
+            // heaps to search to the target forward node
             forward_heap1.Clear();
             forward_heap2.Clear();
+            // heaps to search to the target reverse node
             reverse_heap1.Clear();
             reverse_heap2.Clear();
             int local_upper_bound1 = INVALID_EDGE_WEIGHT;
@@ -96,7 +102,7 @@ class ShortestPathRouting final
                 std::min(-phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
                          -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
 
-            // insert new starting nodes into forward heap, adjusted by previous distances.
+            // insert forward start node in both heaps
             if ((allow_u_turn || search_from_1st_node) &&
                 phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
             {
@@ -104,15 +110,13 @@ class ShortestPathRouting final
                     phantom_node_pair.source_phantom.forward_node_id,
                     -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.source_phantom.forward_node_id);
-                // SimpleLogger().Write(logDEBUG) << "fwd-a2 insert: " <<
-                // phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
                 forward_heap2.Insert(
                     phantom_node_pair.source_phantom.forward_node_id,
                     -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.source_phantom.forward_node_id);
-                // SimpleLogger().Write(logDEBUG) << "fwd-b2 insert: " <<
-                // phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
             }
+
+            // insert reverse start node in both heaps
             if ((allow_u_turn || search_from_2nd_node) &&
                 phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID)
             {
@@ -120,36 +124,29 @@ class ShortestPathRouting final
                     phantom_node_pair.source_phantom.reverse_node_id,
                     -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.source_phantom.reverse_node_id);
-                // SimpleLogger().Write(logDEBUG) << "fwd-a2 insert: " <<
-                // phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
                 forward_heap2.Insert(
                     phantom_node_pair.source_phantom.reverse_node_id,
                     -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.source_phantom.reverse_node_id);
-                // SimpleLogger().Write(logDEBUG) << "fwd-b2 insert: " <<
-                // phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             }
 
-            // insert new backward nodes into backward heap, unadjusted.
+            // insert forward node of target in reverse heap
             if (phantom_node_pair.target_phantom.forward_node_id != SPECIAL_NODEID)
             {
                 reverse_heap1.Insert(phantom_node_pair.target_phantom.forward_node_id,
                                      phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
                                      phantom_node_pair.target_phantom.forward_node_id);
-                // SimpleLogger().Write(logDEBUG) << "rev-a insert: " <<
-                // phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
             }
 
+            // insert reverse node of target in reverse heap
             if (phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID)
             {
                 reverse_heap2.Insert(phantom_node_pair.target_phantom.reverse_node_id,
                                      phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),
                                      phantom_node_pair.target_phantom.reverse_node_id);
-                // SimpleLogger().Write(logDEBUG) << "rev-a insert: " <<
-                // phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
             }
 
-            // run two-Target Dijkstra routing step.
+            // run bi-directional Dijkstra routing step to forward target
             while (0 < (forward_heap1.Size() + reverse_heap1.Size()))
             {
                 if (!forward_heap1.Empty())
@@ -164,6 +161,7 @@ class ShortestPathRouting final
                 }
             }
 
+            // run bi-directional Dijkstra routing step to reverse target
             if (!reverse_heap2.Empty())
             {
                 while (0 < (forward_heap2.Size() + reverse_heap2.Size()))
@@ -190,155 +188,160 @@ class ShortestPathRouting final
                 return;
             }
 
-            search_from_1st_node = true;
-            search_from_2nd_node = true;
-            if (SPECIAL_NODEID == middle1)
-            {
-                search_from_1st_node = false;
-            }
-            if (SPECIAL_NODEID == middle2)
-            {
-                search_from_2nd_node = false;
-            }
-
             // Was at most one of the two paths not found?
-            BOOST_ASSERT_MSG((INVALID_EDGE_WEIGHT != distance1 || INVALID_EDGE_WEIGHT != distance2),
+            BOOST_ASSERT_MSG((INVALID_EDGE_WEIGHT != local_upper_bound1 || INVALID_EDGE_WEIGHT != local_upper_bound2),
                              "no path found");
 
-            // Unpack paths if they exist
-            std::vector<NodeID> temporary_packed_leg1;
-            std::vector<NodeID> temporary_packed_leg2;
-
-            BOOST_ASSERT(current_leg < packed_legs1.size());
-            BOOST_ASSERT(current_leg < packed_legs2.size());
+            // packed path from last forward/reverse via node to current forward node
+            std::vector<NodeID> packed_sub_path1;
+            // packed path from last forward/reverse via node to current reverse node
+            std::vector<NodeID> packed_sub_path2;
 
             if (INVALID_EDGE_WEIGHT != local_upper_bound1)
             {
                 super::RetrievePackedPathFromHeap(forward_heap1, reverse_heap1, middle1,
-                                                  temporary_packed_leg1);
+                                                  packed_sub_path1);
             }
 
             if (INVALID_EDGE_WEIGHT != local_upper_bound2)
             {
                 super::RetrievePackedPathFromHeap(forward_heap2, reverse_heap2, middle2,
-                                                  temporary_packed_leg2);
+                                                  packed_sub_path2);
             }
 
-            // if one of the paths was not found, replace it with the other one.
-            if ((allow_u_turn && local_upper_bound1 > local_upper_bound2) ||
-                temporary_packed_leg1.empty())
+            // if we allow uturns at this via it is optimal to select the shortest sub-path
+            if (allow_u_turn)
             {
-                temporary_packed_leg1.clear();
-                temporary_packed_leg1.insert(temporary_packed_leg1.end(),
-                                             temporary_packed_leg2.begin(),
-                                             temporary_packed_leg2.end());
+                if (local_upper_bound1 <= local_upper_bound2)
+                {
+                    local_upper_bound2 = local_upper_bound1;
+                    packed_sub_path2 = packed_sub_path1;
+                }
+                else
+                {
+                    local_upper_bound1 = local_upper_bound2;
+                    packed_sub_path1 = packed_sub_path2;
+                }
+            }
+
+            // if we only use either one, don't do a full search on both
+            search_from_1st_node = true;
+            search_from_2nd_node = true;
+            if (packed_sub_path1.empty())
+            {
+                packed_sub_path1 = packed_sub_path2;
                 local_upper_bound1 = local_upper_bound2;
+                search_from_1st_node = false;
             }
-            if ((allow_u_turn && local_upper_bound2 > local_upper_bound1) ||
-                temporary_packed_leg2.empty())
+            if (packed_sub_path2.empty())
             {
-                temporary_packed_leg2.clear();
-                temporary_packed_leg2.insert(temporary_packed_leg2.end(),
-                                             temporary_packed_leg1.begin(),
-                                             temporary_packed_leg1.end());
+                packed_sub_path2 = packed_sub_path1;
                 local_upper_bound2 = local_upper_bound1;
+                search_from_2nd_node = false;
             }
 
-            BOOST_ASSERT_MSG(!temporary_packed_leg1.empty() || !temporary_packed_leg2.empty(),
-                             "tempory packed paths empty");
-
-            BOOST_ASSERT((0 == current_leg) || !packed_legs1[current_leg - 1].empty());
-            BOOST_ASSERT((0 == current_leg) || !packed_legs2[current_leg - 1].empty());
-
+            // now we need to figure out if the reverse/forward node was chosen
+            // there are two cases here
+            // 1. both sub paths connect to the same previous path in which
+            //    case we need to copy one
+            // 2. both sub paths connect to different paths in which case
+            //    we don't need to copy them
             if (!allow_u_turn && 0 < current_leg)
             {
-                const NodeID end_id_of_segment1 = packed_legs1[current_leg - 1].back();
-                const NodeID end_id_of_segment2 = packed_legs2[current_leg - 1].back();
-                BOOST_ASSERT(!temporary_packed_leg1.empty());
-                const NodeID start_id_of_leg1 = temporary_packed_leg1.front();
-                const NodeID start_id_of_leg2 = temporary_packed_leg2.front();
-                if ((end_id_of_segment1 != start_id_of_leg1) &&
-                    (end_id_of_segment2 != start_id_of_leg2))
-                {
-                    std::swap(temporary_packed_leg1, temporary_packed_leg2);
-                    std::swap(local_upper_bound1, local_upper_bound2);
-                }
+                const NodeID previous_forward_id = packed_route1.back();
+                const NodeID previous_reverse_id = packed_route2.back();
 
-                // remove the shorter path if both legs end at the same segment
-                if (start_id_of_leg1 == start_id_of_leg2)
+                BOOST_ASSERT(!packed_sub_path1.empty() && !packed_sub_path2.empty());
+
+                const NodeID sub_path1_start = packed_sub_path1.front();
+                const NodeID sub_path2_start = packed_sub_path2.front();
+
+                // use the same previous path, we need to copy one
+                if (sub_path1_start == sub_path2_start)
                 {
-                    const NodeID last_id_of_packed_legs1 = packed_legs1[current_leg - 1].back();
-                    const NodeID last_id_of_packed_legs2 = packed_legs2[current_leg - 1].back();
-                    if (start_id_of_leg1 != last_id_of_packed_legs1)
+                    if (sub_path1_start == previous_forward_id)
                     {
-                        packed_legs1 = packed_legs2;
-                        distance1 = distance2;
-                        BOOST_ASSERT(start_id_of_leg1 == temporary_packed_leg1.front());
-                    }
-                    else if (start_id_of_leg2 != last_id_of_packed_legs2)
-                    {
-                        packed_legs2 = packed_legs1;
+                        packed_route2 = packed_route1;
+                        packed_leg_ends2 = packed_leg_ends1;
                         distance2 = distance1;
-                        BOOST_ASSERT(start_id_of_leg2 == temporary_packed_leg2.front());
+                    }
+                    else
+                    {
+                        BOOST_ASSERT(sub_path1_start == previous_reverse_id);
+
+                        packed_route1 = packed_route2;
+                        packed_leg_ends1 = packed_leg_ends2;
+                        distance1 = distance2;
                     }
                 }
-            }
-            BOOST_ASSERT(packed_legs1.size() == packed_legs2.size());
+                else
+                {
+                    if (sub_path1_start != previous_forward_id)
+                    {
+                        BOOST_ASSERT(previous_forward_id == sub_path2_start && previous_reverse_id == sub_path1_start);
+                        packed_route1.swap(packed_route2);
+                        packed_leg_ends1.swap(packed_leg_ends1);
+                        std::swap(distance1, distance2);
+                    }
+                }
 
-            packed_legs1[current_leg].insert(packed_legs1[current_leg].end(),
-                                             temporary_packed_leg1.begin(),
-                                             temporary_packed_leg1.end());
-            BOOST_ASSERT(packed_legs1[current_leg].size() == temporary_packed_leg1.size());
-            packed_legs2[current_leg].insert(packed_legs2[current_leg].end(),
-                                             temporary_packed_leg2.begin(),
-                                             temporary_packed_leg2.end());
-            BOOST_ASSERT(packed_legs2[current_leg].size() == temporary_packed_leg2.size());
-
-            if (!allow_u_turn &&
-                (packed_legs1[current_leg].back() == packed_legs2[current_leg].back()) &&
-                phantom_node_pair.target_phantom.is_bidirected())
-            {
-                const NodeID last_node_id = packed_legs2[current_leg].back();
-                search_from_1st_node &=
-                    !(last_node_id == phantom_node_pair.target_phantom.reverse_node_id);
-                search_from_2nd_node &=
-                    !(last_node_id == phantom_node_pair.target_phantom.forward_node_id);
-                BOOST_ASSERT(search_from_1st_node != search_from_2nd_node);
+                // this holds because we don't allow uturns
+                BOOST_ASSERT(packed_route1.empty() || packed_sub_path1.front() == packed_route1.back());
+                BOOST_ASSERT(packed_route2.empty() || packed_sub_path2.front() == packed_route2.back());
             }
+
+            packed_route1.insert(packed_route1.end(), packed_sub_path1.begin(), packed_sub_path1.end());
+            packed_leg_ends1.push_back(packed_route1.size());
+            packed_route2.insert(packed_route2.end(), packed_sub_path2.begin(), packed_sub_path2.end());
+            packed_leg_ends2.push_back(packed_route2.size());
 
             distance1 += local_upper_bound1;
             distance2 += local_upper_bound2;
+
             ++current_leg;
         }
 
+        // chose the best overall route
         if (distance1 > distance2)
         {
-            std::swap(packed_legs1, packed_legs2);
+            packed_route1.swap(packed_route2);
+            packed_leg_ends1.swap(packed_leg_ends2);
+            distance1 = distance2;
         }
-        raw_route_data.unpacked_path_segments.resize(packed_legs1.size());
 
-        for (const std::size_t index : osrm::irange<std::size_t>(0, packed_legs1.size()))
+        BOOST_ASSERT(!phantom_nodes_vector.empty());
+
+        std::size_t start_index = 0;
+        for (const std::size_t index : osrm::irange<std::size_t>(0, phantom_nodes_vector.size()))
         {
-            BOOST_ASSERT(!phantom_nodes_vector.empty());
-            BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size());
 
             PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[index];
-            super::UnpackPath(
-                // -- packed input
-                packed_legs1[index],
-                // -- start and end of (sub-)route
-                unpack_phantom_node_pair,
-                // -- unpacked output
-                raw_route_data.unpacked_path_segments[index]);
+            std::size_t end_index = packed_leg_ends1[index];
+            std::vector<PathData> unpacked_leg;
+            super::UnpackPath(packed_route1.begin() + start_index,
+                              packed_route1.begin() + end_index,
+                              unpack_phantom_node_pair,
+                              unpacked_leg);
 
+            //This would only be correct if we source and target phantom
+            //are always included
+            //BOOST_ASSERT(unpacked_leg.size() > 0);
+
+            raw_route_data.unpacked_route.insert(raw_route_data.unpacked_route.end(),
+                                                 // skip first path entry, as vias would be included twice
+                                                 unpacked_leg.begin(),
+                                                 unpacked_leg.end());
+
+            raw_route_data.segment_end_indices.push_back(raw_route_data.unpacked_route.size());
             raw_route_data.source_traversed_in_reverse.push_back(
-                (packed_legs1[index].front() !=
-                 phantom_nodes_vector[index].source_phantom.forward_node_id));
+                (packed_route1[start_index] != phantom_nodes_vector[index].source_phantom.forward_node_id));
             raw_route_data.target_traversed_in_reverse.push_back(
-                (packed_legs1[index].back() !=
-                 phantom_nodes_vector[index].target_phantom.forward_node_id));
+                (packed_route1[end_index-1] != phantom_nodes_vector[index].target_phantom.forward_node_id));
+
+            BOOST_ASSERT(end_index > 0);
+            start_index = end_index;
         }
-        raw_route_data.shortest_path_length = std::min(distance1, distance2);
+        raw_route_data.shortest_path_length = distance1;
     }
 };
 

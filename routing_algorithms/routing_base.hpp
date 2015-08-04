@@ -149,22 +149,22 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
     }
 
-    void UnpackPath(const std::vector<NodeID> &packed_path,
+    template<typename ForwardIter>
+    void UnpackPath(ForwardIter packed_path_begin, ForwardIter packed_path_end,
                     const PhantomNodes &phantom_node_pair,
                     std::vector<PathData> &unpacked_path) const
     {
         const bool start_traversed_in_reverse =
-            (packed_path.front() != phantom_node_pair.source_phantom.forward_node_id);
+            (*packed_path_begin != phantom_node_pair.source_phantom.forward_node_id);
         const bool target_traversed_in_reverse =
-            (packed_path.back() != phantom_node_pair.target_phantom.forward_node_id);
+            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_node_id);
 
-        const unsigned packed_path_size = static_cast<unsigned>(packed_path.size());
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
 
         // We have to push the path in reverse order onto the stack because it's LIFO.
-        for (unsigned i = packed_path_size - 1; i > 0; --i)
+        for (auto iter = std::prev(packed_path_end); iter != packed_path_begin; --iter)
         {
-            recursion_stack.emplace(packed_path[i - 1], packed_path[i]);
+            recursion_stack.emplace(*std::prev(iter), *iter);
         }
 
         std::pair<NodeID, NodeID> edge;
@@ -265,6 +265,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 }
             }
         }
+
         if (SPECIAL_EDGEID != phantom_node_pair.target_phantom.packed_geometry_id)
         {
             std::vector<unsigned> id_vector;
@@ -472,7 +473,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             PhantomNodes nodes;
             nodes.source_phantom = source_phantom;
             nodes.target_phantom = target_phantom;
-            UnpackPath(packed_leg, nodes, unpacked_path);
+            UnpackPath(packed_leg.begin(), packed_leg.end(), nodes, unpacked_path);
 
             FixedPointCoordinate previous_coordinate = source_phantom.location;
             FixedPointCoordinate current_coordinate;
