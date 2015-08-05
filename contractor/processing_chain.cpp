@@ -81,7 +81,7 @@ int Prepare::Run()
     lua_State *lua_state = luaL_newstate();
     luabind::open(lua_state);
 
-    EdgeBasedGraphFactory::SpeedProfileProperties speed_profile;
+    SpeedProfileProperties speed_profile;
 
     SetupScriptingEnvironment(lua_state, speed_profile);
 
