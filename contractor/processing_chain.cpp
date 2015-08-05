@@ -503,6 +503,7 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
     //
     // This is copied from server/data_structures/internal_data_facade.cpp, it would be nice
     // to reuse that code, but the code isn't decoupled enough to integrate here.
+    SimpleLogger().Write() << "  Loading names for traffic lookup";
     ShM<char, false>::vector m_names_char_list;
     RangeTable<16, false> m_name_table;
     boost::filesystem::ifstream name_stream(config.names_path, std::ios::binary);
@@ -532,6 +533,8 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
         return result;
     };
 
+    SimpleLogger().Write() << "  Iterating over edges";
+
     unsigned long updated_count = 0;
     for (auto & edge : edge_based_edge_list) 
     {
@@ -539,9 +542,11 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
         {
             const std::string traffic_segment_name(name_lookup_lambda(edge.traffic_segment_id));
             // TODO: get original traffic_segment_code here from the edge.
+            SimpleLogger().Write() << "  Looking up " << traffic_segment_name;
             const double new_speed = luabind::call_function<double>(lua, "traffic_segment_function", traffic_segment_name);
             if (new_speed >= 0)
             {
+                SimpleLogger().Write() << "  New speed is " << new_speed;
                 edge.weight = (edge.original_length * 10.) / (new_speed / 3.6) + edge.added_penalties;
                 ++updated_count;
             }
@@ -581,7 +586,6 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
     compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
 
     edge_based_graph_factory.Run(config.edge_output_path, lua_state);
-    lua_close(lua_state);
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
