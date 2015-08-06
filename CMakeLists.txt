@@ -73,7 +73,7 @@ add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_O
 file(GLOB ServerGlob server/*.cpp)
 file(GLOB DescriptorGlob descriptors/*.cpp)
 file(GLOB DatastructureGlob data_structures/search_engine_data.cpp data_structures/route_parameters.cpp util/bearing.cpp)
-file(GLOB CoordinateGlob data_structures/coordinate*.cpp)
+file(GLOB CoordinateGlob data_structures/coordinate.cpp algorithms/coordinate_calculation.cpp)
 file(GLOB AlgorithmGlob algorithms/polyline_compressor.cpp algorithms/polyline_formatter.cpp algorithms/douglas_peucker.cpp)
 file(GLOB HttpGlob server/http/*.cpp)
 file(GLOB LibOSRMGlob library/*.cpp)

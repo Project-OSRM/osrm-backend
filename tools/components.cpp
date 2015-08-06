@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../algorithms/tiny_components.hpp"
-#include "../data_structures/coordinate_calculation.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 #include "../data_structures/dynamic_graph.hpp"
 #include "../data_structures/static_graph.hpp"
 #include "../util/fingerprint.hpp"
