@@ -110,7 +110,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         auto check_component_id_is_tiny = [](const phantom_node_pair &phantom_pair)
         {
-            return phantom_pair.first.component_id != 0;
+            return phantom_pair.first.is_in_tiny_component();
         };
 
         const bool every_phantom_is_in_tiny_cc =
@@ -131,7 +131,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         auto swap_phantom_from_big_cc_into_front = [](phantom_node_pair &phantom_pair)
         {
-            if (0 != phantom_pair.first.component_id)
+            if (0 != phantom_pair.first.component_id && 0 == phantom_pair.second.component_id)
             {
                 using namespace std;
                 swap(phantom_pair.first, phantom_pair.second);
