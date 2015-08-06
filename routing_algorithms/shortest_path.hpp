@@ -249,7 +249,9 @@ class ShortestPathRouting final
             if (!allow_u_turn && 0 < current_leg)
             {
                 const NodeID previous_forward_id = packed_route1.back();
+#ifndef NDEBUG
                 const NodeID previous_reverse_id = packed_route2.back();
+#endif
 
                 BOOST_ASSERT(!packed_sub_path1.empty() && !packed_sub_path2.empty());
 

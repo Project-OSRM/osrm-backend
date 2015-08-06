@@ -129,7 +129,9 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
         {
             auto end_idx = raw_route.segment_end_indices[i];
+#ifndef NDEBUG
             const int added_segments =
+#endif
                 DescribeLeg(raw_route.unpacked_route.begin() + start_idx,
                             raw_route.unpacked_route.begin() + end_idx,
                             raw_route.segment_end_coordinates[i],
