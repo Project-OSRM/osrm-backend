@@ -504,7 +504,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         if (traffic_segment_id == INVALID_TRAFFIC_SEGMENT) {
             return "__OSRM_UNDEFINED__";
         }
-        return get_name_for_id(traffic_segment_id) + "|" + std::to_string(traffic_segment_id);
+        return get_name_for_id(traffic_segment_id);
 
     }
 
