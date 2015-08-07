@@ -549,7 +549,7 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
 
     // If street names stay the same and if we are certain that it is not a
     // a segment of a roundabout, we skip it.
-    if (data1.name_id == data2.name_id)
+    if (data1.name_id == data2.name_id && data1.travel_mode == data2.travel_mode)
     {
         // TODO: Here we should also do a small graph exploration to check for
         //      more complex situations
