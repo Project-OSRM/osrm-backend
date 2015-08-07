@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "contractor.hpp"
 #include "../algorithms/graph_compressor.hpp"
-#include "../algorithms/tiny_components.hpp"
+#include "../algorithms/tarjan_scc.hpp"
 #include "../algorithms/crc32_processor.hpp"
 #include "../data_structures/compressed_edge_container.hpp"
 #include "../data_structures/deallocating_vector.hpp"
