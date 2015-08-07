@@ -349,7 +349,7 @@ class Contractor
                 std::vector<float> new_node_priority(remaining_nodes.size());
                 // this map gives the old IDs from the new ones, necessary to get a consistent graph
                 // at the end of contraction
-                orig_node_id_to_new_id_map.resize(remaining_nodes.size());
+                orig_node_id_from_new_node_id_map.resize(remaining_nodes.size());
                 // this map gives the new IDs from the old ones, necessary to remap targets from the
                 // remaining graph
                 std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, UINT_MAX);
@@ -359,7 +359,7 @@ class Contractor
                 for (const auto new_node_id : osrm::irange<std::size_t>(0, remaining_nodes.size()))
                 {
                     // create renumbering maps in both directions
-                    orig_node_id_to_new_id_map[new_node_id] = remaining_nodes[new_node_id].id;
+                    orig_node_id_from_new_node_id_map[new_node_id] = remaining_nodes[new_node_id].id;
                     new_node_id_from_orig_id_map[remaining_nodes[new_node_id].id] = new_node_id;
                     new_node_priority[new_node_id] =
                         node_priorities[remaining_nodes[new_node_id].id];
@@ -566,10 +566,10 @@ class Contractor
                 {
                     const NodeID target = contractor_graph->GetTarget(edge);
                     const ContractorGraph::EdgeData &data = contractor_graph->GetEdgeData(edge);
-                    if (!orig_node_id_to_new_id_map.empty())
+                    if (!orig_node_id_from_new_node_id_map.empty())
                     {
-                        new_edge.source = orig_node_id_to_new_id_map[node];
-                        new_edge.target = orig_node_id_to_new_id_map[target];
+                        new_edge.source = orig_node_id_from_new_node_id_map[node];
+                        new_edge.target = orig_node_id_from_new_node_id_map[target];
                     }
                     else
                     {
@@ -580,9 +580,10 @@ class Contractor
                     BOOST_ASSERT_MSG(UINT_MAX != new_edge.target, "Target id invalid");
                     new_edge.data.distance = data.distance;
                     new_edge.data.shortcut = data.shortcut;
-                    if (!data.is_original_via_node_ID && !orig_node_id_to_new_id_map.empty())
+                    if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
-                        new_edge.data.id = orig_node_id_to_new_id_map[data.id];
+                        // tranlate the _node id_ of the shortcutted node
+                        new_edge.data.id = orig_node_id_from_new_node_id_map[data.id];
                     }
                     else
                     {
@@ -597,10 +598,10 @@ class Contractor
             }
         }
         contractor_graph.reset();
-        orig_node_id_to_new_id_map.clear();
-        orig_node_id_to_new_id_map.shrink_to_fit();
+        orig_node_id_from_new_node_id_map.clear();
+        orig_node_id_from_new_node_id_map.shrink_to_fit();
 
-        BOOST_ASSERT(0 == orig_node_id_to_new_id_map.capacity());
+        BOOST_ASSERT(0 == orig_node_id_from_new_node_id_map.capacity());
 
         edges.append(external_edge_list.begin(), external_edge_list.end());
         external_edge_list.clear();
@@ -958,7 +959,7 @@ class Contractor
 
     std::shared_ptr<ContractorGraph> contractor_graph;
     stxxl::vector<QueryEdge> external_edge_list;
-    std::vector<NodeID> orig_node_id_to_new_id_map;
+    std::vector<NodeID> orig_node_id_from_new_node_id_map;
     XORFastHash fast_hash;
 };
 
