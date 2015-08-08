@@ -106,8 +106,9 @@ int Prepare::Run()
     // Contracting the edge-expanded graph
 
     TIMER_START(contraction);
+    std::vector<bool> is_core_node;
     auto contracted_edge_list = osrm::make_unique<DeallocatingVector<QueryEdge>>();
-    ContractGraph(max_edge_id, edge_based_edge_list, *contracted_edge_list);
+    ContractGraph(max_edge_id, edge_based_edge_list, *contracted_edge_list, is_core_node);
     TIMER_STOP(contraction);
 
     SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
@@ -115,6 +116,7 @@ int Prepare::Run()
     std::size_t number_of_used_edges = WriteContractedGraph(max_edge_id,
                                                             std::move(node_based_edge_list),
                                                             std::move(contracted_edge_list));
+    WriteCoreNodeMarker(std::move(is_core_node));
 
     TIMER_STOP(preparing);
 
@@ -200,6 +202,19 @@ void Prepare::FindComponents(unsigned max_edge_id, const DeallocatingVector<Edge
         const bool is_tiny_component = component_size < 1000;
         node.component_id = is_tiny_component ? (1 + forward_component) : 0;
     }
+}
+
+void Prepare::WriteCoreNodeMarker(std::vector<bool>&& in_is_core_node) const
+{
+    std::vector<bool> is_core_node(in_is_core_node);
+    std::vector<char> unpacked_bool_flags(is_core_node.size());
+    for (auto i = 0u; i < is_core_node.size(); ++i)
+    {
+        unpacked_bool_flags[i] = is_core_node[i] ? 1 : 0;
+    }
+
+    boost::filesystem::ofstream core_marker_output_stream(config.core_output_path, std::ios::binary);
+    core_marker_output_stream.write((char *)unpacked_bool_flags.data(), sizeof(char)*unpacked_bool_flags.size());
 }
 
 std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
@@ -482,11 +497,13 @@ Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_nod
  */
 void Prepare::ContractGraph(const unsigned max_edge_id,
                             DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
-                            DeallocatingVector<QueryEdge>& contracted_edge_list)
+                            DeallocatingVector<QueryEdge>& contracted_edge_list,
+                            std::vector<bool>& is_core_node)
 {
     Contractor contractor(max_edge_id + 1, edge_based_edge_list);
     contractor.Run(config.core_factor);
     contractor.GetEdges(contracted_edge_list);
+    contractor.GetCoreMarker(is_core_node);
 }
 
 /**

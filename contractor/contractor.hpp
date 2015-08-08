@@ -306,6 +306,7 @@ class Contractor
         std::vector<RemainingNodeData> remaining_nodes(number_of_nodes);
         std::vector<float> node_priorities(number_of_nodes);
         std::vector<NodePriorityData> node_data(number_of_nodes);
+        is_core_node.resize(number_of_nodes, false);
 
         // initialize priorities in parallel
         tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, InitGrainSize),
@@ -546,9 +547,23 @@ class Contractor
             p.printStatus(number_of_contracted_nodes);
         }
 
+        if (remaining_nodes.size() > 2)
+        {
+            for (const auto& node : remaining_nodes)
+            {
+                auto orig_id = orig_node_id_from_new_node_id_map[node.id];
+                is_core_node[orig_id] = true;
+            }
+        }
+
         SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes " << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
 
         thread_data_list.data.clear();
+    }
+
+    inline void GetCoreMarker(std::vector<bool> &out_is_core_node)
+    {
+        out_is_core_node.swap(is_core_node);
     }
 
     template <class Edge> inline void GetEdges(DeallocatingVector<Edge> &edges)
@@ -960,6 +975,7 @@ class Contractor
     std::shared_ptr<ContractorGraph> contractor_graph;
     stxxl::vector<QueryEdge> external_edge_list;
     std::vector<NodeID> orig_node_id_from_new_node_id_map;
+    std::vector<bool> is_core_node;
     XORFastHash fast_hash;
 };
 

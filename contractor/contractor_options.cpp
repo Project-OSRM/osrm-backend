@@ -131,6 +131,7 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 void ContractorOptions::GenerateOutputFilesNames(ContractorConfig &contractor_config)
 {
     contractor_config.node_output_path = contractor_config.osrm_input_path.string() + ".nodes";
+    contractor_config.core_output_path = contractor_config.osrm_input_path.string() + ".core";
     contractor_config.edge_output_path = contractor_config.osrm_input_path.string() + ".edges";
     contractor_config.geometry_output_path = contractor_config.osrm_input_path.string() + ".geometry";
     contractor_config.graph_output_path = contractor_config.osrm_input_path.string() + ".hsgr";

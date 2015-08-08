@@ -63,7 +63,9 @@ class Prepare
     unsigned CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list);
     void ContractGraph(const unsigned max_edge_id,
                        DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
-                       DeallocatingVector<QueryEdge>& contracted_edge_list);
+                       DeallocatingVector<QueryEdge>& contracted_edge_list,
+                       std::vector<bool>& is_core_node);
+    void WriteCoreNodeMarker(std::vector<bool>&& is_core_node) const;
     std::size_t WriteContractedGraph(unsigned number_of_edge_based_nodes,
                                      std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list,
                                      std::unique_ptr<DeallocatingVector<QueryEdge>> contracted_edge_list);

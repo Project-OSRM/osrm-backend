@@ -49,6 +49,7 @@ struct ContractorConfig
     boost::filesystem::path profile_path;
 
     std::string node_output_path;
+    std::string core_output_path;
     std::string edge_output_path;
     std::string geometry_output_path;
     std::string graph_output_path;
