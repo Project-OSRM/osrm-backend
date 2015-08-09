@@ -186,7 +186,8 @@ class DirectShortestPathRouting final
         }
 
         // run two-target Dijkstra routing step on core with termination criterion
-        while (distance > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()) )
+        while (0 < (forward_core_heap.Size() + reverse_core_heap.Size()) &&
+               distance > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
         {
             if (!forward_core_heap.Empty())
             {
