@@ -84,6 +84,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     ShM<bool, true>::vector m_edge_is_compressed;
     ShM<unsigned, true>::vector m_geometry_indices;
     ShM<unsigned, true>::vector m_geometry_list;
+    ShM<bool, true>::vector m_is_core_node;
 
     boost::thread_specific_ptr<std::pair<unsigned, std::shared_ptr<SharedRTree>>> m_static_rtree;
     boost::filesystem::path file_index_path;
@@ -445,6 +446,12 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
                       m_names_char_list.begin() + range.back() + 1, result.begin());
         }
         return result;
+    }
+
+    bool IsCoreNode(const NodeID id) const override final
+    {
+        //return m_is_core_node[id];
+        return false;
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }

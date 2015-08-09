@@ -73,6 +73,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     ShM<bool, false>::vector m_edge_is_compressed;
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
+    ShM<bool, false>::vector m_is_core_node;
 
     boost::thread_specific_ptr<
         StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>> m_static_rtree;
@@ -171,6 +172,23 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         edges_input_stream.close();
     }
 
+    void LoadCoreInformation(const boost::filesystem::path &core_data_file)
+    {
+        std::ifstream core_stream(core_data_file.string().c_str(), std::ios::binary);
+        unsigned number_of_markers;
+        core_stream.read((char *)&number_of_markers, sizeof(unsigned));
+
+        std::vector<char> unpacked_core_markers(number_of_markers);
+        core_stream.read((char *)unpacked_core_markers.data(), sizeof(char)*number_of_markers);
+
+        m_is_core_node.resize(number_of_markers);
+        for (auto i = 0u; i < number_of_markers; ++i)
+        {
+            BOOST_ASSERT(unpacked_core_markers[i] == 0 || unpacked_core_markers[i] == 1);
+            m_is_core_node[i] = unpacked_core_markers[i] == 1;
+        }
+    }
+
     void LoadGeometries(const boost::filesystem::path &geometry_file)
     {
         std::ifstream geometry_stream(geometry_file.string().c_str(), std::ios::binary);
@@ -255,6 +273,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         {
             throw osrm::exception("no nodes file given in ini file");
         }
+        if (server_paths.find("coredata") == server_paths.end())
+        {
+            throw osrm::exception("no core file given in ini file");
+        }
         if (server_paths.find("edgesdata") == server_paths.end())
         {
             throw osrm::exception("no edges file given in ini file");
@@ -288,6 +310,9 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         paths_iterator = server_paths.find("geometries");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path &geometries_path = paths_iterator->second;
+        paths_iterator = server_paths.find("coredata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path &core_data_path = paths_iterator->second;
 
         // load data
         SimpleLogger().Write() << "loading graph data";
@@ -297,6 +322,9 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         AssertPathExists(nodes_data_path);
         AssertPathExists(edges_data_path);
         LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
+        SimpleLogger().Write() << "loading core information";
+        AssertPathExists(core_data_path);
+        LoadCoreInformation(core_data_path);
         SimpleLogger().Write() << "loading geometries";
         AssertPathExists(geometries_path);
         LoadGeometries(geometries_path);
@@ -462,6 +490,11 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
     {
         return m_via_node_list.at(id);
+    }
+
+    virtual bool IsCoreNode(const NodeID id) const override final
+    {
+        return m_is_core_node[id];
     }
 
     virtual void GetUncompressedGeometry(const unsigned id,
