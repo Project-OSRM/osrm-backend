@@ -64,9 +64,14 @@ class DirectShortestPathRouting final
     {
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
+            super::facade->GetNumberOfNodes());
 
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
+
+        QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
+        QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
 
         // Get distance to next pair of target nodes.
         BOOST_ASSERT_MSG(1 == phantom_nodes_vector.size(),
@@ -114,23 +119,89 @@ class DirectShortestPathRouting final
                                  phantom_node_pair.target_phantom.reverse_node_id);
         }
 
+        std::vector<std::pair<NodeID, EdgeWeight>> forward_entry_points;
+        std::vector<std::pair<NodeID, EdgeWeight>> reverse_entry_points;
+
         // run two-Target Dijkstra routing step.
         while (0 < (forward_heap.Size() + reverse_heap.Size()) )
         {
             if (!forward_heap.Empty())
             {
-                super::RoutingStep(forward_heap, reverse_heap, &middle, &distance,
-                                   min_edge_offset, true);
+                if (super::facade->IsCoreNode(forward_heap.Min()))
+                {
+                    const NodeID node = forward_heap.DeleteMin();
+                    const int key = forward_heap.GetKey(node);
+                    forward_entry_points.emplace_back(node, key);
+                }
+                else
+                {
+                    super::RoutingStep(forward_heap, reverse_heap, &middle, &distance,
+                                       min_edge_offset, true);
+                }
             }
             if (!reverse_heap.Empty())
             {
-                super::RoutingStep(reverse_heap, forward_heap, &middle, &distance,
+                if (super::facade->IsCoreNode(reverse_heap.Min()))
+                {
+                    const NodeID node = reverse_heap.DeleteMin();
+                    const int key = reverse_heap.GetKey(node);
+                    reverse_entry_points.emplace_back(node, key);
+                }
+                else
+                {
+                    super::RoutingStep(reverse_heap, forward_heap, &middle, &distance,
+                                       min_edge_offset, false);
+                }
+            }
+        }
+
+        // TODO check if unordered_set might be faster
+        // sort by id and increasing by distance
+        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight>& lhs, const std::pair<NodeID, EdgeWeight>& rhs)
+            {
+                return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
+            };
+        std::sort(forward_entry_points.begin(), forward_entry_points.end(), entry_point_comparator);
+        std::sort(reverse_entry_points.begin(), reverse_entry_points.end(), entry_point_comparator);
+
+        NodeID last_id = SPECIAL_NODEID;
+        for (const auto p : forward_entry_points)
+        {
+            if (p.first == last_id)
+            {
+                continue;
+            }
+            forward_core_heap.Insert(p.first, p.second, p.first);
+            last_id = p.first;
+        }
+        last_id = SPECIAL_NODEID;
+        for (const auto p : reverse_entry_points)
+        {
+            if (p.first == last_id)
+            {
+                continue;
+            }
+            reverse_core_heap.Insert(p.first, p.second, p.first);
+            last_id = p.first;
+        }
+
+        // run two-target Dijkstra routing step on core with termination criterion
+        while (distance > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()) )
+        {
+            if (!forward_core_heap.Empty())
+            {
+                super::RoutingStep(forward_core_heap, reverse_core_heap, &middle, &distance,
+                                   min_edge_offset, true);
+            }
+            if (!reverse_core_heap.Empty())
+            {
+                super::RoutingStep(reverse_core_heap, forward_core_heap, &middle, &distance,
                                    min_edge_offset, false);
             }
         }
 
         // No path found for both target nodes?
-        if ((INVALID_EDGE_WEIGHT == distance))
+        if (INVALID_EDGE_WEIGHT == distance)
         {
             raw_route_data.shortest_path_length = INVALID_EDGE_WEIGHT;
             raw_route_data.alternative_path_length = INVALID_EDGE_WEIGHT;
@@ -141,22 +212,33 @@ class DirectShortestPathRouting final
         BOOST_ASSERT_MSG((SPECIAL_NODEID == middle || INVALID_EDGE_WEIGHT != distance),
                          "no path found");
 
-        // Unpack paths if they exist
         std::vector<NodeID> packed_leg;
-        if (INVALID_EDGE_WEIGHT != distance)
+        // we need to unpack sub path from core heaps
+        if(super::facade->IsCoreNode(middle))
+        {
+            std::vector<NodeID> packed_core_leg;
+            super::RetrievePackedPathFromHeap(forward_core_heap, reverse_core_heap, middle, packed_core_leg);
+            BOOST_ASSERT(packed_core_leg.size() > 0);
+            super::RetrievePackedPathFromSingleHeap(forward_heap, packed_core_leg.front(), packed_leg);
+            std::reverse(packed_leg.begin(), packed_leg.end());
+            packed_leg.insert(packed_leg.end(), packed_core_leg.begin(), packed_core_leg.end());
+            super::RetrievePackedPathFromSingleHeap(reverse_heap, packed_core_leg.back(), packed_leg);
+        }
+        else
         {
             super::RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
-
-            BOOST_ASSERT_MSG(!packed_leg.empty(), "packed path empty");
-
-            raw_route_data.unpacked_path_segments.resize(1);
-            raw_route_data.source_traversed_in_reverse.push_back(
-                (packed_leg.front() != phantom_node_pair.source_phantom.forward_node_id));
-            raw_route_data.target_traversed_in_reverse.push_back(
-                (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
-
-            super::UnpackPath(packed_leg, phantom_node_pair, raw_route_data.unpacked_path_segments.front());
         }
+
+
+        BOOST_ASSERT_MSG(!packed_leg.empty(), "packed path empty");
+
+        raw_route_data.unpacked_path_segments.resize(1);
+        raw_route_data.source_traversed_in_reverse.push_back(
+            (packed_leg.front() != phantom_node_pair.source_phantom.forward_node_id));
+        raw_route_data.target_traversed_in_reverse.push_back(
+            (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
+
+        super::UnpackPath(packed_leg, phantom_node_pair, raw_route_data.unpacked_path_segments.front());
 
         raw_route_data.shortest_path_length = distance;
     }
