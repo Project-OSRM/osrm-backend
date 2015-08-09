@@ -214,6 +214,8 @@ void Prepare::WriteCoreNodeMarker(std::vector<bool>&& in_is_core_node) const
     }
 
     boost::filesystem::ofstream core_marker_output_stream(config.core_output_path, std::ios::binary);
+    unsigned size = unpacked_bool_flags.size();
+    core_marker_output_stream.write((char *)&size, sizeof(unsigned));
     core_marker_output_stream.write((char *)unpacked_bool_flags.data(), sizeof(char)*unpacked_bool_flags.size());
 }
 
