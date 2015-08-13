@@ -449,7 +449,6 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             setDestinationPoint(json_instruction_array);
             json_result.values["route_instructions"] = json_instruction_array;
             buildRouteSummary(json_summary_object, route_summary);
-            json_result.values["route_summary"] = json_summary_object;
         }
 
         if (osrm::json::Logger::get())
