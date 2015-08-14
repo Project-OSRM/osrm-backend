@@ -186,6 +186,7 @@ void ExtractionContainers::PrepareEdges()
     {
         if (edge_iterator->result.source < node_iterator->node_id)
         {
+            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference " << edge_iterator->result.source;
             edge_iterator->result.source = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -243,6 +244,7 @@ void ExtractionContainers::PrepareEdges()
 
         if (edge_iterator->result.target < node_iterator->node_id)
         {
+            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference " << edge_iterator->result.target;
             edge_iterator->result.target = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
