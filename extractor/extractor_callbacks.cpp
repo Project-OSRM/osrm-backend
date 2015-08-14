@@ -77,6 +77,28 @@ void ExtractorCallbacks::ProcessRestriction(
         //                           "y" : "n");
     }
 }
+
+/**
+ * Get an index for a string, returning an existing one if the string is already
+ * in there
+ */
+unsigned ExtractorCallbacks::addName(std::string const & str) {
+    unsigned string_id = external_memory.name_list.size();
+    const auto &string_map_iterator = string_map.find(str);
+    if (string_map.end() == string_map_iterator)
+    {
+        external_memory.name_list.push_back(str);
+        string_map.insert(std::make_pair(str, string_id));
+    }
+    else
+    {
+        string_id = string_map_iterator->second;
+    }
+    return string_id;
+}
+
+
+
 /**
  * Takes the geometry contained in the ```input_way``` and the tags computed
  * by the lua profile inside ```parsed_way``` and computes all edge segments.
@@ -148,35 +170,21 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     }
 
     // Get the unique identifier for the street name
-    const auto &string_map_iterator = string_map.find(parsed_way.name);
-    unsigned name_id = external_memory.name_list.size();
-    if (string_map.end() == string_map_iterator)
-    {
-        external_memory.name_list.push_back(parsed_way.name);
-        string_map.insert(std::make_pair(parsed_way.name, name_id));
-    }
-    else
-    {
-        name_id = string_map_iterator->second;
-    }
+    const auto name_id = addName(parsed_way.name);
 
-    // Get a unique identifier for the traffic segment code, note that it goes into
+    // Get a unique identifier for the traffic segment code. Note that it goes into
     // the same lookup table as the street names, they're all just strings we want
     // to convert to shorter index values for efficiency
-    unsigned traffic_segment_id = INVALID_TRAFFIC_SEGMENT;
-    // If it's the empty string, don't bother doing a lookup, it's invalid
-    if (!parsed_way.traffic_segment_code.empty()) {
-        const auto &string_map_iterator2 = string_map.find(parsed_way.traffic_segment_code);
-        traffic_segment_id = external_memory.name_list.size();
-        if (string_map.end() == string_map_iterator2)
-        {
-            external_memory.name_list.push_back(parsed_way.traffic_segment_code);
-            string_map.insert(std::make_pair(parsed_way.traffic_segment_code, traffic_segment_id));
-        }
-        else
-        {
-            traffic_segment_id = string_map_iterator2->second;
-        }
+    // TODO: refactor this a bit
+    unsigned forward_traffic_segment_id = INVALID_TRAFFIC_SEGMENT;
+    unsigned backward_traffic_segment_id = INVALID_TRAFFIC_SEGMENT;
+
+    if (!parsed_way.forward_traffic_segment_code.empty()) {
+        forward_traffic_segment_id = addName(parsed_way.forward_traffic_segment_code);
+    }
+
+    if (!parsed_way.backward_traffic_segment_code.empty()) {
+        backward_traffic_segment_id = addName(parsed_way.backward_traffic_segment_code);
     }
 
     const bool split_edge = (parsed_way.forward_speed > 0) &&
@@ -203,7 +211,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                                     first_node.ref(), last_node.ref(), name_id, backward_weight_data,
                                     true, false, parsed_way.roundabout, parsed_way.is_access_restricted,
-                                    parsed_way.backward_travel_mode, traffic_segment_id, INVALID_LENGTH, false));
+                                    parsed_way.backward_travel_mode, forward_traffic_segment_id, INVALID_LENGTH, false));
                             });
 
         external_memory.way_start_end_id_list.push_back(
@@ -225,7 +233,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                                     first_node.ref(), last_node.ref(), name_id, forward_weight_data,
                                     true, !forward_only, parsed_way.roundabout, parsed_way.is_access_restricted,
-                                    parsed_way.forward_travel_mode, split_edge, traffic_segment_id, INVALID_LENGTH));
+                                    parsed_way.forward_travel_mode, split_edge, forward_traffic_segment_id, INVALID_LENGTH));
                             });
         if (split_edge)
         {
@@ -236,7 +244,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                     external_memory.all_edges_list.push_back(InternalExtractorEdge(
                                         first_node.ref(), last_node.ref(), name_id, backward_weight_data,
                                         false, true, parsed_way.roundabout, parsed_way.is_access_restricted,
-                                        parsed_way.backward_travel_mode, true, traffic_segment_id, INVALID_LENGTH));
+                                        parsed_way.backward_travel_mode, true, backward_traffic_segment_id, INVALID_LENGTH));
                                 });
         }
 
