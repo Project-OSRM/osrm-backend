@@ -58,7 +58,7 @@ int ReturnDistance(const std::vector<EdgeWeight> & dist_table,
                    const int number_of_locations) {
     int route_dist = 0;
     int i = 0;
-    while (i < location_order.size() - 1/* && route_dist < min_route_dist*/) {
+    while (i < location_order.size() - 1 && route_dist < min_route_dist) {
         route_dist += *(dist_table.begin() + (location_order[i] * number_of_locations) + location_order[i+1]);
         ++i;
     }
@@ -77,7 +77,7 @@ void BruteForceTSP(std::vector<unsigned> & component,
 
     // check length of all possible permutation of the component ids
     do {
-        unsigned new_distance = ReturnDistance(dist_table, component, min_route_dist, component_size);
+        const auto new_distance = ReturnDistance(dist_table, component, min_route_dist, component_size);
         if (new_distance < min_route_dist) {
             min_route_dist = new_distance;
             route = component;
@@ -96,7 +96,7 @@ void BruteForceTSP(const PhantomNodeArray & phantom_node_vector,
     unsigned min_route_dist = std::numeric_limits<unsigned>::max();
     // check length of all possible permutation of the location ids
     do {
-        unsigned new_distance = ReturnDistance(dist_table, location_ids, min_route_dist, number_of_locations);
+        const auto new_distance = ReturnDistance(dist_table, location_ids, min_route_dist, number_of_locations);
 
         if (new_distance < min_route_dist) {
             min_route_dist = new_distance;

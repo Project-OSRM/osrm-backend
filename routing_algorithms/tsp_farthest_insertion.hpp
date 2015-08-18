@@ -56,12 +56,13 @@ void GetShortestRoundTrip(const int current_loc,
                          int & min_trip_distance,
                          std::vector<unsigned>::iterator & next_insert_point_candidate){
     // for all nodes in the current trip find the best insertion resulting in the shortest path
+    // assert min 2 nodes in current_trip
     for (auto from_node = current_trip.begin(); from_node != std::prev(current_trip.end()); ++from_node) {
-        auto to_node = std::next(from_node);
+        const auto to_node = std::next(from_node);
 
-        auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + current_loc);
-        auto dist_to = *(dist_table.begin() + (current_loc * number_of_locations) + *to_node);
-        auto trip_dist = dist_from + dist_to - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node);
+        const auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + current_loc);
+        const auto dist_to = *(dist_table.begin() + (current_loc * number_of_locations) + *to_node);
+        const auto trip_dist = dist_from + dist_to - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node);
 
         // from all possible insertions to the current trip, choose the shortest of all insertions
         if (trip_dist < min_trip_distance) {
@@ -104,6 +105,7 @@ void FarthestInsertionTSP(const std::vector<unsigned> & locations,
     auto max_from = -1;
     auto max_to = -1;
 
+    //TODO
     for (auto x : locations) {
         for (auto y : locations) {
             auto xy_dist = *(dist_table.begin() + x * number_of_locations + y);
@@ -181,12 +183,13 @@ void FarthestInsertionTSP(const PhantomNodeArray & phantom_node_vector,
     for (int j = 2; j < number_of_locations; ++j) {
         auto farthest_distance = 0;
         auto next_node = -1;
+        //todo move out of loop and overwrite
         std::vector<unsigned>::iterator next_insert_point;
 
         // find unvisited loc i that is the farthest away from all other visited locs
         for (int i = 0; i < number_of_locations; ++i) {
             if (!visited[i]) {
-                auto min_trip_distance = std::numeric_limits<int>::max();
+                auto min_trip_distance = std::numeric_limits<EdgeWeight>::max();
                 std::vector<unsigned>::iterator next_insert_point_candidate;
 
                 GetShortestRoundTrip(i, dist_table, number_of_locations, current_trip, min_trip_distance, next_insert_point_candidate);
@@ -199,6 +202,7 @@ void FarthestInsertionTSP(const PhantomNodeArray & phantom_node_vector,
                 }
             }
         }
+
         // mark as visited and insert node
         visited[next_node] = true;
         current_trip.insert(next_insert_point, next_node);

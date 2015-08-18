@@ -132,7 +132,7 @@ void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
         int curr_node = start_node;
 
         std::vector<unsigned> curr_route;
-        curr_route.reserve(number_of_locations - 1);
+        curr_route.reserve(number_of_locations);
         curr_route.push_back(start_node);
 
         // visited[i] indicates whether node i was already visited by the salesman
@@ -150,7 +150,7 @@ void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
             auto row_begin_iterator = dist_table.begin() + (curr_node * number_of_locations);
             auto row_end_iterator = dist_table.begin() + ((curr_node + 1) * number_of_locations);
             for (auto it = row_begin_iterator; it != row_end_iterator; ++it) {
-                auto index = std::distance(row_begin_iterator, it);
+                const auto index = std::distance(row_begin_iterator, it);
                 if (!visited[index] && *it < min_dist)
                 {
                     min_dist = *it;
