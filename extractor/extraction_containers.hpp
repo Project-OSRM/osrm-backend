@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "scripting_environment.hpp"
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
+#include "../util/osrm_exception.hpp"
 
 #include <stxxl/vector>
 #include <unordered_map>

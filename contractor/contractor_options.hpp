@@ -45,7 +45,6 @@ struct ContractorConfig
 
     boost::filesystem::path config_file_path;
     boost::filesystem::path osrm_input_path;
-    boost::filesystem::path restrictions_path;
     boost::filesystem::path profile_path;
 
     std::string node_output_path;
@@ -53,6 +52,7 @@ struct ContractorConfig
     std::string edge_output_path;
     std::string geometry_output_path;
     std::string graph_output_path;
+    std::string edge_based_graph_filename;
     std::string rtree_nodes_output_path;
     std::string rtree_leafs_output_path;
     std::string names_path;

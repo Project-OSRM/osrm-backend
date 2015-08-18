@@ -42,6 +42,9 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "restrictions,r",
+        boost::program_options::value<boost::filesystem::path>(&extractor_config.restrictions_path),
+        "Restrictions file in .osrm.restrictions format")(
         "config,c", boost::program_options::value<boost::filesystem::path>(
                         &extractor_config.config_file_path)->default_value("extractor.ini"),
         "Path to a configuration file.");
@@ -120,6 +123,16 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
             SimpleLogger().Write() << visible_options;
             return return_code::exit;
         }
+
+        // TODO: Re-enable this
+        /*
+        if (!option_variables.count("restrictions"))
+        {
+            extractor_config.restrictions_path = extractor_config.input_path.string() + ".restrictions";
+        }
+        */
+
+
     }
     catch (std::exception &e)
     {
@@ -137,6 +150,12 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
     extractor_config.restriction_file_name = input_path.string();
     extractor_config.names_file_name = input_path.string();
     extractor_config.timestamp_file_name = input_path.string();
+    extractor_config.geometry_output_path = input_path.string();
+    extractor_config.edge_output_path = input_path.string();
+    extractor_config.edge_graph_output_path = input_path.string();
+    extractor_config.node_output_path = input_path.string();
+    extractor_config.rtree_nodes_output_path = input_path.string();
+    extractor_config.rtree_leafs_output_path = input_path.string();
     std::string::size_type pos = extractor_config.output_file_name.find(".osm.bz2");
     if (pos == std::string::npos)
     {
@@ -159,6 +178,14 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.restriction_file_name.append(".osrm.restrictions");
             extractor_config.names_file_name.append(".osrm.names");
             extractor_config.timestamp_file_name.append(".osrm.timestamp");
+
+            extractor_config.geometry_output_path.append(".osrm.geometry");
+            extractor_config.node_output_path.append(".osrm.nodes");
+            extractor_config.edge_output_path.append(".osrm.edges");
+            extractor_config.edge_graph_output_path.append(".osrm.ebg");
+
+            extractor_config.rtree_nodes_output_path.append(".osrm.ramIndex");
+            extractor_config.rtree_leafs_output_path.append(".osrm.fileIndex");
         }
         else
         {
@@ -166,6 +193,13 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.restriction_file_name.replace(pos, 5, ".osrm.restrictions");
             extractor_config.names_file_name.replace(pos, 5, ".osrm.names");
             extractor_config.timestamp_file_name.replace(pos, 5, ".osrm.timestamp");
+            extractor_config.geometry_output_path.replace(pos, 5, ".osrm.geometry");
+            extractor_config.node_output_path.replace(pos, 5, ".osrm.nodes");
+            extractor_config.edge_output_path.replace(pos, 5, ".osrm.edges");
+            extractor_config.edge_graph_output_path.replace(pos, 5, ".osrm.ebg");
+
+            extractor_config.rtree_nodes_output_path.replace(pos, 5, ".osrm.ramIndex");
+            extractor_config.rtree_leafs_output_path.replace(pos, 5, ".osrm.fileIndex");
         }
     }
     else
@@ -174,5 +208,11 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
         extractor_config.restriction_file_name.replace(pos, 8, ".osrm.restrictions");
         extractor_config.names_file_name.replace(pos, 8, ".osrm.names");
         extractor_config.timestamp_file_name.replace(pos, 8, ".osrm.timestamp");
+        extractor_config.geometry_output_path.replace(pos, 8, ".osrm.geometry");
+        extractor_config.node_output_path.replace(pos, 8, ".osrm.nodes");
+        extractor_config.edge_output_path.replace(pos, 8, ".osrm.edges");
+        extractor_config.edge_graph_output_path.replace(pos, 8, ".osrm.ebg");
+        extractor_config.rtree_nodes_output_path.replace(pos, 8, ".osrm.ramIndex");
+        extractor_config.rtree_leafs_output_path.replace(pos, 8, ".osrm.fileIndex");
     }
 }
