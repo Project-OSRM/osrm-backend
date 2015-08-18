@@ -105,15 +105,31 @@ int Prepare::Run()
 std::size_t Prepare::LoadEdgeExpandedGraph(
         std::string const &edge_based_graph_filename,
         unsigned &edges_crc32,
-        DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list) {
+        DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
+{
+    boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::in | std::ios::binary);
+    unsigned number_of_edges = 0;
+    size_t max_edge_id = SPECIAL_EDGEID;
+    input_stream.read((char *)&number_of_edges, sizeof(unsigned));
+    input_stream.read((char *)&max_edge_id, sizeof(size_t));
+    input_stream.read((char *)&edges_crc32, sizeof(unsigned));
 
-    // TODO TODO TODO - actually load the .ebg file here
-    return 0;
+    edge_based_edge_list.resize(number_of_edges);
+
+    // TODO: can we read this in bulk?  DeallocatingVector isn't necessarily
+    // all stored contiguously
+    for (;number_of_edges > 0; --number_of_edges) {
+        EdgeBasedEdge inbuffer;
+        input_stream.read((char *) &inbuffer, sizeof(EdgeBasedEdge));
+        edge_based_edge_list.emplace_back(std::move(inbuffer));
+    }
+
+    return max_edge_id;
 }
 
 std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
                                           const unsigned edges_crc32,
-                                          std::unique_ptr<DeallocatingVector<QueryEdge>> contracted_edge_list)
+                                          DeallocatingVector<QueryEdge> contracted_edge_list)
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());

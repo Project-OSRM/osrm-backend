@@ -69,7 +69,7 @@ class Prepare
     void WriteCoreNodeMarker(std::vector<bool> &&is_core_node) const;
     std::size_t WriteContractedGraph(unsigned number_of_edge_based_nodes,
                                      unsigned edges_crc32,
-                                     std::unique_ptr<DeallocatingVector<QueryEdge>> contracted_edge_list);
+                                     DeallocatingVector<QueryEdge> contracted_edge_list);
   private:
     ContractorConfig config;
     std::size_t LoadEdgeExpandedGraph(
