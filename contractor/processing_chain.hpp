@@ -51,8 +51,7 @@ class Prepare
     using InputEdge = DynamicGraph<EdgeData>::InputEdge;
     using StaticEdge = StaticGraph<EdgeData>::InputEdge;
 
-    explicit Prepare(const ContractorConfig& contractor_config)
-        : config(contractor_config) {}
+    explicit Prepare(ContractorConfig contractor_config) : config(std::move(contractor_config)) {}
     Prepare(const Prepare &) = delete;
     ~Prepare();
 

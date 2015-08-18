@@ -73,7 +73,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
     virtual ~MapMatchingPlugin() {}
 
-    const std::string GetDescriptor() const final { return descriptor_string; }
+    const std::string GetDescriptor() const final override { return descriptor_string; }
 
     TraceClassification
     classify(const float trace_length, const float matched_length, const int removed_points) const
@@ -211,7 +211,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     }
 
     int HandleRequest(const RouteParameters &route_parameters,
-                      osrm::json::Object &json_result) final
+                      osrm::json::Object &json_result) final override
     {
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))

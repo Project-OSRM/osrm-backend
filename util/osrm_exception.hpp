@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <exception>
 #include <string>
+#include <utility>
 
 namespace osrm
 {
@@ -37,14 +38,14 @@ class exception final : public std::exception
 {
   public:
     explicit exception(const char *message) : message(message) {}
-    explicit exception(const std::string &message) : message(message) {}
+    explicit exception(std::string message) : message(std::move(message)) {}
 
   private:
     // This function exists to 'anchor' the class, and stop the compiler from
     // copying vtable and RTTI info into every object file that includes
     // this header. (Caught by -Wweak-vtables under Clang.)
     virtual void anchor() const;
-    const char *what() const noexcept { return message.c_str(); }
+    const char *what() const noexcept override { return message.c_str(); }
     const std::string message;
 };
 }

@@ -243,7 +243,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     boost::program_options::notify(option_variables);
 
     // parse config file
-    ServerPaths::iterator path_iterator = paths.find("config");
+    auto path_iterator = paths.find("config");
     if (path_iterator != paths.end() && boost::filesystem::is_regular_file(path_iterator->second) &&
         !option_variables.count("base"))
     {
