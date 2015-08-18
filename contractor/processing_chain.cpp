@@ -540,10 +540,10 @@ Prepare::UpdateEdgesWithTrafficData(DeallocatingVector<EdgeBasedEdge> &edge_base
     {
         if (edge.traffic_segment_id != INVALID_TRAFFIC_SEGMENT && edge.original_length != INVALID_LENGTH)
         {
-            const std::string traffic_segment_name(name_lookup_lambda(edge.traffic_segment_id));
+            const std::string traffic_segment_code(name_lookup_lambda(edge.traffic_segment_id));
             // TODO: get original traffic_segment_code here from the edge.
-            SimpleLogger().Write() << "  Looking up " << traffic_segment_name;
-            const double new_speed = luabind::call_function<double>(lua, "traffic_segment_function", traffic_segment_name);
+            SimpleLogger().Write() << "  Looking up " << traffic_segment_code;
+            const double new_speed = luabind::call_function<double>(lua, "traffic_segment_function", traffic_segment_code);
             if (new_speed >= 0)
             {
                 SimpleLogger().Write() << "  New speed is " << new_speed;
