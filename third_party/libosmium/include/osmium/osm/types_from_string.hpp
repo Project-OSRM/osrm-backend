@@ -47,10 +47,11 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     inline object_id_type string_to_object_id(const char* input) {
+        using namespace std;
         assert(input);
         if (*input != '\0' && !std::isspace(*input)) {
             char* end;
-            auto id = std::strtoll(input, &end, 10);
+            auto id = strtoll(input, &end, 10);
             if (id != std::numeric_limits<long long>::min() && id != std::numeric_limits<long long>::max() && *end == '\0') {
                 return id;
             }
