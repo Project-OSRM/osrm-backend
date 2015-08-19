@@ -297,7 +297,6 @@ int extractor::run()
                                    *node_based_edge_list, 
                                    edge_based_edge_list);
 
-        auto number_of_node_based_nodes = graph_size.first;
         auto max_edge_id = graph_size.second;
 
         TIMER_STOP(expansion);

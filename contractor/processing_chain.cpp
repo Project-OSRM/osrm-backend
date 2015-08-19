@@ -75,8 +75,13 @@ int Prepare::Run()
     unsigned edges_crc32;
     DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
     size_t max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_filename, edges_crc32, edge_based_edge_list);
-    // Contracting the edge-expanded graph
 
+    TIMER_START(traffic);
+    UpdateEdgesWithTrafficData(config.speed_lookup_filename, edge_based_edge_list);
+    TIMER_STOP(traffic);
+    SimpleLogger().Write() << "Traffic lookups " << TIMER_SEC(traffic) << " sec";
+
+    // Contracting the edge-expanded graph
     TIMER_START(contraction);
     std::vector<bool> is_core_node;
     DeallocatingVector<QueryEdge> contracted_edge_list;
@@ -102,6 +107,53 @@ int Prepare::Run()
     return 0;
 }
 
+
+void Prepare::UpdateEdgesWithTrafficData(
+        std::string const& traffic_filename,
+        DeallocatingVector<EdgeBasedEdge> & edge_based_edge_list
+        )
+{
+    std::unordered_map<NodeID, unsigned> new_speeds;
+
+    boost::filesystem::ifstream input_stream(traffic_filename, std::ios::in | std::ios::binary);
+
+    // TODO:  Because there are typically fewer traffic data items than
+    //        edge-based-edges, it would be preferable to only iterate 
+    //        over the former. Unfortunately, the DeallocatingVector
+    //        that the edge-based-edges live in does not have a good lookup
+    //        function.  So instead, we'll iterate over all edge-based-edges,
+    //        and use an O(1) lookup of the traffic data to minimize the impact.
+    //        If the DeallocatingVector could have O(1) lookup, we could reduce
+    //        the amount of work here down to the number of traffic items
+    //        we import.
+    struct pair {
+        NodeID key;
+        unsigned value;
+    };
+    // Maximize data read from filesystem per read.  Optimum is usually between 
+    // 8kb and 64kb depending on type of disk.
+    pair buffer[2048];
+    std::streamsize num_read;
+    do {
+        num_read = input_stream.readsome((char *)buffer, sizeof(pair)*2048);
+        for (int i=0; i< num_read / sizeof(pair); i++) {
+            new_speeds.emplace(buffer[i].key,buffer[i].value);
+        }
+    } while (num_read > 0);
+
+    for (auto & edge : edge_based_edge_list) 
+    {
+        if (edge.traffic_segment_id != INVALID_TRAFFIC_SEGMENT && edge.original_length != INVALID_LENGTH)
+        {
+            auto new_speed = new_speeds.find(edge.edge_id);
+            if (new_speed != new_speeds.end()) {
+                edge.weight = (edge.original_length * 10.) / (new_speed->second / 3.6) + edge.added_penalties;
+            }
+        }
+    }
+    
+}
+
 std::size_t Prepare::LoadEdgeExpandedGraph(
         std::string const &edge_based_graph_filename,
         unsigned &edges_crc32,
@@ -112,7 +164,6 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
 
     const FingerPrint fingerprint_valid = FingerPrint::GetValid();
     FingerPrint fingerprint_loaded;
-    unsigned number_of_usable_restrictions = 0;
     input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
     fingerprint_loaded.TestPrepare(fingerprint_valid);
 

@@ -70,6 +70,11 @@ class Prepare
     std::size_t WriteContractedGraph(unsigned number_of_edge_based_nodes,
                                      unsigned edges_crc32,
                                      DeallocatingVector<QueryEdge> contracted_edge_list);
+    void UpdateEdgesWithTrafficData(
+            std::string const& traffic_filename,
+            DeallocatingVector<EdgeBasedEdge> & edge_based_edge_list
+        );
+
   private:
     ContractorConfig config;
     std::size_t LoadEdgeExpandedGraph(
