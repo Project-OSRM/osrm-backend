@@ -48,10 +48,10 @@ namespace osrm
 namespace tsp
 {
 
-void NearestNeighbourTSP(const std::vector<unsigned> & locations,
-                         const PhantomNodeArray & phantom_node_vector,
+void NearestNeighbourTSP(const std::vector<NodeID> & locations,
+                         const std::size_t number_of_locations,
                          const std::vector<EdgeWeight> & dist_table,
-                         std::vector<unsigned> & route) {
+                         std::vector<NodeID> & route) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
     // 1. grab a random location and mark as starting point
@@ -63,16 +63,15 @@ void NearestNeighbourTSP(const std::vector<unsigned> & locations,
     // 7. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    const auto number_of_locations = phantom_node_vector.size();
     const int component_size = locations.size();
-    int shortest_trip_distance = std::numeric_limits<int>::max();
+    int shortest_trip_distance = INVALID_EDGE_WEIGHT;
 
     // ALWAYS START AT ANOTHER STARTING POINT
     for(auto start_node : locations)
     {
         int curr_node = start_node;
 
-        std::vector<unsigned> curr_route;
+        std::vector<NodeID> curr_route;
         curr_route.reserve(component_size);
         curr_route.push_back(start_node);
 
@@ -84,7 +83,7 @@ void NearestNeighbourTSP(const std::vector<unsigned> & locations,
         int trip_dist = 0;
         for(int via_point = 1; via_point < component_size; ++via_point)
         {
-            int min_dist = std::numeric_limits<int>::max();
+            int min_dist = INVALID_EDGE_WEIGHT;
             int min_id = -1;
 
             // 2. FIND NEAREST NEIGHBOUR
@@ -109,9 +108,9 @@ void NearestNeighbourTSP(const std::vector<unsigned> & locations,
     }
 }
 
-void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
+void NearestNeighbourTSP(const std::size_t number_of_locations,
                          const std::vector<EdgeWeight> & dist_table,
-                         std::vector<unsigned> & route) {
+                         std::vector<NodeID> & route) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
     // 1. grab a random location and mark as starting point
@@ -123,15 +122,14 @@ void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
     // 7. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    const auto number_of_locations = phantom_node_vector.size();
-    int shortest_trip_distance = std::numeric_limits<int>::max();
+    int shortest_trip_distance = INVALID_EDGE_WEIGHT;
 
     // ALWAYS START AT ANOTHER STARTING POINT
     for(int start_node = 0; start_node < number_of_locations; ++start_node)
     {
         int curr_node = start_node;
 
-        std::vector<unsigned> curr_route;
+        std::vector<NodeID> curr_route;
         curr_route.reserve(number_of_locations);
         curr_route.push_back(start_node);
 
@@ -143,7 +141,7 @@ void NearestNeighbourTSP(const PhantomNodeArray & phantom_node_vector,
         int trip_dist = 0;
         for(int via_point = 1; via_point < number_of_locations; ++via_point)
         {
-            int min_dist = std::numeric_limits<int>::max();
+            int min_dist = INVALID_EDGE_WEIGHT;
             int min_id = -1;
 
             // 2. FIND NEAREST NEIGHBOUR

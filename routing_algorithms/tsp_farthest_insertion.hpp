@@ -52,9 +52,9 @@ namespace tsp
 void GetShortestRoundTrip(const int current_loc,
                          const std::vector<EdgeWeight> & dist_table,
                          const int number_of_locations,
-                         std::vector<unsigned> & current_trip,
+                         std::vector<NodeID> & current_trip,
                          int & min_trip_distance,
-                         std::vector<unsigned>::iterator & next_insert_point_candidate){
+                         std::vector<NodeID>::iterator & next_insert_point_candidate){
     // for all nodes in the current trip find the best insertion resulting in the shortest path
     // assert min 2 nodes in current_trip
     for (auto from_node = current_trip.begin(); from_node != std::prev(current_trip.end()); ++from_node) {
@@ -84,10 +84,10 @@ void GetShortestRoundTrip(const int current_loc,
 }
 
 // osrm::tsp::FarthestInsertionTSP(components[k], phantom_node_vector, *result_table, scc_route);
-void FarthestInsertionTSP(const std::vector<unsigned> & locations,
-                          const PhantomNodeArray & phantom_node_vector,
+void FarthestInsertionTSP(const std::vector<NodeID> & locations,
+                          const std::size_t number_of_locations,
                           const std::vector<EdgeWeight> & dist_table,
-                          std::vector<unsigned> & current_trip) {
+                          std::vector<NodeID> & current_trip) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
     // 1. start at a random round trip of 2 locations
@@ -96,7 +96,6 @@ void FarthestInsertionTSP(const std::vector<unsigned> & locations,
     // 4. repeat 2-3 until all locations are visited
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    const int number_of_locations = phantom_node_vector.size();
     const int size_of_component = locations.size();
     // tracks which nodes have been already visited
     std::vector<bool> visited(number_of_locations, false);
@@ -127,14 +126,14 @@ void FarthestInsertionTSP(const std::vector<unsigned> & locations,
         // SimpleLogger().Write() << j << "/" << size_of_component;
         auto farthest_distance = 0;
         auto next_node = -1;
-        std::vector<unsigned>::iterator next_insert_point;
+        std::vector<NodeID>::iterator next_insert_point;
 
         // find unvisited loc i that is the farthest away from all other visited locs
         for (auto i : locations) {
             // find the shortest distance from i to all visited nodes
             if (!visited[i]) {
-                auto min_trip_distance = std::numeric_limits<int>::max();
-                std::vector<unsigned>::iterator next_insert_point_candidate;
+                auto min_trip_distance = INVALID_EDGE_WEIGHT;
+                std::vector<NodeID>::iterator next_insert_point_candidate;
 
                 GetShortestRoundTrip(i, dist_table, number_of_locations, current_trip, min_trip_distance, next_insert_point_candidate);
 
@@ -154,9 +153,9 @@ void FarthestInsertionTSP(const std::vector<unsigned> & locations,
     }
 }
 
-void FarthestInsertionTSP(const PhantomNodeArray & phantom_node_vector,
+void FarthestInsertionTSP(const std::size_t number_of_locations,
                           const std::vector<EdgeWeight> & dist_table,
-                          std::vector<unsigned> & current_trip) {
+                          std::vector<NodeID> & current_trip) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
     // 1. start at a random round trip of 2 locations
@@ -166,7 +165,6 @@ void FarthestInsertionTSP(const PhantomNodeArray & phantom_node_vector,
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    const auto number_of_locations = phantom_node_vector.size();
     // tracks which nodes have been already visited
     std::vector<bool> visited(number_of_locations, false);
 
@@ -184,13 +182,13 @@ void FarthestInsertionTSP(const PhantomNodeArray & phantom_node_vector,
         auto farthest_distance = 0;
         auto next_node = -1;
         //todo move out of loop and overwrite
-        std::vector<unsigned>::iterator next_insert_point;
+        std::vector<NodeID>::iterator next_insert_point;
 
         // find unvisited loc i that is the farthest away from all other visited locs
         for (int i = 0; i < number_of_locations; ++i) {
             if (!visited[i]) {
-                auto min_trip_distance = std::numeric_limits<EdgeWeight>::max();
-                std::vector<unsigned>::iterator next_insert_point_candidate;
+                auto min_trip_distance = INVALID_EDGE_WEIGHT;
+                std::vector<NodeID>::iterator next_insert_point_candidate;
 
                 GetShortestRoundTrip(i, dist_table, number_of_locations, current_trip, min_trip_distance, next_insert_point_candidate);
 

@@ -54,11 +54,11 @@ namespace tsp
 template <typename number>
 int ReturnDistance(const std::vector<EdgeWeight> & dist_table,
                    const std::vector<number> & location_order,
-                   const int min_route_dist,
+                   const EdgeWeight min_route_dist,
                    const int number_of_locations) {
     int route_dist = 0;
     int i = 0;
-    while (i < location_order.size() - 1 && route_dist < min_route_dist) {
+    while (i < location_order.size() - 1) {
         route_dist += *(dist_table.begin() + (location_order[i] * number_of_locations) + location_order[i+1]);
         ++i;
     }
@@ -67,38 +67,36 @@ int ReturnDistance(const std::vector<EdgeWeight> & dist_table,
     return route_dist;
 }
 
-void BruteForceTSP(std::vector<unsigned> & component,
-                   const PhantomNodeArray & phantom_node_vector,
+void BruteForceTSP(std::vector<NodeID> & component,
+                   const std::size_t number_of_locations,
                    const std::vector<EdgeWeight> & dist_table,
-                   std::vector<unsigned> & route) {
+                   std::vector<NodeID> & route) {
 
-    const unsigned component_size = component.size();
-    unsigned min_route_dist = std::numeric_limits<unsigned>::max();
+    EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
 
     // check length of all possible permutation of the component ids
     do {
-        const auto new_distance = ReturnDistance(dist_table, component, min_route_dist, component_size);
-        if (new_distance < min_route_dist) {
+        const auto new_distance = ReturnDistance(dist_table, component, min_route_dist, number_of_locations);
+        if (new_distance <= min_route_dist) {
             min_route_dist = new_distance;
             route = component;
         }
     } while(std::next_permutation(component.begin(), component.end()));
 }
 
-void BruteForceTSP(const PhantomNodeArray & phantom_node_vector,
+void BruteForceTSP(const std::size_t number_of_locations,
                    const std::vector<EdgeWeight> & dist_table,
-                   std::vector<unsigned> & route) {
-    const auto number_of_locations = phantom_node_vector.size();
+                   std::vector<NodeID> & route) {
     // fill a vector with node ids
-    std::vector<unsigned> location_ids(number_of_locations);
+    std::vector<NodeID> location_ids(number_of_locations);
     std::iota(location_ids.begin(), location_ids.end(), 0);
 
-    unsigned min_route_dist = std::numeric_limits<unsigned>::max();
+    EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
     // check length of all possible permutation of the location ids
     do {
         const auto new_distance = ReturnDistance(dist_table, location_ids, min_route_dist, number_of_locations);
 
-        if (new_distance < min_route_dist) {
+        if (new_distance <= min_route_dist) {
             min_route_dist = new_distance;
             route = location_ids;
         }
