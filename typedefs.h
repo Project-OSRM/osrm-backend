@@ -49,6 +49,7 @@ static const EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();
 static const unsigned INVALID_NAMEID = std::numeric_limits<unsigned>::max();
 static const unsigned INVALID_COMPONENTID = std::numeric_limits<unsigned>::max();
 static const TrafficSegmentID INVALID_TRAFFIC_SEGMENT = std::numeric_limits<unsigned>::max();
+static const unsigned INVALID_COMPONENTID = std::numeric_limits<unsigned>::max();
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
 static const Metres INVALID_LENGTH = -1.0;
 
