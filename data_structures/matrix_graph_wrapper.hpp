@@ -42,13 +42,13 @@ public:
         return number_of_nodes_;
     }
 
-    std::vector<EdgeWeight> GetAdjacentEdgeRange(const NodeID node) const {
-        std::vector<EdgeWeight> edges;
-        auto neq_invalid_edge_weight = [](EdgeWeight e){return (e != INVALID_EDGE_WEIGHT);};
-        std::copy_if(std::begin(table_),
-                     std::end(table_),
-                     std::back_inserter(edges),
-                     neq_invalid_edge_weight);
+    std::vector<T> GetAdjacentEdgeRange(const NodeID node) const {
+        std::vector<T> edges;
+        for (auto i = 0; i < number_of_nodes_; ++i) {
+            if (*(std::begin(table_) + node * number_of_nodes_ + i) != INVALID_EDGE_WEIGHT) {
+                edges.push_back(i);
+            }
+        }
         return edges;
     }
 

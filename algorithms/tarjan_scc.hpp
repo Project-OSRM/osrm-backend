@@ -52,6 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <map>
 
 template <typename GraphT> class TarjanSCC
 {
@@ -192,6 +193,7 @@ template <typename GraphT> class TarjanSCC
                                          });
     }
 
+
     std::size_t get_number_of_components() const { return component_size_vector.size(); }
 
     std::size_t get_size_one_count() const { return size_one_counter; }
@@ -201,12 +203,9 @@ template <typename GraphT> class TarjanSCC
         return component_size_vector[component_id];
     }
 
-    unsigned get_component_size_by_id(const unsigned component_id) const
-    {
-        return component_size_vector[component_id];
-    }
-
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
+
+
 };
 
 #endif /* TARJAN_SCC_HPP */
