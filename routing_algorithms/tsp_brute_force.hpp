@@ -89,29 +89,6 @@ std::vector<NodeID> BruteForceTSP(std::vector<NodeID> & component,
     return route;
 }
 
-std::vector<NodeID> BruteForceTSP(const std::size_t number_of_locations,
-                                  const std::vector<EdgeWeight> & dist_table) {
-    std::vector<NodeID> route;
-    route.reserve(number_of_locations);
-
-    // fill a vector with node ids
-    std::vector<NodeID> location_ids(number_of_locations);
-    std::iota(location_ids.begin(), location_ids.end(), 0);
-
-    EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
-    // check length of all possible permutation of the location ids
-    do {
-        const auto new_distance = ReturnDistance(dist_table, location_ids, min_route_dist, number_of_locations);
-
-        if (new_distance <= min_route_dist) {
-            min_route_dist = new_distance;
-            route = location_ids;
-        }
-    } while(std::next_permutation(location_ids.begin(), location_ids.end()));
-
-    return route;
-}
-
-}
-}
+} //end namespace osrm
+} //end namespace tsp
 #endif // TSP_BRUTE_FORCE_HPP
