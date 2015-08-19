@@ -130,17 +130,16 @@ void Prepare::UpdateEdgesWithTrafficData(
         NodeID key;
         unsigned value;
     };
-    // Maximize data read from filesystem per read.  Optimum is usually between 
-    // 8kb and 64kb depending on type of disk.
-    pair buffer[2048];
-    std::streamsize num_read;
+    // TODO: read these in blocks of 8-64kb to maximize disk throughput
+    pair buffer;
+    unsigned lookupcount = 0;
     do {
-        num_read = input_stream.readsome((char *)buffer, sizeof(pair)*2048);
-        for (int i=0; i< num_read / sizeof(pair); i++) {
-            new_speeds.emplace(buffer[i].key,buffer[i].value);
-        }
-    } while (num_read > 0);
+        input_stream.read((char *)&buffer, sizeof(pair));
+        new_speeds.emplace(buffer.key,buffer.value);
+        ++lookupcount;
+    } while (input_stream.good());
 
+    unsigned updatecount = 0;
     for (auto & edge : edge_based_edge_list) 
     {
         if (edge.traffic_segment_id != INVALID_TRAFFIC_SEGMENT && edge.original_length != INVALID_LENGTH)
@@ -148,9 +147,11 @@ void Prepare::UpdateEdgesWithTrafficData(
             auto new_speed = new_speeds.find(edge.edge_id);
             if (new_speed != new_speeds.end()) {
                 edge.weight = (edge.original_length * 10.) / (new_speed->second / 3.6) + edge.added_penalties;
+                ++updatecount;
             }
         }
     }
+    SimpleLogger().Write() << "Found " << lookupcount << " speed values, updated " << updatecount << " of " << edge_based_edge_list.size() << " edges";
     
 }
 
