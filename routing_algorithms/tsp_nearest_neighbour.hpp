@@ -48,8 +48,9 @@ namespace osrm
 {
 namespace tsp
 {
-
-std::vector<NodeID> NearestNeighbourTSP(const std::vector<NodeID> & locations,
+template <typename NodeIDIterator>
+std::vector<NodeID> NearestNeighbourTSP(const NodeIDIterator & start,
+                                        const NodeIDIterator & end,
                                         const std::size_t number_of_locations,
                                         const DistTableWrapper<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,36 +66,36 @@ std::vector<NodeID> NearestNeighbourTSP(const std::vector<NodeID> & locations,
     std::vector<NodeID> route;
     route.reserve(number_of_locations);
 
-    const int component_size = locations.size();
-    int shortest_trip_distance = INVALID_EDGE_WEIGHT;
+    const auto component_size = std::distance(start, end);
+    auto shortest_trip_distance = INVALID_EDGE_WEIGHT;
 
     // ALWAYS START AT ANOTHER STARTING POINT
-    for(auto start_node : locations)
+    for(auto start_node = start; start_node != end; ++start_node)
     {
-        int curr_node = start_node;
+        NodeID curr_node = *start_node;
 
         std::vector<NodeID> curr_route;
         curr_route.reserve(component_size);
-        curr_route.push_back(start_node);
+        curr_route.push_back(*start_node);
 
         // visited[i] indicates whether node i was already visited by the salesman
         std::vector<bool> visited(number_of_locations, false);
-        visited[start_node] = true;
+        visited[*start_node] = true;
 
         // 3. REPEAT FOR EVERY UNVISITED NODE
-        int trip_dist = 0;
-        for(int via_point = 1; via_point < component_size; ++via_point)
+        EdgeWeight trip_dist = 0;
+        for(auto via_point = 1; via_point < component_size; ++via_point)
         {
-            int min_dist = INVALID_EDGE_WEIGHT;
-            int min_id = -1;
+            EdgeWeight min_dist = INVALID_EDGE_WEIGHT;
+            NodeID min_id = SPECIAL_NODEID;
 
             // 2. FIND NEAREST NEIGHBOUR
-            for (auto next : locations) {
-                auto curr_dist = dist_table(curr_node, next);
-                if(!visited[next] &&
+            for (auto next = start; next != end; ++next) {
+                auto curr_dist = dist_table(curr_node, *next);
+                if(!visited[*next] &&
                     curr_dist < min_dist) {
                     min_dist = curr_dist;
-                    min_id = next;
+                    min_id = *next;
                 }
             }
             visited[min_id] = true;
@@ -112,6 +113,6 @@ std::vector<NodeID> NearestNeighbourTSP(const std::vector<NodeID> & locations,
     return route;
 }
 
-}
-}
+} //end namespace tsp
+} //end namespace osrm
 #endif // TSP_NEAREST_NEIGHBOUR_HPP

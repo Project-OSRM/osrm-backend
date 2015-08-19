@@ -52,42 +52,44 @@ namespace osrm
 namespace tsp
 {
 
-template <typename number>
-int ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
-                   const std::vector<number> & location_order,
-                   const EdgeWeight min_route_dist,
-                   const std::size_t  number_of_locations) {
+EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
+                          const std::vector<NodeID> & location_order,
+                          const EdgeWeight min_route_dist,
+                          const std::size_t component_size) {
     EdgeWeight route_dist = 0;
-    int i = 0;
+    std::size_t i = 0;
     while (i < location_order.size()) {
-        route_dist += dist_table(location_order[i], location_order[(i+1) % number_of_locations]);
+        route_dist += dist_table(location_order[i], location_order[(i+1) % component_size]);
         ++i;
     }
     return route_dist;
 }
 
-std::vector<NodeID> BruteForceTSP(std::vector<NodeID> & component,
+template <typename NodeIDIterator>
+std::vector<NodeID> BruteForceTSP(const NodeIDIterator start,
+                                  const NodeIDIterator end,
                                   const std::size_t number_of_locations,
                                   const DistTableWrapper<EdgeWeight> & dist_table) {
+    const auto component_size = std::distance(start, end);
 
+    std::vector<NodeID> perm(start, end);
     std::vector<NodeID> route;
-    route.reserve(number_of_locations);
-
+    route.reserve(component_size);
 
     EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
 
     // check length of all possible permutation of the component ids
     do {
-        const auto new_distance = ReturnDistance(dist_table, component, min_route_dist, number_of_locations);
+        const auto new_distance = ReturnDistance(dist_table, perm, min_route_dist, component_size);
         if (new_distance <= min_route_dist) {
             min_route_dist = new_distance;
-            route = component;
+            route = perm;
         }
-    } while(std::next_permutation(std::begin(component), std::end(component)));
+    } while(std::next_permutation(std::begin(perm), std::end(perm)));
 
     return route;
 }
 
-} //end namespace osrm
 } //end namespace tsp
+} //end namespace osrm
 #endif // TSP_BRUTE_FORCE_HPP
