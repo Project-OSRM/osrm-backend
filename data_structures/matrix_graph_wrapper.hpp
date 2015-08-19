@@ -38,7 +38,7 @@ public:
 
     MatrixGraphWrapper(std::vector<T> table, const unsigned number_of_nodes) : table_(table), number_of_nodes_(number_of_nodes) {};
 
-    unsigned GetNumberOfNodes() {
+    unsigned GetNumberOfNodes() const {
         return number_of_nodes_;
     }
 
@@ -53,7 +53,7 @@ public:
         return edges;
     }
 
-    unsigned GetTarget(const unsigned edge) {
+    unsigned GetTarget(const unsigned edge) const {
         return edge;
     }
 

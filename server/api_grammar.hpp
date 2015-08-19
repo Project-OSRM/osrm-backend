@@ -99,7 +99,6 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
         hint, timestamp, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
         uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, stringforPolyline, tsp_algo;
-        uturns, old_API, num_results, matching_beta, gps_precision, classify, tsp_algo;
 
     HandlerT *handler;
 };

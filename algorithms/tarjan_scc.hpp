@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TINY_COMPONENTS_HPP
-#define TINY_COMPONENTS_HPP
+#ifndef TARJAN_SCC_HPP
+#define TARJAN_SCC_HPP
 
 #include "../typedefs.h"
 #include "../data_structures/deallocating_vector.hpp"
@@ -209,4 +209,4 @@ template <typename GraphT> class TarjanSCC
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
 };
 
-#endif /* TINY_COMPONENTS_HPP */
+#endif /* TARJAN_SCC_HPP */
