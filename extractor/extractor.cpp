@@ -49,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/static_rtree.hpp"
 #include "../data_structures/restriction_map.hpp"
 #include "../data_structures/compressed_edge_container.hpp"
+#include "../data_structures/range_table.hpp"
 
 #include "../algorithms/tarjan_scc.hpp"
 #include "../algorithms/crc32_processor.hpp"
@@ -294,7 +295,7 @@ int extractor::run()
         auto internal_to_external_node_map = osrm::make_unique<std::vector<QueryNode>>();
         auto graph_size =
             BuildEdgeExpandedGraph(*internal_to_external_node_map,
-                                   *node_based_edge_list, 
+                                   *node_based_edge_list,
                                    edge_based_edge_list);
 
         auto max_edge_id = graph_size.second;
@@ -315,6 +316,7 @@ int extractor::run()
 
         const unsigned edges_crc32 = CalculateEdgeChecksum(std::move(node_based_edge_list));
         WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edges_crc32, edge_based_edge_list);
+        WriteEdgeIDMapping(edge_based_edge_list);
 
     }
     catch (std::exception &e)
@@ -352,10 +354,64 @@ void extractor::BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_lis
                                config.rtree_leafs_output_path.c_str(), internal_to_external_node_map);
 }
 
-void extractor::WriteEdgeBasedGraph(std::string const &output_file_filename, 
-                                    size_t const max_edge_id, 
+void extractor::WriteEdgeIDMapping(DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list)
+{
+    SimpleLogger().Write() << "  Loading names for traffic lookup";
+    ShM<char, false>::vector m_names_char_list;
+    RangeTable<16, false> m_name_table;
+    boost::filesystem::ifstream name_stream(config.names_file_name, std::ios::binary);
+    name_stream >> m_name_table;
+    unsigned number_of_chars = 0;
+    name_stream.read((char *)&number_of_chars, sizeof(unsigned));
+    m_names_char_list.resize(number_of_chars + 1); //+1 gives sentinel element
+    name_stream.read((char *)&m_names_char_list[0], number_of_chars * sizeof(char));
+    name_stream.close();
+
+
+    auto name_lookup_lambda = [&m_name_table, &m_names_char_list](TrafficSegmentID &traffic_segment_id)
+    {
+        if (std::numeric_limits<unsigned>::max() == traffic_segment_id)
+        {
+            return std::string("");
+        }
+        auto range = m_name_table.GetRange(traffic_segment_id);
+
+        std::string result;
+        result.reserve(range.size());
+        if (range.begin() != range.end())
+        {
+            result.resize(range.back() - range.front() + 1);
+            std::copy(m_names_char_list.begin() + range.front(),
+                      m_names_char_list.begin() + range.back() + 1, result.begin());
+        }
+        return result;
+    };
+
+    try
+    {
+        boost::filesystem::ofstream id_mapping_out_stream(config.id_mapping_output_path, std::ios::out);
+
+        for (auto & edge : edge_based_edge_list)
+        {
+            if (edge.traffic_segment_id != INVALID_TRAFFIC_SEGMENT && edge.original_length != INVALID_LENGTH)
+            {
+                const std::string traffic_segment_code(name_lookup_lambda(edge.traffic_segment_id));
+                id_mapping_out_stream << edge.edge_id << "," << traffic_segment_code << "\n";
+            }
+        }
+
+        id_mapping_out_stream.close();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Caught Exception:" << e.what() << std::endl;
+    }
+}
+
+void extractor::WriteEdgeBasedGraph(std::string const &output_file_filename,
+                                    size_t const max_edge_id,
                                     const unsigned edges_crc32,
-                                    DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list) 
+                                    DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list)
 {
 
     try
@@ -392,7 +448,7 @@ void extractor::WriteEdgeBasedGraph(std::string const &output_file_filename,
     }
     catch (const std::exception &e)
     {
-        std::cerr << "Caught Execption:" << e.what() << std::endl;
+        std::cerr << "Caught Exception:" << e.what() << std::endl;
     }
 
 }
@@ -633,4 +689,3 @@ unsigned extractor::CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedN
 
     return crc32_value;
 }
-

@@ -54,6 +54,7 @@ struct ExtractorConfig
     std::string edge_output_path;
     std::string edge_graph_output_path;
     std::string node_output_path;
+    std::string id_mapping_output_path;
     std::string rtree_nodes_output_path;
     std::string rtree_leafs_output_path;
 

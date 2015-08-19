@@ -156,6 +156,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
     extractor_config.edge_output_path = input_path.string();
     extractor_config.edge_graph_output_path = input_path.string();
     extractor_config.node_output_path = input_path.string();
+    extractor_config.id_mapping_output_path = input_path.string();
     extractor_config.rtree_nodes_output_path = input_path.string();
     extractor_config.rtree_leafs_output_path = input_path.string();
     std::string::size_type pos = extractor_config.output_file_name.find(".osm.bz2");
@@ -185,6 +186,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.node_output_path.append(".osrm.nodes");
             extractor_config.edge_output_path.append(".osrm.edges");
             extractor_config.edge_graph_output_path.append(".osrm.ebg");
+            extractor_config.id_mapping_output_path.append(".osrm.idMapping");
 
             extractor_config.rtree_nodes_output_path.append(".osrm.ramIndex");
             extractor_config.rtree_leafs_output_path.append(".osrm.fileIndex");
@@ -197,6 +199,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.timestamp_file_name.replace(pos, 5, ".osrm.timestamp");
             extractor_config.geometry_output_path.replace(pos, 5, ".osrm.geometry");
             extractor_config.node_output_path.replace(pos, 5, ".osrm.nodes");
+            extractor_config.id_mapping_output_path.replace(pos, 5, ".osrm.idMapping");
             extractor_config.edge_output_path.replace(pos, 5, ".osrm.edges");
             extractor_config.edge_graph_output_path.replace(pos, 5, ".osrm.ebg");
 
@@ -212,6 +215,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
         extractor_config.timestamp_file_name.replace(pos, 8, ".osrm.timestamp");
         extractor_config.geometry_output_path.replace(pos, 8, ".osrm.geometry");
         extractor_config.node_output_path.replace(pos, 8, ".osrm.nodes");
+        extractor_config.id_mapping_output_path.replace(pos, 8, ".osrm.idMapping");
         extractor_config.edge_output_path.replace(pos, 8, ".osrm.edges");
         extractor_config.edge_graph_output_path.replace(pos, 8, ".osrm.ebg");
         extractor_config.rtree_nodes_output_path.replace(pos, 8, ".osrm.ramIndex");

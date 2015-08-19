@@ -47,6 +47,7 @@ private:
                                        std::vector<EdgeBasedNode> &node_based_edge_list,
                                        DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
     void WriteNodeMapping(std::unique_ptr<std::vector<QueryNode>> internal_to_external_node_map);
+    void WriteEdgeIDMapping(DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list);
     void FindComponents(unsigned max_edge_id, const DeallocatingVector<EdgeBasedEdge>& edges, std::vector<EdgeBasedNode>& nodes) const;
     void BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
                     const std::vector<QueryNode> &internal_to_external_node_map);
@@ -56,13 +57,13 @@ private:
                        std::unordered_set<NodeID> &traffic_lights,
                        std::vector<QueryNode>& internal_to_external_node_map);
 
-    void WriteEdgeBasedGraph(std::string const &output_file_filename, 
-                             size_t const max_edge_id, 
+    void WriteEdgeBasedGraph(std::string const &output_file_filename,
+                             size_t const max_edge_id,
                              const unsigned edges_crc32,
                              DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list);
 
 
- 
-   
+
+
 };
 #endif /* EXTRACTOR_HPP */
