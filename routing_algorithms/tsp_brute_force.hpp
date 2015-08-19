@@ -67,10 +67,13 @@ int ReturnDistance(const std::vector<EdgeWeight> & dist_table,
     return route_dist;
 }
 
-void BruteForceTSP(std::vector<NodeID> & component,
-                   const std::size_t number_of_locations,
-                   const std::vector<EdgeWeight> & dist_table,
-                   std::vector<NodeID> & route) {
+std::vector<NodeID> BruteForceTSP(std::vector<NodeID> & component,
+                                  const std::size_t number_of_locations,
+                                  const std::vector<EdgeWeight> & dist_table) {
+
+    std::vector<NodeID> route;
+    route.reserve(number_of_locations);
+
 
     EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
 
@@ -82,11 +85,15 @@ void BruteForceTSP(std::vector<NodeID> & component,
             route = component;
         }
     } while(std::next_permutation(component.begin(), component.end()));
+
+    return route;
 }
 
-void BruteForceTSP(const std::size_t number_of_locations,
-                   const std::vector<EdgeWeight> & dist_table,
-                   std::vector<NodeID> & route) {
+std::vector<NodeID> BruteForceTSP(const std::size_t number_of_locations,
+                                  const std::vector<EdgeWeight> & dist_table) {
+    std::vector<NodeID> route;
+    route.reserve(number_of_locations);
+
     // fill a vector with node ids
     std::vector<NodeID> location_ids(number_of_locations);
     std::iota(location_ids.begin(), location_ids.end(), 0);
@@ -101,6 +108,8 @@ void BruteForceTSP(const std::size_t number_of_locations,
             route = location_ids;
         }
     } while(std::next_permutation(location_ids.begin(), location_ids.end()));
+
+    return route;
 }
 
 }

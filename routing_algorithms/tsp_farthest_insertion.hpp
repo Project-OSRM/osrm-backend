@@ -52,12 +52,12 @@ namespace tsp
 void GetShortestRoundTrip(const int current_loc,
                          const std::vector<EdgeWeight> & dist_table,
                          const int number_of_locations,
-                         std::vector<NodeID> & current_trip,
+                         std::vector<NodeID> & route,
                          int & min_trip_distance,
                          std::vector<NodeID>::iterator & next_insert_point_candidate){
     // for all nodes in the current trip find the best insertion resulting in the shortest path
-    // assert min 2 nodes in current_trip
-    for (auto from_node = current_trip.begin(); from_node != std::prev(current_trip.end()); ++from_node) {
+    // assert min 2 nodes in route
+    for (auto from_node = route.begin(); from_node != std::prev(route.end()); ++from_node) {
         const auto to_node = std::next(from_node);
 
         const auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + current_loc);
@@ -71,8 +71,8 @@ void GetShortestRoundTrip(const int current_loc,
         }
     }
     // check insertion between last and first location too
-    auto from_node = std::prev(current_trip.end());
-    auto to_node = current_trip.begin();
+    auto from_node = std::prev(route.end());
+    auto to_node = route.begin();
 
     auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + current_loc);
     auto dist_to = *(dist_table.begin() + (current_loc * number_of_locations) + *to_node);
@@ -84,10 +84,9 @@ void GetShortestRoundTrip(const int current_loc,
 }
 
 // osrm::tsp::FarthestInsertionTSP(components[k], phantom_node_vector, *result_table, scc_route);
-void FarthestInsertionTSP(const std::vector<NodeID> & locations,
-                          const std::size_t number_of_locations,
-                          const std::vector<EdgeWeight> & dist_table,
-                          std::vector<NodeID> & current_trip) {
+std::vector<NodeID> FarthestInsertionTSP(const std::vector<NodeID> & locations,
+                                         const std::size_t number_of_locations,
+                                         const std::vector<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
     // 1. start at a random round trip of 2 locations
@@ -96,6 +95,10 @@ void FarthestInsertionTSP(const std::vector<NodeID> & locations,
     // 4. repeat 2-3 until all locations are visited
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::vector<NodeID> route;
+    route.reserve(number_of_locations);
+
     const int size_of_component = locations.size();
     // tracks which nodes have been already visited
     std::vector<bool> visited(number_of_locations, false);
@@ -118,8 +121,8 @@ void FarthestInsertionTSP(const std::vector<NodeID> & locations,
 
     visited[max_from] = true;
     visited[max_to] = true;
-    current_trip.push_back(max_from);
-    current_trip.push_back(max_to);
+    route.push_back(max_from);
+    route.push_back(max_to);
     // SimpleLogger().Write() << size_of_component;
     // add all other nodes missing (two nodes are already in the initial start trip)
     for (int j = 2; j < size_of_component; ++j) {
@@ -135,7 +138,7 @@ void FarthestInsertionTSP(const std::vector<NodeID> & locations,
                 auto min_trip_distance = INVALID_EDGE_WEIGHT;
                 std::vector<NodeID>::iterator next_insert_point_candidate;
 
-                GetShortestRoundTrip(i, dist_table, number_of_locations, current_trip, min_trip_distance, next_insert_point_candidate);
+                GetShortestRoundTrip(i, dist_table, number_of_locations, route, min_trip_distance, next_insert_point_candidate);
 
                 // add the location to the current trip such that it results in the shortest total tour
                 // SimpleLogger().Write() << "min_trip_distance " << min_trip_distance;
@@ -149,13 +152,13 @@ void FarthestInsertionTSP(const std::vector<NodeID> & locations,
         // SimpleLogger().Write() << "next node " << next_node;
         // mark as visited and insert node
         visited[next_node] = true;
-        current_trip.insert(next_insert_point, next_node);
+        route.insert(next_insert_point, next_node);
     }
+    return route;
 }
 
-void FarthestInsertionTSP(const std::size_t number_of_locations,
-                          const std::vector<EdgeWeight> & dist_table,
-                          std::vector<NodeID> & current_trip) {
+std::vector<NodeID> FarthestInsertionTSP(const std::size_t number_of_locations,
+                                         const std::vector<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
     // 1. start at a random round trip of 2 locations
@@ -164,6 +167,9 @@ void FarthestInsertionTSP(const std::size_t number_of_locations,
     // 4. repeat 2-3 until all locations are visited
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::vector<NodeID> route;
+    route.reserve(number_of_locations);
 
     // tracks which nodes have been already visited
     std::vector<bool> visited(number_of_locations, false);
@@ -174,8 +180,8 @@ void FarthestInsertionTSP(const std::size_t number_of_locations,
     const int max_to = index % number_of_locations;
     visited[max_from] = true;
     visited[max_to] = true;
-    current_trip.push_back(max_from);
-    current_trip.push_back(max_to);
+    route.push_back(max_from);
+    route.push_back(max_to);
 
     // add all other nodes missing (two nodes are already in the initial start trip)
     for (int j = 2; j < number_of_locations; ++j) {
@@ -190,7 +196,7 @@ void FarthestInsertionTSP(const std::size_t number_of_locations,
                 auto min_trip_distance = INVALID_EDGE_WEIGHT;
                 std::vector<NodeID>::iterator next_insert_point_candidate;
 
-                GetShortestRoundTrip(i, dist_table, number_of_locations, current_trip, min_trip_distance, next_insert_point_candidate);
+                GetShortestRoundTrip(i, dist_table, number_of_locations, route, min_trip_distance, next_insert_point_candidate);
 
                 // add the location to the current trip such that it results in the shortest total tour
                 if (min_trip_distance >= farthest_distance) {
@@ -203,8 +209,9 @@ void FarthestInsertionTSP(const std::size_t number_of_locations,
 
         // mark as visited and insert node
         visited[next_node] = true;
-        current_trip.insert(next_insert_point, next_node);
+        route.insert(next_insert_point, next_node);
     }
+    return route;
 }
 
 

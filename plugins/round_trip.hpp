@@ -221,24 +221,23 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             for(auto k = 0; k < components.size(); ++k) {
                 if (components[k].size() > 1) {
                     std::vector<NodeID> scc_route;
-                    scc_route.reserve(components[k].size());
 
                     // Compute the TSP with the given algorithm
                     if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
                         SimpleLogger().Write() << "Running brute force on multiple SCC";
-                        osrm::tsp::BruteForceTSP(components[k], number_of_locations, *result_table, scc_route);
+                        scc_route = osrm::tsp::BruteForceTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     } else if (route_parameters.tsp_algo == "NN") {
                         SimpleLogger().Write() << "Running nearest neighbour on multiple SCC";
-                        osrm::tsp::NearestNeighbourTSP(components[k], number_of_locations, *result_table, scc_route);
+                        scc_route = osrm::tsp::NearestNeighbourTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     } else if (route_parameters.tsp_algo == "FI") {
                         SimpleLogger().Write() << "Running farthest insertion on multiple SCC";
-                        osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table, scc_route);
+                        scc_route = osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     } else{
                         SimpleLogger().Write() << "Running farthest insertion on multiple SCC";
-                        osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table, scc_route);
+                        scc_route = osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     }
                 }
@@ -263,23 +262,22 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             SetDistanceOutput(dist, json_result);
         } else { //run TSP computation for all locations
             std::vector<NodeID> res_route;
-            res_route.reserve(number_of_locations);
 
             // Compute the TSP with the given algorithm
             TIMER_START(tsp);
             // TODO patrick nach userfreundlichkeit fragen, BF vs bf usw
             if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
                 SimpleLogger().Write() << "Running brute force";
-                osrm::tsp::BruteForceTSP(number_of_locations, *result_table, res_route);
+                res_route = osrm::tsp::BruteForceTSP(number_of_locations, *result_table);
             } else if (route_parameters.tsp_algo == "NN") {
                 SimpleLogger().Write() << "Running nearest neighbour";
-                osrm::tsp::NearestNeighbourTSP(number_of_locations, *result_table, res_route);
+                res_route = osrm::tsp::NearestNeighbourTSP(number_of_locations, *result_table);
             } else if (route_parameters.tsp_algo == "FI") {
                 SimpleLogger().Write() << "Running farthest insertion";
-                osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table, res_route);
+                res_route = osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table);
             } else {
                 SimpleLogger().Write() << "Running farthest insertion";
-                osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table, res_route);
+                res_route = osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table);
             }
             // TODO asserts numer of result blablabla size
             // TODO std::is_permutation

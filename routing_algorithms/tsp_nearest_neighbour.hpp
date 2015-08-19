@@ -48,10 +48,9 @@ namespace osrm
 namespace tsp
 {
 
-void NearestNeighbourTSP(const std::vector<NodeID> & locations,
-                         const std::size_t number_of_locations,
-                         const std::vector<EdgeWeight> & dist_table,
-                         std::vector<NodeID> & route) {
+std::vector<NodeID> NearestNeighbourTSP(const std::vector<NodeID> & locations,
+                                        const std::size_t number_of_locations,
+                                        const std::vector<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
     // 1. grab a random location and mark as starting point
@@ -62,6 +61,8 @@ void NearestNeighbourTSP(const std::vector<NodeID> & locations,
     // 6. repeat 1-5 with different starting points and choose iteration with shortest trip
     // 7. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
+    std::vector<NodeID> route;
+    route.reserve(number_of_locations);
 
     const int component_size = locations.size();
     int shortest_trip_distance = INVALID_EDGE_WEIGHT;
@@ -106,11 +107,11 @@ void NearestNeighbourTSP(const std::vector<NodeID> & locations,
             route = curr_route;
         }
     }
+    return route;
 }
 
-void NearestNeighbourTSP(const std::size_t number_of_locations,
-                         const std::vector<EdgeWeight> & dist_table,
-                         std::vector<NodeID> & route) {
+std::vector<NodeID> NearestNeighbourTSP(const std::size_t number_of_locations,
+                                        const std::vector<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
     // 1. grab a random location and mark as starting point
@@ -121,6 +122,9 @@ void NearestNeighbourTSP(const std::size_t number_of_locations,
     // 6. repeat 1-5 with different starting points and choose iteration with shortest trip
     // 7. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::vector<NodeID> route;
+    route.reserve(number_of_locations);
 
     int shortest_trip_distance = INVALID_EDGE_WEIGHT;
 
@@ -167,6 +171,7 @@ void NearestNeighbourTSP(const std::size_t number_of_locations,
             route = curr_route;
         }
     }
+    return route;
 }
 
 }
