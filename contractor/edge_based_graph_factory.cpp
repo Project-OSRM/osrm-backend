@@ -158,8 +158,11 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 forward_data.edge_id, reverse_data.edge_id,
                 current_edge_source_coordinate_id, current_edge_target_coordinate_id,
                 forward_data.name_id, forward_geometry[i].second,
-                reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
-                reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
+                reverse_geometry[geometry_size - 1 - i].second,
+                forward_weight_prefix_sum[i], reverse_weight_prefix_sum[i],
+                // TODO: Geometry compression needs to handle durations
+                forward_weight_prefix_sum[i], reverse_weight_prefix_sum[i],
+                m_compressed_edge_container.GetPositionForID(edge_id_1),
                 INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
@@ -202,7 +205,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
-            forward_data.name_id, forward_data.weight, reverse_data.weight, 0, 0, SPECIAL_EDGEID,
+            forward_data.name_id, forward_data.weight, reverse_data.weight,
+            forward_data.duration, reverse_data.duration,
+            0, 0, SPECIAL_EDGEID,
             INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
@@ -464,7 +469,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
 
                 m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
-                                  m_edge_based_edge_list.size(), weight, true, false);
+                                  m_edge_based_edge_list.size(), weight, duration, true, false);
             }
         }
     }

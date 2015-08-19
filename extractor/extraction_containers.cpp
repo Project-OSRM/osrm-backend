@@ -274,6 +274,10 @@ void ExtractionContainers::PrepareEdges()
                 case InternalExtractorEdge::WeightType::SPEED:
                     return (distance * 10.) / (data.speed / 3.6);
                     break;
+                case InternalExtractorEdge::WeightType::WEIGHT:
+                    std::cout << "Weight edge: " << (distance * 10.) / data.weight << std::endl;
+                    return (distance * 10.) / data.weight;
+                    break;
                 case InternalExtractorEdge::WeightType::INVALID:
                     osrm::exception("invalid weight type");
             }
@@ -282,6 +286,9 @@ void ExtractionContainers::PrepareEdges()
 
         auto& edge = edge_iterator->result;
         edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
+        if (edge_iterator->weight_data.type == InternalExtractorEdge::WeightType::WEIGHT) {
+            edge.duration = (distance * 10.) / (edge_iterator->weight_data.actual_speed / 3.6);
+        }
 
         // assign new node id
         auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);

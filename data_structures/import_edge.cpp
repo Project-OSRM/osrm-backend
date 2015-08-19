@@ -58,13 +58,14 @@ NodeBasedEdge::NodeBasedEdge(NodeID source,
                              NodeID target,
                              NodeID name_id,
                              EdgeWeight weight,
+                             EdgeWeight duration,
                              bool forward,
                              bool backward,
                              bool roundabout,
                              bool access_restricted,
                              TravelMode travel_mode,
                              bool is_split)
-    : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
+    : source(source), target(target), name_id(name_id), weight(weight), duration(duration), forward(forward),
       backward(backward), roundabout(roundabout),
       access_restricted(access_restricted), is_split(is_split), travel_mode(travel_mode)
 {
@@ -104,9 +105,10 @@ EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                              const NodeID target,
                              const NodeID edge_id,
                              const EdgeWeight weight,
+                             const EdgeWeight duration,
                              const bool forward,
                              const bool backward)
-    : source(source), target(target), edge_id(edge_id), weight(weight), forward(forward),
+    : source(source), target(target), edge_id(edge_id), weight(weight), duration(duration), forward(forward),
       backward(backward)
 {
 }

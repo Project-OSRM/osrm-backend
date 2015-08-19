@@ -40,6 +40,7 @@ struct NodeBasedEdge
                            NodeID target,
                            NodeID name_id,
                            EdgeWeight weight,
+                           EdgeWeight duration,
                            bool forward,
                            bool backward,
                            bool roundabout,
@@ -51,6 +52,7 @@ struct NodeBasedEdge
     NodeID target;
     NodeID name_id;
     EdgeWeight weight;
+    EdgeWeight duration;
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;
@@ -73,12 +75,14 @@ struct EdgeBasedEdge
                            const NodeID target,
                            const NodeID edge_id,
                            const EdgeWeight weight,
+                           const EdgeWeight duration,
                            const bool forward,
                            const bool backward);
     NodeID source;
     NodeID target;
     NodeID edge_id;
-    EdgeWeight weight : 30;
+    EdgeWeight weight;
+    EdgeWeight duration : 30;
     bool forward : 1;
     bool backward : 1;
 };

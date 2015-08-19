@@ -48,6 +48,8 @@ struct ExtractionWay
     {
         forward_speed = -1;
         backward_speed = -1;
+        forward_weight = -1;
+        backward_weight = -1;
         duration = -1;
         roundabout = false;
         is_access_restricted = false;
@@ -117,6 +119,8 @@ struct ExtractionWay
     double forward_speed;
     double backward_speed;
     double duration;
+    double forward_weight;
+    double backward_weight;
     std::string name;
     bool roundabout;
     bool is_access_restricted;

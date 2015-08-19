@@ -59,6 +59,8 @@ struct EdgeBasedNode
                            unsigned name_id,
                            int forward_weight,
                            int reverse_weight,
+                           int forward_duration,
+                           int reverse_duration,
                            int forward_offset,
                            int reverse_offset,
                            unsigned packed_geometry_id,
@@ -69,6 +71,7 @@ struct EdgeBasedNode
         : forward_edge_based_node_id(forward_edge_based_node_id),
           reverse_edge_based_node_id(reverse_edge_based_node_id), u(u), v(v), name_id(name_id),
           forward_weight(forward_weight), reverse_weight(reverse_weight),
+          forward_duration(forward_duration), reverse_duration(reverse_duration),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
           packed_geometry_id(packed_geometry_id), component_id(component_id),
           fwd_segment_position(fwd_segment_position), forward_travel_mode(forward_travel_mode),
@@ -99,6 +102,8 @@ struct EdgeBasedNode
     unsigned name_id;                  // id of the edge name
     int forward_weight;                // weight of the edge
     int reverse_weight;                // weight in the other direction (may be different)
+    int forward_duration;                // duration of the edge
+    int reverse_duration;                // duration in the other direction (may be different)
     int forward_offset;          // prefix sum of the weight up the edge TODO: short must suffice
     int reverse_offset;          // prefix sum of the weight from the edge TODO: short must suffice
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry

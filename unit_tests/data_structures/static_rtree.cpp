@@ -125,6 +125,8 @@ class LinearSearchNN
                                        e.name_id,
                                        e.forward_weight,
                                        e.reverse_weight,
+                                       e.forward_duration,
+                                       e.reverse_duration,
                                        e.forward_offset,
                                        e.reverse_offset,
                                        e.packed_geometry_id,

@@ -59,22 +59,24 @@ class Contractor
     struct ContractorEdgeData
     {
         ContractorEdgeData()
-            : weight(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
-              is_original_via_node_ID(false)
+            : weight(0), duration(0), id(0), originalEdges(0), shortcut(0),
+            forward(0), backward(0), is_original_via_node_ID(false)
         {
         }
         ContractorEdgeData(unsigned weight,
+                           unsigned duration,
                            unsigned original_edges,
                            unsigned id,
                            bool shortcut,
                            bool forward,
                            bool backward)
-            : weight(weight), id(id),
+            : weight(weight), duration(duration), id(id),
               originalEdges(std::min((unsigned)1 << 28, original_edges)), shortcut(shortcut),
               forward(forward), backward(backward), is_original_via_node_ID(false)
         {
         }
         unsigned weight;
+        unsigned duration;
         unsigned id;
         unsigned originalEdges : 28;
         bool shortcut : 1;
@@ -176,12 +178,15 @@ class Contractor
             }
 #endif
             edges.emplace_back(diter->source, diter->target,
-                               static_cast<unsigned int>(std::max(diter->weight, 1)), 1,
+                               diter->weight,
+                               static_cast<unsigned int>(std::max(diter->duration, 1)),
+                               1,
                                diter->edge_id, false, diter->forward ? true : false,
                                diter->backward ? true : false);
 
             edges.emplace_back(diter->target, diter->source,
-                               static_cast<unsigned int>(std::max(diter->weight, 1)), 1,
+                               diter->weight,
+                               static_cast<unsigned int>(std::max(diter->duration, 1)), 1,
                                diter->edge_id, false, diter->backward ? true : false,
                                diter->forward ? true : false);
         }
@@ -214,6 +219,8 @@ class Contractor
             forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
             forward_edge.data.weight = reverse_edge.data.weight =
                 std::numeric_limits<int>::max();
+            forward_edge.data.duration = reverse_edge.data.duration =
+                std::numeric_limits<int>::max();
             // remove parallel edges
             while (i < edges.size() && edges[i].source == source && edges[i].target == target)
             {
@@ -221,11 +228,15 @@ class Contractor
                 {
                     forward_edge.data.weight =
                         std::min(edges[i].data.weight, forward_edge.data.weight);
+                    forward_edge.data.duration =
+                        std::min(edges[i].data.duration, forward_edge.data.duration);
                 }
                 if (edges[i].data.backward)
                 {
                     reverse_edge.data.weight =
                         std::min(edges[i].data.weight, reverse_edge.data.weight);
+                    reverse_edge.data.duration =
+                        std::min(edges[i].data.duration, reverse_edge.data.duration);
                 }
                 ++i;
             }
@@ -601,6 +612,7 @@ class Contractor
                     BOOST_ASSERT_MSG(UINT_MAX != new_edge.source, "Source id invalid");
                     BOOST_ASSERT_MSG(UINT_MAX != new_edge.target, "Target id invalid");
                     new_edge.data.weight = data.weight;
+                    new_edge.data.duration = data.duration;
                     new_edge.data.shortcut = data.shortcut;
                     if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
@@ -784,6 +796,7 @@ class Contractor
                 }
                 const NodeID target = contractor_graph->GetTarget(out_edge);
                 const int path_weight = in_data.weight + out_data.weight;
+                const int path_duration = in_data.duration + out_data.duration;
                 const int weight = heap.GetKey(target);
                 if (path_weight < weight)
                 {
@@ -796,11 +809,11 @@ class Contractor
                     }
                     else
                     {
-                        inserted_edges.emplace_back(source, target, path_weight,
+                        inserted_edges.emplace_back(source, target, path_weight, path_duration,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node, true, true, false);
 
-                        inserted_edges.emplace_back(target, source, path_weight,
+                        inserted_edges.emplace_back(target, source, path_weight, path_duration,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node, true, false, true);
                     }

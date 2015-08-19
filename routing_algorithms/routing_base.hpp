@@ -236,7 +236,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
                     unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id), name_index,
-                                               turn_instruction, ed.weight, travel_mode);
+                                               turn_instruction, ed.duration, travel_mode);
                 }
                 else
                 {

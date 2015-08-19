@@ -128,6 +128,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
             // add weight of e2's to e1
             graph.GetEdgeData(forward_e1).weight += fwd_edge_data2.weight;
             graph.GetEdgeData(reverse_e1).weight += rev_edge_data2.weight;
+
+            graph.GetEdgeData(forward_e1).duration += fwd_edge_data2.duration;
+            graph.GetEdgeData(reverse_e1).duration += rev_edge_data2.duration;
+
             if (has_node_penalty)
             {
                 graph.GetEdgeData(forward_e1).weight +=
