@@ -57,7 +57,7 @@ private:
                        std::vector<QueryNode>& internal_to_external_node_map);
 
     void WriteEdgeBasedGraph(std::string const &output_file_filename, 
-                             size_t const& max_edge_id, 
+                             size_t const max_edge_id, 
                              const unsigned edges_crc32,
                              DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list);
 

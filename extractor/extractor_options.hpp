@@ -45,7 +45,6 @@ struct ExtractorConfig
     boost::filesystem::path config_file_path;
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;
-    boost::filesystem::path restrictions_path;
 
     std::string output_file_name;
     std::string restriction_file_name;

@@ -42,9 +42,11 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+         /*
         "restrictions,r",
         boost::program_options::value<boost::filesystem::path>(&extractor_config.restrictions_path),
         "Restrictions file in .osrm.restrictions format")(
+        */
         "config,c", boost::program_options::value<boost::filesystem::path>(
                         &extractor_config.config_file_path)->default_value("extractor.ini"),
         "Path to a configuration file.");

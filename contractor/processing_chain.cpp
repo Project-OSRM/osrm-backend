@@ -107,7 +107,15 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
         unsigned &edges_crc32,
         DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
 {
+    SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::in | std::ios::binary);
+
+    const FingerPrint fingerprint_valid = FingerPrint::GetValid();
+    FingerPrint fingerprint_loaded;
+    unsigned number_of_usable_restrictions = 0;
+    input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+    fingerprint_loaded.TestPrepare(fingerprint_valid);
+
     unsigned number_of_edges = 0;
     size_t max_edge_id = SPECIAL_EDGEID;
     input_stream.read((char *)&number_of_edges, sizeof(unsigned));
@@ -115,6 +123,7 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
     input_stream.read((char *)&edges_crc32, sizeof(unsigned));
 
     edge_based_edge_list.resize(number_of_edges);
+    SimpleLogger().Write() << "Reading " << number_of_edges << " edges from the edge based graph";
 
     // TODO: can we read this in bulk?  DeallocatingVector isn't necessarily
     // all stored contiguously
@@ -123,6 +132,7 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
         input_stream.read((char *) &inbuffer, sizeof(EdgeBasedEdge));
         edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
+    SimpleLogger().Write() << "Done reading edges";
 
     return max_edge_id;
 }

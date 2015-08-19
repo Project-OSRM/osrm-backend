@@ -269,6 +269,15 @@ int extractor::run()
                                << "./osrm-prepare " << config.output_file_name
                                << std::endl;
 
+    }
+    catch (std::exception &e)
+    {
+        SimpleLogger().Write(logWARNING) << e.what();
+        return 1;
+    }
+
+
+    try {
         // Transform the node-based graph that OSM is based on into an edge-based graph
         // that is better for routing.  Every edge becomes a node, and every valid
         // movement (e.g. turn from A->B, and B->A) becomes an edge
@@ -291,9 +300,6 @@ int extractor::run()
         auto number_of_node_based_nodes = graph_size.first;
         auto max_edge_id = graph_size.second;
 
-        const unsigned edges_crc32 = CalculateEdgeChecksum(std::move(node_based_edge_list));
-        WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edges_crc32, edge_based_edge_list);
-
         TIMER_STOP(expansion);
 
         SimpleLogger().Write() << "building r-tree ...";
@@ -307,6 +313,9 @@ int extractor::run()
 
         SimpleLogger().Write() << "writing node map ...";
         WriteNodeMapping(std::move(internal_to_external_node_map));
+
+        const unsigned edges_crc32 = CalculateEdgeChecksum(std::move(node_based_edge_list));
+        WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edges_crc32, edge_based_edge_list);
 
     }
     catch (std::exception &e)
@@ -345,7 +354,7 @@ void extractor::BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_lis
 }
 
 void extractor::WriteEdgeBasedGraph(std::string const &output_file_filename, 
-                                    size_t const& max_edge_id, 
+                                    size_t const max_edge_id, 
                                     const unsigned edges_crc32,
                                     DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list) 
 {
@@ -408,8 +417,10 @@ extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
 
+    SimpleLogger().Write() << "Loading restrictions...";
     auto restriction_map = LoadRestrictionMap();
     // TODO: This should already be in memory.....
+    SimpleLogger().Write() << "Loading NodeBasedGraph...";
     auto node_based_graph = LoadNodeBasedGraph(barrier_nodes, traffic_lights, internal_to_external_node_map);
 
 
@@ -524,6 +535,7 @@ extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
 void extractor::FindComponents(unsigned max_edge_id, const DeallocatingVector<EdgeBasedEdge>& input_edge_list,
                                std::vector<EdgeBasedNode>& input_nodes) const
 {
+
     struct UncontractedEdgeData { };
     struct InputEdge {
         unsigned source;
@@ -595,7 +607,7 @@ void extractor::FindComponents(unsigned max_edge_id, const DeallocatingVector<Ed
   */
 std::shared_ptr<RestrictionMap> extractor::LoadRestrictionMap()
 {
-    boost::filesystem::ifstream input_stream(config.restrictions_path, std::ios::in | std::ios::binary);
+    boost::filesystem::ifstream input_stream(config.restriction_file_name, std::ios::in | std::ios::binary);
 
     std::vector<TurnRestriction> restriction_list;
     loadRestrictionsFromFile(input_stream, restriction_list);
