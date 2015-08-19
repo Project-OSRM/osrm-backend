@@ -549,11 +549,18 @@ class Contractor
 
         if (remaining_nodes.size() > 2)
         {
+            // TODO: for small cores a sorted array of core ids might also work good
             for (const auto& node : remaining_nodes)
             {
                 auto orig_id = orig_node_id_from_new_node_id_map[node.id];
                 is_core_node[orig_id] = true;
             }
+        }
+        else
+        {
+            // in this case we don't need core markers since we fully contracted
+            // the graph
+            is_core_node.clear();
         }
 
         SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes " << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;

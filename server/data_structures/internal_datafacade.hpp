@@ -181,6 +181,12 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         std::vector<char> unpacked_core_markers(number_of_markers);
         core_stream.read((char *)unpacked_core_markers.data(), sizeof(char)*number_of_markers);
 
+        // in this case we have nothing to do
+        if (number_of_markers <= 0)
+        {
+            return;
+        }
+
         m_is_core_node.resize(number_of_markers);
         for (auto i = 0u; i < number_of_markers; ++i)
         {
@@ -494,7 +500,14 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     virtual bool IsCoreNode(const NodeID id) const override final
     {
-        return m_is_core_node[id];
+        if (m_is_core_node.size() > 0)
+        {
+            return m_is_core_node[id];
+        }
+        else
+        {
+            return false;
+        }
     }
 
     virtual void GetUncompressedGeometry(const unsigned id,

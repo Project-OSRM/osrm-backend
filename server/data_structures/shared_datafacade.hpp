@@ -194,6 +194,21 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         m_names_char_list.swap(names_char_list);
     }
 
+    void LoadCoreInformation()
+    {
+        if (data_layout->num_entries[SharedDataLayout::CORE_MARKER] <= 0)
+        {
+            return;
+        }
+
+        unsigned *core_marker_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, SharedDataLayout::CORE_MARKER);
+        typename ShM<bool, true>::vector is_core_node(
+            core_marker_ptr,
+            data_layout->num_entries[SharedDataLayout::CORE_MARKER]);
+        m_is_core_node.swap(is_core_node);
+    }
+
     void LoadGeometries()
     {
         unsigned *geometries_compressed_ptr = data_layout->GetBlockPtr<unsigned>(
@@ -269,6 +284,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             LoadTimestamp();
             LoadViaNodeList();
             LoadNames();
+            LoadCoreInformation();
 
             data_layout->PrintInformation();
 
@@ -450,7 +466,11 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     bool IsCoreNode(const NodeID id) const override final
     {
-        //return m_is_core_node[id];
+        if (m_is_core_node.size() > 0)
+        {
+            return m_is_core_node.at(id);
+        }
+
         return false;
     }
 
