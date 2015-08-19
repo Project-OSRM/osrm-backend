@@ -41,6 +41,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/item_type.hpp>
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/way.hpp>
@@ -48,8 +50,6 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/relations/detail/member_meta.hpp>
 
 namespace osmium {
-
-    struct invalid_location;
 
     namespace relations {
         class RelationMeta;
@@ -107,8 +107,8 @@ namespace osmium {
             }
 
             /**
-             * We are interested in all relations tagged with type=multipolygon or
-             * type=boundary.
+             * We are interested in all relations tagged with type=multipolygon
+             * or type=boundary.
              *
              * Overwritten from the base class.
              */
@@ -142,15 +142,22 @@ namespace osmium {
              * Overwritten from the base class.
              */
             void way_not_in_any_relation(const osmium::Way& way) {
-                if (way.nodes().size() > 3 && way.ends_have_same_location()) {
-                    // way is closed and has enough nodes, build simple multipolygon
-                    try {
+                // you need at least 4 nodes to make up a polygon
+                if (way.nodes().size() <= 3) {
+                    return;
+                }
+                try {
+                    if (!way.nodes().front().location() || !way.nodes().back().location()) {
+                        throw osmium::invalid_location("invalid location");
+                    }
+                    if (way.ends_have_same_location()) {
+                        // way is closed and has enough nodes, build simple multipolygon
                         TAssembler assembler(m_assembler_config);
                         assembler(way, m_output_buffer);
                         possibly_flush_output_buffer();
-                    } catch (osmium::invalid_location&) {
-                        // XXX ignore
                     }
+                } catch (osmium::invalid_location&) {
+                    // XXX ignore
                 }
             }
 

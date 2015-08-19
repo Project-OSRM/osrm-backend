@@ -34,11 +34,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cstddef>
-#include <new>
+#include <new> // IWYU pragma: keep
 #include <stdexcept>
 
-#include <osmium/index/detail/typed_mmap.hpp>
-#include <osmium/util/compatibility.hpp>
+#include <osmium/util/memory_mapping.hpp>
 
 namespace osmium {
 
@@ -48,39 +47,28 @@ namespace osmium {
 
         /**
          * This is a base class for implementing classes that look like
-         * STL vector but use mmap internally. This class can not be used
-         * on it's own. Use the derived classes mmap_vector_anon or
-         * mmap_vector_file.
+         * STL vector but use mmap internally. Do not use this class itself,
+         * use the derived classes mmap_vector_anon or mmap_vector_file.
          */
-        template <typename T, template <typename> class TDerived>
+        template <typename T>
         class mmap_vector_base {
 
         protected:
 
-            int m_fd;
-            size_t m_capacity;
             size_t m_size;
-            T* m_data;
-
-            explicit mmap_vector_base(int fd, size_t capacity, size_t size, T* data) noexcept :
-                m_fd(fd),
-                m_capacity(capacity),
-                m_size(size),
-                m_data(data) {
-            }
-
-            explicit mmap_vector_base(int fd, size_t capacity, size_t size) :
-                m_fd(fd),
-                m_capacity(capacity),
-                m_size(size),
-                m_data(osmium::detail::typed_mmap<T>::grow_and_map(capacity, m_fd)) {
-            }
-
-            void data(T* data) {
-                m_data = data;
-            }
+            osmium::util::TypedMemoryMapping<T> m_mapping;
 
         public:
+
+            explicit mmap_vector_base(int fd, size_t capacity, size_t size = 0) :
+                m_size(size),
+                m_mapping(capacity, osmium::util::MemoryMapping::mapping_mode::write_shared, fd) {
+            }
+
+            explicit mmap_vector_base(size_t capacity = mmap_vector_size_increment) :
+                m_size(0),
+                m_mapping(capacity) {
+            }
 
             typedef T value_type;
             typedef T& reference;
@@ -90,12 +78,14 @@ namespace osmium {
             typedef T* iterator;
             typedef const T* const_iterator;
 
-            ~mmap_vector_base() {
-                osmium::detail::typed_mmap<T>::unmap(m_data, m_capacity);
+            ~mmap_vector_base() = default;
+
+            void close() {
+                m_mapping.unmap();
             }
 
             size_t capacity() const noexcept {
-                return m_capacity;
+                return m_mapping.size();
             }
 
             size_t size() const noexcept {
@@ -106,23 +96,23 @@ namespace osmium {
                 return m_size == 0;
             }
 
-            const T* data() const noexcept {
-                return m_data;
+            const T* data() const {
+                return m_mapping.begin();
             }
 
-            T* data() noexcept {
-                return m_data;
+            T* data() {
+                return m_mapping.begin();
             }
 
             T& operator[](size_t n) {
-                return m_data[n];
+                return data()[n];
             }
 
             T at(size_t n) const {
                 if (n >= m_size) {
                     throw std::out_of_range("out of range");
                 }
-                return m_data[n];
+                return data()[n];
             }
 
             void clear() noexcept {
@@ -134,16 +124,22 @@ namespace osmium {
             }
 
             void push_back(const T& value) {
-                if (m_size >= m_capacity) {
+                if (m_size >= capacity()) {
                     resize(m_size+1);
                 }
-                m_data[m_size] = value;
+                data()[m_size] = value;
                 ++m_size;
+            }
+
+            void reserve(size_t new_capacity) {
+                if (new_capacity > capacity()) {
+                    m_mapping.resize(new_capacity);
+                }
             }
 
             void resize(size_t new_size) {
                 if (new_size > capacity()) {
-                    static_cast<TDerived<T>*>(this)->reserve(new_size + osmium::detail::mmap_vector_size_increment);
+                    reserve(new_size + osmium::detail::mmap_vector_size_increment);
                 }
                 if (new_size > size()) {
                     new (data() + size()) T[new_size - size()];
@@ -152,27 +148,27 @@ namespace osmium {
             }
 
             iterator begin() noexcept {
-                return m_data;
+                return data();
             }
 
             iterator end() noexcept {
-                return m_data + m_size;
+                return data() + m_size;
             }
 
             const_iterator begin() const noexcept {
-                return m_data;
+                return data();
             }
 
             const_iterator end() const noexcept {
-                return m_data + m_size;
+                return data() + m_size;
             }
 
-            const_iterator cbegin() noexcept {
-                return m_data;
+            const_iterator cbegin() const noexcept {
+                return data();
             }
 
-            const_iterator cend() noexcept {
-                return m_data + m_size;
+            const_iterator cend() const noexcept {
+                return data() + m_size;
             }
 
         }; // class mmap_vector_base

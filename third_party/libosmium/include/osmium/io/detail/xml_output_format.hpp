@@ -85,6 +85,9 @@ namespace osmium {
                             case '\'': out += "&apos;"; break;
                             case '<':  out += "&lt;";   break;
                             case '>':  out += "&gt;";   break;
+                            case '\n': out += "&#xA;";  break;
+                            case '\r': out += "&#xD;";  break;
+                            case '\t': out += "&#x9;";  break;
                             default:   out += *in;      break;
                         }
                     }
@@ -126,6 +129,7 @@ namespace osmium {
 
                 operation m_last_op {operation::op_none};
 
+                const bool m_add_metadata;
                 const bool m_write_visible_flag;
                 const bool m_write_change_ops;
 
@@ -146,31 +150,33 @@ namespace osmium {
                 void write_meta(const osmium::OSMObject& object) {
                     oprintf(*m_out, " id=\"%" PRId64 "\"", object.id());
 
-                    if (object.version()) {
-                        oprintf(*m_out, " version=\"%d\"", object.version());
-                    }
+                    if (m_add_metadata) {
+                        if (object.version()) {
+                            oprintf(*m_out, " version=\"%d\"", object.version());
+                        }
 
-                    if (object.timestamp()) {
-                        *m_out += " timestamp=\"";
-                        *m_out += object.timestamp().to_iso();
-                        *m_out += "\"";
-                    }
+                        if (object.timestamp()) {
+                            *m_out += " timestamp=\"";
+                            *m_out += object.timestamp().to_iso();
+                            *m_out += "\"";
+                        }
 
-                    if (!object.user_is_anonymous()) {
-                        oprintf(*m_out, " uid=\"%d\" user=\"", object.uid());
-                        xml_string(*m_out, object.user());
-                        *m_out += "\"";
-                    }
+                        if (!object.user_is_anonymous()) {
+                            oprintf(*m_out, " uid=\"%d\" user=\"", object.uid());
+                            xml_string(*m_out, object.user());
+                            *m_out += "\"";
+                        }
 
-                    if (object.changeset()) {
-                        oprintf(*m_out, " changeset=\"%d\"", object.changeset());
-                    }
+                        if (object.changeset()) {
+                            oprintf(*m_out, " changeset=\"%d\"", object.changeset());
+                        }
 
-                    if (m_write_visible_flag) {
-                        if (object.visible()) {
-                            *m_out += " visible=\"true\"";
-                        } else {
-                            *m_out += " visible=\"false\"";
+                        if (m_write_visible_flag) {
+                            if (object.visible()) {
+                                *m_out += " visible=\"true\"";
+                            } else {
+                                *m_out += " visible=\"false\"";
+                            }
                         }
                     }
                 }
@@ -224,9 +230,10 @@ namespace osmium {
 
             public:
 
-                explicit XMLOutputBlock(osmium::memory::Buffer&& buffer, bool write_visible_flag, bool write_change_ops) :
+                explicit XMLOutputBlock(osmium::memory::Buffer&& buffer, bool add_metadata, bool write_visible_flag, bool write_change_ops) :
                     m_input_buffer(std::make_shared<osmium::memory::Buffer>(std::move(buffer))),
                     m_out(std::make_shared<std::string>()),
+                    m_add_metadata(add_metadata),
                     m_write_visible_flag(write_visible_flag && !write_change_ops),
                     m_write_change_ops(write_change_ops) {
                 }
@@ -392,12 +399,14 @@ namespace osmium {
 
             class XMLOutputFormat : public osmium::io::detail::OutputFormat, public osmium::handler::Handler {
 
+                bool m_add_metadata;
                 bool m_write_visible_flag;
 
             public:
 
                 XMLOutputFormat(const osmium::io::File& file, data_queue_type& output_queue) :
                     OutputFormat(file, output_queue),
+                    m_add_metadata(file.get("add_metadata") != "false"),
                     m_write_visible_flag(file.has_multiple_object_versions() || m_file.is_true("force_visible_flag")) {
                 }
 
@@ -408,7 +417,7 @@ namespace osmium {
                 }
 
                 void write_buffer(osmium::memory::Buffer&& buffer) override final {
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(XMLOutputBlock{std::move(buffer), m_write_visible_flag, m_file.is_true("xml_change_format")}));
+                    m_output_queue.push(osmium::thread::Pool::instance().submit(XMLOutputBlock{std::move(buffer), m_add_metadata, m_write_visible_flag, m_file.is_true("xml_change_format")}));
                 }
 
                 void write_header(const osmium::io::Header& header) override final {
@@ -468,10 +477,15 @@ namespace osmium {
 
             namespace {
 
+// we want the register_output_format() function to run, setting the variable
+// is only a side-effect, it will never be used
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
                 const bool registered_xml_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::xml,
                     [](const osmium::io::File& file, data_queue_type& output_queue) {
                         return new osmium::io::detail::XMLOutputFormat(file, output_queue);
                 });
+#pragma GCC diagnostic pop
 
             } // anonymous namespace
 

@@ -58,7 +58,7 @@ namespace osmium {
 
         /**
          * Wait until the given future becomes ready. Will block if the future
-         * is not ready. Can be called more than once unless future.get().
+         * is not ready. Can be called more than once unlike future.get().
          */
         template <class T>
         inline void wait_until_done(std::future<T>& future) {

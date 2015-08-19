@@ -234,8 +234,6 @@ int main(int argc, char* argv[]) {
     osmium::apply(reader, location_handler, ogr_handler);
     reader.close();
 
-    google::protobuf::ShutdownProtobufLibrary();
-
     int locations_fd = open("locations.dump", O_WRONLY | O_CREAT, 0644);
     if (locations_fd < 0) {
         throw std::system_error(errno, std::system_category(), "Open failed");

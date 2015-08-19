@@ -110,15 +110,11 @@ endif()
 #----------------------------------------------------------------------
 # Component 'pbf'
 if(Osmium_USE_PBF)
-    find_package(OSMPBF)
-    find_package(Protobuf)
     find_package(ZLIB)
     find_package(Threads)
 
-    if(OSMPBF_FOUND AND PROTOBUF_FOUND AND ZLIB_FOUND AND Threads_FOUND)
+    if(ZLIB_FOUND AND Threads_FOUND)
         list(APPEND OSMIUM_PBF_LIBRARIES
-            ${OSMPBF_LIBRARIES}
-            ${PROTOBUF_LITE_LIBRARY}
             ${ZLIB_LIBRARIES}
             ${CMAKE_THREAD_LIBS_INIT}
         )
@@ -126,8 +122,6 @@ if(Osmium_USE_PBF)
             list(APPEND OSMIUM_PBF_LIBRARIES ws2_32)
         endif()
         list(APPEND OSMIUM_INCLUDE_DIRS
-            ${OSMPBF_INCLUDE_DIRS}
-            ${PROTOBUF_INCLUDE_DIR}
             ${ZLIB_INCLUDE_DIR}
         )
     else()
@@ -325,7 +319,7 @@ endif()
 if(MSVC)
     set(OSMIUM_WARNING_OPTIONS "/W3 /wd4514" CACHE STRING "Recommended warning options for libosmium")
 else()
-    set(OSMIUM_WARNING_OPTIONS "-Wall -Wextra -pedantic -Wredundant-decls -Wdisabled-optimization -Wctor-dtor-privacy -Wnon-virtual-dtor -Woverloaded-virtual -Wsign-promo -Wold-style-cast -Wno-return-type" CACHE STRING "Recommended warning options for libosmium")
+    set(OSMIUM_WARNING_OPTIONS "-Wall -Wextra -pedantic -Wredundant-decls -Wdisabled-optimization -Wctor-dtor-privacy -Wnon-virtual-dtor -Woverloaded-virtual -Wsign-promo -Wold-style-cast" CACHE STRING "Recommended warning options for libosmium")
 endif()
 
 set(OSMIUM_DRACONIC_CLANG_OPTIONS "-Wdocumentation -Wunused-exception-parameter -Wmissing-declarations -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-macros -Wno-exit-time-destructors -Wno-global-constructors -Wno-padded -Wno-switch-enum -Wno-missing-prototypes -Wno-weak-vtables -Wno-cast-align -Wno-float-equal")

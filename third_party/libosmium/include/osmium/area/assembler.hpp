@@ -171,7 +171,7 @@ namespace osmium {
             }
 
             void add_tags_to_area(osmium::builder::AreaBuilder& builder, const osmium::Relation& relation) const {
-                auto count = std::count_if(relation.tags().begin(), relation.tags().end(), filter());
+                const auto count = std::count_if(relation.tags().begin(), relation.tags().end(), filter());
 
                 if (debug()) {
                     std::cerr << "  found " << count << " tags on relation (without ignored ones)\n";
@@ -331,7 +331,7 @@ namespace osmium {
                 if (debug()) {
                     std::cerr << "      has_closed_subring_back()\n";
                 }
-                auto end = ring.segments().end();
+                const auto end = ring.segments().end();
                 for (auto it = ring.segments().begin() + 1; it != end - 1; ++it) {
                     if (has_same_location(nr, it->first())) {
                         split_off_subring(ring, it, it, end);
@@ -348,7 +348,7 @@ namespace osmium {
                 if (debug()) {
                     std::cerr << "      has_closed_subring_front()\n";
                 }
-                auto end = ring.segments().end();
+                const auto end = ring.segments().end();
                 for (auto it = ring.segments().begin() + 1; it != end - 1; ++it) {
                     if (has_same_location(nr, it->second())) {
                         split_off_subring(ring, it, ring.segments().begin(), it+1);
@@ -366,22 +366,22 @@ namespace osmium {
                 osmium::area::detail::ProtoRing::segments_type segments(ring.segments().size());
                 std::copy(ring.segments().begin(), ring.segments().end(), segments.begin());
                 std::sort(segments.begin(), segments.end());
-                auto it = std::adjacent_find(segments.begin(), segments.end(), [this](const osmium::area::detail::NodeRefSegment& s1, const osmium::area::detail::NodeRefSegment& s2) {
+                const auto it = std::adjacent_find(segments.begin(), segments.end(), [this](const osmium::area::detail::NodeRefSegment& s1, const osmium::area::detail::NodeRefSegment& s2) {
                     return has_same_location(s1.first(), s2.first());
                 });
                 if (it == segments.end()) {
                     return false;
                 }
-                auto r1 = std::find_first_of(ring.segments().begin(), ring.segments().end(), it, it+1);
+                const auto r1 = std::find_first_of(ring.segments().begin(), ring.segments().end(), it, it+1);
                 assert(r1 != ring.segments().end());
-                auto r2 = std::find_first_of(ring.segments().begin(), ring.segments().end(), it+1, it+2);
+                const auto r2 = std::find_first_of(ring.segments().begin(), ring.segments().end(), it+1, it+2);
                 assert(r2 != ring.segments().end());
 
                 if (debug()) {
                     std::cerr << "      found subring in ring " << ring << " at " << it->first() << "\n";
                 }
 
-                auto m = std::minmax(r1, r2);
+                const auto m = std::minmax(r1, r2);
 
                 ProtoRing new_ring(m.first, m.second);
                 ring.remove_segments(m.first, m.second);
@@ -537,7 +537,7 @@ namespace osmium {
                 }
 
                 for (const auto ringptr : m_outer_rings) {
-                    for (const auto segment : ringptr->segments()) {
+                    for (const auto& segment : ringptr->segments()) {
                         if (!segment.role_outer()) {
                             ++m_inner_outer_mismatches;
                             if (debug()) {
@@ -550,7 +550,7 @@ namespace osmium {
                     }
                 }
                 for (const auto ringptr : m_inner_rings) {
-                    for (const auto segment : ringptr->segments()) {
+                    for (const auto& segment : ringptr->segments()) {
                         if (!segment.role_inner()) {
                             ++m_inner_outer_mismatches;
                             if (debug()) {

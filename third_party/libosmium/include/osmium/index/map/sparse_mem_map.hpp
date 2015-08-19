@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
+#include <algorithm> // IWYU pragma: keep (for std::copy)
 #include <cstddef>
 #include <iterator>
 #include <map>
