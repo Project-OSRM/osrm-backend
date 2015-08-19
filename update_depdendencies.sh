@@ -16,6 +16,6 @@ read -p "Looks good? (Y/n) " ok
 
 if [[ $ok =~ [yY] ]]
 then
-  echo git subtree pull -P third_party/libosmium/ $OSMIUM_REPO $OSMIUM_TAG --squash
-  echo git subtree pull -P third_party/variant/ $VARIANT_REPO $VARIANT_TAG --squash
+  git subtree pull -P third_party/libosmium/ $OSMIUM_REPO $OSMIUM_TAG --squash
+  git subtree pull -P third_party/variant/ $VARIANT_REPO $VARIANT_TAG --squash
 fi
