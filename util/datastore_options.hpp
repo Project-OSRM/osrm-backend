@@ -146,7 +146,7 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
     }
 
     // parse config file
-    ServerPaths::iterator path_iterator = paths.find("config");
+    auto path_iterator = paths.find("config");
     if (path_iterator != paths.end() && boost::filesystem::is_regular_file(path_iterator->second) &&
         !option_variables.count("base"))
     {

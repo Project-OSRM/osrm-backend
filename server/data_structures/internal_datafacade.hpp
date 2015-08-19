@@ -264,7 +264,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             throw osrm::exception("no names file given in ini file");
         }
 
-        ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
+        auto paths_iterator = server_paths.find("hsgrdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path &hsgr_path = paths_iterator->second;
         paths_iterator = server_paths.find("timestamp");

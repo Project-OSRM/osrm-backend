@@ -8,8 +8,8 @@
 
 #include "../util/simple_logger.hpp"
 
-GraphCompressor::GraphCompressor(const SpeedProfileProperties& speed_profile)
-    : speed_profile(speed_profile)
+GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
+    : speed_profile(std::move(speed_profile))
 {
 }
 

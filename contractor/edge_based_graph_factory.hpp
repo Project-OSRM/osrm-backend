@@ -58,14 +58,13 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory() = delete;
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
 
-
     explicit EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
-                                   const CompressedEdgeContainer& compressed_edge_container,
-                                   const std::unordered_set<NodeID>& barrier_nodes,
-                                   const std::unordered_set<NodeID>& traffic_lights,
+                                   const CompressedEdgeContainer &compressed_edge_container,
+                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const std::unordered_set<NodeID> &traffic_lights,
                                    std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<QueryNode> &node_info_list,
-                                   const SpeedProfileProperties &speed_profile);
+                                   SpeedProfileProperties speed_profile);
 
     void Run(const std::string &original_edge_data_filename,
              lua_State *lua_state);

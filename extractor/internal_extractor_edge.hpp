@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 
 #include <osrm/coordinate.hpp>
+#include <utility>
 
 struct InternalExtractorEdge
 {
@@ -68,18 +69,26 @@ struct InternalExtractorEdge
     }
 
     explicit InternalExtractorEdge(NodeID source,
-                           NodeID target,
-                           NodeID name_id,
-                           const WeightData& weight_data,
-                           bool forward,
-                           bool backward,
-                           bool roundabout,
-                           bool access_restricted,
-                           TravelMode travel_mode,
-                           bool is_split)
-        : result(source, target, name_id, 0, forward, backward, roundabout,
-                 access_restricted, travel_mode, is_split),
-          weight_data(weight_data)
+                                   NodeID target,
+                                   NodeID name_id,
+                                   WeightData weight_data,
+                                   bool forward,
+                                   bool backward,
+                                   bool roundabout,
+                                   bool access_restricted,
+                                   TravelMode travel_mode,
+                                   bool is_split)
+        : result(source,
+                 target,
+                 name_id,
+                 0,
+                 forward,
+                 backward,
+                 roundabout,
+                 access_restricted,
+                 travel_mode,
+                 is_split),
+          weight_data(std::move(weight_data))
     {
     }
 

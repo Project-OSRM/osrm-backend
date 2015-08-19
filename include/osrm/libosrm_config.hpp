@@ -39,8 +39,11 @@ struct libosrm_config
     {
     }
 
-    libosrm_config(const ServerPaths &paths, const bool sharedmemory_flag, const int max_table, const int max_matching)
-        : server_paths(paths), max_locations_distance_table(max_table),
+    libosrm_config(ServerPaths paths,
+                   const bool sharedmemory_flag,
+                   const int max_table,
+                   const int max_matching)
+        : server_paths(std::move(paths)), max_locations_distance_table(max_table),
           max_locations_map_matching(max_matching), use_shared_memory(sharedmemory_flag)
     {
     }
