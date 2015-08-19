@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 
 #include <vector>
+#include <utility>
 
 struct NormalDistribution
 {
@@ -80,11 +81,11 @@ class BayesClassifier
     };
     using ClassificationT = std::pair<ClassLabel, double>;
 
-    BayesClassifier(const PositiveDistributionT &positive_distribution,
-                    const NegativeDistributionT &negative_distribution,
+    BayesClassifier(PositiveDistributionT positive_distribution,
+                    NegativeDistributionT negative_distribution,
                     const double positive_apriori_probability)
-        : positive_distribution(positive_distribution),
-          negative_distribution(negative_distribution),
+        : positive_distribution(std::move(positive_distribution)),
+          negative_distribution(std::move(negative_distribution)),
           positive_apriori_probability(positive_apriori_probability),
           negative_apriori_probability(1. - positive_apriori_probability)
     {

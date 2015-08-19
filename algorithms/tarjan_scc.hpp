@@ -25,17 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TINY_COMPONENTS_HPP
-#define TINY_COMPONENTS_HPP
+#ifndef TARJAN_SCC_HPP
+#define TARJAN_SCC_HPP
 
 #include "../typedefs.h"
 #include "../data_structures/deallocating_vector.hpp"
 #include "../data_structures/import_edge.hpp"
 #include "../data_structures/query_node.hpp"
 #include "../data_structures/percent.hpp"
-#include "../data_structures/restriction.hpp"
-#include "../data_structures/restriction_map.hpp"
-#include "../data_structures/turn_instructions.hpp"
 
 #include "../util/integer_range.hpp"
 #include "../util/simple_logger.hpp"
@@ -75,27 +72,21 @@ template <typename GraphT> class TarjanSCC
 
     std::vector<unsigned> components_index;
     std::vector<NodeID> component_size_vector;
-    std::shared_ptr<GraphT> m_node_based_graph;
-    std::unordered_set<NodeID> barrier_node_set;
-    RestrictionMap m_restriction_map;
+    std::shared_ptr<const GraphT> m_graph;
     std::size_t size_one_counter;
 
   public:
-    template <class ContainerT>
-    TarjanSCC(std::shared_ptr<GraphT> graph,
-              const RestrictionMap &restrictions,
-              const ContainerT &barrier_node_list)
-        : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID), m_node_based_graph(graph),
-          m_restriction_map(restrictions), size_one_counter(0)
+    TarjanSCC(std::shared_ptr<const GraphT> graph)
+        : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID), m_graph(graph),
+          size_one_counter(0)
     {
-        barrier_node_set.insert(std::begin(barrier_node_list), std::end(barrier_node_list));
-        BOOST_ASSERT(m_node_based_graph->GetNumberOfNodes() > 0);
+        BOOST_ASSERT(m_graph->GetNumberOfNodes() > 0);
     }
 
     void run()
     {
         TIMER_START(SCC_RUN);
-        const NodeID max_node_id = m_node_based_graph->GetNumberOfNodes();
+        const NodeID max_node_id = m_graph->GetNumberOfNodes();
 
         // The following is a hack to distinguish between stuff that happens
         // before the recursive call and stuff that happens after
@@ -140,30 +131,9 @@ template <typename GraphT> class TarjanSCC
                     tarjan_node_list[v].on_stack = true;
                     ++index;
 
-                    const NodeID to_node_of_only_restriction =
-                        m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
-
-                    for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(v))
+                    for (const auto current_edge : m_graph->GetAdjacentEdgeRange(v))
                     {
-                        const auto vprime = m_node_based_graph->GetTarget(current_edge);
-
-                        // Traverse outgoing edges
-                        if (barrier_node_set.find(v) != barrier_node_set.end() && u != vprime)
-                        {
-                            continue;
-                        }
-
-                        if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
-                            vprime == to_node_of_only_restriction)
-                        {
-                            // At an only_-restriction but not at the right turn
-                            // continue;
-                        }
-
-                        if (m_restriction_map.CheckIfTurnIsRestricted(u, v, vprime))
-                        {
-                            // continue;
-                        }
+                        const auto vprime = m_graph->GetTarget(current_edge);
 
                         if (SPECIAL_NODEID == tarjan_node_list[vprime].index)
                         {
@@ -182,9 +152,7 @@ template <typename GraphT> class TarjanSCC
                 else
                 {
                     processing_node_before_recursion[v] = true;
-                    tarjan_node_list[currentFrame.parent].low_link =
-                        std::min(tarjan_node_list[currentFrame.parent].low_link,
-                                 tarjan_node_list[v].low_link);
+                    tarjan_node_list[u].low_link = std::min(tarjan_node_list[u].low_link, tarjan_node_list[v].low_link);
                     // after recursion, lets do cycle checking
                     // Check if we found a cycle. This is the bottom part of the recursion
                     if (tarjan_node_list[v].low_link == tarjan_node_list[v].index)
@@ -228,12 +196,17 @@ template <typename GraphT> class TarjanSCC
 
     std::size_t get_size_one_count() const { return size_one_counter; }
 
-    unsigned get_component_size(const NodeID node) const
+    unsigned get_component_size(const unsigned component_id) const
     {
-        return component_size_vector[components_index[node]];
+        return component_size_vector[component_id];
+    }
+
+    unsigned get_component_size_by_id(const unsigned component_id) const
+    {
+        return component_size_vector[component_id];
     }
 
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
 };
 
-#endif /* TINY_COMPONENTS_HPP */
+#endif /* TARJAN_SCC_HPP */

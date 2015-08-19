@@ -69,6 +69,8 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
         ".ramIndex file")(
         "fileindex", boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
         ".fileIndex file")(
+        "core", boost::program_options::value<boost::filesystem::path>(&paths["core"]),
+        ".core file")(
         "namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
         ".names file")("timestamp",
                        boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
@@ -130,6 +132,8 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
                                     !paths.find("ramindex")->second.string().empty()) ||
                                    (paths.find("fileindex") != paths.end() &&
                                     !paths.find("fileindex")->second.string().empty()) ||
+                                   (paths.find("core") != paths.end() &&
+                                    !paths.find("core")->second.string().empty()) ||
                                    (paths.find("timestamp") != paths.end() &&
                                     !paths.find("timestamp")->second.string().empty());
 
@@ -146,7 +150,7 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
     }
 
     // parse config file
-    ServerPaths::iterator path_iterator = paths.find("config");
+    auto path_iterator = paths.find("config");
     if (path_iterator != paths.end() && boost::filesystem::is_regular_file(path_iterator->second) &&
         !option_variables.count("base"))
     {
@@ -197,6 +201,12 @@ bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &p
         if (path_iterator != paths.end())
         {
             path_iterator->second = base_string + ".fileIndex";
+        }
+
+        path_iterator = paths.find("core");
+        if (path_iterator != paths.end())
+        {
+            path_iterator->second = base_string + ".core";
         }
 
         path_iterator = paths.find("namesdata");

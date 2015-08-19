@@ -316,8 +316,8 @@ class StaticRTree
     using IncrementalQueryNodeType = mapbox::util::variant<TreeNode, EdgeDataT>;
     struct IncrementalQueryCandidate
     {
-        explicit IncrementalQueryCandidate(const float dist, const IncrementalQueryNodeType &node)
-            : min_dist(dist), node(node)
+        explicit IncrementalQueryCandidate(const float dist, IncrementalQueryNodeType node)
+            : min_dist(dist), node(std::move(node))
         {
         }
 
@@ -553,7 +553,7 @@ class StaticRTree
                          const boost::filesystem::path &leaf_file,
                          std::shared_ptr<CoordinateListT> coordinate_list)
         : m_search_tree(tree_node_ptr, number_of_nodes), m_leaf_node_filename(leaf_file.string()),
-          m_coordinate_list(coordinate_list)
+          m_coordinate_list(std::move(coordinate_list))
     {
         // open leaf node file and store thread specific pointer
         if (!boost::filesystem::exists(leaf_file))

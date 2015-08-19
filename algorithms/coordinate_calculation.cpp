@@ -46,7 +46,10 @@ constexpr static const float RAD = 0.017453292519943295769236907684886f;
 constexpr static const float earth_radius = 6372797.560856f;
 }
 
-double coordinate_calculation::great_circle_distance(const int lat1,
+namespace coordinate_calculation
+{
+
+double great_circle_distance(const int lat1,
                                                      const int lon1,
                                                      const int lat2,
                                                      const int lon2)
@@ -74,21 +77,21 @@ double coordinate_calculation::great_circle_distance(const int lat1,
     return earth_radius * cHarv;
 }
 
-double coordinate_calculation::great_circle_distance(const FixedPointCoordinate &coordinate_1,
+double great_circle_distance(const FixedPointCoordinate &coordinate_1,
                                                      const FixedPointCoordinate &coordinate_2)
 {
     return great_circle_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                                  coordinate_2.lon);
 }
 
-float coordinate_calculation::euclidean_distance(const FixedPointCoordinate &coordinate_1,
+float euclidean_distance(const FixedPointCoordinate &coordinate_1,
                                                  const FixedPointCoordinate &coordinate_2)
 {
     return euclidean_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                               coordinate_2.lon);
 }
 
-float coordinate_calculation::euclidean_distance(const int lat1,
+float euclidean_distance(const int lat1,
                                                  const int lon1,
                                                  const int lat2,
                                                  const int lon2)
@@ -108,7 +111,7 @@ float coordinate_calculation::euclidean_distance(const int lat1,
     return std::hypot(x_value, y_value) * earth_radius;
 }
 
-float coordinate_calculation::perpendicular_distance(const FixedPointCoordinate &source_coordinate,
+float perpendicular_distance(const FixedPointCoordinate &source_coordinate,
                                                      const FixedPointCoordinate &target_coordinate,
                                                      const FixedPointCoordinate &query_location)
 {
@@ -119,7 +122,7 @@ float coordinate_calculation::perpendicular_distance(const FixedPointCoordinate 
                                   nearest_location, ratio);
 }
 
-float coordinate_calculation::perpendicular_distance(const FixedPointCoordinate &segment_source,
+float perpendicular_distance(const FixedPointCoordinate &segment_source,
                                                      const FixedPointCoordinate &segment_target,
                                                      const FixedPointCoordinate &query_location,
                                                      FixedPointCoordinate &nearest_location,
@@ -132,7 +135,7 @@ float coordinate_calculation::perpendicular_distance(const FixedPointCoordinate 
         nearest_location, ratio);
 }
 
-float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
+float perpendicular_distance_from_projected_coordinate(
     const FixedPointCoordinate &source_coordinate,
     const FixedPointCoordinate &target_coordinate,
     const FixedPointCoordinate &query_location,
@@ -146,7 +149,7 @@ float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
                                                             nearest_location, ratio);
 }
 
-float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
+float perpendicular_distance_from_projected_coordinate(
     const FixedPointCoordinate &segment_source,
     const FixedPointCoordinate &segment_target,
     const FixedPointCoordinate &query_location,
@@ -221,29 +224,29 @@ float coordinate_calculation::perpendicular_distance_from_projected_coordinate(
     BOOST_ASSERT(nearest_location.is_valid());
 
     const float approximate_distance =
-        coordinate_calculation::euclidean_distance(query_location, nearest_location);
+        euclidean_distance(query_location, nearest_location);
     BOOST_ASSERT(0.f <= approximate_distance);
     return approximate_distance;
 }
 
-void coordinate_calculation::lat_or_lon_to_string(const int value, std::string &output)
+void lat_or_lon_to_string(const int value, std::string &output)
 {
     char buffer[12];
     buffer[11] = 0; // zero termination
     output = printInt<11, 6>(buffer, value);
 }
 
-float coordinate_calculation::deg_to_rad(const float degree)
+float deg_to_rad(const float degree)
 {
     return degree * (static_cast<float>(M_PI) / 180.f);
 }
 
-float coordinate_calculation::rad_to_deg(const float radian)
+float rad_to_deg(const float radian)
 {
     return radian * (180.f * static_cast<float>(M_1_PI));
 }
 
-float coordinate_calculation::bearing(const FixedPointCoordinate &first_coordinate,
+float bearing(const FixedPointCoordinate &first_coordinate,
                                       const FixedPointCoordinate &second_coordinate)
 {
     const float lon_diff =
@@ -265,4 +268,6 @@ float coordinate_calculation::bearing(const FixedPointCoordinate &first_coordina
         result -= 360.f;
     }
     return result;
+}
+
 }

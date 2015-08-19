@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/static_graph.hpp"
 
+struct SpeedProfileProperties;
 struct EdgeBasedNode;
 struct lua_State;
 
@@ -50,8 +51,7 @@ class Prepare
     using InputEdge = DynamicGraph<EdgeData>::InputEdge;
     using StaticEdge = StaticGraph<EdgeData>::InputEdge;
 
-    explicit Prepare(const ContractorConfig& contractor_config)
-        : config(contractor_config) {}
+    explicit Prepare(ContractorConfig contractor_config) : config(std::move(contractor_config)) {}
     Prepare(const Prepare &) = delete;
     ~Prepare();
 
@@ -59,23 +59,27 @@ class Prepare
 
   protected:
     void SetupScriptingEnvironment(lua_State *myLuaState,
-                                   EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
-    std::shared_ptr<RestrictionMap> LoadRestrictionMap();
+                                   SpeedProfileProperties &speed_profile);
     unsigned CalculateEdgeChecksum(std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list);
-    void ContractGraph(const std::size_t number_of_edge_based_nodes,
+    void ContractGraph(const unsigned max_edge_id,
                        DeallocatingVector<EdgeBasedEdge>& edge_based_edge_list,
-                       DeallocatingVector<QueryEdge>& contracted_edge_list);
+                       DeallocatingVector<QueryEdge>& contracted_edge_list,
+                       std::vector<bool>& is_core_node);
+    void WriteCoreNodeMarker(std::vector<bool>&& is_core_node) const;
     std::size_t WriteContractedGraph(unsigned number_of_edge_based_nodes,
                                      std::unique_ptr<std::vector<EdgeBasedNode>> node_based_edge_list,
                                      std::unique_ptr<DeallocatingVector<QueryEdge>> contracted_edge_list);
-    std::shared_ptr<NodeBasedDynamicGraph> LoadNodeBasedGraph(std::vector<NodeID> &barrier_node_list,
-                                               std::vector<NodeID> &traffic_light_list,
-                                               std::vector<QueryNode>& internal_to_external_node_map);
+    std::shared_ptr<RestrictionMap> LoadRestrictionMap();
+    std::shared_ptr<NodeBasedDynamicGraph>
+    LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
+                       std::unordered_set<NodeID> &traffic_lights,
+                       std::vector<QueryNode>& internal_to_external_node_map);
     std::pair<std::size_t, std::size_t>
     BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
                                        std::vector<EdgeBasedNode> &node_based_edge_list,
                                        DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
     void WriteNodeMapping(std::unique_ptr<std::vector<QueryNode>> internal_to_external_node_map);
+    void FindComponents(unsigned max_edge_id, const DeallocatingVector<EdgeBasedEdge>& edges, std::vector<EdgeBasedNode>& nodes) const;
     void BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
                     const std::vector<QueryNode> &internal_to_external_node_map);
   private:

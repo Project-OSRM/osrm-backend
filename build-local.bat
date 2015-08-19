@@ -6,6 +6,9 @@ SET CONFIGURATION=Release
 WHERE msbuild
 IF %ERRORLEVEL% EQU 0 GOTO RUNBUILD
 
+FOR /F "tokens=*" %%i in ('git rev-parse --abbrev-ref HEAD') do SET APPVEYOR_REPO_BRANCH=%%i
+ECHO APPVEYOR_REPO_BRANCH^: %APPVEYOR_REPO_BRANCH%
+
 SET PATH=C:\mb\windows-builds-64\tmp-bin\cmake-3.1.0-win32-x86\bin;%PATH%
 SET PATH=C:\Program Files\7-Zip;%PATH%
 ECHO activating VS command prompt ...

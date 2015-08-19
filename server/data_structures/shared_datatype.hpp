@@ -62,6 +62,7 @@ struct SharedDataLayout
         HSGR_CHECKSUM,
         TIMESTAMP,
         FILE_INDEX_PATH,
+        CORE_MARKER,
         NUM_BLOCKS
     };
 
@@ -72,40 +73,6 @@ struct SharedDataLayout
 
     void PrintInformation() const
     {
-        SimpleLogger().Write(logDEBUG) << "-";
-        SimpleLogger().Write(logDEBUG)
-            << "name_offsets_size:          " << num_entries[NAME_OFFSETS];
-        SimpleLogger().Write(logDEBUG)
-            << "name_blocks_size:           " << num_entries[NAME_BLOCKS];
-        SimpleLogger().Write(logDEBUG)
-            << "name_char_list_size:        " << num_entries[NAME_CHAR_LIST];
-        SimpleLogger().Write(logDEBUG)
-            << "name_id_list_size:          " << num_entries[NAME_ID_LIST];
-        SimpleLogger().Write(logDEBUG)
-            << "via_node_list_size:         " << num_entries[VIA_NODE_LIST];
-        SimpleLogger().Write(logDEBUG)
-            << "graph_node_list_size:       " << num_entries[GRAPH_NODE_LIST];
-        SimpleLogger().Write(logDEBUG)
-            << "graph_edge_list_size:       " << num_entries[GRAPH_EDGE_LIST];
-        SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << num_entries[TIMESTAMP];
-        SimpleLogger().Write(logDEBUG)
-            << "coordinate_list_size:       " << num_entries[COORDINATE_LIST];
-        SimpleLogger().Write(logDEBUG)
-            << "turn_instruction_list_size: " << num_entries[TURN_INSTRUCTION];
-        SimpleLogger().Write(logDEBUG)
-            << "travel_mode_list_size:      " << num_entries[TRAVEL_MODE];
-        SimpleLogger().Write(logDEBUG)
-            << "r_search_tree_size:         " << num_entries[R_SEARCH_TREE];
-        SimpleLogger().Write(logDEBUG)
-            << "geometries_indicators:      " << num_entries[GEOMETRIES_INDICATORS] << "/"
-            << ((num_entries[GEOMETRIES_INDICATORS] / 8) + 1);
-        SimpleLogger().Write(logDEBUG)
-            << "geometries_index_list_size: " << num_entries[GEOMETRIES_INDEX];
-        SimpleLogger().Write(logDEBUG)
-            << "geometries_list_size:       " << num_entries[GEOMETRIES_LIST];
-        SimpleLogger().Write(logDEBUG)
-            << "sizeof(checksum):           " << entry_size[HSGR_CHECKSUM];
-
         SimpleLogger().Write(logDEBUG) << "NAME_OFFSETS         "
                                        << ": " << GetBlockSize(NAME_OFFSETS);
         SimpleLogger().Write(logDEBUG) << "NAME_BLOCKS          "
@@ -140,6 +107,8 @@ struct SharedDataLayout
                                        << ": " << GetBlockSize(TIMESTAMP);
         SimpleLogger().Write(logDEBUG) << "FILE_INDEX_PATH      "
                                        << ": " << GetBlockSize(FILE_INDEX_PATH);
+        SimpleLogger().Write(logDEBUG) << "CORE_MARKER          "
+                                       << ": " << GetBlockSize(CORE_MARKER);
     }
 
     template <typename T> inline void SetBlockSize(BlockID bid, uint64_t entries)
@@ -150,11 +119,11 @@ struct SharedDataLayout
 
     inline uint64_t GetBlockSize(BlockID bid) const
     {
-        // special encoding
-        if (bid == GEOMETRIES_INDICATORS)
+        // special bit encoding
+        if (bid == GEOMETRIES_INDICATORS || bid == CORE_MARKER)
         {
-            return (num_entries[GEOMETRIES_INDICATORS] / 32 + 1) *
-                   entry_size[GEOMETRIES_INDICATORS];
+            return (num_entries[bid] / 32 + 1) *
+                   entry_size[bid];
         }
 
         return num_entries[bid] * entry_size[bid];

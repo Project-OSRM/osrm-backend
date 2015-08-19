@@ -156,7 +156,7 @@ class RestrictionMap
     bool
     CheckIfTurnIsRestricted(const NodeID node_u, const NodeID node_v, const NodeID node_w) const;
 
-    std::size_t size() { return m_count; }
+    std::size_t size() const { return m_count; }
 
   private:
     // check of node is the start of any restriction

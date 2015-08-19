@@ -131,9 +131,9 @@ BOOST_AUTO_TEST_CASE(find_test)
     std::vector<TestInputEdge> input_edges = {
         TestInputEdge{0, 1, TestData{1}},
         TestInputEdge{3, 0, TestData{2}},
+        TestInputEdge{3, 0, TestData{5}},
         TestInputEdge{3, 4, TestData{3}},
-        TestInputEdge{4, 3, TestData{4}},
-        TestInputEdge{3, 0, TestData{5}}
+        TestInputEdge{4, 3, TestData{4}}
     };
     TestStaticGraph simple_graph(5, input_edges);
 

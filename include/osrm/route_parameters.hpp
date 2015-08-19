@@ -81,6 +81,8 @@ struct RouteParameters
     
     void getCoordinatesFromGeometry(const std::string geometry_string);
 
+    void setTSPAlgo(const std::string &tsp_algo);
+
     short zoom_level;
     bool print_instructions;
     bool alternate_route;
@@ -97,6 +99,7 @@ struct RouteParameters
     std::string output_format;
     std::string jsonp_parameter;
     std::string language;
+    std::string tsp_algo;
     std::vector<std::string> hints;
     std::vector<unsigned> timestamps;
     std::vector<bool> uturns;

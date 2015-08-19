@@ -42,7 +42,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                    *(query) >> -(uturns);
         query = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | timestamp | u | cmp |
                             language | instruction | geometry | alt_route | old_API | num_results |
-                            matching_beta | gps_precision | classify | locs));
+                            matching_beta | gps_precision | classify | tsp_algo | locs));
 
         zoom = (-qi::lit('&')) >> qi::lit('z') >> '=' >>
                qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
@@ -78,13 +78,15 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         num_results = (-qi::lit('&')) >> qi::lit("num_results") >> '=' >>
                       qi::short_[boost::bind(&HandlerT::setNumberOfResults, handler, ::_1)];
         matching_beta = (-qi::lit('&')) >> qi::lit("matching_beta") >> '=' >>
-               qi::short_[boost::bind(&HandlerT::setMatchingBeta, handler, ::_1)];
+               qi::float_[boost::bind(&HandlerT::setMatchingBeta, handler, ::_1)];
         gps_precision = (-qi::lit('&')) >> qi::lit("gps_precision") >> '=' >>
-               qi::short_[boost::bind(&HandlerT::setGPSPrecision, handler, ::_1)];
+               qi::float_[boost::bind(&HandlerT::setGPSPrecision, handler, ::_1)];
         classify = (-qi::lit('&')) >> qi::lit("classify") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::setClassify, handler, ::_1)];
         locs = (-qi::lit('&')) >> qi::lit("locs") >> '=' >>
             stringforPolyline[boost::bind(&HandlerT::getCoordinatesFromGeometry, handler, ::_1)];
+        tsp_algo = (-qi::lit('&')) >> qi::lit("tsp_algo") >> '=' >>
+                  string[boost::bind(&HandlerT::setTSPAlgo, handler, ::_1)];
 
         string = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));
@@ -96,7 +98,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     qi::rule<Iterator> api_call, query;
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
         hint, timestamp, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
-        uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, stringforPolyline;
+        uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, stringforPolyline, tsp_algo;
 
     HandlerT *handler;
 };

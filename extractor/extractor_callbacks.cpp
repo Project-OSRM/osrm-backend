@@ -183,8 +183,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                                     first_node.ref(), last_node.ref(), name_id, backward_weight_data,
-                                    true, false, parsed_way.roundabout, parsed_way.ignore_in_grid,
-                                    parsed_way.is_access_restricted, parsed_way.backward_travel_mode, false));
+                                    true, false, parsed_way.roundabout, parsed_way.is_access_restricted,
+                                    parsed_way.backward_travel_mode, false));
                             });
 
         external_memory.way_start_end_id_list.push_back(
@@ -205,8 +205,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                                     first_node.ref(), last_node.ref(), name_id, forward_weight_data,
-                                    true, !forward_only, parsed_way.roundabout, parsed_way.ignore_in_grid,
-                                    parsed_way.is_access_restricted, parsed_way.forward_travel_mode, split_edge));
+                                    true, !forward_only, parsed_way.roundabout, parsed_way.is_access_restricted,
+                                    parsed_way.forward_travel_mode, split_edge));
                             });
         if (split_edge)
         {
@@ -216,8 +216,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                 {
                                     external_memory.all_edges_list.push_back(InternalExtractorEdge(
                                         first_node.ref(), last_node.ref(), name_id, backward_weight_data,
-                                        false, true, parsed_way.roundabout, parsed_way.ignore_in_grid,
-                                        parsed_way.is_access_restricted, parsed_way.backward_travel_mode, true));
+                                        false, true, parsed_way.roundabout, parsed_way.is_access_restricted,
+                                        parsed_way.backward_travel_mode, true));
                                 });
         }
 

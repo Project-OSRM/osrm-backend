@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "description_factory.hpp"
 
 #include "../algorithms/polyline_formatter.hpp"
-#include "../data_structures/coordinate_calculation.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/turn_instructions.hpp"
 #include "../util/container.hpp"

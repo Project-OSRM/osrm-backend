@@ -10,7 +10,6 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
-ignore_in_grid = { ["ferry"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
 speed_profile = {
@@ -391,11 +390,6 @@ function way_function (way, result)
   end
   if maxspeed_backward and maxspeed_backward > 0 then
     result.backward_speed = maxspeed_backward
-  end
-
-  -- Override general direction settings of there is a specific one for our mode of travel
-  if ignore_in_grid[highway] then
-    result.ignore_in_grid = true
   end
 
   local width = math.huge

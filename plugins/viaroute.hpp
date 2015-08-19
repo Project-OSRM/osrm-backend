@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/json_renderer.hpp"
 #include "../util/make_unique.hpp"
 #include "../util/simple_logger.hpp"
+#include "../util/timing_util.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -109,7 +110,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         auto check_component_id_is_tiny = [](const phantom_node_pair &phantom_pair)
         {
-            return phantom_pair.first.component_id != 0;
+            return phantom_pair.first.is_in_tiny_component();
         };
 
         const bool every_phantom_is_in_tiny_cc =
@@ -130,7 +131,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         auto swap_phantom_from_big_cc_into_front = [](phantom_node_pair &phantom_pair)
         {
-            if (0 != phantom_pair.first.component_id)
+            if (0 != phantom_pair.first.component_id && 0 == phantom_pair.second.component_id)
             {
                 using namespace std;
                 swap(phantom_pair.first, phantom_pair.second);
@@ -153,10 +154,18 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         };
         osrm::for_each_pair(phantom_node_pair_list, build_phantom_pairs);
 
-        if (route_parameters.alternate_route && 1 == raw_route.segment_end_coordinates.size())
+        if (1 == raw_route.segment_end_coordinates.size())
         {
-            search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
-                                                raw_route);
+            if (route_parameters.alternate_route)
+            {
+              search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
+                                                  raw_route);
+            }
+            else
+            {
+                search_engine_ptr->direct_shortest_path(raw_route.segment_end_coordinates,
+                                                        route_parameters.uturns, raw_route);
+            }
         }
         else
         {

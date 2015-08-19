@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "routing_base.hpp"
 
-#include "../data_structures/coordinate_calculation.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 #include "../data_structures/hidden_markov_model.hpp"
 #include "../util/json_logger.hpp"
 #include "../util/matching_debug_info.hpp"

@@ -30,8 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EDGE_BASED_GRAPH_FACTORY_HPP_
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
-#include "geometry_compressor.hpp"
+#include "speed_profile.hpp"
 #include "../typedefs.h"
+#include "../data_structures/compressed_edge_container.hpp"
 #include "../data_structures/deallocating_vector.hpp"
 #include "../data_structures/edge_based_node.hpp"
 #include "../data_structures/original_edge_data.hpp"
@@ -57,72 +58,54 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory() = delete;
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
 
-    struct SpeedProfileProperties;
-
     explicit EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
-                                   std::shared_ptr<RestrictionMap> restricion_map,
-                                   std::unique_ptr<std::vector<NodeID>> barrier_node_list,
-                                   std::unique_ptr<std::vector<NodeID>> traffic_light_node_list,
+                                   const CompressedEdgeContainer &compressed_edge_container,
+                                   const std::unordered_set<NodeID> &barrier_nodes,
+                                   const std::unordered_set<NodeID> &traffic_lights,
+                                   std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<QueryNode> &node_info_list,
-                                   const SpeedProfileProperties &speed_profile);
+                                   SpeedProfileProperties speed_profile);
 
     void Run(const std::string &original_edge_data_filename,
-             const std::string &geometry_filename,
              lua_State *lua_state);
 
     void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
 
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
 
+    unsigned GetHighestEdgeID();
+
     TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, const double angle) const;
 
     int GetTurnPenalty(double angle, lua_State *lua_state) const;
 
-    unsigned GetNumberOfEdgeBasedNodes() const;
-
-    struct SpeedProfileProperties
-    {
-        SpeedProfileProperties()
-            : traffic_signal_penalty(0), u_turn_penalty(0), has_turn_penalty_function(false)
-        {
-        }
-
-        int traffic_signal_penalty;
-        int u_turn_penalty;
-        bool has_turn_penalty_function;
-    } speed_profile;
-
   private:
     using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
-    unsigned m_number_of_edge_based_nodes;
-
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
+    unsigned m_max_edge_id;
 
     const std::vector<QueryNode>& m_node_info_list;
     std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
-    std::shared_ptr<RestrictionMap> m_restriction_map;
+    std::shared_ptr<RestrictionMap const> m_restriction_map;
 
-    std::unordered_set<NodeID> m_barrier_nodes;
-    std::unordered_set<NodeID> m_traffic_lights;
+    const std::unordered_set<NodeID>& m_barrier_nodes;
+    const std::unordered_set<NodeID>& m_traffic_lights;
+    const CompressedEdgeContainer& m_compressed_edge_container;
 
-
-    GeometryCompressor m_geometry_compressor;
+    SpeedProfileProperties speed_profile;
 
     void CompressGeometry();
-    void RenumberEdges();
+    unsigned RenumberEdges();
     void GenerateEdgeExpandedNodes();
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    lua_State *lua_state);
 
-    void InsertEdgeBasedNode(const NodeID u, const NodeID v, const unsigned component_id);
+    void InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
-
-    NodeID max_id;
-    std::size_t removed_node_count;
 
 };
 

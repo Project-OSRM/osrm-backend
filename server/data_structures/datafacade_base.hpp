@@ -113,6 +113,8 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual unsigned GetCheckSum() const = 0;
 
+    virtual bool IsCoreNode(const NodeID id) const = 0;
+
     virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const = 0;
 
     virtual std::string get_name_for_id(const unsigned name_id) const = 0;
