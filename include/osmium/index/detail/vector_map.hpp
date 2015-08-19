@@ -68,7 +68,7 @@ namespace osmium {
                     m_vector(fd) {
                 }
 
-                ~VectorBasedDenseMap() {}
+                ~VectorBasedDenseMap() = default;
 
                 void reserve(const size_t size) override final {
                     m_vector.reserve(size);
@@ -97,6 +97,10 @@ namespace osmium {
                     return m_vector.size();
                 }
 
+                size_t byte_size() const {
+                    return m_vector.size() * sizeof(element_type);
+                }
+
                 size_t used_memory() const override final {
                     return sizeof(TValue) * size();
                 }
@@ -104,6 +108,10 @@ namespace osmium {
                 void clear() override final {
                     m_vector.clear();
                     m_vector.shrink_to_fit();
+                }
+
+                void dump_as_array(const int fd) override final {
+                    osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(m_vector.data()), byte_size());
                 }
 
                 iterator begin() {

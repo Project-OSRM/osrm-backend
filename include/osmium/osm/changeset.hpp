@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstdint>
 #include <cstring>
 
 #include <osmium/memory/collection.hpp>
@@ -44,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/osm/types_from_string.hpp>
 
 namespace osmium {
 

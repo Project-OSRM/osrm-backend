@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
  * Include this file if you want to read OSM PBF files.
  *
  * @attention If you include this file, you'll need to link with
- *            `libprotobuf-lite`, `libosmpbf`, `ws2_32` (Windows only),
  *            `libz`, and enable multithreading.
  */
 

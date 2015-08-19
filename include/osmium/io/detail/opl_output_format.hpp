@@ -46,23 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <thread>
 #include <utility>
 
-#include <boost/version.hpp>
-
-#ifdef __clang__
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wmissing-noreturn"
-# pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
-
-#if BOOST_VERSION >= 104800
-# include <boost/regex/pending/unicode_iterator.hpp>
-#else
-# include <boost_unicode_iterator.hpp>
-#endif
-
-#ifdef __clang__
-# pragma clang diagnostic pop
-#endif
+#include <utf8.h>
 
 #include <osmium/handler.hpp>
 #include <osmium/io/detail/output_format.hpp>
@@ -103,6 +87,8 @@ namespace osmium {
 
                 char m_tmp_buffer[tmp_buffer_size+1];
 
+                bool m_add_metadata;
+
                 template <typename... TArgs>
                 void output_formatted(const char* format, TArgs&&... args) {
 #ifndef NDEBUG
@@ -117,13 +103,12 @@ namespace osmium {
                     *m_out += m_tmp_buffer;
                 }
 
-                void append_encoded_string(const std::string& data) {
-                    boost::u8_to_u32_iterator<std::string::const_iterator> it(data.cbegin(), data.cbegin(), data.cend());
-                    boost::u8_to_u32_iterator<std::string::const_iterator> end(data.cend(), data.cend(), data.cend());
-                    boost::utf8_output_iterator<std::back_insert_iterator<std::string>> oit(std::back_inserter(*m_out));
+                void append_encoded_string(const char* data) {
+                    const char* end = data + std::strlen(data);
 
-                    for (; it != end; ++it) {
-                        uint32_t c = *it;
+                    while (data != end) {
+                        const char* last = data;
+                        uint32_t c = utf8::next(data, end);
 
                         // This is a list of Unicode code points that we let
                         // through instead of escaping them. It is incomplete
@@ -138,21 +123,29 @@ namespace osmium {
                             (0x0041 <= c && c <= 0x007e) ||
                             (0x00a1 <= c && c <= 0x00ac) ||
                             (0x00ae <= c && c <= 0x05ff)) {
-                            *oit = c;
+                            m_out->append(last, data);
                         } else {
                             *m_out += '%';
-                            output_formatted("%04x", c);
+                            if (c <= 0xff) {
+                                output_formatted("%02x", c);
+                            } else {
+                                output_formatted("%04x", c);
+                            }
+                            *m_out += '%';
                         }
                     }
                 }
 
                 void write_meta(const osmium::OSMObject& object) {
-                    output_formatted("%" PRId64 " v%d d", object.id(), object.version());
-                    *m_out += (object.visible() ? 'V' : 'D');
-                    output_formatted(" c%d t", object.changeset());
-                    *m_out += object.timestamp().to_iso();
-                    output_formatted(" i%d u", object.uid());
-                    append_encoded_string(object.user());
+                    output_formatted("%" PRId64, object.id());
+                    if (m_add_metadata) {
+                        output_formatted(" v%d d", object.version());
+                        *m_out += (object.visible() ? 'V' : 'D');
+                        output_formatted(" c%d t", object.changeset());
+                        *m_out += object.timestamp().to_iso();
+                        output_formatted(" i%d u", object.uid());
+                        append_encoded_string(object.user());
+                    }
                     *m_out += " T";
                     bool first = true;
                     for (const auto& tag : object.tags()) {
@@ -180,10 +173,11 @@ namespace osmium {
 
             public:
 
-                explicit OPLOutputBlock(osmium::memory::Buffer&& buffer) :
+                explicit OPLOutputBlock(osmium::memory::Buffer&& buffer, bool add_metadata) :
                     m_input_buffer(std::make_shared<osmium::memory::Buffer>(std::move(buffer))),
                     m_out(std::make_shared<std::string>()),
-                    m_tmp_buffer() {
+                    m_tmp_buffer(),
+                    m_add_metadata(add_metadata) {
                 }
 
                 OPLOutputBlock(const OPLOutputBlock&) = default;
@@ -240,7 +234,7 @@ namespace osmium {
                         }
                         *m_out += item_type_to_char(member.type());
                         output_formatted("%" PRId64 "@", member.ref());
-                        *m_out += member.role();
+                        append_encoded_string(member.role());
                     }
                     *m_out += '\n';
                 }
@@ -274,17 +268,20 @@ namespace osmium {
 
             class OPLOutputFormat : public osmium::io::detail::OutputFormat {
 
-                OPLOutputFormat(const OPLOutputFormat&) = delete;
-                OPLOutputFormat& operator=(const OPLOutputFormat&) = delete;
+                bool m_add_metadata;
 
             public:
 
                 OPLOutputFormat(const osmium::io::File& file, data_queue_type& output_queue) :
-                    OutputFormat(file, output_queue) {
+                    OutputFormat(file, output_queue),
+                    m_add_metadata(file.get("add_metadata") != "false") {
                 }
 
+                OPLOutputFormat(const OPLOutputFormat&) = delete;
+                OPLOutputFormat& operator=(const OPLOutputFormat&) = delete;
+
                 void write_buffer(osmium::memory::Buffer&& buffer) override final {
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(OPLOutputBlock{std::move(buffer)}));
+                    m_output_queue.push(osmium::thread::Pool::instance().submit(OPLOutputBlock{std::move(buffer), m_add_metadata}));
                 }
 
                 void close() override final {
@@ -298,6 +295,8 @@ namespace osmium {
 
             namespace {
 
+// we want the register_output_format() function to run, setting the variable
+// is only a side-effect, it will never be used
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
                 const bool registered_opl_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::opl,

@@ -274,11 +274,16 @@ namespace osmium {
 
         namespace {
 
+// we want the register_compression() function to run, setting the variable
+// is only a side-effect, it will never be used
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
             const bool registered_bzip2_compression = osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::bzip2,
                 [](int fd) { return new osmium::io::Bzip2Compressor(fd); },
                 [](int fd) { return new osmium::io::Bzip2Decompressor(fd); },
                 [](const char* buffer, size_t size) { return new osmium::io::Bzip2BufferDecompressor(buffer, size); }
             );
+#pragma GCC diagnostic pop
 
         } // anonymous namespace
 

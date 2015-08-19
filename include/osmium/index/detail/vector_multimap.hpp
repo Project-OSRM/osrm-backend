@@ -67,6 +67,16 @@ namespace osmium {
 
             public:
 
+                VectorBasedSparseMultimap() :
+                    m_vector() {
+                }
+
+                explicit VectorBasedSparseMultimap(int fd) :
+                    m_vector(fd) {
+                }
+
+                ~VectorBasedSparseMultimap() = default;
+
                 void set(const TId id, const TValue value) override final {
                     m_vector.push_back(element_type(id, value));
                 }
@@ -139,6 +149,30 @@ namespace osmium {
 
                 void dump_as_list(const int fd) override final {
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(m_vector.data()), byte_size());
+                }
+
+                iterator begin() {
+                    return m_vector.begin();
+                }
+
+                iterator end() {
+                    return m_vector.end();
+                }
+
+                const_iterator cbegin() const {
+                    return m_vector.cbegin();
+                }
+
+                const_iterator cend() const {
+                    return m_vector.cend();
+                }
+
+                const_iterator begin() const {
+                    return m_vector.cbegin();
+                }
+
+                const_iterator end() const {
+                    return m_vector.cend();
                 }
 
             }; // class VectorBasedSparseMultimap

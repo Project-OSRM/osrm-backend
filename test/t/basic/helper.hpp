@@ -9,7 +9,7 @@
 
 inline void add_tags(osmium::memory::Buffer& buffer, osmium::builder::Builder& builder, const std::vector<std::pair<const char*, const char*>>& tags) {
     osmium::builder::TagListBuilder tl_builder(buffer, &builder);
-    for (auto& tag : tags) {
+    for (const auto& tag : tags) {
         tl_builder.add_tag(tag.first, tag.second);
     }
 }
@@ -26,9 +26,11 @@ inline osmium::Way& buffer_add_way(osmium::memory::Buffer& buffer, const char* u
     osmium::builder::WayBuilder builder(buffer);
     builder.add_user(user);
     add_tags(buffer, builder, tags);
-    osmium::builder::WayNodeListBuilder wnl_builder(buffer, &builder);
-    for (const osmium::object_id_type ref : nodes) {
-        wnl_builder.add_node_ref(ref);
+    {
+        osmium::builder::WayNodeListBuilder wnl_builder(buffer, &builder);
+        for (const osmium::object_id_type ref : nodes) {
+            wnl_builder.add_node_ref(ref);
+        }
     }
     buffer.commit();
     return builder.object();
@@ -38,9 +40,11 @@ inline osmium::Way& buffer_add_way(osmium::memory::Buffer& buffer, const char* u
     osmium::builder::WayBuilder builder(buffer);
     builder.add_user(user);
     add_tags(buffer, builder, tags);
-    osmium::builder::WayNodeListBuilder wnl_builder(buffer, &builder);
-    for (auto& p : nodes) {
-        wnl_builder.add_node_ref(p.first, p.second);
+    {
+        osmium::builder::WayNodeListBuilder wnl_builder(buffer, &builder);
+        for (const auto& p : nodes) {
+            wnl_builder.add_node_ref(p.first, p.second);
+        }
     }
     buffer.commit();
     return builder.object();
@@ -53,9 +57,11 @@ inline osmium::Relation& buffer_add_relation(
     osmium::builder::RelationBuilder builder(buffer);
     builder.add_user(user);
     add_tags(buffer, builder, tags);
-    osmium::builder::RelationMemberListBuilder rml_builder(buffer, &builder);
-    for (const auto& member : members) {
-        rml_builder.add_member(osmium::char_to_item_type(std::get<0>(member)), std::get<1>(member), std::get<2>(member));
+    {
+        osmium::builder::RelationMemberListBuilder rml_builder(buffer, &builder);
+        for (const auto& member : members) {
+            rml_builder.add_member(osmium::char_to_item_type(std::get<0>(member)), std::get<1>(member), std::get<2>(member));
+        }
     }
     buffer.commit();
     return builder.object();
@@ -69,15 +75,15 @@ inline osmium::Area& buffer_add_area(osmium::memory::Buffer& buffer, const char*
     builder.add_user(user);
     add_tags(buffer, builder, tags);
 
-    for (auto& ring : rings) {
+    for (const auto& ring : rings) {
         if (ring.first) {
             osmium::builder::OuterRingBuilder ring_builder(buffer, &builder);
-            for (auto& p : ring.second) {
+            for (const auto& p : ring.second) {
                 ring_builder.add_node_ref(p.first, p.second);
             }
         } else {
             osmium::builder::InnerRingBuilder ring_builder(buffer, &builder);
-            for (auto& p : ring.second) {
+            for (const auto& p : ring.second) {
                 ring_builder.add_node_ref(p.first, p.second);
             }
         }

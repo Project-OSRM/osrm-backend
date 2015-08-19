@@ -15,6 +15,11 @@ add_library(testlib STATIC test_main.cpp)
 
 set(ALL_TESTS "")
 
+# Otherwise GCC throws a lot of warnings for REQUIRE(...) from Catch v.1.2.1
+if(CMAKE_COMPILER_IS_GNUCXX)
+    add_definitions(-Wno-parentheses)
+endif()
+
 
 #-----------------------------------------------------------------------------
 #
@@ -90,6 +95,7 @@ add_unit_test(area test_node_ref_segment)
 
 add_unit_test(basic test_box)
 add_unit_test(basic test_changeset)
+add_unit_test(basic test_crc)
 add_unit_test(basic test_entity_bits)
 add_unit_test(basic test_location)
 add_unit_test(basic test_node)
@@ -97,6 +103,7 @@ add_unit_test(basic test_node_ref)
 add_unit_test(basic test_object_comparisons)
 add_unit_test(basic test_relation)
 add_unit_test(basic test_timestamp)
+add_unit_test(basic test_types_from_string)
 add_unit_test(basic test_way)
 
 add_unit_test(buffer test_buffer_node)
@@ -111,23 +118,24 @@ add_unit_test(geom test_factory_with_projection
     ENABLE_IF ${GEOS_AND_PROJ_FOUND}
     LIBS ${GEOS_LIBRARY} ${PROJ_LIBRARY})
 
+add_unit_test(geom test_exception)
 add_unit_test(geom test_geojson)
 add_unit_test(geom test_geos ENABLE_IF ${GEOS_FOUND} LIBS ${GEOS_LIBRARY})
 add_unit_test(geom test_geos_wkb ENABLE_IF ${GEOS_FOUND} LIBS ${GEOS_LIBRARY})
 add_unit_test(geom test_mercator)
 add_unit_test(geom test_ogr ENABLE_IF ${GDAL_FOUND} LIBS ${GDAL_LIBRARY})
 add_unit_test(geom test_projection ENABLE_IF ${PROJ_FOUND} LIBS ${PROJ_LIBRARY})
+add_unit_test(geom test_tile)
 add_unit_test(geom test_wkb)
 add_unit_test(geom test_wkt)
 
 add_unit_test(index test_id_to_location ENABLE_IF ${SPARSEHASH_FOUND})
-add_unit_test(index test_typed_mmap)
-add_unit_test(index test_typed_mmap_grow LABELS "fails_on_windows")
 
 add_unit_test(io test_bzip2 ENABLE_IF ${BZIP2_FOUND} LIBS ${BZIP2_LIBRARIES})
 add_unit_test(io test_file_formats)
 add_unit_test(io test_reader LIBS "${OSMIUM_XML_LIBRARIES}")
 add_unit_test(io test_output_iterator ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
+add_unit_test(io test_string_table)
 
 add_unit_test(tags test_filter)
 add_unit_test(tags test_operators)
@@ -136,7 +144,12 @@ add_unit_test(tags test_tag_list)
 add_unit_test(thread test_pool ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 add_unit_test(util test_cast_with_assert)
+add_unit_test(util test_data_file)
+add_unit_test(util test_delta)
 add_unit_test(util test_double)
+add_unit_test(util test_file)
+add_unit_test(util test_memory_mapping)
+add_unit_test(util test_minmax)
 add_unit_test(util test_options)
 add_unit_test(util test_string)
 

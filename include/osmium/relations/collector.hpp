@@ -512,7 +512,7 @@ namespace osmium {
                     double percent = static_cast<double>(size_before - size_after);
                     percent /= size_before;
                     percent *= 100;
-                    std::cerr << "PURGE (size before=" << size_before << " after=" << size_after << " purged=" << (size_before - size_after) << " / " << static_cast<int>(percent) << "%)\n";
+//                    std::cerr << "PURGE (size before=" << size_before << " after=" << size_after << " purged=" << (size_before - size_after) << " / " << static_cast<int>(percent) << "%)\n";
                     m_count_complete = 0;
                 }
             }
