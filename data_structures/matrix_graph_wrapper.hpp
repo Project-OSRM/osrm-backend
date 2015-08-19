@@ -36,30 +36,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename T> class MatrixGraphWrapper {
 public:
 
-    MatrixGraphWrapper(std::vector<T> table, const unsigned number_of_nodes) : table_(table), number_of_nodes_(number_of_nodes) {};
+    MatrixGraphWrapper(std::vector<T> table, const std::size_t number_of_nodes) : table_(table), number_of_nodes_(number_of_nodes) {};
 
-    unsigned GetNumberOfNodes() const {
+    std::size_t GetNumberOfNodes() const {
         return number_of_nodes_;
     }
 
-    std::vector<unsigned> GetAdjacentEdgeRange(const unsigned node) const {
-        std::vector<unsigned> edges;
-        const auto maxint = std::numeric_limits<int>::max();
-        for (auto i = 0; i < number_of_nodes_; ++i) {
-            if (*(table_.begin() + node * number_of_nodes_ + i) != maxint) {
-                edges.push_back(i);
-            }
-        }
+    std::vector<EdgeWeight> GetAdjacentEdgeRange(const NodeID node) const {
+        std::vector<EdgeWeight> edges;
+        auto neq_invalid_edge_weight = [](EdgeWeight e){return (e != INVALID_EDGE_WEIGHT);};
+        std::copy_if(std::begin(table_),
+                     std::end(table_),
+                     std::back_inserter(edges),
+                     neq_invalid_edge_weight);
         return edges;
     }
 
-    unsigned GetTarget(const unsigned edge) const {
+    EdgeWeight GetTarget(const EdgeWeight edge) const {
         return edge;
     }
 
 private:
     std::vector<T> table_;
-    const unsigned number_of_nodes_;
+    const std::size_t number_of_nodes_;
 };
 
 

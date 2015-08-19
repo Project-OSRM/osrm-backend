@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/search_engine.hpp"
 #include "../util/string_util.hpp"
+#include "../util/dist_table_wrapper.hpp"
 #include "../tools/tsp_logs.hpp"
 
 #include <osrm/json_container.hpp>
@@ -51,8 +52,10 @@ namespace tsp
 
 using NodeIterator = typename std::vector<NodeID>::iterator;
 
-std::pair<EdgeWeight, NodeIterator> GetShortestRoundTrip(const int current_loc,
-                                                         const std::vector<EdgeWeight> & dist_table,
+// given a route and a new location, find the best place of insertion and
+// check the distance of roundtrip when the new location is additionally visited
+std::pair<EdgeWeight, NodeIterator> GetShortestRoundTrip(const int new_loc,
+                                                         const DistTableWrapper<EdgeWeight> & dist_table,
                                                          const int number_of_locations,
                                                          std::vector<NodeID> & route){
 
@@ -61,29 +64,21 @@ std::pair<EdgeWeight, NodeIterator> GetShortestRoundTrip(const int current_loc,
 
     // for all nodes in the current trip find the best insertion resulting in the shortest path
     // assert min 2 nodes in route
-    for (auto from_node = route.begin(); from_node != std::prev(route.end()); ++from_node) {
-        const auto to_node = std::next(from_node);
+    for (auto from_node = std::begin(route); from_node != std::end(route); ++from_node) {
+        auto to_node = std::next(from_node);
+        if (to_node == std::end(route)) {
+            to_node = std::begin(route);
+        }
 
-        const auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + current_loc);
-        const auto dist_to = *(dist_table.begin() + (current_loc * number_of_locations) + *to_node);
-        const auto trip_dist = dist_from + dist_to - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node);
+        const auto dist_from = dist_table(*from_node, new_loc);
+        const auto dist_to = dist_table(new_loc, *to_node);
+        const auto trip_dist = dist_from + dist_to - dist_table(*from_node, *to_node);;
 
         // from all possible insertions to the current trip, choose the shortest of all insertions
         if (trip_dist < min_trip_distance) {
             min_trip_distance = trip_dist;
             next_insert_point_candidate = to_node;
         }
-    }
-    // check insertion between last and first location too
-    auto from_node = std::prev(route.end());
-    auto to_node = route.begin();
-
-    auto dist_from = *(dist_table.begin() + (*from_node * number_of_locations) + current_loc);
-    auto dist_to = *(dist_table.begin() + (current_loc * number_of_locations) + *to_node);
-    auto trip_dist = dist_from + dist_to - *(dist_table.begin() + (*from_node * number_of_locations) + *to_node);
-    if (trip_dist < min_trip_distance) {
-        min_trip_distance = trip_dist;
-        next_insert_point_candidate = to_node;
     }
 
     return std::make_pair(min_trip_distance, next_insert_point_candidate);
@@ -93,7 +88,7 @@ std::pair<EdgeWeight, NodeIterator> GetShortestRoundTrip(const int current_loc,
 std::vector<NodeID> FindRoute(const std::size_t & number_of_locations,
                               const std::size_t & size_of_component,
                               const std::vector<NodeID> & locations,
-                              const std::vector<EdgeWeight> & dist_table,
+                              const DistTableWrapper<EdgeWeight> & dist_table,
                               const NodeID & start1,
                               const NodeID & start2) {
     std::vector<NodeID> route;
@@ -136,10 +131,9 @@ std::vector<NodeID> FindRoute(const std::size_t & number_of_locations,
     return route;
 }
 
-// osrm::tsp::FarthestInsertionTSP(components[k], phantom_node_vector, *result_table, scc_route);
 std::vector<NodeID> FarthestInsertionTSP(const std::vector<NodeID> & locations,
                                          const std::size_t number_of_locations,
-                                         const std::vector<EdgeWeight> & dist_table) {
+                                         const DistTableWrapper<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
     // 1. start at a random round trip of 2 locations
@@ -149,7 +143,7 @@ std::vector<NodeID> FarthestInsertionTSP(const std::vector<NodeID> & locations,
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    const int size_of_component = locations.size();
+    const auto size_of_component = locations.size();
     auto max_from = -1;
     auto max_to = -1;
 
@@ -163,7 +157,7 @@ std::vector<NodeID> FarthestInsertionTSP(const std::vector<NodeID> & locations,
         auto max_dist = 0;
         for (auto x : locations) {
             for (auto y : locations) {
-                auto xy_dist = *(dist_table.begin() + x * number_of_locations + y);
+                auto xy_dist = dist_table(x, y);
                 if (xy_dist > max_dist) {
                     max_dist = xy_dist;
                     max_from = x;

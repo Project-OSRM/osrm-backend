@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/search_engine.hpp"
 #include "../util/string_util.hpp"
 #include "../util/simple_logger.hpp"
+#include "../util/dist_table_wrapper.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -50,7 +51,7 @@ namespace tsp
 
 std::vector<NodeID> NearestNeighbourTSP(const std::vector<NodeID> & locations,
                                         const std::size_t number_of_locations,
-                                        const std::vector<EdgeWeight> & dist_table) {
+                                        const DistTableWrapper<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
     // 1. grab a random location and mark as starting point
@@ -89,9 +90,10 @@ std::vector<NodeID> NearestNeighbourTSP(const std::vector<NodeID> & locations,
 
             // 2. FIND NEAREST NEIGHBOUR
             for (auto next : locations) {
+                auto curr_dist = dist_table(curr_node, next);
                 if(!visited[next] &&
-                   *(dist_table.begin() + curr_node * number_of_locations + next) < min_dist) {
-                    min_dist = *(dist_table.begin() + curr_node * number_of_locations + next);
+                    curr_dist < min_dist) {
+                    min_dist = curr_dist;
                     min_id = next;
                 }
             }

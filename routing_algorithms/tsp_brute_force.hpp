@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/search_engine.hpp"
 #include "../util/string_util.hpp"
+#include "../util/dist_table_wrapper.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -52,24 +53,22 @@ namespace tsp
 {
 
 template <typename number>
-int ReturnDistance(const std::vector<EdgeWeight> & dist_table,
+int ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
                    const std::vector<number> & location_order,
                    const EdgeWeight min_route_dist,
-                   const int number_of_locations) {
-    int route_dist = 0;
+                   const std::size_t  number_of_locations) {
+    EdgeWeight route_dist = 0;
     int i = 0;
-    while (i < location_order.size() - 1) {
-        route_dist += *(dist_table.begin() + (location_order[i] * number_of_locations) + location_order[i+1]);
+    while (i < location_order.size()) {
+        route_dist += dist_table(location_order[i], location_order[(i+1) % number_of_locations]);
         ++i;
     }
-    //get distance from last location to first location
-    route_dist += *(dist_table.begin() + (location_order[location_order.size()-1] * number_of_locations) + location_order[0]);
     return route_dist;
 }
 
 std::vector<NodeID> BruteForceTSP(std::vector<NodeID> & component,
                                   const std::size_t number_of_locations,
-                                  const std::vector<EdgeWeight> & dist_table) {
+                                  const DistTableWrapper<EdgeWeight> & dist_table) {
 
     std::vector<NodeID> route;
     route.reserve(number_of_locations);
@@ -84,7 +83,7 @@ std::vector<NodeID> BruteForceTSP(std::vector<NodeID> & component,
             min_route_dist = new_distance;
             route = component;
         }
-    } while(std::next_permutation(component.begin(), component.end()));
+    } while(std::next_permutation(std::begin(component), std::end(component)));
 
     return route;
 }
