@@ -103,12 +103,11 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
     }
 
-    void SplitUnaccessibleLocations(PhantomNodeArray & phantom_node_vector,
+    void SplitUnaccessibleLocations(const std::size_t number_of_locations,
                                     std::vector<EdgeWeight> & result_table,
                                     std::vector<std::vector<NodeID>> & components) {
 
         // Run TarjanSCC
-        const auto number_of_locations = phantom_node_vector.size();
         auto wrapper = std::make_shared<MatrixGraphWrapper<EdgeWeight>>(result_table, number_of_locations);
         // auto empty_restriction = RestrictionMap(std::vector<TurnRestriction>());
         // std::vector<bool> empty_vector;
@@ -212,7 +211,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             TIMER_START(tsp);
             // Compute all SCC
             std::vector<std::vector<NodeID>> components;
-            SplitUnaccessibleLocations(phantom_node_vector, *result_table, components);
+            SplitUnaccessibleLocations(number_of_locations, *result_table, components);
             // std::vector<std::vector<NodeID>> res_route (components.size()-1);
             std::vector<std::vector<NodeID>> res_route;
 
@@ -221,24 +220,23 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             for(auto k = 0; k < components.size(); ++k) {
                 if (components[k].size() > 1) {
                     std::vector<NodeID> scc_route;
-                    scc_route.reserve(components[k].size());
 
                     // Compute the TSP with the given algorithm
                     if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
-                        SimpleLogger().Write() << "Running SCC BF";
-                        osrm::tsp::BruteForceTSP(components[k], number_of_locations, *result_table, scc_route);
+                        SimpleLogger().Write() << "Running brute force on multiple SCC";
+                        scc_route = osrm::tsp::BruteForceTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     } else if (route_parameters.tsp_algo == "NN") {
-                        SimpleLogger().Write() << "Running SCC NN";
-                        osrm::tsp::NearestNeighbourTSP(components[k], number_of_locations, *result_table, scc_route);
+                        SimpleLogger().Write() << "Running nearest neighbour on multiple SCC";
+                        scc_route = osrm::tsp::NearestNeighbourTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     } else if (route_parameters.tsp_algo == "FI") {
-                        SimpleLogger().Write() << "Running SCC FI";
-                        osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table, scc_route);
+                        SimpleLogger().Write() << "Running farthest insertion on multiple SCC";
+                        scc_route = osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     } else{
-                        SimpleLogger().Write() << "Running SCC FI";
-                        osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table, scc_route);
+                        SimpleLogger().Write() << "Running farthest insertion on multiple SCC";
+                        scc_route = osrm::tsp::FarthestInsertionTSP(components[k], number_of_locations, *result_table);
                         res_route.push_back(scc_route);
                     }
                 }
@@ -263,23 +261,22 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             SetDistanceOutput(dist, json_result);
         } else { //run TSP computation for all locations
             std::vector<NodeID> res_route;
-            res_route.reserve(number_of_locations);
 
             // Compute the TSP with the given algorithm
             TIMER_START(tsp);
             // TODO patrick nach userfreundlichkeit fragen, BF vs bf usw
             if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
-                SimpleLogger().Write() << "Running BF";
-                osrm::tsp::BruteForceTSP(number_of_locations, *result_table, res_route);
+                SimpleLogger().Write() << "Running brute force";
+                res_route = osrm::tsp::BruteForceTSP(number_of_locations, *result_table);
             } else if (route_parameters.tsp_algo == "NN") {
-                SimpleLogger().Write() << "Running NN";
-                osrm::tsp::NearestNeighbourTSP(number_of_locations, *result_table, res_route);
+                SimpleLogger().Write() << "Running nearest neighbour";
+                res_route = osrm::tsp::NearestNeighbourTSP(number_of_locations, *result_table);
             } else if (route_parameters.tsp_algo == "FI") {
-                SimpleLogger().Write() << "Running FI";
-                osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table, res_route);
+                SimpleLogger().Write() << "Running farthest insertion";
+                res_route = osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table);
             } else {
-                SimpleLogger().Write() << "Running FI";
-                osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table, res_route);
+                SimpleLogger().Write() << "Running farthest insertion";
+                res_route = osrm::tsp::FarthestInsertionTSP(number_of_locations, *result_table);
             }
             // TODO asserts numer of result blablabla size
             // TODO std::is_permutation
