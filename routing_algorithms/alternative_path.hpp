@@ -437,7 +437,7 @@ class AlternativeRouting final
             {
                 EdgeID edgeID = facade->FindEdgeInEitherDirection(
                     packed_s_v_path[current_node], packed_s_v_path[current_node + 1]);
-                *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
+                *sharing_of_via_path += facade->GetEdgeData(edgeID).weight;
             }
             else
             {
@@ -467,7 +467,7 @@ class AlternativeRouting final
             EdgeID selected_edge =
                 facade->FindEdgeInEitherDirection(partially_unpacked_via_path[current_node],
                                                   partially_unpacked_via_path[current_node + 1]);
-            *sharing_of_via_path += facade->GetEdgeData(selected_edge).distance;
+            *sharing_of_via_path += facade->GetEdgeData(selected_edge).weight;
         }
 
         // Second, partially unpack v-->t in reverse order until paths deviate and note lengths
@@ -482,7 +482,7 @@ class AlternativeRouting final
             {
                 EdgeID edgeID = facade->FindEdgeInEitherDirection(
                     packed_v_t_path[via_path_index - 1], packed_v_t_path[via_path_index]);
-                *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
+                *sharing_of_via_path += facade->GetEdgeData(edgeID).weight;
             }
             else
             {
@@ -511,7 +511,7 @@ class AlternativeRouting final
                 EdgeID edgeID = facade->FindEdgeInEitherDirection(
                     partially_unpacked_via_path[via_path_index - 1],
                     partially_unpacked_via_path[via_path_index]);
-                *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
+                *sharing_of_via_path += facade->GetEdgeData(edgeID).weight;
             }
             else
             {
@@ -549,7 +549,7 @@ class AlternativeRouting final
     //         packed_alternate_path[aindex] << "," << packed_alternate_path[aindex+1] << ")";
     //         EdgeID edgeID = facade->FindEdgeInEitherDirection(packed_alternate_path[aindex],
     //         packed_alternate_path[aindex+1]);
-    //         sharing += facade->GetEdgeData(edgeID).distance;
+    //         sharing += facade->GetEdgeData(edgeID).weight;
     //         ++aindex;
     //     }
 
@@ -561,7 +561,7 @@ class AlternativeRouting final
     //     packed_shortest_path[bindex-1]) ) {
     //         EdgeID edgeID = facade->FindEdgeInEitherDirection(packed_alternate_path[aindex],
     //         packed_alternate_path[aindex-1]);
-    //         sharing += facade->GetEdgeData(edgeID).distance;
+    //         sharing += facade->GetEdgeData(edgeID).weight;
     //         --aindex; --bindex;
     //     }
     //     return sharing;
@@ -625,7 +625,7 @@ class AlternativeRouting final
             {
 
                 const NodeID to = facade->GetTarget(edge);
-                const int edge_weight = data.distance;
+                const int edge_weight = data.weight;
 
                 BOOST_ASSERT(edge_weight > 0);
                 const int to_distance = distance + edge_weight;
@@ -722,7 +722,7 @@ class AlternativeRouting final
         {
             const EdgeID current_edge_id =
                 facade->FindEdgeInEitherDirection(packed_s_v_path[i - 1], packed_s_v_path[i]);
-            const int length_of_current_edge = facade->GetEdgeData(current_edge_id).distance;
+            const int length_of_current_edge = facade->GetEdgeData(current_edge_id).weight;
             if ((length_of_current_edge + unpacked_until_distance) >= T_threshold)
             {
                 unpack_stack.emplace(packed_s_v_path[i - 1], packed_s_v_path[i]);
@@ -754,7 +754,7 @@ class AlternativeRouting final
                 const EdgeID second_segment_edge_id = facade->FindEdgeInEitherDirection(
                     via_path_middle_node_id, via_path_edge.second);
                 const int second_segment_length =
-                    facade->GetEdgeData(second_segment_edge_id).distance;
+                    facade->GetEdgeData(second_segment_edge_id).weight;
                 // attention: !unpacking in reverse!
                 // Check if second segment is the one to go over treshold? if yes add second segment
                 // to stack, else push first segment to stack and add distance of second one.
@@ -771,7 +771,7 @@ class AlternativeRouting final
             else
             {
                 // edge is not a shortcut, set the start node for T-Test to end of edge.
-                unpacked_until_distance += current_edge_data.distance;
+                unpacked_until_distance += current_edge_data.weight;
                 s_P = via_path_edge.first;
             }
         }
@@ -785,7 +785,7 @@ class AlternativeRouting final
         {
             const EdgeID edgeID =
                 facade->FindEdgeInEitherDirection(packed_v_t_path[i], packed_v_t_path[i + 1]);
-            int length_of_current_edge = facade->GetEdgeData(edgeID).distance;
+            int length_of_current_edge = facade->GetEdgeData(edgeID).weight;
             if (length_of_current_edge + unpacked_until_distance >= T_threshold)
             {
                 unpack_stack.emplace(packed_v_t_path[i], packed_v_t_path[i + 1]);
@@ -815,7 +815,7 @@ class AlternativeRouting final
                 const NodeID middleOfViaPath = current_edge_data.id;
                 EdgeID edgeIDOfFirstSegment =
                     facade->FindEdgeInEitherDirection(via_path_edge.first, middleOfViaPath);
-                int lengthOfFirstSegment = facade->GetEdgeData(edgeIDOfFirstSegment).distance;
+                int lengthOfFirstSegment = facade->GetEdgeData(edgeIDOfFirstSegment).weight;
                 // Check if first segment is the one to go over treshold? if yes first segment to
                 // stack, else push second segment to stack and add distance of first one.
                 if (unpacked_until_distance + lengthOfFirstSegment >= T_threshold)
@@ -831,7 +831,7 @@ class AlternativeRouting final
             else
             {
                 // edge is not a shortcut, set the start node for T-Test to end of edge.
-                unpacked_until_distance += current_edge_data.distance;
+                unpacked_until_distance += current_edge_data.weight;
                 t_P = via_path_edge.second;
             }
         }

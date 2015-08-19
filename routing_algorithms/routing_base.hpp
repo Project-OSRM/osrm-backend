@@ -106,7 +106,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             if (reverse_flag)
             {
                 const NodeID to = facade->GetTarget(edge);
-                const int edge_weight = data.distance;
+                const int edge_weight = data.weight;
 
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
 
@@ -128,7 +128,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
 
                 const NodeID to = facade->GetTarget(edge);
-                const int edge_weight = data.distance;
+                const int edge_weight = data.weight;
 
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 const int to_distance = distance + edge_weight;
@@ -186,7 +186,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             int edge_weight = std::numeric_limits<EdgeWeight>::max();
             for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
-                const int weight = facade->GetEdgeData(edge_id).distance;
+                const int weight = facade->GetEdgeData(edge_id).weight;
                 if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
                     facade->GetEdgeData(edge_id).forward)
                 {
@@ -206,7 +206,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
                 {
-                    const int weight = facade->GetEdgeData(edge_id).distance;
+                    const int weight = facade->GetEdgeData(edge_id).weight;
                     if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
                         facade->GetEdgeData(edge_id).backward)
                     {
@@ -236,7 +236,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
                     unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id), name_index,
-                                               turn_instruction, ed.distance, travel_mode);
+                                               turn_instruction, ed.weight, travel_mode);
                 }
                 else
                 {
@@ -261,7 +261,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                                    TurnInstruction::NoTurn, 0, travel_mode);
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
-                    unpacked_path.back().segment_duration = ed.distance;
+                    unpacked_path.back().segment_duration = ed.weight;
                 }
             }
         }
@@ -347,7 +347,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             int edge_weight = std::numeric_limits<EdgeWeight>::max();
             for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
-                const int weight = facade->GetEdgeData(edge_id).distance;
+                const int weight = facade->GetEdgeData(edge_id).weight;
                 if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
                     facade->GetEdgeData(edge_id).forward)
                 {
@@ -360,7 +360,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
                 {
-                    const int weight = facade->GetEdgeData(edge_id).distance;
+                    const int weight = facade->GetEdgeData(edge_id).weight;
                     if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
                         facade->GetEdgeData(edge_id).backward)
                     {

@@ -309,12 +309,12 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
         // every target needs to be valid
         BOOST_ASSERT(current_edge.target <= max_used_node_id);
 #ifndef NDEBUG
-        if (current_edge.data.distance <= 0)
+        if (current_edge.data.weight <= 0)
         {
             SimpleLogger().Write(logWARNING) << "Edge: " << edge
                                              << ",source: " << (*contracted_edge_list)[edge].source
                                              << ", target: " << (*contracted_edge_list)[edge].target
-                                             << ", dist: " << current_edge.data.distance;
+                                             << ", weight: " << current_edge.data.weight;
 
             SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
                                              << (*contracted_edge_list)[edge].source << "/"

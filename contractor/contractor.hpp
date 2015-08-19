@@ -59,22 +59,22 @@ class Contractor
     struct ContractorEdgeData
     {
         ContractorEdgeData()
-            : distance(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
+            : weight(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
               is_original_via_node_ID(false)
         {
         }
-        ContractorEdgeData(unsigned distance,
+        ContractorEdgeData(unsigned weight,
                            unsigned original_edges,
                            unsigned id,
                            bool shortcut,
                            bool forward,
                            bool backward)
-            : distance(distance), id(id),
+            : weight(weight), id(id),
               originalEdges(std::min((unsigned)1 << 28, original_edges)), shortcut(shortcut),
               forward(forward), backward(backward), is_original_via_node_ID(false)
         {
         }
-        unsigned distance;
+        unsigned weight;
         unsigned id;
         unsigned originalEdges : 28;
         bool shortcut : 1;
@@ -165,7 +165,7 @@ class Contractor
         for (auto diter = input_edge_list.dbegin(); diter != dend; ++diter)
         {
             BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(diter->weight, 1)) > 0,
-                             "edge distance < 1");
+                             "edge weight < 1");
 #ifndef NDEBUG
             if (static_cast<unsigned int>(std::max(diter->weight, 1)) > 24 * 60 * 60 * 10)
             {
@@ -212,27 +212,27 @@ class Contractor
             forward_edge.data.shortcut = reverse_edge.data.shortcut = false;
             forward_edge.data.id = reverse_edge.data.id = id;
             forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
-            forward_edge.data.distance = reverse_edge.data.distance =
+            forward_edge.data.weight = reverse_edge.data.weight =
                 std::numeric_limits<int>::max();
             // remove parallel edges
             while (i < edges.size() && edges[i].source == source && edges[i].target == target)
             {
                 if (edges[i].data.forward)
                 {
-                    forward_edge.data.distance =
-                        std::min(edges[i].data.distance, forward_edge.data.distance);
+                    forward_edge.data.weight =
+                        std::min(edges[i].data.weight, forward_edge.data.weight);
                 }
                 if (edges[i].data.backward)
                 {
-                    reverse_edge.data.distance =
-                        std::min(edges[i].data.distance, reverse_edge.data.distance);
+                    reverse_edge.data.weight =
+                        std::min(edges[i].data.weight, reverse_edge.data.weight);
                 }
                 ++i;
             }
             // merge edges (s,t) and (t,s) into bidirectional edge
-            if (forward_edge.data.distance == reverse_edge.data.distance)
+            if (forward_edge.data.weight == reverse_edge.data.weight)
             {
-                if ((int)forward_edge.data.distance != std::numeric_limits<int>::max())
+                if ((int)forward_edge.data.weight != std::numeric_limits<int>::max())
                 {
                     forward_edge.data.backward = true;
                     edges[edge++] = forward_edge;
@@ -240,11 +240,11 @@ class Contractor
             }
             else
             { // insert seperate edges
-                if (((int)forward_edge.data.distance) != std::numeric_limits<int>::max())
+                if (((int)forward_edge.data.weight) != std::numeric_limits<int>::max())
                 {
                     edges[edge++] = forward_edge;
                 }
-                if ((int)reverse_edge.data.distance != std::numeric_limits<int>::max())
+                if ((int)reverse_edge.data.weight != std::numeric_limits<int>::max())
                 {
                     edges[edge++] = reverse_edge;
                 }
@@ -490,7 +490,7 @@ class Contractor
                             contractor_graph->GetEdgeData(current_edge_ID);
                         if (current_data.shortcut && edge.data.forward == current_data.forward &&
                             edge.data.backward == current_data.backward &&
-                            edge.data.distance < current_data.distance)
+                            edge.data.weight < current_data.weight)
                         {
                             // found a duplicate edge with smaller weight, update it.
                             current_data = edge.data;
@@ -600,7 +600,7 @@ class Contractor
                     }
                     BOOST_ASSERT_MSG(UINT_MAX != new_edge.source, "Source id invalid");
                     BOOST_ASSERT_MSG(UINT_MAX != new_edge.target, "Target id invalid");
-                    new_edge.data.distance = data.distance;
+                    new_edge.data.weight = data.weight;
                     new_edge.data.shortcut = data.shortcut;
                     if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
@@ -630,7 +630,7 @@ class Contractor
     }
 
   private:
-    inline void Dijkstra(const int max_distance,
+    inline void Dijkstra(const int max_weight,
                          const unsigned number_of_targets,
                          const int maxNodes,
                          ContractorThreadData *const data,
@@ -644,14 +644,14 @@ class Contractor
         while (!heap.Empty())
         {
             const NodeID node = heap.DeleteMin();
-            const int distance = heap.GetKey(node);
+            const int weight = heap.GetKey(node);
             const short current_hop = heap.GetData(node).hop + 1;
 
             if (++nodes > maxNodes)
             {
                 return;
             }
-            if (distance > max_distance)
+            if (weight > max_weight)
             {
                 return;
             }
@@ -679,17 +679,17 @@ class Contractor
                 {
                     continue;
                 }
-                const int to_distance = distance + data.distance;
+                const int to_weight = weight + data.weight;
 
                 // New Node discovered -> Add to Heap + Node Info Storage
                 if (!heap.WasInserted(to))
                 {
-                    heap.Insert(to, to_distance, ContractorHeapData(current_hop, false));
+                    heap.Insert(to, to_weight, ContractorHeapData(current_hop, false));
                 }
-                // Found a shorter Path -> Update distance
-                else if (to_distance < heap.GetKey(to))
+                // Found a shorter Path -> Update weight
+                else if (to_weight < heap.GetKey(to))
                 {
-                    heap.DecreaseKey(to, to_distance);
+                    heap.DecreaseKey(to, to_weight);
                     heap.GetData(to).hop = current_hop;
                 }
             }
@@ -747,7 +747,7 @@ class Contractor
 
             heap.Clear();
             heap.Insert(source, 0, ContractorHeapData());
-            int max_distance = 0;
+            int max_weight = 0;
             unsigned number_of_targets = 0;
 
             for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
@@ -758,8 +758,8 @@ class Contractor
                     continue;
                 }
                 const NodeID target = contractor_graph->GetTarget(out_edge);
-                const int path_distance = in_data.distance + out_data.distance;
-                max_distance = std::max(max_distance, path_distance);
+                const int path_weight = in_data.weight + out_data.weight;
+                max_weight = std::max(max_weight, path_weight);
                 if (!heap.WasInserted(target))
                 {
                     heap.Insert(target, INT_MAX, ContractorHeapData(0, true));
@@ -769,11 +769,11 @@ class Contractor
 
             if (RUNSIMULATION)
             {
-                Dijkstra(max_distance, number_of_targets, 1000, data, node);
+                Dijkstra(max_weight, number_of_targets, 1000, data, node);
             }
             else
             {
-                Dijkstra(max_distance, number_of_targets, 2000, data, node);
+                Dijkstra(max_weight, number_of_targets, 2000, data, node);
             }
             for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
             {
@@ -783,9 +783,9 @@ class Contractor
                     continue;
                 }
                 const NodeID target = contractor_graph->GetTarget(out_edge);
-                const int path_distance = in_data.distance + out_data.distance;
-                const int distance = heap.GetKey(target);
-                if (path_distance < distance)
+                const int path_weight = in_data.weight + out_data.weight;
+                const int weight = heap.GetKey(target);
+                if (path_weight < weight)
                 {
                     if (RUNSIMULATION)
                     {
@@ -796,11 +796,11 @@ class Contractor
                     }
                     else
                     {
-                        inserted_edges.emplace_back(source, target, path_distance,
+                        inserted_edges.emplace_back(source, target, path_weight,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node, true, true, false);
 
-                        inserted_edges.emplace_back(target, source, path_distance,
+                        inserted_edges.emplace_back(target, source, path_weight,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node, true, false, true);
                     }
@@ -823,7 +823,7 @@ class Contractor
                     {
                         continue;
                     }
-                    if (inserted_edges[other].data.distance != inserted_edges[i].data.distance)
+                    if (inserted_edges[other].data.weight != inserted_edges[i].data.weight)
                     {
                         continue;
                     }
