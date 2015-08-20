@@ -122,10 +122,6 @@ void RouteParameters::setLanguage(const std::string &language_string)
     language = language_string;
 }
 
-void RouteParameters::setTripAlgo(const std::string &trip_algo_string)
-{
-    trip_algo = trip_algo_string;
-}
 
 void RouteParameters::setGeometryFlag(const bool flag) { geometry = flag; }
 

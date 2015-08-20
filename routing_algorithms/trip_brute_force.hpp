@@ -55,11 +55,11 @@ namespace trip
 // computes the distance of a given permutation
 EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
                           const std::vector<NodeID> & location_order,
-                          const EdgeWeight min_route_dist,
-                          const std::size_t component_size) {
+                          const EdgeWeight & min_route_dist,
+                          const std::size_t & component_size) {
     EdgeWeight route_dist = 0;
     std::size_t i = 0;
-    while (i < location_order.size()) {
+    while (i < location_order.size() && (route_dist < min_route_dist)) {
         route_dist += dist_table(location_order[i], location_order[(i+1) % component_size]);
         ++i;
     }

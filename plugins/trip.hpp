@@ -270,21 +270,10 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 NodeIDIterator start = std::begin(scc.component) + scc.range[k];
                 NodeIDIterator end = std::begin(scc.component) + scc.range[k+1];
 
-                // Compute the Trip with the given algorithm
-                if (route_parameters.trip_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
-                    SimpleLogger().Write() << "Running brute force";
+                if (component_size < BF_MAX_FEASABLE) {
                     scc_route = osrm::trip::BruteForceTrip(start, end, number_of_locations, result_table);
                     route_result.push_back(scc_route);
-                } else if (route_parameters.trip_algo == "NN") {
-                    SimpleLogger().Write() << "Running nearest neighbour";
-                    scc_route = osrm::trip::NearestNeighbourTrip(start, end, number_of_locations, result_table);
-                    route_result.push_back(scc_route);
-                } else if (route_parameters.trip_algo == "FI") {
-                    SimpleLogger().Write() << "Running farthest insertion";
-                    scc_route = osrm::trip::FarthestInsertionTrip(start, end, number_of_locations, result_table);
-                    route_result.push_back(scc_route);
-                } else{
-                    SimpleLogger().Write() << "Running farthest insertion";
+                } else {
                     scc_route = osrm::trip::FarthestInsertionTrip(start, end, number_of_locations, result_table);
                     route_result.push_back(scc_route);
                 }

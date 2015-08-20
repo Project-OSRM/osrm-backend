@@ -81,8 +81,6 @@ struct RouteParameters
 
     void getCoordinatesFromGeometry(const std::string geometry_string);
 
-    void setTripAlgo(const std::string &trip_algo);
-
     short zoom_level;
     bool print_instructions;
     bool alternate_route;
@@ -99,7 +97,6 @@ struct RouteParameters
     std::string output_format;
     std::string jsonp_parameter;
     std::string language;
-    std::string trip_algo;
     std::vector<std::string> hints;
     std::vector<unsigned> timestamps;
     std::vector<bool> uturns;
