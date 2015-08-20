@@ -47,7 +47,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<const RestrictionMap> restriction_map,
     const std::vector<QueryNode> &node_info_list,
     SpeedProfileProperties speed_profile)
-    : m_node_info_list(node_info_list), m_node_based_graph(std::move(node_based_graph)),
+    : m_max_edge_id(0), m_node_info_list(node_info_list), m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
       speed_profile(std::move(speed_profile))
