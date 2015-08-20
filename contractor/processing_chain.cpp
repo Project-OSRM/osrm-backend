@@ -257,7 +257,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
     SimpleLogger().Write() << "Building node array";
     StaticGraph<EdgeData>::EdgeIterator edge = 0;
     StaticGraph<EdgeData>::EdgeIterator position = 0;
-    StaticGraph<EdgeData>::EdgeIterator last_edge = edge;
+    StaticGraph<EdgeData>::EdgeIterator last_edge;
 
     // initializing 'first_edge'-field of nodes:
     for (const auto node : osrm::irange(0u, max_used_node_id+1))
@@ -295,7 +295,6 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
 
     // serialize all edges
     SimpleLogger().Write() << "Building edge array";
-    edge = 0;
     int number_of_used_edges = 0;
 
     StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
