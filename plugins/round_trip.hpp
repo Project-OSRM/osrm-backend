@@ -106,27 +106,43 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
     }
 
+    // Object to hold all strongly connected components (scc) of a graph
+    // to access all graphs with component ID i, get the iterators by:
+    // auto start = std::begin(scc_component.component) + scc_component.range[i];
+    // auto end = std::begin(scc_component.component) + scc_component.range[i+1];
     struct SCC_Component{
+        // in_component: all NodeIDs sorted by component ID
+        // in_range: index where a new component starts
+        //
+        // example: NodeID 0, 1, 2, 4, 5 are in component 0
+        //          NodeID 3, 6, 7, 8    are in component 1
+        //          => in_component = [0, 1, 2, 4, 5, 3, 6, 7, 8]
+        //          => in_range = [0, 5]
         SCC_Component(std::vector<NodeID> in_component,
-                      std::vector<size_t> in_component_range)
-                      : component(in_component), component_range(in_component_range) {
-                        component_range.push_back(in_component.size());
+                      std::vector<size_t> in_range)
+                      : component(in_component), range(in_range) {
+                        range.push_back(in_component.size());
                       };
 
+        // constructor to use when whole graph is one single scc
         SCC_Component(std::vector<NodeID> in_component)
-                      : component(in_component), component_range({0, in_component.size()}) {
+                      : component(in_component), range({0, in_component.size()}) {
                       };
 
         std::size_t GetNumberOfComponents() const{
-            return component_range.size() - 1;
+            return range.size() - 1;
         }
 
         const std::vector<NodeID> component;
-        std::vector<size_t> component_range;
+        // component range = in_range + [component.size()]
+        std::vector<size_t> range;
     };
 
+    // takes the number of locations and its distance matrix,
+    // identifies and splits the graph in its strongly connected components (scc)
+    // and returns an SCC_Component
     SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
-                                    const DistTableWrapper<EdgeWeight> & result_table) {
+                                             const DistTableWrapper<EdgeWeight> & result_table) {
 
         // Run TarjanSCC
         auto wrapper = std::make_shared<MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(), number_of_locations);
@@ -134,16 +150,16 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         scc.run();
 
         std::vector<size_t> range_insertion;
-        std::vector<size_t> component_range;
+        std::vector<size_t> range;
         range_insertion.reserve(scc.get_number_of_components());
-        component_range.reserve(scc.get_number_of_components());
+        range.reserve(scc.get_number_of_components());
 
         std::vector<NodeID> components(number_of_locations, 0);
 
         auto prefix = 0;
         for (size_t j = 0; j < scc.get_number_of_components(); ++j){
             range_insertion.push_back(prefix);
-            component_range.push_back(prefix);
+            range.push_back(prefix);
             prefix += scc.get_component_size(j);
         }
 
@@ -152,31 +168,16 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             ++range_insertion[scc.get_component_id(i)];
         }
 
-        return SCC_Component(components, component_range);
+        return SCC_Component(components, range);
     }
 
-    void SetLocPermutationOutput(const std::vector<NodeID> & loc_permutation, osrm::json::Object & json_result){
-        osrm::json::Array json_loc_permutation;
-        json_loc_permutation.values.insert(std::end(json_loc_permutation.values), std::begin(loc_permutation), std::end(loc_permutation));
-        json_result.values["loc_permutation"] = json_loc_permutation;
-    }
-
-    void SetDistanceOutput(const int distance, osrm::json::Object & json_result) {
-        json_result.values["distance"] = distance;
-    }
-    void SetRuntimeOutput(const float runtime, osrm::json::Object & json_result) {
-        json_result.values["runtime"] = runtime;
-    }
-
-    void SetGeometry(const RouteParameters &route_parameters,
-                     const InternalRouteResult & min_route,
-                     osrm::json::Object & json_result) {
-        // return geometry result to json
-        std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
-        descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
-
-        descriptor->SetConfig(route_parameters);
-        descriptor->Run(min_route, json_result);
+    void SetLocPermutationOutput(const std::vector<NodeID> & permutation,
+                                 osrm::json::Object & json_result){
+        osrm::json::Array json_permutation;
+        json_permutation.values.insert(std::end(json_permutation.values),
+                                       std::begin(permutation),
+                                       std::end(permutation));
+        json_result.values["permutation"] = json_permutation;
     }
 
     void ComputeRoute(const PhantomNodeArray & phantom_node_vector,
@@ -187,6 +188,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         PhantomNodes viapoint;
         for (auto it = std::begin(trip); it != std::end(trip); ++it) {
             const auto from_node = *it;
+            // if from_node is the last node, compute the route from the last to the first location
             const auto to_node = std::next(it) != std::end(trip) ? *std::next(it) : *std::begin(trip);
             viapoint = PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
             min_route.segment_end_coordinates.emplace_back(viapoint);
@@ -234,33 +236,34 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         using NodeIDIterator = typename std::vector<NodeID>::const_iterator;
 
-        std::vector<std::vector<NodeID>> res_route;
+        std::vector<std::vector<NodeID>> route_result;
+        route_result.reserve(scc.GetNumberOfComponents());
         TIMER_START(tsp);
         //run TSP computation for every SCC
         for(auto k = 0; k < scc.GetNumberOfComponents(); ++k) {
-            const auto component_size = scc.component_range[k+1] - scc.component_range[k];
+            const auto component_size = scc.range[k+1] - scc.range[k];
             if (component_size > 1) {
                 std::vector<NodeID> scc_route;
-                NodeIDIterator start = std::begin(scc.component) + scc.component_range[k];
-                NodeIDIterator end = std::begin(scc.component) + scc.component_range[k+1];
+                NodeIDIterator start = std::begin(scc.component) + scc.range[k];
+                NodeIDIterator end = std::begin(scc.component) + scc.range[k+1];
 
                 // Compute the TSP with the given algorithm
                 if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
                     SimpleLogger().Write() << "Running brute force";
                     scc_route = osrm::tsp::BruteForceTSP(start, end, number_of_locations, result_table);
-                    res_route.push_back(scc_route);
+                    route_result.push_back(scc_route);
                 } else if (route_parameters.tsp_algo == "NN") {
                     SimpleLogger().Write() << "Running nearest neighbour";
                     scc_route = osrm::tsp::NearestNeighbourTSP(start, end, number_of_locations, result_table);
-                    res_route.push_back(scc_route);
+                    route_result.push_back(scc_route);
                 } else if (route_parameters.tsp_algo == "FI") {
                     SimpleLogger().Write() << "Running farthest insertion";
                     scc_route = osrm::tsp::FarthestInsertionTSP(start, end, number_of_locations, result_table);
-                    res_route.push_back(scc_route);
+                    route_result.push_back(scc_route);
                 } else{
                     SimpleLogger().Write() << "Running farthest insertion";
                     scc_route = osrm::tsp::FarthestInsertionTSP(start, end, number_of_locations, result_table);
-                    res_route.push_back(scc_route);
+                    route_result.push_back(scc_route);
                 }
 
                 SimpleLogger().Write() << "Route #"
@@ -272,28 +275,40 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                                                }
                                                return s;
                                            }();
+            } else {
+                route_result.push_back({scc.component[scc.range[k]]});
             }
         }
-        std::vector<InternalRouteResult> comp_route (res_route.size());
-        for (auto r = 0; r < res_route.size(); ++r) {
-            ComputeRoute(phantom_node_vector, route_parameters, res_route[r], comp_route[r]);
+
+        // compute all round trip routes
+        std::vector<InternalRouteResult> comp_route (route_result.size());
+        for (auto r = 0; r < route_result.size(); ++r) {
+            ComputeRoute(phantom_node_vector, route_parameters, route_result[r], comp_route[r]);
         }
+
         TIMER_STOP(tsp);
 
-        SetRuntimeOutput(TIMER_MSEC(tsp), json_result);
-        //TODO
-        SetLocPermutationOutput(res_route[0], json_result);
+        // prepare JSON output
 
-        std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
-        descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
-        descriptor->SetConfig(route_parameters);
-        auto dist = 0;
-        for (auto r : comp_route) {
-            dist += r.shortest_path_length;
-            // SetGeometry(route_parameters, r, json_result);
-            descriptor->Run(r, json_result);
+
+        // create a json object for every trip
+        osrm::json::Array trip;
+        for (auto i = 0; i < route_result.size(); ++i) {
+            std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
+            descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
+            descriptor->SetConfig(route_parameters);
+
+            osrm::json::Object scc_trip;
+
+            // set permutation output
+            SetLocPermutationOutput(route_result[i], scc_trip);
+            // set viaroute output
+            descriptor->Run(comp_route[i], scc_trip);
+
+            trip.values.push_back(scc_trip);
         }
-        SetDistanceOutput(dist, json_result);
+
+        json_result.values["trips"] = trip;
 
 
 
