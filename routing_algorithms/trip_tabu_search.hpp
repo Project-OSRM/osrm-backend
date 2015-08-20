@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TSP_BRUTE_FORCE_HPP
-#define TSP_BRUTE_FORCE_HPP
+#ifndef TRIP_BRUTE_FORCE_HPP
+#define TRIP_BRUTE_FORCE_HPP
 
 
 #include "../data_structures/search_engine.hpp"
@@ -48,10 +48,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace osrm
 {
-namespace tsp
+namespace trip
 {
 
-void TabuSearchTSP(std::vector<unsigned> & location,
+void TabuSearchTrip(std::vector<unsigned> & location,
                    const PhantomNodeArray & phantom_node_vector,
                    const std::vector<EdgeWeight> & dist_table,
                    InternalRouteResult & min_route,
@@ -60,7 +60,7 @@ void TabuSearchTSP(std::vector<unsigned> & location,
 
 }
 
-void TabuSearchTSP(const PhantomNodeArray & phantom_node_vector,
+void TabuSearchTrip(const PhantomNodeArray & phantom_node_vector,
                    const std::vector<EdgeWeight> & dist_table,
                    InternalRouteResult & min_route,
                    std::vector<int> & min_loc_permutation) {
@@ -70,4 +70,4 @@ void TabuSearchTSP(const PhantomNodeArray & phantom_node_vector,
 
 }
 }
-#endif // TSP_BRUTE_FORCE_HPP
+#endif // TRIP_BRUTE_FORCE_HPP

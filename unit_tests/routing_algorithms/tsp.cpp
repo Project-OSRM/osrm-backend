@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../../routing_algorithms/tsp_brute_force.hpp"
+#include "../../routing_algorithms/trip_brute_force.hpp"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-BOOST_AUTO_TEST_SUITE(tsp)
+BOOST_AUTO_TEST_SUITE(trip)
 
 // BOOST_AUTO_TEST_CASE(check_distance_computation)
 // {

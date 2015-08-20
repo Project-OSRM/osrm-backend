@@ -25,14 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TSP_FARTHEST_INSERTION_HPP
-#define TSP_FARTHEST_INSERTION_HPP
+#ifndef TRIP_FARTHEST_INSERTION_HPP
+#define TRIP_FARTHEST_INSERTION_HPP
 
 
 #include "../data_structures/search_engine.hpp"
 #include "../util/string_util.hpp"
 #include "../util/dist_table_wrapper.hpp"
-#include "../tools/tsp_logs.hpp"
 
 #include <osrm/json_container.hpp>
 
@@ -47,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace osrm
 {
-namespace tsp
+namespace trip
 {
 
 // given a route and a new location, find the best place of insertion and
@@ -150,10 +149,10 @@ std::vector<NodeID> FindRoute(const std::size_t & number_of_locations,
 }
 
 template <typename NodeIDIterator>
-std::vector<NodeID> FarthestInsertionTSP(const NodeIDIterator & start,
-                                         const NodeIDIterator & end,
-                                         const std::size_t number_of_locations,
-                                         const DistTableWrapper<EdgeWeight> & dist_table) {
+std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator & start,
+                                          const NodeIDIterator & end,
+                                          const std::size_t number_of_locations,
+                                          const DistTableWrapper<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
     // 1. start at a random round trip of 2 locations
@@ -192,7 +191,7 @@ std::vector<NodeID> FarthestInsertionTSP(const NodeIDIterator & start,
 }
 
 
-} //end namespace tsp
+} //end namespace trip
 } //end namespace osrm
 
-#endif // TSP_FARTHEST_INSERTION_HPP
+#endif // TRIP_FARTHEST_INSERTION_HPP

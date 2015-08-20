@@ -25,16 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ROUND_TRIP_HPP
-#define ROUND_TRIP_HPP
+#ifndef TRIP_HPP
+#define TRIP_HPP
 
 #include "plugin_base.hpp"
 
 #include "../algorithms/object_encoder.hpp"
 #include "../algorithms/tarjan_scc.hpp"
-#include "../routing_algorithms/tsp_nearest_neighbour.hpp"
-#include "../routing_algorithms/tsp_farthest_insertion.hpp"
-#include "../routing_algorithms/tsp_brute_force.hpp"
+#include "../routing_algorithms/trip_nearest_neighbour.hpp"
+#include "../routing_algorithms/trip_farthest_insertion.hpp"
+#include "../routing_algorithms/trip_brute_force.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/search_engine.hpp"
 #include "../data_structures/matrix_graph_wrapper.hpp"
@@ -258,8 +258,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         std::vector<std::vector<NodeID>> route_result;
         route_result.reserve(scc.GetNumberOfComponents());
-        TIMER_START(tsp);
-        //run TSP computation for every SCC
+        TIMER_START(trip);
+        //run Trip computation for every SCC
         for (std::size_t k = 0; k < scc.GetNumberOfComponents(); ++k) {
             const auto component_size = scc.range[k+1] - scc.range[k];
 
@@ -270,22 +270,22 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 NodeIDIterator start = std::begin(scc.component) + scc.range[k];
                 NodeIDIterator end = std::begin(scc.component) + scc.range[k+1];
 
-                // Compute the TSP with the given algorithm
-                if (route_parameters.tsp_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
+                // Compute the Trip with the given algorithm
+                if (route_parameters.trip_algo == "BF" && route_parameters.coordinates.size() < BF_MAX_FEASABLE) {
                     SimpleLogger().Write() << "Running brute force";
-                    scc_route = osrm::tsp::BruteForceTSP(start, end, number_of_locations, result_table);
+                    scc_route = osrm::trip::BruteForceTrip(start, end, number_of_locations, result_table);
                     route_result.push_back(scc_route);
-                } else if (route_parameters.tsp_algo == "NN") {
+                } else if (route_parameters.trip_algo == "NN") {
                     SimpleLogger().Write() << "Running nearest neighbour";
-                    scc_route = osrm::tsp::NearestNeighbourTSP(start, end, number_of_locations, result_table);
+                    scc_route = osrm::trip::NearestNeighbourTrip(start, end, number_of_locations, result_table);
                     route_result.push_back(scc_route);
-                } else if (route_parameters.tsp_algo == "FI") {
+                } else if (route_parameters.trip_algo == "FI") {
                     SimpleLogger().Write() << "Running farthest insertion";
-                    scc_route = osrm::tsp::FarthestInsertionTSP(start, end, number_of_locations, result_table);
+                    scc_route = osrm::trip::FarthestInsertionTrip(start, end, number_of_locations, result_table);
                     route_result.push_back(scc_route);
                 } else{
                     SimpleLogger().Write() << "Running farthest insertion";
-                    scc_route = osrm::tsp::FarthestInsertionTSP(start, end, number_of_locations, result_table);
+                    scc_route = osrm::trip::FarthestInsertionTrip(start, end, number_of_locations, result_table);
                     route_result.push_back(scc_route);
                 }
 
@@ -311,7 +311,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             ComputeRoute(phantom_node_vector, route_parameters, route_result[r], comp_route[r]);
         }
 
-        TIMER_STOP(tsp);
+        TIMER_STOP(trip);
 
         // prepare JSON output
 
@@ -342,4 +342,4 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
 };
 
-#endif // ROUND_TRIP_HPP
+#endif // TRIP_HPP

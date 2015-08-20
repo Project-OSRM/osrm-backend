@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TSP_NEAREST_NEIGHBOUR_HPP
-#define TSP_NEAREST_NEIGHBOUR_HPP
+#ifndef TRIP_NEAREST_NEIGHBOUR_HPP
+#define TRIP_NEAREST_NEIGHBOUR_HPP
 
 
 #include "../data_structures/search_engine.hpp"
@@ -46,13 +46,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace osrm
 {
-namespace tsp
+namespace trip
 {
 template <typename NodeIDIterator>
-std::vector<NodeID> NearestNeighbourTSP(const NodeIDIterator & start,
-                                        const NodeIDIterator & end,
-                                        const std::size_t number_of_locations,
-                                        const DistTableWrapper<EdgeWeight> & dist_table) {
+std::vector<NodeID> NearestNeighbourTrip(const NodeIDIterator & start,
+                                         const NodeIDIterator & end,
+                                         const std::size_t number_of_locations,
+                                         const DistTableWrapper<EdgeWeight> & dist_table) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
     // 1. grab a random location and mark as starting point
@@ -117,6 +117,6 @@ std::vector<NodeID> NearestNeighbourTSP(const NodeIDIterator & start,
     return route;
 }
 
-} //end namespace tsp
+} //end namespace trip
 } //end namespace osrm
-#endif // TSP_NEAREST_NEIGHBOUR_HPP
+#endif // TRIP_NEAREST_NEIGHBOUR_HPP

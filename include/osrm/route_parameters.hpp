@@ -78,10 +78,10 @@ struct RouteParameters
     void setCompressionFlag(const bool flag);
 
     void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
-    
+
     void getCoordinatesFromGeometry(const std::string geometry_string);
 
-    void setTSPAlgo(const std::string &tsp_algo);
+    void setTripAlgo(const std::string &trip_algo);
 
     short zoom_level;
     bool print_instructions;
@@ -99,7 +99,7 @@ struct RouteParameters
     std::string output_format;
     std::string jsonp_parameter;
     std::string language;
-    std::string tsp_algo;
+    std::string trip_algo;
     std::vector<std::string> hints;
     std::vector<unsigned> timestamps;
     std::vector<bool> uturns;

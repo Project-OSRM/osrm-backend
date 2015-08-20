@@ -41,7 +41,7 @@ class named_mutex;
 #include "../plugins/locate.hpp"
 #include "../plugins/nearest.hpp"
 #include "../plugins/timestamp.hpp"
-#include "../plugins/round_trip.hpp"
+#include "../plugins/trip.hpp"
 #include "../plugins/viaroute.hpp"
 #include "../plugins/match.hpp"
 #include "../server/data_structures/datafacade_base.hpp"

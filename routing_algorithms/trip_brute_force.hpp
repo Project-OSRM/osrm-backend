@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TSP_BRUTE_FORCE_HPP
-#define TSP_BRUTE_FORCE_HPP
+#ifndef Trip_BRUTE_FORCE_HPP
+#define Trip_BRUTE_FORCE_HPP
 
 
 #include "../data_structures/search_engine.hpp"
@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace osrm
 {
-namespace tsp
+namespace trip
 {
 
 // computes the distance of a given permutation
@@ -71,7 +71,7 @@ EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
 
 // computes the route by computing all permutations and selecting the shortest
 template <typename NodeIDIterator>
-std::vector<NodeID> BruteForceTSP(const NodeIDIterator start,
+std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
                                   const NodeIDIterator end,
                                   const std::size_t number_of_locations,
                                   const DistTableWrapper<EdgeWeight> & dist_table) {
@@ -99,6 +99,6 @@ std::vector<NodeID> BruteForceTSP(const NodeIDIterator start,
     return route;
 }
 
-} //end namespace tsp
+} //end namespace trip
 } //end namespace osrm
-#endif // TSP_BRUTE_FORCE_HPP
+#endif // Trip_BRUTE_FORCE_HPP
