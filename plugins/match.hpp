@@ -299,9 +299,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                     current_coordinate = facade->GetCoordinateOfNode(path_data.node);
                     factory.AppendSegment(current_coordinate, path_data);
                 }
+                // in some cases the map matching alogrithm creates lots of ViaPoints
+                // these points aren't very user-friendly, so instead of checking the is_via_leg function
+                // we always set it to false
                 factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
                                       raw_route.target_traversed_in_reverse[i],
-                                      raw_route.is_via_leg(i));
+                                      false);
             }
             // we run this to get the instructions
             factory.Run(route_parameters.zoom_level);
@@ -444,11 +447,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
         if(route_parameters.print_instructions)
         {
-            osrm::json::Object json_summary_object;
-
             setDestinationPoint(json_instruction_array);
             json_result.values["route_instructions"] = json_instruction_array;
-            buildRouteSummary(json_summary_object, route_summary);
+            buildRouteSummary(json_result, route_summary);
         }
 
         if (osrm::json::Logger::get())
