@@ -84,7 +84,7 @@ std::vector<NodeID> NearestNeighbourTSP(const NodeIDIterator & start,
 
         // 3. REPEAT FOR EVERY UNVISITED NODE
         EdgeWeight trip_dist = 0;
-        for(auto via_point = 1; via_point < component_size; ++via_point)
+        for(std::size_t via_point = 1; via_point < component_size; ++via_point)
         {
             EdgeWeight min_dist = INVALID_EDGE_WEIGHT;
             NodeID min_id = SPECIAL_NODEID;
@@ -92,12 +92,16 @@ std::vector<NodeID> NearestNeighbourTSP(const NodeIDIterator & start,
             // 2. FIND NEAREST NEIGHBOUR
             for (auto next = start; next != end; ++next) {
                 auto curr_dist = dist_table(curr_node, *next);
+                BOOST_ASSERT_MSG(curr_dist != INVALID_EDGE_WEIGHT, "invalid distance found");
                 if(!visited[*next] &&
                     curr_dist < min_dist) {
                     min_dist = curr_dist;
                     min_id = *next;
                 }
             }
+
+            BOOST_ASSERT_MSG(min_id != SPECIAL_NODEID, "no next node found");
+
             visited[min_id] = true;
             curr_route.push_back(min_id);
             trip_dist += min_dist;

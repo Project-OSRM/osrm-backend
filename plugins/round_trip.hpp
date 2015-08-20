@@ -120,9 +120,25 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         //          => in_range = [0, 5]
         SCC_Component(std::vector<NodeID> in_component,
                       std::vector<size_t> in_range)
-                      : component(in_component), range(in_range) {
-                        range.push_back(in_component.size());
-                      };
+                      : component(in_component),
+                        range(in_range) {
+            range.push_back(in_component.size());
+            BOOST_ASSERT_MSG(in_component.size() >= in_range.size(),
+                             "scc component and its ranges do not match");
+            BOOST_ASSERT_MSG(*std::max_element(in_range.begin(), in_range.end()) < in_component.size(),
+                             "scc component ranges are out of bound");
+            BOOST_ASSERT_MSG(*std::min_element(in_range.begin(), in_range.end()) >= 0,
+                             "invalid scc component range");
+            BOOST_ASSERT_MSG([&in_range](){
+                                 for (std::size_t r = 0; r < in_range.size() - 1; ++r) {
+                                     if (in_range[r] > in_range[r+1]) {
+                                         return false;
+                                     }
+                                 }
+                                 return true;
+                             }(),
+                             "invalid component ranges");
+          };
 
         // constructor to use when whole graph is one single scc
         SCC_Component(std::vector<NodeID> in_component)
@@ -190,11 +206,15 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             const auto from_node = *it;
             // if from_node is the last node, compute the route from the last to the first location
             const auto to_node = std::next(it) != std::end(trip) ? *std::next(it) : *std::begin(trip);
+
             viapoint = PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
             min_route.segment_end_coordinates.emplace_back(viapoint);
         }
 
         search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns, min_route);
+
+        BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT,
+                         "unroutable route");
     }
 
     int HandleRequest(const RouteParameters &route_parameters,
@@ -240,8 +260,11 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         route_result.reserve(scc.GetNumberOfComponents());
         TIMER_START(tsp);
         //run TSP computation for every SCC
-        for(auto k = 0; k < scc.GetNumberOfComponents(); ++k) {
+        for (std::size_t k = 0; k < scc.GetNumberOfComponents(); ++k) {
             const auto component_size = scc.range[k+1] - scc.range[k];
+
+            BOOST_ASSERT_MSG(component_size >= 0,"invalid component size");
+
             if (component_size > 1) {
                 std::vector<NodeID> scc_route;
                 NodeIDIterator start = std::begin(scc.component) + scc.range[k];
@@ -266,6 +289,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                     route_result.push_back(scc_route);
                 }
 
+                // use this if output if debugging of route is needed:
                 SimpleLogger().Write() << "Route #"
                                        << k << ": "
                                        << [&scc_route](){
@@ -276,13 +300,14 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                                                return s;
                                            }();
             } else {
+                // if component only consists of one node, add it to the result routes
                 route_result.push_back({scc.component[scc.range[k]]});
             }
         }
 
         // compute all round trip routes
         std::vector<InternalRouteResult> comp_route (route_result.size());
-        for (auto r = 0; r < route_result.size(); ++r) {
+        for (std::size_t r = 0; r < route_result.size(); ++r) {
             ComputeRoute(phantom_node_vector, route_parameters, route_result[r], comp_route[r]);
         }
 
@@ -293,7 +318,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         // create a json object for every trip
         osrm::json::Array trip;
-        for (auto i = 0; i < route_result.size(); ++i) {
+        for (std::size_t i = 0; i < route_result.size(); ++i) {
             std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
             descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
             descriptor->SetConfig(route_parameters);

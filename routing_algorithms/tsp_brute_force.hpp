@@ -52,6 +52,7 @@ namespace osrm
 namespace tsp
 {
 
+// computes the distance of a given permutation
 EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
                           const std::vector<NodeID> & location_order,
                           const EdgeWeight min_route_dist,
@@ -62,9 +63,13 @@ EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
         route_dist += dist_table(location_order[i], location_order[(i+1) % component_size]);
         ++i;
     }
+
+    BOOST_ASSERT_MSG(route_dist != INVALID_EDGE_WEIGHT, "invalid route found");
+
     return route_dist;
 }
 
+// computes the route by computing all permutations and selecting the shortest
 template <typename NodeIDIterator>
 std::vector<NodeID> BruteForceTSP(const NodeIDIterator start,
                                   const NodeIDIterator end,
@@ -79,6 +84,10 @@ std::vector<NodeID> BruteForceTSP(const NodeIDIterator start,
     EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
 
     // check length of all possible permutation of the component ids
+
+    BOOST_ASSERT_MSG(*(std::max_element(std::begin(perm), std::end(perm))) < number_of_locations, "invalid node id");
+    BOOST_ASSERT_MSG(*(std::min_element(std::begin(perm), std::end(perm))) >= 0, "invalid node id");
+
     do {
         const auto new_distance = ReturnDistance(dist_table, perm, min_route_dist, component_size);
         if (new_distance <= min_route_dist) {

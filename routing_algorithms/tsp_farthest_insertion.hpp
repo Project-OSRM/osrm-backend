@@ -73,12 +73,21 @@ std::pair<EdgeWeight, NodeIDIter> GetShortestRoundTrip(const NodeID new_loc,
         const auto dist_to = dist_table(new_loc, *to_node);
         const auto trip_dist = dist_from + dist_to - dist_table(*from_node, *to_node);;
 
+        BOOST_ASSERT_MSG(dist_from != INVALID_EDGE_WEIGHT,
+                     "distance has invalid edge weight");
+        BOOST_ASSERT_MSG(dist_to != INVALID_EDGE_WEIGHT,
+                     "distance has invalid edge weight");
+        BOOST_ASSERT_MSG(trip_dist >= 0,
+                     "previous trip was not minimal. something's wrong");
+
         // from all possible insertions to the current trip, choose the shortest of all insertions
         if (trip_dist < min_trip_distance) {
             min_trip_distance = trip_dist;
             next_insert_point_candidate = to_node;
         }
     }
+    BOOST_ASSERT_MSG(min_trip_distance != INVALID_EDGE_WEIGHT,
+                     "trip has invalid edge weight");
 
     return std::make_pair(min_trip_distance, next_insert_point_candidate);
 }
@@ -86,12 +95,15 @@ std::pair<EdgeWeight, NodeIDIter> GetShortestRoundTrip(const NodeID new_loc,
 template <typename NodeIDIterator>
 // given two initial start nodes, find a roundtrip route using the farthest insertion algorithm
 std::vector<NodeID> FindRoute(const std::size_t & number_of_locations,
-                              const std::size_t & size_of_component,
+                              const std::size_t & component_size,
                               const NodeIDIterator & start,
                               const NodeIDIterator & end,
                               const DistTableWrapper<EdgeWeight> & dist_table,
                               const NodeID & start1,
                               const NodeID & start2) {
+    BOOST_ASSERT_MSG(number_of_locations >= component_size,
+                     "component size bigger than total number of locations");
+
     std::vector<NodeID> route;
     route.reserve(number_of_locations);
 
@@ -104,7 +116,7 @@ std::vector<NodeID> FindRoute(const std::size_t & number_of_locations,
     route.push_back(start2);
 
     // add all other nodes missing (two nodes are already in the initial start trip)
-    for (std::size_t j = 2; j < size_of_component; ++j) {
+    for (std::size_t j = 2; j < component_size; ++j) {
 
         auto farthest_distance = 0;
         auto next_node = -1;
@@ -116,6 +128,9 @@ std::vector<NodeID> FindRoute(const std::size_t & number_of_locations,
             if (!visited[*i]) {
                 auto insert_candidate = GetShortestRoundTrip(*i, dist_table, number_of_locations, route);
 
+                BOOST_ASSERT_MSG(insert_candidate.first != INVALID_EDGE_WEIGHT,
+                     "shortest round trip is invalid");
+
                 // add the location to the current trip such that it results in the shortest total tour
                 if (insert_candidate.first >= farthest_distance) {
                     farthest_distance = insert_candidate.first;
@@ -124,6 +139,8 @@ std::vector<NodeID> FindRoute(const std::size_t & number_of_locations,
                 }
             }
         }
+
+        BOOST_ASSERT_MSG(next_node >= 0, "next node to visit is invalid");
 
         // mark as visited and insert node
         visited[next_node] = true;
@@ -169,7 +186,8 @@ std::vector<NodeID> FarthestInsertionTSP(const NodeIDIterator & start,
             }
         }
     }
-
+    BOOST_ASSERT_MSG(max_from < number_of_locations && max_from >= 0, "start node");
+    BOOST_ASSERT_MSG(max_to < number_of_locations && max_to >= 0, "start node");
     return FindRoute(number_of_locations, component_size, start, end, dist_table, max_from, max_to);
 }
 

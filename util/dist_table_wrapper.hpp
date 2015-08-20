@@ -43,7 +43,7 @@ public:
     DistTableWrapper(std::vector<T> table, std::size_t number_of_nodes)
                      : table_(std::move(table)), number_of_nodes_(number_of_nodes) {
         BOOST_ASSERT_MSG(table.size() == 0, "table is empty");
-        BOOST_ASSERT_MSG(number_of_nodes_ * number_of_nodes_ < table_, "number_of_nodes_ is invalid");
+        BOOST_ASSERT_MSG(number_of_nodes_ * number_of_nodes_ <= table_.size(), "number_of_nodes_ is invalid");
     };
 
     std::size_t GetNumberOfNodes() const {
@@ -57,8 +57,11 @@ public:
     EdgeWeight operator() (NodeID from, NodeID to) const {
         BOOST_ASSERT_MSG(from < number_of_nodes_, "from ID is out of bound");
         BOOST_ASSERT_MSG(to < number_of_nodes_, "to ID is out of bound");
+
         const auto index = from * number_of_nodes_ + to;
-        BOOST_ASSERT_MSG(index < table_size(), "index is out of bound");
+
+        BOOST_ASSERT_MSG(index < table_.size(), "index is out of bound");
+
         return  table_[index];
     }
 
