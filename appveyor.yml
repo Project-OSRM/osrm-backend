@@ -7,7 +7,7 @@ environment:
 init:
   - git config --global core.autocrlf input
 
-os: Visual Studio 2015 RC
+os: Visual Studio 2015
 
 # clone directory
 clone_folder: c:\projects\osrm
