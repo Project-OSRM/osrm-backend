@@ -79,7 +79,7 @@ struct TurnRestriction
 
 /**
  * This is just a wrapper around TurnRestriction used in the extractor.
- * 
+ *
  * Could be merged with TurnRestriction. For now the type-destiction makes sense
  * as the format in which the restriction is presented in the extractor and in the
  * preprocessing is different. (see restriction_parser.cpp)
@@ -98,6 +98,7 @@ struct InputRestrictionContainer
     {
         restriction.from.way = SPECIAL_EDGEID;
         restriction.to.way = SPECIAL_EDGEID;
+        restriction.via.way = SPECIAL_EDGEID;
         restriction.via.node = SPECIAL_NODEID;
         restriction.flags.is_only = is_only;
     }

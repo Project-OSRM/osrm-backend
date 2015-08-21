@@ -581,9 +581,12 @@ void ExtractionContainers::WriteRestrictions(const std::string& path) const
 
     for (const auto &restriction_container : restrictions_list)
     {
-        if (SPECIAL_NODEID != restriction_container.restriction.from.node &&
+        if ((SPECIAL_NODEID != restriction_container.restriction.from.node &&
             SPECIAL_NODEID != restriction_container.restriction.via.node &&
-            SPECIAL_NODEID != restriction_container.restriction.to.node)
+            SPECIAL_NODEID != restriction_container.restriction.to.node) ||
+            (SPECIAL_EDGEID != restriction_container.restriction.from.way &&
+            SPECIAL_EDGEID != restriction_container.restriction.via.way &&
+            SPECIAL_EDGEID != restriction_container.restriction.to.way))
         {
             restrictions_out_stream.write((char *)&(restriction_container.restriction),
                                           sizeof(TurnRestriction));
