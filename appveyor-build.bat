@@ -13,7 +13,7 @@ IF EXIST %DEPSPKG% DEL %DEPSPKG%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO downloading %DEPSPKG%
-powershell Invoke-WebRequest https://mapbox.s3.amazonaws.com/windows-builds/windows-deps/$env:DEPSPKG -OutFile C:\projects\osrm\$env:DEPSPKG
+powershell Invoke-WebRequest https://mapbox.s3.amazonaws.com/windows-builds/windows-build-deps/$env:DEPSPKG -OutFile C:\projects\osrm\$env:DEPSPKG
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 7z -y x %DEPSPKG% | %windir%\system32\FIND "ing archive"
