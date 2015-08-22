@@ -18,5 +18,5 @@ Feature: Geometry Compression
 
         When I route I should get
             | from | to | route   | distance | speed   |
-            | b    | e  | abcdef  | 589m     | 35 km/h |
-            | e    | b  | abcdef  | 589m     | 35 km/h |
+            | b    | e  | abcdef  | 589m     | 36 km/h |
+            | e    | b  | abcdef  | 589m     | 36 km/h |

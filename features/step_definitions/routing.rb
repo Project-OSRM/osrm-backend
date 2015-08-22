@@ -97,7 +97,7 @@ When /^I route I should get$/ do |table|
               raise "*** Speed must be specied in km/h. (ex: 50 km/h)" unless row['speed'] =~ /\d+ km\/h/
                 time = json['route_summary']['total_time']
                 distance = json['route_summary']['total_distance']
-                speed = time>0 ? (3.6*distance/time).to_i : nil
+                speed = time>0 ? (3.6*distance/time).round : nil
                 got['speed'] =  "#{speed} km/h"
             else
               got['speed'] = ''

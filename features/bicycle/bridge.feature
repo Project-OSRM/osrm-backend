@@ -42,6 +42,6 @@ Feature: Bicycle - Handle movable bridge
         When I route I should get
             | from | to | route       | modes | speed   |
             | a    | g  | abc,cde,efg | 1,5,1 | 5 km/h |
-            | b    | f  | abc,cde,efg | 1,5,1 | 3 km/h |
+            | b    | f  | abc,cde,efg | 1,5,1 | 4 km/h |
             | c    | e  | cde         | 5     | 2 km/h |
             | e    | c  | cde         | 5     | 2 km/h |
