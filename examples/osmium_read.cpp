@@ -26,7 +26,5 @@ int main(int argc, char* argv[]) {
     }
 
     reader.close();
-
-    google::protobuf::ShutdownProtobufLibrary();
 }
 

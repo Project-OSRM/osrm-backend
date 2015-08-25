@@ -120,6 +120,11 @@ namespace osmium {
             return static_cast<unsigned_object_id_type>(std::abs(m_ref));
         }
 
+        RelationMember& set_ref(const osmium::object_id_type ref) noexcept {
+            m_ref = ref;
+            return *this;
+        }
+
         item_type type() const noexcept {
             return m_type;
         }

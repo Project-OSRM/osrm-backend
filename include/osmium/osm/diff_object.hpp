@@ -112,8 +112,35 @@ namespace osmium {
             return m_curr->timestamp();
         }
 
+        /**
+         * Return the timestamp when the current version of the object is
+         * not valid any more, ie the time when the next version of the object
+         * is valid. If this is the last version of the object, this will
+         * return a special "end of time" timestamp that is guaranteed to
+         * be larger than any normal timestamp.
+         */
         const osmium::Timestamp end_time() const noexcept {
-            return last() ? osmium::Timestamp() : m_next->timestamp();
+            return last() ? osmium::end_of_time() : m_next->timestamp();
+        }
+
+        /**
+         * Current object version is valid between time "from" (inclusive) and
+         * time "to" (not inclusive).
+         *
+         * This is a bit more complex than you'd think, because we have to
+         * handle the case properly where the start_time() == end_time().
+         */
+        bool is_between(const osmium::Timestamp& from, const osmium::Timestamp& to) const noexcept {
+            return start_time() < to &&
+                   ((start_time() != end_time() && end_time() >  from) ||
+                    (start_time() == end_time() && end_time() >= from));
+        }
+
+        /**
+         * Current object version is visible at the given timestamp.
+         */
+        bool is_visible_at(const osmium::Timestamp& timestamp) const noexcept {
+            return start_time() <= timestamp && end_time() > timestamp && m_curr->visible();
         }
 
     }; // class DiffObject

@@ -1,12 +1,16 @@
 #include "catch.hpp"
 
+#include <boost/crc.hpp>
+
 #include <osmium/osm/changeset.hpp>
+#include <osmium/osm/crc.hpp>
 
 #include "helper.hpp"
 
-TEST_CASE("Basic_Changeset") {
+TEST_CASE("Basic Changeset") {
 
-SECTION("changeset_builder") {
+    osmium::CRC<boost::crc_32_type> crc32;
+
     osmium::memory::Buffer buffer(10 * 1000);
 
     osmium::Changeset& cs1 = buffer_add_changeset(buffer,
@@ -27,6 +31,9 @@ SECTION("changeset_builder") {
     REQUIRE(osmium::Timestamp(200) == cs1.closed_at());
     REQUIRE(1 == cs1.tags().size());
     REQUIRE(std::string("user") == cs1.user());
+
+    crc32.update(cs1);
+    REQUIRE(crc32().checksum() == 0xf44aff25);
 
     osmium::Changeset& cs2 = buffer_add_changeset(buffer,
         "user",
@@ -52,6 +59,5 @@ SECTION("changeset_builder") {
     REQUIRE(cs1 <= cs2);
     REQUIRE(false == (cs1 > cs2));
     REQUIRE(false == (cs1 >= cs2));
-}
 
 }

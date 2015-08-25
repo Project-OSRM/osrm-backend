@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cstdint>
-#include <cstdlib>
 
 namespace osmium {
 
@@ -57,26 +56,6 @@ namespace osmium {
      * defined limits.
      */
     typedef uint16_t string_size_type;
-
-    inline object_id_type string_to_object_id(const char* string) {
-        return std::atoll(string);
-    }
-
-    inline object_version_type string_to_object_version(const char* string) {
-        return static_cast<object_version_type>(std::atol(string));
-    }
-
-    inline changeset_id_type string_to_changeset_id(const char* string) {
-        return static_cast<changeset_id_type>(std::atol(string));
-    }
-
-    inline signed_user_id_type string_to_user_id(const char* string) {
-        return static_cast<signed_user_id_type>(std::atol(string));
-    }
-
-    inline num_changes_type string_to_num_changes(const char* string) {
-        return static_cast<num_changes_type>(std::atol(string));
-    }
 
 } // namespace osmium
 

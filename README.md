@@ -27,6 +27,10 @@ you need for your programs.
 For details see the
 [list of dependencies](https://github.com/osmcode/libosmium/wiki/Libosmium-dependencies).
 
+The [protozero](https://github.com/mapbox/protozero) and
+[utf8-cpp](http://utfcpp.sourceforge.net/) header-only libraries are included
+in the libosmium repository.
+
 
 ## Directories
 

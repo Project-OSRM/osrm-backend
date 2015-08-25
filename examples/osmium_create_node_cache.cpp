@@ -12,8 +12,7 @@
 #include <fcntl.h>
 #include <iostream>
 
-#include <osmium/io/pbf_input.hpp>
-#include <osmium/io/xml_input.hpp>
+#include <osmium/io/any_input.hpp>
 
 #include <osmium/index/map/dummy.hpp>
 #include <osmium/index/map/dense_mmap_array.hpp>
@@ -50,8 +49,6 @@ int main(int argc, char* argv[]) {
 
     osmium::apply(reader, location_handler);
     reader.close();
-
-    google::protobuf::ShutdownProtobufLibrary();
 
     return 0;
 }
