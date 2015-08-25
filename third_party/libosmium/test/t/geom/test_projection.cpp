@@ -1,5 +1,7 @@
 #include "catch.hpp"
 
+#include <random>
+
 #include <osmium/geom/factory.hpp>
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/projection.hpp>
@@ -123,6 +125,22 @@ SECTION("compare_mercators") {
     }
     {
         const osmium::Location loc(-85.2, -85.2);
+        REQUIRE(projection_merc(loc).x == Approx(projection_3857(loc).x).epsilon(0.1));
+        REQUIRE(projection_merc(loc).y == Approx(projection_3857(loc).y).epsilon(0.1));
+    }
+}
+
+SECTION("compare_mercators") {
+    osmium::geom::MercatorProjection projection_merc;
+    osmium::geom::Projection projection_3857(3857);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis_x(-180.0, 180.0);
+    std::uniform_real_distribution<> dis_y(-90.0, 90.0);
+
+    for (int n = 0; n < 100000; ++n) {
+        const osmium::Location loc(dis_x(gen), dis_y(gen));
         REQUIRE(projection_merc(loc).x == Approx(projection_3857(loc).x).epsilon(0.1));
         REQUIRE(projection_merc(loc).y == Approx(projection_3857(loc).y).epsilon(0.1));
     }

@@ -6,8 +6,6 @@
 
 #include "testdata-testcases.hpp"
 
-#include <osmpbf/osmpbf.h>
-
 std::string dirname;
 
 int main(int argc, char* argv[]) {

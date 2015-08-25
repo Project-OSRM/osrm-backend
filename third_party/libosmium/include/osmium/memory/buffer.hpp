@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <cassert>
 #include <cstddef>
 #include <cstring>
-#include <exception>
 #include <functional>
 #include <iterator>
 #include <stdexcept>
@@ -83,7 +82,7 @@ namespace osmium {
          * Buffers exist in two flavours, those with external memory management and
          * those with internal memory management. If you already have some memory
          * with data in it (for instance read from disk), you create a Buffer with
-         * external memory managment. It is your job then to free the memory once
+         * external memory management. It is your job then to free the memory once
          * the buffer isn't used any more. If you don't have memory already, you can
          * create a Buffer object and have it manage the memory internally. It will
          * dynamically allocate memory and free it again after use.
@@ -414,6 +413,15 @@ namespace osmium {
             }
 
             template <class T>
+            t_iterator<T> get_iterator(size_t offset) {
+                return t_iterator<T>(m_data + offset, m_data + m_committed);
+            }
+
+            iterator get_iterator(size_t offset) {
+                return iterator(m_data + offset, m_data + m_committed);
+            }
+
+            template <class T>
             t_iterator<T> end() {
                 return t_iterator<T>(m_data + m_committed, m_data + m_committed);
             }
@@ -429,6 +437,15 @@ namespace osmium {
 
             const_iterator cbegin() const {
                 return const_iterator(m_data, m_data + m_committed);
+            }
+
+            template <class T>
+            t_const_iterator<T> get_iterator(size_t offset) const {
+                return t_const_iterator<T>(m_data + offset, m_data + m_committed);
+            }
+
+            const_iterator get_iterator(size_t offset) const {
+                return const_iterator(m_data + offset, m_data + m_committed);
             }
 
             template <class T>

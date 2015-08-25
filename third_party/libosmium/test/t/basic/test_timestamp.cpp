@@ -29,6 +29,10 @@ TEST_CASE("Timestamp") {
         REQUIRE("2000-01-01T00:00:00Z" == t.to_iso());
     }
 
+    SECTION("throws if initialized from bad string") {
+        REQUIRE_THROWS_AS(osmium::Timestamp("x"), std::invalid_argument);
+    }
+
     SECTION("can be implicitly cast to time_t") {
         osmium::Timestamp t(4242);
         time_t x = t;

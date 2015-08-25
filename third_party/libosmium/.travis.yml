@@ -6,46 +6,49 @@
 
 language: cpp
 
-compiler:
- - gcc
- - clang
+sudo: false
 
-env:
- - CONFIGURATION=Dev
- - CONFIGURATION=Release
+matrix:
+    include:
+        - os: linux
+          compiler: clang
+          env: BUILD_TYPE=Dev
+        - os: linux
+          compiler: clang
+          env: BUILD_TYPE=Release
+        - os: linux
+          compiler: gcc
+          env: BUILD_TYPE=Dev
+        - os: linux
+          compiler: gcc
+          env: BUILD_TYPE=Release
+        - os: osx
+          compiler: clang
+          env: BUILD_TYPE=Dev
+        - os: osx
+          compiler: clang
+          env: BUILD_TYPE=Release
 
-before_install:
- # we need at least g++-4.8 for c++11 features
- - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
- - sudo apt-get update --yes --quiet
+# http://docs.travis-ci.com/user/apt/
+addons:
+    apt:
+        sources:
+            - boost-latest
+            - ubuntu-toolchain-r-test
+        packages:
+            - g++-4.8
+            - gcc-4.8
+            - libboost1.55-dev
+            - libboost-program-options1.55-dev
+            - libgdal-dev
+            - libgeos++-dev
+            - libproj-dev
+            - libsparsehash-dev
+            - spatialite-bin
 
 install:
- - cd ..
- # upgrade compilers
- - sudo apt-get install --yes gcc-4.8 g++-4.8
- # make sure 'cpp' is the just installed current one
- - sudo rm /usr/bin/cpp
- - sudo ln -s /usr/bin/cpp-4.8 /usr/bin/cpp
- # upgrade libosmium dependencies
- - sudo apt-get install --yes make libboost-dev libboost-program-options-dev libsparsehash-dev libprotobuf-dev protobuf-compiler libgeos++-dev libproj-dev libgdal1h libgdal-dev
- - git clone https://github.com/osmcode/osm-testdata.git
- # OSMPBF is too old, install from git
- #- sudo apt-get install --yes libosmpbf-dev
- - git clone https://github.com/scrosby/OSM-binary.git
- - cd OSM-binary/src
- - make
- - sudo make install
- - cd ../..
- - cd libosmium
-
-before_script:
- - true
+    - scripts/travis_install.sh
 
 script:
- - if [ "${CXX}" = 'g++' ]; then export CXX=g++-4.8; fi;
- - mkdir build
- - cd build
- - cmake -LA -DCMAKE_BUILD_TYPE=${CONFIGURATION} ..
- - make VERBOSE=1
- - ctest --output-on-failure
+    - scripts/travis_script.sh
 

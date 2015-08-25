@@ -149,6 +149,7 @@ namespace osmium {
 
             ~Pool() {
                 m_done = true;
+                m_work_queue.shutdown();
             }
 
             size_t queue_size() const {

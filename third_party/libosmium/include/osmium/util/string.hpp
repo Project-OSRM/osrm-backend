@@ -43,21 +43,55 @@ namespace osmium {
      * Split string on the separator character.
      *
      * @param str The string to be split.
-     * @param sep The separastor character.
+     * @param sep The separator character.
+     * @param compact Set this to true to remove empty strings from result
      * @returns Vector with the parts of the string split up.
      */
-    inline std::vector<std::string> split_string(const std::string& str, const char sep) {
+    inline std::vector<std::string> split_string(const std::string& str, const char sep, bool compact = false) {
         std::vector<std::string> tokens;
 
         if (!str.empty()) {
             size_t pos = 0;
             size_t nextpos = str.find_first_of(sep);
             while (nextpos != std::string::npos) {
-                tokens.push_back(str.substr(pos, nextpos-pos));
+                if (!compact || (nextpos - pos != 0)) {
+                    tokens.push_back(str.substr(pos, nextpos-pos));
+                }
                 pos = nextpos + 1;
                 nextpos = str.find_first_of(sep, pos);
             }
-            tokens.push_back(str.substr(pos));
+            if (!compact || pos != str.size()) {
+                tokens.push_back(str.substr(pos));
+            }
+        }
+
+        return tokens;
+    }
+
+    /**
+     * Split string on the separator character(s).
+     *
+     * @param str The string to be split.
+     * @param sep The separator character(s).
+     * @param compact Set this to true to remove empty strings from result
+     * @returns Vector with the parts of the string split up.
+     */
+    inline std::vector<std::string> split_string(const std::string& str, const char* sep, bool compact = false) {
+        std::vector<std::string> tokens;
+
+        if (!str.empty()) {
+            size_t pos = 0;
+            size_t nextpos = str.find_first_of(sep);
+            while (nextpos != std::string::npos) {
+                if (!compact || (nextpos - pos != 0)) {
+                    tokens.push_back(str.substr(pos, nextpos-pos));
+                }
+                pos = nextpos + 1;
+                nextpos = str.find_first_of(sep, pos);
+            }
+            if (!compact || pos != str.size()) {
+                tokens.push_back(str.substr(pos));
+            }
         }
 
         return tokens;
