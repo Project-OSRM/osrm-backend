@@ -287,10 +287,21 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         if (route_parameters.geometry)
         {
+            // prevent multiple start points - set ViaPoints instead
+            bool is_first_segment;
+            if(route_parameters.print_instructions)
+            {
+                is_first_segment = (route_summary.distance != 0 ? false : true);
+            }
+            else
+            {
+                is_first_segment = true;
+            }
+
             DescriptionFactory factory;
             FixedPointCoordinate current_coordinate;
             factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
-                                    raw_route.source_traversed_in_reverse.front());
+                                    raw_route.source_traversed_in_reverse.front(), is_first_segment);
             for (const auto i :
                  osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
             {
@@ -306,7 +317,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.target_traversed_in_reverse[i],
                                       false);
             }
-            // we run this to get the instructions
+            // we run this to get the distance for the instructions
             factory.Run(route_parameters.zoom_level);
 
             necessary_segments_running_index = 0;
