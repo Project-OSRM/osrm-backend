@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/entity_bits.hpp>
+#include <osmium/osm/item_type.hpp>
 
 namespace osmium {
 

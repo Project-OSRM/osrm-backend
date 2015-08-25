@@ -67,7 +67,7 @@ namespace osmium {
         template <typename TKey>
         OSMIUM_NORETURN void not_found_error(TKey key) {
             std::stringstream s;
-            s << "id " << key << " no found";
+            s << "id " << key << " not found";
             throw not_found(s.str());
         }
 

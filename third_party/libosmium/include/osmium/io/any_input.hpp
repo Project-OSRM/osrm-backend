@@ -39,8 +39,8 @@ DEALINGS IN THE SOFTWARE.
  * Include this file if you want to read all kinds of OSM files.
  *
  * @attention If you include this file, you'll need to link with
- *            `libprotobuf-lite`, `libosmpbf`, `ws2_32` (Windows only),
- *            `libexpat`, `libz`, `libbz2`, and enable multithreading.
+ *            `ws2_32` (Windows only), `libexpat`, `libz`, `libbz2`,
+ *            and enable multithreading.
  */
 
 #include <osmium/io/any_compression.hpp> // IWYU pragma: export

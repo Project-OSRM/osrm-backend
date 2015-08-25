@@ -147,6 +147,7 @@ namespace osmium {
              * @param length Length of data in bytes. If data is a
              *               \0-terminated string, length must contain the
              *               \0 byte.
+             * @returns The number of bytes appended (length).
              */
             osmium::memory::item_size_type append(const char* data, const osmium::memory::item_size_type length) {
                 unsigned char* target = m_buffer.reserve_space(length);
@@ -156,9 +157,22 @@ namespace osmium {
 
             /**
              * Append \0-terminated string to buffer.
+             *
+             * @param str \0-terminated string.
+             * @returns The number of bytes appended (strlen(str) + 1).
              */
             osmium::memory::item_size_type append(const char* str) {
                 return append(str, static_cast<osmium::memory::item_size_type>(std::strlen(str) + 1));
+            }
+
+            /**
+             * Append '\0' to the buffer.
+             *
+             * @returns The number of bytes appended (always 1).
+             */
+            osmium::memory::item_size_type append_zero() {
+                *m_buffer.reserve_space(1) = '\0';
+                return 1;
             }
 
             /// Return the buffer this builder is using.
@@ -188,11 +202,11 @@ namespace osmium {
              * Add user name to buffer.
              *
              * @param user Pointer to user name.
-             * @param length Length of user name including \0 byte.
+             * @param length Length of user name (without \0 termination).
              */
             void add_user(const char* user, const string_size_type length) {
-                object().set_user_size(length);
-                add_size(append(user, length));
+                object().set_user_size(length + 1);
+                add_size(append(user, length) + append_zero());
                 add_padding(true);
             }
 
@@ -202,7 +216,7 @@ namespace osmium {
              * @param user Pointer to \0-terminated user name.
              */
             void add_user(const char* user) {
-                add_user(user, static_cast_with_assert<string_size_type>(std::strlen(user) + 1));
+                add_user(user, static_cast_with_assert<string_size_type>(std::strlen(user)));
             }
 
             /**
@@ -211,7 +225,7 @@ namespace osmium {
              * @param user User name.
              */
             void add_user(const std::string& user) {
-                add_user(user.data(), static_cast_with_assert<string_size_type>(user.size() + 1));
+                add_user(user.data(), static_cast_with_assert<string_size_type>(user.size()));
             }
 
         }; // class ObjectBuilder

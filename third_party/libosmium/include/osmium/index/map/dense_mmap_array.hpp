@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #ifdef __linux__
 
-#include <osmium/index/detail/mmap_vector_anon.hpp>
+#include <osmium/index/detail/mmap_vector_anon.hpp> // IWYU pragma: keep
 #include <osmium/index/detail/vector_map.hpp>
 
 #define OSMIUM_HAS_INDEX_MAP_DENSE_MMAP_ARRAY

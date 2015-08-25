@@ -39,8 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <fcntl.h>
 #include <stdexcept>
 #include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <vector>
 
 namespace osmium {

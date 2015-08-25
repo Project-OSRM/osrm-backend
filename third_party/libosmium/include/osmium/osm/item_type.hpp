@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
 #include <cstdint> // IWYU pragma: keep
 #include <iosfwd>
 #include <stdexcept>
@@ -55,6 +56,25 @@ namespace osmium {
         inner_ring                             = 0x41
 
     }; // enum class item_type
+
+    /**
+     * Return item_type for index:
+     * 0 -> node, 1 -> way, 2 -> relation
+     */
+    inline item_type nwr_index_to_item_type(unsigned int i) noexcept {
+        assert(i <= 2);
+        return item_type(i+1);
+    }
+
+    /**
+     * Return index for item_type:
+     * node -> 0, way -> 1, relation -> 2
+     */
+    inline unsigned int item_type_to_nwr_index(item_type type) noexcept {
+        unsigned int i = static_cast<unsigned int>(type);
+        assert(i >= 1 && i <= 3);
+        return i - 1;
+    }
 
     inline item_type char_to_item_type(const char c) noexcept {
         switch (c) {

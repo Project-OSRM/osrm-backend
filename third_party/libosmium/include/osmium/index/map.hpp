@@ -148,7 +148,11 @@ namespace osmium {
                 }
 
                 virtual void dump_as_list(const int /*fd*/) {
-                    std::runtime_error("can't dump as list");
+                    throw std::runtime_error("can't dump as list");
+                }
+
+                virtual void dump_as_array(const int /*fd*/) {
+                    throw std::runtime_error("can't dump as array");
                 }
 
             }; // class Map
@@ -193,6 +197,10 @@ namespace osmium {
 
             bool register_map(const std::string& map_type_name, create_map_func func) {
                 return m_callbacks.emplace(map_type_name, func).second;
+            }
+
+            bool has_map_type(const std::string& map_type_name) const {
+                return m_callbacks.count(map_type_name);
             }
 
             std::vector<std::string> map_types() const {
@@ -242,9 +250,13 @@ namespace osmium {
             });
         }
 
+#define OSMIUM_CONCATENATE_DETAIL_(x, y) x##y
+#define OSMIUM_CONCATENATE_(x, y) OSMIUM_CONCATENATE_DETAIL_(x, y)
+#define OSMIUM_MAKE_UNIQUE_(x) OSMIUM_CONCATENATE_(x, __COUNTER__)
+
 #define REGISTER_MAP(id, value, klass, name) \
 namespace { \
-    const bool registered_index_map_##name = osmium::index::register_map<id, value, klass>(#name); \
+    const bool OSMIUM_MAKE_UNIQUE_(registered_index_map_##name) = osmium::index::register_map<id, value, klass>(#name); \
 }
 
     } // namespace index
