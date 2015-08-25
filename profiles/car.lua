@@ -195,7 +195,11 @@ function node_function (node, result)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier and "" ~= barrier then
-      if not barrier_whitelist[barrier] then
+      --  make an exception for rising bollard barriers
+      local bollard = node:get_value_by_key("bollard")
+      local rising_bollard = bollard and "rising" == bollard
+
+      if not barrier_whitelist[barrier] and not rising_bollard then
         result.barrier = true
       end
     end
