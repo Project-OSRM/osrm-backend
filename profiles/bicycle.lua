@@ -94,7 +94,6 @@ traffic_signal_penalty          = 2
 use_turn_restrictions           = false
 
 local obey_oneway               = true
-local obey_bollards             = false
 local ignore_areas              = true
 local u_turn_penalty            = 20
 local turn_penalty              = 60
