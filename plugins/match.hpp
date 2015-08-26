@@ -216,6 +216,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))
         {
+            json_result.values["status"] = "Invalid coordinates.";
             return 400;
         }
 
@@ -225,6 +226,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         const auto &input_timestamps = route_parameters.timestamps;
         if (input_timestamps.size() > 0 && input_coords.size() != input_timestamps.size())
         {
+            json_result.values["status"] = "Number of timestamps does not match number of coordinates .";
             return 400;
         }
 
@@ -232,6 +234,14 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (max_locations_map_matching > 0 &&
             static_cast<int>(input_coords.size()) < max_locations_map_matching)
         {
+            json_result.values["status"] = "Too many coodindates.";
+            return 400;
+        }
+
+        // enforce maximum number of locations for performance reasons
+        if (static_cast<int>(input_coords.size()) < 2)
+        {
+            json_result.values["status"] = "At least two coordinates needed.";
             return 400;
         }
 
@@ -239,6 +249,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             getCandiates(input_coords, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
+            json_result.values["status"] = "No suitable matching candidates found.";
             return 400;
         }
 
@@ -254,6 +265,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         if (sub_matchings.empty())
         {
+            json_result.values["status"] = "No matchings found.";
             return 400;
         }
 
