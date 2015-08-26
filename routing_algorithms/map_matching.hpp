@@ -59,10 +59,9 @@ using CandidateLists = std::vector<CandidateList>;
 using HMM = HiddenMarkovModel<CandidateLists>;
 using SubMatchingList = std::vector<SubMatching>;
 
-constexpr static const unsigned MAX_BROKEN_STATES = 6;
-constexpr static const unsigned MAX_BROKEN_TIME = 60;
+constexpr static const unsigned MAX_BROKEN_STATES = 10;
 
-constexpr static const unsigned MAX_DISTANCE_DELTA = 200;
+constexpr static const double MAX_SPEED = 180 / 3.6; // 150km -> m/s
 constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
 
 constexpr static const double default_beta = 5.0;
@@ -78,6 +77,19 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
+    unsigned GetAverageSampleTime(const std::vector<unsigned>& timestamps) const
+    {
+        BOOST_ASSERT(timestamps.size() > 1);
+
+        std::vector<unsigned> sample_times(timestamps.size());
+
+        std::adjacent_difference(timestamps.begin(), timestamps.end(), sample_times.begin());
+
+        // don't use first element of sample_times -> will not be a difference.
+        auto sum_sample_times = std::accumulate(std::next(sample_times.begin()), sample_times.end(), 0);
+        return sum_sample_times / (sample_times.size() - 1);
+    }
+
   public:
     MapMatching(DataFacadeT *facade, SearchEngineData &engine_working_data)
         : super(facade), engine_working_data(engine_working_data)
@@ -91,7 +103,29 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const double gps_precision,
                     osrm::matching::SubMatchingList &sub_matchings) const
     {
-        BOOST_ASSERT(!candidates_list.empty() && !trace_coordinates.empty());
+        BOOST_ASSERT(candidates_list.size() == trace_coordinates.size());
+
+        const auto avg_sample_time = [&]() {
+            if (trace_timestamps.size() > 1)
+            {
+                return GetAverageSampleTime(trace_timestamps);
+            }
+            else
+            {
+                return 0u;
+            }
+        }();
+        const auto max_broken_time = avg_sample_time * osrm::matching::MAX_BROKEN_STATES;
+        const auto max_distance_delta = [&]() {
+            if (trace_timestamps.size() > 1)
+            {
+                return avg_sample_time * osrm::matching::MAX_SPEED;
+            }
+            else
+            {
+                return std::numeric_limits<double>::max();
+            }
+        }();
 
         // TODO replace default values with table lookup based on sampling frequency
         EmissionLogProbability emission_log_probability(
@@ -126,7 +160,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 trace_split =
                     trace_split ||
                     (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                     osrm::matching::MAX_BROKEN_TIME);
+                     max_broken_time);
             }
             else
             {
@@ -179,8 +213,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
             engine_working_data.InitializeOrClearFirstThreadLocalStorage(
                 super::facade->GetNumberOfNodes());
-            engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-                super::facade->GetNumberOfNodes());
 
             QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
             QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
@@ -196,6 +228,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 for (const auto s_prime : osrm::irange<std::size_t>(0u, current_viterbi.size()))
                 {
                     // how likely is candidate s_prime at time t to be emitted?
+                    // FIXME this can be pre-computed
                     const double emission_pr =
                         emission_log_probability(candidates_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
@@ -218,7 +251,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const auto d_t = std::abs(network_distance - great_circle_distance);
 
                     // very low probability transition -> prune
-                    if (d_t > osrm::matching::MAX_DISTANCE_DELTA)
+                    if (d_t > max_distance_delta)
                     {
                         continue;
                     }
