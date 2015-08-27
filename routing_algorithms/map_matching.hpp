@@ -61,7 +61,7 @@ using SubMatchingList = std::vector<SubMatching>;
 
 constexpr static const unsigned MAX_BROKEN_STATES = 10;
 
-constexpr static const double MAX_SPEED = 180 / 3.6; // 150km -> m/s
+constexpr static const double MAX_SPEED = 180 / 3.6; // 180km -> m/s
 constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
 }
 }
