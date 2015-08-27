@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
       compression(true), deprecatedAPI(false), uturn_default(false), classify(false),
-      matching_beta(-1.0), gps_precision(-1.0), check_sum(-1), num_results(1)
+      matching_beta(5), gps_precision(5), check_sum(-1), num_results(1)
 {
 }
 

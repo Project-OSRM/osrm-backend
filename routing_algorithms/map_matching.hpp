@@ -63,9 +63,6 @@ constexpr static const unsigned MAX_BROKEN_STATES = 10;
 
 constexpr static const double MAX_SPEED = 180 / 3.6; // 150km -> m/s
 constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
-
-constexpr static const double default_beta = 5.0;
-constexpr static const double default_sigma_z = 4.07;
 }
 }
 
@@ -128,10 +125,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         }();
 
         // TODO replace default values with table lookup based on sampling frequency
-        EmissionLogProbability emission_log_probability(
-            gps_precision > 0. ? gps_precision : osrm::matching::default_sigma_z);
-        TransitionLogProbability transition_log_probability(
-            matching_beta > 0. ? matching_beta : osrm::matching::default_beta);
+        EmissionLogProbability emission_log_probability(gps_precision);
+        TransitionLogProbability transition_log_probability(matching_beta);
 
         osrm::matching::HMM model(candidates_list, emission_log_probability);
 
