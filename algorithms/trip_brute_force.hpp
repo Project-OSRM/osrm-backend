@@ -25,27 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef Trip_BRUTE_FORCE_HPP
-#define Trip_BRUTE_FORCE_HPP
-
+#ifndef TRIP_BRUTE_FORCE_HPP
+#define TRIP_BRUTE_FORCE_HPP
 
 #include "../data_structures/search_engine.hpp"
-#include "../util/string_util.hpp"
 #include "../util/dist_table_wrapper.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
 
 #include <cstdlib>
-
 #include <algorithm>
 #include <string>
+#include <iterator>
 #include <vector>
 #include <limits>
-#include <iostream>
-#include "../util/simple_logger.hpp"
-
-
-
 
 namespace osrm
 {
@@ -53,18 +47,20 @@ namespace trip
 {
 
 // computes the distance of a given permutation
-EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
-                          const std::vector<NodeID> & location_order,
-                          const EdgeWeight & min_route_dist,
-                          const std::size_t & component_size) {
+EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> &dist_table,
+                          const std::vector<NodeID> &location_order,
+                          const EdgeWeight min_route_dist,
+                          const std::size_t component_size)
+{
     EdgeWeight route_dist = 0;
     std::size_t i = 0;
-    while (i < location_order.size() && (route_dist < min_route_dist)) {
-        route_dist += dist_table(location_order[i], location_order[(i+1) % component_size]);
+    while (i < location_order.size() && (route_dist < min_route_dist))
+    {
+        route_dist += dist_table(location_order[i], location_order[(i + 1) % component_size]);
+        BOOST_ASSERT_MSG(dist_table(location_order[i], location_order[(i + 1) % component_size])
+                         != INVALID_EDGE_WEIGHT, "invalid route found");
         ++i;
     }
-
-    BOOST_ASSERT_MSG(route_dist != INVALID_EDGE_WEIGHT, "invalid route found");
 
     return route_dist;
 }
@@ -72,9 +68,10 @@ EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> & dist_table,
 // computes the route by computing all permutations and selecting the shortest
 template <typename NodeIDIterator>
 std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
-                                  const NodeIDIterator end,
-                                  const std::size_t number_of_locations,
-                                  const DistTableWrapper<EdgeWeight> & dist_table) {
+                                   const NodeIDIterator end,
+                                   const std::size_t number_of_locations,
+                                   const DistTableWrapper<EdgeWeight> &dist_table)
+{
     const auto component_size = std::distance(start, end);
 
     std::vector<NodeID> perm(start, end);
@@ -85,20 +82,25 @@ std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
 
     // check length of all possible permutation of the component ids
 
-    BOOST_ASSERT_MSG(*(std::max_element(std::begin(perm), std::end(perm))) < number_of_locations, "invalid node id");
+    BOOST_ASSERT_MSG(perm.size() > 0,
+                     "no permutation given");
+    BOOST_ASSERT_MSG(*(std::max_element(std::begin(perm), std::end(perm))) < number_of_locations,
+                     "invalid node id");
     BOOST_ASSERT_MSG(*(std::min_element(std::begin(perm), std::end(perm))) >= 0, "invalid node id");
 
-    do {
+    do
+    {
         const auto new_distance = ReturnDistance(dist_table, perm, min_route_dist, component_size);
-        if (new_distance <= min_route_dist) {
+        if (new_distance <= min_route_dist)
+        {
             min_route_dist = new_distance;
             route = perm;
         }
-    } while(std::next_permutation(std::begin(perm), std::end(perm)));
+    } while (std::next_permutation(std::begin(perm), std::end(perm)));
 
     return route;
 }
 
-} //end namespace trip
-} //end namespace osrm
-#endif // Trip_BRUTE_FORCE_HPP
+} // end namespace trip
+} // end namespace osrm
+#endif // TRIP_BRUTE_FORCE_HPP

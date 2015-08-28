@@ -28,10 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_IMPL_HPP
 #define OSRM_IMPL_HPP
 
-// #if __cplusplus > 199711L
-// #define register      // Deprecated in C++11.
-// #endif  // #if __cplusplus > 199711L
-
 class BasePlugin;
 struct RouteParameters;
 

@@ -29,37 +29,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MATRIX_GRAPH_WRAPPER_H
 
 #include <vector>
+#include <cstddef>
+#include <iterator>
 
-//This Wrapper provides all methods that are needed for TarjanSCC, when the graph is given in a
-//matrix representation (e.g. as output from a distance table call)
+#include "../typedefs.h"
 
-template <typename T> class MatrixGraphWrapper {
-public:
+// This Wrapper provides all methods that are needed for TarjanSCC, when the graph is given in a
+// matrix representation (e.g. as output from a distance table call)
 
-    MatrixGraphWrapper(std::vector<T> table, const std::size_t number_of_nodes) : table_(table), number_of_nodes_(number_of_nodes) {};
+template <typename T> class MatrixGraphWrapper
+{
+  public:
+    MatrixGraphWrapper(std::vector<T> table, const std::size_t number_of_nodes)
+        : table_(std::move(table)), number_of_nodes_(number_of_nodes){};
 
-    std::size_t GetNumberOfNodes() const {
-        return number_of_nodes_;
-    }
+    std::size_t GetNumberOfNodes() const { return number_of_nodes_; }
 
-    std::vector<T> GetAdjacentEdgeRange(const NodeID node) const {
+    std::vector<T> GetAdjacentEdgeRange(const NodeID node) const
+    {
+
         std::vector<T> edges;
-        for (auto i = 0; i < number_of_nodes_; ++i) {
-            if (*(std::begin(table_) + node * number_of_nodes_ + i) != INVALID_EDGE_WEIGHT) {
+        // find all valid adjacent edges and move to vector `edges`
+        for (std::size_t i = 0; i < number_of_nodes_; ++i)
+        {
+            if (*(std::begin(table_) + node * number_of_nodes_ + i) != INVALID_EDGE_WEIGHT)
+            {
                 edges.push_back(i);
             }
         }
         return edges;
     }
 
-    EdgeWeight GetTarget(const EdgeWeight edge) const {
-        return edge;
-    }
+    EdgeWeight GetTarget(const EdgeWeight edge) const { return edge; }
 
-private:
-    std::vector<T> table_;
+  private:
+    const std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
-
 
 #endif // MATRIX_GRAPH_WRAPPER_H

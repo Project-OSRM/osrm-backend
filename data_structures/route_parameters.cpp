@@ -122,7 +122,6 @@ void RouteParameters::setLanguage(const std::string &language_string)
     language = language_string;
 }
 
-
 void RouteParameters::setGeometryFlag(const bool flag) { geometry = flag; }
 
 void RouteParameters::setCompressionFlag(const bool flag) { compression = flag; }

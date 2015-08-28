@@ -40,19 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/timing_util.hpp"
 
 #include <osrm/coordinate.hpp>
-
 #include <boost/assert.hpp>
-
-#include <tbb/parallel_sort.h>
-
 #include <cstdint>
 
 #include <memory>
 #include <stack>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
-#include <map>
 
 template <typename GraphT> class TarjanSCC
 {
@@ -153,7 +146,8 @@ template <typename GraphT> class TarjanSCC
                 else
                 {
                     processing_node_before_recursion[v] = true;
-                    tarjan_node_list[u].low_link = std::min(tarjan_node_list[u].low_link, tarjan_node_list[v].low_link);
+                    tarjan_node_list[u].low_link =
+                        std::min(tarjan_node_list[u].low_link, tarjan_node_list[v].low_link);
                     // after recursion, lets do cycle checking
                     // Check if we found a cycle. This is the bottom part of the recursion
                     if (tarjan_node_list[v].low_link == tarjan_node_list[v].index)
@@ -193,7 +187,6 @@ template <typename GraphT> class TarjanSCC
                                          });
     }
 
-
     std::size_t get_number_of_components() const { return component_size_vector.size(); }
 
     std::size_t get_size_one_count() const { return size_one_counter; }
@@ -204,8 +197,6 @@ template <typename GraphT> class TarjanSCC
     }
 
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
-
-
 };
 
 #endif /* TARJAN_SCC_HPP */

@@ -28,46 +28,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRIP_BRUTE_FORCE_HPP
 #define TRIP_BRUTE_FORCE_HPP
 
-
 #include "../data_structures/search_engine.hpp"
-#include "../util/string_util.hpp"
+#include "../util/simple_logger.hpp"
 
 #include <osrm/json_container.hpp>
 
 #include <cstdlib>
-
 #include <algorithm>
 #include <string>
 #include <vector>
 #include <limits>
-#include <iostream>
-#include "../util/simple_logger.hpp"
-
-
-
 
 namespace osrm
 {
 namespace trip
 {
 
-void TabuSearchTrip(std::vector<unsigned> & location,
-                   const PhantomNodeArray & phantom_node_vector,
-                   const std::vector<EdgeWeight> & dist_table,
-                   InternalRouteResult & min_route,
-                   std::vector<int> & min_loc_permutation) {
-
-
+// todo: yet to be implemented
+void TabuSearchTrip(std::vector<unsigned> &location,
+                    const PhantomNodeArray &phantom_node_vector,
+                    const std::vector<EdgeWeight> &dist_table,
+                    InternalRouteResult &min_route,
+                    std::vector<int> &min_loc_permutation)
+{
 }
 
-void TabuSearchTrip(const PhantomNodeArray & phantom_node_vector,
-                   const std::vector<EdgeWeight> & dist_table,
-                   InternalRouteResult & min_route,
-                   std::vector<int> & min_loc_permutation) {
-
-
+void TabuSearchTrip(const PhantomNodeArray &phantom_node_vector,
+                    const std::vector<EdgeWeight> &dist_table,
+                    InternalRouteResult &min_route,
+                    std::vector<int> &min_loc_permutation)
+{
 }
-
 }
 }
 #endif // TRIP_BRUTE_FORCE_HPP
