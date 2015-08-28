@@ -44,7 +44,9 @@ namespace osmium {
             xml     = 1,
             pbf     = 2,
             opl     = 3,
-            json    = 4
+            json    = 4,
+            o5m     = 5,
+            debug   = 6
         };
 
 // avoid g++ false positive
@@ -62,6 +64,10 @@ namespace osmium {
                     return "OPL";
                 case file_format::json:
                     return "JSON";
+                case file_format::o5m:
+                    return "O5M";
+                case file_format::debug:
+                    return "DEBUG";
             }
         }
 #pragma GCC diagnostic pop

@@ -74,6 +74,14 @@ SECTION("linestring_with_two_same_locations") {
     });
 
     REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+
+    try {
+        factory.create_linestring(wnl);
+    } catch (osmium::geometry_error& e) {
+        REQUIRE(e.id() == 0);
+        REQUIRE(std::string(e.what()) == "need at least two points for linestring");
+    }
+
     REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
 
     {

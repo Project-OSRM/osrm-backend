@@ -1,12 +1,16 @@
 #include "catch.hpp"
 
+#include <boost/crc.hpp>
+
+#include <osmium/osm/crc.hpp>
 #include <osmium/osm/relation.hpp>
 
 #include "helper.hpp"
 
-TEST_CASE("Basic_Relation") {
+TEST_CASE("Build relation") {
 
-SECTION("relation_builder") {
+    osmium::CRC<boost::crc_32_type> crc32;
+
     osmium::memory::Buffer buffer(10000);
 
     osmium::Relation& relation = buffer_add_relation(buffer,
@@ -55,6 +59,7 @@ SECTION("relation_builder") {
         }
         ++n;
     }
-}
 
+    crc32.update(relation);
+    REQUIRE(crc32().checksum() == 0xebcd836d);
 }

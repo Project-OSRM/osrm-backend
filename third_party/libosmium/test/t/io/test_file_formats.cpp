@@ -247,5 +247,29 @@ TEST_CASE("FileFormats") {
         REQUIRE_THROWS_AS(f.check(), std::runtime_error);
     }
 
+    SECTION("url without format") {
+        osmium::io::File f {"http://www.example.com/api"};
+        REQUIRE(osmium::io::file_format::xml == f.format());
+        REQUIRE(osmium::io::file_compression::none == f.compression());
+        REQUIRE(false == f.has_multiple_object_versions());
+        f.check();
+    }
+
+    SECTION("url without format and filename") {
+        osmium::io::File f {"http://planet.osm.org/pbf/planet-latest.osm.pbf"};
+        REQUIRE(osmium::io::file_format::pbf == f.format());
+        REQUIRE(osmium::io::file_compression::none == f.compression());
+        REQUIRE(false == f.has_multiple_object_versions());
+        f.check();
+    }
+
+    SECTION("url with format") {
+        osmium::io::File f {"http://www.example.com/api", "osh"};
+        REQUIRE(osmium::io::file_format::xml == f.format());
+        REQUIRE(osmium::io::file_compression::none == f.compression());
+        REQUIRE(true == f.has_multiple_object_versions());
+        f.check();
+    }
+
 }
 

@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <queue>
 #include <string>
 #include <thread>
-#include <utility>
-
-#include <osmium/util/compatibility.hpp>
+#include <utility> // IWYU pragma: keep (for std::move)
 
 namespace osmium {
 
@@ -71,6 +69,8 @@ namespace osmium {
             /// Used to signal readers when data is available in the queue.
             std::condition_variable m_data_available;
 
+            std::atomic<bool> m_done;
+
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
             /// The largest size the queue has been so far.
             size_t m_largest_size;
@@ -94,7 +94,8 @@ namespace osmium {
                 m_name(name),
                 m_mutex(),
                 m_queue(),
-                m_data_available()
+                m_data_available(),
+                m_done(false)
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 ,
                 m_largest_size(0),
@@ -104,6 +105,7 @@ namespace osmium {
             }
 
             ~Queue() {
+                shutdown();
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 std::cerr << "queue '" << m_name << "' with max_size=" << m_max_size << " had largest size " << m_largest_size << " and was full " << m_full_counter << " times\n";
 #endif
@@ -132,24 +134,33 @@ namespace osmium {
                 m_data_available.notify_one();
             }
 
+            void shutdown() {
+                m_done = true;
+                m_data_available.notify_all();
+            }
+
             void wait_and_pop(T& value) {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 m_data_available.wait(lock, [this] {
-                    return !m_queue.empty();
+                    return !m_queue.empty() || m_done;
                 });
-                value = std::move(m_queue.front());
-                m_queue.pop();
+                if (!m_queue.empty()) {
+                    value = std::move(m_queue.front());
+                    m_queue.pop();
+                }
             }
 
             void wait_and_pop_with_timeout(T& value) {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 if (!m_data_available.wait_for(lock, std::chrono::seconds(1), [this] {
-                    return !m_queue.empty();
+                    return !m_queue.empty() || m_done;
                 })) {
                     return;
                 }
-                value = std::move(m_queue.front());
-                m_queue.pop();
+                if (!m_queue.empty()) {
+                    value = std::move(m_queue.front());
+                    m_queue.pop();
+                }
             }
 
             bool try_pop(T& value) {

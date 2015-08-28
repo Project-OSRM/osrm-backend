@@ -1,10 +1,15 @@
 #include "catch.hpp"
 
+#include <boost/crc.hpp>
+
+#include <osmium/osm/crc.hpp>
 #include <osmium/osm/node.hpp>
 
 #include "helper.hpp"
 
 TEST_CASE("Basic_Node") {
+
+    osmium::CRC<boost::crc_32_type> crc32;
 
 SECTION("node_builder") {
     osmium::memory::Buffer buffer(10000);
@@ -35,6 +40,9 @@ SECTION("node_builder") {
     REQUIRE(123 == node.timestamp());
     REQUIRE(osmium::Location(3.5, 4.7) == node.location());
     REQUIRE(2 == node.tags().size());
+
+    crc32.update(node);
+    REQUIRE(crc32().checksum() == 0xc696802f);
 
     node.set_visible(false);
     REQUIRE(false == node.visible());
