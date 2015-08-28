@@ -1,0 +1,111 @@
+#ifndef PROTOZERO_PBF_BUILDER_HPP
+#define PROTOZERO_PBF_BUILDER_HPP
+
+/*****************************************************************************
+
+protozero - Minimalistic protocol buffer decoder and encoder in C++.
+
+This file is from https://github.com/mapbox/protozero where you can find more
+documentation.
+
+*****************************************************************************/
+
+#include <type_traits>
+
+#include <protozero/pbf_types.hpp>
+#include <protozero/pbf_writer.hpp>
+
+namespace protozero {
+
+template <typename T>
+class pbf_builder : public pbf_writer {
+
+    static_assert(std::is_same<pbf_tag_type, typename std::underlying_type<T>::type>::value, "T must be enum with underlying type protozero::pbf_tag_type");
+
+public:
+
+    using enum_type = T;
+
+    pbf_builder(std::string& data) noexcept :
+        pbf_writer(data) {
+    }
+
+    template <typename P>
+    pbf_builder(pbf_writer& parent_writer, P tag) noexcept :
+        pbf_writer(parent_writer, pbf_tag_type(tag)) {
+    }
+
+#define PROTOZERO_WRITER_WRAP_ADD_SCALAR(name, type) \
+    inline void add_##name(T tag, type value) { \
+        pbf_writer::add_##name(pbf_tag_type(tag), value); \
+    }
+
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(bool, bool)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(enum, int32_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(int32, int32_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(sint32, int32_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(uint32, uint32_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(int64, int64_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(sint64, int64_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(uint64, uint64_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(fixed32, uint32_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(sfixed32, int32_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(fixed64, uint64_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(sfixed64, int64_t)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(float, float)
+    PROTOZERO_WRITER_WRAP_ADD_SCALAR(double, double)
+
+    inline void add_bytes(T tag, const char* value, size_t size) {
+        pbf_writer::add_bytes(pbf_tag_type(tag), value, size);
+    }
+
+    inline void add_bytes(T tag, const std::string& value) {
+        pbf_writer::add_bytes(pbf_tag_type(tag), value);
+    }
+
+    inline void add_string(T tag, const char* value, size_t size) {
+        pbf_writer::add_string(pbf_tag_type(tag), value, size);
+    }
+
+    inline void add_string(T tag, const std::string& value) {
+        pbf_writer::add_string(pbf_tag_type(tag), value);
+    }
+
+    inline void add_string(T tag, const char* value) {
+        pbf_writer::add_string(pbf_tag_type(tag), value);
+    }
+
+    inline void add_message(T tag, const char* value, size_t size) {
+        pbf_writer::add_message(pbf_tag_type(tag), value, size);
+    }
+
+    inline void add_message(T tag, const std::string& value) {
+        pbf_writer::add_message(pbf_tag_type(tag), value);
+    }
+
+#define PROTOZERO_WRITER_WRAP_ADD_PACKED(name) \
+    template <typename InputIterator> \
+    inline void add_packed_##name(T tag, InputIterator first, InputIterator last) { \
+        pbf_writer::add_packed_##name(pbf_tag_type(tag), first, last); \
+    }
+
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(bool)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(enum)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(int32)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(sint32)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(uint32)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(int64)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(sint64)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(uint64)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(fixed32)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(sfixed32)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(fixed64)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(sfixed64)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(float)
+    PROTOZERO_WRITER_WRAP_ADD_PACKED(double)
+
+};
+
+} // end namespace protozero
+
+#endif // PROTOZERO_PBF_BUILDER_HPP

@@ -46,7 +46,6 @@ int main(int argc, char* argv[]) {
     std::string input_filename = argv[1];
 
     osmium::memory::Buffer buffer = osmium::io::read_file(input_filename);
-    google::protobuf::ShutdownProtobufLibrary();
 
     const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
 

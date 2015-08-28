@@ -19,8 +19,7 @@
 # include <direct.h>
 #endif
 
-#include <osmium/io/pbf_input.hpp>
-#include <osmium/io/xml_input.hpp>
+#include <osmium/io/any_input.hpp>
 #include <osmium/handler/disk_store.hpp>
 #include <osmium/handler/object_relations.hpp>
 
@@ -203,7 +202,5 @@ int main(int argc, char* argv[]) {
         map_relation2relation.dump_as_list(fd);
         close(fd);
     }
-
-    google::protobuf::ShutdownProtobufLibrary();
 }
 

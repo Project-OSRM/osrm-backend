@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 

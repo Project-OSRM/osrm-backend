@@ -106,7 +106,6 @@ int main(int argc, char* argv[]) {
         exit_code = 1;
     }
 
-    google::protobuf::ShutdownProtobufLibrary();
     return exit_code;
 }
 

@@ -59,7 +59,6 @@ TEST_CASE("thread") {
         auto& pool = osmium::thread::Pool::instance();
         result = 0;
 
-        bool got_exception = false;
         auto future = pool.submit(test_job_throw {});
 
         REQUIRE_THROWS_AS(future.get(), std::runtime_error);

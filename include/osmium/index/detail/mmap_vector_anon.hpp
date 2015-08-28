@@ -35,9 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #ifdef __linux__
 
-#include <cstddef>
-
-#include <osmium/index/detail/typed_mmap.hpp>
 #include <osmium/index/detail/mmap_vector_base.hpp>
 
 namespace osmium {
@@ -45,26 +42,16 @@ namespace osmium {
     namespace detail {
 
         /**
-         * This class looks and behaves like STL vector, but uses mmap internally.
+         * This class looks and behaves like STL vector, but uses mmap
+         * internally.
          */
         template <typename T>
-        class mmap_vector_anon : public mmap_vector_base<T, mmap_vector_anon> {
+        class mmap_vector_anon : public mmap_vector_base<T> {
 
         public:
 
             mmap_vector_anon() :
-                mmap_vector_base<T, osmium::detail::mmap_vector_anon>(
-                    -1,
-                    osmium::detail::mmap_vector_size_increment,
-                    0,
-                    osmium::detail::typed_mmap<T>::map(osmium::detail::mmap_vector_size_increment)) {
-            }
-
-            void reserve(size_t new_capacity) {
-                if (new_capacity > this->capacity()) {
-                    this->data(osmium::detail::typed_mmap<T>::remap(this->data(), this->capacity(), new_capacity));
-                    this->m_capacity = new_capacity;
-                }
+                mmap_vector_base<T>() {
             }
 
         }; // class mmap_vector_anon

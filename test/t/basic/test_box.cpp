@@ -2,7 +2,10 @@
 
 #include <sstream>
 
+#include <boost/crc.hpp>
+
 #include <osmium/osm/box.hpp>
+#include <osmium/osm/crc.hpp>
 #include <osmium/geom/relations.hpp>
 
 TEST_CASE("Box") {
@@ -48,6 +51,10 @@ TEST_CASE("Box") {
         REQUIRE(b.contains(loc1));
         REQUIRE(b.contains(loc2));
         REQUIRE(b.contains(loc3));
+
+        osmium::CRC<boost::crc_32_type> crc32;
+        crc32.update(b);
+        REQUIRE(crc32().checksum() == 0xd381a838);
     }
 
     SECTION("output_defined") {

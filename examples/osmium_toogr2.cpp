@@ -327,7 +327,5 @@ int main(int argc, char* argv[]) {
         }
         std::cerr << "\n";
     }
-
-    google::protobuf::ShutdownProtobufLibrary();
 }
 

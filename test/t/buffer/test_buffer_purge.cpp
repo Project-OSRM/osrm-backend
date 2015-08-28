@@ -108,7 +108,7 @@ TEST_CASE("Purge data from buffer") {
             node_builder.object().set_removed(true);
         }
         buffer.commit();
-        size_t size2 = buffer.committed() - size1;
+
         REQUIRE(std::distance(buffer.begin(), buffer.end()) == 2);
 
         CallbackClass callback;
@@ -127,20 +127,20 @@ TEST_CASE("Purge data from buffer") {
             node_builder.add_user("testuser_longer_name");
         }
         buffer.commit();
-        size_t size1 = buffer.committed();
+
         {
             osmium::builder::NodeBuilder node_builder(buffer);
             node_builder.add_user("testuser");
             node_builder.object().set_removed(true);
         }
         buffer.commit();
-        size_t size2 = buffer.committed() - size1;
+
         {
             osmium::builder::NodeBuilder node_builder(buffer);
             node_builder.add_user("sn");
         }
         buffer.commit();
-        size_t size3 = buffer.committed() - (size1 + size2);
+
         REQUIRE(std::distance(buffer.begin(), buffer.end()) == 3);
 
         CallbackClass callback;
@@ -159,21 +159,21 @@ TEST_CASE("Purge data from buffer") {
             node_builder.object().set_removed(true);
         }
         buffer.commit();
-        size_t size1 = buffer.committed();
+
         {
             osmium::builder::NodeBuilder node_builder(buffer);
             node_builder.add_user("testuser");
             node_builder.object().set_removed(true);
         }
         buffer.commit();
-        size_t size2 = buffer.committed() - size1;
+
         {
             osmium::builder::NodeBuilder node_builder(buffer);
             node_builder.add_user("sn");
             node_builder.object().set_removed(true);
         }
         buffer.commit();
-        size_t size3 = buffer.committed() - (size1 + size2);
+
         REQUIRE(std::distance(buffer.begin(), buffer.end()) == 3);
 
         CallbackClass callback;
