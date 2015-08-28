@@ -6,8 +6,8 @@ OSMIUM_TAG=v2.3.0
 VARIANT_REPO=https://github.com/mapbox/variant.git 
 VARIANT_TAG=v1.0
 
-VARIANT_LATEST=$(http --body https://api.github.com/repos/mapbox/variant/releases/latest | jq ".tag_name")
-OSMIUM_LATEST=$(http --body https://api.github.com/repos/osmcode/libosmium/releases/latest | jq ".tag_name")
+VARIANT_LATEST=$(curl https://api.github.com/repos/mapbox/variant/releases/latest | jq ".tag_name")
+OSMIUM_LATEST=$(curl https://api.github.com/repos/osmcode/libosmium/releases/latest | jq ".tag_name")
 
 echo "Latest osmium release is $OSMIUM_LATEST, pulling in \"$OSMIUM_TAG\""
 echo "Latest variant release is $VARIANT_LATEST, pulling in \"$VARIANT_TAG\""
