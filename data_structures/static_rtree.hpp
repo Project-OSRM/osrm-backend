@@ -783,31 +783,17 @@ class StaticRTree
     // Returns elements within max_distance.
     // If the minium of elements could not be found in the search radius, widen
     // it until the minimum can be satisfied.
-    // At the number of returned nodes is capped at the given maximum.
     bool IncrementalFindPhantomNodeForCoordinateWithDistance(
         const FixedPointCoordinate &input_coordinate,
         std::vector<std::pair<PhantomNode, double>> &result_phantom_node_vector,
         const double max_distance,
-        const unsigned min_number_of_phantom_nodes,
-        const unsigned max_number_of_phantom_nodes,
         const unsigned max_checked_elements = 4 * LEAF_NODE_SIZE)
     {
         unsigned inspected_elements = 0;
-        unsigned number_of_elements_from_big_cc = 0;
-        unsigned number_of_elements_from_tiny_cc = 0;
-
-        // is true if a big cc was added to the queue to we also have a lower bound
-        // for them. it actives pruning for big components
-        bool has_big_cc = false;
-
-        unsigned pruned_elements = 0;
 
         std::pair<double, double> projected_coordinate = {
             mercator::lat2y(input_coordinate.lat / COORDINATE_PRECISION),
             input_coordinate.lon / COORDINATE_PRECISION};
-
-        // upper bound pruning technique
-        upper_bound<float> pruning_bound(max_number_of_phantom_nodes);
 
         // initialize queue with root element
         std::priority_queue<IncrementalQueryCandidate> traversal_queue;
@@ -817,6 +803,11 @@ class StaticRTree
         {
             const IncrementalQueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
+
+            if (current_query_node.min_dist > max_distance || inspected_elements >= max_checked_elements)
+            {
+                break;
+            }
 
             if (current_query_node.node.template is<TreeNode>())
             { // current object is a tree node
@@ -839,16 +830,9 @@ class StaticRTree
                         // distance must be non-negative
                         BOOST_ASSERT(0.f <= current_perpendicular_distance);
 
-                        if (pruning_bound.get() >= current_perpendicular_distance ||
-                            (!has_big_cc && !current_edge.is_in_tiny_cc()))
+                        if (current_perpendicular_distance <= max_distance)
                         {
-                            pruning_bound.insert(current_perpendicular_distance);
                             traversal_queue.emplace(current_perpendicular_distance, current_edge);
-                            has_big_cc = has_big_cc || !current_edge.is_in_tiny_cc();
-                        }
-                        else
-                        {
-                            ++pruned_elements;
                         }
                     }
                 }
@@ -865,7 +849,10 @@ class StaticRTree
                             child_rectangle.GetMinDist(input_coordinate);
                         BOOST_ASSERT(0.f <= lower_bound_to_element);
 
-                        traversal_queue.emplace(lower_bound_to_element, child_tree_node);
+                        if (lower_bound_to_element <= max_distance)
+                        {
+                            traversal_queue.emplace(lower_bound_to_element, child_tree_node);
+                        }
                     }
                 }
             }
@@ -875,14 +862,6 @@ class StaticRTree
                 // inspecting an actual road segment
                 const EdgeDataT &current_segment =
                     current_query_node.node.template get<EdgeDataT>();
-
-                // continue searching for the first segment from a big component
-                if (number_of_elements_from_big_cc == 0 &&
-                    number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes - 1 &&
-                    current_segment.is_in_tiny_cc())
-                {
-                    continue;
-                }
 
                 // check if it is smaller than what we had before
                 float current_ratio = 0.f;
@@ -894,9 +873,7 @@ class StaticRTree
                         m_coordinate_list->at(current_segment.v), input_coordinate,
                         projected_coordinate, foot_point_coordinate_on_segment, current_ratio);
 
-                if (number_of_elements_from_big_cc > 0 &&
-                    result_phantom_node_vector.size() >= min_number_of_phantom_nodes &&
-                    current_perpendicular_distance >= max_distance)
+                if (current_perpendicular_distance >= max_distance)
                 {
                     traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
                     continue;
@@ -920,36 +897,14 @@ class StaticRTree
                 // set forward and reverse weights on the phantom node
                 SetForwardAndReverseWeightsOnPhantomNode(current_segment,
                                                          result_phantom_node_vector.back().first);
-
-                // update counts on what we found from which result class
-                if (current_segment.is_in_tiny_cc())
-                { // found an element in tiny component
-                    ++number_of_elements_from_tiny_cc;
-                }
-                else
-                { // found an element in a big component
-                    ++number_of_elements_from_big_cc;
-                }
             }
 
             // stop the search by flushing the queue
-            if ((result_phantom_node_vector.size() >= max_number_of_phantom_nodes &&
-                 number_of_elements_from_big_cc > 0) ||
-                inspected_elements >= max_checked_elements)
+            if (inspected_elements >= max_checked_elements)
             {
                 traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
         }
-        // SimpleLogger().Write() << "result_phantom_node_vector.size(): " <<
-        // result_phantom_node_vector.size();
-        // SimpleLogger().Write() << "max_number_of_phantom_nodes: " << max_number_of_phantom_nodes;
-        // SimpleLogger().Write() << "number_of_elements_from_big_cc: " <<
-        // number_of_elements_from_big_cc;
-        // SimpleLogger().Write() << "number_of_elements_from_tiny_cc: " <<
-        // number_of_elements_from_tiny_cc;
-        // SimpleLogger().Write() << "inspected_elements: " << inspected_elements;
-        // SimpleLogger().Write() << "max_checked_elements: " << max_checked_elements;
-        // SimpleLogger().Write() << "pruned_elements: " << pruned_elements;
 
         return !result_phantom_node_vector.empty();
     }

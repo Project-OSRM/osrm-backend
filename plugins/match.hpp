@@ -92,11 +92,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     }
 
     bool getCandiates(const std::vector<FixedPointCoordinate> &input_coords,
+                      const double gps_precision,
                       std::vector<double> &sub_trace_lengths,
                       osrm::matching::CandidateLists &candidates_lists)
     {
-        double last_distance =
-            coordinate_calculation::great_circle_distance(input_coords[0], input_coords[1]);
+        double query_radius = 10 * gps_precision;
+        double last_distance = coordinate_calculation::great_circle_distance(input_coords[0], input_coords[1]);
+
         sub_trace_lengths.resize(input_coords.size());
         sub_trace_lengths[0] = 0;
         for (const auto current_coordinate : osrm::irange<std::size_t>(0, input_coords.size()))
@@ -104,8 +106,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             bool allow_uturn = false;
             if (0 < current_coordinate)
             {
-                last_distance = coordinate_calculation::great_circle_distance(
-                    input_coords[current_coordinate - 1], input_coords[current_coordinate]);
+                last_distance = coordinate_calculation::great_circle_distance(input_coords[current_coordinate - 1], input_coords[current_coordinate]);
+
                 sub_trace_lengths[current_coordinate] +=
                     sub_trace_lengths[current_coordinate - 1] + last_distance;
             }
@@ -124,18 +126,27 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             }
 
             std::vector<std::pair<PhantomNode, double>> candidates;
-            if (!facade->IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
-                    input_coords[current_coordinate], candidates, last_distance / 2.0, 5,
-                    max_number_of_candidates))
-            {
-                return false;
-            }
+            facade->IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
+                    input_coords[current_coordinate], candidates, query_radius);
 
-            if (allow_uturn)
-            {
-                candidates_lists.push_back(candidates);
-            }
-            else
+            // sort by foward id, then by reverse id and then by distance
+            std::sort(candidates.begin(), candidates.end(),
+                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
+                    return lhs.first.forward_node_id < rhs.first.forward_node_id ||
+                            (lhs.first.forward_node_id == rhs.first.forward_node_id &&
+                             (lhs.first.reverse_node_id < rhs.first.reverse_node_id ||
+                              (lhs.first.reverse_node_id == rhs.first.reverse_node_id &&
+                               lhs.second < rhs.second)));
+                });
+
+            auto new_end = std::unique(candidates.begin(), candidates.end(),
+                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
+                    return lhs.first.forward_node_id == rhs.first.forward_node_id &&
+                           lhs.first.reverse_node_id == rhs.first.reverse_node_id;
+                });
+            candidates.resize(new_end - candidates.begin());
+
+            if (!allow_uturn)
             {
                 const auto compact_size = candidates.size();
                 for (const auto i : osrm::irange<std::size_t>(0, compact_size))
@@ -151,8 +162,15 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                         candidates[i].first.reverse_node_id = SPECIAL_NODEID;
                     }
                 }
-                candidates_lists.push_back(candidates);
             }
+
+            // sort by distance to make pruning effective
+            std::sort(candidates.begin(), candidates.end(),
+                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
+                    return lhs.second < rhs.second;
+                });
+
+            candidates_lists.push_back(std::move(candidates));
         }
 
         return true;
@@ -246,7 +264,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
 
         const bool found_candidates =
-            getCandiates(input_coords, sub_trace_lengths, candidates_lists);
+            getCandiates(input_coords, route_parameters.gps_precision, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
             json_result.values["status"] = "No suitable matching candidates found.";

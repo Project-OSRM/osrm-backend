@@ -91,13 +91,23 @@ template <class CandidateLists> struct HiddenMarkovModel
         : breakage(candidates_list.size()), candidates_list(candidates_list),
           emission_log_probability(emission_log_probability)
     {
-        for (const auto &l : candidates_list)
+        viterbi.resize(candidates_list.size());
+        parents.resize(candidates_list.size());
+        path_lengths.resize(candidates_list.size());
+        suspicious.resize(candidates_list.size());
+        pruned.resize(candidates_list.size());
+        for (const auto i : osrm::irange<std::size_t>(0u, candidates_list.size()))
         {
-            viterbi.emplace_back(l.size());
-            parents.emplace_back(l.size());
-            path_lengths.emplace_back(l.size());
-            suspicious.emplace_back(l.size());
-            pruned.emplace_back(l.size());
+            const auto& num_candidates = candidates_list[i].size();
+            // add empty vectors
+            if (num_candidates > 0)
+            {
+                viterbi[i].resize(num_candidates);
+                parents[i].resize(num_candidates);
+                path_lengths[i].resize(num_candidates);
+                suspicious[i].resize(num_candidates);
+                pruned[i].resize(num_candidates);
+            }
         }
 
         clear(0);
@@ -121,10 +131,11 @@ template <class CandidateLists> struct HiddenMarkovModel
 
     std::size_t initialize(std::size_t initial_timestamp)
     {
-        BOOST_ASSERT(initial_timestamp < candidates_list.size());
-
+        auto num_points = candidates_list.size();
         do
         {
+            BOOST_ASSERT(initial_timestamp < num_points);
+
             for (const auto s : osrm::irange<std::size_t>(0u, viterbi[initial_timestamp].size()))
             {
                 viterbi[initial_timestamp][s] =
@@ -139,9 +150,9 @@ template <class CandidateLists> struct HiddenMarkovModel
             }
 
             ++initial_timestamp;
-        } while (breakage[initial_timestamp - 1]);
+        } while (initial_timestamp < num_points && breakage[initial_timestamp - 1]);
 
-        if (initial_timestamp >= viterbi.size())
+        if (initial_timestamp >= num_points)
         {
             return osrm::matching::INVALID_STATE;
         }
