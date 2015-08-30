@@ -131,6 +131,11 @@ maxspeed_table = {
 traffic_signal_penalty          = 2
 use_turn_restrictions           = true
 
+local turn_penalty              = 10
+-- Note: this biases right-side driving.  Should be
+-- inverted for left-driving countries.
+local turn_bias                 = 1.2
+
 local obey_oneway               = true
 local ignore_areas              = true
 local u_turn_penalty            = 20
@@ -431,3 +436,12 @@ function way_function (way, result)
   end
 end
 
+function turn_function (angle)
+  ---- compute turn penalty as angle^2, with a left/right bias
+  k = turn_penalty/(90.0*90.0)
+  if angle>=0 then
+    return angle*angle*k/turn_bias
+  else
+    return angle*angle*k*turn_bias
+  end
+end
