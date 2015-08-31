@@ -44,6 +44,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 
 #include <memory>
+#include <algorithm>
+#include <climits>
 #include <stack>
 #include <vector>
 

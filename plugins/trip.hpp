@@ -36,15 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../algorithms/trip_farthest_insertion.hpp"
 #include "../algorithms/trip_brute_force.hpp"
 #include "../data_structures/search_engine.hpp"
-#include "../data_structures/matrix_graph_wrapper.hpp"  // wrapper to use tarjan
-                                                        // scc on dist table
-#include "../descriptors/descriptor_base.hpp"           // to make json output
-#include "../descriptors/json_descriptor.hpp"           // to make json output
+#include "../data_structures/matrix_graph_wrapper.hpp" // wrapper to use tarjan
+                                                       // scc on dist table
+#include "../descriptors/descriptor_base.hpp"          // to make json output
+#include "../descriptors/json_descriptor.hpp"          // to make json output
 #include "../util/make_unique.hpp"
-#include "../util/timing_util.hpp"                      // to time runtime
-#include "../util/simple_logger.hpp"                    // for logging output
-#include "../util/dist_table_wrapper.hpp"               // to access the dist
-                                                        // table more easily
+#include "../util/timing_util.hpp"        // to time runtime
+#include "../util/simple_logger.hpp"      // for logging output
+#include "../util/dist_table_wrapper.hpp" // to access the dist
+                                          // table more easily
 
 #include <osrm/json_container.hpp>
 #include <boost/assert.hpp>
@@ -122,8 +122,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
             BOOST_ASSERT_MSG(in_component.size() >= in_range.size(),
                              "scc component and its ranges do not match");
-            BOOST_ASSERT_MSG(in_component.size() > 0,
-                             "there's no scc component");
+            BOOST_ASSERT_MSG(in_component.size() > 0, "there's no scc component");
             BOOST_ASSERT_MSG(*std::max_element(in_range.begin(), in_range.end()) <=
                                  in_component.size(),
                              "scc component ranges are out of bound");
@@ -135,11 +134,11 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         // constructor to use when whole graph is one single scc
         SCC_Component(std::vector<NodeID> in_component)
-                      : component(in_component), range({0, in_component.size()}){};
+            : component(in_component), range({0, in_component.size()}){};
 
-        std::size_t GetNumberOfComponents() const {
-            BOOST_ASSERT_MSG(range.size() > 0,
-                             "there's no range");
+        std::size_t GetNumberOfComponents() const
+        {
+            BOOST_ASSERT_MSG(range.size() > 0, "there's no range");
             return range.size() - 1;
         }
 
@@ -154,14 +153,14 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                                              const DistTableWrapper<EdgeWeight> &result_table)
     {
 
-        if (std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) == std::end(result_table))
+        if (std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
+            std::end(result_table))
         {
             // whole graph is one scc
             std::vector<NodeID> location_ids(number_of_locations);
             std::iota(std::begin(location_ids), std::end(location_ids), 0);
             return SCC_Component(std::move(location_ids));
         }
-
 
         // Run TarjanSCC
         auto wrapper = std::make_shared<MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
@@ -217,8 +216,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         {
             const auto from_node = *it;
             // if from_node is the last node, compute the route from the last to the first location
-            const auto to_node =
-                std::next(it) != end ? *std::next(it) : *start;
+            const auto to_node = std::next(it) != end ? *std::next(it) : *start;
 
             viapoint =
                 PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
@@ -283,16 +281,11 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 if (component_size < BF_MAX_FEASABLE)
                 {
                     scc_route =
-                        osrm::trip::BruteForceTrip(start,
-                                                   end,
-                                                   number_of_locations,
-                                                   result_table);
+                        osrm::trip::BruteForceTrip(start, end, number_of_locations, result_table);
                 }
                 else
                 {
-                    scc_route = osrm::trip::FarthestInsertionTrip(start,
-                                                                  end,
-                                                                  number_of_locations,
+                    scc_route = osrm::trip::FarthestInsertionTrip(start, end, number_of_locations,
                                                                   result_table);
                 }
 
@@ -321,19 +314,22 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         comp_route.reserve(route_result.size());
         for (std::size_t r = 0; r < route_result.size(); ++r)
         {
-            comp_route.push_back(ComputeRoute(phantom_node_vector, route_parameters, route_result[r]));
+            comp_route.push_back(
+                ComputeRoute(phantom_node_vector, route_parameters, route_result[r]));
         }
 
         TIMER_STOP(TRIP_TIMER);
 
-        SimpleLogger().Write() << "Trip calculation took: " << TIMER_MSEC(TRIP_TIMER) / 1000. << "s";
+        SimpleLogger().Write() << "Trip calculation took: " << TIMER_MSEC(TRIP_TIMER) / 1000.
+                               << "s";
 
         // prepare JSON output
         // create a json object for every trip
         osrm::json::Array trip;
         for (std::size_t i = 0; i < route_result.size(); ++i)
         {
-            std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
+            std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor =
+                osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
             descriptor->SetConfig(route_parameters);
 
             osrm::json::Object scc_trip;

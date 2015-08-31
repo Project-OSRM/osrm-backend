@@ -57,8 +57,9 @@ EdgeWeight ReturnDistance(const DistTableWrapper<EdgeWeight> &dist_table,
     while (i < location_order.size() && (route_dist < min_route_dist))
     {
         route_dist += dist_table(location_order[i], location_order[(i + 1) % component_size]);
-        BOOST_ASSERT_MSG(dist_table(location_order[i], location_order[(i + 1) % component_size])
-                         != INVALID_EDGE_WEIGHT, "invalid route found");
+        BOOST_ASSERT_MSG(dist_table(location_order[i], location_order[(i + 1) % component_size]) !=
+                             INVALID_EDGE_WEIGHT,
+                         "invalid route found");
         ++i;
     }
 
@@ -82,8 +83,7 @@ std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
 
     // check length of all possible permutation of the component ids
 
-    BOOST_ASSERT_MSG(perm.size() > 0,
-                     "no permutation given");
+    BOOST_ASSERT_MSG(perm.size() > 0, "no permutation given");
     BOOST_ASSERT_MSG(*(std::max_element(std::begin(perm), std::end(perm))) < number_of_locations,
                      "invalid node id");
     BOOST_ASSERT_MSG(*(std::min_element(std::begin(perm), std::end(perm))) >= 0, "invalid node id");
