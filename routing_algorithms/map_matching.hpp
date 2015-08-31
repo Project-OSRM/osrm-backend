@@ -139,6 +139,12 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         MatchingDebugInfo matching_debug(osrm::json::Logger::get());
         matching_debug.initialize(candidates_list);
 
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
+            super::facade->GetNumberOfNodes());
+
+        QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
+        QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
+
         std::size_t breakage_begin = osrm::matching::INVALID_STATE;
         std::vector<std::size_t> split_points;
         std::vector<std::size_t> prev_unbroken_timestamps;
@@ -205,12 +211,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             auto &current_lengths = model.path_lengths[t];
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
-
-            engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-                super::facade->GetNumberOfNodes());
-
-            QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
-            QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
 
             // compute d_t for this timestamp and the next one
             for (const auto s : osrm::irange<std::size_t>(0u, prev_viterbi.size()))
