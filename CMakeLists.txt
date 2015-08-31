@@ -281,16 +281,6 @@ if(OPENMP_FOUND)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-find_package(OSMPBF REQUIRED)
-include_directories(${OSMPBF_INCLUDE_DIR})
-target_link_libraries(osrm-extract ${OSMPBF_LIBRARY})
-target_link_libraries(osrm-prepare ${OSMPBF_LIBRARY})
-
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-target_link_libraries(osrm-extract ${PROTOBUF_LIBRARY})
-target_link_libraries(osrm-prepare ${PROTOBUF_LIBRARY})
-
 find_package(BZip2 REQUIRED)
 include_directories(${BZIP_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${BZIP2_LIBRARIES})
