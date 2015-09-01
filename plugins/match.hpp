@@ -324,6 +324,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 raw_route.segment_end_coordinates,
                 std::vector<bool>(raw_route.segment_end_coordinates.size(), true), raw_route);
 
+            BOOST_ASSERT(raw_route.shortest_path_length != INVALID_EDGE_WEIGHT);
+
             matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
         }
 

@@ -248,7 +248,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const auto d_t = std::abs(network_distance - great_circle_distance);
 
                     // very low probability transition -> prune
-                    if (d_t > max_distance_delta)
+                    if (d_t >= max_distance_delta)
                     {
                         continue;
                     }
