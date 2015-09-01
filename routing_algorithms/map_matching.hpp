@@ -214,6 +214,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
+            const auto great_circle_distance = coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate);
+
             // compute d_t for this timestamp and the next one
             for (const auto s : osrm::irange<std::size_t>(0u, prev_viterbi.size()))
             {
@@ -241,9 +243,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const auto network_distance = super::get_network_distance(
                         forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].first,
                         current_timestamps_list[s_prime].first);
-                    const auto great_circle_distance =
-                        coordinate_calculation::great_circle_distance(prev_coordinate,
-                                                                      current_coordinate);
 
                     const auto d_t = std::abs(network_distance - great_circle_distance);
 
