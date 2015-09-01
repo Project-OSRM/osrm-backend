@@ -30,6 +30,7 @@ Feature: POST request
             | z    | x  | yz,xy | head,left,destination  |
 
     Scenario: Testbot - match POST request
+        Given a grid size of 10 meters
         Given the node map
             | a | b | c | d |
             | e | f | g | h |

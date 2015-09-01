@@ -40,6 +40,7 @@ Feature: Basic Map Matching
             | afcde  | abcde     |
 
     Scenario: Testbot - Map matching with oneways
+        Given a grid size of 10 meters
         Given the node map
             | a | b | c | d |
             | e | f | g | h |
