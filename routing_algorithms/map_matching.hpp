@@ -74,7 +74,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
-    unsigned GetAverageSampleTime(const std::vector<unsigned>& timestamps) const
+    unsigned GetMedianSampleTime(const std::vector<unsigned>& timestamps) const
     {
         BOOST_ASSERT(timestamps.size() > 1);
 
@@ -83,8 +83,10 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         std::adjacent_difference(timestamps.begin(), timestamps.end(), sample_times.begin());
 
         // don't use first element of sample_times -> will not be a difference.
-        auto sum_sample_times = std::accumulate(std::next(sample_times.begin()), sample_times.end(), 0);
-        return sum_sample_times / (sample_times.size() - 1);
+        auto first_elem = std::next(sample_times.begin());
+        auto median = first_elem + std::distance(first_elem, sample_times.end())/2;
+        std::nth_element(first_elem, median, sample_times.end());
+        return *median;
     }
 
   public:
@@ -102,21 +104,21 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     {
         BOOST_ASSERT(candidates_list.size() == trace_coordinates.size());
 
-        const auto avg_sample_time = [&]() {
+        const auto median_sample_time = [&]() {
             if (trace_timestamps.size() > 1)
             {
-                return GetAverageSampleTime(trace_timestamps);
+                return GetMedianSampleTime(trace_timestamps);
             }
             else
             {
                 return 0u;
             }
         }();
-        const auto max_broken_time = avg_sample_time * osrm::matching::MAX_BROKEN_STATES;
+        const auto max_broken_time = median_sample_time * osrm::matching::MAX_BROKEN_STATES;
         const auto max_distance_delta = [&]() {
             if (trace_timestamps.size() > 1)
             {
-                return avg_sample_time * osrm::matching::MAX_SPEED;
+                return median_sample_time * osrm::matching::MAX_SPEED;
             }
             else
             {
