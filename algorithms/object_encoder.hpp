@@ -28,14 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OBJECT_ENCODER_HPP
 #define OBJECT_ENCODER_HPP
 
-#include "../util/string_util.hpp"
-
 #include <boost/assert.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -66,8 +65,8 @@ struct ObjectEncoder
         encoded.resize(sizeof(ObjectT));
         encoded.assign(base64_t(&data[0]),
                        base64_t(&data[0] + (data.size() - number_of_padded_chars)));
-        replaceAll(encoded, "+", "-");
-        replaceAll(encoded, "/", "_");
+        std::replace(begin(encoded), end(encoded), '+', '-');
+        std::replace(begin(encoded), end(encoded), '/', '_');
     }
 
     template <class ObjectT> static void DecodeFromBase64(const std::string &input, ObjectT &object)
@@ -75,9 +74,8 @@ struct ObjectEncoder
         try
         {
             std::string encoded(input);
-            // replace "-" with "+" and "_" with "/"
-            replaceAll(encoded, "-", "+");
-            replaceAll(encoded, "_", "/");
+            std::replace(begin(encoded), end(encoded), '-', '+');
+            std::replace(begin(encoded), end(encoded), '_', '/');
 
             std::copy(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length()),
                       reinterpret_cast<char *>(&object));

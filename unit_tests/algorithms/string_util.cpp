@@ -34,16 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 BOOST_AUTO_TEST_SUITE(string_util)
 
-BOOST_AUTO_TEST_CASE(replace_all_test)
-{
-    std::string input{"ababababababa"};
-    const std::string sub{"a"};
-    const std::string other{"c"};
-    replaceAll(input, sub, other);
-
-    BOOST_CHECK_EQUAL(input, "cbcbcbcbcbcbc");
-}
-
 BOOST_AUTO_TEST_CASE(json_escaping)
 {
     std::string input{"\b\\"};
