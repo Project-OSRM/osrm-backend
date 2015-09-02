@@ -125,13 +125,15 @@ Feature: Car - Restricted access
 
     Scenario: Car - Access combinations
         Then routability should be
-            | highway     | accesss      | vehicle    | motor_vehicle | motorcar   | bothw |
-            | runway      | private      |            |               | permissive | x     |
-            | primary     | forestry     |            | yes           |            | x     |
-            | cycleway    |              |            | designated    |            | x     |
-            | residential |              | yes        | no            |            |       |
-            | motorway    | yes          | permissive |               | private    |       |
-            | trunk       | agricultural | designated | permissive    | no         |       |
+            | highway     | accesss      | vehicle    | motor_vehicle | motorcar    | bothw |
+            | runway      | private      |            |               | permissive  | x     |
+            | primary     | forestry     |            | yes           |             | x     |
+            | cycleway    |              |            | designated    |             | x     |
+            | residential |              | yes        | no            |             |       |
+            | motorway    | yes          | permissive |               | private     |       |
+            | trunk       | agricultural | designated | permissive    | no          |       |
+            | pedestrian  |              |            |               |             |       |
+            | pedestrian  |              |            |               | destination | x     |
 
     Scenario: Car - Ignore access tags for other modes
         Then routability should be
