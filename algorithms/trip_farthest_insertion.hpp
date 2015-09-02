@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/dist_table_wrapper.hpp"
 
 #include <osrm/json_container.hpp>
+#include <boost/assert.hpp>
 
 #include <cstdlib>
 #include <algorithm>
@@ -170,10 +171,12 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
     const auto component_size = std::distance(start, end);
+    BOOST_ASSERT(component_size >= 0);
+
     auto max_from = -1;
     auto max_to = -1;
 
-    if (component_size == number_of_locations)
+    if (static_cast<std::size_t>(component_size) == number_of_locations)
     {
         // find the pair of location with the biggest distance and make the pair the initial start
         // trip
@@ -199,8 +202,10 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
             }
         }
     }
-    BOOST_ASSERT_MSG(max_from < number_of_locations && max_from >= 0, "start node");
-    BOOST_ASSERT_MSG(max_to < number_of_locations && max_to >= 0, "start node");
+    BOOST_ASSERT(max_from >= 0);
+    BOOST_ASSERT(max_to >= 0);
+    BOOST_ASSERT_MSG(static_cast<std::size_t>(max_from) < number_of_locations, "start node");
+    BOOST_ASSERT_MSG(static_cast<std::size_t>(max_to) < number_of_locations, "start node");
     return FindRoute(number_of_locations, component_size, start, end, dist_table, max_from, max_to);
 }
 
