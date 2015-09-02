@@ -58,6 +58,26 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     using ClassifierT = BayesClassifier<LaplaceDistribution, LaplaceDistribution, double>;
     using TraceClassification = ClassifierT::ClassificationT;
 
+    struct RoundAbout
+    {
+        RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
+        int start_index;
+        unsigned name_id;
+        int leave_at_exit;
+    } round_about;
+
+    struct Segment
+    {
+        Segment() : name_id(INVALID_NAMEID), length(-1), position(0) {}
+        Segment(unsigned n, int l, unsigned p) : name_id(n), length(l), position(p) {}
+        unsigned name_id;
+        int length;
+        unsigned position;
+    };
+    std::vector<Segment> shortest_path_segments;
+    unsigned entered_restricted_area_count;
+    unsigned necessary_segments_running_index;
+
   public:
     MapMatchingPlugin(DataFacadeT *facade, const int max_locations_map_matching)
         : descriptor_string("match"), facade(facade),
@@ -158,9 +178,105 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return true;
     }
 
+    void getRoutingInstructions(SegmentInformation &segment,
+                                struct RoundAbout &round_about,
+                                std::string &temp_instruction,
+                                osrm::json::Array &json_instruction_array)
+    {
+            osrm::json::Array json_instruction_row;
+            TurnInstruction current_instruction = segment.turn_instruction;
+            entered_restricted_area_count += (current_instruction != segment.turn_instruction);
+            if (TurnInstructionsClass::TurnIsNecessary(current_instruction))
+            {
+                if (TurnInstruction::EnterRoundAbout == current_instruction)
+                {
+                    round_about.name_id = segment.name_id;
+                    round_about.start_index = necessary_segments_running_index;
+                }
+                else
+                {
+                    std::string current_turn_instruction;
+                    if (TurnInstruction::LeaveRoundAbout == current_instruction)
+                    {
+                        temp_instruction = cast::integral_to_string(
+                            cast::enum_to_underlying(TurnInstruction::EnterRoundAbout));
+                        current_turn_instruction += temp_instruction;
+                        current_turn_instruction += "-";
+                        temp_instruction = cast::integral_to_string(round_about.leave_at_exit + 1);
+                        current_turn_instruction += temp_instruction;
+                        round_about.leave_at_exit = 0;
+                    }
+                    else
+                    {
+                        temp_instruction =
+                            cast::integral_to_string(cast::enum_to_underlying(current_instruction));
+                        current_turn_instruction += temp_instruction;
+                    }
+                    json_instruction_row.values.push_back(current_turn_instruction);
+
+                    json_instruction_row.values.push_back(facade->get_name_for_id(segment.name_id));
+                    json_instruction_row.values.push_back(std::round(segment.length));
+                    json_instruction_row.values.push_back(necessary_segments_running_index);
+                    json_instruction_row.values.push_back(std::round(segment.duration / 10.));
+                    json_instruction_row.values.push_back(
+                        cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
+                    const double bearing_value = (segment.bearing / 10.);
+                    json_instruction_row.values.push_back(bearing::get(bearing_value));
+                    json_instruction_row.values.push_back(
+                        static_cast<unsigned>(round(bearing_value)));
+                    json_instruction_row.values.push_back(segment.travel_mode);
+
+                    shortest_path_segments.emplace_back(
+                        segment.name_id, static_cast<int>(segment.length),
+                        static_cast<unsigned>(shortest_path_segments.size()));
+                    json_instruction_array.values.push_back(json_instruction_row);
+                }
+            }
+            else if (TurnInstruction::StayOnRoundAbout == current_instruction)
+            {
+                ++round_about.leave_at_exit;
+            }
+            if (segment.necessary)
+            {
+                ++necessary_segments_running_index;
+            }
+    }
+    
+    void setDestinationPoint(osrm::json::Array &json_instruction_array)
+    {
+        std::string temp_instruction;
+        osrm::json::Array json_last_instruction_row;
+        temp_instruction = cast::integral_to_string(
+            cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
+        json_last_instruction_row.values.push_back(temp_instruction);
+        json_last_instruction_row.values.push_back("");
+        json_last_instruction_row.values.push_back(0);
+        json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
+        json_last_instruction_row.values.push_back(0);
+        json_last_instruction_row.values.push_back("0m");
+        json_last_instruction_row.values.push_back(bearing::get(0.0));
+        json_last_instruction_row.values.push_back(0.);
+        json_instruction_array.values.push_back(json_last_instruction_row);
+    }
+    
+    void buildRouteSummary(osrm::json::Object &json_result,
+                           DescriptionFactory::RouteSummary &route_summary)
+    {
+            osrm::json::Object json_route_summary;
+            json_route_summary.values["total_distance"] = route_summary.distance;
+            json_route_summary.values["total_time"] = route_summary.duration;
+            json_route_summary.values["start_point"] =
+                facade->get_name_for_id(route_summary.source_name_id);
+            json_route_summary.values["end_point"] =
+                facade->get_name_for_id(route_summary.target_name_id);
+            json_result.values["route_summary"] = json_route_summary;
+    }
+    
     osrm::json::Object submatchingToJSON(const osrm::matching::SubMatching &sub,
                                          const RouteParameters &route_parameters,
-                                         const InternalRouteResult &raw_route)
+                                         const InternalRouteResult &raw_route,
+                                         osrm::json::Array &json_instruction_array,
+                                         DescriptionFactory::RouteSummary &route_summary)
     {
         osrm::json::Object subtrace;
 
@@ -171,10 +287,21 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         if (route_parameters.geometry)
         {
+            // prevent multiple start points - set ViaPoints instead
+            bool is_first_segment;
+            if(route_parameters.print_instructions)
+            {
+                is_first_segment = (route_summary.distance != 0 ? false : true);
+            }
+            else
+            {
+                is_first_segment = true;
+            }
+
             DescriptionFactory factory;
             FixedPointCoordinate current_coordinate;
             factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
-                                    raw_route.source_traversed_in_reverse.front());
+                                    raw_route.source_traversed_in_reverse.front(), is_first_segment);
             for (const auto i :
                  osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
             {
@@ -183,15 +310,38 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                     current_coordinate = facade->GetCoordinateOfNode(path_data.node);
                     factory.AppendSegment(current_coordinate, path_data);
                 }
+                // in some cases the map matching alogrithm creates lots of ViaPoints
+                // these points aren't very user-friendly, so instead of checking the is_via_leg function
+                // we always set it to false
                 factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
                                       raw_route.target_traversed_in_reverse[i],
-                                      raw_route.is_via_leg(i));
+                                      false);
             }
-            // we need this because we don't run DP
+            // we run this to get the distance for the instructions
+            factory.Run(route_parameters.zoom_level);
+
+            necessary_segments_running_index = 0;
+            round_about.leave_at_exit = 0;
+            round_about.name_id = 0;
+            std::string temp_instruction;
             for (auto &segment : factory.path_description)
             {
+                // we need this because we don't run DP
                 segment.necessary = true;
+
+                if(route_parameters.print_instructions)
+                {
+                    getRoutingInstructions(segment, round_about,
+                                       temp_instruction,
+                                       json_instruction_array);
+                }
             }
+            // build route summary
+            factory.BuildRouteSummary(factory.get_entire_length(),
+                raw_route.shortest_path_length);
+            route_summary.distance += factory.summary.distance;
+            route_summary.duration += factory.summary.duration;
+
             subtrace.values["geometry"] =
                 factory.AppendGeometryString(route_parameters.compression);
         }
@@ -258,6 +408,15 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
 
         osrm::json::Array matchings;
+        osrm::json::Array json_instruction_array;
+        DescriptionFactory::RouteSummary route_summary;
+        if(route_parameters.print_instructions)
+        {
+            route_summary.distance = 0;
+            route_summary.duration = 0;
+            route_summary.source_name_id = sub_matchings.front().nodes.front().name_id;
+	    route_summary.target_name_id = sub_matchings.back().nodes.back().name_id;
+        }
         for (auto &sub : sub_matchings)
         {
             // classify result
@@ -294,7 +453,14 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 raw_route.segment_end_coordinates,
                 std::vector<bool>(raw_route.segment_end_coordinates.size(), true), raw_route);
 
-            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
+            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route,
+                json_instruction_array, route_summary));
+        }
+        if(route_parameters.print_instructions)
+        {
+            setDestinationPoint(json_instruction_array);
+            json_result.values["route_instructions"] = json_instruction_array;
+            buildRouteSummary(json_result, route_summary);
         }
 
         if (osrm::json::Logger::get())

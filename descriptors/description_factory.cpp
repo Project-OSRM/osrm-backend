@@ -39,14 +39,16 @@ DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_b
 
 std::vector<unsigned> const &DescriptionFactory::GetViaIndices() const { return via_indices; }
 
-void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool traversed_in_reverse)
+void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool traversed_in_reverse,
+                                         const bool is_first_segment)
 {
     start_phantom = source;
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
     const TravelMode travel_mode =
         (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
-    AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn,
+    AppendSegment(source.location, PathData(0, source.name_id, 
+                                            (is_first_segment ? TurnInstruction::HeadOn : TurnInstruction::ReachViaLocation),
                                             segment_duration, travel_mode));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }

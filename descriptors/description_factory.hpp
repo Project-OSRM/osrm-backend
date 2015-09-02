@@ -81,7 +81,9 @@ class DescriptionFactory
     DescriptionFactory();
     void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
+    void SetStartSegment(const PhantomNode &start_phantom, 
+                         const bool traversed_in_reverse,
+                         const bool is_first_segment = true);
     void SetEndSegment(const PhantomNode &start_phantom,
                        const bool traversed_in_reverse,
                        const bool is_via_location = false);
