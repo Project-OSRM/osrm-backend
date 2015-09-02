@@ -159,7 +159,7 @@ local function parse_maxspeed(source)
   local n = tonumber(source:match("%d*"))
   if n then
     if string.match(source, "mph") or string.match(source, "mp/h") then
-      n = (n*1609)/1000;
+      n = (n*1609)/1000
     end
   else
     -- parse maxspeed like FR:urban
@@ -208,7 +208,7 @@ function node_function (node, result)
   -- check if node is a traffic light
   local tag = node:get_value_by_key("highway")
   if tag and "traffic_signals" == tag then
-    result.traffic_lights = true;
+    result.traffic_lights = true
   end
 end
 
@@ -252,10 +252,10 @@ function way_function (way, result)
   -- handling ferries and piers
   local route_speed = speed_profile[route]
   if (route_speed and route_speed > 0) then
-    highway = route;
+    highway = route
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
-      result.duration = max( parseDuration(duration), 1 );
+      result.duration = max( parseDuration(duration), 1 )
     end
     result.forward_mode = mode_ferry
     result.backward_mode = mode_ferry
@@ -267,10 +267,10 @@ function way_function (way, result)
   local bridge_speed = speed_profile[bridge]
   local capacity_car = way:get_value_by_key("capacity:car")
   if (bridge_speed and bridge_speed > 0) and (capacity_car ~= 0) then
-    highway = bridge;
+    highway = bridge
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
-      result.duration = max( parseDuration(duration), 1 );
+      result.duration = max( parseDuration(duration), 1 )
     end
     result.forward_mode = mode_movable_bridge
     result.backward_mode = mode_movable_bridge
@@ -355,7 +355,7 @@ function way_function (way, result)
   end
 
   if junction and "roundabout" == junction then
-    result.roundabout = true;
+    result.roundabout = true
   end
 
   -- Set access restriction flag if access is allowed under certain restrictions only
@@ -413,19 +413,19 @@ function way_function (way, result)
 
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
-    local scaled_speed = result.forward_speed*speed_reduction + 11;
+    local scaled_speed = result.forward_speed*speed_reduction + 11
     local penalized_speed = math.huge
     if width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.forward_speed / 2;
+      penalized_speed = result.forward_speed / 2
     end
     result.forward_speed = math.min(penalized_speed, scaled_speed)
   end
 
   if result.backward_speed > 0 then
-    local scaled_speed = result.backward_speed*speed_reduction + 11;
+    local scaled_speed = result.backward_speed*speed_reduction + 11
     local penalized_speed = math.huge
     if width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.backward_speed / 2;
+      penalized_speed = result.backward_speed / 2
     end
     result.backward_speed = math.min(penalized_speed, scaled_speed)
   end

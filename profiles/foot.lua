@@ -161,7 +161,7 @@ function way_function (way, result)
 
     -- roundabouts
   if "roundabout" == junction then
-    result.roundabout = true;
+    result.roundabout = true
   end
 
     -- speed

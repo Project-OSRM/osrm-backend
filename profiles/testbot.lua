@@ -49,7 +49,7 @@ function node_function (node, result)
   local traffic_signal = node:get_value_by_key("highway")
 
   if traffic_signal and traffic_signal == "traffic_signals" then
-    result.traffic_lights = true;
+    result.traffic_lights = true
     -- TODO: a way to set the penalty value
   end
 end
@@ -78,7 +78,7 @@ function way_function (way, result)
     local speed_back = speed_forw
 
     if highway == "river" then
-      local temp_speed = speed_forw;
+      local temp_speed = speed_forw
       result.forward_mode = 3
       result.backward_mode = 4
       speed_forw = temp_speed*1.5

@@ -120,7 +120,7 @@ local function parse_maxspeed(source)
         n = 0
     end
     if string.match(source, "mph") or string.match(source, "mp/h") then
-        n = (n*1609)/1000;
+        n = (n*1609)/1000
     end
     return n
 end
@@ -155,7 +155,7 @@ function node_function (node, result)
   -- check if node is a traffic light
   local tag = node:get_value_by_key("highway")
   if tag and "traffic_signals" == tag then
-    result.traffic_lights = true;
+    result.traffic_lights = true
   end
 end
 
@@ -226,15 +226,15 @@ function way_function (way, result)
 
   -- roundabout handling
   if junction and "roundabout" == junction then
-    result.roundabout = true;
+    result.roundabout = true
   end
 
   -- speed
   local bridge_speed = bridge_speeds[bridge]
   if (bridge_speed and bridge_speed > 0) then
-    highway = bridge;
+    highway = bridge
     if duration and durationIsValid(duration) then
-      result.duration = math.max( parseDuration(duration), 1 );
+      result.duration = math.max( parseDuration(duration), 1 )
     end
     result.forward_mode = mode_movable_bridge
     result.backward_mode = mode_movable_bridge
