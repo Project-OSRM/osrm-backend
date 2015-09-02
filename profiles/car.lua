@@ -297,8 +297,12 @@ function way_function (way, result)
         result.backward_speed = highway_speed
       end
     else
+      -- make an exception for restricted highway=pedestrian with motorcar=destination
+      local motorcar = way:get_value_by_key("motorcar")
+      local pedestrian_road = motorcar and "destination" == motorcar and "pedestrian" == highway
+
       -- Set the avg speed on ways that are marked accessible
-      if access_tag_whitelist[access] then
+      if access_tag_whitelist[access] or pedestrian_road then
         result.forward_speed = speed_profile["default"]
         result.backward_speed = speed_profile["default"]
       end
