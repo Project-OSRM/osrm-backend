@@ -4,7 +4,7 @@ local find_access_tag = require("lib/access").find_access_tag
 
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
-access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true }
+access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
@@ -297,12 +297,8 @@ function way_function (way, result)
         result.backward_speed = highway_speed
       end
     else
-      -- make an exception for restricted highway=pedestrian with motorcar=destination
-      local motorcar = way:get_value_by_key("motorcar")
-      local pedestrian_road = motorcar and "destination" == motorcar and "pedestrian" == highway
-
       -- Set the avg speed on ways that are marked accessible
-      if access_tag_whitelist[access] or pedestrian_road then
+      if access_tag_whitelist[access] then
         result.forward_speed = speed_profile["default"]
         result.backward_speed = speed_profile["default"]
       end
