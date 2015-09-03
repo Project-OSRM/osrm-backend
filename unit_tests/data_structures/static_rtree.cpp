@@ -35,12 +35,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
-#include <boost/mpl/list.hpp>
 
 #include <osrm/coordinate.hpp>
 
+#include <cstdint>
+#include <cmath>
+
+#include <algorithm>
+#include <memory>
 #include <random>
+#include <string>
+#include <utility>
 #include <unordered_set>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE(static_rtree)
 

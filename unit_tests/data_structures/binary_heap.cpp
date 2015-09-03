@@ -32,7 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>
 
+#include <algorithm>
+#include <limits>
 #include <random>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE(binary_heap)
 
