@@ -30,7 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/json_container.hpp>
 
-#include <boost/thread.hpp>
+#include <boost/thread/tss.hpp>
+
+#include <string>
+#include <unordered_map>
 
 namespace osrm
 {
