@@ -96,6 +96,7 @@ template <class CandidateLists> struct HiddenMarkovModel
         path_lengths.resize(candidates_list.size());
         suspicious.resize(candidates_list.size());
         pruned.resize(candidates_list.size());
+        breakage.resize(candidates_list.size());
         for (const auto i : osrm::irange<std::size_t>(0u, candidates_list.size()))
         {
             const auto& num_candidates = candidates_list[i].size();

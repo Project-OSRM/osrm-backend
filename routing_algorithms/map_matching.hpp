@@ -301,13 +301,16 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         {
             osrm::matching::SubMatching matching;
 
-            // find real end of trace
-            // not sure if this is really needed
             std::size_t parent_timestamp_index = sub_matching_end - 1;
             while (parent_timestamp_index >= sub_matching_begin &&
                    model.breakage[parent_timestamp_index])
             {
                 --parent_timestamp_index;
+            }
+            while (sub_matching_begin < sub_matching_end &&
+                   model.breakage[sub_matching_begin])
+            {
+                ++sub_matching_begin;
             }
 
             // matchings that only consist of one candidate are invalid
@@ -335,6 +338,11 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                 reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
                 const auto &next = model.parents[parent_timestamp_index][parent_candidate_index];
+                // make sure we can never get stuck in this loop
+                if (parent_timestamp_index == next.first)
+                {
+                    break;
+                }
                 parent_timestamp_index = next.first;
                 parent_candidate_index = next.second;
             }
