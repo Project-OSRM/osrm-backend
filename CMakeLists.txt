@@ -32,8 +32,8 @@ option(WITH_TOOLS "Build OSRM tools" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
 
 add_custom_target(FingerPrintConfigure ALL
   ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -216,7 +216,7 @@ find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 if(NOT Boost_FOUND)
   message(FATAL_ERROR "Fatal error: Boost (version >= 1.49.0) required.\n")
 endif()
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(OSRM ${Boost_LIBRARIES})
 target_link_libraries(osrm-extract ${Boost_LIBRARIES})
@@ -247,12 +247,12 @@ target_link_libraries(osrm-routed ${TBB_LIBRARIES})
 target_link_libraries(datastructure-tests ${TBB_LIBRARIES})
 target_link_libraries(algorithm-tests ${TBB_LIBRARIES})
 target_link_libraries(rtree-bench ${TBB_LIBRARIES})
-include_directories(${TBB_INCLUDE_DIR})
+include_directories(SYSTEM ${TBB_INCLUDE_DIR})
 
 find_package( Luabind REQUIRED )
 include(check_luabind)
 
-include_directories(${LUABIND_INCLUDE_DIR})
+include_directories(SYSTEM ${LUABIND_INCLUDE_DIR})
 target_link_libraries(osrm-extract ${LUABIND_LIBRARY})
 target_link_libraries(osrm-prepare ${LUABIND_LIBRARY})
 
@@ -263,14 +263,14 @@ else()
   target_link_libraries(osrm-extract ${LUA_LIBRARY})
   target_link_libraries(osrm-prepare ${LUA_LIBRARY})
 endif()
-include_directories(${LUA_INCLUDE_DIR})
+include_directories(SYSTEM ${LUA_INCLUDE_DIR})
 
 find_package(EXPAT REQUIRED)
-include_directories(${EXPAT_INCLUDE_DIRS})
+include_directories(SYSTEM ${EXPAT_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${EXPAT_LIBRARIES})
 
 find_package(STXXL REQUIRED)
-include_directories(${STXXL_INCLUDE_DIR})
+include_directories(SYSTEM ${STXXL_INCLUDE_DIR})
 target_link_libraries(OSRM ${STXXL_LIBRARY})
 target_link_libraries(osrm-extract ${STXXL_LIBRARY})
 target_link_libraries(osrm-prepare ${STXXL_LIBRARY})
@@ -283,11 +283,11 @@ if(OPENMP_FOUND)
 endif()
 
 find_package(BZip2 REQUIRED)
-include_directories(${BZIP_INCLUDE_DIRS})
+include_directories(SYSTEM ${BZIP_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${BZIP2_LIBRARIES})
 
 find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
+include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${ZLIB_LIBRARY})
 target_link_libraries(osrm-routed ${ZLIB_LIBRARY})
 
@@ -302,7 +302,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   if(GDAL_FOUND)
     add_executable(osrm-components tools/components.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
     target_link_libraries(osrm-components ${TBB_LIBRARIES})
-    include_directories(${GDAL_INCLUDE_DIR})
+    include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
     target_link_libraries(
       osrm-components
       ${GDAL_LIBRARIES} ${Boost_LIBRARIES})
