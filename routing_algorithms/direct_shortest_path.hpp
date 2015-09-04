@@ -62,6 +62,8 @@ class DirectShortestPathRouting final
                     const std::vector<bool> &uturn_indicators,
                     InternalRouteResult &raw_route_data) const
     {
+        (void)uturn_indicators; // unused
+
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(

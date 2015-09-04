@@ -54,6 +54,7 @@ GetShortestRoundTrip(const NodeID new_loc,
                      const std::size_t number_of_locations,
                      std::vector<NodeID> &route)
 {
+    (void)number_of_locations; // unused
 
     auto min_trip_distance = INVALID_EDGE_WEIGHT;
     NodeIDIter next_insert_point_candidate;

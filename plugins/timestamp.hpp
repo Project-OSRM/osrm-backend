@@ -47,6 +47,8 @@ template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
+        (void)route_parameters; // unused
+
         json_result.values["status"] = 0;
         const std::string timestamp = facade->GetTimestamp();
         json_result.values["timestamp"] = timestamp;

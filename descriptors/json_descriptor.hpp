@@ -295,7 +295,6 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                                                      std::vector<Segment> &route_segments_list) const
     {
         osrm::json::Array json_instruction_array;
-
         // Segment information has following format:
         //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]
         unsigned necessary_segments_running_index = 0;

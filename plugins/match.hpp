@@ -78,6 +78,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     TraceClassification
     classify(const float trace_length, const float matched_length, const int removed_points) const
     {
+        (void)removed_points; // unused
+
         const double distance_feature = -std::log(trace_length) + std::log(matched_length);
 
         // matched to the same point
