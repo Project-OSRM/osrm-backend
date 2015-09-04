@@ -190,6 +190,28 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   target_link_libraries(osrm-extract wsock32 ws2_32)
 endif()
 
+# Configuring linker
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} "-Wl,--version" ERROR_QUIET OUTPUT_VARIABLE LINKER_VERSION)
+# For ld.gold and ld.bfs (the GNU linkers) we optimize hard
+if("${LINKER_VERSION}" MATCHES "GNU gold" OR "${LINKER_VERSION}" MATCHES "GNU ld")
+  message(STATUS "Setting linker optimizations")
+  if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+    # Tell compiler to put every function in separate section, linker can then match sections and functions
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
+    # Tell linker to do dead code and data eminination during link time discarding sections
+    set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,--gc-sections")
+  endif()
+  # Default linker optimization flags
+  set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,-O1 -Wl,--hash-style=gnu -Wl,--sort-common")
+else()
+  message(STATUS "Using unknown linker, not setting linker optimizations")
+endif ()
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
+# XXX(daniel-j-h): building libosrm.a invokes AR passing on the linker flags, but AR does not understand them
+#set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
+
 # Activate C++11
 if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
