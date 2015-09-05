@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.9)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -370,6 +370,12 @@ set_property(TARGET osrm-extract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-prepare PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+set_property(TARGET OSRM PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET osrm-extract PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET osrm-prepare PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET osrm-datastore PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET osrm-routed PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 install(FILES ${InstallGlob} DESTINATION include/osrm)
 install(FILES ${VariantGlob} DESTINATION include/variant)
