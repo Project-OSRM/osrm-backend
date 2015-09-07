@@ -19,6 +19,7 @@ Feature: Barriers
             | wall           |       |
             | fence          |       |
             | some_tag       |       |
+            | block          | x     |
 
     Scenario: Foot - Access tag trumphs barriers
         Then routability should be

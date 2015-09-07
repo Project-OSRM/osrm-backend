@@ -19,6 +19,7 @@ Feature: Car - Barriers
             | wall           |       |
             | fence          |       |
             | some_tag       |       |
+            | block          |       |
 
     Scenario: Car - Access tag trumphs barriers
         Then routability should be
