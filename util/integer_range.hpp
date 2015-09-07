@@ -32,13 +32,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <type_traits>
 
+#include <cstdint>
+
 namespace osrm
 {
 
 template <typename Integer> class range
 {
   private:
-    Integer last;
+    const Integer last;
     Integer iter;
 
   public:
@@ -53,7 +55,10 @@ template <typename Integer> class range
     const range &end() const noexcept { return *this; }
     Integer front() const noexcept { return iter; }
     Integer back() const noexcept { return last - 1; }
-    Integer size() const noexcept { return last - iter; }
+    std::size_t size() const noexcept
+    {
+        return static_cast<std::size_t>(last - iter);
+    }
 
     // Iterator functions
     bool operator!=(const range &) const noexcept { return iter < last; }
