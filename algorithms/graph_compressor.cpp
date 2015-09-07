@@ -111,14 +111,14 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
                          graph.GetEdgeData(reverse_e2).name_id);
 
             // Get distances before graph is modified
-            const int forward_weight1 = graph.GetEdgeData(forward_e1).distance;
-            const int forward_weight2 = graph.GetEdgeData(forward_e2).distance;
+            const int forward_weight1 = graph.GetEdgeData(forward_e1).weight;
+            const int forward_weight2 = graph.GetEdgeData(forward_e2).weight;
 
             BOOST_ASSERT(0 != forward_weight1);
             BOOST_ASSERT(0 != forward_weight2);
 
-            const int reverse_weight1 = graph.GetEdgeData(reverse_e1).distance;
-            const int reverse_weight2 = graph.GetEdgeData(reverse_e2).distance;
+            const int reverse_weight1 = graph.GetEdgeData(reverse_e1).weight;
+            const int reverse_weight2 = graph.GetEdgeData(reverse_e2).weight;
 
             BOOST_ASSERT(0 != reverse_weight1);
             BOOST_ASSERT(0 != reverse_weight2);
@@ -126,13 +126,17 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
             const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
 
             // add weight of e2's to e1
-            graph.GetEdgeData(forward_e1).distance += fwd_edge_data2.distance;
-            graph.GetEdgeData(reverse_e1).distance += rev_edge_data2.distance;
+            graph.GetEdgeData(forward_e1).weight += fwd_edge_data2.weight;
+            graph.GetEdgeData(reverse_e1).weight += rev_edge_data2.weight;
+
+            graph.GetEdgeData(forward_e1).duration += fwd_edge_data2.duration;
+            graph.GetEdgeData(reverse_e1).duration += rev_edge_data2.duration;
+
             if (has_node_penalty)
             {
-                graph.GetEdgeData(forward_e1).distance +=
+                graph.GetEdgeData(forward_e1).weight +=
                     speed_profile.traffic_signal_penalty;
-                graph.GetEdgeData(reverse_e1).distance +=
+                graph.GetEdgeData(reverse_e1).weight +=
                     speed_profile.traffic_signal_penalty;
             }
 

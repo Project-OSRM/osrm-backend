@@ -43,7 +43,7 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
 {
     start_phantom = source;
     const EdgeWeight segment_duration =
-        (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
+        (traversed_in_reverse ? source.reverse_duration : source.forward_duration);
     const TravelMode travel_mode =
         (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
     AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn,

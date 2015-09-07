@@ -64,6 +64,7 @@ function way_function (way, result)
   local maxspeed_forward = tonumber(way:get_value_by_key( "maxspeed:forward"))
   local maxspeed_backward = tonumber(way:get_value_by_key( "maxspeed:backward"))
   local junction = way:get_value_by_key("junction")
+  local weight = way:get_value_by_key("weight")
 
   if name then
     result.name = name
@@ -102,6 +103,14 @@ function way_function (way, result)
       if maxspeed ~=nil and maxspeed > 0 and speed_back > maxspeed then
         speed_back = maxspeed
       end
+    end
+
+    if weight == "avoid" then
+      result.forward_weight = 0.1 * speed_forw
+      result.backward_weight = 0.1 * speed_back
+    elseif weight == "prefer" then
+      result.forward_weight = 10 * speed_forw
+      result.backward_weight = 10 * speed_back
     end
 
     result.forward_speed = speed_forw

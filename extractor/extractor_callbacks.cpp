@@ -126,17 +126,33 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     }
     else
     {
-        if (parsed_way.forward_speed > 0 &&
-            parsed_way.forward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
+        if (parsed_way.forward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
         {
-            forward_weight_data.speed = parsed_way.forward_speed;
-            forward_weight_data.type = InternalExtractorEdge::WeightType::SPEED;
+            if (parsed_way.forward_weight > 0)
+            {
+                forward_weight_data.actual_speed = parsed_way.forward_speed;
+                forward_weight_data.weight = parsed_way.forward_weight;
+                forward_weight_data.type = InternalExtractorEdge::WeightType::WEIGHT;
+            }
+            else if (parsed_way.forward_speed > 0)
+            {
+                forward_weight_data.speed = parsed_way.forward_speed;
+                forward_weight_data.type = InternalExtractorEdge::WeightType::SPEED;
+            }
         }
-        if (parsed_way.backward_speed > 0 &&
-            parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
+        if (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
         {
-            backward_weight_data.speed = parsed_way.backward_speed;
-            backward_weight_data.type = InternalExtractorEdge::WeightType::SPEED;
+            if (parsed_way.backward_weight > 0)
+            {
+                backward_weight_data.actual_speed = parsed_way.backward_speed;
+                backward_weight_data.weight = parsed_way.backward_weight;
+                backward_weight_data.type = InternalExtractorEdge::WeightType::WEIGHT;
+            }
+            else if (parsed_way.backward_speed > 0)
+            {
+                backward_weight_data.speed = parsed_way.backward_speed;
+                backward_weight_data.type = InternalExtractorEdge::WeightType::SPEED;
+            }
         }
     }
 

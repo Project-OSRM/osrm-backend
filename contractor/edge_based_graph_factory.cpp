@@ -120,27 +120,27 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
         // reconstruct bidirectional edge with individual weights and put each into the NN index
 
-        std::vector<int> forward_dist_prefix_sum(forward_geometry.size(), 0);
-        std::vector<int> reverse_dist_prefix_sum(reverse_geometry.size(), 0);
+        std::vector<int> forward_weight_prefix_sum(forward_geometry.size(), 0);
+        std::vector<int> reverse_weight_prefix_sum(reverse_geometry.size(), 0);
 
         // quick'n'dirty prefix sum as std::partial_sum needs addtional casts
         // TODO: move to lambda function with C++11
-        int temp_sum = 0;
+        int temp_weight_sum = 0;
 
         for (const auto i : osrm::irange(0u, geometry_size))
         {
-            forward_dist_prefix_sum[i] = temp_sum;
-            temp_sum += forward_geometry[i].second;
+            forward_weight_prefix_sum[i] = temp_weight_sum;
+            temp_weight_sum += forward_geometry[i].second;
 
-            BOOST_ASSERT(forward_data.distance >= temp_sum);
+            BOOST_ASSERT(forward_data.weight >= temp_weight_sum);
         }
 
-        temp_sum = 0;
+        temp_weight_sum = 0;
         for (const auto i : osrm::irange(0u, geometry_size))
         {
-            temp_sum += reverse_geometry[reverse_geometry.size() - 1 - i].second;
-            reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
-            // BOOST_ASSERT(reverse_data.distance >= temp_sum);
+            temp_weight_sum += reverse_geometry[reverse_geometry.size() - 1 - i].second;
+            reverse_weight_prefix_sum[i] = reverse_data.weight - temp_weight_sum;
+            // BOOST_ASSERT(reverse_data.weight >= temp_weight_sum);
         }
 
         NodeID current_edge_source_coordinate_id = node_u;
@@ -158,8 +158,11 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 forward_data.edge_id, reverse_data.edge_id,
                 current_edge_source_coordinate_id, current_edge_target_coordinate_id,
                 forward_data.name_id, forward_geometry[i].second,
-                reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
-                reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
+                reverse_geometry[geometry_size - 1 - i].second,
+                forward_weight_prefix_sum[i], reverse_weight_prefix_sum[i],
+                // TODO: Geometry compression needs to handle durations
+                forward_weight_prefix_sum[i], reverse_weight_prefix_sum[i],
+                m_compressed_edge_container.GetPositionForID(edge_id_1),
                 INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
@@ -202,7 +205,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
-            forward_data.name_id, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
+            forward_data.name_id, forward_data.weight, reverse_data.weight,
+            forward_data.duration, reverse_data.duration,
+            0, 0, SPECIAL_EDGEID,
             INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
@@ -411,10 +416,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(!edge_data2.reversed);
 
                 // the following is the core of the loop.
-                unsigned distance = edge_data1.distance;
+                unsigned weight = edge_data1.weight;
+                unsigned duration = edge_data1.duration;
                 if (m_traffic_lights.find(node_v) != m_traffic_lights.end())
                 {
-                    distance += speed_profile.traffic_signal_penalty;
+                    weight += speed_profile.traffic_signal_penalty;
                 }
 
                 // unpack last node of first segment if packed
@@ -436,9 +442,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 TurnInstruction turn_instruction = AnalyzeTurn(node_u, node_v, node_w, turn_angle);
                 if (turn_instruction == TurnInstruction::UTurn)
                 {
-                    distance += speed_profile.u_turn_penalty;
+                    weight += speed_profile.u_turn_penalty;
                 }
-                distance += turn_penalty;
+                weight += turn_penalty;
 
                 const bool edge_is_compressed = m_compressed_edge_container.HasEntryForID(e1);
 
@@ -463,7 +469,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
 
                 m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
-                                  m_edge_based_edge_list.size(), distance, true, false);
+                                  m_edge_based_edge_list.size(), weight, duration, true, false);
             }
         }
     }

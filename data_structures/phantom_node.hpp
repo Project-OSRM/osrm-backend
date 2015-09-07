@@ -44,6 +44,8 @@ struct PhantomNode
                 unsigned name_id,
                 int forward_weight,
                 int reverse_weight,
+                int forward_duration,
+                int reverse_duration,
                 int forward_offset,
                 int reverse_offset,
                 unsigned packed_geometry_id,
@@ -62,7 +64,9 @@ struct PhantomNode
         name_id = other.name_id;
 
         forward_weight = other.forward_weight;
+        forward_duration = other.forward_duration;
         reverse_weight = other.reverse_weight;
+        reverse_duration = other.reverse_duration;
 
         forward_offset = other.forward_offset;
         reverse_offset = other.reverse_offset;
@@ -82,6 +86,8 @@ struct PhantomNode
     unsigned name_id;
     int forward_weight;
     int reverse_weight;
+    int forward_duration;
+    int reverse_duration;
     int forward_offset;
     int reverse_offset;
     unsigned packed_geometry_id;

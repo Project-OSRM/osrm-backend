@@ -213,7 +213,7 @@ class ManyToManyRouting final
             if (direction_flag)
             {
                 const NodeID to = super::facade->GetTarget(edge);
-                const int edge_weight = data.distance;
+                const int edge_weight = data.weight;
 
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 const int to_distance = distance + edge_weight;
@@ -246,7 +246,7 @@ class ManyToManyRouting final
             if (reverse_flag)
             {
                 const NodeID to = super::facade->GetTarget(edge);
-                const int edge_weight = data.distance;
+                const int edge_weight = data.weight;
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 if (query_heap.WasInserted(to))
                 {

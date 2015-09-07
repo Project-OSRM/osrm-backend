@@ -39,22 +39,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : distance(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
+        : duration(INVALID_EDGE_WEIGHT), weight(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), access_restricted(false),
           reversed(false), roundabout(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
-    NodeBasedEdgeData(int distance, unsigned edge_id, unsigned name_id,
+    NodeBasedEdgeData(int duration, int weight, unsigned edge_id, unsigned name_id,
             bool access_restricted, bool reversed,
             bool roundabout, TravelMode travel_mode)
-        : distance(distance), edge_id(edge_id), name_id(name_id),
+        : duration(duration), weight(weight), edge_id(edge_id), name_id(name_id),
           access_restricted(access_restricted), reversed(reversed),
           roundabout(roundabout), travel_mode(travel_mode)
     {
     }
 
-    int distance;
+    int duration;
+    int weight;
     unsigned edge_id;
     unsigned name_id;
     bool access_restricted : 1;
@@ -80,8 +81,9 @@ NodeBasedDynamicGraphFromEdges(int number_of_nodes, const std::vector<NodeBasedE
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(input_edge_list,
         [](NodeBasedDynamicGraph::InputEdge& output_edge, const NodeBasedEdge& input_edge)
         {
-            output_edge.data.distance = static_cast<int>(input_edge.weight);
-            BOOST_ASSERT(output_edge.data.distance > 0);
+            output_edge.data.weight = static_cast<int>(input_edge.weight);
+            output_edge.data.duration = static_cast<int>(input_edge.duration);
+            BOOST_ASSERT(output_edge.data.weight > 0);
 
             output_edge.data.roundabout = input_edge.roundabout;
             output_edge.data.name_id = input_edge.name_id;

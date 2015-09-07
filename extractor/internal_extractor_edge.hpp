@@ -45,12 +45,13 @@ struct InternalExtractorEdge
         SPEED,
         EDGE_DURATION,
         WAY_DURATION,
+        WEIGHT,
     };
 
     struct WeightData
     {
 
-        WeightData() : duration(0.0), type(WeightType::INVALID)
+        WeightData() : duration(0.0), actual_speed(0.0), type(WeightType::INVALID)
         {
         }
 
@@ -58,12 +59,14 @@ struct InternalExtractorEdge
         {
             double duration;
             double speed;
+            double weight;
         };
+        double actual_speed;
         WeightType type;
     };
 
     explicit InternalExtractorEdge()
-        : result(0, 0, 0, 0, false, false, false, false,
+        : result(0, 0, 0, 0, 0, false, false, false, false,
                 TRAVEL_MODE_INACCESSIBLE, false)
     {
     }
@@ -81,6 +84,7 @@ struct InternalExtractorEdge
         : result(source,
                  target,
                  name_id,
+                 0,
                  0,
                  forward,
                  backward,
