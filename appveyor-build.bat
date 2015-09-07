@@ -75,10 +75,10 @@ SET PATH=%PROJECT_DIR%\osrm-deps\libs\bin;%PATH%
 
 ECHO running datastructure-tests.exe ...
 datastructure-tests.exe
-::IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO running algorithm-tests.exe ...
 algorithm-tests.exe
-::IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE
 ECHO ========= CREATING PACKAGES ==========
