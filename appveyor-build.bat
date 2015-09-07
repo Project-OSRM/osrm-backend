@@ -4,6 +4,9 @@ SET EL=0
 
 ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+SET PROJECT_DIR=%CD%
+ECHO PROJECT_DIR^: %PROJECT_DIR%
+
 ECHO activating VS command prompt ...
 SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
 CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
@@ -13,25 +16,28 @@ ECHO platform^: %platform%
 SET DEPSPKG=osrm-deps-win-x64-14.0.7z
 
 :: local development
-IF "%computername%"=="WIN-2G2NPH4S5B8" GOTO SKIPDL
+ECHO LOCAL_DEV^: %LOCAL_DEV%
+IF NOT DEFINED LOCAL_DEV SET LOCAL_DEV=0
+IF DEFINED LOCAL_DEV IF %LOCAL_DEV% EQU 1 IF EXIST %DEPSPKG% ECHO skipping deps download && GOTO SKIPDL
 
 IF EXIST %DEPSPKG% DEL %DEPSPKG%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-SET PROJECT_DIR=%CD%
-ECHO PROJECT_DIR^: %PROJECT_DIR%
 ECHO downloading %DEPSPKG%
 powershell Invoke-WebRequest https://mapbox.s3.amazonaws.com/windows-builds/windows-build-deps/$env:DEPSPKG -OutFile $env:PROJECT_DIR\$env:DEPSPKG
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+:SKIPDL
+
+IF EXIST osrm-deps ECHO deleting osrm-deps... && RD /S /Q osrm-deps
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF EXIST build ECHO deletings build dir... && RD /S /Q build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 7z -y x %DEPSPKG% | %windir%\system32\FIND "ing archive"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-:SKIPDL
-
-IF EXIST build rd /s /q build
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-mkdir build
+MKDIR build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 cd build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
@@ -68,20 +74,23 @@ msbuild OSRM.sln ^
 /flp2:logfile=build_warnings.txt;warningsonly
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-CD %PROJECT_DIR%\build\%Configuration%
+CD %PROJECT_DIR%\build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 SET PATH=%PROJECT_DIR%\osrm-deps\libs\bin;%PATH%
 
 ECHO running datastructure-tests.exe ...
-datastructure-tests.exe
+%Configuration%\datastructure-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO running algorithm-tests.exe ...
-algorithm-tests.exe
+%Configuration%\algorithm-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE
 ECHO ========= CREATING PACKAGES ==========
+
+CD %PROJECT_DIR%\build\%Configuration%
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 SET P=%PROJECT_DIR%
 SET ZIP= %P%\osrm_%Configuration%.zip
