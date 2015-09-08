@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/range_table.hpp"
 #include "../../data_structures/static_graph.hpp"
 #include "../../data_structures/static_rtree.hpp"
-#include "../../util/boost_filesystem_2_fix.hpp"
 #include "../../util/make_unique.hpp"
 #include "../../util/simple_logger.hpp"
 
@@ -273,7 +272,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             if (!boost::filesystem::exists(file_index_path))
             {
                 SimpleLogger().Write(logDEBUG) << "Leaf file name " << file_index_path.string();
-                throw osrm::exception("Could not load leaf index file."
+                throw osrm::exception("Could not load leaf index file. "
                                       "Is any data loaded into shared memory?");
             }
 

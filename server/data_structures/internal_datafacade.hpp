@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/static_graph.hpp"
 #include "../../data_structures/static_rtree.hpp"
 #include "../../data_structures/range_table.hpp"
-#include "../../util/boost_filesystem_2_fix.hpp"
 #include "../../util/graph_loader.hpp"
 #include "../../util/simple_logger.hpp"
 
@@ -179,7 +178,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         core_stream.read((char *)&number_of_markers, sizeof(unsigned));
 
         std::vector<char> unpacked_core_markers(number_of_markers);
-        core_stream.read((char *)unpacked_core_markers.data(), sizeof(char)*number_of_markers);
+        core_stream.read((char *)unpacked_core_markers.data(), sizeof(char) * number_of_markers);
 
         // in this case we have nothing to do
         if (number_of_markers <= 0)
@@ -258,90 +257,40 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     explicit InternalDataFacade(const ServerPaths &server_paths)
     {
-        // generate paths of data files
-        if (server_paths.find("hsgrdata") == server_paths.end())
-        {
-            throw osrm::exception("no hsgr file given in ini file");
-        }
-        if (server_paths.find("ramindex") == server_paths.end())
-        {
-            throw osrm::exception("no ram index file given in ini file");
-        }
-        if (server_paths.find("fileindex") == server_paths.end())
-        {
-            throw osrm::exception("no leaf index file given in ini file");
-        }
-        if (server_paths.find("geometries") == server_paths.end())
-        {
-            throw osrm::exception("no geometries file given in ini file");
-        }
-        if (server_paths.find("nodesdata") == server_paths.end())
-        {
-            throw osrm::exception("no nodes file given in ini file");
-        }
-        if (server_paths.find("coredata") == server_paths.end())
-        {
-            throw osrm::exception("no core file given in ini file");
-        }
-        if (server_paths.find("edgesdata") == server_paths.end())
-        {
-            throw osrm::exception("no edges file given in ini file");
-        }
-        if (server_paths.find("namesdata") == server_paths.end())
-        {
-            throw osrm::exception("no names file given in ini file");
-        }
+        // cache end iterator to quickly check .find against
+        const auto end_it = end(server_paths);
 
-        auto paths_iterator = server_paths.find("hsgrdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &hsgr_path = paths_iterator->second;
-        paths_iterator = server_paths.find("timestamp");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &timestamp_path = paths_iterator->second;
-        paths_iterator = server_paths.find("ramindex");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        ram_index_path = paths_iterator->second;
-        paths_iterator = server_paths.find("fileindex");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        file_index_path = paths_iterator->second;
-        paths_iterator = server_paths.find("nodesdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &nodes_data_path = paths_iterator->second;
-        paths_iterator = server_paths.find("edgesdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &edges_data_path = paths_iterator->second;
-        paths_iterator = server_paths.find("namesdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &names_data_path = paths_iterator->second;
-        paths_iterator = server_paths.find("geometries");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &geometries_path = paths_iterator->second;
-        paths_iterator = server_paths.find("coredata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &core_data_path = paths_iterator->second;
+        const auto file_for = [&server_paths, &end_it](const std::string &path)
+        {
+            const auto it = server_paths.find(path);
+            if (it == end_it || !boost::filesystem::is_regular_file(it->second))
+                throw osrm::exception("no valid " + path + " file given in ini file");
+            return it->second;
+        };
 
-        // load data
+        ram_index_path = file_for("ramindex");
+        file_index_path = file_for("fileindex");
+
         SimpleLogger().Write() << "loading graph data";
-        AssertPathExists(hsgr_path);
-        LoadGraph(hsgr_path);
+        LoadGraph(file_for("hsgrdata"));
+
         SimpleLogger().Write() << "loading edge information";
-        AssertPathExists(nodes_data_path);
-        AssertPathExists(edges_data_path);
-        LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
+        LoadNodeAndEdgeInformation(file_for("nodesdata"), file_for("edgesdata"));
+
         SimpleLogger().Write() << "loading core information";
-        AssertPathExists(core_data_path);
-        LoadCoreInformation(core_data_path);
+        LoadCoreInformation(file_for("coredata"));
+
         SimpleLogger().Write() << "loading geometries";
-        AssertPathExists(geometries_path);
-        LoadGeometries(geometries_path);
+        LoadGeometries(file_for("geometries"));
+
         SimpleLogger().Write() << "loading r-tree";
-        AssertPathExists(ram_index_path);
-        AssertPathExists(file_index_path);
+        // XXX(daniel-j-h): it says this ^ but doesn't load the rtree here
+
         SimpleLogger().Write() << "loading timestamp";
-        LoadTimestamp(timestamp_path);
+        LoadTimestamp(file_for("timestamp"));
+
         SimpleLogger().Write() << "loading street names";
-        AssertPathExists(names_data_path);
-        LoadStreetNames(names_data_path);
+        LoadStreetNames(file_for("namesdata"));
     }
 
     // search graph access
