@@ -345,8 +345,8 @@ class StaticRTree
 
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
-                         const std::string tree_node_filename,
-                         const std::string leaf_node_filename,
+                         const std::string &tree_node_filename,
+                         const std::string &leaf_node_filename,
                          const std::vector<QueryNode> &coordinate_list)
         : m_element_count(input_data_vector.size()), m_leaf_node_filename(leaf_node_filename)
     {

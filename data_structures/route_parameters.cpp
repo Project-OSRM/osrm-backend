@@ -134,7 +134,7 @@ void RouteParameters::addCoordinate(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
 }
 
-void RouteParameters::getCoordinatesFromGeometry(const std::string geometry_string)
+void RouteParameters::getCoordinatesFromGeometry(const std::string &geometry_string)
 {
     PolylineCompressor pc;
     coordinates = pc.decode_string(geometry_string);
