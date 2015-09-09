@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
         std::vector<TarjanEdge> graph_edge_list;
         auto number_of_nodes = LoadGraph(argv[1], coordinate_list, graph_edge_list);
 
-        tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
+        tbb::parallel_sort(graph_edge_list);
         const auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
         graph_edge_list.clear();
         graph_edge_list.shrink_to_fit();

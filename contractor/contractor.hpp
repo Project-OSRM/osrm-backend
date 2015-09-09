@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <vector>
 
 class Contractor
@@ -172,7 +173,8 @@ class Contractor
                 SimpleLogger().Write(logWARNING)
                     << "Edge weight large -> "
                     << static_cast<unsigned int>(std::max(diter->weight, 1)) << " : "
-                    << static_cast<unsigned int>(diter->source) << " -> " << static_cast<unsigned int>(diter->target);
+                    << static_cast<unsigned int>(diter->source) << " -> "
+                    << static_cast<unsigned int>(diter->target);
             }
 #endif
             edges.emplace_back(diter->source, diter->target,
@@ -190,7 +192,7 @@ class Contractor
         // FIXME not sure if we need this
         edges.shrink_to_fit();
 
-        tbb::parallel_sort(edges.begin(), edges.end());
+        tbb::parallel_sort(edges);
         NodeID edge = 0;
         for (NodeID i = 0; i < edges.size();)
         {
@@ -284,7 +286,7 @@ class Contractor
 
     ~Contractor() {}
 
-    void Run( double core_factor = 1.0 )
+    void Run(double core_factor = 1.0)
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
         constexpr size_t InitGrainSize = 100000;
@@ -330,13 +332,15 @@ class Contractor
                                       this->EvaluateNodePriority(data, &node_data[x], x);
                               }
                           });
-        std::cout << "ok" << std::endl << "preprocessing " << number_of_nodes << " nodes ..."
-                  << std::flush;
+        std::cout << "ok" << std::endl
+                  << "preprocessing " << number_of_nodes << " nodes ..." << std::flush;
 
         bool flushed_contractor = false;
-        while (number_of_nodes > 2 && number_of_contracted_nodes < static_cast<NodeID>(number_of_nodes * core_factor) )
+        while (number_of_nodes > 2 &&
+               number_of_contracted_nodes < static_cast<NodeID>(number_of_nodes * core_factor))
         {
-            if (!flushed_contractor && (number_of_contracted_nodes > static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
+            if (!flushed_contractor && (number_of_contracted_nodes >
+                                        static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
             {
                 DeallocatingVector<ContractorEdge> new_edge_set; // this one is not explicitely
                                                                  // cleared since it goes out of
@@ -360,7 +364,8 @@ class Contractor
                 for (const auto new_node_id : osrm::irange<std::size_t>(0, remaining_nodes.size()))
                 {
                     // create renumbering maps in both directions
-                    orig_node_id_from_new_node_id_map[new_node_id] = remaining_nodes[new_node_id].id;
+                    orig_node_id_from_new_node_id_map[new_node_id] =
+                        remaining_nodes[new_node_id].id;
                     new_node_id_from_orig_id_map[remaining_nodes[new_node_id].id] = new_node_id;
                     new_node_priority[new_node_id] =
                         node_priorities[remaining_nodes[new_node_id].id];
@@ -411,7 +416,7 @@ class Contractor
                 contractor_graph.reset();
 
                 // create new graph
-                std::sort(new_edge_set.begin(), new_edge_set.end());
+                tbb::parallel_sort(new_edge_set);
                 contractor_graph =
                     std::make_shared<ContractorGraph>(remaining_nodes.size(), new_edge_set);
 
@@ -463,7 +468,7 @@ class Contractor
                 [&](const ThreadDataContainer::EnumerableThreadData::range_type &range)
                 {
                     for (auto &data : range)
-                        std::sort(data->inserted_edges.begin(), data->inserted_edges.end());
+                        tbb::parallel_sort(data->inserted_edges);
                 });
             tbb::parallel_for(
                 tbb::blocked_range<int>(first_independent_node, last, DeleteGrainSize),
@@ -550,7 +555,7 @@ class Contractor
         if (remaining_nodes.size() > 2)
         {
             // TODO: for small cores a sorted array of core ids might also work good
-            for (const auto& node : remaining_nodes)
+            for (const auto &node : remaining_nodes)
             {
                 auto orig_id = orig_node_id_from_new_node_id_map[node.id];
                 is_core_node[orig_id] = true;
@@ -563,7 +568,8 @@ class Contractor
             is_core_node.clear();
         }
 
-        SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes " << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
+        SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes "
+                               << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
 
         thread_data_list.data.clear();
     }
@@ -861,7 +867,7 @@ class Contractor
             }
         }
         // eliminate duplicate entries ( forward + backward edges )
-        std::sort(neighbours.begin(), neighbours.end());
+        tbb::parallel_sort(neighbours);
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         for (const auto i : osrm::irange<std::size_t>(0, neighbours.size()))
@@ -890,7 +896,7 @@ class Contractor
             node_data[u].depth = (std::max)(node_data[node].depth + 1, node_data[u].depth);
         }
         // eliminate duplicate entries ( forward + backward edges )
-        std::sort(neighbours.begin(), neighbours.end());
+        tbb::parallel_sort(neighbours);
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         // re-evaluate priorities of neighboring nodes
@@ -933,7 +939,7 @@ class Contractor
             neighbours.push_back(target);
         }
 
-        std::sort(neighbours.begin(), neighbours.end());
+        tbb::parallel_sort(neighbours);
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         // examine all neighbours that are at most 2 hops away

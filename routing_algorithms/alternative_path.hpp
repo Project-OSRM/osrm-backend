@@ -35,10 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
+#include <tbb/parallel_sort.h>
+
 #include <unordered_map>
 #include <unordered_set>
 
 #include <vector>
+#include <algorithm>
+#include <utility>
 
 const double VIAPATH_ALPHA = 0.10;
 const double VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
@@ -59,6 +63,7 @@ class AlternativeRouting final
             : node(node), length(length), sharing(sharing)
         {
         }
+
 
         NodeID node;
         int length;
@@ -287,7 +292,7 @@ class AlternativeRouting final
                 ranked_candidates_list.emplace_back(node, length_of_via_path, sharing_of_via_path);
             }
         }
-        std::sort(ranked_candidates_list.begin(), ranked_candidates_list.end());
+        tbb::parallel_sort(ranked_candidates_list);
 
         NodeID selected_via_node = SPECIAL_NODEID;
         int length_of_via_path = INVALID_EDGE_WEIGHT;

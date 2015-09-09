@@ -28,9 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONTAINER_HPP
 #define CONTAINER_HPP
 
+#include <tbb/parallel_sort.h>
+
 #include <algorithm>
 #include <iterator>
 #include <vector>
+#include <utility>
 
 namespace osrm
 {
@@ -49,7 +52,7 @@ constexpr bool has_resize_method(...) noexcept { return false; }
 
 template <typename Container> void sort_unique_resize(Container &vector) noexcept
 {
-    std::sort(std::begin(vector), std::end(vector));
+    tbb::parallel_sort(vector);
     const auto number_of_unique_elements =
         std::unique(std::begin(vector), std::end(vector)) - std::begin(vector);
     if (detail::has_resize_method(vector))
