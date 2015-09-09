@@ -88,11 +88,12 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         }
 
         // pick the longest segment for the shortest path.
-        tbb::parallel_sort(shortest_path_segments, length_comperator);
+        std::sort(shortest_path_segments.begin(), shortest_path_segments.end(), length_comperator);
         shortest_segment_1 = shortest_path_segments[0];
         if (!alternative_path_segments.empty())
         {
-            tbb::parallel_sort(alternative_path_segments, length_comperator);
+            std::sort(alternative_path_segments.begin(), alternative_path_segments.end(),
+                      length_comperator);
 
             // also pick the longest segment for the alternative path
             alternative_segment_1 = alternative_path_segments[0];
@@ -101,13 +102,15 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         // compute the set difference (for shortest path) depending on names between shortest and
         // alternative
         std::vector<SegmentT> shortest_path_set_difference(shortest_path_segments.size());
-        tbb::parallel_sort(shortest_path_segments, name_id_comperator);
-        tbb::parallel_sort(alternative_path_segments, name_id_comperator);
+        std::sort(shortest_path_segments.begin(), shortest_path_segments.end(), name_id_comperator);
+        std::sort(alternative_path_segments.begin(), alternative_path_segments.end(),
+                  name_id_comperator);
         std::set_difference(shortest_path_segments.begin(), shortest_path_segments.end(),
                             alternative_path_segments.begin(), alternative_path_segments.end(),
                             shortest_path_set_difference.begin(), name_id_comperator);
 
-        tbb::parallel_sort(shortest_path_set_difference, length_comperator);
+        std::sort(shortest_path_set_difference.begin(), shortest_path_set_difference.end(),
+                  length_comperator);
         shortest_segment_2 =
             PickNextLongestSegment(shortest_path_set_difference, shortest_segment_1.name_id);
 
@@ -124,7 +127,8 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
                             shortest_path_segments.begin(), shortest_path_segments.end(),
                             alternative_path_set_difference.begin(), name_id_comperator);
 
-        tbb::parallel_sort(alternative_path_set_difference, length_comperator);
+        std::sort(alternative_path_set_difference.begin(), alternative_path_set_difference.end(),
+                  length_comperator);
 
         if (!alternative_path_segments.empty())
         {

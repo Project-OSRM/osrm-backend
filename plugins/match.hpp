@@ -42,8 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/json_util.hpp"
 #include "../util/string_util.hpp"
 
-#include <tbb/parallel_sort.h>
-
 #include <cstdlib>
 
 #include <algorithm>
@@ -99,8 +97,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                       osrm::matching::CandidateLists &candidates_lists)
     {
         double query_radius = 10 * gps_precision;
-        double last_distance =
-            coordinate_calculation::great_circle_distance(input_coords[0], input_coords[1]);
+        double last_distance = coordinate_calculation::great_circle_distance(input_coords[0], input_coords[1]);
 
         sub_trace_lengths.resize(input_coords.size());
         sub_trace_lengths[0] = 0;
@@ -109,8 +106,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             bool allow_uturn = false;
             if (0 < current_coordinate)
             {
-                last_distance = coordinate_calculation::great_circle_distance(
-                    input_coords[current_coordinate - 1], input_coords[current_coordinate]);
+                last_distance = coordinate_calculation::great_circle_distance(input_coords[current_coordinate - 1], input_coords[current_coordinate]);
 
                 sub_trace_lengths[current_coordinate] +=
                     sub_trace_lengths[current_coordinate - 1] + last_distance;
@@ -131,24 +127,20 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             std::vector<std::pair<PhantomNode, double>> candidates;
             facade->IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
-                input_coords[current_coordinate], candidates, query_radius);
+                    input_coords[current_coordinate], candidates, query_radius);
 
             // sort by foward id, then by reverse id and then by distance
-            tbb::parallel_sort(
-                candidates, [](const std::pair<PhantomNode, double> &lhs,
-                               const std::pair<PhantomNode, double> &rhs)
-                {
+            std::sort(candidates.begin(), candidates.end(),
+                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
                     return lhs.first.forward_node_id < rhs.first.forward_node_id ||
-                           (lhs.first.forward_node_id == rhs.first.forward_node_id &&
-                            (lhs.first.reverse_node_id < rhs.first.reverse_node_id ||
-                             (lhs.first.reverse_node_id == rhs.first.reverse_node_id &&
-                              lhs.second < rhs.second)));
+                            (lhs.first.forward_node_id == rhs.first.forward_node_id &&
+                             (lhs.first.reverse_node_id < rhs.first.reverse_node_id ||
+                              (lhs.first.reverse_node_id == rhs.first.reverse_node_id &&
+                               lhs.second < rhs.second)));
                 });
 
-            auto new_end = std::unique(
-                candidates.begin(), candidates.end(), [](const std::pair<PhantomNode, double> &lhs,
-                                                         const std::pair<PhantomNode, double> &rhs)
-                {
+            auto new_end = std::unique(candidates.begin(), candidates.end(),
+                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
                     return lhs.first.forward_node_id == rhs.first.forward_node_id &&
                            lhs.first.reverse_node_id == rhs.first.reverse_node_id;
                 });
@@ -173,11 +165,10 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             }
 
             // sort by distance to make pruning effective
-            tbb::parallel_sort(candidates, [](const std::pair<PhantomNode, double> &lhs,
-                                              const std::pair<PhantomNode, double> &rhs)
-                               {
-                                   return lhs.second < rhs.second;
-                               });
+            std::sort(candidates.begin(), candidates.end(),
+                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
+                    return lhs.second < rhs.second;
+                });
 
             candidates_lists.push_back(std::move(candidates));
         }
@@ -279,8 +270,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         const auto &input_timestamps = route_parameters.timestamps;
         if (input_timestamps.size() > 0 && input_coords.size() != input_timestamps.size())
         {
-            json_result.values["status"] =
-                "Number of timestamps does not match number of coordinates .";
+            json_result.values["status"] = "Number of timestamps does not match number of coordinates .";
             return 400;
         }
 
@@ -299,8 +289,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return 400;
         }
 
-        const bool found_candidates = getCandiates(input_coords, route_parameters.gps_precision,
-                                                   sub_trace_lengths, candidates_lists);
+        const bool found_candidates =
+            getCandiates(input_coords, route_parameters.gps_precision, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
             json_result.values["status"] = "No suitable matching candidates found.";
