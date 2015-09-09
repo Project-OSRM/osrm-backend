@@ -30,17 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
-#include <tbb/parallel_sort.h>
-
 #include "routing_base.hpp"
 #include "../data_structures/search_engine_data.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/timing_util.hpp"
 #include "../typedefs.h"
-
-#include <vector>
-#include <algorithm>
-#include <utility>
 
 /// This is a striped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
@@ -167,8 +161,8 @@ class DirectShortestPathRouting final
             {
                 return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
             };
-        tbb::parallel_sort(forward_entry_points, entry_point_comparator);
-        tbb::parallel_sort(reverse_entry_points, entry_point_comparator);
+        std::sort(forward_entry_points.begin(), forward_entry_points.end(), entry_point_comparator);
+        std::sort(reverse_entry_points.begin(), reverse_entry_points.end(), entry_point_comparator);
 
         NodeID last_id = SPECIAL_NODEID;
         for (const auto p : forward_entry_points)
