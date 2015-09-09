@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <iostream>
+#include <string>
 
 RequestHandler::RequestHandler() : routing_machine(nullptr) {}
 
@@ -102,7 +103,7 @@ void RequestHandler::handle_request(const http::request &current_request,
 
             json_result.values["status"] = 400;
             std::string message = "Query string malformed close to position ";
-            message += cast::integral_to_string(position);
+            message += std::to_string(position);
             json_result.values["status_message"] = message;
             osrm::json::render(current_reply.content, json_result);
             return;
@@ -135,7 +136,7 @@ void RequestHandler::handle_request(const http::request &current_request,
 
         // set headers
         current_reply.headers.emplace_back("Content-Length",
-                                           cast::integral_to_string(current_reply.content.size()));
+                                           std::to_string(current_reply.content.size()));
         if ("gpx" == route_parameters.output_format)
         { // gpx file
             osrm::json::gpx_render(current_reply.content, json_result.values["route"]);

@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/segment_information.hpp"
 #include "../data_structures/turn_instructions.hpp"
 #include "../util/bearing.hpp"
+#include "../util/cast.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/simple_logger.hpp"
@@ -44,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/json_container.hpp>
 
 #include <algorithm>
+#include <string>
 
 template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<DataFacadeT>
 {
@@ -327,18 +329,18 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     std::string current_turn_instruction;
                     if (TurnInstruction::LeaveRoundAbout == current_instruction)
                     {
-                        temp_instruction = cast::integral_to_string(
+                        temp_instruction = std::to_string(
                             cast::enum_to_underlying(TurnInstruction::EnterRoundAbout));
                         current_turn_instruction += temp_instruction;
                         current_turn_instruction += "-";
-                        temp_instruction = cast::integral_to_string(round_about.leave_at_exit + 1);
+                        temp_instruction = std::to_string(round_about.leave_at_exit + 1);
                         current_turn_instruction += temp_instruction;
                         round_about.leave_at_exit = 0;
                     }
                     else
                     {
                         temp_instruction =
-                            cast::integral_to_string(cast::enum_to_underlying(current_instruction));
+                            std::to_string(cast::enum_to_underlying(current_instruction));
                         current_turn_instruction += temp_instruction;
                     }
                     json_instruction_row.values.push_back(current_turn_instruction);
@@ -348,7 +350,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     json_instruction_row.values.push_back(necessary_segments_running_index);
                     json_instruction_row.values.push_back(std::round(segment.duration / 10.));
                     json_instruction_row.values.push_back(
-                        cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
+                        std::to_string(static_cast<unsigned>(segment.length)) + "m");
                     const double bearing_value = (segment.bearing / 10.);
                     json_instruction_row.values.push_back(bearing::get(bearing_value));
                     json_instruction_row.values.push_back(
@@ -372,8 +374,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         }
 
         osrm::json::Array json_last_instruction_row;
-        temp_instruction = cast::integral_to_string(
-            cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
+        temp_instruction =
+            std::to_string(cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
         json_last_instruction_row.values.push_back(temp_instruction);
         json_last_instruction_row.values.push_back("");
         json_last_instruction_row.values.push_back(0);

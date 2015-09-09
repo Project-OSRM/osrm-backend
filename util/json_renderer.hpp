@@ -111,7 +111,7 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
 
     void operator()(const Number &number) const
     {
-        const std::string number_string = cast::double_fixed_to_string(number.value);
+        const std::string number_string = cast::to_string_with_precision(number.value);
         out.insert(out.end(), number_string.begin(), number_string.end());
     }
 
