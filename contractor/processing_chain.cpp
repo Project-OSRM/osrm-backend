@@ -230,7 +230,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
     const unsigned crc32_value = CalculateEdgeChecksum(node_based_edge_list);
 
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
-    tbb::parallel_sort(contracted_edge_list);
+    tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
     const unsigned contracted_edge_count = contracted_edge_list.size();
     SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
                            << " edges";
