@@ -115,8 +115,8 @@ Given /^the relations$/ do |table|
           raise "*** unknown relation way member '#{way_name}'" unless way
           relation << OSM::Member.new( 'way', way.id, $1 )
         end
-      elsif key =~ /^(.*):(.*)/
-        raise "*** unknown relation member type '#{$1}', must be either 'node' or 'way'"
+      elsif key =~ /^(.*):(.*)/ && "#{$1}" != 'restriction'
+        raise "*** unknown relation member type '#{$1}:#{$2}', must be either 'node' or 'way'"
       else
         relation << { key => value }
       end

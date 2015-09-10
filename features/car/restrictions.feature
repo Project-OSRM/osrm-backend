@@ -226,6 +226,54 @@ Feature: Car - Turn restrictions
             | s    | n  | sj,nj |
             | s    | e  |       |
 
+    @specific
+    Scenario: Car - :hgv-qualified on a standard turn restriction
+        Given the node map
+            |   | n |   |
+            | w | j | e |
+            |   | s |   |
+
+        And the ways
+            | nodes | oneway |
+            | sj    | yes    |
+            | nj    | -1     |
+            | wj    | -1     |
+            | ej    | -1     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:hgv |
+            | restriction | sj       | nj     | j        | no_straight_on  |
+
+        When I route I should get
+            | from | to | route |
+            | s    | w  | sj,wj |
+            | s    | n  | sj,nj |
+            | s    | e  | sj,ej |
+
+    @specific
+    Scenario: Car - :motorcar-qualified on a standard turn restriction
+        Given the node map
+            |   | n |   |
+            | w | j | e |
+            |   | s |   |
+
+        And the ways
+            | nodes | oneway |
+            | sj    | yes    |
+            | nj    | -1     |
+            | wj    | -1     |
+            | ej    | -1     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction:motorcar |
+            | restriction | sj       | nj     | j        | no_straight_on       |
+
+        When I route I should get
+            | from | to | route |
+            | s    | w  | sj,wj |
+            | s    | n  |       |
+            | s    | e  | sj,ej |
+
     @except
     Scenario: Car - Except tag and on no_ restrictions
         Given the node map
