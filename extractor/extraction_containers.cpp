@@ -157,20 +157,41 @@ void ExtractionContainers::PrepareNodes()
     TIMER_STOP(erasing_dups);
     std::cout << "ok, after " << TIMER_SEC(erasing_dups) << "s" << std::endl;
 
-    std::cout << "[extractor] Building node id map      ... " << std::flush;
-    TIMER_START(id_map);
-    external_to_internal_node_id_map.reserve(used_node_id_list.size());
-    for (NodeID i = 0u; i < used_node_id_list.size(); ++i)
-        external_to_internal_node_id_map[used_node_id_list[i]] = i;
-    TIMER_STOP(id_map);
-    std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
-
     std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
     TIMER_START(sorting_nodes);
     stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), ExternalMemoryNodeSTXXLCompare(),
                 stxxl_memory);
     TIMER_STOP(sorting_nodes);
     std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
+
+    std::cout << "[extractor] Building node id map      ... " << std::flush;
+    TIMER_START(id_map);
+    external_to_internal_node_id_map.reserve(used_node_id_list.size());
+    auto node_iter = all_nodes_list.begin();
+    auto ref_iter = used_node_id_list.begin();
+    auto internal_id = 0u;
+    // compute the intersection of nodes that were referenced and nodes we actually have
+    while (node_iter != all_nodes_list.end() && ref_iter != used_node_id_list.end())
+    {
+        if (node_iter->node_id < *ref_iter)
+        {
+            node_iter++;
+            continue;
+        }
+        if (node_iter->node_id > *ref_iter)
+        {
+            ref_iter++;
+            continue;
+        }
+        BOOST_ASSERT(node_iter->node_id == *ref_iter);
+        external_to_internal_node_id_map[*ref_iter] = internal_id++;
+        node_iter++;
+        ref_iter++;
+    }
+    max_internal_node_id = internal_id;
+    TIMER_STOP(id_map);
+    std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
+
 }
 
 void ExtractionContainers::PrepareEdges(lua_State *segment_state)
@@ -444,9 +465,11 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
 
 void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
 {
-    unsigned number_of_used_nodes = 0;
     // write dummy value, will be overwritten later
-    file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
+    std::cout << "[extractor] setting number of nodes   ... " << std::flush;
+    file_out_stream.write((char *)&max_internal_node_id, sizeof(unsigned));
+    std::cout << "ok" << std::endl;
+
     std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
     TIMER_START(write_nodes);
     // identify all used nodes by a merging step of two sorted lists
@@ -468,21 +491,14 @@ void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
 
         file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
 
-        ++number_of_used_nodes;
         ++node_id_iterator;
         ++node_iterator;
     }
     TIMER_STOP(write_nodes);
     std::cout << "ok, after " << TIMER_SEC(write_nodes) << "s" << std::endl;
 
-    std::cout << "[extractor] setting number of nodes   ... " << std::flush;
-    std::ios::pos_type previous_file_position = file_out_stream.tellp();
-    file_out_stream.seekp(std::ios::beg + sizeof(FingerPrint));
-    file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
-    file_out_stream.seekp(previous_file_position);
-    std::cout << "ok" << std::endl;
 
-    SimpleLogger().Write() << "Processed " << number_of_used_nodes << " nodes";
+    SimpleLogger().Write() << "Processed " << max_internal_node_id << " nodes";
 }
 
 void ExtractionContainers::WriteRestrictions(const std::string& path) const

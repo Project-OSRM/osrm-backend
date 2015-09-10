@@ -119,6 +119,7 @@ template <typename EdgeDataT> class DynamicGraph
                                              node_array[node].first_edge + node_array[node].edges))
             {
                 edge_list[i].target = graph[edge].target;
+                BOOST_ASSERT(edge_list[i].target < number_of_nodes);
                 edge_list[i].data = graph[edge].data;
                 ++edge;
             }
