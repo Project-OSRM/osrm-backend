@@ -28,7 +28,6 @@ if(WIN32 AND MSVC_VERSION LESS 1800)
 endif()
 
 option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
-option(WITH_TOOLS "Build OSRM tools" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -116,8 +115,13 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   message(STATUS "Configuring OSRM in debug mode")
   if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-    message(STATUS "adding profiling flags")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage -fno-inline")
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -fno-omit-frame-pointer")
+
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -ggdb")
+  endif()
+
   endif()
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Release)
@@ -159,9 +163,7 @@ endif()
 
 # Configuring compilers
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  # using Clang
-  #  -Weverything -Wno-c++98-compat -Wno-shadow -Wno-exit-time-destructors
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=3 -D_FORTIFY_SOURCE=2")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
@@ -169,7 +171,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(COLOR_FLAG "")
   endif()
   # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=3 -D_FORTIFY_SOURCE=2 ${COLOR_FLAG}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2 ${COLOR_FLAG}")
   if(WIN32) # using mingw
     add_definitions(-D_USE_MATH_DEFINES) # define M_PI, M_1_PI etc.
     add_definitions(-DWIN32)
@@ -324,16 +326,14 @@ if (ENABLE_JSON_LOGGING)
   add_definitions(-DENABLE_JSON_LOGGING)
 endif()
 
-if(WITH_TOOLS OR BUILD_TOOLS)
+if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   find_package(GDAL)
   if(GDAL_FOUND)
     add_executable(osrm-components tools/components.cpp $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
     target_link_libraries(osrm-components ${TBB_LIBRARIES})
     include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
-    target_link_libraries(
-      osrm-components
-      ${GDAL_LIBRARIES} ${Boost_LIBRARIES})
+    target_link_libraries(osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES})
     install(TARGETS osrm-components DESTINATION bin)
   else()
     message(FATAL_ERROR "libgdal and/or development headers not found")
