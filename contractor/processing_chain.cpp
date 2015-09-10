@@ -183,7 +183,7 @@ void Prepare::FindComponents(unsigned max_edge_id,
         }
     }
 
-    tbb::parallel_sort(edges);
+    tbb::parallel_sort(edges.begin(), edges.end());
     auto new_end = std::unique(edges.begin(), edges.end());
     edges.resize(new_end - edges.begin());
 

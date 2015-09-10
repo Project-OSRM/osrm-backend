@@ -76,9 +76,9 @@ void DeleteFileIfExists(const std::string &file_name)
 }
 }
 
-std::size_t LoadGraph(const char* path,
-                      std::vector<QueryNode>& coordinate_list,
-                      std::vector<TarjanEdge>& graph_edge_list)
+std::size_t LoadGraph(const char *path,
+                      std::vector<QueryNode> &coordinate_list,
+                      std::vector<TarjanEdge> &graph_edge_list)
 {
     std::ifstream input_stream(path, std::ifstream::in | std::ifstream::binary);
     if (!input_stream.is_open())
@@ -92,8 +92,7 @@ std::size_t LoadGraph(const char* path,
     std::vector<NodeID> barrier_node_list;
 
     auto number_of_nodes = loadNodesFromFile(input_stream, barrier_node_list,
-                                             traffic_light_node_list,
-                                             coordinate_list);
+                                             traffic_light_node_list, coordinate_list);
 
     loadEdgesFromFile(input_stream, edge_list);
 
@@ -133,8 +132,7 @@ int main(int argc, char *argv[])
         // enable logging
         if (argc < 3)
         {
-            SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0]
-                                             << " <osrm>";
+            SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0] << " <osrm>";
             return -1;
         }
 
@@ -143,7 +141,7 @@ int main(int argc, char *argv[])
         std::vector<TarjanEdge> graph_edge_list;
         auto number_of_nodes = LoadGraph(argv[1], coordinate_list, graph_edge_list);
 
-        tbb::parallel_sort(graph_edge_list);
+        tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
         const auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
         graph_edge_list.clear();
         graph_edge_list.shrink_to_fit();
@@ -216,8 +214,9 @@ int main(int argc, char *argv[])
                     BOOST_ASSERT(source != SPECIAL_NODEID);
                     BOOST_ASSERT(target != SPECIAL_NODEID);
 
-                    const unsigned size_of_containing_component = std::min(
-                        tarjan->get_component_size(tarjan->get_component_id(source)), tarjan->get_component_size(tarjan->get_component_id(target)));
+                    const unsigned size_of_containing_component =
+                        std::min(tarjan->get_component_size(tarjan->get_component_id(source)),
+                                 tarjan->get_component_size(tarjan->get_component_id(target)));
 
                     // edges that end on bollard nodes may actually be in two distinct components
                     if (size_of_containing_component < 1000)

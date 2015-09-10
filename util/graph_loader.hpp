@@ -141,7 +141,8 @@ NodeID loadEdgesFromFile(std::istream &input_stream, std::vector<NodeBasedEdge> 
 
 #ifndef NDEBUG
     SimpleLogger().Write() << "Validating loaded edges...";
-    tbb::parallel_sort(edge_list, [](const NodeBasedEdge &lhs, const NodeBasedEdge &rhs)
+    tbb::parallel_sort(edge_list.begin(), edge_list.end(),
+                       [](const NodeBasedEdge &lhs, const NodeBasedEdge &rhs)
                        {
                            return (lhs.source < rhs.source) ||
                                   (lhs.source == rhs.source && lhs.target < rhs.target);

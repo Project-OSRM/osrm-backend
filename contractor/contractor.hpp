@@ -192,7 +192,7 @@ class Contractor
         // FIXME not sure if we need this
         edges.shrink_to_fit();
 
-        tbb::parallel_sort(edges);
+        tbb::parallel_sort(edges.begin(), edges.end());
         NodeID edge = 0;
         for (NodeID i = 0; i < edges.size();)
         {
@@ -416,7 +416,7 @@ class Contractor
                 contractor_graph.reset();
 
                 // create new graph
-                tbb::parallel_sort(new_edge_set);
+                tbb::parallel_sort(new_edge_set.begin(), new_edge_set.end());
                 contractor_graph =
                     std::make_shared<ContractorGraph>(remaining_nodes.size(), new_edge_set);
 
@@ -468,7 +468,8 @@ class Contractor
                 [&](const ThreadDataContainer::EnumerableThreadData::range_type &range)
                 {
                     for (auto &data : range)
-                        tbb::parallel_sort(data->inserted_edges);
+                        tbb::parallel_sort(data->inserted_edges.begin(),
+                                           data->inserted_edges.end());
                 });
             tbb::parallel_for(
                 tbb::blocked_range<int>(first_independent_node, last, DeleteGrainSize),
@@ -867,7 +868,7 @@ class Contractor
             }
         }
         // eliminate duplicate entries ( forward + backward edges )
-        tbb::parallel_sort(neighbours);
+        tbb::parallel_sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         for (const auto i : osrm::irange<std::size_t>(0, neighbours.size()))
@@ -896,7 +897,7 @@ class Contractor
             node_data[u].depth = (std::max)(node_data[node].depth + 1, node_data[u].depth);
         }
         // eliminate duplicate entries ( forward + backward edges )
-        tbb::parallel_sort(neighbours);
+        tbb::parallel_sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         // re-evaluate priorities of neighboring nodes
@@ -939,7 +940,7 @@ class Contractor
             neighbours.push_back(target);
         }
 
-        tbb::parallel_sort(neighbours);
+        tbb::parallel_sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         // examine all neighbours that are at most 2 hops away

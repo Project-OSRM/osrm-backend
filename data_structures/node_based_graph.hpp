@@ -90,7 +90,7 @@ NodeBasedDynamicGraphFromEdges(int number_of_nodes, const std::vector<NodeBasedE
         }
     );
 
-    tbb::parallel_sort(edges_list);
+    tbb::parallel_sort(edges_list.begin(), edges_list.end());
 
     auto graph = std::make_shared<NodeBasedDynamicGraph>(
         static_cast<NodeBasedDynamicGraph::NodeIterator>(number_of_nodes), edges_list);
