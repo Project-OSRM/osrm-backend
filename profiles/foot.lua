@@ -65,8 +65,9 @@ leisure_speeds = {
 }
 
 traffic_signal_penalty   = 2
-u_turn_penalty       = 2
-use_turn_restrictions   = false
+u_turn_penalty           = 2
+use_turn_restrictions    = false
+local fallback_names     = true
 
 --modes
 local mode_normal = 1
@@ -154,7 +155,7 @@ function way_function (way, result)
       result.name = ref
   elseif name and "" ~= name then
     result.name = name
-  elseif highway then
+  elseif highway and fallback_names then
     result.name = "{highway:"..highway.."}"  -- if no name exists, use way type
                                             -- this encoding scheme is excepted to be a temporary solution
   end
