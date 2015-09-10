@@ -211,8 +211,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                                       raw_route.is_via_leg(i));
             }
 
-            // we run this to get the instructions
             factory.Run(route_parameters.zoom_level);
+
+            // we need because we don't run path simplification
+            for (auto &segment : factory.path_description)
+            {
+                segment.necessary = true;
+            }
 
             if (route_parameters.geometry)
             {
