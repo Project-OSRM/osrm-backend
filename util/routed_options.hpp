@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTED_OPTIONS_HPP
 #define ROUTED_OPTIONS_HPP
 
-#include "git_sha.hpp"
+#include "version.hpp"
 #include "ini_file.hpp"
 #include "osrm_exception.hpp"
 #include "simple_logger.hpp"
@@ -232,7 +232,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
 
     if (option_variables.count("version"))
     {
-        SimpleLogger().Write() << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << OSRM_VERSION;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 

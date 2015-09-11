@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "contractor_options.hpp"
 
-#include "../util/git_sha.hpp"
+#include "../util/version.hpp"
 #include "../util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
@@ -102,7 +102,7 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 
     if (option_variables.count("version"))
     {
-        SimpleLogger().Write() << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << OSRM_VERSION;
         return return_code::exit;
     }
 

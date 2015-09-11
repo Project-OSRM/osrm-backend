@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/static_rtree.hpp"
 #include "../data_structures/restriction_map.hpp"
 
-#include "../util/git_sha.hpp"
 #include "../util/graph_loader.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/lua_util.hpp"

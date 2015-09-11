@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../util/git_sha.hpp"
+#include "../util/version.hpp"
 #include "../util/osrm_exception.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     boost::filesystem::path test_path;
     try
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
         if (1 == argc)
         {

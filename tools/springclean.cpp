@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/shared_memory_factory.hpp"
 #include "../server/data_structures/shared_datatype.hpp"
-#include "../util/git_sha.hpp"
+#include "../util/version.hpp"
 #include "../util/simple_logger.hpp"
 
 void delete_region(const SharedDataType region)
@@ -77,7 +77,7 @@ int main()
     LogPolicy::GetInstance().Unmute();
     try
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << "\n\n";
+        SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION << "\n\n";
         SimpleLogger().Write() << "Releasing all locks";
         SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
         SimpleLogger().Write() << "----------------------";

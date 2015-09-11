@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../library/osrm.hpp"
-#include "../util/git_sha.hpp"
+#include "../util/version.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/routed_options.hpp"
 #include "../util/simple_logger.hpp"
@@ -59,7 +59,7 @@ int main(int argc, const char *argv[])
         {
             return 1;
         }
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
         OSRM routing_machine(lib_config);
 

@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "scripting_environment.hpp"
 
 #include "../data_structures/raster_source.hpp"
-#include "../util/git_sha.hpp"
 #include "../util/make_unique.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"

@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor_options.hpp"
 
-#include "../util/git_sha.hpp"
+#include "../util/version.hpp"
 #include "../util/ini_file.hpp"
 #include "../util/simple_logger.hpp"
 
@@ -90,7 +90,7 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
                                       option_variables);
         if (option_variables.count("version"))
         {
-            SimpleLogger().Write() << g_GIT_DESCRIPTION;
+            SimpleLogger().Write() << OSRM_VERSION;
             return return_code::exit;
         }
 

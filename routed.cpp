@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "library/osrm.hpp"
 #include "server/server.hpp"
-#include "util/git_sha.hpp"
+#include "util/version.hpp"
 #include "util/routed_options.hpp"
 #include "util/simple_logger.hpp"
 
@@ -97,7 +97,7 @@ int main(int argc, const char *argv[])
             SimpleLogger().Write(logWARNING) << argv[0] << " could not be locked to RAM";
         }
 #endif
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
         if (lib_config.use_shared_memory)
         {
