@@ -132,9 +132,10 @@ inline std::string escape_JSON(const std::string &input)
 inline std::size_t URIDecode(const std::string &input, std::string &output)
 {
     auto src_iter = std::begin(input);
+    const auto src_end = std::end(input);
     output.resize(input.size() + 1);
     std::size_t decoded_length = 0;
-    for (decoded_length = 0; src_iter != std::end(input); ++decoded_length)
+    for (decoded_length = 0; src_iter != src_end; ++decoded_length)
     {
         if (src_iter[0] == '%' && src_iter[1] && src_iter[2] && isxdigit(src_iter[1]) &&
             isxdigit(src_iter[2]))

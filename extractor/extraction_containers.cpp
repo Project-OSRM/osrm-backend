@@ -169,9 +169,12 @@ void ExtractionContainers::PrepareNodes()
     external_to_internal_node_id_map.reserve(used_node_id_list.size());
     auto node_iter = all_nodes_list.begin();
     auto ref_iter = used_node_id_list.begin();
+    const auto all_nodes_list_end = all_nodes_list.end();
+    const auto used_node_id_list_end = used_node_id_list.end();
     auto internal_id = 0u;
+
     // compute the intersection of nodes that were referenced and nodes we actually have
-    while (node_iter != all_nodes_list.end() && ref_iter != used_node_id_list.end())
+    while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
     {
         if (node_iter->node_id < *ref_iter)
         {
@@ -208,7 +211,11 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // Traverse list of edges and nodes in parallel and set start coord
     auto node_iterator = all_nodes_list.begin();
     auto edge_iterator = all_edges_list.begin();
-    while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
+
+    const auto all_edges_list_end = all_edges_list.end();
+    const auto all_nodes_list_end = all_nodes_list.end();
+
+    while (edge_iterator != all_edges_list_end && node_iterator != all_nodes_list_end)
     {
         if (edge_iterator->result.source < node_iterator->node_id)
         {
@@ -259,7 +266,10 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     TIMER_START(compute_weights);
     node_iterator = all_nodes_list.begin();
     edge_iterator = all_edges_list.begin();
-    while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
+    const auto all_edges_list_end_ = all_edges_list.end();
+    const auto all_nodes_list_end_ = all_nodes_list.end();
+
+    while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
     {
         // skip all invalid edges
         if (edge_iterator->result.source == SPECIAL_NODEID)
@@ -475,7 +485,10 @@ void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
     // identify all used nodes by a merging step of two sorted lists
     auto node_iterator = all_nodes_list.begin();
     auto node_id_iterator = used_node_id_list.begin();
-    while (node_id_iterator != used_node_id_list.end() && node_iterator != all_nodes_list.end())
+    const auto used_node_id_list_end = used_node_id_list.end();
+    const auto all_nodes_list_end = all_nodes_list.end();
+
+    while (node_id_iterator != used_node_id_list_end && node_iterator != all_nodes_list_end)
     {
         if (*node_id_iterator < node_iterator->node_id)
         {
@@ -550,9 +563,11 @@ void ExtractionContainers::PrepareRestrictions()
     TIMER_START(fix_restriction_starts);
     auto restrictions_iterator = restrictions_list.begin();
     auto way_start_and_end_iterator = way_start_end_id_list.cbegin();
+    const auto restrictions_list_end = restrictions_list.end();
+    const auto way_start_end_id_list_end = way_start_end_id_list.cend();
 
-    while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
-           restrictions_iterator != restrictions_list.end())
+    while (way_start_and_end_iterator != way_start_end_id_list_end &&
+           restrictions_iterator != restrictions_list_end)
     {
         if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.from.way)
         {
@@ -616,8 +631,11 @@ void ExtractionContainers::PrepareRestrictions()
     TIMER_START(fix_restriction_ends);
     restrictions_iterator = restrictions_list.begin();
     way_start_and_end_iterator = way_start_end_id_list.cbegin();
-    while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
-           restrictions_iterator != restrictions_list.end())
+    const auto way_start_end_id_list_end_ = way_start_end_id_list.cend();
+    const auto restrictions_list_end_ = restrictions_list.end();
+
+    while (way_start_and_end_iterator != way_start_end_id_list_end_ &&
+           restrictions_iterator != restrictions_list_end_)
     {
         if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.to.way)
         {

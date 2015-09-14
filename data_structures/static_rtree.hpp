@@ -365,8 +365,8 @@ class StaticRTree
             [&input_data_vector, &input_wrapper_vector, &get_hilbert_number, &coordinate_list](
                 const tbb::blocked_range<uint64_t> &range)
             {
-                for (uint64_t element_counter = range.begin(); element_counter != range.end();
-                     ++element_counter)
+                for (uint64_t element_counter = range.begin(), end = range.end();
+                     element_counter != end; ++element_counter)
                 {
                     WrappedInputElement &current_wrapper = input_wrapper_vector[element_counter];
                     current_wrapper.m_array_index = element_counter;
@@ -476,7 +476,7 @@ class StaticRTree
         tbb::parallel_for(tbb::blocked_range<uint32_t>(0, search_tree_size),
                           [this, &search_tree_size](const tbb::blocked_range<uint32_t> &range)
                           {
-                              for (uint32_t i = range.begin(); i != range.end(); ++i)
+                              for (uint32_t i = range.begin(), end = range.end(); i != end; ++i)
                               {
                                   TreeNode &current_tree_node = this->m_search_tree[i];
                                   for (uint32_t j = 0; j < current_tree_node.child_count; ++j)
@@ -664,7 +664,8 @@ class StaticRTree
         while (!traversal_queue.empty())
         {
             const IncrementalQueryCandidate current_query_node = traversal_queue.top();
-            if (current_query_node.min_dist > max_distance && inspected_elements > max_checked_elements)
+            if (current_query_node.min_dist > max_distance &&
+                inspected_elements > max_checked_elements)
             {
                 break;
             }
@@ -760,7 +761,7 @@ class StaticRTree
 
             // stop the search by flushing the queue
             if (result_phantom_node_vector.size() >= max_number_of_phantom_nodes &&
-                 number_of_elements_from_big_cc > 0)
+                number_of_elements_from_big_cc > 0)
             {
                 traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
@@ -804,7 +805,8 @@ class StaticRTree
             const IncrementalQueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
 
-            if (current_query_node.min_dist > max_distance || inspected_elements >= max_checked_elements)
+            if (current_query_node.min_dist > max_distance ||
+                inspected_elements >= max_checked_elements)
             {
                 break;
             }
