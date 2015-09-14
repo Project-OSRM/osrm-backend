@@ -79,7 +79,7 @@ struct ObjectEncoder
             replaceAll(encoded, "-", "+");
             replaceAll(encoded, "_", "/");
 
-            std::copy(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length() - 1),
+            std::copy(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length()),
                       reinterpret_cast<char *>(&object));
         }
         catch (...)
