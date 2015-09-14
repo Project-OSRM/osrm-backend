@@ -312,7 +312,7 @@ class Contractor
         tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, InitGrainSize),
                           [&remaining_nodes](const tbb::blocked_range<int> &range)
                           {
-                              for (int x = range.begin(); x != range.end(); ++x)
+                              for (int x = range.begin(), end = range.end(); x != end; ++x)
                               {
                                   remaining_nodes[x].id = x;
                               }
@@ -324,7 +324,7 @@ class Contractor
                               const tbb::blocked_range<int> &range)
                           {
                               ContractorThreadData *data = thread_data_list.getThreadData();
-                              for (int x = range.begin(); x != range.end(); ++x)
+                              for (int x = range.begin(), end = range.end(); x != end; ++x)
                               {
                                   node_priorities[x] =
                                       this->EvaluateNodePriority(data, &node_data[x], x);
@@ -430,7 +430,7 @@ class Contractor
                               {
                                   ContractorThreadData *data = thread_data_list.getThreadData();
                                   // determine independent node set
-                                  for (int i = range.begin(); i != range.end(); ++i)
+                                  for (int i = range.begin(), end = range.end(); i != end; ++i)
                                   {
                                       const NodeID node = remaining_nodes[i].id;
                                       remaining_nodes[i].is_independent =
@@ -451,7 +451,7 @@ class Contractor
                 [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(); position != range.end(); ++position)
+                    for (int position = range.begin(), end = range.end(); position != end; ++position)
                     {
                         const NodeID x = remaining_nodes[position].id;
                         this->ContractNode<false>(data, x);
@@ -470,7 +470,7 @@ class Contractor
                 [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(); position != range.end(); ++position)
+                    for (int position = range.begin(), end = range.end(); position != end; ++position)
                     {
                         const NodeID x = remaining_nodes[position].id;
                         this->DeleteIncomingEdges(data, x);
@@ -508,7 +508,7 @@ class Contractor
                     const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(); position != range.end(); ++position)
+                    for (int position = range.begin(), end = range.end(); position != end; ++position)
                     {
                         NodeID x = remaining_nodes[position].id;
                         this->UpdateNodeNeighbours(node_priorities, node_data, data, x);

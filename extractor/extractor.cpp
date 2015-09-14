@@ -161,7 +161,7 @@ int extractor::run()
         {
             // create a vector of iterators into the buffer
             std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
-            for (auto iter = std::begin(buffer); iter != std::end(buffer); ++iter)
+            for (auto iter = std::begin(buffer), end = std::end(buffer); iter != end; ++iter)
             {
                 osm_elements.push_back(iter);
             }
@@ -180,7 +180,7 @@ int extractor::run()
                     ExtractionWay result_way;
                     lua_State *local_state = scripting_environment.get_lua_state();
 
-                    for (auto x = range.begin(); x != range.end(); ++x)
+                    for (auto x = range.begin(), end = range.end(); x != end; ++x)
                     {
                         const auto entity = osm_elements[x];
 
