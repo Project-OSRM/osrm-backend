@@ -244,6 +244,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
         subtrace.values["matched_points"] = points;
 
+        osrm::json::Array names;
+        for (const auto &node : sub.nodes)
+        {
+            names.values.emplace_back( facade->get_name_for_id(node.name_id) );
+        }
+        subtrace.values["matched_names"] = names;
+
         return subtrace;
     }
 
