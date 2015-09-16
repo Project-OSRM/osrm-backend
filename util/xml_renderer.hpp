@@ -56,38 +56,33 @@ struct XMLToArrayRenderer : mapbox::util::static_visitor<>
 
     void operator()(const Object &object) const
     {
-        auto iterator = object.values.begin();
-        while (iterator != object.values.end())
+        for (auto &&each : object.values)
         {
-            if (iterator->first.at(0) != '_')
+            if (each.first.at(0) != '_')
             {
                 out.push_back('<');
-                out.insert(out.end(), (*iterator).first.begin(), (*iterator).first.end());
+                out.insert(out.end(), each.first.begin(), each.first.end());
             }
             else
             {
                 out.push_back(' ');
-                out.insert(out.end(), ++(*iterator).first.begin(), (*iterator).first.end());
+                out.insert(out.end(), ++(each).first.begin(), each.first.end());
                 out.push_back('=');
             }
-            mapbox::util::apply_visitor(XMLToArrayRenderer(out), (*iterator).second);
-            if (iterator->first.at(0) != '_')
+            mapbox::util::apply_visitor(XMLToArrayRenderer(out), each.second);
+            if (each.first.at(0) != '_')
             {
                 out.push_back('/');
                 out.push_back('>');
             }
-            ++iterator;
         }
     }
 
     void operator()(const Array &array) const
     {
-        std::vector<Value>::const_iterator iterator;
-        iterator = array.values.begin();
-        while (iterator != array.values.end())
+        for (auto &&each : array.values)
         {
-            mapbox::util::apply_visitor(XMLToArrayRenderer(out), *iterator);
-            ++iterator;
+            mapbox::util::apply_visitor(XMLToArrayRenderer(out), each);
         }
     }
 

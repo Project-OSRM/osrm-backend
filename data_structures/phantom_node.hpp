@@ -88,8 +88,10 @@ struct PhantomNode
     unsigned component_id;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
-    TravelMode forward_travel_mode : 4;
-    TravelMode backward_travel_mode : 4;
+    // note 4 bits would suffice for each,
+    // but the saved byte would be padding anyway
+    TravelMode forward_travel_mode;
+    TravelMode backward_travel_mode;
 
     int GetForwardWeightPlusOffset() const;
 
@@ -107,6 +109,8 @@ struct PhantomNode
 
     bool operator==(const PhantomNode &other) const;
 };
+
+static_assert(sizeof(PhantomNode) == 48, "PhantomNode has more padding then expected");
 
 using PhantomNodeArray = std::vector<std::vector<PhantomNode>>;
 

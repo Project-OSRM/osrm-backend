@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/ref.hpp>
 #include <boost/regex.hpp>
 
@@ -51,8 +52,7 @@ int lua_error_callback(lua_State *lua_state)
 }
 }
 
-RestrictionParser::RestrictionParser(lua_State *lua_state)
-    : use_turn_restrictions(true)
+RestrictionParser::RestrictionParser(lua_State *lua_state) : use_turn_restrictions(true)
 {
     ReadUseRestrictionsSetting(lua_state);
 
@@ -141,16 +141,30 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
 
     bool is_only_restriction = false;
 
-    for (auto iter = fi_begin; iter != fi_end; ++iter)
+    for (; fi_begin != fi_end; ++fi_begin)
     {
-        if (std::string("restriction") == iter->key() ||
-            std::string("restriction::hgv") == iter->key())
-        {
-            const std::string restriction_value(iter->value());
+        const std::string key(fi_begin->key());
+        const std::string value(fi_begin->value());
 
-            if (restriction_value.find("only_") == 0)
+        if (value.find("only_") == 0)
+        {
+            is_only_restriction = true;
+        }
+
+        // if the "restriction*" key is longer than 11 chars, it is a conditional exception (i.e.
+        // "restriction:<transportation_type>")
+        if (key.size() > 11)
+        {
+            const auto ex_suffix = [&](const std::string &exception)
             {
-                is_only_restriction = true;
+                return boost::algorithm::ends_with(key, exception);
+            };
+            bool is_actually_restricted =
+                std::any_of(begin(restriction_exceptions), end(restriction_exceptions), ex_suffix);
+
+            if (!is_actually_restricted)
+            {
+                return mapbox::util::optional<InputRestrictionContainer>();
             }
         }
     }

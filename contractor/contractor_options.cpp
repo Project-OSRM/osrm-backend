@@ -56,7 +56,11 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
         "Path to LUA routing profile")(
         "threads,t", boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
                          ->default_value(tbb::task_scheduler_init::default_num_threads()),
-        "Number of threads to use");
+        "Number of threads to use")(
+		"core,k", boost::program_options::value<double>(&contractor_config.core_factor)
+						 ->default_value(1.0),"Percentage of the graph (in vertices) to contract [0.1]");
+
+
 
     // hidden options, will be allowed both on command line and in config file, but will not be
     // shown to the user
@@ -127,6 +131,7 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 void ContractorOptions::GenerateOutputFilesNames(ContractorConfig &contractor_config)
 {
     contractor_config.node_output_path = contractor_config.osrm_input_path.string() + ".nodes";
+    contractor_config.core_output_path = contractor_config.osrm_input_path.string() + ".core";
     contractor_config.edge_output_path = contractor_config.osrm_input_path.string() + ".edges";
     contractor_config.geometry_output_path = contractor_config.osrm_input_path.string() + ".geometry";
     contractor_config.graph_output_path = contractor_config.osrm_input_path.string() + ".hsgr";

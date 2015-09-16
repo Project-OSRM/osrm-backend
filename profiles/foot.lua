@@ -3,7 +3,7 @@
 local find_access_tag = require("lib/access").find_access_tag
 
 -- Begin of globals
-barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true}
+barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["block"] = true}
 access_tag_whitelist = { ["yes"] = true, ["foot"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
@@ -65,8 +65,9 @@ leisure_speeds = {
 }
 
 traffic_signal_penalty   = 2
-u_turn_penalty       = 2
-use_turn_restrictions   = false
+u_turn_penalty           = 2
+use_turn_restrictions    = false
+local fallback_names     = true
 
 --modes
 local mode_normal = 1
@@ -85,7 +86,7 @@ function node_function (node, result)
 
   -- flag node if it carries a traffic light
   if traffic_signal and traffic_signal == "traffic_signals" then
-    result.traffic_light = true
+    result.traffic_lights = true
   end
 
   -- parse access and barrier tags
@@ -154,14 +155,14 @@ function way_function (way, result)
       result.name = ref
   elseif name and "" ~= name then
     result.name = name
-  elseif highway then
+  elseif highway and fallback_names then
     result.name = "{highway:"..highway.."}"  -- if no name exists, use way type
                                             -- this encoding scheme is excepted to be a temporary solution
   end
 
     -- roundabouts
   if "roundabout" == junction then
-    result.roundabout = true;
+    result.roundabout = true
   end
 
     -- speed

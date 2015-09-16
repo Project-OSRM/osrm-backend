@@ -90,9 +90,11 @@ template <typename EdgeDataT> class DynamicGraph
      */
     template <class ContainerT> DynamicGraph(const NodeIterator nodes, const ContainerT &graph)
     {
+        // we need to cast here because DeallocatingVector does not have a valid const iterator
+        BOOST_ASSERT(std::is_sorted(const_cast<ContainerT&>(graph).begin(), const_cast<ContainerT&>(graph).end()));
+
         number_of_nodes = nodes;
         number_of_edges = static_cast<EdgeIterator>(graph.size());
-        // node_array.reserve(number_of_nodes + 1);
         node_array.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
@@ -117,6 +119,7 @@ template <typename EdgeDataT> class DynamicGraph
                                              node_array[node].first_edge + node_array[node].edges))
             {
                 edge_list[i].target = graph[edge].target;
+                BOOST_ASSERT(edge_list[i].target < number_of_nodes);
                 edge_list[i].data = graph[edge].data;
                 ++edge;
             }
@@ -136,7 +139,7 @@ template <typename EdgeDataT> class DynamicGraph
         unsigned degree = 0;
         for (const auto edge : osrm::irange(BeginEdges(n), EndEdges(n)))
         {
-            if (GetEdgeData(edge).forward)
+            if (!GetEdgeData(edge).reversed)
             {
                 ++degree;
             }

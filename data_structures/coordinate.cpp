@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "coordinate_calculation.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 
 #ifndef NDEBUG
 #include "../util/simple_logger.hpp"

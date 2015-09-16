@@ -7,16 +7,12 @@ environment:
 init:
   - git config --global core.autocrlf input
 
-os: Visual Studio 2015 RC
+os: Visual Studio 2015
 
 # clone directory
 clone_folder: c:\projects\osrm
 
 platform: x64
-
-install:
-  - set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
-  - CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
 build_script:
   - CALL appveyor-build.bat

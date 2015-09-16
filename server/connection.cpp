@@ -78,7 +78,6 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         request_handler.handle_request(current_request, current_reply);
 
         // Header compression_header;
-        std::vector<char> compressed_output;
         std::vector<boost::asio::const_buffer> output_buffer;
 
         // compress the result w/ gzip/deflate if requested

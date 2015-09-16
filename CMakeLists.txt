@@ -51,10 +51,11 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/util/git_sha.cpp
 )
 file(GLOB ExtractorGlob extractor/*.cpp)
-file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp)
+file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp data_structures/raster_source.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT util/simple_logger.cpp)
 add_library(PHANTOMNODE OBJECT data_structures/phantom_node.cpp)
+add_library(RASTERSOURCE OBJECT data_structures/raster_source.cpp)
 add_library(EXCEPTION OBJECT util/osrm_exception.cpp)
 add_library(MERCATOR OBJECT util/mercator.cpp)
 add_library(ANGLE OBJECT util/compute_angle.cpp)
@@ -63,21 +64,22 @@ set(ExtractorSources extract.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
 add_library(RESTRICTION OBJECT data_structures/restriction_map.cpp)
+add_library(COMPRESSEDEDGE OBJECT data_structures/compressed_edge_container.cpp)
+add_library(GRAPHCOMPRESSOR OBJECT algorithms/graph_compressor.cpp)
 
 file(GLOB PrepareGlob contractor/*.cpp data_structures/hilbert_value.cpp {RestrictionMapGlob})
 set(PrepareSources prepare.cpp ${PrepareGlob})
-add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
+add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR> $<TARGET_OBJECTS:COMPRESSEDEDGE> $<TARGET_OBJECTS:GRAPHCOMPRESSOR>)
 
 file(GLOB ServerGlob server/*.cpp)
 file(GLOB DescriptorGlob descriptors/*.cpp)
 file(GLOB DatastructureGlob data_structures/search_engine_data.cpp data_structures/route_parameters.cpp util/bearing.cpp)
-list(REMOVE_ITEM DatastructureGlob data_structures/Coordinate.cpp)
-file(GLOB CoordinateGlob data_structures/coordinate*.cpp)
-file(GLOB AlgorithmGlob algorithms/*.cpp)
+file(GLOB CoordinateGlob data_structures/coordinate.cpp algorithms/coordinate_calculation.cpp)
+file(GLOB AlgorithmGlob algorithms/polyline_compressor.cpp algorithms/polyline_formatter.cpp algorithms/douglas_peucker.cpp)
 file(GLOB HttpGlob server/http/*.cpp)
 file(GLOB LibOSRMGlob library/*.cpp)
 file(GLOB DataStructureTestsGlob unit_tests/data_structures/*.cpp data_structures/hilbert_value.cpp)
-file(GLOB AlgorithmTestsGlob unit_tests/algorithms/*.cpp)
+file(GLOB AlgorithmTestsGlob unit_tests/algorithms/*.cpp algorithms/graph_compressor.cpp)
 
 set(
   OSRMSources
@@ -90,7 +92,7 @@ set(
 
 add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(GITDESCRIPTION OBJECT util/git_sha.cpp)
-add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR> $<TARGET_OBJECTS:IMPORT>)
+add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR> $<TARGET_OBJECTS:IMPORT>)
 
 add_library(FINGERPRINT OBJECT util/fingerprint.cpp)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
@@ -101,8 +103,8 @@ add_executable(osrm-routed routed.cpp ${ServerGlob} $<TARGET_OBJECTS:EXCEPTION>)
 add_executable(osrm-datastore datastore.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:GITDESCRIPTION> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
 
 # Unit tests
-add_executable(datastructure-tests EXCLUDE_FROM_ALL unit_tests/datastructure_tests.cpp ${DataStructureTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
-add_executable(algorithm-tests EXCLUDE_FROM_ALL unit_tests/algorithm_tests.cpp ${AlgorithmTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION>)
+add_executable(datastructure-tests EXCLUDE_FROM_ALL unit_tests/datastructure_tests.cpp ${DataStructureTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR> $<TARGET_OBJECTS:COMPRESSEDEDGE> $<TARGET_OBJECTS:GRAPHCOMPRESSOR> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:RASTERSOURCE>)
+add_executable(algorithm-tests EXCLUDE_FROM_ALL unit_tests/algorithm_tests.cpp ${AlgorithmTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:COMPRESSEDEDGE>)
 
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL benchmarks/static_rtree.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
@@ -279,16 +281,6 @@ if(OPENMP_FOUND)
   message(STATUS "OpenMP support found. Linking just in case for stxxl")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-find_package(OSMPBF REQUIRED)
-include_directories(${OSMPBF_INCLUDE_DIR})
-target_link_libraries(osrm-extract ${OSMPBF_LIBRARY})
-target_link_libraries(osrm-prepare ${OSMPBF_LIBRARY})
-
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-target_link_libraries(osrm-extract ${PROTOBUF_LIBRARY})
-target_link_libraries(osrm-prepare ${PROTOBUF_LIBRARY})
 
 find_package(BZip2 REQUIRED)
 include_directories(${BZIP_INCLUDE_DIRS})

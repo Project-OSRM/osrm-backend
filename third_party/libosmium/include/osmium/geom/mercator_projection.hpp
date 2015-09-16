@@ -47,6 +47,7 @@ namespace osmium {
         namespace detail {
 
             constexpr double earth_radius_for_epsg3857 = 6378137.0;
+            constexpr double max_coordinate_epsg3857 = 20037508.34;
 
             constexpr inline double lon_to_x(double lon) {
                 return earth_radius_for_epsg3857 * deg_to_rad(lon);

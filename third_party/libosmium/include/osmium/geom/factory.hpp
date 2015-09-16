@@ -54,14 +54,43 @@ namespace osmium {
      * Exception thrown when an invalid geometry is encountered. An example
      * would be a linestring with less than two points.
      */
-    struct geometry_error : public std::runtime_error {
+    class geometry_error : public std::runtime_error {
 
-        geometry_error(const std::string& what) :
-            std::runtime_error(what) {
+        std::string m_message;
+        osmium::object_id_type m_id;
+
+    public:
+
+        geometry_error(const std::string& message, const char* object_type = "", osmium::object_id_type id = 0) :
+            std::runtime_error(message),
+            m_message(message),
+            m_id(id) {
+            if (m_id != 0) {
+                m_message += " (";
+                m_message += object_type;
+                m_message += "_id=";
+                m_message += std::to_string(m_id);
+                m_message += ")";
+            }
         }
 
-        geometry_error(const char* what) :
-            std::runtime_error(what) {
+        void set_id(const char* object_type, osmium::object_id_type id) {
+            if (m_id == 0 && id != 0) {
+                m_message += " (";
+                m_message += object_type;
+                m_message += "_id=";
+                m_message += std::to_string(id);
+                m_message += ")";
+            }
+            m_id = id;
+        }
+
+        osmium::object_id_type id() const noexcept {
+            return m_id;
+        }
+
+        virtual const char* what() const noexcept override {
+            return m_message.c_str();
         }
 
     }; // struct geometry_error
@@ -174,11 +203,21 @@ namespace osmium {
             }
 
             point_type create_point(const osmium::Node& node) {
-                return create_point(node.location());
+                try {
+                    return create_point(node.location());
+                } catch (osmium::geometry_error& e) {
+                    e.set_id("node", node.id());
+                    throw;
+                }
             }
 
             point_type create_point(const osmium::NodeRef& node_ref) {
-                return create_point(node_ref.location());
+                try {
+                    return create_point(node_ref.location());
+                } catch (osmium::geometry_error& e) {
+                    e.set_id("node", node_ref.ref());
+                    throw;
+                }
             }
 
             /* LineString */
@@ -240,14 +279,19 @@ namespace osmium {
                 }
 
                 if (num_points < 2) {
-                    throw osmium::geometry_error("not enough points for linestring");
+                    throw osmium::geometry_error("need at least two points for linestring");
                 }
 
                 return linestring_finish(num_points);
             }
 
             linestring_type create_linestring(const osmium::Way& way, use_nodes un=use_nodes::unique, direction dir=direction::forward) {
-                return create_linestring(way.nodes(), un, dir);
+                try {
+                    return create_linestring(way.nodes(), un, dir);
+                } catch (osmium::geometry_error& e) {
+                    e.set_id("way", way.id());
+                    throw;
+                }
             }
 
             /* Polygon */
@@ -283,40 +327,86 @@ namespace osmium {
                 return m_impl.polygon_finish(num_points);
             }
 
-            /* MultiPolygon */
+            polygon_type create_polygon(const osmium::WayNodeList& wnl, use_nodes un = use_nodes::unique, direction dir = direction::forward) {
+                polygon_start();
+                size_t num_points = 0;
 
-            multipolygon_type create_multipolygon(const osmium::Area& area) {
-                size_t num_polygons = 0;
-                size_t num_rings = 0;
-                m_impl.multipolygon_start();
-
-                for (auto it = area.cbegin(); it != area.cend(); ++it) {
-                    const osmium::OuterRing& ring = static_cast<const osmium::OuterRing&>(*it);
-                    if (it->type() == osmium::item_type::outer_ring) {
-                        if (num_polygons > 0) {
-                            m_impl.multipolygon_polygon_finish();
-                        }
-                        m_impl.multipolygon_polygon_start();
-                        m_impl.multipolygon_outer_ring_start();
-                        add_points(ring);
-                        m_impl.multipolygon_outer_ring_finish();
-                        ++num_rings;
-                        ++num_polygons;
-                    } else if (it->type() == osmium::item_type::inner_ring) {
-                        m_impl.multipolygon_inner_ring_start();
-                        add_points(ring);
-                        m_impl.multipolygon_inner_ring_finish();
-                        ++num_rings;
+                if (un == use_nodes::unique) {
+                    osmium::Location last_location;
+                    switch (dir) {
+                        case direction::forward:
+                            num_points = fill_polygon_unique(wnl.cbegin(), wnl.cend());
+                            break;
+                        case direction::backward:
+                            num_points = fill_polygon_unique(wnl.crbegin(), wnl.crend());
+                            break;
+                    }
+                } else {
+                    switch (dir) {
+                        case direction::forward:
+                            num_points = fill_polygon(wnl.cbegin(), wnl.cend());
+                            break;
+                        case direction::backward:
+                            num_points = fill_polygon(wnl.crbegin(), wnl.crend());
+                            break;
                     }
                 }
 
-                // if there are no rings, this area is invalid
-                if (num_rings == 0) {
-                    throw osmium::geometry_error("invalid area");
+                if (num_points < 4) {
+                    throw osmium::geometry_error("need at least four points for polygon");
                 }
 
-                m_impl.multipolygon_polygon_finish();
-                return m_impl.multipolygon_finish();
+                return polygon_finish(num_points);
+            }
+
+            polygon_type create_polygon(const osmium::Way& way, use_nodes un=use_nodes::unique, direction dir=direction::forward) {
+                try {
+                    return create_polygon(way.nodes(), un, dir);
+                } catch (osmium::geometry_error& e) {
+                    e.set_id("way", way.id());
+                    throw;
+                }
+            }
+
+            /* MultiPolygon */
+
+            multipolygon_type create_multipolygon(const osmium::Area& area) {
+                try {
+                    size_t num_polygons = 0;
+                    size_t num_rings = 0;
+                    m_impl.multipolygon_start();
+
+                    for (auto it = area.cbegin(); it != area.cend(); ++it) {
+                        const osmium::OuterRing& ring = static_cast<const osmium::OuterRing&>(*it);
+                        if (it->type() == osmium::item_type::outer_ring) {
+                            if (num_polygons > 0) {
+                                m_impl.multipolygon_polygon_finish();
+                            }
+                            m_impl.multipolygon_polygon_start();
+                            m_impl.multipolygon_outer_ring_start();
+                            add_points(ring);
+                            m_impl.multipolygon_outer_ring_finish();
+                            ++num_rings;
+                            ++num_polygons;
+                        } else if (it->type() == osmium::item_type::inner_ring) {
+                            m_impl.multipolygon_inner_ring_start();
+                            add_points(ring);
+                            m_impl.multipolygon_inner_ring_finish();
+                            ++num_rings;
+                        }
+                    }
+
+                    // if there are no rings, this area is invalid
+                    if (num_rings == 0) {
+                        throw osmium::geometry_error("area contains no rings");
+                    }
+
+                    m_impl.multipolygon_polygon_finish();
+                    return m_impl.multipolygon_finish();
+                } catch (osmium::geometry_error& e) {
+                    e.set_id("area", area.id());
+                    throw;
+                }
             }
 
         }; // class GeometryFactory

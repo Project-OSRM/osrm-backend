@@ -78,9 +78,9 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         num_results = (-qi::lit('&')) >> qi::lit("num_results") >> '=' >>
                       qi::short_[boost::bind(&HandlerT::setNumberOfResults, handler, ::_1)];
         matching_beta = (-qi::lit('&')) >> qi::lit("matching_beta") >> '=' >>
-               qi::short_[boost::bind(&HandlerT::setMatchingBeta, handler, ::_1)];
+               qi::float_[boost::bind(&HandlerT::setMatchingBeta, handler, ::_1)];
         gps_precision = (-qi::lit('&')) >> qi::lit("gps_precision") >> '=' >>
-               qi::short_[boost::bind(&HandlerT::setGPSPrecision, handler, ::_1)];
+               qi::float_[boost::bind(&HandlerT::setGPSPrecision, handler, ::_1)];
         classify = (-qi::lit('&')) >> qi::lit("classify") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::setClassify, handler, ::_1)];
         locs = (-qi::lit('&')) >> qi::lit("locs") >> '=' >>

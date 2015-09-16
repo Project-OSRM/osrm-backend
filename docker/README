@@ -1,0 +1,6 @@
+# Docker based continious integration
+
+Run ```./docker/build-image.sh``` to build a docker image.
+The image contains all the build dependencies and the state of the local git repository.
+
+Run ```./docker/run-gcc.sh``` to build OSRM with g++ and run all tests.

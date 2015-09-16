@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "routing_base.hpp"
 
-#include "../data_structures/coordinate_calculation.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 #include "../data_structures/hidden_markov_model.hpp"
 #include "../util/json_logger.hpp"
 #include "../util/matching_debug_info.hpp"
@@ -59,14 +59,10 @@ using CandidateLists = std::vector<CandidateList>;
 using HMM = HiddenMarkovModel<CandidateLists>;
 using SubMatchingList = std::vector<SubMatching>;
 
-constexpr static const unsigned MAX_BROKEN_STATES = 6;
-constexpr static const unsigned MAX_BROKEN_TIME = 60;
+constexpr static const unsigned MAX_BROKEN_STATES = 10;
 
-constexpr static const unsigned MAX_DISTANCE_DELTA = 200;
+constexpr static const double MAX_SPEED = 180 / 3.6; // 180km -> m/s
 constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
-
-constexpr static const double default_beta = 5.0;
-constexpr static const double default_sigma_z = 4.07;
 }
 }
 
@@ -77,6 +73,21 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     using super = BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
+
+    unsigned GetMedianSampleTime(const std::vector<unsigned>& timestamps) const
+    {
+        BOOST_ASSERT(timestamps.size() > 1);
+
+        std::vector<unsigned> sample_times(timestamps.size());
+
+        std::adjacent_difference(timestamps.begin(), timestamps.end(), sample_times.begin());
+
+        // don't use first element of sample_times -> will not be a difference.
+        auto first_elem = std::next(sample_times.begin());
+        auto median = first_elem + std::distance(first_elem, sample_times.end())/2;
+        std::nth_element(first_elem, median, sample_times.end());
+        return *median;
+    }
 
   public:
     MapMatching(DataFacadeT *facade, SearchEngineData &engine_working_data)
@@ -91,13 +102,33 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const double gps_precision,
                     osrm::matching::SubMatchingList &sub_matchings) const
     {
-        BOOST_ASSERT(!candidates_list.empty() && !trace_coordinates.empty());
+        BOOST_ASSERT(candidates_list.size() == trace_coordinates.size());
+
+        const auto median_sample_time = [&]() {
+            if (trace_timestamps.size() > 1)
+            {
+                return GetMedianSampleTime(trace_timestamps);
+            }
+            else
+            {
+                return 0u;
+            }
+        }();
+        const auto max_broken_time = median_sample_time * osrm::matching::MAX_BROKEN_STATES;
+        const auto max_distance_delta = [&]() {
+            if (trace_timestamps.size() > 1)
+            {
+                return median_sample_time * osrm::matching::MAX_SPEED;
+            }
+            else
+            {
+                return std::numeric_limits<double>::max();
+            }
+        }();
 
         // TODO replace default values with table lookup based on sampling frequency
-        EmissionLogProbability emission_log_probability(
-            gps_precision > 0. ? gps_precision : osrm::matching::default_sigma_z);
-        TransitionLogProbability transition_log_probability(
-            matching_beta > 0. ? matching_beta : osrm::matching::default_beta);
+        EmissionLogProbability emission_log_probability(gps_precision);
+        TransitionLogProbability transition_log_probability(matching_beta);
 
         osrm::matching::HMM model(candidates_list, emission_log_probability);
 
@@ -109,6 +140,12 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         MatchingDebugInfo matching_debug(osrm::json::Logger::get());
         matching_debug.initialize(candidates_list);
+
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
+            super::facade->GetNumberOfNodes());
+
+        QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
+        QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
 
         std::size_t breakage_begin = osrm::matching::INVALID_STATE;
         std::vector<std::size_t> split_points;
@@ -126,7 +163,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 trace_split =
                     trace_split ||
                     (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                     osrm::matching::MAX_BROKEN_TIME);
+                     max_broken_time);
             }
             else
             {
@@ -177,13 +214,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
-            engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-                super::facade->GetNumberOfNodes());
-            engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-                super::facade->GetNumberOfNodes());
-
-            QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
-            QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
+            const auto great_circle_distance = coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate);
 
             // compute d_t for this timestamp and the next one
             for (const auto s : osrm::irange<std::size_t>(0u, prev_viterbi.size()))
@@ -196,6 +227,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 for (const auto s_prime : osrm::irange<std::size_t>(0u, current_viterbi.size()))
                 {
                     // how likely is candidate s_prime at time t to be emitted?
+                    // FIXME this can be pre-computed
                     const double emission_pr =
                         emission_log_probability(candidates_list[t][s_prime].second);
                     double new_value = prev_viterbi[s] + emission_pr;
@@ -211,14 +243,11 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const auto network_distance = super::get_network_distance(
                         forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].first,
                         current_timestamps_list[s_prime].first);
-                    const auto great_circle_distance =
-                        coordinate_calculation::great_circle_distance(prev_coordinate,
-                                                                      current_coordinate);
 
                     const auto d_t = std::abs(network_distance - great_circle_distance);
 
                     // very low probability transition -> prune
-                    if (d_t > osrm::matching::MAX_DISTANCE_DELTA)
+                    if (d_t >= max_distance_delta)
                     {
                         continue;
                     }
@@ -272,13 +301,16 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         {
             osrm::matching::SubMatching matching;
 
-            // find real end of trace
-            // not sure if this is really needed
             std::size_t parent_timestamp_index = sub_matching_end - 1;
             while (parent_timestamp_index >= sub_matching_begin &&
                    model.breakage[parent_timestamp_index])
             {
                 --parent_timestamp_index;
+            }
+            while (sub_matching_begin < sub_matching_end &&
+                   model.breakage[sub_matching_begin])
+            {
+                ++sub_matching_begin;
             }
 
             // matchings that only consist of one candidate are invalid
@@ -306,6 +338,11 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                 reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
                 const auto &next = model.parents[parent_timestamp_index][parent_candidate_index];
+                // make sure we can never get stuck in this loop
+                if (parent_timestamp_index == next.first)
+                {
+                    break;
+                }
                 parent_timestamp_index = next.first;
                 parent_candidate_index = next.second;
             }

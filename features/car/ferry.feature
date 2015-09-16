@@ -41,7 +41,7 @@ Feature: Car - Handle ferry routes
 
         When I route I should get
             | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,2,1 | 26 km/h |
+            | a    | g  | abc,cde,efg | 1,2,1 | 25 km/h |
             | b    | f  | abc,cde,efg | 1,2,1 | 20 km/h |
             | c    | e  | cde         | 2     | 12 km/h |
             | e    | c  | cde         | 2     | 12 km/h |
@@ -60,7 +60,7 @@ Feature: Car - Handle ferry routes
 
         When I route I should get
             | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,2,1 | 26 km/h |
+            | a    | g  | abc,cde,efg | 1,2,1 | 25 km/h |
             | b    | f  | abc,cde,efg | 1,2,1 | 20 km/h |
             | c    | e  | cde         | 2     | 12 km/h |
             | e    | c  | cde         | 2     | 12 km/h |

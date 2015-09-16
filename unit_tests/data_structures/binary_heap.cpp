@@ -165,6 +165,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, storage_types, RandomData
         {
             heap.DecreaseKey(id, weights[id]);
             BOOST_CHECK_EQUAL(heap.Min(), min_id);
+            BOOST_CHECK_EQUAL(heap.MinKey(), min_weight);
             weights[id]--;
         }
 
@@ -172,6 +173,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, storage_types, RandomData
         weights[id] -= 2;
         heap.DecreaseKey(id, weights[id]);
         BOOST_CHECK_EQUAL(heap.Min(), id);
+        BOOST_CHECK_EQUAL(heap.MinKey(), weights[id]);
     }
 }
 

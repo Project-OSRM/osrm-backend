@@ -4,13 +4,12 @@ local find_access_tag = require("lib/access").find_access_tag
 
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
-access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true }
+access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
-ignore_in_grid = { ["ferry"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
 speed_profile = {
@@ -132,8 +131,12 @@ maxspeed_table = {
 traffic_signal_penalty          = 2
 use_turn_restrictions           = true
 
+local turn_penalty              = 10
+-- Note: this biases right-side driving.  Should be
+-- inverted for left-driving countries.
+local turn_bias                 = 1.2
+
 local obey_oneway               = true
-local obey_bollards             = true
 local ignore_areas              = true
 local u_turn_penalty            = 20
 
@@ -161,7 +164,7 @@ local function parse_maxspeed(source)
   local n = tonumber(source:match("%d*"))
   if n then
     if string.match(source, "mph") or string.match(source, "mp/h") then
-      n = (n*1609)/1000;
+      n = (n*1609)/1000
     end
   else
     -- parse maxspeed like FR:urban
@@ -197,7 +200,11 @@ function node_function (node, result)
   else
     local barrier = node:get_value_by_key("barrier")
     if barrier and "" ~= barrier then
-      if not barrier_whitelist[barrier] then
+      --  make an exception for rising bollard barriers
+      local bollard = node:get_value_by_key("bollard")
+      local rising_bollard = bollard and "rising" == bollard
+
+      if not barrier_whitelist[barrier] and not rising_bollard then
         result.barrier = true
       end
     end
@@ -206,7 +213,7 @@ function node_function (node, result)
   -- check if node is a traffic light
   local tag = node:get_value_by_key("highway")
   if tag and "traffic_signals" == tag then
-    result.traffic_lights = true;
+    result.traffic_lights = true
   end
 end
 
@@ -250,10 +257,10 @@ function way_function (way, result)
   -- handling ferries and piers
   local route_speed = speed_profile[route]
   if (route_speed and route_speed > 0) then
-    highway = route;
+    highway = route
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
-      result.duration = max( parseDuration(duration), 1 );
+      result.duration = max( parseDuration(duration), 1 )
     end
     result.forward_mode = mode_ferry
     result.backward_mode = mode_ferry
@@ -265,10 +272,10 @@ function way_function (way, result)
   local bridge_speed = speed_profile[bridge]
   local capacity_car = way:get_value_by_key("capacity:car")
   if (bridge_speed and bridge_speed > 0) and (capacity_car ~= 0) then
-    highway = bridge;
+    highway = bridge
     local duration  = way:get_value_by_key("duration")
     if duration and durationIsValid(duration) then
-      result.duration = max( parseDuration(duration), 1 );
+      result.duration = max( parseDuration(duration), 1 )
     end
     result.forward_mode = mode_movable_bridge
     result.backward_mode = mode_movable_bridge
@@ -353,7 +360,7 @@ function way_function (way, result)
   end
 
   if junction and "roundabout" == junction then
-    result.roundabout = true;
+    result.roundabout = true
   end
 
   -- Set access restriction flag if access is allowed under certain restrictions only
@@ -393,11 +400,6 @@ function way_function (way, result)
     result.backward_speed = maxspeed_backward
   end
 
-  -- Override general direction settings of there is a specific one for our mode of travel
-  if ignore_in_grid[highway] then
-    result.ignore_in_grid = true
-  end
-
   local width = math.huge
   local lanes = math.huge
   if result.forward_speed > 0 or result.backward_speed > 0 then
@@ -416,21 +418,30 @@ function way_function (way, result)
 
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
-    local scaled_speed = result.forward_speed*speed_reduction + 11;
+    local scaled_speed = result.forward_speed*speed_reduction + 11
     local penalized_speed = math.huge
     if width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.forward_speed / 2;
+      penalized_speed = result.forward_speed / 2
     end
     result.forward_speed = math.min(penalized_speed, scaled_speed)
   end
 
   if result.backward_speed > 0 then
-    local scaled_speed = result.backward_speed*speed_reduction + 11;
+    local scaled_speed = result.backward_speed*speed_reduction + 11
     local penalized_speed = math.huge
     if width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.backward_speed / 2;
+      penalized_speed = result.backward_speed / 2
     end
     result.backward_speed = math.min(penalized_speed, scaled_speed)
   end
 end
 
+function turn_function (angle)
+  ---- compute turn penalty as angle^2, with a left/right bias
+  k = turn_penalty/(90.0*90.0)
+  if angle>=0 then
+    return angle*angle*k/turn_bias
+  else
+    return angle*angle*k*turn_bias
+  end
+end

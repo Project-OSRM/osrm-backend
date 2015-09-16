@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_containers.hpp"
 #include "extraction_way.hpp"
 
-#include "../data_structures/coordinate_calculation.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 #include "../data_structures/node_id.hpp"
 #include "../data_structures/range_table.hpp"
 
@@ -36,10 +36,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
 #include "../util/fingerprint.hpp"
+#include "../util/lua_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/ref.hpp>
+
+#include <luabind/luabind.hpp>
 
 #include <stxxl/sort>
 
@@ -76,7 +80,8 @@ ExtractionContainers::~ExtractionContainers()
  */
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
-                                       const std::string &name_file_name)
+                                       const std::string &name_file_name,
+                                       lua_State *segment_state)
 {
     try
     {
@@ -87,7 +92,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         PrepareNodes();
         WriteNodes(file_out_stream);
-        PrepareEdges();
+        PrepareEdges(segment_state);
         WriteEdges(file_out_stream);
 
         file_out_stream.close();
@@ -152,23 +157,47 @@ void ExtractionContainers::PrepareNodes()
     TIMER_STOP(erasing_dups);
     std::cout << "ok, after " << TIMER_SEC(erasing_dups) << "s" << std::endl;
 
-    std::cout << "[extractor] Building node id map      ... " << std::flush;
-    TIMER_START(id_map);
-    external_to_internal_node_id_map.reserve(used_node_id_list.size());
-    for (NodeID i = 0u; i < used_node_id_list.size(); ++i)
-        external_to_internal_node_id_map[used_node_id_list[i]] = i;
-    TIMER_STOP(id_map);
-    std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
-
     std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
     TIMER_START(sorting_nodes);
     stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), ExternalMemoryNodeSTXXLCompare(),
                 stxxl_memory);
     TIMER_STOP(sorting_nodes);
     std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
+
+    std::cout << "[extractor] Building node id map      ... " << std::flush;
+    TIMER_START(id_map);
+    external_to_internal_node_id_map.reserve(used_node_id_list.size());
+    auto node_iter = all_nodes_list.begin();
+    auto ref_iter = used_node_id_list.begin();
+    const auto all_nodes_list_end = all_nodes_list.end();
+    const auto used_node_id_list_end = used_node_id_list.end();
+    auto internal_id = 0u;
+
+    // compute the intersection of nodes that were referenced and nodes we actually have
+    while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
+    {
+        if (node_iter->node_id < *ref_iter)
+        {
+            node_iter++;
+            continue;
+        }
+        if (node_iter->node_id > *ref_iter)
+        {
+            ref_iter++;
+            continue;
+        }
+        BOOST_ASSERT(node_iter->node_id == *ref_iter);
+        external_to_internal_node_id_map[*ref_iter] = internal_id++;
+        node_iter++;
+        ref_iter++;
+    }
+    max_internal_node_id = internal_id;
+    TIMER_STOP(id_map);
+    std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
+
 }
 
-void ExtractionContainers::PrepareEdges()
+void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 {
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
@@ -182,10 +211,15 @@ void ExtractionContainers::PrepareEdges()
     // Traverse list of edges and nodes in parallel and set start coord
     auto node_iterator = all_nodes_list.begin();
     auto edge_iterator = all_edges_list.begin();
-    while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
+
+    const auto all_edges_list_end = all_edges_list.end();
+    const auto all_nodes_list_end = all_nodes_list.end();
+
+    while (edge_iterator != all_edges_list_end && node_iterator != all_nodes_list_end)
     {
         if (edge_iterator->result.source < node_iterator->node_id)
         {
+            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference " << edge_iterator->result.source;
             edge_iterator->result.source = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -232,7 +266,10 @@ void ExtractionContainers::PrepareEdges()
     TIMER_START(compute_weights);
     node_iterator = all_nodes_list.begin();
     edge_iterator = all_edges_list.begin();
-    while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
+    const auto all_edges_list_end_ = all_edges_list.end();
+    const auto all_nodes_list_end_ = all_nodes_list.end();
+
+    while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
     {
         // skip all invalid edges
         if (edge_iterator->result.source == SPECIAL_NODEID)
@@ -243,6 +280,7 @@ void ExtractionContainers::PrepareEdges()
 
         if (edge_iterator->result.target < node_iterator->node_id)
         {
+            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference " << edge_iterator->result.target;
             edge_iterator->result.target = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -261,6 +299,16 @@ void ExtractionContainers::PrepareEdges()
         const double distance = coordinate_calculation::euclidean_distance(
             edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
             node_iterator->lat, node_iterator->lon);
+
+        if (lua_function_exists(segment_state, "segment_function"))
+        {
+            luabind::call_function<void>(
+                segment_state, "segment_function",
+                boost::cref(edge_iterator->source_coordinate),
+                boost::cref(*node_iterator),
+                distance,
+                boost::ref(edge_iterator->weight_data));
+        }
 
         const double weight = [distance](const InternalExtractorEdge::WeightData& data) {
             switch (data.type)
@@ -427,15 +475,20 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
 
 void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
 {
-    unsigned number_of_used_nodes = 0;
     // write dummy value, will be overwritten later
-    file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
+    std::cout << "[extractor] setting number of nodes   ... " << std::flush;
+    file_out_stream.write((char *)&max_internal_node_id, sizeof(unsigned));
+    std::cout << "ok" << std::endl;
+
     std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
     TIMER_START(write_nodes);
     // identify all used nodes by a merging step of two sorted lists
     auto node_iterator = all_nodes_list.begin();
     auto node_id_iterator = used_node_id_list.begin();
-    while (node_id_iterator != used_node_id_list.end() && node_iterator != all_nodes_list.end())
+    const auto used_node_id_list_end = used_node_id_list.end();
+    const auto all_nodes_list_end = all_nodes_list.end();
+
+    while (node_id_iterator != used_node_id_list_end && node_iterator != all_nodes_list_end)
     {
         if (*node_id_iterator < node_iterator->node_id)
         {
@@ -451,21 +504,14 @@ void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
 
         file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
 
-        ++number_of_used_nodes;
         ++node_id_iterator;
         ++node_iterator;
     }
     TIMER_STOP(write_nodes);
     std::cout << "ok, after " << TIMER_SEC(write_nodes) << "s" << std::endl;
 
-    std::cout << "[extractor] setting number of nodes   ... " << std::flush;
-    std::ios::pos_type previous_file_position = file_out_stream.tellp();
-    file_out_stream.seekp(std::ios::beg + sizeof(FingerPrint));
-    file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
-    file_out_stream.seekp(previous_file_position);
-    std::cout << "ok" << std::endl;
 
-    SimpleLogger().Write() << "Processed " << number_of_used_nodes << " nodes";
+    SimpleLogger().Write() << "Processed " << max_internal_node_id << " nodes";
 }
 
 void ExtractionContainers::WriteRestrictions(const std::string& path) const
@@ -517,9 +563,11 @@ void ExtractionContainers::PrepareRestrictions()
     TIMER_START(fix_restriction_starts);
     auto restrictions_iterator = restrictions_list.begin();
     auto way_start_and_end_iterator = way_start_end_id_list.cbegin();
+    const auto restrictions_list_end = restrictions_list.end();
+    const auto way_start_end_id_list_end = way_start_end_id_list.cend();
 
-    while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
-           restrictions_iterator != restrictions_list.end())
+    while (way_start_and_end_iterator != way_start_end_id_list_end &&
+           restrictions_iterator != restrictions_list_end)
     {
         if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.from.way)
         {
@@ -583,8 +631,11 @@ void ExtractionContainers::PrepareRestrictions()
     TIMER_START(fix_restriction_ends);
     restrictions_iterator = restrictions_list.begin();
     way_start_and_end_iterator = way_start_end_id_list.cbegin();
-    while (way_start_and_end_iterator != way_start_end_id_list.cend() &&
-           restrictions_iterator != restrictions_list.end())
+    const auto way_start_end_id_list_end_ = way_start_end_id_list.cend();
+    const auto restrictions_list_end_ = restrictions_list.end();
+
+    while (way_start_and_end_iterator != way_start_end_id_list_end_ &&
+           restrictions_iterator != restrictions_list_end_)
     {
         if (way_start_and_end_iterator->way_id < restrictions_iterator->restriction.to.way)
         {

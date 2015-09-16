@@ -49,6 +49,7 @@ struct ContractorConfig
     boost::filesystem::path profile_path;
 
     std::string node_output_path;
+    std::string core_output_path;
     std::string edge_output_path;
     std::string geometry_output_path;
     std::string graph_output_path;
@@ -56,6 +57,12 @@ struct ContractorConfig
     std::string rtree_leafs_output_path;
 
     unsigned requested_num_threads;
+
+    //A percentage of vertices that will be contracted for the hierarchy.
+    //Offers a trade-off between preprocessing and query time.
+    //The remaining vertices form the core of the hierarchy 
+    //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
+    double core_factor;
 };
 
 struct ContractorOptions

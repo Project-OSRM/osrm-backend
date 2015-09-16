@@ -30,13 +30,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extraction_helper_functions.hpp"
 #include "extraction_node.hpp"
 #include "extraction_way.hpp"
+#include "internal_extractor_edge.hpp"
 #include "../data_structures/external_memory_node.hpp"
+#include "../data_structures/raster_source.hpp"
 #include "../util/lua_util.hpp"
 #include "../util/osrm_exception.hpp"
 #include "../util/simple_logger.hpp"
 #include "../typedefs.h"
 
 #include <luabind/tag_function.hpp>
+#include <luabind/operator.hpp>
 
 #include <osmium/osm.hpp>
 
@@ -80,6 +83,13 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::def("print", LUA_print<std::string>),
         luabind::def("durationIsValid", durationIsValid),
         luabind::def("parseDuration", parseDuration),
+        luabind::class_<SourceContainer>("sources")
+            .def(luabind::constructor<>())
+            .def("load", &SourceContainer::loadRasterSource)
+            .def("query", &SourceContainer::getRasterDataFromSource)
+            .def("interpolate", &SourceContainer::getRasterInterpolateFromSource),
+        luabind::class_<const float>("constants")
+            .enum_("enums")[luabind::value("precision", COORDINATE_PRECISION)],
 
         luabind::class_<std::vector<std::string>>("vector")
             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(
@@ -107,7 +117,6 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
             .def_readwrite("name", &ExtractionWay::name)
             .def_readwrite("roundabout", &ExtractionWay::roundabout)
             .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
-            .def_readwrite("ignore_in_index", &ExtractionWay::ignore_in_grid)
             .def_readwrite("duration", &ExtractionWay::duration)
             .property("forward_mode", &ExtractionWay::get_forward_mode,
                       &ExtractionWay::set_forward_mode)
@@ -122,7 +131,21 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
         luabind::class_<osmium::Way>("Way")
             .def("get_value_by_key", &osmium::Way::get_value_by_key)
             .def("get_value_by_key", &get_value_by_key<osmium::Way>)
-            .def("id", &osmium::Way::id)
+            .def("id", &osmium::Way::id),
+        luabind::class_<InternalExtractorEdge>("EdgeSource")
+            .property("source_coordinate", &InternalExtractorEdge::source_coordinate)
+            .property("weight_data", &InternalExtractorEdge::weight_data),
+        luabind::class_<InternalExtractorEdge::WeightData>("WeightData")
+            .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
+        luabind::class_<ExternalMemoryNode>("EdgeTarget")
+            .property("lat", &ExternalMemoryNode::lat)
+            .property("lon", &ExternalMemoryNode::lon),
+        luabind::class_<FixedPointCoordinate>("Coordinate")
+            .property("lat", &FixedPointCoordinate::lat)
+            .property("lon", &FixedPointCoordinate::lon),
+        luabind::class_<RasterDatum>("RasterDatum")
+            .property("datum", &RasterDatum::datum)
+            .def("invalid_data", &RasterDatum::get_invalid)
     ];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))

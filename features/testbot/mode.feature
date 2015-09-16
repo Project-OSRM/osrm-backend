@@ -11,7 +11,21 @@ Feature: Testbot - Travel mode
 
     Background:
        Given the profile "testbot"
-        
+
+    Scenario: Testbot - Always announce mode change
+        Given the node map
+            | a | b | c | d |
+
+        And the ways
+            | nodes | highway     | name |
+            | ab    | residential | foo  |
+            | bc    | river       | foo  |
+            | cd    | residential | foo  |
+
+        When I route I should get
+            | from | to | route        | modes |
+            | a    | d  | foo,foo,foo  | 1,3,1 |
+
     Scenario: Testbot - Modes in each direction, different forward/backward speeds
         Given the node map
             |   | 0 | 1 |   |

@@ -23,10 +23,10 @@ OSRM will use 4/5 of the projected free-flow speed.
             | from | to | route | speed         |
             | a    | b  | ab    |  78 km/h      |
             | b    | c  | bc    |  59 km/h +- 1 |
-            | c    | d  | cd    |  50 km/h      |
+            | c    | d  | cd    |  51 km/h      |
             | d    | e  | de    |  75 km/h      |
             | e    | f  | ef    |  90 km/h      |
-            | f    | g  | fg    | 105 km/h      |
+            | f    | g  | fg    | 106 km/h      |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
@@ -42,7 +42,7 @@ OSRM will use 4/5 of the projected free-flow speed.
             | from | to | route | speed        |
             | a    | b  | ab    | 31 km/h      |
             | b    | c  | bc    | 83 km/h +- 1 |
-            | c    | d  | cd    | 50 km/h      |
+            | c    | d  | cd    | 51 km/h      |
 
     Scenario: Car - Forward/backward maxspeed
         Given a grid size of 100 meters
@@ -119,4 +119,3 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |   30     |   1    | -1     |         | 34 km/h |
             | primary |   30     |   1    |        | 15 km/h | 15 km/h |
             | primary |   30     |   2    |        | 34 km/h | 34 km/h |
-

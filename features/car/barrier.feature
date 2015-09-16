@@ -19,6 +19,7 @@ Feature: Car - Barriers
             | wall           |       |
             | fence          |       |
             | some_tag       |       |
+            | block          |       |
 
     Scenario: Car - Access tag trumphs barriers
         Then routability should be
@@ -37,3 +38,10 @@ Feature: Car - Barriers
             | wall         | no            |       |
             | wall         | private       |       |
             | wall         | agricultural  |       |
+
+    Scenario: Car - Rising bollard exception for barriers
+        Then routability should be
+            | node/barrier | node/bollard  | bothw |
+            | bollard      |               |       |
+            | bollard      | rising        | x     |
+            | bollard      | removable     |       |

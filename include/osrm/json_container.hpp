@@ -50,7 +50,7 @@ struct String
 {
     String() {}
     String(const char *value) : value(value) {}
-    String(const std::string &value) : value(value) {}
+    String(std::string value) : value(std::move(value)) {}
     std::string value;
 };
 

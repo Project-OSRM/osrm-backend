@@ -189,6 +189,11 @@ class BinaryHeap
         return inserted_nodes[heap[1].index].node;
     }
 
+    Weight MinKey() const {
+      BOOST_ASSERT(heap.size() > 1);
+      return heap[1].weight;
+    }
+
     NodeID DeleteMin()
     {
         BOOST_ASSERT(heap.size() > 1);
@@ -207,7 +212,7 @@ class BinaryHeap
     void DeleteAll()
     {
         auto iend = heap.end();
-        for (typename std::vector<HeapElement>::iterator i = heap.begin() + 1; i != iend; ++i)
+        for (auto i = heap.begin() + 1; i != iend; ++i)
         {
             inserted_nodes[i->index].key = 0;
         }
@@ -232,7 +237,9 @@ class BinaryHeap
     class HeapNode
     {
       public:
-        HeapNode(NodeID n, Key k, Weight w, Data d) : node(n), key(k), weight(w), data(d) {}
+        HeapNode(NodeID n, Key k, Weight w, Data d) : node(n), key(k), weight(w), data(std::move(d))
+        {
+        }
 
         NodeID node;
         Key key;

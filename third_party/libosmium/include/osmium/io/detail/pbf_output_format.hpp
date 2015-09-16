@@ -33,75 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-/*
-
-About the .osm.pbf file format
-This is an excerpt of <http://wiki.openstreetmap.org/wiki/PBF_Format>
-
-The .osm.pbf format and it's derived formats (.osh.pbf and .osc.pbf) are encoded
-using googles protobuf library for the low-level storage. They are constructed
-by nesting data on two levels:
-
-On the lower level the file is constructed using BlobHeaders and Blobs. A .osm.pbf
-file contains multiple sequences of
- 1. a 4-byte header size, stored in network-byte-order
- 2. a BlobHeader of exactly this size
- 3. a Blob
-
-The BlobHeader tells the reader about the type and size of the following Blob. The
-Blob can contain data in raw or zlib-compressed form. After uncompressing the blob
-it is treated differently depending on the type specified in the BlobHeader.
-
-The contents of the Blob belongs to the higher level. It contains either an HeaderBlock
-(type="OSMHeader") or an PrimitiveBlock (type="OSMData"). The file needs to have
-at least one HeaderBlock before the first PrimitiveBlock.
-
-The HeaderBlock contains meta-information like the writing program or a bbox. It may
-also contain multiple "required features" that describe what kinds of input a
-reading program needs to handle in order to fully understand the files' contents.
-
-The PrimitiveBlock can store multiple types of objects (i.e. 5 nodes, 2 ways and
-1 relation). It contains one or more PrimitiveGroup which in turn contain multiple
-nodes, ways or relations. A PrimitiveGroup should only contain one kind of object.
-
-There's a special kind of "object type" called dense-nodes. It is used to store nodes
-in a very dense format, avoiding message overheads and using delta-encoding for nearly
-all ids.
-
-All Strings are stored as indexes to rows in a StringTable. The StringTable contains
-one row for each used string, so strings that are used multiple times need to be
-stored only once. The StringTable is sorted by usage-count, so the most often used
-string is stored at index 1.
-
-A simple outline of a .osm.pbf file could look like this:
-
-  4-bytes header size
-  BlobHeader
-  Blob
-    HeaderBlock
-  4-bytes header size
-  BlobHeader
-  Blob
-    PrimitiveBlock
-      StringTable
-      PrimitiveGroup
-        5 nodes
-      PrimitiveGroup
-        2 ways
-      PrimitiveGroup
-        1 relation
-
-More complete outlines of real .osm.pbf files can be created using the osmpbf-outline tool:
- <https://github.com/MaZderMind/OSM-binary/tree/osmpbf-outline>
-*/
-
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <future>
-#include <iostream>
+#include <iterator>
 #include <memory>
 #include <ratio>
 #include <string>
@@ -109,10 +47,15 @@ More complete outlines of real .osm.pbf files can be created using the osmpbf-ou
 #include <time.h>
 #include <utility>
 
+#include <boost/iterator/transform_iterator.hpp>
+
+#include <protozero/pbf_builder.hpp>
+
 #include <osmium/handler.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/pbf.hpp> // IWYU pragma: export
-#include <osmium/io/detail/pbf_stringtable.hpp>
+#include <osmium/io/detail/protobuf_tags.hpp>
+#include <osmium/io/detail/string_table.hpp>
 #include <osmium/io/detail/zlib.hpp>
 #include <osmium/io/file.hpp>
 #include <osmium/io/file_format.hpp>
@@ -129,6 +72,7 @@ More complete outlines of real .osm.pbf files can be created using the osmpbf-ou
 #include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/util/cast.hpp>
+#include <osmium/util/delta.hpp>
 #include <osmium/visitor.hpp>
 
 namespace osmium {
@@ -137,99 +81,252 @@ namespace osmium {
 
         namespace detail {
 
-            namespace {
+            /**
+             * Maximum number of items in a primitive block.
+             *
+             * The uncompressed length of a Blob *should* be less
+             * than 16 megabytes and *must* be less than 32 megabytes.
+             *
+             * A block may contain any number of entities, as long as
+             * the size limits for the surrounding blob are obeyed.
+             * However, for simplicity, the current Osmosis (0.38)
+             * as well as Osmium implementation always
+             * uses at most 8k entities in a block.
+             */
+            constexpr int32_t max_entities_per_block = 8000;
 
-                /**
-                 * Serialize a protobuf message into a Blob, optionally apply compression
-                 * and return it together with a BlobHeader ready to be written to a file.
-                 *
-                 * @param type Type-string used in the BlobHeader.
-                 * @param msg Protobuf-message.
-                 * @param use_compression Should the output be compressed using zlib?
-                 */
-                std::string serialize_blob(const std::string& type, const google::protobuf::MessageLite& msg, bool use_compression) {
-                    OSMPBF::Blob pbf_blob;
+            constexpr int location_granularity = 100;
 
-                    {
-                        std::string content;
-                        msg.SerializeToString(&content);
+            /**
+             * convert a double lat or lon value to an int, respecting the granularity
+             */
+            inline int64_t lonlat2int(double lonlat) {
+                return static_cast<int64_t>(std::round(lonlat * lonlat_resolution / location_granularity));
+            }
 
-                        pbf_blob.set_raw_size(static_cast_with_assert<::google::protobuf::int32>(content.size()));
+            /**
+             * Serialize a protobuf message into a Blob, optionally apply compression
+             * and return it together with a BlobHeader ready to be written to a file.
+             *
+             * @param type Type-string used in the BlobHeader.
+             * @param msg Protobuf-message.
+             * @param use_compression Should the output be compressed using zlib?
+             */
+            inline std::string serialize_blob(const std::string& type, const std::string& msg, bool use_compression) {
+                std::string blob_data;
+                protozero::pbf_builder<FileFormat::Blob> pbf_blob(blob_data);
 
-                        if (use_compression) {
-                            pbf_blob.set_zlib_data(osmium::io::detail::zlib_compress(content));
-                        } else {
-                            pbf_blob.set_raw(content);
+                if (use_compression) {
+                    pbf_blob.add_int32(FileFormat::Blob::optional_int32_raw_size, msg.size());
+                    pbf_blob.add_bytes(FileFormat::Blob::optional_bytes_zlib_data, osmium::io::detail::zlib_compress(msg));
+                } else {
+                    pbf_blob.add_bytes(FileFormat::Blob::optional_bytes_raw, msg);
+                }
+
+                std::string blob_header_data;
+                protozero::pbf_builder<FileFormat::BlobHeader> pbf_blob_header(blob_header_data);
+
+                pbf_blob_header.add_string(FileFormat::BlobHeader::required_string_type, type);
+                pbf_blob_header.add_int32(FileFormat::BlobHeader::required_int32_datasize, blob_data.size());
+
+                uint32_t sz = htonl(static_cast_with_assert<uint32_t>(blob_header_data.size()));
+
+                // write to output: the 4-byte BlobHeader-Size followed by the BlobHeader followed by the Blob
+                std::string output;
+                output.reserve(sizeof(sz) + blob_header_data.size() + blob_data.size());
+                output.append(reinterpret_cast<const char*>(&sz), sizeof(sz));
+                output.append(blob_header_data);
+                output.append(blob_data);
+
+                return output;
+            }
+
+            class DenseNodes {
+
+                StringTable& m_stringtable;
+
+                std::vector<int64_t> m_ids;
+
+                std::vector<int32_t> m_versions;
+                std::vector<int64_t> m_timestamps;
+                std::vector<int64_t> m_changesets;
+                std::vector<int32_t> m_uids;
+                std::vector<int32_t> m_user_sids;
+                std::vector<bool> m_visibles;
+
+                std::vector<int64_t> m_lats;
+                std::vector<int64_t> m_lons;
+                std::vector<int32_t> m_tags;
+
+                osmium::util::DeltaEncode<int64_t> m_delta_id;
+
+                osmium::util::DeltaEncode<int64_t> m_delta_timestamp;
+                osmium::util::DeltaEncode<int64_t> m_delta_changeset;
+                osmium::util::DeltaEncode<int32_t> m_delta_uid;
+                osmium::util::DeltaEncode<int32_t> m_delta_user_sid;
+
+                osmium::util::DeltaEncode<int64_t> m_delta_lat;
+                osmium::util::DeltaEncode<int64_t> m_delta_lon;
+
+                bool m_add_metadata;
+                bool m_add_visible;
+
+            public:
+
+                DenseNodes(StringTable& stringtable, bool add_metadata, bool add_visible) :
+                    m_stringtable(stringtable),
+                    m_add_metadata(add_metadata),
+                    m_add_visible(add_visible) {
+                }
+
+                void clear() {
+                    m_ids.clear();
+
+                    m_versions.clear();
+                    m_timestamps.clear();
+                    m_changesets.clear();
+                    m_uids.clear();
+                    m_user_sids.clear();
+                    m_visibles.clear();
+
+                    m_lats.clear();
+                    m_lons.clear();
+                    m_tags.clear();
+
+                    m_delta_id.clear();
+
+                    m_delta_timestamp.clear();
+                    m_delta_changeset.clear();
+                    m_delta_uid.clear();
+                    m_delta_user_sid.clear();
+
+                    m_delta_lat.clear();
+                    m_delta_lon.clear();
+                }
+
+                size_t size() const {
+                    return m_ids.size() * 3 * sizeof(int64_t);
+                }
+
+                void add_node(const osmium::Node& node) {
+                    m_ids.push_back(m_delta_id.update(node.id()));
+
+                    if (m_add_metadata) {
+                        m_versions.push_back(node.version());
+                        m_timestamps.push_back(m_delta_timestamp.update(node.timestamp()));
+                        m_changesets.push_back(m_delta_changeset.update(node.changeset()));
+                        m_uids.push_back(m_delta_uid.update(node.uid()));
+                        m_user_sids.push_back(m_delta_user_sid.update(m_stringtable.add(node.user())));
+                        if (m_add_visible) {
+                            m_visibles.push_back(node.visible());
                         }
                     }
 
-                    std::string blob_data;
-                    pbf_blob.SerializeToString(&blob_data);
+                    m_lats.push_back(m_delta_lat.update(lonlat2int(node.location().lat_without_check())));
+                    m_lons.push_back(m_delta_lon.update(lonlat2int(node.location().lon_without_check())));
 
-                    OSMPBF::BlobHeader pbf_blob_header;
-                    pbf_blob_header.set_type(type);
-                    pbf_blob_header.set_datasize(static_cast_with_assert<::google::protobuf::int32>(blob_data.size()));
-
-                    std::string blob_header_data;
-                    pbf_blob_header.SerializeToString(&blob_header_data);
-
-                    uint32_t sz = htonl(static_cast_with_assert<uint32_t>(blob_header_data.size()));
-
-                    // write to output: the 4-byte BlobHeader-Size followed by the BlobHeader followed by the Blob
-                    std::string output;
-                    output.reserve(sizeof(sz) + blob_header_data.size() + blob_data.size());
-                    output.append(reinterpret_cast<const char*>(&sz), sizeof(sz));
-                    output.append(blob_header_data);
-                    output.append(blob_data);
-
-                    return output;
+                    for (const auto& tag : node.tags()) {
+                        m_tags.push_back(m_stringtable.add(tag.key()));
+                        m_tags.push_back(m_stringtable.add(tag.value()));
+                    }
+                    m_tags.push_back(0);
                 }
 
-            } // anonymous namespace
+                std::string serialize() const {
+                    std::string data;
+                    protozero::pbf_builder<OSMFormat::DenseNodes> pbf_dense_nodes(data);
 
-            class PBFOutputFormat : public osmium::io::detail::OutputFormat, public osmium::handler::Handler {
+                    pbf_dense_nodes.add_packed_sint64(OSMFormat::DenseNodes::packed_sint64_id, m_ids.cbegin(), m_ids.cend());
 
-                /**
-                 * This class models a variable that keeps track of the value
-                 * it was last set to and returns the delta between old and
-                 * new value from the update() call.
-                 */
-                template <typename T>
-                class Delta {
+                    if (m_add_metadata) {
+                        protozero::pbf_builder<OSMFormat::DenseInfo> pbf_dense_info(pbf_dense_nodes, OSMFormat::DenseNodes::optional_DenseInfo_denseinfo);
+                        pbf_dense_info.add_packed_int32(OSMFormat::DenseInfo::packed_int32_version, m_versions.cbegin(), m_versions.cend());
+                        pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_timestamp, m_timestamps.cbegin(), m_timestamps.cend());
+                        pbf_dense_info.add_packed_sint64(OSMFormat::DenseInfo::packed_sint64_changeset, m_changesets.cbegin(), m_changesets.cend());
+                        pbf_dense_info.add_packed_sint32(OSMFormat::DenseInfo::packed_sint32_uid, m_uids.cbegin(), m_uids.cend());
+                        pbf_dense_info.add_packed_sint32(OSMFormat::DenseInfo::packed_sint32_user_sid, m_user_sids.cbegin(), m_user_sids.cend());
 
-                    T m_value;
-
-                public:
-
-                    Delta() :
-                        m_value(0) {
+                        if (m_add_visible) {
+                            pbf_dense_info.add_packed_bool(OSMFormat::DenseInfo::packed_bool_visible, m_visibles.cbegin(), m_visibles.cend());
+                        }
                     }
 
-                    void clear() {
-                        m_value = 0;
+                    pbf_dense_nodes.add_packed_sint64(OSMFormat::DenseNodes::packed_sint64_lat, m_lats.cbegin(), m_lats.cend());
+                    pbf_dense_nodes.add_packed_sint64(OSMFormat::DenseNodes::packed_sint64_lon, m_lons.cbegin(), m_lons.cend());
+
+                    pbf_dense_nodes.add_packed_int32(OSMFormat::DenseNodes::packed_int32_keys_vals, m_tags.cbegin(), m_tags.cend());
+
+                    return data;
+                }
+
+            }; // class DenseNodes
+
+            class PrimitiveBlock {
+
+                std::string m_pbf_primitive_group_data;
+                protozero::pbf_builder<OSMFormat::PrimitiveGroup> m_pbf_primitive_group;
+                StringTable m_stringtable;
+                DenseNodes m_dense_nodes;
+                OSMFormat::PrimitiveGroup m_type;
+                int m_count;
+
+            public:
+
+                PrimitiveBlock(bool add_metadata, bool add_visible) :
+                    m_pbf_primitive_group_data(),
+                    m_pbf_primitive_group(m_pbf_primitive_group_data),
+                    m_stringtable(),
+                    m_dense_nodes(m_stringtable, add_metadata, add_visible),
+                    m_type(OSMFormat::PrimitiveGroup::unknown),
+                    m_count(0) {
+                }
+
+                const std::string& group_data() {
+                    if (type() == OSMFormat::PrimitiveGroup::optional_DenseNodes_dense) {
+                        m_pbf_primitive_group.add_message(OSMFormat::PrimitiveGroup::optional_DenseNodes_dense, m_dense_nodes.serialize());
                     }
+                    return m_pbf_primitive_group_data;
+                }
 
-                    T update(T new_value) {
-                        using std::swap;
-                        swap(m_value, new_value);
-                        return m_value - new_value;
+                void reset(OSMFormat::PrimitiveGroup type) {
+                    m_pbf_primitive_group_data.clear();
+                    m_stringtable.clear();
+                    m_dense_nodes.clear();
+                    m_type = type;
+                    m_count = 0;
+                }
+
+                void write_stringtable(protozero::pbf_builder<OSMFormat::StringTable>& pbf_string_table) {
+                    for (const char* s : m_stringtable) {
+                        pbf_string_table.add_bytes(OSMFormat::StringTable::repeated_bytes_s, s);
                     }
+                }
 
-                }; // class Delta
+                protozero::pbf_builder<OSMFormat::PrimitiveGroup>& group() {
+                    ++m_count;
+                    return m_pbf_primitive_group;
+                }
 
-                /**
-                 * Maximum number of items in a primitive block.
-                 *
-                 * The uncompressed length of a Blob *should* be less
-                 * than 16 megabytes and *must* be less than 32 megabytes.
-                 *
-                 * A block may contain any number of entities, as long as
-                 * the size limits for the surrounding blob are obeyed.
-                 * However, for simplicity, the current Osmosis (0.38)
-                 * as well as Osmium implementation always
-                 * uses at most 8k entities in a block.
-                 */
-                static constexpr uint32_t max_block_contents = 8000;
+                void add_dense_node(const osmium::Node& node) {
+                    m_dense_nodes.add_node(node);
+                    ++m_count;
+                }
+
+                size_t add_string(const char* s) {
+                    return m_stringtable.add(s);
+                }
+
+                int count() const {
+                    return m_count;
+                }
+
+                OSMFormat::PrimitiveGroup type() const {
+                    return m_type;
+                }
+
+                size_t size() const {
+                    return m_pbf_primitive_group_data.size() + m_stringtable.size() + m_dense_nodes.size();
+                }
 
                 /**
                  * The output buffer (block) will be filled to about
@@ -237,715 +334,240 @@ namespace osmium {
                  * enough space for the string table (which typically
                  * needs about 0.1 to 0.3% of the block size).
                  */
-                static constexpr int64_t buffer_fill_percent = 95;
+                constexpr static size_t max_used_blob_size = max_uncompressed_blob_size * 95 / 100;
+
+                bool can_add(OSMFormat::PrimitiveGroup type) const {
+                    if (type != m_type) {
+                        return false;
+                    }
+                    if (count() >= max_entities_per_block) {
+                        return false;
+                    }
+                    return size() < max_used_blob_size;
+                }
+
+            }; // class PrimitiveBlock
+
+            class PBFOutputFormat : public osmium::io::detail::OutputFormat, public osmium::handler::Handler {
+
+                /// Should nodes be encoded in DenseNodes?
+                bool m_use_dense_nodes;
 
                 /**
-                 * protobuf-struct of a HeaderBlock
-                 */
-                OSMPBF::HeaderBlock pbf_header_block;
-
-                /**
-                 * protobuf-struct of a PrimitiveBlock
-                 */
-                OSMPBF::PrimitiveBlock pbf_primitive_block;
-
-                /**
-                 * pointer to PrimitiveGroups inside the current PrimitiveBlock,
-                 * used for writing nodes, ways or relations
-                 */
-                OSMPBF::PrimitiveGroup* pbf_nodes;
-                OSMPBF::PrimitiveGroup* pbf_ways;
-                OSMPBF::PrimitiveGroup* pbf_relations;
-
-                /**
-                 * To flexibly handle multiple resolutions, the granularity, or
-                 * resolution used for representing locations is adjustable in
-                 * multiples of 1 nanodegree. The default scaling factor is 100
-                 * nanodegrees, corresponding to about ~1cm at the equator.
-                 * This is the current resolution of the OSM database.
-                 */
-                int m_location_granularity;
-
-                /**
-                 * The granularity used for representing timestamps is also adjustable in
-                 * multiples of 1 millisecond. The default scaling factor is 1000
-                 * milliseconds, which is the current resolution of the OSM database.
-                 */
-                int m_date_granularity;
-
-                /**
-                 * should nodes be serialized into the dense format?
+                 * Should the PBF blobs contain zlib compressed data?
                  *
-                 * nodes can be encoded one of two ways, as a Node
-                 * (m_use_dense_nodes = false) and a special dense format.
-                 * In the dense format, all information is stored 'column wise',
-                 * as an array of ID's, array of latitudes, and array of
-                 * longitudes. Each column is delta-encoded. This reduces
-                 * header overheads and allows delta-coding to work very effectively.
+                 * The zlib compression is optional, it's possible to store the
+                 * blobs in raw format. Disabling the compression can improve
+                 * the writing speed a little but the output will be 2x to 3x
+                 * bigger.
                  */
-                bool m_use_dense_nodes {true};
+                bool m_use_compression;
 
-                /**
-                 * should the PBF blobs contain zlib compressed data?
-                 *
-                 * the zlib compression is optional, it's possible to store the
-                 * blobs in raw format. Disabling the compression can improve the
-                 * writing speed a little but the output will be 2x to 3x bigger.
-                 */
-                bool m_use_compression {true};
+                /// Should metadata of objects be written?
+                bool m_add_metadata;
 
-                /**
-                 * Should the string tables in the data blocks be sorted?
-                 *
-                 * Not sorting the string tables makes writing PBF files
-                 * slightly faster.
-                 */
-                bool m_sort_stringtables { true };
-
-                /**
-                 * While the .osm.pbf-format is able to carry all meta information, it is
-                 * also able to omit this information to reduce size.
-                 */
-                bool m_should_add_metadata {true};
-
-                /**
-                 * Should the visible flag be added on objects?
-                 */
+                /// Should the visible flag be added to objects?
                 bool m_add_visible;
 
-                /**
-                 * counter used to quickly check the number of objects stored inside
-                 * the current PrimitiveBlock. When the counter reaches max_block_contents
-                 * the PrimitiveBlock is serialized into a Blob and flushed to the file.
-                 *
-                 * this check is performed in check_block_contents_counter() which is
-                 * called once for each object.
-                 */
-                uint16_t primitive_block_contents;
-                int primitive_block_size;
+                PrimitiveBlock m_primitive_block;
 
-                // StringTable management
-                StringTable string_table;
-
-                /**
-                 * These variables are used to calculate the
-                 * delta-encoding while storing dense-nodes. It holds the last seen values
-                 * from which the difference is stored into the protobuf.
-                 */
-                Delta<int64_t> m_delta_id;
-                Delta<int64_t> m_delta_lat;
-                Delta<int64_t> m_delta_lon;
-                Delta<int64_t> m_delta_timestamp;
-                Delta<int64_t> m_delta_changeset;
-                Delta<int64_t> m_delta_uid;
-                Delta<::google::protobuf::int32> m_delta_user_sid;
-
-                bool debug;
-
-                bool has_debug_level(int) {
-                    return false;
-                }
-
-                ///// Blob writing /////
-
-                void delta_encode_string_ids() {
-                    if (pbf_nodes && pbf_nodes->has_dense()) {
-                        OSMPBF::DenseNodes* dense = pbf_nodes->mutable_dense();
-
-                        if (dense->has_denseinfo()) {
-                            OSMPBF::DenseInfo* denseinfo = dense->mutable_denseinfo();
-
-                            for (int i = 0, l=denseinfo->user_sid_size(); i<l; ++i) {
-                                auto user_sid = denseinfo->user_sid(i);
-                                denseinfo->set_user_sid(i, m_delta_user_sid.update(user_sid));
-                            }
-                        }
-                    }
-                }
-
-                /**
-                 * Before a PrimitiveBlock gets serialized, all interim StringTable-ids needs to be
-                 * mapped to the associated real StringTable ids. This is done in this function.
-                 *
-                 * This function needs to know about the concrete structure of all item types to find
-                 * all occurrences of string-ids.
-                 */
-                void map_string_ids() {
-                    // test, if the node-block has been allocated
-                    if (pbf_nodes) {
-                        // iterate over all nodes, passing them to the map_common_string_ids function
-                        for (int i = 0, l=pbf_nodes->nodes_size(); i<l; ++i) {
-                            map_common_string_ids(pbf_nodes->mutable_nodes(i));
-                        }
-
-                        // test, if the node-block has a densenodes structure
-                        if (pbf_nodes->has_dense()) {
-                            // get a pointer to the densenodes structure
-                            OSMPBF::DenseNodes* dense = pbf_nodes->mutable_dense();
-
-                            // in the densenodes structure keys and vals are encoded in an intermixed
-                            // array, individual nodes are seperated by a value of 0 (0 in the StringTable
-                            // is always unused). String-ids of 0 are thus kept alone.
-                            for (int i = 0, l=dense->keys_vals_size(); i<l; ++i) {
-                                // map interim string-ids > 0 to real string ids
-                                auto sid = dense->keys_vals(i);
-                                if (sid > 0) {
-                                    dense->set_keys_vals(i, string_table.map_string_id(sid));
-                                }
-                            }
-
-                            // test if the densenodes block has meta infos
-                            if (dense->has_denseinfo()) {
-                                // get a pointer to the denseinfo structure
-                                OSMPBF::DenseInfo* denseinfo = dense->mutable_denseinfo();
-
-                                // iterate over all username string-ids
-                                for (int i = 0, l=denseinfo->user_sid_size(); i<l; ++i) {
-                                    // map interim string-ids > 0 to real string ids
-                                    auto user_sid = string_table.map_string_id(denseinfo->user_sid(i));
-
-                                    // delta encode the string-id
-                                    denseinfo->set_user_sid(i, m_delta_user_sid.update(user_sid));
-                                }
-                            }
-                        }
-                    }
-
-                    // test, if the ways-block has been allocated
-                    if (pbf_ways) {
-                        // iterate over all ways, passing them to the map_common_string_ids function
-                        for (int i = 0, l=pbf_ways->ways_size(); i<l; ++i) {
-                            map_common_string_ids(pbf_ways->mutable_ways(i));
-                        }
-                    }
-
-                    // test, if the relations-block has been allocated
-                    if (pbf_relations) {
-                        // iterate over all relations
-                        for (int i = 0, l=pbf_relations->relations_size(); i<l; ++i) {
-                            // get a pointer to the relation
-                            OSMPBF::Relation* relation = pbf_relations->mutable_relations(i);
-
-                            // pass them to the map_common_string_ids function
-                            map_common_string_ids(relation);
-
-                            // iterate over all relation members, mapping the interim string-ids
-                            // of the role to real string ids
-                            for (int mi = 0; mi < relation->roles_sid_size(); ++mi) {
-                                relation->set_roles_sid(mi, string_table.map_string_id(relation->roles_sid(mi)));
-                            }
-                        }
-                    }
-                }
-
-                /**
-                * a helper function used in map_string_ids to map common interim string-ids of the
-                * user name and all tags to real string ids.
-                *
-                * TPBFObject is either OSMPBF::Node, OSMPBF::Way or OSMPBF::Relation.
-                */
-                template <class TPBFObject>
-                void map_common_string_ids(TPBFObject* in) {
-                    // if the object has meta-info attached
-                    if (in->has_info()) {
-                        // map the interim-id of the user name to a real id
-                        OSMPBF::Info* info = in->mutable_info();
-                        info->set_user_sid(string_table.map_string_id(info->user_sid()));
-                    }
-
-                    // iterate over all tags and map the interim-ids of the key and the value to real ids
-                    for (int i = 0, l=in->keys_size(); i<l; ++i) {
-                        in->set_keys(i, string_table.map_string_id(in->keys(i)));
-                        in->set_vals(i, string_table.map_string_id(in->vals(i)));
-                    }
-                }
-
-
-                ///// MetaData helper /////
-
-                /**
-                 * convert a double lat or lon value to an int, respecting the current blocks granularity
-                 */
-                int64_t lonlat2int(double lonlat) {
-                    return static_cast<int64_t>(std::round(lonlat * OSMPBF::lonlat_resolution / location_granularity()));
-                }
-
-                /**
-                 * convert a timestamp to an int, respecting the current blocks granularity
-                 */
-                int64_t timestamp2int(time_t timestamp) {
-                    return static_cast<int64_t>(std::round(timestamp * (1000.0 / date_granularity())));
-                }
-
-                /**
-                 * helper function used in the write()-calls to apply common information from an osmium-object
-                 * onto a pbf-object.
-                 *
-                 * TPBFObject is either OSMPBF::Node, OSMPBF::Way or OSMPBF::Relation.
-                 */
-                template <class TPBFObject>
-                void apply_common_info(const osmium::OSMObject& in, TPBFObject* out) {
-                    // set the object-id
-                    out->set_id(in.id());
-
-                    // iterate over all tags and set the keys and vals, recording the strings in the
-                    // interim StringTable and storing the interim ids
-                    for (const auto& tag : in.tags()) {
-                        out->add_keys(string_table.record_string(tag.key()));
-                        out->add_vals(string_table.record_string(tag.value()));
-                    }
-
-                    if (m_should_add_metadata) {
-                        // add an info-section to the pbf object and set the meta-info on it
-                        OSMPBF::Info* out_info = out->mutable_info();
-                        if (m_add_visible) {
-                            out_info->set_visible(in.visible());
-                        }
-                        out_info->set_version(static_cast<::google::protobuf::int32>(in.version()));
-                        out_info->set_timestamp(timestamp2int(in.timestamp()));
-                        out_info->set_changeset(in.changeset());
-                        out_info->set_uid(static_cast<::google::protobuf::int32>(in.uid()));
-                        out_info->set_user_sid(string_table.record_string(in.user()));
-                    }
-                }
-
-
-                ///// High-Level Block writing /////
-
-                /**
-                 * store the current pbf_header_block into a Blob and clear this struct afterwards.
-                 */
-                void store_header_block() {
-                    if (debug && has_debug_level(1)) {
-                        std::cerr << "storing header block" << std::endl;
-                    }
-
-                    std::promise<std::string> promise;
-                    m_output_queue.push(promise.get_future());
-                    promise.set_value(serialize_blob("OSMHeader", pbf_header_block, m_use_compression));
-
-                    pbf_header_block.Clear();
-                }
-
-                /**
-                 * store the interim StringTable to the current pbf_primitive_block, map all interim string ids
-                 * to real StringTable ids and then store the current pbf_primitive_block into a Blob and clear
-                 * this struct and all related pointers and maps afterwards.
-                 */
                 void store_primitive_block() {
-                    if (debug && has_debug_level(1)) {
-                        std::cerr << "storing primitive block with " << primitive_block_contents << " items" << std::endl;
+                    if (m_primitive_block.count() == 0) {
+                        return;
                     }
 
-                    // set the granularity
-                    pbf_primitive_block.set_granularity(location_granularity());
-                    pbf_primitive_block.set_date_granularity(date_granularity());
+                    std::string primitive_block_data;
+                    protozero::pbf_builder<OSMFormat::PrimitiveBlock> primitive_block(primitive_block_data);
 
-                    string_table.store_stringtable(pbf_primitive_block.mutable_stringtable(), m_sort_stringtables);
-
-                    if (m_sort_stringtables) {
-                        map_string_ids();
-                    } else {
-                        delta_encode_string_ids();
+                    {
+                        protozero::pbf_builder<OSMFormat::StringTable> pbf_string_table(primitive_block, OSMFormat::PrimitiveBlock::required_StringTable_stringtable);
+                        m_primitive_block.write_stringtable(pbf_string_table);
                     }
+
+                    primitive_block.add_message(OSMFormat::PrimitiveBlock::repeated_PrimitiveGroup_primitivegroup, m_primitive_block.group_data());
 
                     std::promise<std::string> promise;
                     m_output_queue.push(promise.get_future());
-                    promise.set_value(serialize_blob("OSMData", pbf_primitive_block, m_use_compression));
-
-                    // clear the PrimitiveBlock struct
-                    pbf_primitive_block.Clear();
-
-                    // clear the interim StringTable and its id map
-                    string_table.clear();
-
-                    // reset the delta variables
-                    m_delta_id.clear();
-                    m_delta_lat.clear();
-                    m_delta_lon.clear();
-                    m_delta_timestamp.clear();
-                    m_delta_changeset.clear();
-                    m_delta_uid.clear();
-                    m_delta_user_sid.clear();
-
-                    // reset the contents-counter to zero
-                    primitive_block_contents = 0;
-                    primitive_block_size = 0;
-
-                    // reset the node/way/relation pointers to nullptr
-                    pbf_nodes = nullptr;
-                    pbf_ways = nullptr;
-                    pbf_relations = nullptr;
+                    promise.set_value(serialize_blob("OSMData", primitive_block_data, m_use_compression));
                 }
 
-                /**
-                 * this little function checks primitive_block_contents counter against its maximum and calls
-                 * store_primitive_block to flush the block to the disk when it's reached. It's also responsible
-                 * for increasing this counter.
-                 *
-                 * this function also checks the estimated size of the current block and calls store_primitive_block
-                 * when the estimated size reaches buffer_fill_percent of the maximum uncompressed blob size.
-                 */
-                void check_block_contents_counter() {
-                    if (primitive_block_contents >= max_block_contents) {
-                        store_primitive_block();
-                    } else if (primitive_block_size > OSMPBF::max_uncompressed_blob_size * buffer_fill_percent / 100) {
-                        if (debug && has_debug_level(1)) {
-                            std::cerr << "storing primitive_block with only " << primitive_block_contents << " items, because its ByteSize (" << primitive_block_size << ") reached " <<
-                                      (static_cast<float>(primitive_block_size) / static_cast<float>(OSMPBF::max_uncompressed_blob_size) * 100.0) << "% of the maximum blob-size" << std::endl;
-                        }
+                template <typename T>
+                void add_meta(const osmium::OSMObject& object, T& pbf_object) {
+                    const osmium::TagList& tags = object.tags();
 
-                        store_primitive_block();
-                    }
+                    auto map_tag_key = [this](const osmium::Tag& tag) -> size_t {
+                        return m_primitive_block.add_string(tag.key());
+                    };
+                    auto map_tag_value = [this](const osmium::Tag& tag) -> size_t {
+                        return m_primitive_block.add_string(tag.value());
+                    };
 
-                    ++primitive_block_contents;
-                }
+                    pbf_object.add_packed_uint32(T::enum_type::packed_uint32_keys,
+                        boost::make_transform_iterator(tags.begin(), map_tag_key),
+                        boost::make_transform_iterator(tags.end(), map_tag_key));
 
+                    pbf_object.add_packed_uint32(T::enum_type::packed_uint32_vals,
+                        boost::make_transform_iterator(tags.begin(), map_tag_value),
+                        boost::make_transform_iterator(tags.end(), map_tag_value));
 
-                ///// Block content writing /////
+                    if (m_add_metadata) {
+                        protozero::pbf_builder<OSMFormat::Info> pbf_info(pbf_object, T::enum_type::optional_Info_info);
 
-                /**
-                 * Add a node to the block.
-                 *
-                 * @param node The node to add.
-                 */
-                void write_node(const osmium::Node& node) {
-                    // add a way to the group
-                    OSMPBF::Node* pbf_node = pbf_nodes->add_nodes();
-
-                    // copy the common meta-info from the osmium-object to the pbf-object
-                    apply_common_info(node, pbf_node);
-
-                    // modify lat & lon to integers, respecting the block's granularity and copy
-                    // the ints to the pbf-object
-                    pbf_node->set_lon(lonlat2int(node.location().lon_without_check()));
-                    pbf_node->set_lat(lonlat2int(node.location().lat_without_check()));
-                }
-
-                /**
-                 * Add a node to the block using DenseNodes.
-                 *
-                 * @param node The node to add.
-                 */
-                void write_dense_node(const osmium::Node& node) {
-                    // add a DenseNodes-Section to the PrimitiveGroup
-                    OSMPBF::DenseNodes* dense = pbf_nodes->mutable_dense();
-
-                    // copy the id, delta encoded
-                    dense->add_id(m_delta_id.update(node.id()));
-
-                    // copy the longitude, delta encoded
-                    dense->add_lon(m_delta_lon.update(lonlat2int(node.location().lon_without_check())));
-
-                    // copy the latitude, delta encoded
-                    dense->add_lat(m_delta_lat.update(lonlat2int(node.location().lat_without_check())));
-
-                    // in the densenodes structure keys and vals are encoded in an intermixed
-                    // array, individual nodes are seperated by a value of 0 (0 in the StringTable
-                    // is always unused)
-                    // so for three nodes the keys_vals array may look like this: 3 5 2 1 0 0 8 5
-                    // the first node has two tags (3=>5 and 2=>1), the second node does not
-                    // have any tags and the third node has a single tag (8=>5)
-                    for (const auto& tag : node.tags()) {
-                        dense->add_keys_vals(string_table.record_string(tag.key()));
-                        dense->add_keys_vals(string_table.record_string(tag.value()));
-                    }
-                    dense->add_keys_vals(0);
-
-                    if (m_should_add_metadata) {
-                        // add a DenseInfo-Section to the PrimitiveGroup
-                        OSMPBF::DenseInfo* denseinfo = dense->mutable_denseinfo();
-
-                        denseinfo->add_version(static_cast<::google::protobuf::int32>(node.version()));
-
+                        pbf_info.add_int32(OSMFormat::Info::optional_int32_version, object.version());
+                        pbf_info.add_int64(OSMFormat::Info::optional_int64_timestamp, object.timestamp());
+                        pbf_info.add_int64(OSMFormat::Info::optional_int64_changeset, object.changeset());
+                        pbf_info.add_int32(OSMFormat::Info::optional_int32_uid, object.uid());
+                        pbf_info.add_uint32(OSMFormat::Info::optional_uint32_user_sid, m_primitive_block.add_string(object.user()));
                         if (m_add_visible) {
-                            denseinfo->add_visible(node.visible());
+                            pbf_info.add_bool(OSMFormat::Info::optional_bool_visible, object.visible());
                         }
-
-                        // copy the timestamp, delta encoded
-                        denseinfo->add_timestamp(m_delta_timestamp.update(timestamp2int(node.timestamp())));
-
-                        // copy the changeset, delta encoded
-                        denseinfo->add_changeset(m_delta_changeset.update(node.changeset()));
-
-                        // copy the user id, delta encoded
-                        denseinfo->add_uid(static_cast<::google::protobuf::int32>(m_delta_uid.update(node.uid())));
-
-                        // record the user-name to the interim stringtable and copy the
-                        // interim string-id to the pbf-object
-                        denseinfo->add_user_sid(string_table.record_string(node.user()));
                     }
                 }
 
-                /**
-                 * Add a way to the block.
-                 *
-                 * @param way The way to add.
-                 */
-                void write_way(const osmium::Way& way) {
-                    // add a way to the group
-                    OSMPBF::Way* pbf_way = pbf_ways->add_ways();
-
-                    // copy the common meta-info from the osmium-object to the pbf-object
-                    apply_common_info(way, pbf_way);
-
-                    // last way-node-id used for delta-encoding
-                    Delta<int64_t> delta_id;
-
-                    for (const auto& node_ref : way.nodes()) {
-                        // copy the way-node-id, delta encoded
-                        pbf_way->add_refs(delta_id.update(node_ref.ref()));
-                    }
-
-                    // count up blob size by the size of the Way
-                    primitive_block_size += pbf_way->ByteSize();
-                }
-
-                /**
-                 * Add a relation to the block.
-                 *
-                 * @param relation The relation to add.
-                 */
-                void write_relation(const osmium::Relation& relation) {
-                    // add a relation to the group
-                    OSMPBF::Relation* pbf_relation = pbf_relations->add_relations();
-
-                    // copy the common meta-info from the osmium-object to the pbf-object
-                    apply_common_info(relation, pbf_relation);
-
-                    Delta<int64_t> delta_id;
-
-                    for (const auto& member : relation.members()) {
-                        // record the relation-member role to the interim stringtable and copy the
-                        // interim string-id to the pbf-object
-                        pbf_relation->add_roles_sid(string_table.record_string(member.role()));
-
-                        // copy the relation-member-id, delta encoded
-                        pbf_relation->add_memids(delta_id.update(member.ref()));
-
-                        // copy the relation-member-type, mapped to the OSMPBF enum
-                        pbf_relation->add_types(item_type_to_osmpbf_membertype(member.type()));
-                    }
-
-                    // count up blob size by the size of the Relation
-                    primitive_block_size += pbf_relation->ByteSize();
-                }
-
-                // objects of this class can't be copied
                 PBFOutputFormat(const PBFOutputFormat&) = delete;
                 PBFOutputFormat& operator=(const PBFOutputFormat&) = delete;
 
             public:
 
-                /**
-                 * Create PBFOutputFormat object from File.
-                 */
                 explicit PBFOutputFormat(const osmium::io::File& file, data_queue_type& output_queue) :
                     OutputFormat(file, output_queue),
-                    pbf_header_block(),
-                    pbf_primitive_block(),
-                    pbf_nodes(nullptr),
-                    pbf_ways(nullptr),
-                    pbf_relations(nullptr),
-                    m_location_granularity(pbf_primitive_block.granularity()),
-                    m_date_granularity(pbf_primitive_block.date_granularity()),
+                    m_use_dense_nodes(file.get("pbf_dense_nodes") != "false"),
+                    m_use_compression(file.get("pbf_compression") != "none" && file.get("pbf_compression") != "false"),
+                    m_add_metadata(file.get("pbf_add_metadata") != "false" && file.get("add_metadata") != "false"),
                     m_add_visible(file.has_multiple_object_versions()),
-                    primitive_block_contents(0),
-                    primitive_block_size(0),
-                    string_table(),
-                    m_delta_id(),
-                    m_delta_lat(),
-                    m_delta_lon(),
-                    m_delta_timestamp(),
-                    m_delta_changeset(),
-                    m_delta_uid(),
-                    m_delta_user_sid(),
-                    debug(true) {
-                    GOOGLE_PROTOBUF_VERIFY_VERSION;
-                    if (file.get("pbf_dense_nodes") == "false") {
-                        m_use_dense_nodes = false;
-                    }
-                    if (file.get("pbf_compression") == "none" || file.get("pbf_compression") == "false") {
-                        m_use_compression = false;
-                    }
-                    if (file.get("pbf_sort_stringtables") == "false") {
-                        m_sort_stringtables = false;
-                    }
-                    if (file.get("pbf_add_metadata") == "false") {
-                        m_should_add_metadata = false;
-                    }
+                    m_primitive_block(m_add_metadata, m_add_visible) {
                 }
 
                 void write_buffer(osmium::memory::Buffer&& buffer) override final {
                     osmium::apply(buffer.cbegin(), buffer.cend(), *this);
                 }
 
-
-                /**
-                 * getter to access the granularity
-                 */
-                int location_granularity() const {
-                    return m_location_granularity;
-                }
-
-                /**
-                 * setter to set the granularity
-                 */
-                PBFOutputFormat& location_granularity(int g) {
-                    m_location_granularity = g;
-                    return *this;
-                }
-
-
-                /**
-                 * getter to access the date_granularity
-                 */
-                int date_granularity() const {
-                    return m_date_granularity;
-                }
-
-                /**
-                 * Set date granularity.
-                 */
-                PBFOutputFormat& date_granularity(int g) {
-                    m_date_granularity = g;
-                    return *this;
-                }
-
-
-                /**
-                 * Initialize the writing process.
-                 *
-                 * This initializes the header-block, sets the required-features and
-                 * the writing-program and adds the obligatory StringTable-Index 0.
-                 */
                 void write_header(const osmium::io::Header& header) override final {
-                    // add the schema version as required feature to the HeaderBlock
-                    pbf_header_block.add_required_features("OsmSchema-V0.6");
-
-                    // when the densenodes-feature is used, add DenseNodes as required feature
-                    if (m_use_dense_nodes) {
-                        pbf_header_block.add_required_features("DenseNodes");
-                    }
-
-                    // when the resulting file will carry history information, add
-                    // HistoricalInformation as required feature
-                    if (m_file.has_multiple_object_versions()) {
-                        pbf_header_block.add_required_features("HistoricalInformation");
-                    }
-
-                    // set the writing program
-                    pbf_header_block.set_writingprogram(header.get("generator"));
+                    std::string data;
+                    protozero::pbf_builder<OSMFormat::HeaderBlock> pbf_header_block(data);
 
                     if (!header.boxes().empty()) {
-                        OSMPBF::HeaderBBox* pbf_bbox = pbf_header_block.mutable_bbox();
+                        protozero::pbf_builder<OSMFormat::HeaderBBox> pbf_header_bbox(pbf_header_block, OSMFormat::HeaderBlock::optional_HeaderBBox_bbox);
+
                         osmium::Box box = header.joined_boxes();
-                        pbf_bbox->set_left(static_cast<::google::protobuf::int64>(box.bottom_left().lon() * OSMPBF::lonlat_resolution));
-                        pbf_bbox->set_bottom(static_cast<::google::protobuf::int64>(box.bottom_left().lat() * OSMPBF::lonlat_resolution));
-                        pbf_bbox->set_right(static_cast<::google::protobuf::int64>(box.top_right().lon() * OSMPBF::lonlat_resolution));
-                        pbf_bbox->set_top(static_cast<::google::protobuf::int64>(box.top_right().lat() * OSMPBF::lonlat_resolution));
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_left,   box.bottom_left().lon() * lonlat_resolution);
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_right,  box.top_right().lon()   * lonlat_resolution);
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_top,    box.top_right().lat()   * lonlat_resolution);
+                        pbf_header_bbox.add_sint64(OSMFormat::HeaderBBox::required_sint64_bottom, box.bottom_left().lat() * lonlat_resolution);
                     }
+
+                    pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_required_features, "OsmSchema-V0.6");
+
+                    if (m_use_dense_nodes) {
+                        pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_required_features, "DenseNodes");
+                    }
+
+                    if (m_file.has_multiple_object_versions()) {
+                        pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_required_features, "HistoricalInformation");
+                    }
+
+                    pbf_header_block.add_string(OSMFormat::HeaderBlock::optional_string_writingprogram, header.get("generator"));
 
                     std::string osmosis_replication_timestamp = header.get("osmosis_replication_timestamp");
                     if (!osmosis_replication_timestamp.empty()) {
                         osmium::Timestamp ts(osmosis_replication_timestamp.c_str());
-                        pbf_header_block.set_osmosis_replication_timestamp(ts);
+                        pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_timestamp, ts);
                     }
 
                     std::string osmosis_replication_sequence_number = header.get("osmosis_replication_sequence_number");
                     if (!osmosis_replication_sequence_number.empty()) {
-                        pbf_header_block.set_osmosis_replication_sequence_number(std::atoll(osmosis_replication_sequence_number.c_str()));
+                        pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_sequence_number, std::atoll(osmosis_replication_sequence_number.c_str()));
                     }
 
                     std::string osmosis_replication_base_url = header.get("osmosis_replication_base_url");
                     if (!osmosis_replication_base_url.empty()) {
-                        pbf_header_block.set_osmosis_replication_base_url(osmosis_replication_base_url);
+                        pbf_header_block.add_string(OSMFormat::HeaderBlock::optional_string_osmosis_replication_base_url, osmosis_replication_base_url);
                     }
 
-                    store_header_block();
+                    std::promise<std::string> promise;
+                    m_output_queue.push(promise.get_future());
+                    promise.set_value(serialize_blob("OSMHeader", data, m_use_compression));
                 }
 
-                /**
-                 * Add a node to the pbf.
-                 *
-                 * A call to this method won't write the node to the file directly but
-                 * cache it for later bulk-writing. Calling final() ensures that everything
-                 * gets written and every file pointer is closed.
-                 */
+                void switch_primitive_block_type(OSMFormat::PrimitiveGroup type) {
+                    if (!m_primitive_block.can_add(type)) {
+                        store_primitive_block();
+                        m_primitive_block.reset(type);
+                    }
+                }
+
                 void node(const osmium::Node& node) {
-                    // first of we check the contents-counter which may flush the cached nodes to
-                    // disk if the limit is reached. This call also increases the contents-counter
-                    check_block_contents_counter();
-
-                    if (debug && has_debug_level(2)) {
-                        std::cerr << "node " << node.id() << " v" << node.version() << std::endl;
-                    }
-
-                    // if no PrimitiveGroup for nodes has been added, add one and save the pointer
-                    if (!pbf_nodes) {
-                        pbf_nodes = pbf_primitive_block.add_primitivegroup();
-                    }
-
                     if (m_use_dense_nodes) {
-                        write_dense_node(node);
-                    } else {
-                        write_node(node);
+                        switch_primitive_block_type(OSMFormat::PrimitiveGroup::optional_DenseNodes_dense);
+                        m_primitive_block.add_dense_node(node);
+                        return;
                     }
+
+                    switch_primitive_block_type(OSMFormat::PrimitiveGroup::repeated_Node_nodes);
+                    protozero::pbf_builder<OSMFormat::Node> pbf_node{ m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Node_nodes };
+
+                    pbf_node.add_sint64(OSMFormat::Node::required_sint64_id, node.id());
+                    add_meta(node, pbf_node);
+
+                    pbf_node.add_sint64(OSMFormat::Node::required_sint64_lat, lonlat2int(node.location().lat_without_check()));
+                    pbf_node.add_sint64(OSMFormat::Node::required_sint64_lon, lonlat2int(node.location().lon_without_check()));
                 }
 
-                /**
-                 * Add a way to the pbf.
-                 *
-                 * A call to this method won't write the way to the file directly but
-                 * cache it for later bulk-writing. Calling final() ensures that everything
-                 * gets written and every file pointer is closed.
-                 */
                 void way(const osmium::Way& way) {
-                    // first of we check the contents-counter which may flush the cached ways to
-                    // disk if the limit is reached. This call also increases the contents-counter
-                    check_block_contents_counter();
+                    switch_primitive_block_type(OSMFormat::PrimitiveGroup::repeated_Way_ways);
+                    protozero::pbf_builder<OSMFormat::Way> pbf_way{ m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Way_ways };
 
-                    // if no PrimitiveGroup for nodes has been added, add one and save the pointer
-                    if (!pbf_ways) {
-                        pbf_ways = pbf_primitive_block.add_primitivegroup();
-                    }
+                    pbf_way.add_int64(OSMFormat::Way::required_int64_id, way.id());
+                    add_meta(way, pbf_way);
 
-                    write_way(way);
+                    static auto map_node_ref = [](osmium::NodeRefList::const_iterator node_ref) noexcept -> osmium::object_id_type {
+                        return node_ref->ref();
+                    };
+                    typedef osmium::util::DeltaEncodeIterator<osmium::NodeRefList::const_iterator, decltype(map_node_ref), osmium::object_id_type> it_type;
+
+                    const auto& nodes = way.nodes();
+                    it_type first { nodes.cbegin(), nodes.cend(), map_node_ref };
+                    it_type last { nodes.cend(), nodes.cend(), map_node_ref };
+                    pbf_way.add_packed_sint64(OSMFormat::Way::packed_sint64_refs, first, last);
                 }
 
-                /**
-                 * Add a relation to the pbf.
-                 *
-                 * A call to this method won't write the way to the file directly but
-                 * cache it for later bulk-writing. Calling final() ensures that everything
-                 * gets written and every file pointer is closed.
-                 */
                 void relation(const osmium::Relation& relation) {
-                    // first of we check the contents-counter which may flush the cached relations to
-                    // disk if the limit is reached. This call also increases the contents-counter
-                    check_block_contents_counter();
+                    switch_primitive_block_type(OSMFormat::PrimitiveGroup::repeated_Relation_relations);
+                    protozero::pbf_builder<OSMFormat::Relation> pbf_relation { m_primitive_block.group(), OSMFormat::PrimitiveGroup::repeated_Relation_relations };
 
-                    // if no PrimitiveGroup for relations has been added, add one and save the pointer
-                    if (!pbf_relations) {
-                        pbf_relations = pbf_primitive_block.add_primitivegroup();
-                    }
+                    pbf_relation.add_int64(OSMFormat::Relation::required_int64_id, relation.id());
+                    add_meta(relation, pbf_relation);
 
-                    write_relation(relation);
+                    auto map_member_role = [this](const osmium::RelationMember& member) -> size_t {
+                        return m_primitive_block.add_string(member.role());
+                    };
+                    pbf_relation.add_packed_int32(OSMFormat::Relation::packed_int32_roles_sid,
+                        boost::make_transform_iterator(relation.members().begin(), map_member_role),
+                        boost::make_transform_iterator(relation.members().end(), map_member_role));
+
+                    static auto map_member_ref = [](osmium::RelationMemberList::const_iterator member) noexcept -> osmium::object_id_type {
+                        return member->ref();
+                    };
+                    typedef osmium::util::DeltaEncodeIterator<osmium::RelationMemberList::const_iterator, decltype(map_member_ref), osmium::object_id_type> it_type;
+                    const auto& members = relation.members();
+                    it_type first { members.cbegin(), members.cend(), map_member_ref };
+                    it_type last { members.cend(), members.cend(), map_member_ref };
+                    pbf_relation.add_packed_sint64(OSMFormat::Relation::packed_sint64_memids, first, last);
+
+                    static auto map_member_type = [](const osmium::RelationMember& member) noexcept -> int {
+                        return osmium::item_type_to_nwr_index(member.type());
+                    };
+                    pbf_relation.add_packed_int32(OSMFormat::Relation::packed_MemberType_types,
+                        boost::make_transform_iterator(relation.members().begin(), map_member_type),
+                        boost::make_transform_iterator(relation.members().end(), map_member_type));
                 }
 
                 /**
-                 * Finalize the writing process, flush any open primitive blocks to the file and
-                 * close the file.
+                 * Finalize the writing process, flush any open primitive
+                 * blocks to the file and close the file.
                  */
                 void close() override final {
-                    if (debug && has_debug_level(1)) {
-                        std::cerr << "finishing" << std::endl;
-                    }
-
-                    // if the current block contains any elements, flush it to the protobuf
-                    if (primitive_block_contents > 0) {
-                        store_primitive_block();
-                    }
+                    store_primitive_block();
 
                     std::promise<std::string> promise;
                     m_output_queue.push(promise.get_future());
@@ -956,10 +578,15 @@ namespace osmium {
 
             namespace {
 
+// we want the register_output_format() function to run, setting the variable
+// is only a side-effect, it will never be used
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
                 const bool registered_pbf_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::pbf,
                     [](const osmium::io::File& file, data_queue_type& output_queue) {
                         return new osmium::io::detail::PBFOutputFormat(file, output_queue);
                 });
+#pragma GCC diagnostic pop
 
             } // anonymous namespace
 

@@ -34,10 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "restriction_parser.hpp"
 #include "scripting_environment.hpp"
 
+#include "../data_structures/raster_source.hpp"
 #include "../util/git_sha.hpp"
 #include "../util/make_unique.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
+#include "../util/lua_util.hpp"
 
 #include "../typedefs.h"
 
@@ -116,6 +118,17 @@ int extractor::run()
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
+        lua_State *segment_state = scripting_environment.get_lua_state();
+
+        if (lua_function_exists(segment_state, "source_function"))
+        {
+            // bind a single instance of SourceContainer class to relevant lua state
+            SourceContainer sources;
+            luabind::globals(segment_state)["sources"] = sources;
+
+            luabind::call_function<void>(segment_state, "source_function");
+        }
+
         std::string generator = header.get("generator");
         if (generator.empty())
         {
@@ -148,7 +161,7 @@ int extractor::run()
         {
             // create a vector of iterators into the buffer
             std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
-            for (auto iter = std::begin(buffer); iter != std::end(buffer); ++iter)
+            for (auto iter = std::begin(buffer), end = std::end(buffer); iter != end; ++iter)
             {
                 osm_elements.push_back(iter);
             }
@@ -167,7 +180,7 @@ int extractor::run()
                     ExtractionWay result_way;
                     lua_State *local_state = scripting_environment.get_lua_state();
 
-                    for (auto x = range.begin(); x != range.end(); ++x)
+                    for (auto x = range.begin(), end = range.end(); x != end; ++x)
                     {
                         const auto entity = osm_elements[x];
 
@@ -238,7 +251,9 @@ int extractor::run()
 
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
-                                          config.names_file_name);
+                                          config.names_file_name,
+                                          segment_state);
+
         TIMER_STOP(extracting);
         SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: "

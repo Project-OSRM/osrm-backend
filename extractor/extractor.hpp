@@ -33,8 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class extractor
 {
 public:
-    extractor(const ExtractorConfig &extractor_config)
-        : config(extractor_config) {}
+  extractor(ExtractorConfig extractor_config) : config(std::move(extractor_config)) {}
     int run();
 private:
    ExtractorConfig config;

@@ -284,7 +284,7 @@ class Contractor
 
     ~Contractor() {}
 
-    void Run()
+    void Run( double core_factor = 1.0 )
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
         constexpr size_t InitGrainSize = 100000;
@@ -306,12 +306,13 @@ class Contractor
         std::vector<RemainingNodeData> remaining_nodes(number_of_nodes);
         std::vector<float> node_priorities(number_of_nodes);
         std::vector<NodePriorityData> node_data(number_of_nodes);
+        is_core_node.resize(number_of_nodes, false);
 
         // initialize priorities in parallel
         tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, InitGrainSize),
                           [&remaining_nodes](const tbb::blocked_range<int> &range)
                           {
-                              for (int x = range.begin(); x != range.end(); ++x)
+                              for (int x = range.begin(), end = range.end(); x != end; ++x)
                               {
                                   remaining_nodes[x].id = x;
                               }
@@ -323,7 +324,7 @@ class Contractor
                               const tbb::blocked_range<int> &range)
                           {
                               ContractorThreadData *data = thread_data_list.getThreadData();
-                              for (int x = range.begin(); x != range.end(); ++x)
+                              for (int x = range.begin(), end = range.end(); x != end; ++x)
                               {
                                   node_priorities[x] =
                                       this->EvaluateNodePriority(data, &node_data[x], x);
@@ -333,9 +334,9 @@ class Contractor
                   << std::flush;
 
         bool flushed_contractor = false;
-        while (number_of_nodes > 2 && number_of_contracted_nodes < number_of_nodes)
+        while (number_of_nodes > 2 && number_of_contracted_nodes < static_cast<NodeID>(number_of_nodes * core_factor) )
         {
-            if (!flushed_contractor && (number_of_contracted_nodes > (number_of_nodes * 0.65)))
+            if (!flushed_contractor && (number_of_contracted_nodes > static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
             {
                 DeallocatingVector<ContractorEdge> new_edge_set; // this one is not explicitely
                                                                  // cleared since it goes out of
@@ -349,7 +350,7 @@ class Contractor
                 std::vector<float> new_node_priority(remaining_nodes.size());
                 // this map gives the old IDs from the new ones, necessary to get a consistent graph
                 // at the end of contraction
-                orig_node_id_to_new_id_map.resize(remaining_nodes.size());
+                orig_node_id_from_new_node_id_map.resize(remaining_nodes.size());
                 // this map gives the new IDs from the old ones, necessary to remap targets from the
                 // remaining graph
                 std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, UINT_MAX);
@@ -359,7 +360,7 @@ class Contractor
                 for (const auto new_node_id : osrm::irange<std::size_t>(0, remaining_nodes.size()))
                 {
                     // create renumbering maps in both directions
-                    orig_node_id_to_new_id_map[new_node_id] = remaining_nodes[new_node_id].id;
+                    orig_node_id_from_new_node_id_map[new_node_id] = remaining_nodes[new_node_id].id;
                     new_node_id_from_orig_id_map[remaining_nodes[new_node_id].id] = new_node_id;
                     new_node_priority[new_node_id] =
                         node_priorities[remaining_nodes[new_node_id].id];
@@ -429,7 +430,7 @@ class Contractor
                               {
                                   ContractorThreadData *data = thread_data_list.getThreadData();
                                   // determine independent node set
-                                  for (int i = range.begin(); i != range.end(); ++i)
+                                  for (int i = range.begin(), end = range.end(); i != end; ++i)
                                   {
                                       const NodeID node = remaining_nodes[i].id;
                                       remaining_nodes[i].is_independent =
@@ -450,7 +451,7 @@ class Contractor
                 [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(); position != range.end(); ++position)
+                    for (int position = range.begin(), end = range.end(); position != end; ++position)
                     {
                         const NodeID x = remaining_nodes[position].id;
                         this->ContractNode<false>(data, x);
@@ -469,7 +470,7 @@ class Contractor
                 [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(); position != range.end(); ++position)
+                    for (int position = range.begin(), end = range.end(); position != end; ++position)
                     {
                         const NodeID x = remaining_nodes[position].id;
                         this->DeleteIncomingEdges(data, x);
@@ -507,7 +508,7 @@ class Contractor
                     const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(); position != range.end(); ++position)
+                    for (int position = range.begin(), end = range.end(); position != end; ++position)
                     {
                         NodeID x = remaining_nodes[position].id;
                         this->UpdateNodeNeighbours(node_priorities, node_data, data, x);
@@ -524,7 +525,7 @@ class Contractor
             //            unsigned quaddegree = 0;
             //
             //            for(unsigned i = 0; i < remaining_nodes.size(); ++i) {
-            //                unsigned degree = contractor_graph->EndEdges(remaining_nodes[i].first)
+            //                unsigned degree = contractor_graph->EndEdges(remaining_nodes[i].id)
             //                -
             //                contractor_graph->BeginEdges(remaining_nodes[i].first);
             //                if(degree > maxdegree)
@@ -546,7 +547,30 @@ class Contractor
             p.printStatus(number_of_contracted_nodes);
         }
 
+        if (remaining_nodes.size() > 2)
+        {
+            // TODO: for small cores a sorted array of core ids might also work good
+            for (const auto& node : remaining_nodes)
+            {
+                auto orig_id = orig_node_id_from_new_node_id_map[node.id];
+                is_core_node[orig_id] = true;
+            }
+        }
+        else
+        {
+            // in this case we don't need core markers since we fully contracted
+            // the graph
+            is_core_node.clear();
+        }
+
+        SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes " << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
+
         thread_data_list.data.clear();
+    }
+
+    inline void GetCoreMarker(std::vector<bool> &out_is_core_node)
+    {
+        out_is_core_node.swap(is_core_node);
     }
 
     template <class Edge> inline void GetEdges(DeallocatingVector<Edge> &edges)
@@ -564,10 +588,10 @@ class Contractor
                 {
                     const NodeID target = contractor_graph->GetTarget(edge);
                     const ContractorGraph::EdgeData &data = contractor_graph->GetEdgeData(edge);
-                    if (!orig_node_id_to_new_id_map.empty())
+                    if (!orig_node_id_from_new_node_id_map.empty())
                     {
-                        new_edge.source = orig_node_id_to_new_id_map[node];
-                        new_edge.target = orig_node_id_to_new_id_map[target];
+                        new_edge.source = orig_node_id_from_new_node_id_map[node];
+                        new_edge.target = orig_node_id_from_new_node_id_map[target];
                     }
                     else
                     {
@@ -578,9 +602,10 @@ class Contractor
                     BOOST_ASSERT_MSG(UINT_MAX != new_edge.target, "Target id invalid");
                     new_edge.data.distance = data.distance;
                     new_edge.data.shortcut = data.shortcut;
-                    if (!data.is_original_via_node_ID && !orig_node_id_to_new_id_map.empty())
+                    if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
-                        new_edge.data.id = orig_node_id_to_new_id_map[data.id];
+                        // tranlate the _node id_ of the shortcutted node
+                        new_edge.data.id = orig_node_id_from_new_node_id_map[data.id];
                     }
                     else
                     {
@@ -595,10 +620,10 @@ class Contractor
             }
         }
         contractor_graph.reset();
-        orig_node_id_to_new_id_map.clear();
-        orig_node_id_to_new_id_map.shrink_to_fit();
+        orig_node_id_from_new_node_id_map.clear();
+        orig_node_id_from_new_node_id_map.shrink_to_fit();
 
-        BOOST_ASSERT(0 == orig_node_id_to_new_id_map.capacity());
+        BOOST_ASSERT(0 == orig_node_id_from_new_node_id_map.capacity());
 
         edges.append(external_edge_list.begin(), external_edge_list.end());
         external_edge_list.clear();
@@ -956,7 +981,8 @@ class Contractor
 
     std::shared_ptr<ContractorGraph> contractor_graph;
     stxxl::vector<QueryEdge> external_edge_list;
-    std::vector<NodeID> orig_node_id_to_new_id_map;
+    std::vector<NodeID> orig_node_id_from_new_node_id_map;
+    std::vector<bool> is_core_node;
     XORFastHash fast_hash;
 };
 

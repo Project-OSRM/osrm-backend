@@ -115,8 +115,8 @@ Given /^the relations$/ do |table|
           raise "*** unknown relation way member '#{way_name}'" unless way
           relation << OSM::Member.new( 'way', way.id, $1 )
         end
-      elsif key =~ /^(.*):(.*)/
-        raise "*** unknown relation member type '#{$1}', must be either 'node' or 'way'"
+      elsif key =~ /^(.*):(.*)/ && "#{$1}" != 'restriction'
+        raise "*** unknown relation member type '#{$1}:#{$2}', must be either 'node' or 'way'"
       else
         relation << { key => value }
       end
@@ -132,6 +132,12 @@ end
 Given /^the input file ([^"]*)$/ do |file|
   raise "*** Input file must in .osm format" unless File.extname(file)=='.osm'
   @osm_str = File.read file
+end
+
+Given /^the raster source$/ do |data|
+  Dir.chdir TEST_FOLDER do
+    File.open("rastersource.asc", "w") {|f| f.write(data)}
+  end
 end
 
 Given /^the data has been saved to disk$/ do

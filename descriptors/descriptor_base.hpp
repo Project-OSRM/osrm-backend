@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTOR_BASE_HPP
 #define DESCRIPTOR_BASE_HPP
 
-#include "../data_structures/coordinate_calculation.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 #include "../data_structures/internal_route_result.hpp"
 #include "../data_structures/phantom_node.hpp"
 #include "../typedefs.h"

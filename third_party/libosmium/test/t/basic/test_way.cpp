@@ -1,11 +1,16 @@
 #include "catch.hpp"
 
+#include <boost/crc.hpp>
+
 #include <osmium/builder/osm_object_builder.hpp>
+#include <osmium/osm/crc.hpp>
 #include <osmium/osm/way.hpp>
 
 #include "helper.hpp"
 
-TEST_CASE("Basic_Way") {
+TEST_CASE("Build way") {
+
+    osmium::CRC<boost::crc_32_type> crc32;
 
 SECTION("way_builder") {
     osmium::memory::Buffer buffer(10000);
@@ -38,6 +43,9 @@ SECTION("way_builder") {
     REQUIRE(3 == way.nodes()[1].ref());
     REQUIRE(2 == way.nodes()[2].ref());
     REQUIRE(! way.is_closed());
+
+    crc32.update(way);
+    REQUIRE(crc32().checksum() == 0x20fe7a30);
 }
 
 SECTION("closed_way") {

@@ -33,7 +33,6 @@ print("PostGIS connection opened")
 -- these settings are read directly by osrm
 take_minimum_of_speeds   = true
 obey_oneway             = true
-obey_bollards           = true
 use_restrictions         = true
 ignore_areas             = true  -- future feature
 traffic_signal_penalty   = 7      -- seconds
@@ -45,7 +44,7 @@ function node_function(node)
 end
 
 -- ways processing, called from OSRM
-function way_function (way)
+function way_function (way, result)
   -- only route on ways with highway=*
   local highway = way.tags:Find("highway")
   if (not highway or highway=='') then
@@ -65,18 +64,18 @@ function way_function (way)
 
   local cursor = assert( sql_con:execute(sql_query) )   -- execute querty
   local row = cursor:fetch( {}, "a" )                   -- fetch first (and only) row
-  way.forward_speed = 20.0                                      -- default speed
+  result.forward_speed = 20.0                           -- default speed
+  result.forward_mode = 1
   if row then
-    local val = tonumber(row.val)                       -- read 'val' from row 
+    local val = tonumber(row.val)                       -- read 'val' from row
     if val > 10 then
-      way.forward_speed = way.forward_speed / math.log10( val )         -- reduce speed by amount of industry close by 
+      -- reduce speed by amount of industry close by
+      result.forward_speed = way.forward_speed / math.log10( val )
     end
   end
   cursor:close()                                        -- done with this query
 
   -- set other required info for this way
-  way.name = way.tags:Find("name")
-  way.direction = Way.bidirectional 
-  way.type = 1
+  result.name = way.get_value_by_key("name")
   return 1
 end

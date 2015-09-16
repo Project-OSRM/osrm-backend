@@ -73,6 +73,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     ShM<bool, false>::vector m_edge_is_compressed;
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
+    ShM<bool, false>::vector m_is_core_node;
 
     boost::thread_specific_ptr<
         StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>> m_static_rtree;
@@ -171,6 +172,29 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         edges_input_stream.close();
     }
 
+    void LoadCoreInformation(const boost::filesystem::path &core_data_file)
+    {
+        std::ifstream core_stream(core_data_file.string().c_str(), std::ios::binary);
+        unsigned number_of_markers;
+        core_stream.read((char *)&number_of_markers, sizeof(unsigned));
+
+        std::vector<char> unpacked_core_markers(number_of_markers);
+        core_stream.read((char *)unpacked_core_markers.data(), sizeof(char)*number_of_markers);
+
+        // in this case we have nothing to do
+        if (number_of_markers <= 0)
+        {
+            return;
+        }
+
+        m_is_core_node.resize(number_of_markers);
+        for (auto i = 0u; i < number_of_markers; ++i)
+        {
+            BOOST_ASSERT(unpacked_core_markers[i] == 0 || unpacked_core_markers[i] == 1);
+            m_is_core_node[i] = unpacked_core_markers[i] == 1;
+        }
+    }
+
     void LoadGeometries(const boost::filesystem::path &geometry_file)
     {
         std::ifstream geometry_stream(geometry_file.string().c_str(), std::ios::binary);
@@ -255,6 +279,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         {
             throw osrm::exception("no nodes file given in ini file");
         }
+        if (server_paths.find("coredata") == server_paths.end())
+        {
+            throw osrm::exception("no core file given in ini file");
+        }
         if (server_paths.find("edgesdata") == server_paths.end())
         {
             throw osrm::exception("no edges file given in ini file");
@@ -264,7 +292,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             throw osrm::exception("no names file given in ini file");
         }
 
-        ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
+        auto paths_iterator = server_paths.find("hsgrdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path &hsgr_path = paths_iterator->second;
         paths_iterator = server_paths.find("timestamp");
@@ -288,6 +316,9 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         paths_iterator = server_paths.find("geometries");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path &geometries_path = paths_iterator->second;
+        paths_iterator = server_paths.find("coredata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path &core_data_path = paths_iterator->second;
 
         // load data
         SimpleLogger().Write() << "loading graph data";
@@ -297,6 +328,9 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         AssertPathExists(nodes_data_path);
         AssertPathExists(edges_data_path);
         LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
+        SimpleLogger().Write() << "loading core information";
+        AssertPathExists(core_data_path);
+        LoadCoreInformation(core_data_path);
         SimpleLogger().Write() << "loading geometries";
         AssertPathExists(geometries_path);
         LoadGeometries(geometries_path);
@@ -419,9 +453,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     bool IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
         const FixedPointCoordinate &input_coordinate,
         std::vector<std::pair<PhantomNode, double>> &resulting_phantom_node_vector,
-        const double max_distance,
-        const unsigned min_number_of_phantom_nodes,
-        const unsigned max_number_of_phantom_nodes) override final
+        const double max_distance) override final
     {
         if (!m_static_rtree.get())
         {
@@ -429,8 +461,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         }
 
         return m_static_rtree->IncrementalFindPhantomNodeForCoordinateWithDistance(
-            input_coordinate, resulting_phantom_node_vector, max_distance,
-            min_number_of_phantom_nodes, max_number_of_phantom_nodes);
+            input_coordinate, resulting_phantom_node_vector, max_distance);
     }
 
     unsigned GetCheckSum() const override final { return m_check_sum; }
@@ -462,6 +493,18 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
     {
         return m_via_node_list.at(id);
+    }
+
+    virtual bool IsCoreNode(const NodeID id) const override final
+    {
+        if (m_is_core_node.size() > 0)
+        {
+            return m_is_core_node[id];
+        }
+        else
+        {
+            return false;
+        }
     }
 
     virtual void GetUncompressedGeometry(const unsigned id,

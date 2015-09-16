@@ -33,9 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <stdexcept>
-
-#include <osmpbf/osmpbf.h>
+#include <string>
 
 // needed for htonl and ntohl
 #ifndef _WIN32
@@ -45,37 +43,9 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 #include <osmium/io/error.hpp>
-#include <osmium/osm/item_type.hpp>
+#include <osmium/osm/location.hpp>
 
 namespace osmium {
-
-// avoid g++ false positive
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-    inline item_type osmpbf_membertype_to_item_type(const OSMPBF::Relation::MemberType mt) {
-        switch (mt) {
-            case OSMPBF::Relation::NODE:
-                return item_type::node;
-            case OSMPBF::Relation::WAY:
-                return item_type::way;
-            case OSMPBF::Relation::RELATION:
-                return item_type::relation;
-        }
-    }
-#pragma GCC diagnostic pop
-
-    inline OSMPBF::Relation::MemberType item_type_to_osmpbf_membertype(const item_type type) {
-        switch (type) {
-            case item_type::node:
-                return OSMPBF::Relation::NODE;
-            case item_type::way:
-                return OSMPBF::Relation::WAY;
-            case item_type::relation:
-                return OSMPBF::Relation::RELATION;
-            default:
-                throw std::runtime_error("Unknown relation member type");
-        }
-    }
 
     /**
      * Exception thrown when there was a problem with parsing the PBF format of
@@ -92,6 +62,26 @@ namespace osmium {
         }
 
     }; // struct pbf_error
+
+    namespace io {
+
+        namespace detail {
+
+            // the maximum size of a blob header in bytes
+            const int max_blob_header_size = 64 * 1024; // 64 kB
+
+            // the maximum size of an uncompressed blob in bytes
+            const uint64_t max_uncompressed_blob_size = 32 * 1024 * 1024; // 32 MB
+
+            // resolution for longitude/latitude used for conversion
+            // between representation as double and as int
+            const int64_t lonlat_resolution = 1000 * 1000 * 1000;
+
+            const int64_t resolution_convert = lonlat_resolution / osmium::Location::coordinate_precision;
+
+        }
+
+    }
 
 } // namespace osmium
 

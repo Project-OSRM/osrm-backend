@@ -41,7 +41,7 @@ Feature: Car - Handle movable bridge
 
         When I route I should get
             | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,3,1 | 6 km/h |
-            | b    | f  | abc,cde,efg | 1,3,1 | 4 km/h |
+            | a    | g  | abc,cde,efg | 1,3,1 | 7 km/h |
+            | b    | f  | abc,cde,efg | 1,3,1 | 5 km/h |
             | c    | e  | cde         | 3     | 2 km/h |
             | e    | c  | cde         | 3     | 2 km/h |
