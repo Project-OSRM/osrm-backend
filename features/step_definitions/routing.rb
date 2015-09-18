@@ -82,6 +82,10 @@ When /^I route I should get$/ do |table|
         end
         if table.headers.include? 'route'
           got['route'] = (instructions || '').strip
+          if table.headers.include?('alternative')
+            raise "*** No alternative found ***" unless json['found_alternative']
+            got['alternative'] = way_list json['alternative_instructions'].first
+          end
           if table.headers.include?('distance')
             if row['distance']!=''
               raise "*** Distance must be specied in meters. (ex: 250m)" unless row['distance'] =~ /\d+m/
