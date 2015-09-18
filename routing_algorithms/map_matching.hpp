@@ -35,11 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/json_logger.hpp"
 #include "../util/matching_debug_info.hpp"
 
-#include <variant/variant.hpp>
+#include <cstddef>
 
 #include <algorithm>
+#include <deque>
 #include <iomanip>
 #include <numeric>
+#include <utility>
+#include <vector>
 
 namespace osrm
 {

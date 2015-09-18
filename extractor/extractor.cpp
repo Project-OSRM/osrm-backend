@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <luabind/luabind.hpp>
 
@@ -52,8 +53,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/parallel_for.h>
 #include <tbb/task_scheduler_init.h>
-
-#include <variant/optional.hpp>
 
 #include <cstdlib>
 
@@ -151,8 +150,7 @@ int extractor::run()
         // initialize vectors holding parsed objects
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> resulting_nodes;
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> resulting_ways;
-        tbb::concurrent_vector<mapbox::util::optional<InputRestrictionContainer>>
-            resulting_restrictions;
+        tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
         // setup restriction parser
         const RestrictionParser restriction_parser(scripting_environment.get_lua_state());
