@@ -214,7 +214,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             osrm::json::Array json_current_alt_instructions;
             if (config.instructions)
             {
-                json_alt_instructions = BuildTextualDescription(alternate_description_factory, alternative_path_segments);
+                json_current_alt_instructions = BuildTextualDescription(alternate_description_factory, alternative_path_segments);
                 json_alt_instructions.values.push_back(json_current_alt_instructions);
                 json_result.values["alternative_instructions"] = json_alt_instructions;
             }
