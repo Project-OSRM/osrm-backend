@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/coordinate.hpp>
 
 #include <boost/fusion/container/vector/vector_fwd.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include <string>
 #include <vector>
@@ -71,6 +72,8 @@ struct RouteParameters
 
     void addTimestamp(const unsigned timestamp);
 
+    void addBearing(const int timestamp, boost::spirit::qi::unused_type unused, bool& pass);
+
     void setLanguage(const std::string &language);
 
     void setGeometryFlag(const bool flag);
@@ -99,6 +102,7 @@ struct RouteParameters
     std::string language;
     std::vector<std::string> hints;
     std::vector<unsigned> timestamps;
+    std::vector<int> bearings;
     std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
 };

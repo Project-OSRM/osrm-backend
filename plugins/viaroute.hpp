@@ -80,6 +80,13 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             return 400;
         }
 
+        const auto &input_bearings = route_parameters.bearings;
+        if (input_bearings.size() > 0 && route_parameters.coordinates.size() != input_bearings.size())
+        {
+            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            return 400;
+        }
+
         std::vector<phantom_node_pair> phantom_node_pair_list(route_parameters.coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
@@ -96,8 +103,10 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 }
             }
             std::vector<PhantomNode> phantom_node_vector;
+            int bearing = input_bearings.size() > 0 ? input_bearings[i] : 0;
+            int range = input_bearings.size() > 0 ? 8 : 180;
             if (facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                                phantom_node_vector, 1))
+                                                                phantom_node_vector, 1, bearing, range))
             {
                 BOOST_ASSERT(!phantom_node_vector.empty());
                 phantom_node_pair_list[i].first = phantom_node_vector.front();

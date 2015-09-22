@@ -93,7 +93,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return label_with_confidence;
     }
 
-    bool getCandiates(const std::vector<FixedPointCoordinate> &input_coords,
+    bool getCandidates(const std::vector<FixedPointCoordinate> &input_coords,
+                      const std::vector<int> &input_bearings,
                       const double gps_precision,
                       std::vector<double> &sub_trace_lengths,
                       osrm::matching::CandidateLists &candidates_lists)
@@ -128,8 +129,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             }
 
             std::vector<std::pair<PhantomNode, double>> candidates;
+            // Use bearing values if supplied, otherwise fallback to 0,180 defaults
+            auto bearing = input_bearings.size() > 0 ? input_bearings[current_coordinate] : 0;
+            auto range = input_bearings.size() > 0 ? 10 : 180;
             facade->IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
-                    input_coords[current_coordinate], candidates, query_radius);
+                    input_coords[current_coordinate], candidates, query_radius,
+                    bearing, range);
 
             // sort by foward id, then by reverse id and then by distance
             std::sort(candidates.begin(), candidates.end(),
@@ -270,9 +275,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         osrm::matching::CandidateLists candidates_lists;
         const auto &input_coords = route_parameters.coordinates;
         const auto &input_timestamps = route_parameters.timestamps;
+        const auto &input_bearings = route_parameters.bearings;
         if (input_timestamps.size() > 0 && input_coords.size() != input_timestamps.size())
         {
             json_result.values["status"] = "Number of timestamps does not match number of coordinates .";
+            return 400;
+        }
+
+        if (input_bearings.size() > 0 && input_coords.size() != input_bearings.size())
+        {
+            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
             return 400;
         }
 
@@ -292,7 +304,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
 
         const bool found_candidates =
-            getCandiates(input_coords, route_parameters.gps_precision, sub_trace_lengths, candidates_lists);
+            getCandidates(input_coords, input_bearings, route_parameters.gps_precision, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
             json_result.values["status"] = "No suitable matching candidates found.";

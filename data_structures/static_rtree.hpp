@@ -642,10 +642,55 @@ class StaticRTree
         return result_coordinate.is_valid();
     }
 
+    /**
+     * Checks whether A is between B-range and B+range, all modulo 360
+     * e.g. A = 5, B = 5, range = 10 == true
+     *      A = -6, B = 5, range = 10 == false
+     *      A = -2, B = 355, range = 10 == true
+     *      A = 6, B = 355, range = 10 == false
+     *      A = 355, B = -2, range = 10 == true
+     *
+     * @param A the bearing to check, in degrees, 0-359, 0=north
+     * @param B the bearing to check against, in degrees, 0-359, 0=north
+     * @param range the number of degrees either side of B that A will still match
+     * @return true if B-range <= A <= B+range, modulo 360
+     * */
+    static bool IsBearingWithinBounds(const int A,
+                                      const int B,
+                                      const int range)
+    {
+
+        if (range >= 180) return true;
+        if (range <= 0) return false;
+
+        // Map both bearings into positive modulo 360 space
+        const int normalized_B = (B < 0)?(B % 360)+360:(B % 360);
+        const int normalized_A = (A < 0)?(A % 360)+360:(A % 360);
+
+        if (normalized_B - range < 0)
+        {
+            return (normalized_B - range + 360 <= normalized_A && normalized_A < 360) ||
+                   (0 <= normalized_A && normalized_A <= normalized_B + range);
+        }
+        else if (normalized_B + range > 360)
+        {
+            return (normalized_B - range <= normalized_A && normalized_A < 360) ||
+                   (0 <= normalized_A && normalized_A <= normalized_B + range - 360);
+        }
+        else
+        {
+            return normalized_B - range <= normalized_A && normalized_A <= normalized_B + range;
+        }
+    }
+
+
+
     bool IncrementalFindPhantomNodeForCoordinate(
         const FixedPointCoordinate &input_coordinate,
         std::vector<PhantomNode> &result_phantom_node_vector,
         const unsigned max_number_of_phantom_nodes,
+        const int filter_bearing = 0,
+        const int filter_bearing_range = 180,
         const float max_distance = 1100,
         const unsigned max_checked_elements = 4 * LEAF_NODE_SIZE)
     {
@@ -737,9 +782,34 @@ class StaticRTree
                     m_coordinate_list->at(current_segment.v), input_coordinate,
                     projected_coordinate, foot_point_coordinate_on_segment, current_ratio);
 
+                const float forward_edge_bearing = coordinate_calculation::bearing(
+                                m_coordinate_list->at(current_segment.u),
+                                m_coordinate_list->at(current_segment.v));
+
+                const float backward_edge_bearing = (forward_edge_bearing + 180) > 360 
+                                                      ? (forward_edge_bearing - 180) 
+                                                      : (forward_edge_bearing + 180);
+
+                const bool forward_bearing_valid = IsBearingWithinBounds(forward_edge_bearing, filter_bearing, filter_bearing_range);
+                const bool backward_bearing_valid = IsBearingWithinBounds(backward_edge_bearing, filter_bearing, filter_bearing_range);
+
+                if (!forward_bearing_valid && !backward_bearing_valid)
+                {
+                    continue;
+                }
+
                 // store phantom node in result vector
                 result_phantom_node_vector.emplace_back(current_segment,
                                                         foot_point_coordinate_on_segment);
+
+                if (!forward_bearing_valid)
+                {
+                    result_phantom_node_vector.back().forward_node_id = SPECIAL_NODEID;
+                } 
+                else if (!backward_bearing_valid)
+                {
+                    result_phantom_node_vector.back().reverse_node_id = SPECIAL_NODEID;
+                }
 
                 // Hack to fix rounding errors and wandering via nodes.
                 FixUpRoundingIssue(input_coordinate, result_phantom_node_vector.back());
@@ -788,6 +858,8 @@ class StaticRTree
         const FixedPointCoordinate &input_coordinate,
         std::vector<std::pair<PhantomNode, double>> &result_phantom_node_vector,
         const double max_distance,
+        const int filter_bearing = 0,
+        const int filter_bearing_range = 180,
         const unsigned max_checked_elements = 4 * LEAF_NODE_SIZE)
     {
         unsigned inspected_elements = 0;
@@ -881,6 +953,23 @@ class StaticRTree
                     continue;
                 }
 
+                const float forward_edge_bearing = coordinate_calculation::bearing(
+                                m_coordinate_list->at(current_segment.u),
+                                m_coordinate_list->at(current_segment.v));
+
+                const float backward_edge_bearing = (forward_edge_bearing + 180) > 360 
+                                                      ? (forward_edge_bearing - 180) 
+                                                      : (forward_edge_bearing + 180);
+
+                const bool forward_bearing_valid = IsBearingWithinBounds(forward_edge_bearing, filter_bearing, filter_bearing_range);
+                const bool backward_bearing_valid = IsBearingWithinBounds(backward_edge_bearing, filter_bearing, filter_bearing_range);
+
+                if (!forward_bearing_valid && !backward_bearing_valid)
+                {
+                    // This edge doesn't fall within our bearing filter
+                    continue;
+                }
+
                 // store phantom node in result vector
                 result_phantom_node_vector.emplace_back(
                     PhantomNode(
@@ -892,6 +981,15 @@ class StaticRTree
                         foot_point_coordinate_on_segment, current_segment.fwd_segment_position,
                         current_segment.forward_travel_mode, current_segment.backward_travel_mode),
                     current_perpendicular_distance);
+
+                if (!forward_bearing_valid)
+                {
+                    result_phantom_node_vector.back().first.forward_node_id = SPECIAL_NODEID;
+                }
+                if (!backward_bearing_valid)
+                {
+                    result_phantom_node_vector.back().first.reverse_node_id = SPECIAL_NODEID;
+                }
 
                 // Hack to fix rounding errors and wandering via nodes.
                 FixUpRoundingIssue(input_coordinate, result_phantom_node_vector.back().first);

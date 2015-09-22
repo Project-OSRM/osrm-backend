@@ -40,7 +40,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     {
         api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >>
                    *(query) >> -(uturns);
-        query = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | timestamp | u | cmp |
+        query = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | timestamp | bearing | u | cmp |
                             language | instruction | geometry | alt_route | old_API | num_results |
                             matching_beta | gps_precision | classify | locs));
 
@@ -65,6 +65,8 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                stringwithDot[boost::bind(&HandlerT::addHint, handler, ::_1)];
         timestamp = (-qi::lit('&')) >> qi::lit("t") >> '=' >>
                qi::uint_[boost::bind(&HandlerT::addTimestamp, handler, ::_1)];
+        bearing = (-qi::lit('&')) >> qi::lit("b") >> '=' >>
+               qi::int_[boost::bind(&HandlerT::addBearing, handler, ::_1, ::_2, ::_3)];
         u = (-qi::lit('&')) >> qi::lit("u") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::setUTurn, handler, ::_1)];
         uturns = (-qi::lit('&')) >> qi::lit("uturns") >> '=' >>
@@ -95,7 +97,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
 
     qi::rule<Iterator> api_call, query;
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
-        hint, timestamp, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
+        hint, timestamp, bearing, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
         uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, stringforPolyline;
 
     HandlerT *handler;

@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic.hpp>
 #include <boost/fusion/include/at_c.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include <osrm/route_parameters.hpp>
 
@@ -114,6 +115,18 @@ void RouteParameters::addTimestamp(const unsigned timestamp)
     if (!timestamps.empty())
     {
         timestamps.back() = timestamp;
+    }
+}
+
+void RouteParameters::addBearing(const int bearing, boost::spirit::qi::unused_type unused, bool& pass)
+{
+    bearings.resize(coordinates.size());
+    pass = false;
+    if (bearing < 0 || bearing > 359) return;
+    if (!bearings.empty())
+    {
+        bearings.back() = bearing;
+        pass = true;
     }
 }
 

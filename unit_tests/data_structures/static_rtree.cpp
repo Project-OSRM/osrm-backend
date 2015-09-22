@@ -258,6 +258,12 @@ struct GraphFixture
             TestData d;
             d.u = pair.first;
             d.v = pair.second;
+            // We set the forward nodes to the target node-based-node IDs, just
+            // so we have something to test against.  Because this isn't a real
+            // graph, the actual values aren't important, we just need something
+            // to examine during tests.
+            d.forward_edge_based_node_id = pair.second;
+            d.reverse_edge_based_node_id = pair.first;
             edges.emplace_back(d);
         }
     }
@@ -494,5 +500,101 @@ BOOST_AUTO_TEST_CASE(rectangle_test)
     TestRectangle(10, 10, -5, -5);
     TestRectangle(10, 10, 0, 0);
 }
+
+/* Verify that the bearing-bounds checking function behaves as expected */
+BOOST_AUTO_TEST_CASE(bearing_range_test)
+{
+    // Simple, non-edge-case checks
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(45, 45, 10));
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(35, 45, 10));
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(55, 45, 10));
+
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(34, 45, 10));
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(56, 45, 10));
+
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(34, 45, 10));
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(56, 45, 10));
+
+    // When angle+limit goes > 360
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(359, 355, 10));
+
+    // When angle-limit goes < 0
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(359, 5, 10));
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(354, 5, 10));
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(16, 5, 10));
+
+
+    // Checking other cases of wraparound
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(359, -5, 10));
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(344, -5, 10));
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(6, -5, 10));
+
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(-1, 5, 10));
+    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(-6, 5, 10));
+
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(-721, 5, 10));
+    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(719, 5, 10));
+
+}
+
+BOOST_AUTO_TEST_CASE(bearing_tests)
+{
+
+    typedef std::pair<float, float> Coord;
+    typedef std::pair<unsigned, unsigned> Edge;
+    GraphFixture fixture(
+        {
+         Coord(0.0, 0.0),
+         Coord(10.0, 10.0),
+        },
+        {Edge(0, 1), Edge(1,0)});
+
+    typedef StaticRTree<TestData, std::vector<FixedPointCoordinate>, false, 2, 3> MiniStaticRTree;
+
+    std::string leaves_path;
+    std::string nodes_path;
+    build_rtree<GraphFixture, MiniStaticRTree>("test_bearing", &fixture, leaves_path, nodes_path);
+    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+
+    FixedPointCoordinate input(5.0 * COORDINATE_PRECISION, 5.1 * COORDINATE_PRECISION);
+    std::vector<PhantomNode> results;
+
+    rtree.IncrementalFindPhantomNodeForCoordinate( input, results, 5);
+    BOOST_CHECK_EQUAL(results.size(), 2);
+    BOOST_CHECK_EQUAL(results.back().forward_node_id, 0);
+    BOOST_CHECK_EQUAL(results.back().reverse_node_id, 1);
+
+    results.clear();
+    rtree.IncrementalFindPhantomNodeForCoordinate( input, results, 5, 270, 10);
+    BOOST_CHECK_EQUAL(results.size(), 0);
+
+    results.clear();
+    rtree.IncrementalFindPhantomNodeForCoordinate( input, results, 5, 45, 10);
+    BOOST_CHECK_EQUAL(results.size(), 2);
+    BOOST_CHECK_EQUAL(results[0].forward_node_id, 1);
+    BOOST_CHECK_EQUAL(results[0].reverse_node_id, SPECIAL_NODEID);
+    BOOST_CHECK_EQUAL(results[1].forward_node_id, SPECIAL_NODEID);
+    BOOST_CHECK_EQUAL(results[1].reverse_node_id, 1);
+
+
+    std::vector<std::pair<PhantomNode, double>> distance_results;
+    rtree.IncrementalFindPhantomNodeForCoordinateWithDistance( input, distance_results, 11000 );
+    BOOST_CHECK_EQUAL(distance_results.size(), 2);
+
+    distance_results.clear();
+    rtree.IncrementalFindPhantomNodeForCoordinateWithDistance( input, distance_results, 11000, 270, 10 );
+    BOOST_CHECK_EQUAL(distance_results.size(), 0);
+
+    distance_results.clear();
+    rtree.IncrementalFindPhantomNodeForCoordinateWithDistance( input, distance_results, 11000, 45, 10 );
+    BOOST_CHECK_EQUAL(distance_results.size(), 2);
+    BOOST_CHECK_EQUAL(distance_results[0].first.forward_node_id, 1);
+    BOOST_CHECK_EQUAL(distance_results[0].first.reverse_node_id, SPECIAL_NODEID);
+    BOOST_CHECK_EQUAL(distance_results[1].first.forward_node_id, SPECIAL_NODEID);
+    BOOST_CHECK_EQUAL(distance_results[1].first.reverse_node_id, 1);
+
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
