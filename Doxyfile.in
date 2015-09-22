@@ -12,7 +12,8 @@ EXTRACT_ANON_NSPACES   = YES
 QUIET                  = YES
 
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@
-FILE_PATTERNS          = *.h *.hpp *.c *.cc *.cpp
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/README.md
+FILE_PATTERNS          = *.h *.hpp *.c *.cc *.cpp *.md
 RECURSIVE              = YES
 
 EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/third_party \
