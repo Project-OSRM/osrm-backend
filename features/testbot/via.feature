@@ -52,30 +52,6 @@ Feature: Via points
             | a,c,f     | ab,bcd,bcd,de,efg        |
             | a,c,f,h   | ab,bcd,bcd,de,efg,efg,gh |
 
-    Scenario: Alternative via points
-        Given the node map
-            |   | b | c | d |   |   |
-            | a |   |   |   |   | z |
-            |   | g | h | i | j |   |
-
-        And the ways
-            | nodes |
-            | ab    |
-            | bc    |
-            | cd    |
-            | dz    |
-            | ag    |
-            | gh    |
-            | hi    |
-            | ij    |
-            | jz    |
-
-        And the query options
-            | alt | true |
-
-        When I route I should get
-            | waypoints | route       | alternative    |
-            | a,z       | ab,bc,cd,dz | ag,gh,hi,ij,jz |
 
     Scenario: Duplicate via point
         Given the node map
