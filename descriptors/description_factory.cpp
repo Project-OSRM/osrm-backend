@@ -60,10 +60,11 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     const TravelMode travel_mode =
         (traversed_in_reverse ? target.backward_travel_mode : target.forward_travel_mode);
-    path_description.emplace_back(target.location, target.name_id, segment_duration, 0.f,
+    path_description.emplace_back(target.location, target.name_id, target.traffic_segment_id,
+                                  segment_duration, 0.f,
                                   is_via_location ? TurnInstruction::ReachViaLocation
                                                   : TurnInstruction::NoTurn,
-                                  true, true, travel_mode, target.traffic_segment_id);
+                                  true, true, travel_mode);
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -95,8 +96,9 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         return path_point.turn_instruction;
     }();
 
-    path_description.emplace_back(coordinate, path_point.name_id, path_point.segment_duration, 0.f,
-                                  turn, path_point.travel_mode, path_point.traffic_segment_id);
+    path_description.emplace_back(coordinate, path_point.name_id, path_point.traffic_segment_id,
+                                  path_point.segment_duration, 0.f,
+                                  turn, path_point.travel_mode);
 }
 
 osrm::json::Value DescriptionFactory::AppendGeometryString(const bool return_encoded)

@@ -114,7 +114,7 @@ struct PhantomNode
     bool operator==(const PhantomNode &other) const;
 };
 
-static_assert(sizeof(PhantomNode) == 48, "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 52, "PhantomNode has more padding then expected");
 
 using PhantomNodeArray = std::vector<std::vector<PhantomNode>>;
 

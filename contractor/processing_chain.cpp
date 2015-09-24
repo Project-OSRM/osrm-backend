@@ -189,6 +189,23 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
     return max_edge_id;
 }
 
+void Prepare::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
+{
+    std::vector<bool> is_core_node(in_is_core_node);
+    std::vector<char> unpacked_bool_flags(is_core_node.size());
+    for (auto i = 0u; i < is_core_node.size(); ++i)
+    {
+        unpacked_bool_flags[i] = is_core_node[i] ? 1 : 0;
+    }
+
+    boost::filesystem::ofstream core_marker_output_stream(config.core_output_path,
+                                                          std::ios::binary);
+    unsigned size = unpacked_bool_flags.size();
+    core_marker_output_stream.write((char *)&size, sizeof(unsigned));
+    core_marker_output_stream.write((char *)unpacked_bool_flags.data(),
+                                    sizeof(char) * unpacked_bool_flags.size());
+}
+
 std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
                                           const unsigned edges_crc32,
                                           DeallocatingVector<QueryEdge> contracted_edge_list)
