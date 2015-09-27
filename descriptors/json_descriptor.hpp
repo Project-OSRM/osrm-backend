@@ -73,7 +73,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
 
     virtual void SetConfig(const DescriptorConfig &c) override final { config = c; }
 
-    unsigned DescribeLeg(const std::vector<PathData> &route_leg,
+    template<typename ForwardIter>
+    unsigned DescribeLeg(ForwardIter leg_begin, ForwardIter leg_end,
                          const PhantomNodes &leg_phantoms,
                          const bool target_traversed_in_reverse,
                          const bool is_via_leg)
@@ -81,16 +82,15 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         unsigned added_element_count = 0;
         // Get all the coordinates for the computed route
         FixedPointCoordinate current_coordinate;
-        for (const PathData &path_data : route_leg)
+        for (auto iter = leg_begin; iter != leg_end; ++iter)
         {
-            current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-            description_factory.AppendSegment(current_coordinate, path_data);
+            current_coordinate = facade->GetCoordinateOfNode(iter->node);
+            description_factory.AppendSegment(current_coordinate, *iter);
             ++added_element_count;
         }
         description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse,
                                           is_via_leg);
         ++added_element_count;
-        BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
         return added_element_count;
     }
 
@@ -106,25 +106,32 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             return;
         }
 
-        // check if first segment is non-zero
-        BOOST_ASSERT(raw_route.unpacked_path_segments.size() ==
-                     raw_route.segment_end_coordinates.size());
-
         description_factory.SetStartSegment(
             raw_route.segment_end_coordinates.front().source_phantom,
             raw_route.source_traversed_in_reverse.front());
+
         json_result.values["status"] = 0;
         json_result.values["status_message"] = "Found route between points";
 
+        BOOST_ASSERT(raw_route.segment_end_indices.size() ==
+                     raw_route.segment_end_coordinates.size());
+
+        BOOST_ASSERT(raw_route.segment_end_indices.back() == raw_route.unpacked_route.size());
+
+        std::size_t start_idx = 0;
         // for each unpacked segment add the leg to the description
-        for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
         {
+            auto end_idx = raw_route.segment_end_indices[i];
 #ifndef NDEBUG
             const int added_segments =
 #endif
-                DescribeLeg(raw_route.unpacked_path_segments[i],
+                DescribeLeg(raw_route.unpacked_route.begin() + start_idx,
+                            raw_route.unpacked_route.begin() + end_idx,
                             raw_route.segment_end_coordinates[i],
-                            raw_route.target_traversed_in_reverse[i], raw_route.is_via_leg(i));
+                            raw_route.target_traversed_in_reverse[i],
+                            i < raw_route.segment_end_coordinates.size() - 1);
+            start_idx = end_idx;
             BOOST_ASSERT(0 < added_segments);
         }
         description_factory.Run(config.zoom_level);
@@ -352,7 +359,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     const double bearing_value = (segment.bearing / 10.);
                     json_instruction_row.values.push_back(bearing::get(bearing_value));
                     json_instruction_row.values.push_back(
-                        static_cast<unsigned>(round(bearing_value)));
+                        static_cast<unsigned>(std::round(bearing_value)));
                     json_instruction_row.values.push_back(segment.travel_mode);
 
                     route_segments_list.emplace_back(
@@ -382,6 +389,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_last_instruction_row.values.push_back("0m");
         json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
+        json_last_instruction_row.values.push_back(TRAVEL_MODE_DEFAULT);
         json_instruction_array.values.push_back(json_last_instruction_row);
 
         return json_instruction_array;

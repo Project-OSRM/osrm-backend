@@ -59,7 +59,6 @@ class DirectShortestPathRouting final
     ~DirectShortestPathRouting() {}
 
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
-                    const std::vector<bool> &uturn_indicators,
                     InternalRouteResult &raw_route_data) const
     {
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
@@ -230,16 +229,14 @@ class DirectShortestPathRouting final
             super::RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
         }
 
-
-        BOOST_ASSERT_MSG(!packed_leg.empty(), "packed path empty");
-
-        raw_route_data.unpacked_path_segments.resize(1);
         raw_route_data.source_traversed_in_reverse.push_back(
             (packed_leg.front() != phantom_node_pair.source_phantom.forward_node_id));
         raw_route_data.target_traversed_in_reverse.push_back(
             (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
 
-        super::UnpackPath(packed_leg, phantom_node_pair, raw_route_data.unpacked_path_segments.front());
+        super::UnpackPath(packed_leg.begin(), packed_leg.end(),
+                          phantom_node_pair, raw_route_data.unpacked_route);
+        raw_route_data.segment_end_indices.push_back(raw_route_data.unpacked_route.size());
 
         raw_route_data.shortest_path_length = distance;
     }

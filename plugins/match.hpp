@@ -198,17 +198,23 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             FixedPointCoordinate current_coordinate;
             factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
                                     raw_route.source_traversed_in_reverse.front());
+
+            std::size_t start_idx = 0;
             for (const auto i :
-                 osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
+                 osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
             {
-                for (const PathData &path_data : raw_route.unpacked_path_segments[i])
+                auto end_idx = raw_route.segment_end_indices[i];
+                auto begin_leg = raw_route.unpacked_route.begin() + start_idx;
+                auto end_leg = raw_route.unpacked_route.begin() + end_idx;
+                for (auto iter = begin_leg; iter != end_leg; ++iter)
                 {
-                    current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-                    factory.AppendSegment(current_coordinate, path_data);
+                    current_coordinate = facade->GetCoordinateOfNode(iter->node);
+                    factory.AppendSegment(current_coordinate, *iter);
                 }
                 factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
                                       raw_route.target_traversed_in_reverse[i],
-                                      raw_route.is_via_leg(i));
+                                      i < raw_route.segment_end_coordinates.size() - 1);
+                start_idx = end_idx;
             }
 
             factory.Run(route_parameters.zoom_level);

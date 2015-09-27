@@ -163,8 +163,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             }
             else
             {
-                search_engine_ptr->direct_shortest_path(raw_route.segment_end_coordinates,
-                                                        route_parameters.uturns, raw_route);
+                search_engine_ptr->direct_shortest_path(raw_route.segment_end_coordinates, raw_route);
             }
         }
         else

@@ -75,14 +75,11 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
             AddRoutePoint(raw_route.segment_end_coordinates.front().source_phantom.location,
                           json_route);
 
-            for (const std::vector<PathData> &path_data_vector : raw_route.unpacked_path_segments)
+            for (const PathData &path_data : raw_route.unpacked_route)
             {
-                for (const PathData &path_data : path_data_vector)
-                {
-                    const FixedPointCoordinate current_coordinate =
-                        facade->GetCoordinateOfNode(path_data.node);
-                    AddRoutePoint(current_coordinate, json_route);
-                }
+                const FixedPointCoordinate current_coordinate =
+                    facade->GetCoordinateOfNode(path_data.node);
+                AddRoutePoint(current_coordinate, json_route);
             }
             AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location,
                           json_route);

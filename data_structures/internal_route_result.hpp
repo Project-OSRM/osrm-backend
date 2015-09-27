@@ -63,8 +63,9 @@ struct PathData
 
 struct InternalRouteResult
 {
-    std::vector<std::vector<PathData>> unpacked_path_segments;
+    std::vector<PathData> unpacked_route;
     std::vector<PathData> unpacked_alternative;
+    std::vector<std::size_t> segment_end_indices;
     std::vector<PhantomNodes> segment_end_coordinates;
     std::vector<bool> source_traversed_in_reverse;
     std::vector<bool> target_traversed_in_reverse;
@@ -72,11 +73,6 @@ struct InternalRouteResult
     std::vector<bool> alt_target_traversed_in_reverse;
     int shortest_path_length;
     int alternative_path_length;
-
-    bool is_via_leg(const std::size_t leg) const
-    {
-        return (leg != unpacked_path_segments.size() - 1);
-    }
 
     InternalRouteResult()
         : shortest_path_length(INVALID_EDGE_WEIGHT), alternative_path_length(INVALID_EDGE_WEIGHT)

@@ -309,20 +309,15 @@ class AlternativeRouting final
         if (INVALID_EDGE_WEIGHT != upper_bound_to_shortest_path_distance)
         {
             BOOST_ASSERT(!packed_shortest_path.empty());
-            raw_route_data.unpacked_path_segments.resize(1);
             raw_route_data.source_traversed_in_reverse.push_back(
                 (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id));
             raw_route_data.target_traversed_in_reverse.push_back(
                 (packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_node_id));
 
-            super::UnpackPath(
-                // -- packed input
-                packed_shortest_path,
-                // -- start of route
-                phantom_node_pair,
-                // -- unpacked output
-                raw_route_data.unpacked_path_segments.front());
+            super::UnpackPath(packed_shortest_path.begin(), packed_shortest_path.end(),
+                              phantom_node_pair, raw_route_data.unpacked_route);
             raw_route_data.shortest_path_length = upper_bound_to_shortest_path_distance;
+            raw_route_data.segment_end_indices.push_back(raw_route_data.unpacked_route.size());
         }
 
         if (SPECIAL_NODEID != selected_via_node)
@@ -338,8 +333,8 @@ class AlternativeRouting final
                 (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id));
 
             // unpack the alternate path
-            super::UnpackPath(packed_alternate_path, phantom_node_pair,
-                              raw_route_data.unpacked_alternative);
+            super::UnpackPath(packed_alternate_path.begin(), packed_alternate_path.end(),
+                              phantom_node_pair, raw_route_data.unpacked_alternative);
 
             raw_route_data.alternative_path_length = length_of_via_path;
         }
