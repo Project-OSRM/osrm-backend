@@ -132,7 +132,8 @@ class LinearSearchNN
                                        nearest,
                                        e.fwd_segment_position,
                                        e.forward_travel_mode,
-                                       e.backward_travel_mode};
+                                       e.backward_travel_mode,
+                                       e.traffic_segment_id};
                 nearest_edge = e;
             }
         }

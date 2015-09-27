@@ -28,13 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "processing_chain.hpp"
 
 #include "contractor.hpp"
-#include "../algorithms/graph_compressor.hpp"
-#include "../algorithms/tarjan_scc.hpp"
-#include "../algorithms/crc32_processor.hpp"
-#include "../data_structures/compressed_edge_container.hpp"
 #include "../data_structures/deallocating_vector.hpp"
 #include "../data_structures/static_rtree.hpp"
 #include "../data_structures/restriction_map.hpp"
+#include "../data_structures/range_table.hpp"
 
 #include "../util/git_sha.hpp"
 #include "../util/graph_loader.hpp"
@@ -64,45 +61,27 @@ int Prepare::Run()
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
 #else
-    static_assert(sizeof(NodeBasedEdge) == 20,
+    static_assert(sizeof(NodeBasedEdge) == 32,
                   "changing NodeBasedEdge type has influence on memory consumption!");
-    static_assert(sizeof(EdgeBasedEdge) == 16,
+    static_assert(sizeof(EdgeBasedEdge) == 40,
                   "changing EdgeBasedEdge type has influence on memory consumption!");
 #endif
 
     TIMER_START(preparing);
 
-    // Create a new lua state
+    // Load the edge-expanded graph from disk
+    //
 
-    SimpleLogger().Write() << "Generating edge-expanded graph representation";
-
-    TIMER_START(expansion);
-
-    std::vector<EdgeBasedNode> node_based_edge_list;
+    unsigned edges_crc32;
     DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
-    std::vector<QueryNode> internal_to_external_node_map;
-    auto graph_size = BuildEdgeExpandedGraph(internal_to_external_node_map, node_based_edge_list,
-                                             edge_based_edge_list);
+    size_t max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_filename, edges_crc32, edge_based_edge_list);
 
-    auto number_of_node_based_nodes = graph_size.first;
-    auto max_edge_id = graph_size.second;
-
-    TIMER_STOP(expansion);
-
-    SimpleLogger().Write() << "building r-tree ...";
-    TIMER_START(rtree);
-
-    FindComponents(max_edge_id, edge_based_edge_list, node_based_edge_list);
-
-    BuildRTree(node_based_edge_list, internal_to_external_node_map);
-
-    TIMER_STOP(rtree);
-
-    SimpleLogger().Write() << "writing node map ...";
-    WriteNodeMapping(internal_to_external_node_map);
+    TIMER_START(traffic);
+    UpdateEdgesWithTrafficData(config.speed_lookup_filename, edge_based_edge_list);
+    TIMER_STOP(traffic);
+    SimpleLogger().Write() << "Traffic lookups " << TIMER_SEC(traffic) << " sec";
 
     // Contracting the edge-expanded graph
-
     TIMER_START(contraction);
     std::vector<bool> is_core_node;
     DeallocatingVector<QueryEdge> contracted_edge_list;
@@ -110,17 +89,14 @@ int Prepare::Run()
     TIMER_STOP(contraction);
 
     SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
-
-    std::size_t number_of_used_edges =
-        WriteContractedGraph(max_edge_id, node_based_edge_list, contracted_edge_list);
+    std::size_t number_of_used_edges = WriteContractedGraph(max_edge_id,
+                                                            edges_crc32,
+                                                            std::move(contracted_edge_list));
     WriteCoreNodeMarker(std::move(is_core_node));
 
     TIMER_STOP(preparing);
 
     SimpleLogger().Write() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
-    SimpleLogger().Write() << "Expansion  : " << (number_of_node_based_nodes / TIMER_SEC(expansion))
-                           << " nodes/sec and " << ((max_edge_id + 1) / TIMER_SEC(expansion))
-                           << " edges/sec";
 
     SimpleLogger().Write() << "Contraction: " << ((max_edge_id + 1) / TIMER_SEC(contraction))
                            << " nodes/sec and " << number_of_used_edges / TIMER_SEC(contraction)
@@ -131,79 +107,86 @@ int Prepare::Run()
     return 0;
 }
 
-void Prepare::FindComponents(unsigned max_edge_id,
-                             const DeallocatingVector<EdgeBasedEdge> &input_edge_list,
-                             std::vector<EdgeBasedNode> &input_nodes) const
+
+void Prepare::UpdateEdgesWithTrafficData(
+        std::string const& traffic_filename,
+        DeallocatingVector<EdgeBasedEdge> & edge_based_edge_list
+        )
 {
-    struct UncontractedEdgeData
-    {
+    std::unordered_map<NodeID, unsigned> new_speeds;
+
+    boost::filesystem::ifstream input_stream(traffic_filename, std::ios::in | std::ios::binary);
+
+    // TODO:  Because there are typically fewer traffic data items than
+    //        edge-based-edges, it would be preferable to only iterate 
+    //        over the former. Unfortunately, the DeallocatingVector
+    //        that the edge-based-edges live in does not have a good lookup
+    //        function.  So instead, we'll iterate over all edge-based-edges,
+    //        and use an O(1) lookup of the traffic data to minimize the impact.
+    //        If the DeallocatingVector could have O(1) lookup, we could reduce
+    //        the amount of work here down to the number of traffic items
+    //        we import.
+    struct pair {
+        NodeID key;
+        unsigned value;
     };
-    struct InputEdge
+    // TODO: read these in blocks of 8-64kb to maximize disk throughput
+    pair buffer;
+    unsigned lookupcount = 0;
+    do {
+        input_stream.read((char *)&buffer, sizeof(pair));
+        new_speeds.emplace(buffer.key,buffer.value);
+        ++lookupcount;
+    } while (input_stream.good());
+
+    unsigned updatecount = 0;
+    for (auto & edge : edge_based_edge_list) 
     {
-        unsigned source;
-        unsigned target;
-        UncontractedEdgeData data;
-
-        bool operator<(const InputEdge &rhs) const
+        if (edge.traffic_segment_id != INVALID_TRAFFIC_SEGMENT && edge.original_length != INVALID_LENGTH)
         {
-            return source < rhs.source || (source == rhs.source && target < rhs.target);
-        }
-
-        bool operator==(const InputEdge &rhs) const
-        {
-            return source == rhs.source && target == rhs.target;
-        }
-    };
-    using UncontractedGraph = StaticGraph<UncontractedEdgeData>;
-    std::vector<InputEdge> edges;
-    edges.reserve(input_edge_list.size() * 2);
-
-    for (const auto &edge : input_edge_list)
-    {
-        BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(edge.weight, 1)) > 0,
-                         "edge distance < 1");
-        if (edge.forward)
-        {
-            edges.push_back({edge.source, edge.target, {}});
-        }
-
-        if (edge.backward)
-        {
-            edges.push_back({edge.target, edge.source, {}});
+            auto new_speed = new_speeds.find(edge.edge_id);
+            if (new_speed != new_speeds.end()) {
+                edge.weight = (edge.original_length * 10.) / (new_speed->second / 3.6) + edge.added_penalties;
+                ++updatecount;
+            }
         }
     }
+    SimpleLogger().Write() << "Found " << lookupcount << " speed values, updated " << updatecount << " of " << edge_based_edge_list.size() << " edges";
+    
+}
 
-    // connect forward and backward nodes of each edge
-    for (const auto &node : input_nodes)
-    {
-        if (node.reverse_edge_based_node_id != SPECIAL_NODEID)
-        {
-            edges.push_back({node.forward_edge_based_node_id, node.reverse_edge_based_node_id, {}});
-            edges.push_back({node.reverse_edge_based_node_id, node.forward_edge_based_node_id, {}});
-        }
+std::size_t Prepare::LoadEdgeExpandedGraph(
+        std::string const &edge_based_graph_filename,
+        unsigned &edges_crc32,
+        DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
+{
+    SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
+    boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::in | std::ios::binary);
+
+    const FingerPrint fingerprint_valid = FingerPrint::GetValid();
+    FingerPrint fingerprint_loaded;
+    input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+    fingerprint_loaded.TestPrepare(fingerprint_valid);
+
+    unsigned number_of_edges = 0;
+    size_t max_edge_id = SPECIAL_EDGEID;
+    input_stream.read((char *)&number_of_edges, sizeof(unsigned));
+    input_stream.read((char *)&max_edge_id, sizeof(size_t));
+    input_stream.read((char *)&edges_crc32, sizeof(unsigned));
+
+    edge_based_edge_list.resize(number_of_edges);
+    SimpleLogger().Write() << "Reading " << number_of_edges << " edges from the edge based graph";
+
+    // TODO: can we read this in bulk?  DeallocatingVector isn't necessarily
+    // all stored contiguously
+    for (;number_of_edges > 0; --number_of_edges) {
+        EdgeBasedEdge inbuffer;
+        input_stream.read((char *) &inbuffer, sizeof(EdgeBasedEdge));
+        edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
+    SimpleLogger().Write() << "Done reading edges";
 
-    tbb::parallel_sort(edges.begin(), edges.end());
-    auto new_end = std::unique(edges.begin(), edges.end());
-    edges.resize(new_end - edges.begin());
-
-    auto uncontractor_graph = std::make_shared<UncontractedGraph>(max_edge_id + 1, edges);
-
-    TarjanSCC<UncontractedGraph> component_search(
-        std::const_pointer_cast<const UncontractedGraph>(uncontractor_graph));
-    component_search.run();
-
-    for (auto &node : input_nodes)
-    {
-        auto forward_component = component_search.get_component_id(node.forward_edge_based_node_id);
-        BOOST_ASSERT(node.reverse_edge_based_node_id == SPECIAL_EDGEID ||
-                     forward_component ==
-                         component_search.get_component_id(node.reverse_edge_based_node_id));
-
-        const unsigned component_size = component_search.get_component_size(forward_component);
-        const bool is_tiny_component = component_size < 1000;
-        node.component_id = is_tiny_component ? (1 + forward_component) : 0;
-    }
+    return max_edge_id;
 }
 
 void Prepare::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
@@ -224,11 +207,9 @@ void Prepare::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
 }
 
 std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
-                                          const std::vector<EdgeBasedNode> &node_based_edge_list,
-                                          const DeallocatingVector<QueryEdge> &contracted_edge_list)
+                                          const unsigned edges_crc32,
+                                          DeallocatingVector<QueryEdge> contracted_edge_list)
 {
-    const unsigned crc32_value = CalculateEdgeChecksum(node_based_edge_list);
-
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
     const unsigned contracted_edge_count = contracted_edge_list.size();
@@ -286,7 +267,7 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
 
     const unsigned node_array_size = node_array.size();
     // serialize crc32, aka checksum
-    hsgr_output_stream.write((char *)&crc32_value, sizeof(unsigned));
+    hsgr_output_stream.write((char *)&edges_crc32, sizeof(unsigned));
     // serialize number of nodes
     hsgr_output_stream.write((char *)&node_array_size, sizeof(unsigned));
     // serialize number of edges
@@ -335,166 +316,6 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
     return number_of_used_edges;
 }
 
-unsigned Prepare::CalculateEdgeChecksum(const std::vector<EdgeBasedNode> &node_based_edge_list)
-{
-    RangebasedCRC32 crc32;
-    if (crc32.using_hardware())
-    {
-        SimpleLogger().Write() << "using hardware based CRC32 computation";
-    }
-    else
-    {
-        SimpleLogger().Write() << "using software based CRC32 computation";
-    }
-
-    const unsigned crc32_value = crc32(node_based_edge_list);
-    SimpleLogger().Write() << "CRC32: " << crc32_value;
-
-    return crc32_value;
-}
-
-/**
-    \brief Setups scripting environment (lua-scripting)
-    Also initializes speed profile.
-*/
-void Prepare::SetupScriptingEnvironment(lua_State *lua_state, SpeedProfileProperties &speed_profile)
-{
-    // open utility libraries string library;
-    luaL_openlibs(lua_state);
-
-    // adjust lua load path
-    luaAddScriptFolderToLoadPath(lua_state, config.profile_path.string().c_str());
-
-    // Now call our function in a lua script
-    if (0 != luaL_dofile(lua_state, config.profile_path.string().c_str()))
-    {
-        std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occured in scripting block";
-        throw osrm::exception(msg.str());
-    }
-
-    if (0 != luaL_dostring(lua_state, "return traffic_signal_penalty\n"))
-    {
-        std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occured in scripting block";
-        throw osrm::exception(msg.str());
-    }
-    speed_profile.traffic_signal_penalty = 10 * lua_tointeger(lua_state, -1);
-    SimpleLogger().Write(logDEBUG)
-        << "traffic_signal_penalty: " << speed_profile.traffic_signal_penalty;
-
-    if (0 != luaL_dostring(lua_state, "return u_turn_penalty\n"))
-    {
-        std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occured in scripting block";
-        throw osrm::exception(msg.str());
-    }
-
-    speed_profile.u_turn_penalty = 10 * lua_tointeger(lua_state, -1);
-    speed_profile.has_turn_penalty_function = lua_function_exists(lua_state, "turn_function");
-}
-
-/**
-  \brief Build load restrictions from .restriction file
-  */
-std::shared_ptr<RestrictionMap> Prepare::LoadRestrictionMap()
-{
-    boost::filesystem::ifstream input_stream(config.restrictions_path,
-                                             std::ios::in | std::ios::binary);
-
-    std::vector<TurnRestriction> restriction_list;
-    loadRestrictionsFromFile(input_stream, restriction_list);
-
-    SimpleLogger().Write() << " - " << restriction_list.size() << " restrictions.";
-
-    return std::make_shared<RestrictionMap>(restriction_list);
-}
-
-/**
-  \brief Load node based graph from .osrm file
-  */
-std::shared_ptr<NodeBasedDynamicGraph>
-Prepare::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
-                            std::unordered_set<NodeID> &traffic_lights,
-                            std::vector<QueryNode> &internal_to_external_node_map)
-{
-    std::vector<NodeBasedEdge> edge_list;
-
-    boost::filesystem::ifstream input_stream(config.osrm_input_path,
-                                             std::ios::in | std::ios::binary);
-
-    std::vector<NodeID> barrier_list;
-    std::vector<NodeID> traffic_light_list;
-    NodeID number_of_node_based_nodes = loadNodesFromFile(
-        input_stream, barrier_list, traffic_light_list, internal_to_external_node_map);
-
-    SimpleLogger().Write() << " - " << barrier_list.size() << " bollard nodes, "
-                           << traffic_light_list.size() << " traffic lights";
-
-    // insert into unordered sets for fast lookup
-    barrier_nodes.insert(barrier_list.begin(), barrier_list.end());
-    traffic_lights.insert(traffic_light_list.begin(), traffic_light_list.end());
-
-    barrier_list.clear();
-    barrier_list.shrink_to_fit();
-    traffic_light_list.clear();
-    traffic_light_list.shrink_to_fit();
-
-    loadEdgesFromFile(input_stream, edge_list);
-
-    if (edge_list.empty())
-    {
-        SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
-        return std::shared_ptr<NodeBasedDynamicGraph>();
-    }
-
-    return NodeBasedDynamicGraphFromEdges(number_of_node_based_nodes, edge_list);
-}
-
-/**
- \brief Building an edge-expanded graph from node-based input and turn restrictions
-*/
-std::pair<std::size_t, std::size_t>
-Prepare::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
-                                std::vector<EdgeBasedNode> &node_based_edge_list,
-                                DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
-{
-    lua_State *lua_state = luaL_newstate();
-    luabind::open(lua_state);
-
-    SpeedProfileProperties speed_profile;
-    SetupScriptingEnvironment(lua_state, speed_profile);
-
-    std::unordered_set<NodeID> barrier_nodes;
-    std::unordered_set<NodeID> traffic_lights;
-
-    auto restriction_map = LoadRestrictionMap();
-    auto node_based_graph =
-        LoadNodeBasedGraph(barrier_nodes, traffic_lights, internal_to_external_node_map);
-
-    CompressedEdgeContainer compressed_edge_container;
-    GraphCompressor graph_compressor(speed_profile);
-    graph_compressor.Compress(barrier_nodes, traffic_lights, *restriction_map, *node_based_graph,
-                              compressed_edge_container);
-
-    EdgeBasedGraphFactory edge_based_graph_factory(
-        node_based_graph, compressed_edge_container, barrier_nodes, traffic_lights,
-        std::const_pointer_cast<RestrictionMap const>(restriction_map),
-        internal_to_external_node_map, speed_profile);
-
-    compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
-
-    edge_based_graph_factory.Run(config.edge_output_path, lua_state);
-    lua_close(lua_state);
-
-    edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
-    edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
-    auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
-
-    const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
-    return std::make_pair(number_of_node_based_nodes, max_edge_id);
-}
-
 /**
  \brief Build contracted graph.
  */
@@ -509,31 +330,3 @@ void Prepare::ContractGraph(const unsigned max_edge_id,
     contractor.GetCoreMarker(is_core_node);
 }
 
-/**
-  \brief Writing info on original (node-based) nodes
- */
-void Prepare::WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map)
-{
-    boost::filesystem::ofstream node_stream(config.node_output_path, std::ios::binary);
-    const unsigned size_of_mapping = internal_to_external_node_map.size();
-    node_stream.write((char *)&size_of_mapping, sizeof(unsigned));
-    if (size_of_mapping > 0)
-    {
-        node_stream.write((char *)internal_to_external_node_map.data(),
-                          size_of_mapping * sizeof(QueryNode));
-    }
-    node_stream.close();
-}
-
-/**
-    \brief Building rtree-based nearest-neighbor data structure
-
-    Saves tree into '.ramIndex' and leaves into '.fileIndex'.
- */
-void Prepare::BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
-                         const std::vector<QueryNode> &internal_to_external_node_map)
-{
-    StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path.c_str(),
-                               config.rtree_leafs_output_path.c_str(),
-                               internal_to_external_node_map);
-}

@@ -41,16 +41,20 @@ struct NodeBasedEdgeData
     NodeBasedEdgeData()
         : distance(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), access_restricted(false),
-          reversed(false), roundabout(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          reversed(false), roundabout(false),
+          travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          traffic_segment_id(INVALID_TRAFFIC_SEGMENT), original_length(INVALID_LENGTH)
     {
     }
 
     NodeBasedEdgeData(int distance, unsigned edge_id, unsigned name_id,
             bool access_restricted, bool reversed,
-            bool roundabout, TravelMode travel_mode)
+            bool roundabout, TravelMode travel_mode,
+            TrafficSegmentID traffic_segment_id, EdgeWeight original_length)
         : distance(distance), edge_id(edge_id), name_id(name_id),
           access_restricted(access_restricted), reversed(reversed),
-          roundabout(roundabout), travel_mode(travel_mode)
+          roundabout(roundabout), travel_mode(travel_mode),
+          traffic_segment_id(traffic_segment_id), original_length(original_length)
     {
     }
 
@@ -61,6 +65,8 @@ struct NodeBasedEdgeData
     bool reversed : 1;
     bool roundabout : 1;
     TravelMode travel_mode : 4;
+    TrafficSegmentID traffic_segment_id;
+    EdgeWeight original_length;
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
@@ -85,6 +91,8 @@ NodeBasedDynamicGraphFromEdges(int number_of_nodes, const std::vector<NodeBasedE
 
             output_edge.data.roundabout = input_edge.roundabout;
             output_edge.data.name_id = input_edge.name_id;
+            output_edge.data.traffic_segment_id = input_edge.traffic_segment_id;
+            output_edge.data.original_length = input_edge.original_length;
             output_edge.data.access_restricted = input_edge.access_restricted;
             output_edge.data.travel_mode = input_edge.travel_mode;
         }

@@ -160,7 +160,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 forward_data.name_id, forward_geometry[i].second,
                 reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
                 reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
-                INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
+                INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode,
+                forward_data.traffic_segment_id);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -203,7 +204,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
             forward_data.name_id, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
-            INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
+            INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode,
+            forward_data.traffic_segment_id);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -450,7 +452,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 original_edge_data_vector.emplace_back(
                     (edge_is_compressed ? m_compressed_edge_container.GetPositionForID(e1) : node_v),
                     edge_data1.name_id, turn_instruction, edge_is_compressed,
-                    edge_data2.travel_mode);
+                    edge_data2.travel_mode, edge_data1.traffic_segment_id);
 
                 ++original_edges_counter;
 
@@ -462,8 +464,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
 
+                // If this edge is later updated by the ingestion of traffic data,
+                // the edge will be re-weighted to (length * new_speed) plus the
+                // penalties added here.  Thus, we need to save them.
+                unsigned added_penalties = distance - edge_data1.distance;
+
                 m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
-                                  m_edge_based_edge_list.size(), distance, true, false);
+                                  m_edge_based_edge_list.size(), distance, true, false,
+                                  edge_data1.traffic_segment_id, edge_data1.original_length,
+                                  added_penalties);
             }
         }
     }

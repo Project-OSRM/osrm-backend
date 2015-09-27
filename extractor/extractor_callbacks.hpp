@@ -57,6 +57,11 @@ class ExtractorCallbacks
     std::unordered_map<std::string, NodeID> string_map;
     ExtractionContainers &external_memory;
 
+    // Utility function to add a name to the external_memory.name_list,
+    // and return the ID.  Will return the existing ID if string is already
+    // added.
+    unsigned addName(std::string const & str);
+
   public:
     ExtractorCallbacks() = delete;
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;

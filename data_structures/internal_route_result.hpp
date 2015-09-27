@@ -41,7 +41,8 @@ struct PathData
 {
     PathData()
         : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT), segment_duration(INVALID_EDGE_WEIGHT),
-          turn_instruction(TurnInstruction::NoTurn), travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          turn_instruction(TurnInstruction::NoTurn), travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          traffic_segment_id(INVALID_TRAFFIC_SEGMENT)
     {
     }
 
@@ -49,9 +50,11 @@ struct PathData
              unsigned name_id,
              TurnInstruction turn_instruction,
              EdgeWeight segment_duration,
-             TravelMode travel_mode)
+             TravelMode travel_mode,
+             TrafficSegmentID traffic_segment_id)
         : node(node), name_id(name_id), segment_duration(segment_duration),
-          turn_instruction(turn_instruction), travel_mode(travel_mode)
+          turn_instruction(turn_instruction), travel_mode(travel_mode),
+          traffic_segment_id(traffic_segment_id)
     {
     }
     NodeID node;
@@ -59,6 +62,7 @@ struct PathData
     EdgeWeight segment_duration;
     TurnInstruction turn_instruction;
     TravelMode travel_mode : 4;
+    TrafficSegmentID traffic_segment_id;
 };
 
 struct InternalRouteResult

@@ -47,7 +47,7 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
     const TravelMode travel_mode =
         (traversed_in_reverse ? source.backward_travel_mode : source.forward_travel_mode);
     AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn,
-                                            segment_duration, travel_mode));
+                                            segment_duration, travel_mode, source.traffic_segment_id));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -60,7 +60,8 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     const TravelMode travel_mode =
         (traversed_in_reverse ? target.backward_travel_mode : target.forward_travel_mode);
-    path_description.emplace_back(target.location, target.name_id, segment_duration, 0.f,
+    path_description.emplace_back(target.location, target.name_id, target.traffic_segment_id,
+                                  segment_duration, 0.f,
                                   is_via_location ? TurnInstruction::ReachViaLocation
                                                   : TurnInstruction::NoTurn,
                                   true, true, travel_mode);
@@ -78,6 +79,7 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         {
             path_description.front().name_id = path_point.name_id;
             path_description.front().travel_mode = path_point.travel_mode;
+            path_description.front().traffic_segment_id = path_point.traffic_segment_id;
         }
         return;
     }
@@ -94,7 +96,8 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
         return path_point.turn_instruction;
     }();
 
-    path_description.emplace_back(coordinate, path_point.name_id, path_point.segment_duration, 0.f,
+    path_description.emplace_back(coordinate, path_point.name_id, path_point.traffic_segment_id,
+                                  path_point.segment_duration, 0.f,
                                   turn, path_point.travel_mode);
 }
 
@@ -127,6 +130,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
+        path_description[i - 1].traffic_segment_id = path_description[i].traffic_segment_id;
         path_description[i].length = coordinate_calculation::euclidean_distance(
             path_description[i - 1].location, path_description[i].location);
     }
@@ -205,6 +209,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
         path_description.back().necessary = true;
         path_description.back().turn_instruction = TurnInstruction::NoTurn;
         target_phantom.name_id = (path_description.end() - 2)->name_id;
+        target_phantom.name_id = (path_description.end() - 2)->traffic_segment_id;
     }
 
     if (path_description.size() > 2 &&
@@ -215,6 +220,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
         path_description.front().turn_instruction = TurnInstruction::HeadOn;
         path_description.front().necessary = true;
         start_phantom.name_id = path_description.front().name_id;
+        start_phantom.traffic_segment_id = path_description.front().traffic_segment_id;
     }
 
     // Generalize poly line

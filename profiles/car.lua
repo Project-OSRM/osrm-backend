@@ -254,6 +254,17 @@ function way_function (way, result)
     return
   end
 
+  -- This is the key on the way that's the stable traffic identifier
+  local forward_traffic_segment_code = way:get_value_by_key("tmc_code:backward")
+  if forward_traffic_segment_code then
+    result.forward_traffic_segment_code = forward_traffic_segment_code
+  end
+
+  local backward_traffic_segment_code = way:get_value_by_key("tmc_code:backward")
+  if backward_traffic_segment_code then
+    result.backward_traffic_segment_code = backward_traffic_segment_code
+  end
+
   -- handling ferries and piers
   local route_speed = speed_profile[route]
   if (route_speed and route_speed > 0) then
@@ -444,4 +455,13 @@ function turn_function (angle)
   else
     return angle*angle*k*turn_bias
   end
+end
+
+-- This is called during the "prepare" phase (not extract).  It takes a traffic_segment_code
+-- parameter, and returns a speed for that segment, or a negative value if there is no data
+-- for the requested traffic_segment_code
+function traffic_segment_function(traffic_segment_code)
+    -- TODO: perform a real lookup here
+    -- return 0.5
+    return -1
 end

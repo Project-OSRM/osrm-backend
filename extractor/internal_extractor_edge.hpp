@@ -64,7 +64,7 @@ struct InternalExtractorEdge
 
     explicit InternalExtractorEdge()
         : result(0, 0, 0, 0, false, false, false, false,
-                TRAVEL_MODE_INACCESSIBLE, false)
+                TRAVEL_MODE_INACCESSIBLE, false, INVALID_TRAFFIC_SEGMENT, INVALID_LENGTH)
     {
     }
 
@@ -77,7 +77,9 @@ struct InternalExtractorEdge
                                    bool roundabout,
                                    bool access_restricted,
                                    TravelMode travel_mode,
-                                   bool is_split)
+                                   bool is_split,
+                                   TrafficSegmentID traffic_segment_id,
+                                   EdgeWeight original_length)
         : result(source,
                  target,
                  name_id,
@@ -87,8 +89,10 @@ struct InternalExtractorEdge
                  roundabout,
                  access_restricted,
                  travel_mode,
-                 is_split),
-          weight_data(std::move(weight_data))
+                 is_split,
+                 traffic_segment_id,
+                 original_length),
+                 weight_data(std::move(weight_data))
     {
     }
 
@@ -104,12 +108,12 @@ struct InternalExtractorEdge
     static InternalExtractorEdge min_value()
     {
         return InternalExtractorEdge(0, 0, 0, WeightData(), false, false, false,
-                                     false, TRAVEL_MODE_INACCESSIBLE, false);
+                                     false, TRAVEL_MODE_INACCESSIBLE, false, INVALID_TRAFFIC_SEGMENT, INVALID_LENGTH);
     }
     static InternalExtractorEdge max_value()
     {
         return InternalExtractorEdge(SPECIAL_NODEID, SPECIAL_NODEID, 0, WeightData(), false,
-                                     false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
+                                     false, false, false, TRAVEL_MODE_INACCESSIBLE, false, INVALID_TRAFFIC_SEGMENT, INVALID_LENGTH);
     }
 };
 

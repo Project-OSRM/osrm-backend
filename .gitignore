@@ -80,3 +80,7 @@ stxxl.errlog
 # Deprecated config file #
 ##########################
 /server.ini
+
+# VIM temporary files
+##########################
+.*.swp

@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
         }
 
         SimpleLogger().Write() << "Input file: " << contractor_config.osrm_input_path.filename().string();
-        SimpleLogger().Write() << "Restrictions file: " << contractor_config.restrictions_path.filename().string();
         SimpleLogger().Write() << "Profile: " << contractor_config.profile_path.filename().string();
         SimpleLogger().Write() << "Threads: " << contractor_config.requested_num_threads;
 

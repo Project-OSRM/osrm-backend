@@ -63,6 +63,7 @@ struct SharedDataLayout
         TIMESTAMP,
         FILE_INDEX_PATH,
         CORE_MARKER,
+        TRAFFIC_SEGMENT_ID_LIST,
         NUM_BLOCKS
     };
 
@@ -109,6 +110,8 @@ struct SharedDataLayout
                                        << ": " << GetBlockSize(FILE_INDEX_PATH);
         SimpleLogger().Write(logDEBUG) << "CORE_MARKER          "
                                        << ": " << GetBlockSize(CORE_MARKER);
+        SimpleLogger().Write(logDEBUG) << "TRAFFIC_SEGMENT_ID_LIST         "
+                                       << ": " << GetBlockSize(TRAFFIC_SEGMENT_ID_LIST);
     }
 
     template <typename T> inline void SetBlockSize(BlockID bid, uint64_t entries)
@@ -163,11 +166,11 @@ struct SharedDataLayout
             bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
             if (!start_canary_alive)
             {
-                throw osrm::exception("Start canary of block corrupted.");
+                throw osrm::exception("Start canary of block corrupted." + std::to_string(bid));
             }
             if (!end_canary_alive)
             {
-                throw osrm::exception("End canary of block corrupted.");
+                throw osrm::exception("End canary of block corrupted." + std::to_string(bid));
             }
         }
 

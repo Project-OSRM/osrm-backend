@@ -229,6 +229,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
+                unsigned traffic_segment_id = facade->GetTrafficSegmentIDFromEdgeID(ed.id);
                 const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
 
@@ -236,7 +237,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
                     unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id), name_index,
-                                               turn_instruction, ed.distance, travel_mode);
+                                               turn_instruction, ed.distance, travel_mode,
+                                               traffic_segment_id);
                 }
                 else
                 {
@@ -258,7 +260,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
                         unpacked_path.emplace_back(id_vector[i], name_index,
-                                                   TurnInstruction::NoTurn, 0, travel_mode);
+                                                   TurnInstruction::NoTurn, 0, travel_mode,
+                                                   traffic_segment_id);
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().segment_duration = ed.distance;
@@ -307,7 +310,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                              phantom_node_pair.target_phantom.name_id,
                              TurnInstruction::NoTurn,
                              0,
-                             phantom_node_pair.target_phantom.forward_travel_mode});
+                             phantom_node_pair.target_phantom.forward_travel_mode,
+                             phantom_node_pair.target_phantom.traffic_segment_id});
             }
         }
 
