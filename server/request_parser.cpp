@@ -328,11 +328,14 @@ osrm::tribool RequestParser::consume(request &current_request, const char input)
         }
         return osrm::tribool::no;
     case internal_state::expecting_newline_3:
-        if(input == '\n')
+        if (input == '\n')
         {
-            if(is_post_header)
+            if (is_post_header)
             {
-                current_request.uri.push_back('?');
+		if (content_length > 0)
+		{
+		    current_request.uri.push_back('?');
+		}
                 state = internal_state::post_request;
                 return osrm::tribool::indeterminate;
             }
