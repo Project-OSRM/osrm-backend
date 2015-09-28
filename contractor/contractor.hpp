@@ -868,7 +868,7 @@ class Contractor
             }
         }
         // eliminate duplicate entries ( forward + backward edges )
-        tbb::parallel_sort(neighbours.begin(), neighbours.end());
+        std::sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         for (const auto i : osrm::irange<std::size_t>(0, neighbours.size()))
@@ -897,7 +897,7 @@ class Contractor
             node_data[u].depth = (std::max)(node_data[node].depth + 1, node_data[u].depth);
         }
         // eliminate duplicate entries ( forward + backward edges )
-        tbb::parallel_sort(neighbours.begin(), neighbours.end());
+        std::sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         // re-evaluate priorities of neighboring nodes
@@ -940,7 +940,7 @@ class Contractor
             neighbours.push_back(target);
         }
 
-        tbb::parallel_sort(neighbours.begin(), neighbours.end());
+        std::sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
         // examine all neighbours that are at most 2 hops away
