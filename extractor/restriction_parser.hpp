@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/restriction.hpp"
 
-#include <boost/optional/optional_fwd.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <string>
 #include <vector>
