@@ -33,6 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <type_traits>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
 namespace cast
 {
 template <typename Enumeration>
@@ -47,8 +50,19 @@ template <typename T, int Precision = 6> inline std::string to_string_with_preci
     static_assert(std::is_arithmetic<T>::value, "integral or floating point type required");
 
     std::ostringstream out;
-    out << std::setprecision(Precision) << x;
-    return out.str();
+    out << std::fixed << std::setprecision(Precision) << x;
+    auto rv = out.str();
+
+    // Javascript has no separation of float / int, digits without a '.' are integral typed
+    // X.Y.0 -> X.Y
+    // X.0 -> X
+    boost::trim_right_if(rv, boost::is_any_of("0"));
+    boost::trim_right_if(rv, boost::is_any_of("."));
+    // Note:
+    //  - assumes the locale to use '.' as digit separator
+    //  - this is not identical to:  trim_right_if(rv, is_any_of('0 .'))
+
+    return rv;
 }
 }
 
