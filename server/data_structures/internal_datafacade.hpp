@@ -376,6 +376,11 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_query_graph->FindEdge(from, to);
     }
 
+    EdgeID FindSmallestEdge(const NodeID from, const NodeID to) const override final
+    {
+        return m_query_graph->FindSmallestEdge(from, to);
+    }
+
     EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const override final
     {
         return m_query_graph->FindEdgeInEitherDirection(from, to);

@@ -46,15 +46,17 @@ struct PathData
     }
 
     PathData(NodeID node,
+             FixedPointCoordinate location,
              unsigned name_id,
              TurnInstruction turn_instruction,
              EdgeWeight segment_duration,
              TravelMode travel_mode)
-        : node(node), name_id(name_id), segment_duration(segment_duration),
+        : node(node), location(location), name_id(name_id), segment_duration(segment_duration),
           turn_instruction(turn_instruction), travel_mode(travel_mode)
     {
     }
     NodeID node;
+    FixedPointCoordinate location;
     unsigned name_id;
     EdgeWeight segment_duration;
     TurnInstruction turn_instruction;
@@ -63,8 +65,8 @@ struct PathData
 
 struct InternalRouteResult
 {
-    std::vector<PathData> unpacked_route;
-    std::vector<PathData> unpacked_alternative;
+    std::vector<PathData> uncompressed_route;
+    std::vector<PathData> uncompressed_alternative;
     std::vector<std::size_t> segment_end_indices;
     std::vector<PhantomNodes> segment_end_coordinates;
     std::vector<bool> source_traversed_in_reverse;

@@ -73,6 +73,9 @@ template <class EdgeDataT> class BaseDataFacade
     // searches for a specific edge
     virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;
 
+    /// Find the edge with the smallest edge weight
+    virtual EdgeID FindSmallestEdge(const NodeID from, const NodeID to) const = 0;
+
     virtual EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const = 0;
 
     virtual EdgeID

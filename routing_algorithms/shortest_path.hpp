@@ -317,24 +317,17 @@ class ShortestPathRouting final
         for (const std::size_t index : osrm::irange<std::size_t>(0, phantom_nodes_vector.size()))
         {
 
-            PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[index];
             std::size_t end_index = packed_leg_ends1[index];
-            std::vector<PathData> unpacked_leg;
+            std::vector<NodeID> unpacked_leg;
             super::UnpackPath(packed_route1.begin() + start_index,
                               packed_route1.begin() + end_index,
-                              unpack_phantom_node_pair,
                               unpacked_leg);
 
-            //This would only be correct if we source and target phantom
-            //are always included
-            //BOOST_ASSERT(unpacked_leg.size() > 0);
+            PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[index];
+            super::UncompressPath(unpacked_leg.begin(), unpacked_leg.end(),
+                                  unpack_phantom_node_pair, raw_route_data.uncompressed_route);
 
-            raw_route_data.unpacked_route.insert(raw_route_data.unpacked_route.end(),
-                                                 // skip first path entry, as vias would be included twice
-                                                 unpacked_leg.begin(),
-                                                 unpacked_leg.end());
-
-            raw_route_data.segment_end_indices.push_back(raw_route_data.unpacked_route.size());
+            raw_route_data.segment_end_indices.push_back(raw_route_data.uncompressed_route.size());
             raw_route_data.source_traversed_in_reverse.push_back(
                 (packed_route1[start_index] != phantom_nodes_vector[index].source_phantom.forward_node_id));
             raw_route_data.target_traversed_in_reverse.push_back(

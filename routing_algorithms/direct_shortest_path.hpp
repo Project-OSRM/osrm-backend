@@ -234,9 +234,11 @@ class DirectShortestPathRouting final
         raw_route_data.target_traversed_in_reverse.push_back(
             (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
 
-        super::UnpackPath(packed_leg.begin(), packed_leg.end(),
-                          phantom_node_pair, raw_route_data.unpacked_route);
-        raw_route_data.segment_end_indices.push_back(raw_route_data.unpacked_route.size());
+        std::vector<NodeID> unpacked_route;
+        super::UnpackPath(packed_leg.begin(), packed_leg.end(), unpacked_route);
+        super::UncompressPath(unpacked_route.begin(), unpacked_route.end(),
+                              phantom_node_pair, raw_route_data.uncompressed_route);
+        raw_route_data.segment_end_indices.push_back(raw_route_data.uncompressed_route.size());
 
         raw_route_data.shortest_path_length = distance;
     }

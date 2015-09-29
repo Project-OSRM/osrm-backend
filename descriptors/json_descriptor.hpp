@@ -80,22 +80,19 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
     virtual void SetConfig(const DescriptorConfig &c) override final { config = c; }
 
     template<typename ForwardIter>
-    unsigned DescribeLeg(ForwardIter leg_begin, ForwardIter leg_end,
-                         const PhantomNodes &leg_phantoms,
-                         const bool target_traversed_in_reverse,
-                         const bool is_via_leg)
+    unsigned DescribeLeg(ForwardIter leg_begin, ForwardIter leg_end, const bool is_via_leg)
     {
         unsigned added_element_count = 0;
-        // Get all the coordinates for the computed route
-        FixedPointCoordinate current_coordinate;
         for (auto iter = leg_begin; iter != leg_end; ++iter)
         {
-            current_coordinate = facade->GetCoordinateOfNode(iter->node);
-            description_factory.AppendSegment(current_coordinate, *iter);
+            description_factory.AppendSegment(*iter);
             ++added_element_count;
         }
-        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse,
-                                          is_via_leg);
+        if (is_via_leg)
+        {
+            description_factory.path_description.back().turn_instruction = TurnInstruction::ReachViaLocation;
+        }
+
         ++added_element_count;
         return added_element_count;
     }
@@ -112,30 +109,24 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             return;
         }
 
-        description_factory.SetStartSegment(
-            raw_route.segment_end_coordinates.front().source_phantom,
-            raw_route.source_traversed_in_reverse.front());
-
         json_result.values["status"] = 0;
         json_result.values["status_message"] = "Found route between points";
 
         BOOST_ASSERT(raw_route.segment_end_indices.size() ==
                      raw_route.segment_end_coordinates.size());
 
-        BOOST_ASSERT(raw_route.segment_end_indices.back() == raw_route.unpacked_route.size());
+        BOOST_ASSERT(raw_route.segment_end_indices.back() == raw_route.uncompressed_route.size());
 
         std::size_t start_idx = 0;
-        // for each unpacked segment add the leg to the description
+        // for each uncompressed segment add the leg to the description
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
         {
             auto end_idx = raw_route.segment_end_indices[i];
 #ifndef NDEBUG
             const int added_segments =
 #endif
-                DescribeLeg(raw_route.unpacked_route.begin() + start_idx,
-                            raw_route.unpacked_route.begin() + end_idx,
-                            raw_route.segment_end_coordinates[i],
-                            raw_route.target_traversed_in_reverse[i],
+                DescribeLeg(raw_route.uncompressed_route.begin() + start_idx,
+                            raw_route.uncompressed_route.begin() + end_idx,
                             i < raw_route.segment_end_coordinates.size() - 1);
             start_idx = end_idx;
             BOOST_ASSERT(0 < added_segments);
@@ -201,19 +192,12 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             json_result.values["found_alternative"] = osrm::json::True();
-            BOOST_ASSERT(!raw_route.alt_source_traversed_in_reverse.empty());
-            alternate_description_factory.SetStartSegment(
-                raw_route.segment_end_coordinates.front().source_phantom,
-                raw_route.alt_source_traversed_in_reverse.front());
+
             // Get all the coordinates for the computed route
-            for (const PathData &path_data : raw_route.unpacked_alternative)
+            for (const PathData &path_data : raw_route.uncompressed_alternative)
             {
-                current = facade->GetCoordinateOfNode(path_data.node);
-                alternate_description_factory.AppendSegment(current, path_data);
+                alternate_description_factory.AppendSegment(path_data);
             }
-            alternate_description_factory.SetEndSegment(
-                raw_route.segment_end_coordinates.back().target_phantom,
-                raw_route.alt_source_traversed_in_reverse.back());
             alternate_description_factory.Run(config.zoom_level);
 
             if (config.geometry)

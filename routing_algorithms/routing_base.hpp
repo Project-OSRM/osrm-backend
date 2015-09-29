@@ -149,15 +149,235 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
     }
 
+    /// This function decompresses routes given as list of _edge based_ node ids.
+    ///
+    /// (0,1,2) and (1,2,3) form an edge based edge each and the node list we are going
+    /// to get will represent (0,1)(1,2)(2,3).
+    /// If all edges are uncompressedwe want to extract is (1, 2).
+    ///           s
+    ///       1-----0
+    ///       |
+    ///       |
+    /// 3-----2
+    ///     t
+    ///
+    /// If (0, 1), (1,2) and (2,3) are actually compressed that means we need to
+    /// add all the segments inbetween:
+    ///            s
+    ///       1-b-a-0
+    ///       |
+    ///       c
+    ///       |
+    /// 3-e-d-2
+    ///    t
+    /// -> (a, b, 1, c, 2, d)
+    template<typename ForwardIter>
+    void UncompressPath(ForwardIter unpacked_path_begin, ForwardIter unpacked_path_end,
+                        const PhantomNodes &phantom_node_pair,
+                        std::vector<PathData> &uncompressed_path) const
+    {
+        BOOST_ASSERT(std::distance(unpacked_path_begin, unpacked_path_end) > 0);
+
+        const bool source_traversed_in_reverse =
+            (*unpacked_path_begin != phantom_node_pair.source_phantom.forward_node_id);
+        const bool target_traversed_in_reverse =
+            (*std::prev(unpacked_path_end) != phantom_node_pair.target_phantom.forward_node_id);
+
+        BOOST_ASSERT(*unpacked_path_begin == phantom_node_pair.source_phantom.forward_node_id ||
+                     *unpacked_path_begin == phantom_node_pair.source_phantom.reverse_node_id);
+        BOOST_ASSERT(std::prev(unpacked_path_end) == phantom_node_pair.target_phantom.forward_node_id ||
+                     std::prev(unpacked_path_end) == phantom_node_pair.target_phantom.reverse_node_id);
+
+        bool same_edge = phantom_node_pair.source_phantom.forward_node_id == phantom_node_pair.target_phantom.forward_node_id;
+        BOOST_ASSERT(!same_edge || phantom_node_pair.source_phantom.reverse_node_id == phantom_node_pair.target_phantom.reverse_node_id);
+
+        // source and target are on the same compressed edge
+        if (same_edge)
+        {
+            const auto edge_id = *unpacked_path_begin;
+
+            unsigned name_index = phantom_node_pair.source_phantom.name_id;
+            const TravelMode travel_mode = source_traversed_in_reverse ? phantom_node_pair.source_phantom.backward_travel_mode :
+                                            phantom_node_pair.source_phantom.forward_travel_mode;
+            const EdgeWeight duration = [&]() {
+                if (source_traversed_in_reverse)
+                {
+                  BOOST_ASSERT(target_traversed_in_reverse);
+                  return phantom_node_pair.source_phantom.GetForwardWeightPlusOffset() - phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
+                }
+                else
+                {
+                  BOOST_ASSERT(!target_traversed_in_reverse);
+                  return phantom_node_pair.source_phantom.GetReverseWeightPlusOffset() - phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
+                }
+            }();
+
+            if (facade->EdgeIsCompressed(edge_id))
+            {
+                std::vector<unsigned> uncompressed_node_ids;
+                facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(edge_id), uncompressed_node_ids);
+
+                auto source_node_id = uncompressed_node_ids[phantom_node_pair.source_phantom.fwd_segment_position];
+                uncompressed_path.emplace_back(source_node_id, phantom_node_pair.source_phantom.location,
+                                               name_index, TurnInstruction::HeadOn, 0, travel_mode);
+                if (source_traversed_in_reverse)
+                {
+                    // single compressed edge
+                    // 0--->1--->2--->3--->4
+                    //   t              s
+                    // -> 3, 2, 1
+                    for (int idx = phantom_node_pair.source_phantom.fwd_segment_position+1;
+                         idx > phantom_node_pair.target_phantom.fwd_segment_position; idx--)
+                    {
+                        auto node_id = uncompressed_node_ids[idx];
+                        uncompressed_path.emplace_back(node_id, facade->GetCoordinateOfNode(node_id),
+                                                       name_index, TurnInstruction::NoTurn, 0, travel_mode);
+                    }
+                }
+                else
+                {
+                    // single compressed edge
+                    // 0--->1--->2--->3--->4
+                    //   s              t
+                    // -> 1, 2, 3
+                    for (int idx = phantom_node_pair.source_phantom.fwd_segment_position+1;
+                         idx <= phantom_node_pair.target_phantom.fwd_segment_position; idx++)
+                    {
+                        auto node_id = uncompressed_node_ids[idx];
+                        uncompressed_path.emplace_back(node_id, facade->GetCoordinateOfNode(node_id),
+                                                       name_index, TurnInstruction::NoTurn, 0, travel_mode);
+                    }
+                }
+
+                auto target_node_id = uncompressed_node_ids[phantom_node_pair.target_phantom.fwd_segment_position];
+                uncompressed_path.emplace_back(target_node_id, phantom_node_pair.target_phantom.location,
+                                               name_index, TurnInstruction::ReachedYourDestination, duration, travel_mode);
+            }
+            else
+            {
+                uncompressed_path.emplace_back(facade->GetGeometryIndexForEdgeID(edge_id), phantom_node_pair.source_phantom.location,
+                                               name_index, TurnInstruction::HeadOn, 0, travel_mode);
+                uncompressed_path.emplace_back(facade->GetGeometryIndexForEdgeID(edge_id), phantom_node_pair.target_phantom.location,
+                                               name_index, TurnInstruction::ReachedYourDestination, duration, travel_mode);
+            }
+        }
+        else
+        {
+            for (auto iter = unpacked_path_begin; iter != unpacked_path_end; ++iter)
+            {
+                const auto edge_id = *iter;
+                const auto data = facade->GetEdgeData(edge_id);
+                const auto duration = data.distance;
+
+                unsigned name_index = facade->GetNameIndexFromEdgeID(edge_id);
+                const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(edge_id);
+                const TravelMode travel_mode = facade->GetTravelModeForEdgeID(edge_id);
+
+                if (facade->EdgeIsCompressed(edge_id))
+                {
+                    std::vector<unsigned> uncompressed_node_ids;
+                    facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(edge_id),
+                                                    uncompressed_node_ids);
+
+                    const auto end_index = uncompressed_node_ids.size();
+                    const auto begin_index = [&]() {
+                        if (uncompressed_path.size() > 0)
+                            return 0UL;
+
+                        if (source_traversed_in_reverse)
+                        {
+                            return end_index - phantom_node_pair.source_phantom.fwd_segment_position - 1;
+                        }
+                        else
+                        {
+                            return static_cast<unsigned long>(phantom_node_pair.source_phantom.fwd_segment_position);
+                        }
+                    }();
+
+                    BOOST_ASSERT(begin_index >= 0);
+                    BOOST_ASSERT(begin_index <= end_index);
+                    for (auto idx = begin_index; idx < end_index; ++idx)
+                    {
+                        auto node_id = uncompressed_node_ids[idx];
+                        uncompressed_path.emplace_back(node_id, facade->GetCoordinateOfNode(node_id),
+                                                       name_index, TurnInstruction::NoTurn, 0, travel_mode);
+                    }
+                    uncompressed_path.back().turn_instruction = turn_instruction;
+                    uncompressed_path.back().segment_duration = duration;
+                }
+                else
+                {
+                    auto node_id = facade->GetGeometryIndexForEdgeID(edge_id);
+                    uncompressed_path.emplace_back(node_id, facade->GetCoordinateOfNode(node_id), name_index,
+                                               turn_instruction, duration, travel_mode);
+                }
+            }
+
+            if (SPECIAL_EDGEID != phantom_node_pair.target_phantom.packed_geometry_id)
+            {
+                std::vector<unsigned> uncompressed_node_ids;
+                facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.packed_geometry_id,
+                                                uncompressed_node_ids);
+
+                const auto end_index = phantom_node_pair.target_phantom.fwd_segment_position;
+                unsigned name_index = phantom_node_pair.target_phantom.name_id;
+                auto target_node_id = uncompressed_node_ids[phantom_node_pair.target_phantom.fwd_segment_position];
+
+                //         t
+                //         <<<<<<<<
+                // u--->x--->x--->v
+                if (target_traversed_in_reverse)
+                {
+                    TravelMode travel_mode = phantom_node_pair.target_phantom.backward_travel_mode;
+                    EdgeWeight duration = phantom_node_pair.target_phantom.reverse_offset;
+
+                    BOOST_ASSERT(begin_index >= end_index);
+                    for (auto idx = uncompressed_node_ids.size()-1; idx > end_index; --idx)
+                    {
+                        auto node_id = uncompressed_node_ids[idx];
+                        uncompressed_path.emplace_back(node_id, facade->GetCoordinateOfNode(node_id),
+                                                       name_index, TurnInstruction::NoTurn, 0, travel_mode);
+                    }
+                    uncompressed_path.emplace_back(target_node_id, phantom_node_pair.target_phantom.location,
+                                                   name_index, TurnInstruction::ReachedYourDestination, duration, travel_mode);
+                }
+                //         t
+                // >>>>>>>>>
+                // u--->x--->x--->v
+                else
+                {
+                    TravelMode travel_mode = phantom_node_pair.target_phantom.forward_travel_mode;
+                    EdgeWeight duration = phantom_node_pair.target_phantom.forward_weight;
+
+                    BOOST_ASSERT(begin_index >= end_index);
+                    for (auto idx = 0; idx < end_index; ++idx)
+                    {
+                        auto node_id = uncompressed_node_ids[idx];
+                        uncompressed_path.emplace_back(node_id, facade->GetCoordinateOfNode(node_id),
+                                                       name_index, TurnInstruction::NoTurn, 0, travel_mode);
+                    }
+                    uncompressed_path.emplace_back(target_node_id, phantom_node_pair.target_phantom.location,
+                                                   name_index, TurnInstruction::ReachedYourDestination, duration, travel_mode);
+                }
+            }
+        }
+    }
+
+    /// Gets a list of node ids that potentially cover shortcuts. This recursively
+    /// unpacks shortcuts until only simple edges are left.
+    /// Returns a list of edge-based node ids.
     template<typename ForwardIter>
     void UnpackPath(ForwardIter packed_path_begin, ForwardIter packed_path_end,
-                    const PhantomNodes &phantom_node_pair,
-                    std::vector<PathData> &unpacked_path) const
+                    std::vector<NodeID> &unpacked_path) const
     {
-        const bool start_traversed_in_reverse =
-            (*packed_path_begin != phantom_node_pair.source_phantom.forward_node_id);
-        const bool target_traversed_in_reverse =
-            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_node_id);
+        BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
+
+        // handle local path on same edge, they are always unpacked
+        if (std::distance(packed_path_begin, packed_path_end) < 2)
+        {
+            unpacked_path.emplace_back(*packed_path_begin);
+            return;
+        }
 
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
 
@@ -170,166 +390,31 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         std::pair<NodeID, NodeID> edge;
         while (!recursion_stack.empty())
         {
-            /*
-            Graphical representation of variables:
-
-            edge.first         edge.second
-                *------------------>*
-                       edge_id
-            */
             edge = recursion_stack.top();
             recursion_stack.pop();
 
             // facade->FindEdge does not suffice here in case of shortcuts.
             // The above explanation unclear? Think!
-            EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            int edge_weight = std::numeric_limits<EdgeWeight>::max();
-            for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
-            {
-                const int weight = facade->GetEdgeData(edge_id).distance;
-                if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
-                    facade->GetEdgeData(edge_id).forward)
-                {
-                    smaller_edge_id = edge_id;
-                    edge_weight = weight;
-                }
-            }
+            EdgeID smaller_edge_id = facade->FindSmallestEdge(edge.first, edge.second);
 
-            /*
-                Graphical representation of variables:
-
-                edge.first         edge.second
-                    *<------------------*
-                           edge_id
-            */
             if (SPECIAL_EDGEID == smaller_edge_id)
             {
-                for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
-                {
-                    const int weight = facade->GetEdgeData(edge_id).distance;
-                    if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
-                        facade->GetEdgeData(edge_id).backward)
-                    {
-                        smaller_edge_id = edge_id;
-                        edge_weight = weight;
-                    }
-                }
+                smaller_edge_id = facade->FindSmallestEdge(edge.second, edge.first);
             }
-            BOOST_ASSERT_MSG(edge_weight != INVALID_EDGE_WEIGHT, "edge id invalid");
+            BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "edge id invalid");
 
-            const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
-            if (ed.shortcut)
-            { // unpack
-                const NodeID middle_node_id = ed.id;
+            const EdgeData &data = facade->GetEdgeData(smaller_edge_id);
+            if (data.shortcut)
+            {
+                const NodeID middle_node_id = data.id;
                 // again, we need to this in reversed order
                 recursion_stack.emplace(middle_node_id, edge.second);
                 recursion_stack.emplace(edge.first, middle_node_id);
             }
             else
             {
-                BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
-                unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
-                const TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
-
-                if (!facade->EdgeIsCompressed(ed.id))
-                {
-                    BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
-                    unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id), name_index,
-                                               turn_instruction, ed.distance, travel_mode);
-                }
-                else
-                {
-                    std::vector<unsigned> id_vector;
-                    facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id),
-                                                    id_vector);
-
-                    const std::size_t start_index =
-                        (unpacked_path.empty()
-                             ? ((start_traversed_in_reverse)
-                                    ? id_vector.size() -
-                                          phantom_node_pair.source_phantom.fwd_segment_position - 1
-                                    : phantom_node_pair.source_phantom.fwd_segment_position)
-                             : 0);
-                    const std::size_t end_index = id_vector.size();
-
-                    BOOST_ASSERT(start_index >= 0);
-                    BOOST_ASSERT(start_index <= end_index);
-                    for (std::size_t i = start_index; i < end_index; ++i)
-                    {
-                        unpacked_path.emplace_back(id_vector[i], name_index,
-                                                   TurnInstruction::NoTurn, 0, travel_mode);
-                    }
-                    unpacked_path.back().turn_instruction = turn_instruction;
-                    unpacked_path.back().segment_duration = ed.distance;
-                }
+                unpacked_path.emplace_back(data.id);
             }
-        }
-
-        if (SPECIAL_EDGEID != phantom_node_pair.target_phantom.packed_geometry_id)
-        {
-            std::vector<unsigned> id_vector;
-            facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.packed_geometry_id,
-                                            id_vector);
-            const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id ==
-                                        phantom_node_pair.target_phantom.packed_geometry_id) &&
-                                       unpacked_path.empty();
-
-            std::size_t start_index = 0;
-            if (is_local_path)
-            {
-                start_index = phantom_node_pair.source_phantom.fwd_segment_position;
-                if (target_traversed_in_reverse)
-                {
-                    start_index =
-                        id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position;
-                }
-            }
-
-            std::size_t end_index = phantom_node_pair.target_phantom.fwd_segment_position;
-            if (target_traversed_in_reverse)
-            {
-                std::reverse(id_vector.begin(), id_vector.end());
-                end_index =
-                    id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
-            }
-
-            if (start_index > end_index)
-            {
-                start_index = std::min(start_index, id_vector.size() - 1);
-            }
-
-            for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
-            {
-                BOOST_ASSERT(i < id_vector.size());
-                BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
-                unpacked_path.emplace_back(
-                    PathData{id_vector[i],
-                             phantom_node_pair.target_phantom.name_id,
-                             TurnInstruction::NoTurn,
-                             0,
-                             phantom_node_pair.target_phantom.forward_travel_mode});
-            }
-        }
-
-        // there is no equivalent to a node-based node in an edge-expanded graph.
-        // two equivalent routes may start (or end) at different node-based edges
-        // as they are added with the offset how much "distance" on the edge
-        // has already been traversed. Depending on offset one needs to remove
-        // the last node.
-        if (unpacked_path.size() > 1)
-        {
-            const std::size_t last_index = unpacked_path.size() - 1;
-            const std::size_t second_to_last_index = last_index - 1;
-
-            // looks like a trivially true check but tests for underflow
-            BOOST_ASSERT(last_index > second_to_last_index);
-
-            if (unpacked_path[last_index].node == unpacked_path[second_to_last_index].node)
-            {
-                unpacked_path.pop_back();
-            }
-            BOOST_ASSERT(!unpacked_path.empty());
         }
     }
 
@@ -469,24 +554,24 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         {
             std::vector<NodeID> packed_leg;
             RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle_node, packed_leg);
-            std::vector<PathData> unpacked_path;
             PhantomNodes nodes;
             nodes.source_phantom = source_phantom;
             nodes.target_phantom = target_phantom;
-            UnpackPath(packed_leg.begin(), packed_leg.end(), nodes, unpacked_path);
+            std::vector<NodeID> unpacked_path;
+            UnpackPath(packed_leg.begin(), packed_leg.end(), unpacked_path);
+            std::vector<PathData> uncompressed_path;
+            UncompressPath(unpacked_path.begin(), unpacked_path.end(), nodes, uncompressed_path);
 
             FixedPointCoordinate previous_coordinate = source_phantom.location;
             FixedPointCoordinate current_coordinate;
             distance = 0;
-            for (const auto &p : unpacked_path)
+            for (const auto &p : uncompressed_path)
             {
-                current_coordinate = facade->GetCoordinateOfNode(p.node);
+                current_coordinate = p.location;
                 distance += coordinate_calculation::great_circle_distance(previous_coordinate,
                                                                           current_coordinate);
                 previous_coordinate = current_coordinate;
             }
-            distance += coordinate_calculation::great_circle_distance(previous_coordinate,
-                                                                      target_phantom.location);
         }
         return distance;
     }

@@ -79,12 +79,8 @@ class DescriptionFactory
     // I know, declaring this public is considered bad. I'm lazy
     std::vector<SegmentInformation> path_description;
     DescriptionFactory();
-    void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
+    void AppendSegment(const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
-    void SetEndSegment(const PhantomNode &start_phantom,
-                       const bool traversed_in_reverse,
-                       const bool is_via_location = false);
     osrm::json::Value AppendGeometryString(const bool return_encoded);
     std::vector<unsigned> const &GetViaIndices() const;
 

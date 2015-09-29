@@ -172,27 +172,10 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (route_parameters.geometry)
         {
             DescriptionFactory factory;
-            FixedPointCoordinate current_coordinate;
-            factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
-                                    raw_route.source_traversed_in_reverse.front());
 
-            std::size_t start_idx = 0;
-            for (const auto i :
-                 osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
-            {
-                auto end_idx = raw_route.segment_end_indices[i];
-                auto begin_leg = raw_route.unpacked_route.begin() + start_idx;
-                auto end_leg = raw_route.unpacked_route.begin() + end_idx;
-                for (auto iter = begin_leg; iter != end_leg; ++iter)
-                {
-                    current_coordinate = facade->GetCoordinateOfNode(iter->node);
-                    factory.AppendSegment(current_coordinate, *iter);
-                }
-                factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
-                                      raw_route.target_traversed_in_reverse[i],
-                                      i < raw_route.segment_end_coordinates.size() - 1);
-                start_idx = end_idx;
-            }
+            std::for_each(raw_route.uncompressed_route.begin(), raw_route.uncompressed_route.end(),
+                          [&](const PathData& data) { factory.AppendSegment(data); });
+
             // we need this because we don't run DP
             for (auto &segment : factory.path_description)
             {

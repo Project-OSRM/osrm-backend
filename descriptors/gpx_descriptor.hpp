@@ -72,17 +72,10 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
         osrm::json::Array json_route;
         if (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT)
         {
-            AddRoutePoint(raw_route.segment_end_coordinates.front().source_phantom.location,
-                          json_route);
-
-            for (const PathData &path_data : raw_route.unpacked_route)
+            for (const PathData &path_data : raw_route.uncompressed_route)
             {
-                const FixedPointCoordinate current_coordinate =
-                    facade->GetCoordinateOfNode(path_data.node);
-                AddRoutePoint(current_coordinate, json_route);
+                AddRoutePoint(path_data.location, json_route);
             }
-            AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location,
-                          json_route);
         }
         // osrm::json::gpx_render(reply.content, json_route);
         json_result.values["route"] = json_route;
