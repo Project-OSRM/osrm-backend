@@ -169,7 +169,7 @@ endif()
 
 # Configuring compilers
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2 -fPIC")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
@@ -177,7 +177,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(COLOR_FLAG "")
   endif()
   # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2 ${COLOR_FLAG}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC")
   if(WIN32) # using mingw
     add_definitions(-D_USE_MATH_DEFINES) # define M_PI, M_1_PI etc.
     add_definitions(-DWIN32)
