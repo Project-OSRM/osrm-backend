@@ -119,25 +119,25 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         //          => in_component = [0, 1, 2, 4, 5, 3, 6, 7, 8]
         //          => in_range = [0, 5]
         SCC_Component(std::vector<NodeID> in_component, std::vector<size_t> in_range)
-            : component(in_component), range(in_range)
+            : component(std::move(in_component)), range(std::move(in_range))
         {
-            range.push_back(in_component.size());
+            range.push_back(component.size());
 
-            BOOST_ASSERT_MSG(in_component.size() >= in_range.size(),
+            BOOST_ASSERT_MSG(component.size() >= range.size(),
                              "scc component and its ranges do not match");
-            BOOST_ASSERT_MSG(in_component.size() > 0, "there's no scc component");
-            BOOST_ASSERT_MSG(*std::max_element(in_range.begin(), in_range.end()) <=
-                                 in_component.size(),
+            BOOST_ASSERT_MSG(component.size() > 0, "there's no scc component");
+            BOOST_ASSERT_MSG(*std::max_element(range.begin(), range.end()) <=
+                                 component.size(),
                              "scc component ranges are out of bound");
-            BOOST_ASSERT_MSG(*std::min_element(in_range.begin(), in_range.end()) >= 0,
+            BOOST_ASSERT_MSG(*std::min_element(range.begin(), range.end()) >= 0,
                              "invalid scc component range");
-            BOOST_ASSERT_MSG(std::is_sorted(std::begin(in_range), std::end(in_range)),
+            BOOST_ASSERT_MSG(std::is_sorted(std::begin(range), std::end(range)),
                              "invalid component ranges");
         };
 
         // constructor to use when whole graph is one single scc
         SCC_Component(std::vector<NodeID> in_component)
-            : component(in_component), range({0, in_component.size()}){};
+            : component(std::move(in_component)), range({0, component.size()}){};
 
         std::size_t GetNumberOfComponents() const
         {
@@ -322,10 +322,9 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // compute all round trip routes
         std::vector<InternalRouteResult> comp_route;
         comp_route.reserve(route_result.size());
-        for (std::size_t r = 0; r < route_result.size(); ++r)
+        for (auto &elem : route_result)
         {
-            comp_route.push_back(
-                ComputeRoute(phantom_node_vector, route_parameters, route_result[r]));
+            comp_route.push_back(ComputeRoute(phantom_node_vector, route_parameters, elem));
         }
 
         TIMER_STOP(TRIP_TIMER);
