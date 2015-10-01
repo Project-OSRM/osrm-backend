@@ -130,13 +130,11 @@ int main(int argc, char *argv[])
     try
     {
         // enable logging
-        if (argc < 3)
+        if (argc < 2)
         {
             SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0] << " <osrm>";
             return -1;
         }
-
-        SimpleLogger().Write() << "Using restrictions from file: " << argv[2];
 
         std::vector<TarjanEdge> graph_edge_list;
         auto number_of_nodes = LoadGraph(argv[1], coordinate_list, graph_edge_list);
