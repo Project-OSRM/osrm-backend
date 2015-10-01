@@ -57,7 +57,7 @@ void DescriptionFactory::AppendSegment(const PathData &path_point)
     const TurnInstruction turn = [&]() -> TurnInstruction
     {
         if (TurnInstruction::NoTurn == path_point.turn_instruction &&
-            path_description.front().travel_mode != path_point.travel_mode &&
+            path_description.size() > 0 && path_description.front().travel_mode != path_point.travel_mode &&
             path_point.segment_duration > 0)
         {
             return TurnInstruction::GoStraight;

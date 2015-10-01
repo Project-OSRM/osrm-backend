@@ -172,6 +172,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                          node_v != m_edge_based_node_list.back().u);
         }
 
+        std::cout << forward_data.edge_id << " / " << reverse_data.edge_id << ": compressed" << std::endl;
+
         BOOST_ASSERT(current_edge_source_coordinate_id == node_v);
         BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
     }
@@ -199,6 +201,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
 
         BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID ||
                      reverse_data.edge_id != SPECIAL_NODEID);
+
+        std::cout << forward_data.edge_id << " / " << reverse_data.edge_id << ": not compressed" << std::endl;
 
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
@@ -282,7 +286,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     {
         BOOST_ASSERT(node_u != SPECIAL_NODEID);
         BOOST_ASSERT(node_u < m_node_based_graph->GetNumberOfNodes());
-        progress.printStatus(node_u);
+        //progress.printStatus(node_u);
         for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
             const EdgeData &edge_data = m_node_based_graph->GetEdgeData(e1);
@@ -344,7 +348,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     for (const auto node_u : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
-        progress.printStatus(node_u);
+        //progress.printStatus(node_u);
         for (const EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
             if (m_node_based_graph->GetEdgeData(e1).reversed)
@@ -461,6 +465,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
+
+                std::cout << edge_data1.edge_id << " -> " << edge_data2.edge_id << ": " << edge_is_compressed << std::endl;
 
                 m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
                                   m_edge_based_edge_list.size(), distance, true, false);

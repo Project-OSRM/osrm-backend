@@ -309,15 +309,18 @@ class AlternativeRouting final
         if (INVALID_EDGE_WEIGHT != upper_bound_to_shortest_path_distance)
         {
             BOOST_ASSERT(!packed_shortest_path.empty());
-            raw_route_data.source_traversed_in_reverse.push_back(
-                (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id));
-            raw_route_data.target_traversed_in_reverse.push_back(
-                (packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_node_id));
+            auto source_traversed_in_reverse =
+                packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id;
+            auto target_traversed_in_reverse =
+                packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_node_id;
+            raw_route_data.source_traversed_in_reverse.push_back(source_traversed_in_reverse);
+            raw_route_data.target_traversed_in_reverse.push_back(target_traversed_in_reverse);
 
             std::vector<NodeID> unpacked_route;
             super::UnpackPath(packed_shortest_path.begin(), packed_shortest_path.end(), unpacked_route);
             super::UncompressPath(unpacked_route.begin(), unpacked_route.end(),
-                                  phantom_node_pair, raw_route_data.uncompressed_route);
+                                  phantom_node_pair, source_traversed_in_reverse, target_traversed_in_reverse,
+                                  raw_route_data.uncompressed_route);
             raw_route_data.shortest_path_length = upper_bound_to_shortest_path_distance;
             raw_route_data.segment_end_indices.push_back(raw_route_data.uncompressed_route.size());
         }
@@ -328,17 +331,20 @@ class AlternativeRouting final
             // retrieve alternate path
             RetrievePackedAlternatePath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2,
                                         s_v_middle, v_t_middle, packed_alternate_path);
+            auto source_traversed_in_reverse =
+                packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id;
+            auto target_traversed_in_reverse =
+                packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id;
 
-            raw_route_data.alt_source_traversed_in_reverse.push_back((
-                packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id));
-            raw_route_data.alt_target_traversed_in_reverse.push_back(
-                (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id));
+            raw_route_data.alt_source_traversed_in_reverse.push_back(source_traversed_in_reverse);
+            raw_route_data.alt_target_traversed_in_reverse.push_back(target_traversed_in_reverse);
 
             // unpack the alternate path
             std::vector<NodeID> unpacked_route;
             super::UnpackPath(packed_alternate_path.begin(), packed_alternate_path.end(), unpacked_route);
             super::UncompressPath(unpacked_route.begin(), unpacked_route.end(),
-                                  phantom_node_pair, raw_route_data.uncompressed_alternative);
+                                  phantom_node_pair, source_traversed_in_reverse, target_traversed_in_reverse,
+                                  raw_route_data.uncompressed_alternative);
 
             raw_route_data.alternative_path_length = length_of_via_path;
         }

@@ -358,15 +358,14 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return m_edge_is_compressed.at(id);
     }
 
-    virtual void GetUncompressedGeometry(const unsigned id,
-                                         std::vector<unsigned> &result_nodes) const override final
+    virtual unsigned BeginGeometry(const unsigned id) const override final
     {
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1);
+        return m_geometry_indices.at(id);
+    }
 
-        result_nodes.clear();
-        result_nodes.insert(result_nodes.begin(), m_geometry_list.begin() + begin,
-                            m_geometry_list.begin() + end);
+    virtual unsigned EndGeometry(const unsigned id) const override final
+    {
+        return m_geometry_indices.at(id+1);
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final

@@ -88,8 +88,9 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const = 0;
 
-    virtual void GetUncompressedGeometry(const unsigned id,
-                                         std::vector<unsigned> &result_nodes) const = 0;
+    virtual unsigned BeginGeometry(const unsigned id) const = 0;
+
+    virtual unsigned EndGeometry(const unsigned id) const = 0;
 
     virtual TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
 

@@ -500,6 +500,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
     {
+      std::cout << "Max geometry id: " << m_via_node_list.size() << std::endl;
         return m_via_node_list.at(id);
     }
 
@@ -515,15 +516,14 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         }
     }
 
-    virtual void GetUncompressedGeometry(const unsigned id,
-                                         std::vector<unsigned> &result_nodes) const override final
+    virtual unsigned BeginGeometry(const unsigned id) const override final
     {
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1);
+        return m_geometry_indices.at(id);
+    }
 
-        result_nodes.clear();
-        result_nodes.insert(result_nodes.begin(), m_geometry_list.begin() + begin,
-                            m_geometry_list.begin() + end);
+    virtual unsigned EndGeometry(const unsigned id) const override final
+    {
+        return m_geometry_indices.at(id+1);
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }

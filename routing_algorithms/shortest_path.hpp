@@ -316,22 +316,25 @@ class ShortestPathRouting final
         std::size_t start_index = 0;
         for (const std::size_t index : osrm::irange<std::size_t>(0, phantom_nodes_vector.size()))
         {
-
             std::size_t end_index = packed_leg_ends1[index];
             std::vector<NodeID> unpacked_leg;
             super::UnpackPath(packed_route1.begin() + start_index,
                               packed_route1.begin() + end_index,
                               unpacked_leg);
 
+            auto source_traversed_in_reverse =
+                packed_route1[start_index] != phantom_nodes_vector[index].source_phantom.forward_node_id;
+            auto target_traversed_in_reverse =
+                packed_route1[end_index-1] != phantom_nodes_vector[index].target_phantom.forward_node_id;
+
             PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[index];
             super::UncompressPath(unpacked_leg.begin(), unpacked_leg.end(),
-                                  unpack_phantom_node_pair, raw_route_data.uncompressed_route);
+                                  unpack_phantom_node_pair, source_traversed_in_reverse, target_traversed_in_reverse,
+                                  raw_route_data.uncompressed_route);
 
             raw_route_data.segment_end_indices.push_back(raw_route_data.uncompressed_route.size());
-            raw_route_data.source_traversed_in_reverse.push_back(
-                (packed_route1[start_index] != phantom_nodes_vector[index].source_phantom.forward_node_id));
-            raw_route_data.target_traversed_in_reverse.push_back(
-                (packed_route1[end_index-1] != phantom_nodes_vector[index].target_phantom.forward_node_id));
+            raw_route_data.source_traversed_in_reverse.push_back(source_traversed_in_reverse);
+            raw_route_data.target_traversed_in_reverse.push_back(target_traversed_in_reverse);
 
             BOOST_ASSERT(end_index > 0);
             start_index = end_index;

@@ -229,15 +229,19 @@ class DirectShortestPathRouting final
             super::RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
         }
 
-        raw_route_data.source_traversed_in_reverse.push_back(
-            (packed_leg.front() != phantom_node_pair.source_phantom.forward_node_id));
-        raw_route_data.target_traversed_in_reverse.push_back(
-            (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
+        auto source_traversed_in_reverse =
+          packed_leg.front() != phantom_node_pair.source_phantom.forward_node_id;
+        auto target_traversed_in_reverse =
+          packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id;
+
+        raw_route_data.source_traversed_in_reverse.push_back(source_traversed_in_reverse);
+        raw_route_data.target_traversed_in_reverse.push_back(target_traversed_in_reverse);
 
         std::vector<NodeID> unpacked_route;
         super::UnpackPath(packed_leg.begin(), packed_leg.end(), unpacked_route);
         super::UncompressPath(unpacked_route.begin(), unpacked_route.end(),
-                              phantom_node_pair, raw_route_data.uncompressed_route);
+                              phantom_node_pair, source_traversed_in_reverse, target_traversed_in_reverse,
+                              raw_route_data.uncompressed_route);
         raw_route_data.segment_end_indices.push_back(raw_route_data.uncompressed_route.size());
 
         raw_route_data.shortest_path_length = distance;
