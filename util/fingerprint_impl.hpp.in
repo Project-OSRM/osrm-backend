@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <string>
 
-#cmakedefine01 HAS64BITS
 #cmakedefine MD5PREPARE "${MD5PREPARE}"
 #cmakedefine MD5RTREE "${MD5RTREE}"
 #cmakedefine MD5GRAPH "${MD5GRAPH}"
@@ -68,7 +67,6 @@ FingerPrint FingerPrint::GetValid()
     temp_string += fingerprint.md5_objects;
 
     fingerprint.named_uuid = gen(temp_string);
-    fingerprint.has_64_bits = HAS64BITS;
 
     return fingerprint;
 }

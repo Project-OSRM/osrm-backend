@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EXTRACTOR_HPP
 
 #include "extractor_options.hpp"
+#include "edge_based_graph_factory.hpp"
+#include "../algorithms/graph_compressor.hpp"
 
 class extractor
 {
@@ -36,6 +38,25 @@ public:
   extractor(ExtractorConfig extractor_config) : config(std::move(extractor_config)) {}
     int run();
 private:
-   ExtractorConfig config;
+    ExtractorConfig config;
+    void SetupScriptingEnvironment(lua_State *myLuaState,
+                               SpeedProfileProperties &speed_profile);
+    std::pair<std::size_t, std::size_t>
+    BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
+                                       std::vector<EdgeBasedNode> &node_based_edge_list,
+                                       DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
+    void WriteNodeMapping(const std::vector<QueryNode> & internal_to_external_node_map);
+    void FindComponents(unsigned max_edge_id, const DeallocatingVector<EdgeBasedEdge>& edges, std::vector<EdgeBasedNode>& nodes) const;
+    void BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
+                    const std::vector<QueryNode> &internal_to_external_node_map);
+    std::shared_ptr<RestrictionMap> LoadRestrictionMap();
+    std::shared_ptr<NodeBasedDynamicGraph>
+    LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
+                       std::unordered_set<NodeID> &traffic_lights,
+                       std::vector<QueryNode>& internal_to_external_node_map);
+
+    void WriteEdgeBasedGraph(std::string const &output_file_filename, 
+                             size_t const max_edge_id, 
+                             DeallocatingVector<EdgeBasedEdge> const & edge_based_edge_list);
 };
 #endif /* EXTRACTOR_HPP */

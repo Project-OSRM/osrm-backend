@@ -2,7 +2,7 @@
 #include "../../data_structures/compressed_edge_container.hpp"
 #include "../../data_structures/restriction_map.hpp"
 #include "../../data_structures/node_based_graph.hpp"
-#include "../../contractor/speed_profile.hpp"
+#include "../../extractor/speed_profile.hpp"
 #include "../../typedefs.h"
 
 #include <boost/test/unit_test.hpp>

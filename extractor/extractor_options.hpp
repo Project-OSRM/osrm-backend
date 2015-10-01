@@ -50,6 +50,12 @@ struct ExtractorConfig
     std::string restriction_file_name;
     std::string names_file_name;
     std::string timestamp_file_name;
+    std::string geometry_output_path;
+    std::string edge_output_path;
+    std::string edge_graph_output_path;
+    std::string node_output_path;
+    std::string rtree_nodes_output_path;
+    std::string rtree_leafs_output_path;
 
     unsigned requested_num_threads;
 };

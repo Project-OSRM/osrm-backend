@@ -51,7 +51,7 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/util/version.hpp.in
   ${CMAKE_CURRENT_SOURCE_DIR}/util/version.hpp
 )
-file(GLOB ExtractorGlob extractor/*.cpp)
+file(GLOB ExtractorGlob extractor/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp data_structures/raster_source.cpp)
 add_library(IMPORT OBJECT ${ImporterGlob})
 add_library(LOGGER OBJECT util/simple_logger.cpp)
@@ -62,7 +62,7 @@ add_library(MERCATOR OBJECT util/mercator.cpp)
 add_library(ANGLE OBJECT util/compute_angle.cpp)
 
 set(ExtractorSources extract.cpp ${ExtractorGlob})
-add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
+add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:IMPORT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR> $<TARGET_OBJECTS:COMPRESSEDEDGE> $<TARGET_OBJECTS:GRAPHCOMPRESSOR> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:ANGLE>)
 
 add_library(RESTRICTION OBJECT data_structures/restriction_map.cpp)
 add_library(COMPRESSEDEDGE OBJECT data_structures/compressed_edge_container.cpp)
