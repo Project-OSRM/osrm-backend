@@ -250,6 +250,16 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         edge_iterator->source_coordinate.lon = node_iterator->lon;
         ++edge_iterator;
     }
+
+    // Remove all remaining edges. They are invalid because there are no corresponding nodes for
+    // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
+    auto markSourcesInvalid = [](InternalExtractorEdge &edge)
+    {
+        SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
+                                                   << edge.result.source;
+        edge.result.source = SPECIAL_NODEID;
+    };
+    std::for_each(edge_iterator, all_edges_list_end, markSourcesInvalid);
     TIMER_STOP(set_start_coords);
     std::cout << "ok, after " << TIMER_SEC(set_start_coords) << "s" << std::endl;
 
@@ -347,6 +357,16 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         }
         ++edge_iterator;
     }
+
+    // Remove all remaining edges. They are invalid because there are no corresponding nodes for
+    // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
+    auto markTargetsInvalid = [](InternalExtractorEdge &edge)
+    {
+        SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
+                                                   << edge.result.target;
+        edge.result.target = SPECIAL_NODEID;
+    };
+    std::for_each(edge_iterator, all_edges_list_end_, markTargetsInvalid);
     TIMER_STOP(compute_weights);
     std::cout << "ok, after " << TIMER_SEC(compute_weights) << "s" << std::endl;
 
