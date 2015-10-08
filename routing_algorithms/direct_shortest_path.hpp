@@ -194,12 +194,12 @@ class DirectShortestPathRouting final
             if (!forward_core_heap.Empty())
             {
                 super::RoutingStep(forward_core_heap, reverse_core_heap, &middle, &distance,
-                                   min_edge_offset, true);
+                                   min_edge_offset, true, false);
             }
             if (!reverse_core_heap.Empty())
             {
                 super::RoutingStep(reverse_core_heap, forward_core_heap, &middle, &distance,
-                                   min_edge_offset, false);
+                                   min_edge_offset, false, false);
             }
         }
 

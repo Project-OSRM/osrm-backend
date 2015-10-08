@@ -64,7 +64,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                      NodeID *middle_node_id,
                      int *upper_bound,
                      const int min_edge_offset,
-                     const bool forward_direction) const
+                     const bool forward_direction,
+                     const bool stalling=true) const
     {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
@@ -99,25 +100,28 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
 
         // Stalling
-        for (const auto edge : facade->GetAdjacentEdgeRange(node))
+        if (stalling)
         {
-            const EdgeData &data = facade->GetEdgeData(edge);
-            const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
-            if (reverse_flag)
-            {
-                const NodeID to = facade->GetTarget(edge);
-                const int edge_weight = data.distance;
+          for (const auto edge : facade->GetAdjacentEdgeRange(node))
+          {
+              const EdgeData &data = facade->GetEdgeData(edge);
+              const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
+              if (reverse_flag)
+              {
+                  const NodeID to = facade->GetTarget(edge);
+                  const int edge_weight = data.distance;
 
-                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+                  BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
 
-                if (forward_heap.WasInserted(to))
-                {
-                    if (forward_heap.GetKey(to) + edge_weight < distance)
-                    {
-                        return;
-                    }
-                }
-            }
+                  if (forward_heap.WasInserted(to))
+                  {
+                      if (forward_heap.GetKey(to) + edge_weight < distance)
+                      {
+                          return;
+                      }
+                  }
+              }
+          }
         }
 
         for (const auto edge : facade->GetAdjacentEdgeRange(node))
