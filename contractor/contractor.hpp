@@ -555,11 +555,20 @@ class Contractor
 
         if (remaining_nodes.size() > 2)
         {
-            // TODO: for small cores a sorted array of core ids might also work good
-            for (const auto &node : remaining_nodes)
+            if (orig_node_id_from_new_node_id_map.empty())
             {
-                auto orig_id = orig_node_id_from_new_node_id_map[node.id];
-                is_core_node[orig_id] = true;
+                for (const auto &node : remaining_nodes)
+                {
+                    is_core_node[node.id] = true;
+                }
+            }
+            else
+            {
+              for (const auto &node : remaining_nodes)
+              {
+                  auto orig_id = orig_node_id_from_new_node_id_map[node.id];
+                  is_core_node[orig_id] = true;
+              }
             }
         }
         else
