@@ -91,11 +91,23 @@ int main(int argc, const char *argv[])
         }
 
 #ifdef __linux__
-        const int lock_flags = MCL_CURRENT | MCL_FUTURE;
-        if (-1 == mlockall(lock_flags))
+        struct MemoryLocker final
         {
-            SimpleLogger().Write(logWARNING) << argv[0] << " could not be locked to RAM";
-        }
+            explicit MemoryLocker(bool shouldLock_) : shouldLock(shouldLock_)
+            {
+                if (-1 == mlockall(MCL_CURRENT | MCL_FUTURE))
+                {
+                    couldLock = false;
+                    SimpleLogger().Write(logWARNING) << "memory could not be locked to RAM";
+                }
+            }
+            ~MemoryLocker()
+            {
+                if (couldLock)
+                    (void)munlockall();
+            }
+            bool shouldLock = false, couldLock = false;
+        } memoryLocker(lib_config.use_shared_memory);
 #endif
         SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
@@ -177,9 +189,6 @@ int main(int argc, const char *argv[])
         SimpleLogger().Write(logWARNING) << "exception: " << e.what();
         return 1;
     }
-#ifdef __linux__
-    munlockall();
-#endif
 
     return 0;
 }
