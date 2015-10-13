@@ -93,7 +93,7 @@ int main(int argc, const char *argv[]) try
     {
         explicit MemoryLocker(bool shouldLock_) : shouldLock(shouldLock_)
         {
-            if (-1 == mlockall(MCL_CURRENT | MCL_FUTURE))
+            if (shouldLock && -1 == mlockall(MCL_CURRENT | MCL_FUTURE))
             {
                 couldLock = false;
                 SimpleLogger().Write(logWARNING) << "memory could not be locked to RAM";
@@ -101,7 +101,7 @@ int main(int argc, const char *argv[]) try
         }
         ~MemoryLocker()
         {
-            if (couldLock)
+            if (shouldLock && couldLock)
                 (void)munlockall();
         }
         bool shouldLock = false, couldLock = true;
