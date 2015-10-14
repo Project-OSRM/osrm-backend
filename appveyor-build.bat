@@ -6,6 +6,8 @@ ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SET PROJECT_DIR=%CD%
 ECHO PROJECT_DIR^: %PROJECT_DIR%
+ECHO NUMBER_OF_PROCESSORS^: %NUMBER_OF_PROCESSORS%
+ECHO cmake^: && cmake --version
 
 ECHO activating VS command prompt ...
 SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
@@ -50,7 +52,7 @@ set TBB_ARCH_PLATFORM=intel64/vc14
 
 ECHO calling cmake ....
 cmake .. ^
--G "Visual Studio 14 Win64" ^
+-G "Visual Studio 14 2015 Win64" ^
 -DBOOST_ROOT=%BOOST_ROOT% ^
 -DBoost_ADDITIONAL_VERSIONS=1.58 ^
 -DBoost_USE_MULTITHREADED=ON ^

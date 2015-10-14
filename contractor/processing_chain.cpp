@@ -55,6 +55,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <thread>
 #include <vector>
 
+#include "../util/debug_geometry.hpp"
+
 Prepare::~Prepare() {}
 
 int Prepare::Run()
@@ -95,7 +97,8 @@ int Prepare::Run()
         ReadNodeLevels(node_levels);
     }
     DeallocatingVector<QueryEdge> contracted_edge_list;
-    ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, is_core_node, node_levels);
+    ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, is_core_node,
+                  node_levels);
     TIMER_STOP(contraction);
 
     SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
@@ -186,12 +189,14 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
         }
     }
 
+    DEBUG_GEOMETRY_START(config);
+
     // TODO: can we read this in bulk?  DeallocatingVector isn't necessarily
     // all stored contiguously
     for (; number_of_edges > 0; --number_of_edges)
     {
         EdgeBasedEdge inbuffer;
-        input_stream.read((char *)&inbuffer, sizeof(EdgeBasedEdge));
+        input_stream.read((char *) &inbuffer, sizeof(EdgeBasedEdge));
 
         if (update_edge_weights)
         {
@@ -232,11 +237,23 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
                         std::max(1, static_cast<int>(std::floor(
                                         (segment_length * 10.) / (speed_iter->second / 3.6) + .5)));
                     new_weight += new_segment_weight;
+
+                    DEBUG_GEOMETRY_EDGE( 
+                            new_segment_weight, 
+                            segment_length,
+                            previous_osm_node_id,
+                            this_osm_node_id);
                 }
                 else
                 {
                     // If no lookup found, use the original weight value for this segment
                     new_weight += segment_weight;
+
+                    DEBUG_GEOMETRY_EDGE(
+                            segment_weight,
+                            segment_length,
+                            previous_osm_node_id,
+                            this_osm_node_id);
                 }
 
                 previous_osm_node_id = this_osm_node_id;
@@ -247,33 +264,31 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
+
+    DEBUG_GEOMETRY_STOP();
     SimpleLogger().Write() << "Done reading edges";
     return max_edge_id;
 }
 
 void Prepare::ReadNodeLevels(std::vector<float> &node_levels) const
 {
-    boost::filesystem::ifstream order_input_stream(config.level_output_path,
-                                                          std::ios::binary);
+    boost::filesystem::ifstream order_input_stream(config.level_output_path, std::ios::binary);
 
     unsigned level_size;
     order_input_stream.read((char *)&level_size, sizeof(unsigned));
     node_levels.resize(level_size);
-    order_input_stream.read((char *)node_levels.data(),
-                                    sizeof(float) * node_levels.size());
+    order_input_stream.read((char *)node_levels.data(), sizeof(float) * node_levels.size());
 }
 
 void Prepare::WriteNodeLevels(std::vector<float> &&in_node_levels) const
 {
     std::vector<float> node_levels(std::move(in_node_levels));
 
-    boost::filesystem::ofstream order_output_stream(config.level_output_path,
-                                                          std::ios::binary);
+    boost::filesystem::ofstream order_output_stream(config.level_output_path, std::ios::binary);
 
     unsigned level_size = node_levels.size();
     order_output_stream.write((char *)&level_size, sizeof(unsigned));
-    order_output_stream.write((char *)node_levels.data(),
-                                    sizeof(float) * node_levels.size());
+    order_output_stream.write((char *)node_levels.data(), sizeof(float) * node_levels.size());
 }
 
 void Prepare::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const

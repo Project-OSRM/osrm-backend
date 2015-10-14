@@ -536,17 +536,15 @@ extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
             config.edge_segment_lookup_path,
             config.edge_penalty_path,
             config.generate_edge_lookup
+#ifdef DEBUG_GEOMETRY
+            , config.debug_turns_path
+#endif
             );
     lua_close(lua_state);
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
     auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
-
-    // danpat TODO: somewhere right around here, we will need to
-    // use the internal_to_external_node_map (which contains original OSM node ids)
-    // the edges from the compressed edge container
-    // and the edge-based-edges
 
     const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
     return std::make_pair(number_of_node_based_nodes, max_edge_id);
