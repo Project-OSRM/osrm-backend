@@ -15,7 +15,8 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
-        And stdout should contain 12 lines
+        And stdout should contain "--generate-edge-lookup"
+        And stdout should contain 16 lines
         And it should exit with code 0
 
     Scenario: osrm-extract - Help, short
@@ -29,7 +30,8 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
-        And stdout should contain 12 lines
+        And stdout should contain "--generate-edge-lookup"
+        And stdout should contain 16 lines
         And it should exit with code 0
 
     Scenario: osrm-extract - Help, long
@@ -43,5 +45,6 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
-        And stdout should contain 12 lines
+        And stdout should contain "--generate-edge-lookup"
+        And stdout should contain 16 lines
         And it should exit with code 0

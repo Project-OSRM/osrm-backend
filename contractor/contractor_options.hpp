@@ -52,6 +52,8 @@ struct ContractorConfig
     std::string graph_output_path;
     std::string edge_based_graph_path;
 
+    std::string edge_segment_lookup_path;
+    std::string edge_penalty_path;
     bool use_cached_priority;
 
     unsigned requested_num_threads;
@@ -61,6 +63,9 @@ struct ContractorConfig
     //The remaining vertices form the core of the hierarchy 
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
     double core_factor;
+
+    std::string segment_speed_lookup_path;
+
 };
 
 struct ContractorOptions

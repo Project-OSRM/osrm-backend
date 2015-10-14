@@ -67,7 +67,11 @@ class EdgeBasedGraphFactory
                                    SpeedProfileProperties speed_profile);
 
     void Run(const std::string &original_edge_data_filename,
-             lua_State *lua_state);
+             lua_State *lua_state,
+             const std::string &edge_segment_lookup_filename,
+             const std::string &edge_penalty_filename,
+             const bool generate_edge_lookup
+             );
 
     void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
 
@@ -100,7 +104,11 @@ class EdgeBasedGraphFactory
     unsigned RenumberEdges();
     void GenerateEdgeExpandedNodes();
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
-                                   lua_State *lua_state);
+                                   lua_State *lua_state,
+                                   const std::string &edge_segment_lookup_filename,
+                                   const std::string &edge_fixed_penalties_filename,
+                                   const bool generate_edge_lookup
+                                   );
 
     void InsertEdgeBasedNode(const NodeID u, const NodeID v);
 

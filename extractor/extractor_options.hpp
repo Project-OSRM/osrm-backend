@@ -58,6 +58,10 @@ struct ExtractorConfig
     std::string rtree_leafs_output_path;
 
     unsigned requested_num_threads;
+
+    bool generate_edge_lookup;
+    std::string edge_penalty_path;
+    std::string edge_segment_lookup_path;
 };
 
 struct ExtractorOptions

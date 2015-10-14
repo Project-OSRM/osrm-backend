@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "processing_chain.hpp"
 #include "contractor.hpp"
 
+#include "contractor.hpp"
+
 #include "../data_structures/deallocating_vector.hpp"
 
 #include "../algorithms/crc32_processor.hpp"
@@ -39,6 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/string_util.hpp"
 #include "../util/timing_util.hpp"
 #include "../typedefs.h"
+
+#include <fast-cpp-csv-parser/csv.h>
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>
@@ -64,6 +68,11 @@ int Prepare::Run()
                   "changing EdgeBasedEdge type has influence on memory consumption!");
 #endif
 
+    if (config.core_factor > 1.0 || config.core_factor < 0) 
+    {
+       throw osrm::exception("Core factor must be between 0.0 to 1.0 (inclusive)");
+    }
+
     TIMER_START(preparing);
 
     // Create a new lua state
@@ -72,7 +81,9 @@ int Prepare::Run()
 
     DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
 
-    size_t max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path, edge_based_edge_list);
+    size_t max_edge_id = LoadEdgeExpandedGraph(
+        config.edge_based_graph_path, edge_based_edge_list, config.edge_segment_lookup_path,
+        config.edge_penalty_path, config.segment_speed_lookup_path);
 
     // Contracting the edge-expanded graph
 
@@ -89,8 +100,7 @@ int Prepare::Run()
 
     SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
-    std::size_t number_of_used_edges =
-        WriteContractedGraph(max_edge_id, contracted_edge_list);
+    std::size_t number_of_used_edges = WriteContractedGraph(max_edge_id, contracted_edge_list);
     WriteCoreNodeMarker(std::move(is_core_node));
     if (!config.use_cached_priority)
     {
@@ -109,12 +119,42 @@ int Prepare::Run()
     return 0;
 }
 
-std::size_t Prepare::LoadEdgeExpandedGraph(
-                std::string const & edge_based_graph_filename, 
-                DeallocatingVector<EdgeBasedEdge> & edge_based_edge_list)
+namespace std
+{
+
+template <> struct hash<std::pair<unsigned, unsigned>>
+{
+    std::size_t operator()(const std::pair<unsigned, unsigned> &k) const
+    {
+        return k.first ^ (k.second << 12);
+    }
+};
+}
+
+std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
+                                           DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+                                           const std::string &edge_segment_lookup_filename,
+                                           const std::string &edge_penalty_filename,
+                                           const std::string &segment_speed_filename)
 {
     SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
-    boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::in | std::ios::binary);
+    boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
+
+    const bool update_edge_weights = segment_speed_filename != "";
+
+    boost::filesystem::ifstream edge_segment_input_stream;
+    boost::filesystem::ifstream edge_fixed_penalties_input_stream;
+
+    if (update_edge_weights)
+    {
+        edge_segment_input_stream.open(edge_segment_lookup_filename, std::ios::binary);
+        edge_fixed_penalties_input_stream.open(edge_penalty_filename, std::ios::binary);
+        if (!edge_segment_input_stream || !edge_fixed_penalties_input_stream)
+        {
+            throw osrm::exception("Could not load .edge_segment_lookup or .edge_penalties, did you "
+                                  "run osrm-extract with '--generate-edge-lookup'?");
+        }
+    }
 
     const FingerPrint fingerprint_valid = FingerPrint::GetValid();
     FingerPrint fingerprint_loaded;
@@ -129,11 +169,82 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
     edge_based_edge_list.resize(number_of_edges);
     SimpleLogger().Write() << "Reading " << number_of_edges << " edges from the edge based graph";
 
+    std::unordered_map<std::pair<unsigned, unsigned>, unsigned> segment_speed_lookup;
+
+    if (update_edge_weights)
+    {
+        SimpleLogger().Write() << "Segment speed data supplied, will update edge weights from "
+                               << segment_speed_filename;
+        io::CSVReader<3> csv_in(segment_speed_filename);
+        csv_in.set_header("from_node", "to_node", "speed");
+        unsigned from_node_id;
+        unsigned to_node_id;
+        unsigned speed;
+        while (csv_in.read_row(from_node_id, to_node_id, speed))
+        {
+            segment_speed_lookup[std::pair<unsigned, unsigned>(from_node_id, to_node_id)] = speed;
+        }
+    }
+
     // TODO: can we read this in bulk?  DeallocatingVector isn't necessarily
     // all stored contiguously
-    for (;number_of_edges > 0; --number_of_edges) {
+    for (; number_of_edges > 0; --number_of_edges)
+    {
         EdgeBasedEdge inbuffer;
-        input_stream.read((char *) &inbuffer, sizeof(EdgeBasedEdge));
+        input_stream.read((char *)&inbuffer, sizeof(EdgeBasedEdge));
+
+        if (update_edge_weights)
+        {
+            // Processing-time edge updates
+            unsigned fixed_penalty;
+            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&fixed_penalty),
+                                                   sizeof(fixed_penalty));
+
+            int new_weight = 0;
+
+            unsigned num_osm_nodes = 0;
+            edge_segment_input_stream.read(reinterpret_cast<char *>(&num_osm_nodes),
+                                           sizeof(num_osm_nodes));
+            NodeID previous_osm_node_id;
+            edge_segment_input_stream.read(reinterpret_cast<char *>(&previous_osm_node_id),
+                                           sizeof(previous_osm_node_id));
+            NodeID this_osm_node_id;
+            double segment_length;
+            int segment_weight;
+            --num_osm_nodes;
+            for (; num_osm_nodes != 0; --num_osm_nodes)
+            {
+                edge_segment_input_stream.read(reinterpret_cast<char *>(&this_osm_node_id),
+                                               sizeof(this_osm_node_id));
+                edge_segment_input_stream.read(reinterpret_cast<char *>(&segment_length),
+                                               sizeof(segment_length));
+                edge_segment_input_stream.read(reinterpret_cast<char *>(&segment_weight),
+                                               sizeof(segment_weight));
+
+                auto speed_iter = segment_speed_lookup.find(
+                    std::pair<unsigned, unsigned>(previous_osm_node_id, this_osm_node_id));
+                if (speed_iter != segment_speed_lookup.end())
+                {
+                    // This sets the segment weight using the same formula as the
+                    // EdgeBasedGraphFactory for consistency.  The *why* of this formula
+                    // is lost in the annals of time.
+                    int new_segment_weight =
+                        std::max(1, static_cast<int>(std::floor(
+                                        (segment_length * 10.) / (speed_iter->second / 3.6) + .5)));
+                    new_weight += new_segment_weight;
+                }
+                else
+                {
+                    // If no lookup found, use the original weight value for this segment
+                    new_weight += segment_weight;
+                }
+
+                previous_osm_node_id = this_osm_node_id;
+            }
+
+            inbuffer.weight = fixed_penalty + new_weight;
+        }
+
         edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
     SimpleLogger().Write() << "Done reading edges";
@@ -295,8 +406,6 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
     return number_of_used_edges;
 }
 
-
-
 /**
  \brief Build contracted graph.
  */
@@ -315,5 +424,3 @@ void Prepare::ContractGraph(const unsigned max_edge_id,
     contractor.GetCoreMarker(is_core_node);
     contractor.GetNodeLevels(inout_node_levels);
 }
-
-

@@ -70,11 +70,14 @@ class Prepare
     void FindComponents(unsigned max_edge_id,
                         const DeallocatingVector<EdgeBasedEdge> &edges,
                         std::vector<EdgeBasedNode> &nodes) const;
+
   private:
     ContractorConfig config;
-    std::size_t LoadEdgeExpandedGraph(
-            const std::string & edge_based_graph_path,
-            DeallocatingVector<EdgeBasedEdge> & edge_based_edge_list);
+    std::size_t LoadEdgeExpandedGraph(const std::string &edge_based_graph_path,
+                                      DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+                                      const std::string &edge_segment_lookup_path,
+                                      const std::string &edge_penalty_path,
+                                      const std::string &segment_speed_path);
 };
 
 #endif // PROCESSING_CHAIN_HPP
