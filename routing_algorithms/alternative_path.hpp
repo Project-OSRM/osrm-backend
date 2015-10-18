@@ -429,7 +429,7 @@ class AlternativeRouting final
         // partial unpacking, compute sharing
         // First partially unpack s-->v until paths deviate, note length of common path.
         const int64_t s_v_min_path_size =
-            std::min(packed_s_v_path.size(), packed_shortest_path.size()) - 1;
+            static_cast<int64_t>(std::min(packed_s_v_path.size(), packed_shortest_path.size())) - 1;
         for (const int64_t current_node : osrm::irange<int64_t>(0, s_v_min_path_size))
         {
             if (packed_s_v_path[current_node] == packed_shortest_path[current_node] &&
@@ -455,7 +455,8 @@ class AlternativeRouting final
         }
         // traverse partially unpacked edge and note common prefix
         const int64_t packed_path_length =
-            std::min(partially_unpacked_via_path.size(), partially_unpacked_shortest_path.size()) -
+            static_cast<int64_t>(std::min(partially_unpacked_via_path.size(),
+                                          partially_unpacked_shortest_path.size())) -
             1;
         for (int64_t current_node = 0; (current_node < packed_path_length) &&
                                            (partially_unpacked_via_path[current_node] ==
@@ -471,8 +472,8 @@ class AlternativeRouting final
         }
 
         // Second, partially unpack v-->t in reverse order until paths deviate and note lengths
-        int64_t via_path_index = packed_v_t_path.size() - 1;
-        int64_t shortest_path_index = packed_shortest_path.size() - 1;
+        int64_t via_path_index = static_cast<int64_t>(packed_v_t_path.size()) - 1;
+        int64_t shortest_path_index = static_cast<int64_t>(packed_shortest_path.size()) - 1;
         for (; via_path_index > 0 && shortest_path_index > 0;
              --via_path_index, --shortest_path_index)
         {
