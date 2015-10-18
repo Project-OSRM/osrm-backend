@@ -43,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <future>
 #include <iostream>
 #include <thread>
+#include <new>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
@@ -81,11 +82,11 @@ int main(int argc, const char *argv[]) try
         lib_config.max_locations_map_matching);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
-        return 0;
+        return EXIT_SUCCESS;
     }
     if (init_result == INIT_FAILED)
     {
-        return 1;
+        return EXIT_FAILURE;
     }
 
 #ifdef __linux__
@@ -117,6 +118,7 @@ int main(int argc, const char *argv[]) try
     SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
     SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
     SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
+
 #ifndef _WIN32
     int sig = 0;
     sigset_t new_mask;
@@ -182,8 +184,15 @@ int main(int argc, const char *argv[]) try
     routing_server.reset();
     SimpleLogger().Write() << "shutdown completed";
 }
+catch (const std::bad_alloc &e)
+{
+    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    SimpleLogger().Write(logWARNING)
+        << "Please provide more memory or consider using a larger swapfile";
+    return EXIT_FAILURE;
+}
 catch (const std::exception &e)
 {
-    SimpleLogger().Write(logWARNING) << "exception: " << e.what();
-    return 1;
+    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    return EXIT_FAILURE;
 }

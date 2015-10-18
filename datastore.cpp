@@ -62,6 +62,7 @@ using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 
 #include <fstream>
 #include <string>
+#include <new>
 
 // delete a shared memory region. report warning if it could not be deleted
 void delete_region(const SharedDataType region)
@@ -123,7 +124,7 @@ int main(const int argc, const char *argv[]) try
     ServerPaths server_paths;
     if (!GenerateDataStoreOptions(argc, argv, server_paths))
     {
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (server_paths.find("hsgrdata") == server_paths.end())
@@ -584,6 +585,13 @@ int main(const int argc, const char *argv[]) try
     SimpleLogger().Write() << "all data loaded";
 
     shared_layout_ptr->PrintInformation();
+}
+catch (const std::bad_alloc &e)
+{
+    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    SimpleLogger().Write(logWARNING) << "Please provide more memory or disable locking the virtual "
+                                        "address space (note: this makes OSRM swap, i.e. slow)";
+    return EXIT_FAILURE;
 }
 catch (const std::exception &e)
 {

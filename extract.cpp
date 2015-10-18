@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdlib>
 #include <exception>
+#include <new>
 
 int main(int argc, char *argv[]) try
 {
@@ -73,6 +74,13 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
     return extractor(extractor_config).run();
+}
+catch (const std::bad_alloc &e)
+{
+    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    SimpleLogger().Write(logWARNING)
+        << "Please provide more memory or consider using a larger swapfile";
+    return EXIT_FAILURE;
 }
 catch (const std::exception &e)
 {
