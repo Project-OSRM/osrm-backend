@@ -80,16 +80,7 @@ inline void populate_base_path(ServerPaths &server_paths)
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        if (path_iterator == server_paths.end())
-        {
-            SimpleLogger().Write() << "hsgrdata unset";
-        }
-        if (!boost::filesystem::is_regular_file(path_iterator->second))
-        {
-            SimpleLogger().Write() << "not a regular file";
-        }
-
-        throw osrm::exception(".hsgr not found: " + path_iterator->second.string());
+        throw osrm::exception(".hsgr not found");
     }
 
     path_iterator = server_paths.find("nodesdata");
