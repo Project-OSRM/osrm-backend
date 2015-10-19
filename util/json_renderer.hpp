@@ -76,7 +76,7 @@ struct Renderer : mapbox::util::static_visitor<>
     void operator()(const Array &array) const
     {
         out << "[";
-        for (auto it = array.values.cend(), end = array.values.cend(); it != end;)
+        for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
             mapbox::util::apply_visitor(Renderer(out), *it);
             if (++it != end)
