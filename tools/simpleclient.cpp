@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../library/osrm.hpp"
-#include "../util/version.hpp"
+#include "util/version.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/routed_options.hpp"
 #include "../util/simple_logger.hpp"

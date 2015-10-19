@@ -33,6 +33,7 @@ option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" 
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
@@ -51,7 +52,7 @@ set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/util/version.hpp.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/util/version.hpp
+  ${CMAKE_CURRENT_BINARY_DIR}/util/version.hpp
 )
 file(GLOB ExtractorGlob extractor/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp data_structures/raster_source.cpp)
@@ -97,7 +98,6 @@ add_library(COORDINATE OBJECT ${CoordinateGlob})
 add_library(OSRM ${OSRMSources} $<TARGET_OBJECTS:ANGLE> $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:FINGERPRINT> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR> $<TARGET_OBJECTS:IMPORT>)
 
 add_library(FINGERPRINT OBJECT util/fingerprint.cpp)
-target_include_directories(FINGERPRINT PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 add_dependencies(FINGERPRINT FingerPrintConfigure)
 add_dependencies(OSRM FingerPrintConfigure)
 set_target_properties(FINGERPRINT PROPERTIES LINKER_LANGUAGE CXX)
