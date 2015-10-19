@@ -25,5 +25,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "fingerprint.hpp"
-#include "fingerprint_impl.hpp"
+#include "util/fingerprint.hpp"
+#include "util/fingerprint_impl.hpp"
