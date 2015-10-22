@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "contractor_options.hpp"
 
-#include "../util/version.hpp"
+#include "util/version.hpp"
 #include "../util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>

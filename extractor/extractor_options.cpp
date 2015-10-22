@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor_options.hpp"
 
-#include "../util/version.hpp"
+#include "util/version.hpp"
 #include "../util/ini_file.hpp"
 #include "../util/simple_logger.hpp"
 

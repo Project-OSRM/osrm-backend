@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/shared_memory_factory.hpp"
 #include "../server/data_structures/shared_datatype.hpp"
-#include "../util/version.hpp"
+#include "util/version.hpp"
 #include "../util/simple_logger.hpp"
 
 void delete_region(const SharedDataType region)

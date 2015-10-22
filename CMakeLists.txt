@@ -32,13 +32,16 @@ endif()
 option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
 
-add_custom_target(FingerPrintConfigure ALL
-  ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
+add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
+  "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}"
+  "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake"
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
@@ -49,7 +52,7 @@ set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/util/version.hpp.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/util/version.hpp
+  ${CMAKE_CURRENT_BINARY_DIR}/util/version.hpp
 )
 file(GLOB ExtractorGlob extractor/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB ImporterGlob data_structures/import_edge.cpp data_structures/external_memory_node.cpp data_structures/raster_source.cpp)

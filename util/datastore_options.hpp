@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DATASTORE_OPTIONS_HPP
 #define DATASTORE_OPTIONS_HPP
 
-#include "version.hpp"
+#include "util/version.hpp"
 #include "ini_file.hpp"
 #include "osrm_exception.hpp"
 #include "simple_logger.hpp"
