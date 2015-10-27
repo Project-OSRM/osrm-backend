@@ -49,7 +49,7 @@ constexpr static const float earth_radius = 6372797.560856f;
 namespace coordinate_calculation
 {
 
-double great_circle_distance(const int lat1,
+double haversine_distance(const int lat1,
                                                      const int lon1,
                                                      const int lat2,
                                                      const int lon2)
@@ -77,21 +77,21 @@ double great_circle_distance(const int lat1,
     return earth_radius * cHarv;
 }
 
-double great_circle_distance(const FixedPointCoordinate &coordinate_1,
+double haversine_distance(const FixedPointCoordinate &coordinate_1,
                                                      const FixedPointCoordinate &coordinate_2)
 {
-    return great_circle_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+    return haversine_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                                  coordinate_2.lon);
 }
 
-float euclidean_distance(const FixedPointCoordinate &coordinate_1,
+float great_circle_distance(const FixedPointCoordinate &coordinate_1,
                                                  const FixedPointCoordinate &coordinate_2)
 {
-    return euclidean_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+    return great_circle_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                               coordinate_2.lon);
 }
 
-float euclidean_distance(const int lat1,
+float great_circle_distance(const int lat1,
                                                  const int lon1,
                                                  const int lat2,
                                                  const int lon2)
@@ -224,7 +224,7 @@ float perpendicular_distance_from_projected_coordinate(
     BOOST_ASSERT(nearest_location.is_valid());
 
     const float approximate_distance =
-        euclidean_distance(query_location, nearest_location);
+        great_circle_distance(query_location, nearest_location);
     BOOST_ASSERT(0.f <= approximate_distance);
     return approximate_distance;
 }

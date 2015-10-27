@@ -217,7 +217,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
-            const auto great_circle_distance = coordinate_calculation::great_circle_distance(prev_coordinate, current_coordinate);
+            const auto haversine_distance = coordinate_calculation::haversine_distance(prev_coordinate, current_coordinate);
 
             // compute d_t for this timestamp and the next one
             for (const auto s : osrm::irange<std::size_t>(0u, prev_viterbi.size()))
@@ -247,7 +247,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].first,
                         current_timestamps_list[s_prime].first);
 
-                    const auto d_t = std::abs(network_distance - great_circle_distance);
+                    const auto d_t = std::abs(network_distance - haversine_distance);
 
                     // very low probability transition -> prune
                     if (d_t >= max_distance_delta)
@@ -260,7 +260,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                     matching_debug.add_transition_info(prev_unbroken_timestamp, t, s, s_prime,
                                                        prev_viterbi[s], emission_pr, transition_pr,
-                                                       network_distance, great_circle_distance);
+                                                       network_distance, haversine_distance);
 
                     if (new_value > current_viterbi[s_prime])
                     {

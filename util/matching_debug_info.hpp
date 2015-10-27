@@ -82,7 +82,7 @@ struct MatchingDebugInfo
                              const double emission_pr,
                              const double transition_pr,
                              const double network_distance,
-                             const double great_circle_distance)
+                             const double haversine_distance)
     {
         // json logger not enabled
         if (!logger)
@@ -94,7 +94,7 @@ struct MatchingDebugInfo
         transistion.values["to"] = osrm::json::make_array(current_t, current_state);
         transistion.values["properties"] = osrm::json::make_array(
             osrm::json::clamp_float(prev_viterbi), osrm::json::clamp_float(emission_pr),
-            osrm::json::clamp_float(transition_pr), network_distance, great_circle_distance);
+            osrm::json::clamp_float(transition_pr), network_distance, haversine_distance);
 
         osrm::json::get(*object, "states", prev_t, prev_state, "transitions")
             .get<mapbox::util::recursive_wrapper<osrm::json::Array>>()

@@ -306,7 +306,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         BOOST_ASSERT(edge_iterator->source_coordinate.lat != std::numeric_limits<int>::min());
         BOOST_ASSERT(edge_iterator->source_coordinate.lon != std::numeric_limits<int>::min());
 
-        const double distance = coordinate_calculation::euclidean_distance(
+        const double distance = coordinate_calculation::great_circle_distance(
             edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
             node_iterator->lat, node_iterator->lon);
 

@@ -127,7 +127,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
-        path_description[i].length = coordinate_calculation::euclidean_distance(
+        path_description[i].length = coordinate_calculation::great_circle_distance(
             path_description[i - 1].location, path_description[i].location);
     }
 

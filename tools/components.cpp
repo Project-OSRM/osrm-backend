@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
                 if (source < target || SPECIAL_EDGEID == graph->FindEdge(target, source))
                 {
                     total_network_length +=
-                        100 * coordinate_calculation::euclidean_distance(
+                        100 * coordinate_calculation::great_circle_distance(
                                   coordinate_list[source].lat, coordinate_list[source].lon,
                                   coordinate_list[target].lat, coordinate_list[target].lon);
 

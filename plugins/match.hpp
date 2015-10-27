@@ -100,7 +100,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                       osrm::matching::CandidateLists &candidates_lists)
     {
         double query_radius = 10 * gps_precision;
-        double last_distance = coordinate_calculation::great_circle_distance(input_coords[0], input_coords[1]);
+        double last_distance = coordinate_calculation::haversine_distance(input_coords[0], input_coords[1]);
 
         sub_trace_lengths.resize(input_coords.size());
         sub_trace_lengths[0] = 0;
@@ -109,7 +109,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             bool allow_uturn = false;
             if (0 < current_coordinate)
             {
-                last_distance = coordinate_calculation::great_circle_distance(input_coords[current_coordinate - 1], input_coords[current_coordinate]);
+                last_distance = coordinate_calculation::haversine_distance(input_coords[current_coordinate - 1], input_coords[current_coordinate]);
 
                 sub_trace_lengths[current_coordinate] +=
                     sub_trace_lengths[current_coordinate - 1] + last_distance;

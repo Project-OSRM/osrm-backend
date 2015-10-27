@@ -36,15 +36,15 @@ struct FixedPointCoordinate;
 namespace coordinate_calculation
 {
     double
-    great_circle_distance(const int lat1, const int lon1, const int lat2, const int lon2);
+    haversine_distance(const int lat1, const int lon1, const int lat2, const int lon2);
 
-    double great_circle_distance(const FixedPointCoordinate &first_coordinate,
+    double haversine_distance(const FixedPointCoordinate &first_coordinate,
                                  const FixedPointCoordinate &second_coordinate);
 
-    float euclidean_distance(const FixedPointCoordinate &first_coordinate,
+    float great_circle_distance(const FixedPointCoordinate &first_coordinate,
                              const FixedPointCoordinate &second_coordinate);
 
-    float euclidean_distance(const int lat1, const int lon1, const int lat2, const int lon2);
+    float great_circle_distance(const int lat1, const int lon1, const int lat2, const int lon2);
 
     void lat_or_lon_to_string(const int value, std::string &output);
 
