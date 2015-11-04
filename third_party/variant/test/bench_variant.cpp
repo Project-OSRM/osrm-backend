@@ -7,7 +7,9 @@
 #include <boost/timer/timer.hpp>
 #include "variant.hpp"
 
-#define TEXT "Testing various variant implementations with a longish string ........................................."
+#define TEXT_SHORT "Test"
+#define TEXT_LONG "Testing various variant implementations with a longish string ........................................."
+#define NUM_SAMPLES 3
 //#define BOOST_VARIANT_MINIMIZE_SIZE
 
 using namespace mapbox;
@@ -52,9 +54,9 @@ struct dummy : boost::static_visitor<>
         : v_(v) {}
 
     template <typename T>
-    void operator() (T const& val) const
+    void operator() (T && val) const
     {
-        v_ = val;
+        v_ = std::move(val);
     }
     V & v_;
 };
@@ -66,9 +68,9 @@ struct dummy2 : util::static_visitor<>
         : v_(v) {}
 
     template <typename T>
-    void operator() (T const& val) const
+    void operator() (T && val) const
     {
-        v_.template set<T>(val);
+        v_ = std::move(val);
     }
     V & v_;
 };
@@ -79,7 +81,8 @@ void run_boost_test(std::size_t runs)
     h.data.reserve(runs);
     for (std::size_t i=0; i< runs; ++i)
     {
-        h.append_move(std::string(TEXT));
+        h.append_move(std::string(TEXT_SHORT));
+        h.append_move(std::string(TEXT_LONG));
         h.append_move(123);
         h.append_move(3.14159);
     }
@@ -98,7 +101,8 @@ void run_variant_test(std::size_t runs)
     h.data.reserve(runs);
     for (std::size_t i=0; i< runs; ++i)
     {
-        h.append_move(std::string(TEXT));
+        h.append_move(std::string(TEXT_SHORT));
+        h.append_move(std::string(TEXT_LONG));
         h.append_move(123);
         h.append_move(3.14159);
     }
@@ -125,77 +129,50 @@ int main (int argc, char** argv)
     const std::size_t NUM_RUNS = static_cast<std::size_t>(std::stol(argv[1]));
 
 #ifdef SINGLE_THREADED
+
+    for (std::size_t j = 0; j < NUM_SAMPLES; ++j)
     {
-        std::cerr << "custom variant: ";
-        boost::timer::auto_cpu_timer t;
-        run_variant_test(NUM_RUNS);
+
+        {
+            std::cerr << "custom variant: ";
+            boost::timer::auto_cpu_timer t;
+            run_variant_test(NUM_RUNS);
+        }
+        {
+            std::cerr << "boost variant: ";
+            boost::timer::auto_cpu_timer t;
+            run_boost_test(NUM_RUNS);
+        }
     }
-    {
-        std::cerr << "boost variant: ";
-        boost::timer::auto_cpu_timer t;
-        run_boost_test(NUM_RUNS);
-    }
-    {
-        std::cerr << "custom variant: ";
-        boost::timer::auto_cpu_timer t;
-        run_variant_test(NUM_RUNS);
-    }
-    {
-        std::cerr << "boost variant: ";
-        boost::timer::auto_cpu_timer t;
-        run_boost_test(NUM_RUNS);
-    }
+
 #else
+    for (std::size_t j = 0; j < NUM_SAMPLES; ++j)
     {
-        typedef std::vector<std::unique_ptr<std::thread>> thread_group;
-        typedef thread_group::value_type value_type;
-        thread_group tg;
-        std::cerr << "custom variant: ";
-        boost::timer::auto_cpu_timer timer;
-        for (std::size_t i=0; i<THREADS; ++i)
         {
-            tg.emplace_back(new std::thread(run_variant_test, NUM_RUNS));
+            typedef std::vector<std::unique_ptr<std::thread>> thread_group;
+            typedef thread_group::value_type value_type;
+            thread_group tg;
+            std::cerr << "custom variant: ";
+            boost::timer::auto_cpu_timer timer;
+            for (std::size_t i=0; i<THREADS; ++i)
+            {
+                tg.emplace_back(new std::thread(run_variant_test, NUM_RUNS));
+            }
+            std::for_each(tg.begin(), tg.end(), [](value_type & t) {if (t->joinable()) t->join();});
         }
-        std::for_each(tg.begin(), tg.end(), [](value_type & t) {if (t->joinable()) t->join();});
-    }
 
-    {
-        typedef std::vector<std::unique_ptr<std::thread>> thread_group;
-        typedef thread_group::value_type value_type;
-        thread_group tg;
-        std::cerr << "boost variant: ";
-        boost::timer::auto_cpu_timer timer;
-        for (std::size_t i=0; i<THREADS; ++i)
         {
-            tg.emplace_back(new std::thread(run_boost_test, NUM_RUNS));
+            typedef std::vector<std::unique_ptr<std::thread>> thread_group;
+            typedef thread_group::value_type value_type;
+            thread_group tg;
+            std::cerr << "boost variant: ";
+            boost::timer::auto_cpu_timer timer;
+            for (std::size_t i=0; i<THREADS; ++i)
+            {
+                tg.emplace_back(new std::thread(run_boost_test, NUM_RUNS));
+            }
+            std::for_each(tg.begin(), tg.end(), [](value_type & t) {if (t->joinable()) t->join();});
         }
-        std::for_each(tg.begin(), tg.end(), [](value_type & t) {if (t->joinable()) t->join();});
-    }
-
-    {
-        typedef std::vector<std::unique_ptr<std::thread>> thread_group;
-        typedef thread_group::value_type value_type;
-        thread_group tg;
-        std::cerr << "custom variant: ";
-        boost::timer::auto_cpu_timer timer;
-        for (std::size_t i=0; i<THREADS; ++i)
-        {
-            tg.emplace_back(new std::thread(run_variant_test, NUM_RUNS));
-        }
-        std::for_each(tg.begin(), tg.end(), [](value_type & t) {if (t->joinable()) t->join();});
-    }
-
-    {
-        typedef std::vector<std::unique_ptr<std::thread>> thread_group;
-        typedef thread_group::value_type value_type;
-        thread_group tg;
-        std::cerr << "boost variant: ";
-        boost::timer::auto_cpu_timer timer;
-        for (std::size_t i=0; i<THREADS; ++i)
-        {
-            tg.emplace_back(new std::thread(run_boost_test, NUM_RUNS));
-        }
-        std::for_each(tg.begin(), tg.end(), [](value_type & t) {if (t->joinable()) t->join();});
     }
 #endif
 

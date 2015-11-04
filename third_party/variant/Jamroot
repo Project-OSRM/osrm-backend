@@ -1,4 +1,4 @@
-local BOOST_DIR = "/opt/boost" ;
+local BOOST_DIR = "/usr/local" ;
 
 #using clang : : ;
 
