@@ -148,8 +148,18 @@ void RouteParameters::addCoordinate(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
 }
 
+void RouteParameters::addSource(
+    const boost::fusion::vector<double, double> &received_coordinates)
+{
+    sources.emplace_back(
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
+}
+
 void RouteParameters::getCoordinatesFromGeometry(const std::string &geometry_string)
 {
     PolylineCompressor pc;
     coordinates = pc.decode_string(geometry_string);
 }
+
+void RouteParameters::setMappedPointsFlag(const bool flag) { mapped_points = flag; }

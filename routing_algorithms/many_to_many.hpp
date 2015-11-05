@@ -67,11 +67,12 @@ class ManyToManyRouting final
     ~ManyToManyRouting() {}
 
     std::shared_ptr<std::vector<EdgeWeight>>
-    operator()(const PhantomNodeArray &phantom_nodes_array) const
+    operator()(const PhantomNodeArray &phantom_targets_array, const PhantomNodeArray &phantom_sources_array = PhantomNodeArray(0)) const
     {
-        const auto number_of_locations = phantom_nodes_array.size();
+        const auto number_of_targets = phantom_targets_array.size();
+        const auto number_of_sources = (phantom_sources_array.size()) ? phantom_sources_array.size() : number_of_targets;
         std::shared_ptr<std::vector<EdgeWeight>> result_table =
-            std::make_shared<std::vector<EdgeWeight>>(number_of_locations * number_of_locations,
+            std::make_shared<std::vector<EdgeWeight>>(number_of_targets * number_of_sources,
                                                       std::numeric_limits<EdgeWeight>::max());
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
@@ -82,7 +83,7 @@ class ManyToManyRouting final
         SearchSpaceWithBuckets search_space_with_buckets;
 
         unsigned target_id = 0;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
+        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_targets_array)
         {
             query_heap.Clear();
             // insert target(s) at distance 0
@@ -113,7 +114,7 @@ class ManyToManyRouting final
 
         // for each source do forward search
         unsigned source_id = 0;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
+        for (const std::vector<PhantomNode> &phantom_node_vector : (phantom_sources_array.size() ? phantom_sources_array : phantom_targets_array))
         {
             query_heap.Clear();
             for (const PhantomNode &phantom_node : phantom_node_vector)
@@ -136,13 +137,13 @@ class ManyToManyRouting final
             // explore search space
             while (!query_heap.Empty())
             {
-                ForwardRoutingStep(source_id, number_of_locations, query_heap,
+                ForwardRoutingStep(source_id, number_of_targets, query_heap,
                                    search_space_with_buckets, result_table);
             }
 
             ++source_id;
         }
-        BOOST_ASSERT(source_id == target_id);
+        // BOOST_ASSERT(source_id == target_id);
         return result_table;
     }
 

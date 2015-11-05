@@ -1,5 +1,4 @@
 When /^I request a travel time matrix I should get$/ do |table|
-  
   no_route = 2147483647   # MAX_INT
   
   raise "*** Top-left cell of matrix table must be empty" unless table.headers[0]==""
@@ -7,7 +6,7 @@ When /^I request a travel time matrix I should get$/ do |table|
   nodes = []
   column_headers = table.headers[1..-1]
   row_headers = table.rows.map { |h| h.first }
-  unless column_headers==row_headers
+  unless column_headers==row_headers || @query_params['src']
     raise "*** Column and row headers must match in matrix table, got #{column_headers.inspect} and #{row_headers.inspect}"
   end
   column_headers.each do |node_name|
@@ -23,6 +22,10 @@ When /^I request a travel time matrix I should get$/ do |table|
     
     # compute matrix
     params = @query_params
+    if params['src']
+      node = find_node_by_name(params['src'])
+      params['src'] = node.lat + ',' + node.lon
+    end
     response = request_table nodes, params
     if response.body.empty? == false
       json = JSON.parse response.body
