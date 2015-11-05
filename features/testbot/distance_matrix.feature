@@ -100,3 +100,24 @@ Feature: Basic Distance Matrix
             | y | 500 | 0   | 300 | 200 |
             | d | 200 | 300 | 0   | 300 |
             | e | 300 | 400 | 100 | 0   |
+
+    Scenario: Testbot - Travel time matrix and mapped coordinates with only one source
+        Given the node map
+            | a | b | c |
+            | d | e | f |
+
+        And the ways
+            | nodes |
+            | abc   |
+            | def   |
+            | ad    |
+            | be    |
+            | cf    |
+
+        And the query options
+            | mapped_points | true |
+            | src | a |
+
+        When I request a travel time matrix I should get
+            |   | a   | b   | e   | f   |
+            | a | 0   | 100 | 200 | 300 |
