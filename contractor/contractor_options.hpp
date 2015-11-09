@@ -47,9 +47,12 @@ struct ContractorConfig
     boost::filesystem::path osrm_input_path;
     boost::filesystem::path profile_path;
 
+    std::string level_output_path;
     std::string core_output_path;
     std::string graph_output_path;
     std::string edge_based_graph_path;
+
+    bool use_cached_priority;
 
     unsigned requested_num_threads;
 

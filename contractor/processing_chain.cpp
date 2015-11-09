@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "processing_chain.hpp"
-
 #include "contractor.hpp"
+
 #include "../data_structures/deallocating_vector.hpp"
 
 #include "../algorithms/crc32_processor.hpp"
@@ -78,8 +78,13 @@ int Prepare::Run()
 
     TIMER_START(contraction);
     std::vector<bool> is_core_node;
+    std::vector<float> node_levels;
+    if (config.use_cached_priority)
+    {
+        ReadNodeLevels(node_levels);
+    }
     DeallocatingVector<QueryEdge> contracted_edge_list;
-    ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, is_core_node);
+    ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, is_core_node, node_levels);
     TIMER_STOP(contraction);
 
     SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
@@ -87,6 +92,10 @@ int Prepare::Run()
     std::size_t number_of_used_edges =
         WriteContractedGraph(max_edge_id, contracted_edge_list);
     WriteCoreNodeMarker(std::move(is_core_node));
+    if (!config.use_cached_priority)
+    {
+        WriteNodeLevels(std::move(node_levels));
+    }
 
     TIMER_STOP(preparing);
 
@@ -131,11 +140,35 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
     return max_edge_id;
 }
 
+void Prepare::ReadNodeLevels(std::vector<float> &node_levels) const
+{
+    boost::filesystem::ifstream order_input_stream(config.level_output_path,
+                                                          std::ios::binary);
+
+    unsigned level_size;
+    order_input_stream.read((char *)&level_size, sizeof(unsigned));
+    node_levels.resize(level_size);
+    order_input_stream.read((char *)node_levels.data(),
+                                    sizeof(float) * node_levels.size());
+}
+
+void Prepare::WriteNodeLevels(std::vector<float> &&in_node_levels) const
+{
+    std::vector<float> node_levels(std::move(in_node_levels));
+
+    boost::filesystem::ofstream order_output_stream(config.level_output_path,
+                                                          std::ios::binary);
+
+    unsigned level_size = node_levels.size();
+    order_output_stream.write((char *)&level_size, sizeof(unsigned));
+    order_output_stream.write((char *)node_levels.data(),
+                                    sizeof(float) * node_levels.size());
+}
 
 void Prepare::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
 {
-    std::vector<bool> is_core_node(in_is_core_node);
-    std::vector<char> unpacked_bool_flags(is_core_node.size());
+    std::vector<bool> is_core_node(std::move(in_is_core_node));
+    std::vector<char> unpacked_bool_flags(std::move(is_core_node.size()));
     for (auto i = 0u; i < is_core_node.size(); ++i)
     {
         unpacked_bool_flags[i] = is_core_node[i] ? 1 : 0;
@@ -270,12 +303,17 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
 void Prepare::ContractGraph(const unsigned max_edge_id,
                             DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
                             DeallocatingVector<QueryEdge> &contracted_edge_list,
-                            std::vector<bool> &is_core_node)
+                            std::vector<bool> &is_core_node,
+                            std::vector<float> &inout_node_levels) const
 {
-    Contractor contractor(max_edge_id + 1, edge_based_edge_list);
+    std::vector<float> node_levels;
+    node_levels.swap(inout_node_levels);
+
+    Contractor contractor(max_edge_id + 1, edge_based_edge_list, std::move(node_levels));
     contractor.Run(config.core_factor);
     contractor.GetEdges(contracted_edge_list);
     contractor.GetCoreMarker(is_core_node);
+    contractor.GetNodeLevels(inout_node_levels);
 }
 
 

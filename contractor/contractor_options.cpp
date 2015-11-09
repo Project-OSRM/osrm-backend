@@ -48,16 +48,20 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
     // declare a group of options that will be allowed both on command line and in config file
     boost::program_options::options_description config_options("Configuration");
     config_options.add_options()(
-        "profile,p", boost::program_options::value<boost::filesystem::path>(&contractor_config.profile_path)
-                         ->default_value("profile.lua"),
+        "profile,p",
+        boost::program_options::value<boost::filesystem::path>(&contractor_config.profile_path)
+            ->default_value("profile.lua"),
         "Path to LUA routing profile")(
-        "threads,t", boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
-                         ->default_value(tbb::task_scheduler_init::default_num_threads()),
+        "threads,t",
+        boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
+            ->default_value(tbb::task_scheduler_init::default_num_threads()),
         "Number of threads to use")(
-		"core,k", boost::program_options::value<double>(&contractor_config.core_factor)
-						 ->default_value(1.0),"Percentage of the graph (in vertices) to contract [0.1]");
-
-
+        "core,k",
+        boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
+        "Percentage of the graph (in vertices) to contract [0.1]")(
+        "level-cache,o",
+        boost::program_options::value<bool>(&contractor_config.use_cached_priority)->default_value(false),
+        "Use .level file to retain the contaction level for each node from the last run.");
 
     // hidden options, will be allowed both on command line and in config file, but will not be
     // shown to the user
@@ -122,6 +126,7 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 
 void ContractorOptions::GenerateOutputFilesNames(ContractorConfig &contractor_config)
 {
+    contractor_config.level_output_path = contractor_config.osrm_input_path.string() + ".level";
     contractor_config.core_output_path = contractor_config.osrm_input_path.string() + ".core";
     contractor_config.graph_output_path = contractor_config.osrm_input_path.string() + ".hsgr";
     contractor_config.edge_based_graph_path = contractor_config.osrm_input_path.string() + ".ebg";
