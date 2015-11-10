@@ -8,6 +8,17 @@ When /^I match I should get$/ do |table|
         response = request_url row['request']
       else
         params = @query_params
+        got = {}
+        row.each_pair do |k,v|
+          if k =~ /param:(.*)/
+            if v=='(nil)'
+              params[$1]=nil
+            elsif v!=nil
+              params[$1]=v
+            end
+            got[k]=v
+          end
+        end
         trace = []
         timestamps = []
         if row['trace']
@@ -19,21 +30,10 @@ When /^I match I should get$/ do |table|
           if row['timestamps']
               timestamps = row['timestamps'].split(" ").compact.map { |t| t.to_i}
           end
-          got = {'trace' => row['trace'] }
+          got = got.merge({'trace' => row['trace'] })
           response = request_matching trace, timestamps, params
         else
           raise "*** no trace"
-        end
-      end
-
-      row.each_pair do |k,v|
-        if k =~ /param:(.*)/
-          if v=='(nil)'
-            params[$1]=nil
-          elsif v!=nil
-            params[$1]=v
-          end
-          got[k]=v
         end
       end
 

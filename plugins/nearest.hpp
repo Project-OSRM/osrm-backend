@@ -58,11 +58,21 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
         {
             return 400;
         }
+
+        const auto &input_bearings = route_parameters.bearings;
+        if (input_bearings.size() > 0 && route_parameters.coordinates.size() != input_bearings.size())
+        {
+            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            return 400;
+        }
+
         auto number_of_results = static_cast<std::size_t>(route_parameters.num_results);
         std::vector<PhantomNode> phantom_node_vector;
+        const int bearing = input_bearings.size() > 0 ? input_bearings.front().first : 0;
+        const int range = input_bearings.size() > 0 ? (input_bearings.front().second?*input_bearings.front().second:10) : 180;
         facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates.front(),
                                                         phantom_node_vector,
-                                                        static_cast<int>(number_of_results));
+                                                        static_cast<int>(number_of_results), bearing, range);
 
         if (phantom_node_vector.empty() || !phantom_node_vector.front().is_valid())
         {

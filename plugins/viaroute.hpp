@@ -103,8 +103,8 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 }
             }
             std::vector<PhantomNode> phantom_node_vector;
-            int bearing = input_bearings.size() > 0 ? input_bearings[i] : 0;
-            int range = input_bearings.size() > 0 ? 8 : 180;
+            const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
+            const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
             if (facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
                                                                 phantom_node_vector, 1, bearing, range))
             {
