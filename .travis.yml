@@ -16,7 +16,7 @@ install:
  # osmosis
  - curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
  # cmake
- - curl -s https://gist.githubusercontent.com/DennisOSRM/5fad9bee5c7f09fd7fc9/raw/ | sudo bash
+ - curl -s https://gist.githubusercontent.com/TheMarex/21e18751717a459e0f44/raw/5d9477a72e2af4b2fc65199be92e87422a44402c/gistfile1.txt | sudo bash
 before_script:
  - rvm use 1.9.3
  - gem install bundler
