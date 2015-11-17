@@ -80,3 +80,38 @@ Feature: Turn directions/codes
             | go    | xg,xo | head,straight,destination     | go        |
             | ga    | xg,xa | head,slight_right,destination | ga        |
             | gc    | xg,xc | head,right,destination        | gc        |
+
+    Scenario: Turn directions
+        Given the node map
+            | o | p | a | b | c |
+            | n |   |   |   | d |
+            | m |   | x |   | e |
+            | l |   |   |   | f |
+            | k | j | i | h | g |
+
+        And the ways
+            | nodes |
+            | xa    |
+            | xb    |
+            | xc    |
+            | xd    |
+            | xe    |
+            | xf    |
+            | xg    |
+            | xh    |
+            | xi    |
+            | xj    |
+            | xk    |
+            | xl    |
+            | xm    |
+            | xn    |
+            | xo    |
+            | xp    |
+
+        When I match with turns I should get
+            | trace | route | turns                         | matchings | duration |
+            | im    | xi,xm | head,left,destination         | im        | 80       |
+            | io    | xi,xo | head,slight_left,destination  | io        | 88       |
+            | ia    | xi,xa | head,straight,destination     | ia        | 80       |
+            | ic    | xi,xc | head,slight_right,destination | ic        | 88       |
+            | ie    | xi,xe | head,right,destination        | ie        | 60       |

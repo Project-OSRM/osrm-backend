@@ -156,6 +156,7 @@ When /^I match with turns I should get$/ do |table|
           modes = mode_list json['matchings'][0]['instructions']
           times = time_list json['matchings'][0]['instructions']
           distances = distance_list json['matchings'][0]['instructions']
+          summary = json['matchings'][0]['route_summary']
         end
       end
       
@@ -167,6 +168,9 @@ When /^I match with turns I should get$/ do |table|
       end
       if table.headers.include? '#'   # comment column
         got['#'] = row['#']           # copy value so it always match
+      end
+      if table.headers.include? 'duration'
+          got['duration'] = "#{summary["total_time"]}"
       end
 
       sub_matchings = []

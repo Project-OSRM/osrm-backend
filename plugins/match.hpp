@@ -238,6 +238,12 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 subtrace.values["instructions"] = json_descriptor.BuildTextualDescription(factory, temp_segments);
             }
 
+            factory.BuildRouteSummary(factory.get_entire_length(),
+                                              raw_route.shortest_path_length);
+            osrm::json::Object json_route_summary;
+            json_route_summary.values["total_distance"] = factory.summary.distance;
+            json_route_summary.values["total_time"] = factory.summary.duration;
+            subtrace.values["route_summary"] = json_route_summary;
         }
 
         subtrace.values["indices"] = osrm::json::make_array(sub.indices);
