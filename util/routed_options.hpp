@@ -184,10 +184,10 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         "shared-memory,s",
         boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
         "Load data from shared memory")(
-        "max-table-size,m",
+        "max-table-size",
         boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
         "Max. locations supported in distance table query")(
-        "max-matching-size,m",
+        "max-matching-size",
         boost::program_options::value<int>(&max_locations_map_matching)->default_value(2),
         "Max. locations supported in map matching query");
 
