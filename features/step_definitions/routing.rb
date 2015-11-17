@@ -8,6 +8,17 @@ When /^I route I should get$/ do |table|
         response = request_url row['request']
       else
         params = @query_params
+        got = {}
+        row.each_pair do |k,v|
+          if k =~ /param:(.*)/
+            if v=='(nil)'
+              params[$1]=nil
+            elsif v!=nil
+              params[$1]=v
+            end
+            got[k]=v
+          end
+        end
         waypoints = []
         if row['from'] and row['to']
           node = find_node_by_name(row['from'])
@@ -18,7 +29,7 @@ When /^I route I should get$/ do |table|
           raise "*** unknown to-node '#{row['to']}" unless node
           waypoints << node
 
-          got = {'from' => row['from'], 'to' => row['to'] }
+          got = got.merge({'from' => row['from'], 'to' => row['to'] })
           response = request_route waypoints, params
         elsif row['waypoints']
           row['waypoints'].split(',').each do |n|
@@ -26,21 +37,10 @@ When /^I route I should get$/ do |table|
             raise "*** unknown waypoint node '#{n.strip}" unless node
             waypoints << node
           end
-          got = {'waypoints' => row['waypoints'] }
+          got = got.merge({'waypoints' => row['waypoints'] })
           response = request_route waypoints, params
         else
           raise "*** no waypoints"
-        end
-      end
-
-      row.each_pair do |k,v|
-        if k =~ /param:(.*)/
-          if v=='(nil)'
-            params[$1]=nil
-          elsif v!=nil
-            params[$1]=v
-          end
-          got[k]=v
         end
       end
 

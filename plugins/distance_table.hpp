@@ -75,6 +75,13 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return 400;
         }
 
+        const auto &input_bearings = route_parameters.bearings;
+        if (input_bearings.size() > 0 && route_parameters.coordinates.size() != input_bearings.size())
+        {
+            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            return 400;
+        }
+
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
         unsigned max_locations =
             std::min(static_cast<unsigned>(max_locations_distance_table),
@@ -94,8 +101,10 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                     continue;
                 }
             }
+            const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
+            const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i], 1);
+                                                            phantom_node_vector[i], 1, bearing, range);
 
             BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }

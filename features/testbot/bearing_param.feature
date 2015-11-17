@@ -1,9 +1,25 @@
-@routing @bearing_param @todo @testbot
+@routing @bearing_param @testbot
 Feature: Bearing parameter
 
     Background:
         Given the profile "testbot"
         And a grid size of 10 meters
+
+    Scenario: Testbot - Intial bearing in simple case
+        Given the node map
+            | a | b | c | d |
+
+        And the ways
+            | nodes |
+            | ad    |
+
+        When I route I should get
+            | from | to | param:b     | route | bearing |
+            | b    | c  | 90&b=90     | ad    | 90      |
+            | b    | c  | 180&b=90    |       |         |
+            | b    | c  | 80&b=100    | ad    | 90      |
+            | b    | c  | 79&b=100    |       |         |
+            | b    | c  | 79,11&b=100 | ad    | 90      |
 
     Scenario: Testbot - Intial bearing in simple case
         Given the node map
@@ -17,13 +33,13 @@ Feature: Bearing parameter
             | bc    |
 
         When I route I should get
-            | from | to | param:bearing | route | bearing |
-            | 0    | c  | 0             | bc    | 45      |
-            | 0    | c  | 45            | bc    | 45      |
-            | 0    | c  | 85            | bc    | 45      |
-            | 0    | c  | 95            | ac    | 135     |
-            | 0    | c  | 135           | ac    | 135     |
-            | 0    | c  | 180           | ac    | 135     |
+            | from | to | param:b    | route | bearing |
+            | 0    | c  | 0&b=0      |       |         |
+            | 0    | c  | 45&b=45    | bc    | 45 ~3%   |
+            | 0    | c  | 85&b=85    |       |         |
+            | 0    | c  | 95&b=95    |       |         |
+            | 0    | c  | 135&b=135  | ac    | 135 ~1%  |
+            | 0    | c  | 180&b=180  |       |         |
 
     Scenario: Testbot - Initial bearing on split way
         Given the node map
@@ -38,23 +54,21 @@ Feature: Bearing parameter
             | da    | yes    |
 
         When I route I should get
-            | from | to | param:bearing | route    | bearing |
-            | 0    | b  | 10            | ab       | 90      |
-            | 0    | b  | 90            | ab       | 90      |
-            | 0    | b  | 170           | ab       | 90      |
-            | 0    | b  | 190           | cd,da,ab | 270     |
-            | 0    | b  | 270           | cd,da,ab | 270     |
-            | 0    | b  | 350           | cd,da,ab | 270     |
-            | 1    | d  | 10            | cd       | 90      |
-            | 1    | d  | 90            | cd       | 90      |
-            | 1    | d  | 170           | cd       | 90      |
-            | 1    | d  | 190           | ab,bc,cd | 270     |
-            | 1    | d  | 270           | ab,bc,cd | 270     |
-            | 1    | d  | 350           | ab,bc,cd | 270     |
+            | from | to | param:b    | route    | bearing  |
+            | 0    | b  | 10&b=10    |          |          |
+            | 0    | b  | 90&b=90    | ab       | 90       |
+            | 0    | b  | 170&b=170  |          |          |
+            | 0    | b  | 190&b=190  |          |          |
+            | 0    | 1  | 90&b=270   | ab,bc,cd | 90,0,270 |
+            | 1    | d  | 10&b=10    |          |          |
+            | 1    | d  | 90&b=90    |          |          |
+            | 1    | 0  | 190&b=190  |          |          |
+            | 1    | d  | 270&b=270  | cd       | 270      |
+            | 1    | d  | 350&b=350  |          |          |
 
     Scenario: Testbot - Initial bearing in all direction
         Given the node map
-            | h |  |   | a |   |  | b |
+            | h |  | q | a |   |  | b |
             |   |  |   |   |   |  |   |
             |   |  | p | i | j |  |   |
             | g |  | o | 0 | k |  | c |
@@ -82,12 +96,12 @@ Feature: Bearing parameter
             | ha    | yes    |
 
         When I route I should get
-            | from | to | param:bearing | route                   | bearing |
-            | 0    | a  | 0             | ia                      | 0       |
-            | 0    | a  | 45            | jb,bc,cd,de,ef,fg,gh,ha | 45      |
-            | 0    | a  | 90            | kc,cd,de,ef,fg,gh,ha    | 90      |
-            | 0    | a  | 135           | ld,de,ef,fg,gh,ha       | 135     |
-            | 0    | a  | 180           | me,de,ef,fg,gh,ha       | 180     |
-            | 0    | a  | 225           | nf,ef,fg,gh,ha          | 225     |
-            | 0    | a  | 270           | og,gh,ha                | 270     |
-            | 0    | a  | 315           | pn,ha                   | 315     |
+            | from | to | param:b     | route                      | bearing                     |
+            | i    | q  | 0&b=90      | ia,ab,bc,cd,de,ef,fg,gh,ha | 0,90,180,180,270,270,0,0,90 |
+            | 0    | a  | 45&b=90     | jb,bc,cd,de,ef,fg,gh,ha    | 45,180,180,270,270,0,0,90   |
+            | j    | q  | 90&b=90     | kc,cd,de,ef,fg,gh,ha       | 90,180,270,270,0,0,90       |
+            | k    | a  | 135&b=90    | ld,de,ef,fg,gh,ha          | 135,270,270,0,0,90          |
+            | 0    | a  | 180&b=90    | me,ef,fg,gh,ha             | 180,270,0,0,90              |
+            | m    | a  | 225&b=90    | nf,fg,gh,ha                | 225,0,0,90                  |
+            | 0    | a  | 270&b=90    | og,gh,ha                   | 270,0,90                    |
+            | 0    | a  | 315&b=90    | ph,ha                      | 315,90                      |

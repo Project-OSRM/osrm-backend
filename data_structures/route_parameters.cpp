@@ -118,16 +118,17 @@ void RouteParameters::addTimestamp(const unsigned timestamp)
     }
 }
 
-void RouteParameters::addBearing(const int bearing, boost::spirit::qi::unused_type unused, bool& pass)
+void RouteParameters::addBearing(
+    const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
+        boost::spirit::qi::unused_type /* unused */, bool& pass)
 {
-    bearings.resize(coordinates.size());
     pass = false;
+    const int bearing = boost::fusion::at_c<0>(received_bearing);
+    const boost::optional<int> range = boost::fusion::at_c<1>(received_bearing);
     if (bearing < 0 || bearing > 359) return;
-    if (!bearings.empty())
-    {
-        bearings.back() = bearing;
-        pass = true;
-    }
+    if (range && (*range < 0 || *range > 180)) return;
+    bearings.emplace_back(std::make_pair(bearing,range));
+    pass = true;
 }
 
 void RouteParameters::setLanguage(const std::string &language_string)

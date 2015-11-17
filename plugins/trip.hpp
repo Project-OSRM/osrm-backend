@@ -76,6 +76,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                          PhantomNodeArray &phantom_node_vector)
     {
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
+        const auto &input_bearings = route_parameters.bearings;
 
         // find phantom nodes for all input coords
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
@@ -92,8 +93,10 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                     continue;
                 }
             }
+            const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
+            const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i], 1);
+                                                            phantom_node_vector[i], 1, bearing, range);
             if (phantom_node_vector[i].size() > 1)
             {
                 phantom_node_vector[i].erase(std::begin(phantom_node_vector[i]));
@@ -236,6 +239,13 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // check if all inputs are coordinates
         if (!check_all_coordinates(route_parameters.coordinates))
         {
+            return 400;
+        }
+
+        const auto &input_bearings = route_parameters.bearings;
+        if (input_bearings.size() > 0 && route_parameters.coordinates.size() != input_bearings.size())
+        {
+            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
             return 400;
         }
 

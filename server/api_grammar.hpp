@@ -66,7 +66,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         timestamp = (-qi::lit('&')) >> qi::lit("t") >> '=' >>
                qi::uint_[boost::bind(&HandlerT::addTimestamp, handler, ::_1)];
         bearing = (-qi::lit('&')) >> qi::lit("b") >> '=' >>
-               qi::int_[boost::bind(&HandlerT::addBearing, handler, ::_1, ::_2, ::_3)];
+               (qi::int_ >> -(qi::lit(',') >> qi::int_ | qi::attr(10)))[boost::bind(&HandlerT::addBearing, handler, ::_1, ::_2, ::_3)];
         u = (-qi::lit('&')) >> qi::lit("u") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::setUTurn, handler, ::_1)];
         uturns = (-qi::lit('&')) >> qi::lit("uturns") >> '=' >>
