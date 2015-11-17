@@ -248,8 +248,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 #Check Boost
-set(BOOST_MIN_VERSION "1.49.0")
-find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
+find_package(Boost 1.49.0 COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 if(NOT Boost_FOUND)
   message(FATAL_ERROR "Fatal error: Boost (version >= 1.49.0) required.\n")
 endif()
