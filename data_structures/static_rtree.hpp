@@ -790,8 +790,10 @@ class StaticRTree
                                                       ? (forward_edge_bearing - 180) 
                                                       : (forward_edge_bearing + 180);
 
-                const bool forward_bearing_valid = IsBearingWithinBounds(forward_edge_bearing, filter_bearing, filter_bearing_range);
-                const bool backward_bearing_valid = IsBearingWithinBounds(backward_edge_bearing, filter_bearing, filter_bearing_range);
+                const bool forward_bearing_valid = IsBearingWithinBounds(forward_edge_bearing, filter_bearing, filter_bearing_range)
+                    && current_segment.forward_edge_based_node_id != SPECIAL_NODEID;
+                const bool backward_bearing_valid = IsBearingWithinBounds(backward_edge_bearing, filter_bearing, filter_bearing_range)
+                    && current_segment.reverse_edge_based_node_id != SPECIAL_NODEID;
 
                 if (!forward_bearing_valid && !backward_bearing_valid)
                 {
@@ -961,8 +963,10 @@ class StaticRTree
                                                       ? (forward_edge_bearing - 180) 
                                                       : (forward_edge_bearing + 180);
 
-                const bool forward_bearing_valid = IsBearingWithinBounds(forward_edge_bearing, filter_bearing, filter_bearing_range);
-                const bool backward_bearing_valid = IsBearingWithinBounds(backward_edge_bearing, filter_bearing, filter_bearing_range);
+                const bool forward_bearing_valid = IsBearingWithinBounds(forward_edge_bearing, filter_bearing, filter_bearing_range)
+                    && current_segment.forward_edge_based_node_id != SPECIAL_NODEID;
+                const bool backward_bearing_valid = IsBearingWithinBounds(backward_edge_bearing, filter_bearing, filter_bearing_range)
+                    && current_segment.reverse_edge_based_node_id != SPECIAL_NODEID;
 
                 if (!forward_bearing_valid && !backward_bearing_valid)
                 {

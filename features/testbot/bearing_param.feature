@@ -54,17 +54,17 @@ Feature: Bearing parameter
             | da    | yes    |
 
         When I route I should get
-            | from | to | param:b    | route    | bearing  |
-            | 0    | b  | 10&b=10    |          |          |
-            | 0    | b  | 90&b=90    | ab       | 90       |
-            | 0    | b  | 170&b=170  |          |          |
-            | 0    | b  | 190&b=190  |          |          |
-            | 0    | 1  | 90&b=270   | ab,bc,cd | 90,0,270 |
-            | 1    | d  | 10&b=10    |          |          |
-            | 1    | d  | 90&b=90    |          |          |
-            | 1    | 0  | 190&b=190  |          |          |
-            | 1    | d  | 270&b=270  | cd       | 270      |
-            | 1    | d  | 350&b=350  |          |          |
+            | from | to | param:b    | route       | bearing       |
+            | 0    | b  | 10&b=10    | bc          | 0             |
+            | 0    | b  | 90&b=90    | ab          | 90            |
+            | 0    | b  | 170&b=170  | da          | 180           |
+            | 0    | b  | 189&b=189  | da          | 180           |
+            | 0    | 1  | 90&b=270   | ab,bc,cd    | 90,0,270      |
+            | 1    | d  | 10&b=10    | bc          | 0             |
+            | 1    | d  | 90&b=90    | ab,bc,cd,da | 90,0,270,180  |
+            | 1    | 0  | 189&b=189  | da          | 180           |
+            | 1    | d  | 270&b=270  | cd          | 270           |
+            | 1    | d  | 349&b=349  |             |               |
 
     Scenario: Testbot - Initial bearing in all direction
         Given the node map
@@ -97,11 +97,11 @@ Feature: Bearing parameter
 
         When I route I should get
             | from | to | param:b     | route                      | bearing                     |
-            | i    | q  | 0&b=90      | ia,ab,bc,cd,de,ef,fg,gh,ha | 0,90,180,180,270,270,0,0,90 |
+            | 0    | q  | 0&b=90      | ia,ab,bc,cd,de,ef,fg,gh,ha | 0,90,180,180,270,270,0,0,90 |
             | 0    | a  | 45&b=90     | jb,bc,cd,de,ef,fg,gh,ha    | 45,180,180,270,270,0,0,90   |
-            | j    | q  | 90&b=90     | kc,cd,de,ef,fg,gh,ha       | 90,180,270,270,0,0,90       |
-            | k    | a  | 135&b=90    | ld,de,ef,fg,gh,ha          | 135,270,270,0,0,90          |
+            | 0    | q  | 90&b=90     | kc,cd,de,ef,fg,gh,ha       | 90,180,270,270,0,0,90       |
+            | 0    | a  | 135&b=90    | ld,de,ef,fg,gh,ha          | 135,270,270,0,0,90          |
             | 0    | a  | 180&b=90    | me,ef,fg,gh,ha             | 180,270,0,0,90              |
-            | m    | a  | 225&b=90    | nf,fg,gh,ha                | 225,0,0,90                  |
+            | 0    | a  | 225&b=90    | nf,fg,gh,ha                | 225,0,0,90                  |
             | 0    | a  | 270&b=90    | og,gh,ha                   | 270,0,90                    |
             | 0    | a  | 315&b=90    | ph,ha                      | 315,90                      |
