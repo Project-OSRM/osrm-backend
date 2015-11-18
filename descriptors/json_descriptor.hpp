@@ -105,7 +105,6 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             // We do not need to do much, if there is no route ;-)
             json_result.values["status"] = 207;
             json_result.values["status_message"] = "Cannot find route between points";
-            // osrm::json::render(reply.content, json_result);
             return;
         }
 

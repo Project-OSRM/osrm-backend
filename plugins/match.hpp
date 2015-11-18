@@ -273,7 +273,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            json_result.values["status"] = "Invalid coordinates.";
+            json_result.values["status"] = 400;
+            json_result.values["status_message"] = "Invalid coordinates.";
             return 400;
         }
 
@@ -284,13 +285,15 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         const auto &input_bearings = route_parameters.bearings;
         if (input_timestamps.size() > 0 && input_coords.size() != input_timestamps.size())
         {
-            json_result.values["status"] = "Number of timestamps does not match number of coordinates .";
+            json_result.values["status"] = 400;
+            json_result.values["status_message"] = "Number of timestamps does not match number of coordinates.";
             return 400;
         }
 
         if (input_bearings.size() > 0 && input_coords.size() != input_bearings.size())
         {
-            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            json_result.values["status"] = 400;
+            json_result.values["status_message"] = "Number of bearings does not match number of coordinates.";
             return 400;
         }
 
@@ -298,14 +301,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (max_locations_map_matching > 0 &&
             static_cast<int>(input_coords.size()) < max_locations_map_matching)
         {
-            json_result.values["status"] = "Too many coodindates.";
+            json_result.values["status"] = 400;
+            json_result.values["status_message"] = "Too many coodindates.";
             return 400;
         }
 
         // enforce maximum number of locations for performance reasons
         if (static_cast<int>(input_coords.size()) < 2)
         {
-            json_result.values["status"] = "At least two coordinates needed.";
+            json_result.values["status"] = 400;
+            json_result.values["status_message"] = "At least two coordinates needed.";
             return 400;
         }
 
@@ -313,7 +318,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             getCandidates(input_coords, input_bearings, route_parameters.gps_precision, sub_trace_lengths, candidates_lists);
         if (!found_candidates)
         {
-            json_result.values["status"] = "No suitable matching candidates found.";
+            json_result.values["status"] = 400;
+            json_result.values["status_message"] = "No suitable matching candidates found.";
             return 400;
         }
 
@@ -326,12 +332,6 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps,
                                         route_parameters.matching_beta,
                                         route_parameters.gps_precision, sub_matchings);
-
-        if (sub_matchings.empty())
-        {
-            json_result.values["status"] = "No matchings found.";
-            return 400;
-        }
 
         osrm::json::Array matchings;
         for (auto &sub : sub_matchings)
@@ -378,6 +378,17 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (osrm::json::Logger::get())
             osrm::json::Logger::get()->render("matching", json_result);
         json_result.values["matchings"] = matchings;
+
+        if (sub_matchings.empty())
+        {
+            json_result.values["status"] = 0;
+            json_result.values["status_message"] = "Found matchings.";
+        }
+        else
+        {
+            json_result.values["status"] = 207;
+            json_result.values["status_message"] = "Cannot find matchings.";
+        }
 
         return 200;
     }
