@@ -181,15 +181,6 @@ local function parse_maxspeed(source)
   return n
 end
 
--- FIXME Why was this commented out?
--- function turn_function (angle)
---   -- print ("called at angle " .. angle )
---   local index = math.abs(math.floor(angle/10+0.5))+1 -- +1 'coz LUA starts as idx 1
---   local penalty = turn_cost_table[index]
---   -- print ("index: " .. index .. ", bias: " .. penalty )
---   return penalty
--- end
-
 function node_function (node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, access_tags_hierachy)
