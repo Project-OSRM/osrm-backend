@@ -130,4 +130,6 @@ void ContractorOptions::GenerateOutputFilesNames(ContractorConfig &contractor_co
     contractor_config.core_output_path = contractor_config.osrm_input_path.string() + ".core";
     contractor_config.graph_output_path = contractor_config.osrm_input_path.string() + ".hsgr";
     contractor_config.edge_based_graph_path = contractor_config.osrm_input_path.string() + ".ebg";
+    contractor_config.edge_segment_lookup_path = contractor_config.osrm_input_path.string() + ".edge_segment_lookup";
+    contractor_config.edge_penalty_path = contractor_config.osrm_input_path.string() + ".edge_penalties";
 }
