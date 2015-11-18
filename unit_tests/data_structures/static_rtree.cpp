@@ -109,13 +109,13 @@ class LinearSearchNN
 
     bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                       PhantomNode &result_phantom_node,
-                                      const unsigned zoom_level)
+                                      const unsigned)
     {
         float min_dist = std::numeric_limits<float>::max();
         TestData nearest_edge;
         for (const TestData &e : edges)
         {
-            if (e.component_id != 0)
+            if (e.component.is_tiny)
                 continue;
 
             float current_ratio = 0.;
@@ -136,7 +136,8 @@ class LinearSearchNN
                                        e.forward_offset,
                                        e.reverse_offset,
                                        e.packed_geometry_id,
-                                       e.component_id,
+                                       e.component.is_tiny,
+                                       e.component.id,
                                        nearest,
                                        e.fwd_segment_position,
                                        e.forward_travel_mode,
@@ -226,7 +227,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
             if (used_edges.find(std::pair<unsigned, unsigned>(
                     std::min(data.u, data.v), std::max(data.u, data.v))) == used_edges.end())
             {
-                data.component_id = 0;
+                data.component.id = 0;
                 edges.emplace_back(data);
                 used_edges.emplace(std::min(data.u, data.v), std::max(data.u, data.v));
             }
