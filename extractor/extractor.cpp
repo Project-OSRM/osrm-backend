@@ -436,8 +436,8 @@ void extractor::FindComponents(unsigned max_edge_id,
                          component_search.get_component_id(node.reverse_edge_based_node_id));
 
         const unsigned component_size = component_search.get_component_size(forward_component);
-        const bool is_tiny_component = component_size < 1000;
-        node.component_id = is_tiny_component ? (1 + forward_component) : 0;
+        node.component.is_tiny = component_size < 1000;
+        node.component.id = 1 + forward_component;
     }
 }
 

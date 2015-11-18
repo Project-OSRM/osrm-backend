@@ -46,7 +46,7 @@ struct EdgeBasedNode
           u(SPECIAL_NODEID), v(SPECIAL_NODEID), name_id(0),
           forward_weight(INVALID_EDGE_WEIGHT >> 1), reverse_weight(INVALID_EDGE_WEIGHT >> 1),
           forward_offset(0), reverse_offset(0), packed_geometry_id(SPECIAL_EDGEID),
-          component_id(-1), fwd_segment_position(std::numeric_limits<unsigned short>::max()),
+          component{false, INVALID_COMPONENTID}, fwd_segment_position(std::numeric_limits<unsigned short>::max()),
           forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
@@ -62,6 +62,7 @@ struct EdgeBasedNode
                            int forward_offset,
                            int reverse_offset,
                            unsigned packed_geometry_id,
+                           bool is_tiny_component,
                            unsigned component_id,
                            unsigned short fwd_segment_position,
                            TravelMode forward_travel_mode,
@@ -70,7 +71,7 @@ struct EdgeBasedNode
           reverse_edge_based_node_id(reverse_edge_based_node_id), u(u), v(v), name_id(name_id),
           forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
-          packed_geometry_id(packed_geometry_id), component_id(component_id),
+          packed_geometry_id(packed_geometry_id), component{is_tiny_component, component_id},
           fwd_segment_position(fwd_segment_position), forward_travel_mode(forward_travel_mode),
           backward_travel_mode(backward_travel_mode)
     {
@@ -90,8 +91,6 @@ struct EdgeBasedNode
 
     bool IsCompressed() const { return packed_geometry_id != SPECIAL_EDGEID; }
 
-    bool is_in_tiny_cc() const { return 0 != component_id; }
-
     NodeID forward_edge_based_node_id; // needed for edge-expanded graph
     NodeID reverse_edge_based_node_id; // needed for edge-expanded graph
     NodeID u;                          // indices into the coordinates array
@@ -102,7 +101,10 @@ struct EdgeBasedNode
     int forward_offset;          // prefix sum of the weight up the edge TODO: short must suffice
     int reverse_offset;          // prefix sum of the weight from the edge TODO: short must suffice
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
-    unsigned component_id;
+    struct {
+        bool is_tiny : 1;
+        unsigned id : 31;
+    } component;
     unsigned short fwd_segment_position; // segment id in a compressed geometry
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;

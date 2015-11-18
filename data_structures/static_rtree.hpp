@@ -603,7 +603,7 @@ class StaticRTree
                     for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         EdgeDataT const &current_edge = current_leaf_node.objects[i];
-                        if (ignore_tiny_components && current_edge.component_id != 0)
+                        if (ignore_tiny_components && current_edge.component.is_tiny)
                         {
                             continue;
                         }
@@ -767,7 +767,7 @@ class StaticRTree
                 // continue searching for the first segment from a big component
                 if (number_of_elements_from_big_cc == 0 &&
                     number_of_elements_from_tiny_cc >= max_number_of_phantom_nodes &&
-                    current_segment.is_in_tiny_cc())
+                    current_segment.component.is_tiny)
                 {
                     continue;
                 }
@@ -821,7 +821,7 @@ class StaticRTree
                                                          result_phantom_node_vector.back());
 
                 // update counts on what we found from which result class
-                if (current_segment.is_in_tiny_cc())
+                if (current_segment.component.is_tiny)
                 { // found an element in tiny component
                     ++number_of_elements_from_tiny_cc;
                 }
@@ -976,14 +976,7 @@ class StaticRTree
 
                 // store phantom node in result vector
                 result_phantom_node_vector.emplace_back(
-                    PhantomNode(
-                        current_segment.forward_edge_based_node_id,
-                        current_segment.reverse_edge_based_node_id, current_segment.name_id,
-                        current_segment.forward_weight, current_segment.reverse_weight,
-                        current_segment.forward_offset, current_segment.reverse_offset,
-                        current_segment.packed_geometry_id, current_segment.component_id,
-                        foot_point_coordinate_on_segment, current_segment.fwd_segment_position,
-                        current_segment.forward_travel_mode, current_segment.backward_travel_mode),
+                    PhantomNode {current_segment, foot_point_coordinate_on_segment},
                     current_perpendicular_distance);
 
                 if (!forward_bearing_valid)
@@ -1043,7 +1036,7 @@ class StaticRTree
                     for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         const EdgeDataT &current_edge = current_leaf_node.objects[i];
-                        if (ignore_tiny_components && current_edge.component_id != 0)
+                        if (ignore_tiny_components && current_edge.component.is_tiny != 0)
                         {
                             continue;
                         }
@@ -1062,19 +1055,7 @@ class StaticRTree
                             !osrm::epsilon_compare(current_perpendicular_distance, min_dist))
                         { // found a new minimum
                             min_dist = current_perpendicular_distance;
-                            result_phantom_node = {current_edge.forward_edge_based_node_id,
-                                                   current_edge.reverse_edge_based_node_id,
-                                                   current_edge.name_id,
-                                                   current_edge.forward_weight,
-                                                   current_edge.reverse_weight,
-                                                   current_edge.forward_offset,
-                                                   current_edge.reverse_offset,
-                                                   current_edge.packed_geometry_id,
-                                                   current_edge.component_id,
-                                                   nearest,
-                                                   current_edge.fwd_segment_position,
-                                                   current_edge.forward_travel_mode,
-                                                   current_edge.backward_travel_mode};
+                            result_phantom_node = {current_edge, nearest};
                             nearest_edge = current_edge;
                         }
                     }

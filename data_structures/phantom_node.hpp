@@ -47,6 +47,7 @@ struct PhantomNode
                 int forward_offset,
                 int reverse_offset,
                 unsigned packed_geometry_id,
+                bool is_tiny_component,
                 unsigned component_id,
                 FixedPointCoordinate &location,
                 unsigned short fwd_segment_position,
@@ -68,7 +69,9 @@ struct PhantomNode
         reverse_offset = other.reverse_offset;
 
         packed_geometry_id = other.packed_geometry_id;
-        component_id = other.component_id;
+
+        component.id = other.component.id;
+        component.is_tiny = other.component.is_tiny;
 
         location = foot_point;
         fwd_segment_position = other.fwd_segment_position;
@@ -85,7 +88,10 @@ struct PhantomNode
     int forward_offset;
     int reverse_offset;
     unsigned packed_geometry_id;
-    unsigned component_id;
+    struct {
+        bool is_tiny : 1;
+        unsigned id : 31;
+    } component;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
     // note 4 bits would suffice for each,
@@ -104,8 +110,6 @@ struct PhantomNode
     bool is_valid(const unsigned numberOfNodes) const;
 
     bool is_valid() const;
-
-    bool is_in_tiny_component() const;
 
     bool operator==(const PhantomNode &other) const;
 };
@@ -147,7 +151,7 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
         << "fwd-o: " << pn.forward_offset << ", "
         << "rev-o: " << pn.reverse_offset << ", "
         << "geom: " << pn.packed_geometry_id << ", "
-        << "comp: " << pn.component_id << ", "
+        << "comp: " << pn.component.is_tiny << " / " << pn.component.id << ", "
         << "pos: " << pn.fwd_segment_position << ", "
         << "loc: " << pn.location;
     return out;

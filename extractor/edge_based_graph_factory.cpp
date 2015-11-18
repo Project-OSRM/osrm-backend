@@ -164,7 +164,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 forward_data.name_id, forward_geometry[i].second,
                 reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
                 reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
-                INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
+                false, INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -207,7 +207,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
             forward_data.name_id, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
-            INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
+            false, INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }

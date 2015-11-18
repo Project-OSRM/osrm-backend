@@ -117,9 +117,9 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             }
         }
 
-        auto check_component_id_is_tiny = [](const phantom_node_pair &phantom_pair)
+        const auto check_component_id_is_tiny = [](const phantom_node_pair &phantom_pair)
         {
-            return phantom_pair.first.is_in_tiny_component();
+            return phantom_pair.first.component.is_tiny;
         };
 
         const bool every_phantom_is_in_tiny_cc =
@@ -127,31 +127,36 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                         check_component_id_is_tiny);
 
         // are all phantoms from a tiny cc?
-        const auto component_id = phantom_node_pair_list.front().first.component_id;
-
-        auto check_component_id_is_equal = [component_id](const phantom_node_pair &phantom_pair)
+        const auto check_all_in_same_component = [](const std::vector<phantom_node_pair> &nodes)
         {
-            return component_id == phantom_pair.first.component_id;
-        };
+            const auto component_id = nodes.front().first.component.id;
 
-        const bool every_phantom_has_equal_id =
-            std::all_of(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
-                        check_component_id_is_equal);
+            return std::all_of(std::begin(nodes), std::end(nodes),
+                               [component_id](const phantom_node_pair &phantom_pair)
+                               {
+                                   return component_id == phantom_pair.first.component.id;
+                               });
+        };
 
         auto swap_phantom_from_big_cc_into_front = [](phantom_node_pair &phantom_pair)
         {
-            if (0 != phantom_pair.first.component_id && 0 == phantom_pair.second.component_id)
+            if (phantom_pair.first.component.is_tiny && phantom_pair.second.is_valid() && !phantom_pair.second.component.is_tiny)
             {
                 using namespace std;
                 swap(phantom_pair.first, phantom_pair.second);
             }
         };
 
+        auto all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
+
         // this case is true if we take phantoms from the big CC
-        if (!every_phantom_is_in_tiny_cc || !every_phantom_has_equal_id)
+        if (every_phantom_is_in_tiny_cc && !all_in_same_component)
         {
             std::for_each(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
                           swap_phantom_from_big_cc_into_front);
+
+            // update check with new component ids
+            all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
         }
 
         InternalRouteResult raw_route;
@@ -182,7 +187,9 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                                              route_parameters.uturns, raw_route);
         }
 
-        if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
+        bool no_route = INVALID_EDGE_WEIGHT == raw_route.shortest_path_length;
+
+        if (no_route)
         {
             SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
         }
@@ -203,6 +210,15 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         descriptor->SetConfig(route_parameters);
         descriptor->Run(raw_route, json_result);
+
+        // we can only know this after the fact, different SCC ids still
+        // allow for connection in one direction.
+        if (!all_in_same_component && no_route)
+        {
+            json_result.values["status"] = "Impossible route";
+            return 400;
+        }
+
         return 200;
     }
 };
