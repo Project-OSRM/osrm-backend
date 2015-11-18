@@ -215,7 +215,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         // allow for connection in one direction.
         if (!all_in_same_component && no_route)
         {
-            json_result.values["status"] = "Impossible route";
+            json_result.values["status_message"] = "Impossible route between points.";
             return 400;
         }
 

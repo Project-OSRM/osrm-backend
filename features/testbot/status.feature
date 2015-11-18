@@ -32,8 +32,8 @@ Feature: Status messages
             | from | to | route | status | message                          |
             | a    | b  | ab    | 0      | Found route between points       |
             | c    | d  | cd    | 0      | Found route between points       |
-            | a    | c  |       | 207    | Cannot find route between points |
-            | b    | d  |       | 207    | Cannot find route between points |
+            | a    | c  |       | 207    | Impossible route between points. |
+            | b    | d  |       | 207    | Impossible route between points. |
 
     Scenario: Malformed requests
         Given the node locations
