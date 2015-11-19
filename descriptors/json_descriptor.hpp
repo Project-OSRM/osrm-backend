@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/json_container.hpp>
 
+#include <limits>
 #include <algorithm>
 #include <string>
 
@@ -301,7 +302,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
 
         struct RoundAbout
         {
-            RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
+            RoundAbout() : start_index(std::numeric_limits<int>::max()), name_id(INVALID_NAMEID), leave_at_exit(std::numeric_limits<int>::max()) {}
             int start_index;
             unsigned name_id;
             int leave_at_exit;
@@ -350,16 +351,26 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     json_instruction_row.values.push_back(std::round(segment.duration / 10.));
                     json_instruction_row.values.push_back(
                         std::to_string(static_cast<unsigned>(segment.length)) + "m");
-                    const double bearing_value = (segment.bearing / 10.);
-                    json_instruction_row.values.push_back(bearing::get(bearing_value));
+
+                    // post turn bearing
+                    const double post_turn_bearing_value = (segment.post_turn_bearing / 10.);
+                    json_instruction_row.values.push_back(bearing::get(post_turn_bearing_value));
                     json_instruction_row.values.push_back(
-                        static_cast<unsigned>(round(bearing_value)));
+                        static_cast<unsigned>(round(post_turn_bearing_value)));
+
                     json_instruction_row.values.push_back(segment.travel_mode);
+
+                    // pre turn bearing
+                    const double pre_turn_bearing_value = (segment.pre_turn_bearing / 10.);
+                    json_instruction_row.values.push_back(bearing::get(pre_turn_bearing_value));
+                    json_instruction_row.values.push_back(
+                        static_cast<unsigned>(round(pre_turn_bearing_value)));
+
+                    json_instruction_array.values.push_back(json_instruction_row);
 
                     route_segments_list.emplace_back(
                         segment.name_id, static_cast<int>(segment.length),
                         static_cast<unsigned>(route_segments_list.size()));
-                    json_instruction_array.values.push_back(json_instruction_row);
                 }
             }
             else if (TurnInstruction::StayOnRoundAbout == current_instruction)
@@ -381,6 +392,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
         json_last_instruction_row.values.push_back(0);
         json_last_instruction_row.values.push_back("0m");
+        json_last_instruction_row.values.push_back(bearing::get(0.0));
+        json_last_instruction_row.values.push_back(0.);
         json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
         json_instruction_array.values.push_back(json_last_instruction_row);

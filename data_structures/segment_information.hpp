@@ -43,7 +43,8 @@ struct SegmentInformation
     NodeID name_id;
     EdgeWeight duration;
     float length;
-    short bearing; // more than enough [0..3600] fits into 12 bits
+    short pre_turn_bearing; // more than enough [0..3600] fits into 12 bits
+    short post_turn_bearing;
     TurnInstruction turn_instruction;
     TravelMode travel_mode;
     bool necessary;
@@ -58,7 +59,7 @@ struct SegmentInformation
                                 const bool is_via_location,
                                 const TravelMode travel_mode)
         : location(std::move(location)), name_id(name_id), duration(duration), length(length),
-          bearing(0), turn_instruction(turn_instruction), travel_mode(travel_mode),
+          pre_turn_bearing(0), post_turn_bearing(0), turn_instruction(turn_instruction), travel_mode(travel_mode),
           necessary(necessary), is_via_location(is_via_location)
     {
     }
@@ -70,7 +71,7 @@ struct SegmentInformation
                                 const TurnInstruction turn_instruction,
                                 const TravelMode travel_mode)
         : location(std::move(location)), name_id(name_id), duration(duration), length(length),
-          bearing(0), turn_instruction(turn_instruction), travel_mode(travel_mode),
+          pre_turn_bearing(0), post_turn_bearing(0), turn_instruction(turn_instruction), travel_mode(travel_mode),
           necessary(turn_instruction != TurnInstruction::NoTurn), is_via_location(false)
     {
     }

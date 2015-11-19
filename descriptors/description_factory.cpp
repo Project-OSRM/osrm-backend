@@ -237,8 +237,10 @@ void DescriptionFactory::Run(const unsigned zoom_level)
                 via_indices.push_back(necessary_segments);
             }
 
-            const double angle = coordinate_calculation::bearing(first.location, second.location);
-            first.bearing = static_cast<short>(angle * 10);
+            const double post_turn_bearing = coordinate_calculation::bearing(first.location, second.location);
+            const double pre_turn_bearing = coordinate_calculation::bearing(second.location, first.location);
+            first.post_turn_bearing = static_cast<short>(post_turn_bearing * 10);
+            first.pre_turn_bearing = static_cast<short>(pre_turn_bearing * 10);
         });
 
     via_indices.push_back(necessary_segments + 1);
