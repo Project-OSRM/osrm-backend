@@ -66,6 +66,12 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
                                                 &extractor_config.generate_edge_lookup)->implicit_value(true)->default_value(false),
                                  "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs");
 
+#ifdef DEBUG_GEOMETRY
+        config_options.add_options()("debug-turns",
+            boost::program_options::value<std::string>(&extractor_config.debug_turns_path),
+            "Write out GeoJSON with turn penalty data");
+#endif // DEBUG_GEOMETRY
+
     // hidden options, will be allowed both on command line and in config file, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");

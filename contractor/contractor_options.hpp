@@ -66,6 +66,9 @@ struct ContractorConfig
 
     std::string segment_speed_lookup_path;
 
+#ifdef DEBUG_GEOMETRY
+    std::string debug_geometry_path;
+#endif
 };
 
 struct ContractorOptions

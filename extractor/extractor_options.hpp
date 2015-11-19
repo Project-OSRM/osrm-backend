@@ -62,6 +62,9 @@ struct ExtractorConfig
     bool generate_edge_lookup;
     std::string edge_penalty_path;
     std::string edge_segment_lookup_path;
+#ifdef DEBUG_GEOMETRY
+    std::string debug_turns_path;
+#endif
 };
 
 struct ExtractorOptions

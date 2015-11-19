@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PROCESSING_CHAIN_HPP
 #define PROCESSING_CHAIN_HPP
 
+#include "contractor.hpp"
 #include "contractor_options.hpp"
 #include "../data_structures/query_edge.hpp"
 #include "../data_structures/static_graph.hpp"
