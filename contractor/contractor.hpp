@@ -55,14 +55,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Contractor
 {
-  public:
-    struct RemainingNodeData
-    {
-        RemainingNodeData() : id(0), is_independent(false) {}
-        NodeID id : 31;
-        bool is_independent : 1;
-    };
-
 
   private:
     struct ContractorEdgeData
@@ -133,6 +125,13 @@ class Contractor
               original_edges_added_count(0)
         {
         }
+    };
+
+    struct RemainingNodeData
+    {
+        RemainingNodeData() : id(0), is_independent(false) {}
+        NodeID id : 31;
+        bool is_independent : 1;
     };
 
     struct ThreadDataContainer
