@@ -88,10 +88,14 @@ struct PhantomNode
     int forward_offset;
     int reverse_offset;
     unsigned packed_geometry_id;
-    struct {
+    struct ComponentType {
+        uint32_t id : 31;
         bool is_tiny : 1;
-        unsigned id : 31;
     } component;
+// bit-fields are broken on Windows
+#ifndef _MSC_VER
+    static_assert(sizeof(ComponentType) == 4, "ComponentType needs to 4 bytes big");
+#endif
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
     // note 4 bits would suffice for each,
@@ -114,7 +118,9 @@ struct PhantomNode
     bool operator==(const PhantomNode &other) const;
 };
 
+#ifndef _MSC_VER
 static_assert(sizeof(PhantomNode) == 48, "PhantomNode has more padding then expected");
+#endif
 
 using PhantomNodeArray = std::vector<std::vector<PhantomNode>>;
 
