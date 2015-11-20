@@ -14,46 +14,6 @@ matrix:
   include:
 
     # 1/ Linux Clang Builds
-    - os: linux
-      compiler: clang
-      addons: &clang35
-        apt:
-          sources: ['llvm-toolchain-precise-3.5', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='clang++-3.5' BUILD_TYPE='Release'
-
-    - os: linux
-      compiler: clang
-      addons: *clang35
-      env: COMPILER='clang++-3.5' BUILD_TYPE='Debug'
-
-    - os: linux
-      compiler: clang
-      addons: &clang36
-        apt:
-          sources: ['llvm-toolchain-precise-3.6', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='clang++-3.6' BUILD_TYPE='Release'
-
-    - os: linux
-      compiler: clang
-      addons: *clang36
-      env: COMPILER='clang++-3.6' BUILD_TYPE='Debug'
-
-
-    - os: linux
-      compiler: clang
-      addons: &clang37
-        apt:
-          sources: ['llvm-toolchain-precise-3.7', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.7', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='clang++-3.7' BUILD_TYPE='Release'
-
-    - os: linux
-      compiler: clang
-      addons: *clang37
-      env: COMPILER='clang++-3.7' BUILD_TYPE='Debug'
-
 
     - os: linux
       compiler: clang
@@ -90,28 +50,6 @@ matrix:
       compiler: gcc
       addons: *gcc48
       env: COMPILER='g++-4.8' BUILD_TYPE='Debug'
-
-
-    - os: linux
-      compiler: gcc
-      addons: &gcc49
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.9', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-4.9' BUILD_TYPE='Release'
-
-    - os: linux
-      compiler: gcc
-      addons: &gcc49
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.9', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-4.9' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
-
-    - os: linux
-      compiler: gcc
-      addons: *gcc49
-      env: COMPILER='g++-4.9' BUILD_TYPE='Debug'
 
 
     - os: linux
