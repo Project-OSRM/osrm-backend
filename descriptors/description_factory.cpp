@@ -230,8 +230,6 @@ void DescriptionFactory::Run(const unsigned zoom_level)
                 return;
             }
 
-            ++necessary_segments;
-
             if (first.is_via_location)
             { // mark the end of a leg (of several segments)
                 via_indices.push_back(necessary_segments);
@@ -241,9 +239,11 @@ void DescriptionFactory::Run(const unsigned zoom_level)
             const double pre_turn_bearing = coordinate_calculation::bearing(second.location, first.location);
             first.post_turn_bearing = static_cast<short>(post_turn_bearing * 10);
             first.pre_turn_bearing = static_cast<short>(pre_turn_bearing * 10);
+
+            ++necessary_segments;
         });
 
-    via_indices.push_back(necessary_segments + 1);
+    via_indices.push_back(necessary_segments);
     BOOST_ASSERT(via_indices.size() >= 2);
     return;
 }
