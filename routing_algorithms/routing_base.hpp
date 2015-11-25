@@ -416,6 +416,234 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
     }
 
+    // assumes that heaps are already setup correctly.
+    void Search(SearchEngineData::QueryHeap &forward_heap,
+                SearchEngineData::QueryHeap &reverse_heap,
+                const PhantomNode &source_phantom,
+                const PhantomNode &target_phantom,
+                int &distance,
+                std::vector<NodeID> &packed_leg) const
+    {
+        NodeID middle = SPECIAL_NODEID;
+
+        const EdgeWeight min_edge_offset = std::min(-source_phantom.GetForwardWeightPlusOffset(),
+                                                    -source_phantom.GetReverseWeightPlusOffset());
+
+        // insert new starting nodes into forward heap, adjusted by previous distances.
+        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.forward_node_id,
+                                -source_phantom.GetForwardWeightPlusOffset(),
+                                source_phantom.forward_node_id);
+        }
+        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.reverse_node_id,
+                                -source_phantom.GetReverseWeightPlusOffset(),
+                                source_phantom.reverse_node_id);
+        }
+
+        // insert new backward nodes into backward heap, unadjusted.
+        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.forward_node_id,
+                                target_phantom.GetForwardWeightPlusOffset(),
+                                target_phantom.forward_node_id);
+        }
+
+        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.reverse_node_id,
+                                target_phantom.GetReverseWeightPlusOffset(),
+                                target_phantom.reverse_node_id);
+        }
+
+        std::vector<std::pair<NodeID, EdgeWeight>> forward_entry_points;
+        std::vector<std::pair<NodeID, EdgeWeight>> reverse_entry_points;
+
+        // run two-Target Dijkstra routing step.
+        while (0 < (forward_heap.Size() + reverse_heap.Size()))
+        {
+            if (!forward_heap.Empty())
+            {
+                  RoutingStep(forward_heap, reverse_heap, &middle, &distance, min_edge_offset,
+                              true);
+            }
+            if (!reverse_heap.Empty())
+            {
+                    RoutingStep(reverse_heap, forward_heap, &middle, &distance, min_edge_offset,
+                                false);
+            }
+        }
+
+        // No path found for both target nodes?
+        if (INVALID_EDGE_WEIGHT == distance)
+        {
+            return;
+        }
+
+        // Was a paths over one of the forward/reverse nodes not found?
+        BOOST_ASSERT_MSG((SPECIAL_NODEID == middle || INVALID_EDGE_WEIGHT != distance),
+                         "no path found");
+
+        RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
+    }
+
+    // assumes that heaps are already setup correctly.
+    void SearchWithCore(SearchEngineData::QueryHeap &forward_heap,
+                        SearchEngineData::QueryHeap &reverse_heap,
+                        SearchEngineData::QueryHeap &forward_core_heap,
+                        SearchEngineData::QueryHeap &reverse_core_heap,
+                        const PhantomNode &source_phantom,
+                        const PhantomNode &target_phantom,
+                        int &distance,
+                        std::vector<NodeID> &packed_leg) const
+    {
+        NodeID middle = SPECIAL_NODEID;
+
+        const EdgeWeight min_edge_offset = std::min(-source_phantom.GetForwardWeightPlusOffset(),
+                                                    -source_phantom.GetReverseWeightPlusOffset());
+
+        // insert new starting nodes into forward heap, adjusted by previous distances.
+        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.forward_node_id,
+                                -source_phantom.GetForwardWeightPlusOffset(),
+                                source_phantom.forward_node_id);
+        }
+        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.reverse_node_id,
+                                -source_phantom.GetReverseWeightPlusOffset(),
+                                source_phantom.reverse_node_id);
+        }
+
+        // insert new backward nodes into backward heap, unadjusted.
+        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.forward_node_id,
+                                target_phantom.GetForwardWeightPlusOffset(),
+                                target_phantom.forward_node_id);
+        }
+
+        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.reverse_node_id,
+                                target_phantom.GetReverseWeightPlusOffset(),
+                                target_phantom.reverse_node_id);
+        }
+
+        std::vector<std::pair<NodeID, EdgeWeight>> forward_entry_points;
+        std::vector<std::pair<NodeID, EdgeWeight>> reverse_entry_points;
+
+        // run two-Target Dijkstra routing step.
+        while (0 < (forward_heap.Size() + reverse_heap.Size()))
+        {
+            if (!forward_heap.Empty())
+            {
+                if (facade->IsCoreNode(forward_heap.Min()))
+                {
+                    const NodeID node = forward_heap.DeleteMin();
+                    const int key = forward_heap.GetKey(node);
+                    forward_entry_points.emplace_back(node, key);
+                }
+                else
+                {
+                    RoutingStep(forward_heap, reverse_heap, &middle, &distance, min_edge_offset,
+                                true);
+                }
+            }
+            if (!reverse_heap.Empty())
+            {
+                if (facade->IsCoreNode(reverse_heap.Min()))
+                {
+                    const NodeID node = reverse_heap.DeleteMin();
+                    const int key = reverse_heap.GetKey(node);
+                    reverse_entry_points.emplace_back(node, key);
+                }
+                else
+                {
+                    RoutingStep(reverse_heap, forward_heap, &middle, &distance, min_edge_offset,
+                                false);
+                }
+            }
+        }
+
+        // TODO check if unordered_set might be faster
+        // sort by id and increasing by distance
+        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
+                                         const std::pair<NodeID, EdgeWeight> &rhs)
+        {
+            return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
+        };
+        std::sort(forward_entry_points.begin(), forward_entry_points.end(), entry_point_comparator);
+        std::sort(reverse_entry_points.begin(), reverse_entry_points.end(), entry_point_comparator);
+
+        NodeID last_id = SPECIAL_NODEID;
+        for (const auto p : forward_entry_points)
+        {
+            if (p.first == last_id)
+            {
+                continue;
+            }
+            forward_core_heap.Insert(p.first, p.second, p.first);
+            last_id = p.first;
+        }
+        last_id = SPECIAL_NODEID;
+        for (const auto p : reverse_entry_points)
+        {
+            if (p.first == last_id)
+            {
+                continue;
+            }
+            reverse_core_heap.Insert(p.first, p.second, p.first);
+            last_id = p.first;
+        }
+
+        // run two-target Dijkstra routing step on core with termination criterion
+        while (0 < (forward_core_heap.Size() + reverse_core_heap.Size()) &&
+               distance > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
+        {
+            if (!forward_core_heap.Empty())
+            {
+                RoutingStep(forward_core_heap, reverse_core_heap, &middle, &distance,
+                            min_edge_offset, true, false);
+            }
+            if (!reverse_core_heap.Empty())
+            {
+                RoutingStep(reverse_core_heap, forward_core_heap, &middle, &distance,
+                            min_edge_offset, false, false);
+            }
+        }
+
+        // No path found for both target nodes?
+        if (INVALID_EDGE_WEIGHT == distance)
+        {
+            return;
+        }
+
+        // Was a paths over one of the forward/reverse nodes not found?
+        BOOST_ASSERT_MSG((SPECIAL_NODEID == middle || INVALID_EDGE_WEIGHT != distance),
+                         "no path found");
+
+        // we need to unpack sub path from core heaps
+        if (facade->IsCoreNode(middle))
+        {
+            std::vector<NodeID> packed_core_leg;
+            RetrievePackedPathFromHeap(forward_core_heap, reverse_core_heap, middle,
+                                       packed_core_leg);
+            BOOST_ASSERT(packed_core_leg.size() > 0);
+            RetrievePackedPathFromSingleHeap(forward_heap, packed_core_leg.front(), packed_leg);
+            std::reverse(packed_leg.begin(), packed_leg.end());
+            packed_leg.insert(packed_leg.end(), packed_core_leg.begin(), packed_core_leg.end());
+            RetrievePackedPathFromSingleHeap(reverse_heap, packed_core_leg.back(), packed_leg);
+        }
+        else
+        {
+            RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
+        }
+    }
+
     double get_network_distance(SearchEngineData::QueryHeap &forward_heap,
                                 SearchEngineData::QueryHeap &reverse_heap,
                                 const PhantomNode &source_phantom,
