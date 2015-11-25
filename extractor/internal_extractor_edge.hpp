@@ -63,13 +63,13 @@ struct InternalExtractorEdge
     };
 
     explicit InternalExtractorEdge()
-        : result(0, 0, 0, 0, false, false, false, false,
+        : result(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, 0, false, false, false, false,
                 TRAVEL_MODE_INACCESSIBLE, false)
     {
     }
 
-    explicit InternalExtractorEdge(NodeID source,
-                                   NodeID target,
+    explicit InternalExtractorEdge(OSMNodeID source,
+                                   OSMNodeID target,
                                    NodeID name_id,
                                    WeightData weight_data,
                                    bool forward,
@@ -78,8 +78,8 @@ struct InternalExtractorEdge
                                    bool access_restricted,
                                    TravelMode travel_mode,
                                    bool is_split)
-        : result(source,
-                 target,
+        : result(OSMNodeID(source),
+                 OSMNodeID(target),
                  name_id,
                  0,
                  forward,
@@ -93,7 +93,7 @@ struct InternalExtractorEdge
     }
 
     // data that will be written to disk
-    NodeBasedEdge result;
+    NodeBasedEdgeWithOSM result;
     // intermediate edge weight
     WeightData weight_data;
     // coordinate of the source node
@@ -101,19 +101,35 @@ struct InternalExtractorEdge
 
 
     // necessary static util functions for stxxl's sorting
-    static InternalExtractorEdge min_value()
+    static InternalExtractorEdge min_osm_value()
     {
-        return InternalExtractorEdge(0, 0, 0, WeightData(), false, false, false,
+        return InternalExtractorEdge(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, WeightData(), false, false, false,
                                      false, TRAVEL_MODE_INACCESSIBLE, false);
     }
-    static InternalExtractorEdge max_value()
+    static InternalExtractorEdge max_osm_value()
     {
-        return InternalExtractorEdge(SPECIAL_NODEID, SPECIAL_NODEID, 0, WeightData(), false,
+        return InternalExtractorEdge(MAX_OSM_NODEID, MAX_OSM_NODEID, 0, WeightData(), false,
                                      false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
     }
+
+    static InternalExtractorEdge min_internal_value()
+    {
+        auto v = min_osm_value();
+        v.result.source = 0;
+        v.result.target = 0;
+        return v;
+    }
+    static InternalExtractorEdge max_internal_value()
+    {
+        auto v = max_osm_value();
+        v.result.source = std::numeric_limits<NodeID>::max();
+        v.result.target = std::numeric_limits<NodeID>::max();
+        return v;
+    }
+
 };
 
-struct CmpEdgeByStartThenTargetID
+struct CmpEdgeByInternalStartThenInternalTargetID
 {
     using value_type = InternalExtractorEdge;
     bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
@@ -123,32 +139,32 @@ struct CmpEdgeByStartThenTargetID
                (lhs.result.target <  rhs.result.target));
     }
 
-    value_type max_value() { return InternalExtractorEdge::max_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_value(); }
+    value_type max_value() { return InternalExtractorEdge::max_internal_value(); }
+    value_type min_value() { return InternalExtractorEdge::min_internal_value(); }
 };
 
-struct CmpEdgeByStartID
+struct CmpEdgeByOSMStartID
 {
     using value_type = InternalExtractorEdge;
     bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
     {
-        return lhs.result.source < rhs.result.source;
+        return lhs.result.osm_source_id < rhs.result.osm_source_id;
     }
 
-    value_type max_value() { return InternalExtractorEdge::max_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_value(); }
+    value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
+    value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
 };
 
-struct CmpEdgeByTargetID
+struct CmpEdgeByOSMTargetID
 {
     using value_type = InternalExtractorEdge;
     bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
     {
-        return lhs.result.target < rhs.result.target;
+        return lhs.result.osm_target_id < rhs.result.osm_target_id;
     }
 
-    value_type max_value() { return InternalExtractorEdge::max_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_value(); }
+    value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
+    value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
 };
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

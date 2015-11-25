@@ -63,7 +63,7 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     external_memory.all_nodes_list.push_back(
         {static_cast<int>(input_node.location().lat() * COORDINATE_PRECISION),
          static_cast<int>(input_node.location().lon() * COORDINATE_PRECISION),
-         static_cast<NodeID>(input_node.id()),
+         OSMNodeID(input_node.id()),
          result_node.barrier,
          result_node.traffic_lights});
 }
@@ -175,7 +175,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                    std::back_inserter(external_memory.used_node_id_list),
                    [](const osmium::NodeRef &ref)
                    {
-                       return ref.ref();
+                       return OSMNodeID(ref.ref());
                    });
 
     const bool is_opposite_way = TRAVEL_MODE_INACCESSIBLE == parsed_way.forward_travel_mode;
@@ -189,18 +189,18 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    first_node.ref(), last_node.ref(), name_id,
+                                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
                                     backward_weight_data, true, false, parsed_way.roundabout,
                                     parsed_way.is_access_restricted,
                                     parsed_way.backward_travel_mode, false));
                             });
 
         external_memory.way_start_end_id_list.push_back(
-            {static_cast<EdgeID>(input_way.id()),
-             static_cast<NodeID>(input_way.nodes().back().ref()),
-             static_cast<NodeID>(input_way.nodes()[input_way.nodes().size() - 2].ref()),
-             static_cast<NodeID>(input_way.nodes()[1].ref()),
-             static_cast<NodeID>(input_way.nodes()[0].ref())});
+            {OSMWayID(input_way.id()),
+             OSMNodeID(input_way.nodes().back().ref()),
+             OSMNodeID(input_way.nodes()[input_way.nodes().size() - 2].ref()),
+             OSMNodeID(input_way.nodes()[1].ref()),
+             OSMNodeID(input_way.nodes()[0].ref())});
     }
     else
     {
@@ -210,7 +210,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    first_node.ref(), last_node.ref(), name_id, forward_weight_data,
+                                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id, forward_weight_data,
                                     true, !forward_only, parsed_way.roundabout,
                                     parsed_way.is_access_restricted, parsed_way.forward_travel_mode,
                                     split_edge));
@@ -223,17 +223,17 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                 {
                     external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                        first_node.ref(), last_node.ref(), name_id, backward_weight_data, false,
+                        OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id, backward_weight_data, false,
                         true, parsed_way.roundabout, parsed_way.is_access_restricted,
                         parsed_way.backward_travel_mode, true));
                 });
         }
 
         external_memory.way_start_end_id_list.push_back(
-            {static_cast<EdgeID>(input_way.id()),
-             static_cast<NodeID>(input_way.nodes().back().ref()),
-             static_cast<NodeID>(input_way.nodes()[input_way.nodes().size() - 2].ref()),
-             static_cast<NodeID>(input_way.nodes()[1].ref()),
-             static_cast<NodeID>(input_way.nodes()[0].ref())});
+            {OSMWayID(input_way.id()),
+             OSMNodeID(input_way.nodes().back().ref()),
+             OSMNodeID(input_way.nodes()[input_way.nodes().size() - 2].ref()),
+             OSMNodeID(input_way.nodes()[1].ref()),
+             OSMNodeID(input_way.nodes()[0].ref())});
     }
 }

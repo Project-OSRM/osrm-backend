@@ -32,10 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct Cmp
 {
-    using value_type = NodeID;
-    bool operator()(const NodeID left, const NodeID right) const { return left < right; }
-    value_type max_value() { return 0xffffffff; }
-    value_type min_value() { return 0x0; }
+    using value_type = OSMNodeID;
+    bool operator()(const value_type left, const value_type right) const { return left < right; }
+    value_type max_value() { return MAX_OSM_NODEID; }
+    value_type min_value() { return MIN_OSM_NODEID; }
 };
 
 #endif // NODE_ID_HPP

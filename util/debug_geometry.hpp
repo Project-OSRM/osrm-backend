@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 inline void DEBUG_GEOMETRY_START(ContractorConfig & /* config */) {}
 inline void DEBUG_GEOMETRY_EDGE(int /* new_segment_weight */ , double /* segment_length */,
-        NodeID /* previous_osm_node_id */, NodeID /* this_osm_node_id */) {}
+        OSMNodeID /* previous_osm_node_id */, OSMNodeID /* this_osm_node_id */) {}
 inline void DEBUG_GEOMETRY_STOP() {}
 
 inline void DEBUG_TURNS_START(const std::string & /* debug_turns_filename */) {}
@@ -86,7 +86,7 @@ inline void DEBUG_GEOMETRY_START(const ContractorConfig &config)
     }
 }
 
-inline void DEBUG_GEOMETRY_EDGE(int new_segment_weight, double segment_length, NodeID previous_osm_node_id, NodeID this_osm_node_id)
+inline void DEBUG_GEOMETRY_EDGE(int new_segment_weight, double segment_length, OSMNodeID previous_osm_node_id, OSMNodeID this_osm_node_id)
 {
     if (dg_output_debug_geometry)
     {
