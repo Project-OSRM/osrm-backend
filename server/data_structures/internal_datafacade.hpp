@@ -447,6 +447,11 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_via_node_list.at(id);
     }
 
+    virtual std::size_t GetCoreSize() const override final
+    {
+        return m_is_core_node.size();
+    }
+
     virtual bool IsCoreNode(const NodeID id) const override final
     {
         if (m_is_core_node.size() > 0)

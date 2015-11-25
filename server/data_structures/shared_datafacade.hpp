@@ -473,6 +473,11 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return false;
     }
 
+    virtual std::size_t GetCoreSize() const override final
+    {
+        return m_is_core_node.size();
+    }
+
     std::string GetTimestamp() const override final { return m_timestamp; }
 };
 

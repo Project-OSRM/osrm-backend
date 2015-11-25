@@ -118,6 +118,8 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual std::string get_name_for_id(const unsigned name_id) const = 0;
 
+    virtual std::size_t GetCoreSize() const = 0;
+
     virtual std::string GetTimestamp() const = 0;
 };
 
