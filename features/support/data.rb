@@ -123,8 +123,9 @@ def table_coord_to_lonlat ci,ri
   [@origin[0]+ci*@zoom, @origin[1]-ri*@zoom]
 end
 
-def add_osm_node name,lon,lat
-  node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
+def add_osm_node name,lon,lat,id
+  id = make_osm_id if id == nil
+  node = OSM::Node.new id, OSM_USER, OSM_TIMESTAMP, lon, lat
   node << { :name => name }
   node.uid = OSM_UID
   osm_db << node

@@ -211,7 +211,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         {
             int lat = lat_udist(g);
             int lon = lon_udist(g);
-            nodes.emplace_back(QueryNode(lat, lon, i));
+            nodes.emplace_back(QueryNode(lat, lon, OSMNodeID(i)));
             coords->emplace_back(FixedPointCoordinate(lat, lon));
         }
 
@@ -251,7 +251,7 @@ struct GraphFixture
             FixedPointCoordinate c(input_coords[i].first * COORDINATE_PRECISION,
                                    input_coords[i].second * COORDINATE_PRECISION);
             coords->emplace_back(c);
-            nodes.emplace_back(QueryNode(c.lat, c.lon, i));
+            nodes.emplace_back(QueryNode(c.lat, c.lon, OSMNodeID(i)));
         }
 
         for (const auto &pair : input_edges)

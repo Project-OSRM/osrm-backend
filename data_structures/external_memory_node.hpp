@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct ExternalMemoryNode : QueryNode
 {
-    ExternalMemoryNode(int lat, int lon, NodeID id, bool barrier, bool traffic_light);
+    ExternalMemoryNode(int lat, int lon, OSMNodeID id, bool barrier, bool traffic_light);
 
     ExternalMemoryNode();
 

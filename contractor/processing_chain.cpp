@@ -125,11 +125,11 @@ int Prepare::Run()
 namespace std
 {
 
-template <> struct hash<std::pair<unsigned, unsigned>>
+template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 {
-    std::size_t operator()(const std::pair<unsigned, unsigned> &k) const
+    std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const
     {
-        return k.first ^ (k.second << 12);
+        return OSMNodeID_to_uint64_t(k.first) ^ (OSMNodeID_to_uint64_t(k.second) << 12);
     }
 };
 }
@@ -172,7 +172,7 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
     edge_based_edge_list.resize(number_of_edges);
     SimpleLogger().Write() << "Reading " << number_of_edges << " edges from the edge based graph";
 
-    std::unordered_map<std::pair<unsigned, unsigned>, unsigned> segment_speed_lookup;
+    std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, unsigned> segment_speed_lookup;
 
     if (update_edge_weights)
     {
@@ -180,12 +180,12 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
                                << segment_speed_filename;
         io::CSVReader<3> csv_in(segment_speed_filename);
         csv_in.set_header("from_node", "to_node", "speed");
-        unsigned from_node_id;
-        unsigned to_node_id;
+        uint64_t from_node_id;
+        uint64_t to_node_id;
         unsigned speed;
         while (csv_in.read_row(from_node_id, to_node_id, speed))
         {
-            segment_speed_lookup[std::pair<unsigned, unsigned>(from_node_id, to_node_id)] = speed;
+            segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] = speed;
         }
     }
 
@@ -210,10 +210,10 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
             unsigned num_osm_nodes = 0;
             edge_segment_input_stream.read(reinterpret_cast<char *>(&num_osm_nodes),
                                            sizeof(num_osm_nodes));
-            NodeID previous_osm_node_id;
+            OSMNodeID previous_osm_node_id;
             edge_segment_input_stream.read(reinterpret_cast<char *>(&previous_osm_node_id),
                                            sizeof(previous_osm_node_id));
-            NodeID this_osm_node_id;
+            OSMNodeID this_osm_node_id;
             double segment_length;
             int segment_weight;
             --num_osm_nodes;
@@ -227,7 +227,7 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
                                                sizeof(segment_weight));
 
                 auto speed_iter = segment_speed_lookup.find(
-                    std::pair<unsigned, unsigned>(previous_osm_node_id, this_osm_node_id));
+                    std::make_pair(previous_osm_node_id, this_osm_node_id));
                 if (speed_iter != segment_speed_lookup.end())
                 {
                     // This sets the segment weight using the same formula as the

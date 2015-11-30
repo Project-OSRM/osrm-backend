@@ -518,6 +518,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
 
+
+                // NOTE: potential overflow here if we hit 2^32 routable edges
+                BOOST_ASSERT(m_edge_based_edge_list.size() <= std::numeric_limits<NodeID>::max());
                 m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
                                   m_edge_based_edge_list.size(), distance, true, false);
 

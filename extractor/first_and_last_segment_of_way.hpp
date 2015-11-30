@@ -36,21 +36,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct FirstAndLastSegmentOfWay
 {
-    EdgeID way_id;
-    NodeID first_segment_source_id;
-    NodeID first_segment_target_id;
-    NodeID last_segment_source_id;
-    NodeID last_segment_target_id;
+    OSMWayID way_id;
+    OSMNodeID first_segment_source_id;
+    OSMNodeID first_segment_target_id;
+    OSMNodeID last_segment_source_id;
+    OSMNodeID last_segment_target_id;
+
     FirstAndLastSegmentOfWay()
-        : way_id(std::numeric_limits<EdgeID>::max()),
-          first_segment_source_id(std::numeric_limits<NodeID>::max()),
-          first_segment_target_id(std::numeric_limits<NodeID>::max()),
-          last_segment_source_id(std::numeric_limits<NodeID>::max()),
-          last_segment_target_id(std::numeric_limits<NodeID>::max())
+        : way_id(SPECIAL_OSM_WAYID),
+          first_segment_source_id(SPECIAL_OSM_NODEID),
+          first_segment_target_id(SPECIAL_OSM_NODEID),
+          last_segment_source_id(SPECIAL_OSM_NODEID),
+          last_segment_target_id(SPECIAL_OSM_NODEID)
     {
     }
 
-    FirstAndLastSegmentOfWay(EdgeID w, NodeID fs, NodeID ft, NodeID ls, NodeID lt)
+    FirstAndLastSegmentOfWay(OSMWayID w, OSMNodeID fs, OSMNodeID ft, OSMNodeID ls, OSMNodeID lt)
         : way_id(w), first_segment_source_id(fs), first_segment_target_id(ft),
           last_segment_source_id(ls), last_segment_target_id(lt)
     {
@@ -58,19 +59,19 @@ struct FirstAndLastSegmentOfWay
 
     static FirstAndLastSegmentOfWay min_value()
     {
-        return {std::numeric_limits<EdgeID>::min(),
-                std::numeric_limits<NodeID>::min(),
-                std::numeric_limits<NodeID>::min(),
-                std::numeric_limits<NodeID>::min(),
-                std::numeric_limits<NodeID>::min()};
+        return {MIN_OSM_WAYID,
+                MIN_OSM_NODEID,
+                MIN_OSM_NODEID,
+                MIN_OSM_NODEID,
+                MIN_OSM_NODEID};
     }
     static FirstAndLastSegmentOfWay max_value()
     {
-        return {std::numeric_limits<EdgeID>::max(),
-                std::numeric_limits<NodeID>::max(),
-                std::numeric_limits<NodeID>::max(),
-                std::numeric_limits<NodeID>::max(),
-                std::numeric_limits<NodeID>::max()};
+        return {MAX_OSM_WAYID,
+                MAX_OSM_NODEID,
+                MAX_OSM_NODEID,
+                MAX_OSM_NODEID,
+                MAX_OSM_NODEID};
     }
 };
 

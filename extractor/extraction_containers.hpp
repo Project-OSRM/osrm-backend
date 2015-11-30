@@ -61,7 +61,7 @@ class ExtractionContainers
     void WriteEdges(std::ofstream& file_out_stream) const;
     void WriteNames(const std::string& names_file_name) const;
   public:
-    using STXXLNodeIDVector = stxxl::vector<NodeID>;
+    using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
     using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
     using STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
     using STXXLStringVector = stxxl::vector<std::string>;
@@ -74,7 +74,7 @@ class ExtractionContainers
     STXXLStringVector name_list;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
-    std::unordered_map<NodeID, NodeID> external_to_internal_node_id_map;
+    std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
     unsigned max_internal_node_id;
 
     ExtractionContainers();
