@@ -579,9 +579,14 @@ void extractor::BuildRTree(std::vector<EdgeBasedNode> &&node_based_edge_list_,
 
     // Filter out all segments that are not traversible by the default mode of transportation
     // For example this filters out ferry routes and such.
-    std::remove_if(node_based_edge_list.begin(), node_based_edge_list.end(), [](const EdgeBasedNode& segment) {
-                return segment.forward_travel_mode != TRAVEL_MODE_DEFAULT && segment.backward_travel_mode != TRAVEL_MODE_DEFAULT;
-            });
+    auto new_end = std::remove_if(node_based_edge_list.begin(), node_based_edge_list.end(),
+                                  [](const EdgeBasedNode &segment)
+                                  {
+                                      return segment.forward_travel_mode != TRAVEL_MODE_DEFAULT &&
+                                             segment.backward_travel_mode != TRAVEL_MODE_DEFAULT;
+                                  });
+
+    node_based_edge_list.resize(std::distance(node_based_edge_list.begin(), new_end));
 
     StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path.c_str(),
                                config.rtree_leafs_output_path.c_str(),
