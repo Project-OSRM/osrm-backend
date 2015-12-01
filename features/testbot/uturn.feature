@@ -67,3 +67,27 @@ Feature: U-turns at via points
         When I route I should get
             | waypoints | route       | turns                              |
             | a,e,c     | ab,be,be,bc | head,right,uturn,right,destination |
+
+    Scenario: u-turn mixed with non-uturn vias
+        Given the node map
+            | a | 1 | b | 3 | c | 5 | d |
+            |   |   | 2 |   |   |   | 4 |
+            |   |   | e |   | f |   | g |
+
+        And the query options
+            | uturns | true |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+            | be    |
+            | dg    |
+            | ef    |
+            | fg    |
+
+        When I route I should get
+            | waypoints | route                      |
+            | 1,2,3,4,5 | ab,be,be,bc,bc,cd,dg,dg,cd |
+
