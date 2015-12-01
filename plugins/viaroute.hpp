@@ -115,47 +115,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             BOOST_ASSERT(phantom_node_pair_list[i].second.is_valid(facade->GetNumberOfNodes()));
         }
 
-        const auto check_component_id_is_tiny = [](const PhantomNodePair &phantom_pair)
-        {
-            return phantom_pair.first.component.is_tiny;
-        };
-
-        const bool every_phantom_is_in_tiny_cc =
-            std::all_of(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
-                        check_component_id_is_tiny);
-
-        // are all phantoms from a tiny cc?
-        const auto check_all_in_same_component = [](const std::vector<PhantomNodePair> &nodes)
-        {
-            const auto component_id = nodes.front().first.component.id;
-
-            return std::all_of(std::begin(nodes), std::end(nodes),
-                               [component_id](const PhantomNodePair &phantom_pair)
-                               {
-                                   return component_id == phantom_pair.first.component.id;
-                               });
-        };
-
-        auto swap_phantom_from_big_cc_into_front = [](PhantomNodePair &phantom_pair)
-        {
-            if (phantom_pair.first.component.is_tiny && phantom_pair.second.is_valid() && !phantom_pair.second.component.is_tiny)
-            {
-                using namespace std;
-                swap(phantom_pair.first, phantom_pair.second);
-            }
-        };
-
-        auto all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
-
-        // this case is true if we take phantoms from the big CC
-        if (every_phantom_is_in_tiny_cc && !all_in_same_component)
-        {
-            std::for_each(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
-                          swap_phantom_from_big_cc_into_front);
-
-            // update check with new component ids
-            all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
-        }
+        auto all_in_same_component = snapPhantomNodes(phantom_node_pair_list);
 
         InternalRouteResult raw_route;
         auto build_phantom_pairs =

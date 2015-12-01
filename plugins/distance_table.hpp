@@ -175,10 +175,14 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 phantom_node_target_out_iter++;
             }
         }
+
         BOOST_ASSERT((phantom_node_source_out_iter - phantom_node_source_vector.begin()) ==
                      number_of_sources);
         BOOST_ASSERT((phantom_node_target_out_iter - phantom_node_target_vector.begin()) ==
                      number_of_destination);
+
+        snapPhantomNodes(phantom_node_source_vector);
+        snapPhantomNodes(phantom_node_target_vector);
 
         std::shared_ptr<std::vector<EdgeWeight>> result_table = search_engine_ptr->distance_table(
             phantom_node_source_vector, phantom_node_target_vector);
