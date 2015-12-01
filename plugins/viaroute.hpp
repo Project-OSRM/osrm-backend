@@ -114,6 +114,12 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 {
                     phantom_node_pair_list[i].second = phantom_node_vector.back();
                 }
+
+            }
+            else
+            {
+                json_result.values["status_message"] = std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
+                return 400;
             }
         }
 
@@ -172,8 +178,8 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         {
             if (route_parameters.alternate_route)
             {
-              search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
-                                                  raw_route);
+                search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
+                                                    raw_route);
             }
             else
             {

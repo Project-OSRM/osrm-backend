@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DIRECT_SHORTEST_PATH_HPP
 
 #include <boost/assert.hpp>
+#include <iterator>
 
 #include "routing_base.hpp"
 #include "../data_structures/search_engine_data.hpp"
@@ -68,6 +69,8 @@ class DirectShortestPathRouting final
         BOOST_ASSERT_MSG(1 == phantom_nodes_vector.size(),
                                          "Direct Shortest Path Query only accepts a single source and target pair. Multiple ones have been specified.");
         const auto& phantom_node_pair = phantom_nodes_vector.front();
+        const auto& source_phantom = phantom_node_pair.source_phantom;
+        const auto& target_phantom = phantom_node_pair.target_phantom;
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -76,7 +79,37 @@ class DirectShortestPathRouting final
         forward_heap.Clear();
         reverse_heap.Clear();
 
-        int distance;
+        BOOST_ASSERT(source_phantom.is_valid());
+        BOOST_ASSERT(target_phantom.is_valid());
+
+        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.forward_node_id,
+                                -source_phantom.GetForwardWeightPlusOffset(),
+                                source_phantom.forward_node_id);
+        }
+        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.reverse_node_id,
+                                -source_phantom.GetReverseWeightPlusOffset(),
+                                source_phantom.reverse_node_id);
+        }
+
+        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.forward_node_id,
+                                target_phantom.GetForwardWeightPlusOffset(),
+                                target_phantom.forward_node_id);
+        }
+
+        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.reverse_node_id,
+                                target_phantom.GetReverseWeightPlusOffset(),
+                                target_phantom.reverse_node_id);
+        }
+
+        int distance = INVALID_EDGE_WEIGHT;
         std::vector<NodeID> packed_leg;
 
         if (super::facade->GetCoreSize() > 0)
@@ -90,13 +123,11 @@ class DirectShortestPathRouting final
 
 
             super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
-                                  phantom_node_pair.source_phantom, phantom_node_pair.target_phantom,
                                   distance, packed_leg);
         }
         else
         {
-            super::Search(forward_heap, reverse_heap, phantom_node_pair.source_phantom,
-                          phantom_node_pair.target_phantom, distance, packed_leg);
+            super::Search(forward_heap, reverse_heap, distance, packed_leg);
         }
 
         // No path found for both target nodes?
@@ -116,7 +147,7 @@ class DirectShortestPathRouting final
         raw_route_data.target_traversed_in_reverse.push_back(
             (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
 
-        super::UnpackPath(packed_leg, phantom_node_pair, raw_route_data.unpacked_path_segments.front());
+        super::UnpackPath(packed_leg.begin(), packed_leg.end(), phantom_node_pair, raw_route_data.unpacked_path_segments.front());
 
     }
 };
