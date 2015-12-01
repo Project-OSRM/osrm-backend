@@ -47,7 +47,7 @@ private:
                                        DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
     void WriteNodeMapping(const std::vector<QueryNode> & internal_to_external_node_map);
     void FindComponents(unsigned max_edge_id, const DeallocatingVector<EdgeBasedEdge>& edges, std::vector<EdgeBasedNode>& nodes) const;
-    void BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
+    void BuildRTree(std::vector<EdgeBasedNode> &&node_based_edge_list_,
                     const std::vector<QueryNode> &internal_to_external_node_map);
     std::shared_ptr<RestrictionMap> LoadRestrictionMap();
     std::shared_ptr<NodeBasedDynamicGraph>

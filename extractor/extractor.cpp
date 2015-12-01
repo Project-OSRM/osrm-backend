@@ -300,7 +300,7 @@ int extractor::run()
 
         FindComponents(max_edge_id, edge_based_edge_list, node_based_edge_list);
 
-        BuildRTree(node_based_edge_list, internal_to_external_node_map);
+        BuildRTree(std::move(node_based_edge_list), internal_to_external_node_map);
 
         TIMER_STOP(rtree);
 
@@ -572,9 +572,17 @@ void extractor::WriteNodeMapping(const std::vector<QueryNode> & internal_to_exte
 
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
-void extractor::BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
+void extractor::BuildRTree(std::vector<EdgeBasedNode> &&node_based_edge_list_,
                          const std::vector<QueryNode> &internal_to_external_node_map)
 {
+    std::vector<EdgeBasedNode> node_based_edge_list(std::move(node_based_edge_list_));
+
+    // Filter out all segments that are not traversible by the default mode of transportation
+    // For example this filters out ferry routes and such.
+    std::remove_if(node_based_edge_list.begin(), node_based_edge_list.end(), [](const EdgeBasedNode& segment) {
+                return segment.forward_travel_mode != TRAVEL_MODE_DEFAULT && segment.backward_travel_mode != TRAVEL_MODE_DEFAULT;
+            });
+
     StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path.c_str(),
                                config.rtree_leafs_output_path.c_str(),
                                internal_to_external_node_map);
