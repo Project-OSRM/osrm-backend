@@ -100,7 +100,9 @@ template <class EdgeDataT> class BaseDataFacade
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
                                             const unsigned number_of_results,
-                                            const int bearing = 0, const int bearing_range = 180) = 0;
+                                            const int bearing = 0, const int bearing_range = 180,
+                                            const float max_distance = 1100.,
+                                            const unsigned max_checked_elements = 4096) = 0;
 
     virtual bool
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,

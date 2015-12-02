@@ -106,7 +106,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
             facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i], 1, bearing, range);
+                                                            phantom_node_vector[i], 1, bearing, range, 1100, 0);
 
             if (phantom_node_vector[i].size() == 1)
             {
