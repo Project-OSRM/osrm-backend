@@ -82,6 +82,8 @@ struct RouteParameters
 
     void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
 
+    void addDestination(const boost::fusion::vector<double, double> &received_coordinates);
+
     void addSource(const boost::fusion::vector<double, double> &received_coordinates);
 
     void getCoordinatesFromGeometry(const std::string &geometry_string);
@@ -110,6 +112,7 @@ struct RouteParameters
     std::vector<std::pair<const int,const boost::optional<int>>> bearings;
     std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
+    std::vector<FixedPointCoordinate> destinations;
     std::vector<FixedPointCoordinate> sources;
 };
 
