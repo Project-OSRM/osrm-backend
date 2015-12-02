@@ -41,9 +41,13 @@ def request_route waypoints, params={}
   request_path "viaroute", waypoints, defaults.merge(params)
 end
 
-def request_table waypoints, params={}
+def request_table waypoints, sources, params={}
   defaults = { 'output' => 'json' }
-  request_path "table", waypoints, defaults.merge(params)
+  options = defaults.merge(params)
+  locs = (sources.size > 0) ? (waypoints.compact.map { |w| "dst=#{w.lat},#{w.lon}" } + sources.compact.map { |w| "src=#{w.lat},#{w.lon}" }) : waypoints.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
+  params = (locs + options.to_param).join('&')
+  uri = generate_request_url ("table" + '?' + params)
+  response = send_request uri, waypoints, options, sources
 end
 
 def got_route? response

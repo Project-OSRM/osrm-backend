@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
-      compression(true), deprecatedAPI(false), uturn_default(false), classify(false),
+      compression(true), deprecatedAPI(false), uturn_default(false), classify(false), mapped_points(true),
       matching_beta(5), gps_precision(5), check_sum(-1), num_results(1)
 {
 }
@@ -144,6 +144,14 @@ void RouteParameters::addCoordinate(
     const boost::fusion::vector<double, double> &received_coordinates)
 {
     coordinates.emplace_back(
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
+        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
+}
+
+void RouteParameters::addDestination(
+    const boost::fusion::vector<double, double> &received_coordinates)
+{
+    destinations.emplace_back(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
 }

@@ -116,8 +116,25 @@ Feature: Basic Distance Matrix
 
         And the query options
             | mapped_points | true |
-            | src | a |
 
         When I request a travel time matrix I should get
             |   | a   | b   | e   | f   |
             | a | 0   | 100 | 200 | 300 |
+
+     Scenario: Testbot - Travel time 3x2 matrix
+        Given the node map
+            | a | b | c |
+            | d | e | f |
+
+        And the ways
+            | nodes |
+            | abc   |
+            | def   |
+            | ad    |
+            | be    |
+            | cf    |
+
+        When I request a travel time matrix I should get
+            |   | b   | e   | f   |
+            | a | 100 | 200 | 300 |
+            | b | 0   | 100 | 200 |
