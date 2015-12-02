@@ -135,3 +135,30 @@ Feature: Basic Distance Matrix
             |   | b   | e   | f   |
             | a | 100 | 200 | 300 |
             | b | 0   | 100 | 200 |
+
+    # There is a 1100m limit when searching for nearest neighbours
+    # so we set the grid size to something that makes it easy to
+    # put nodes inside/outside that limit
+    Scenario: Testbog - Check snapping on on small components
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the node map
+            | a | b |  |   | m |  | x |
+            | d | e |  |   | n |  | y |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | be    |
+            | ed    |
+            | da    |
+            | xy    |
+
+        When I request a travel time matrix I should get
+            |   | a   | b   | x   | y   | m   | n   |
+            | a | 0   | 300 |     |     | 300 | 600 |
+            | b | 300 |  0  |     |     | 0   | 300 |
+            | x |     |     | 0   | 300 |     |     |
+            | y |     |     | 300 | 0   |     |     |
+            | m | 300 | 0   |     |     | 0   | 300 |
+            | n | 600 | 300 |     |     | 300 | 0   |

@@ -64,7 +64,11 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
         "Number of threads to use")(
             "generate-edge-lookup",boost::program_options::value<bool>(
                                                 &extractor_config.generate_edge_lookup)->implicit_value(true)->default_value(false),
-                                 "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs");
+                                 "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs")(
+        "small-component-size",
+        boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
+            ->default_value(1000),
+        "Number of nodes required before a strongly-connected-componennt is considered big (affects nearest neighbor snapping)");
 
 #ifdef DEBUG_GEOMETRY
         config_options.add_options()("debug-turns",

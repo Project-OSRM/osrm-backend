@@ -274,7 +274,7 @@ def extract_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Extracting #{osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm#{'.pbf' if pbf?} #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
