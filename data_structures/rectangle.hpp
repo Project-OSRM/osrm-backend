@@ -170,15 +170,15 @@ struct RectangleInt2D
         const FixedPointCoordinate lower_right(min_lat, max_lon);
         const FixedPointCoordinate lower_left(min_lat, min_lon);
 
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::great_circle_distance(location, upper_left),
-                              coordinate_calculation::great_circle_distance(location, upper_right)));
+        min_max_dist = std::min(
+            min_max_dist,
+            std::max(coordinate_calculation::great_circle_distance(location, upper_left),
+                     coordinate_calculation::great_circle_distance(location, upper_right)));
 
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::great_circle_distance(location, upper_right),
-                              coordinate_calculation::great_circle_distance(location, lower_right)));
+        min_max_dist = std::min(
+            min_max_dist,
+            std::max(coordinate_calculation::great_circle_distance(location, upper_right),
+                     coordinate_calculation::great_circle_distance(location, lower_right)));
 
         min_max_dist =
             std::min(min_max_dist,
@@ -197,14 +197,6 @@ struct RectangleInt2D
         const bool lats_contained = (location.lat >= min_lat) && (location.lat <= max_lat);
         const bool lons_contained = (location.lon >= min_lon) && (location.lon <= max_lon);
         return lats_contained && lons_contained;
-    }
-
-    friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
-    {
-        out << rect.min_lat / COORDINATE_PRECISION << "," << rect.min_lon / COORDINATE_PRECISION
-            << " " << rect.max_lat / COORDINATE_PRECISION << ","
-            << rect.max_lon / COORDINATE_PRECISION;
-        return out;
     }
 };
 
