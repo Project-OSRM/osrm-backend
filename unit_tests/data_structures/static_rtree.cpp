@@ -502,41 +502,6 @@ BOOST_AUTO_TEST_CASE(rectangle_test)
     TestRectangle(10, 10, 0, 0);
 }
 
-/* Verify that the bearing-bounds checking function behaves as expected */
-BOOST_AUTO_TEST_CASE(bearing_range_test)
-{
-    // Simple, non-edge-case checks
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(45, 45, 10));
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(35, 45, 10));
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(55, 45, 10));
-
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(34, 45, 10));
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(56, 45, 10));
-
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(34, 45, 10));
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(56, 45, 10));
-
-    // When angle+limit goes > 360
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(359, 355, 10));
-
-    // When angle-limit goes < 0
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(359, 5, 10));
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(354, 5, 10));
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(16, 5, 10));
-
-
-    // Checking other cases of wraparound
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(359, -5, 10));
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(344, -5, 10));
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(6, -5, 10));
-
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(-1, 5, 10));
-    BOOST_CHECK_EQUAL(false, TestStaticRTree::IsBearingWithinBounds(-6, 5, 10));
-
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(-721, 5, 10));
-    BOOST_CHECK_EQUAL(true, TestStaticRTree::IsBearingWithinBounds(719, 5, 10));
-
-}
 
 BOOST_AUTO_TEST_CASE(bearing_tests)
 {

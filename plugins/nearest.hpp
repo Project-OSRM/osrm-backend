@@ -67,14 +67,11 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
         }
 
         auto number_of_results = static_cast<std::size_t>(route_parameters.num_results);
-        std::vector<PhantomNode> phantom_node_vector;
         const int bearing = input_bearings.size() > 0 ? input_bearings.front().first : 0;
         const int range = input_bearings.size() > 0 ? (input_bearings.front().second?*input_bearings.front().second:10) : 180;
-        facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates.front(),
-                                                        phantom_node_vector,
-                                                        static_cast<int>(number_of_results), bearing, range);
+        auto phantom_node_vector = facade->NearestPhantomNodes(route_parameters.coordinates.front(), number_of_results, bearing, range);
 
-        if (phantom_node_vector.empty() || !phantom_node_vector.front().is_valid())
+        if (phantom_node_vector.empty() || !phantom_node_vector.front().second.is_valid())
         {
             json_result.values["status"] = 207;
         }
@@ -91,15 +88,14 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                 for (const auto i :
                      osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                 {
+                    const auto& node = phantom_node_vector[i].second;
                     osrm::json::Array json_coordinate;
                     osrm::json::Object result;
-                    json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
-                                                     COORDINATE_PRECISION);
-                    json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
-                                                     COORDINATE_PRECISION);
+                    json_coordinate.values.push_back(node.location.lat / COORDINATE_PRECISION);
+                    json_coordinate.values.push_back(node.location.lon / COORDINATE_PRECISION);
                     result.values["mapped coordinate"] = json_coordinate;
                     result.values["name"] =
-                        facade->get_name_for_id(phantom_node_vector.at(i).name_id);
+                        facade->get_name_for_id(node.name_id);
                     results.values.push_back(result);
                 }
                 json_result.values["results"] = results;
@@ -107,13 +103,13 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
             else
             {
                 osrm::json::Array json_coordinate;
-                json_coordinate.values.push_back(phantom_node_vector.front().location.lat /
+                json_coordinate.values.push_back(phantom_node_vector.front().second.location.lat /
                                                  COORDINATE_PRECISION);
-                json_coordinate.values.push_back(phantom_node_vector.front().location.lon /
+                json_coordinate.values.push_back(phantom_node_vector.front().second.location.lon /
                                                  COORDINATE_PRECISION);
                 json_result.values["mapped_coordinate"] = json_coordinate;
                 json_result.values["name"] =
-                    facade->get_name_for_id(phantom_node_vector.front().name_id);
+                    facade->get_name_for_id(phantom_node_vector.front().second.name_id);
             }
         }
         return 200;

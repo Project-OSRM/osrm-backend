@@ -87,7 +87,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             std::min(static_cast<unsigned>(max_locations_distance_table),
                      static_cast<unsigned>(route_parameters.coordinates.size()));
 
-        PhantomNodeArray phantom_node_vector(max_locations);
+        std::vector<PhantomNodePair> phantom_node_vector(max_locations);
         for (const auto i : osrm::irange(0u, max_locations))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
@@ -97,16 +97,15 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
-                    phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
+                    phantom_node_vector[i] = std::make_pair(current_phantom_node, current_phantom_node);
                     continue;
                 }
             }
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
-            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i], 1, bearing, range);
+            phantom_node_vector[i] = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
 
-            BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_vector[i].first.is_valid(facade->GetNumberOfNodes()));
         }
 
         // TIMER_START(distance_table);

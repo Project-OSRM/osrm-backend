@@ -73,7 +73,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     void GetPhantomNodes(const RouteParameters &route_parameters,
-                         PhantomNodeArray &phantom_node_vector)
+                         std::vector<PhantomNodePair> &phantom_node_pair_list)
     {
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
         const auto &input_bearings = route_parameters.bearings;
@@ -89,19 +89,16 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
-                    phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
+                    phantom_node_pair_list[i] = std::make_pair(current_phantom_node, current_phantom_node);
                     continue;
                 }
             }
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
-            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i], 1, bearing, range);
-            if (phantom_node_vector[i].size() > 1)
-            {
-                phantom_node_vector[i].erase(std::begin(phantom_node_vector[i]));
-            }
-            BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
+            auto phantom_nodes = facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range);
+            // FIXME we only use the pair because that is what DistanceTable expects
+            phantom_node_pair_list[i] = std::make_pair(phantom_nodes.front().second, phantom_nodes.front().second);
+            BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
         }
     }
 
@@ -206,7 +203,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         json_result.values["permutation"] = json_permutation;
     }
 
-    InternalRouteResult ComputeRoute(const PhantomNodeArray &phantom_node_vector,
+    InternalRouteResult ComputeRoute(const std::vector<PhantomNodePair> &phantom_node_pair_list,
                                      const RouteParameters &route_parameters,
                                      const std::vector<NodeID> &trip)
     {
@@ -222,7 +219,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             const auto to_node = std::next(it) != end ? *std::next(it) : *start;
 
             viapoint =
-                PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
+                PhantomNodes{phantom_node_pair_list[from_node].first, phantom_node_pair_list[to_node].first};
             min_route.segment_end_coordinates.emplace_back(viapoint);
         }
 
@@ -250,13 +247,13 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
 
         // get phantom nodes
-        PhantomNodeArray phantom_node_vector(route_parameters.coordinates.size());
-        GetPhantomNodes(route_parameters, phantom_node_vector);
-        const auto number_of_locations = phantom_node_vector.size();
+        std::vector<PhantomNodePair> phantom_node_pair_list(route_parameters.coordinates.size());
+        GetPhantomNodes(route_parameters, phantom_node_pair_list);
+        const auto number_of_locations = phantom_node_pair_list.size();
 
         // compute the distance table of all phantom nodes
         const auto result_table = DistTableWrapper<EdgeWeight>(
-            *search_engine_ptr->distance_table(phantom_node_vector), number_of_locations);
+            *search_engine_ptr->distance_table(phantom_node_pair_list), number_of_locations);
 
         if (result_table.size() == 0)
         {
@@ -324,7 +321,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         comp_route.reserve(route_result.size());
         for (auto &elem : route_result)
         {
-            comp_route.push_back(ComputeRoute(phantom_node_vector, route_parameters, elem));
+            comp_route.push_back(ComputeRoute(phantom_node_pair_list, route_parameters, elem));
         }
 
         TIMER_STOP(TRIP_TIMER);

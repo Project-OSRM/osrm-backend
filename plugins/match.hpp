@@ -128,28 +128,25 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 }
             }
 
-            std::vector<std::pair<PhantomNode, double>> candidates;
             // Use bearing values if supplied, otherwise fallback to 0,180 defaults
             auto bearing = input_bearings.size() > 0 ? input_bearings[current_coordinate].first : 0;
             auto range = input_bearings.size() > 0 ? (input_bearings[current_coordinate].second ? *input_bearings[current_coordinate].second : 10 ) : 180;
-            facade->IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
-                    input_coords[current_coordinate], candidates, query_radius,
-                    bearing, range);
+            auto candidates = facade->NearestPhantomNodesInRange(input_coords[current_coordinate], query_radius, bearing, range);
 
             // sort by foward id, then by reverse id and then by distance
             std::sort(candidates.begin(), candidates.end(),
-                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
-                    return lhs.first.forward_node_id < rhs.first.forward_node_id ||
-                            (lhs.first.forward_node_id == rhs.first.forward_node_id &&
-                             (lhs.first.reverse_node_id < rhs.first.reverse_node_id ||
-                              (lhs.first.reverse_node_id == rhs.first.reverse_node_id &&
-                               lhs.second < rhs.second)));
+                [](const std::pair<double, PhantomNode>& lhs, const std::pair<double, PhantomNode>& rhs) {
+                    return lhs.second.forward_node_id < rhs.second.forward_node_id ||
+                            (lhs.second.forward_node_id == rhs.second.forward_node_id &&
+                             (lhs.second.reverse_node_id < rhs.second.reverse_node_id ||
+                              (lhs.second.reverse_node_id == rhs.second.reverse_node_id &&
+                               lhs.first < rhs.first)));
                 });
 
             auto new_end = std::unique(candidates.begin(), candidates.end(),
-                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
-                    return lhs.first.forward_node_id == rhs.first.forward_node_id &&
-                           lhs.first.reverse_node_id == rhs.first.reverse_node_id;
+                [](const std::pair<double, PhantomNode>& lhs, const std::pair<double, PhantomNode>& rhs) {
+                    return lhs.second.forward_node_id == rhs.second.forward_node_id &&
+                           lhs.second.reverse_node_id == rhs.second.reverse_node_id;
                 });
             candidates.resize(new_end - candidates.begin());
 
@@ -159,22 +156,22 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 for (const auto i : osrm::irange<std::size_t>(0, compact_size))
                 {
                     // Split edge if it is bidirectional and append reverse direction to end of list
-                    if (candidates[i].first.forward_node_id != SPECIAL_NODEID &&
-                        candidates[i].first.reverse_node_id != SPECIAL_NODEID)
+                    if (candidates[i].second.forward_node_id != SPECIAL_NODEID &&
+                        candidates[i].second.reverse_node_id != SPECIAL_NODEID)
                     {
-                        PhantomNode reverse_node(candidates[i].first);
+                        PhantomNode reverse_node(candidates[i].second);
                         reverse_node.forward_node_id = SPECIAL_NODEID;
-                        candidates.push_back(std::make_pair(reverse_node, candidates[i].second));
+                        candidates.push_back(std::make_pair(candidates[i].first, reverse_node));
 
-                        candidates[i].first.reverse_node_id = SPECIAL_NODEID;
+                        candidates[i].second.reverse_node_id = SPECIAL_NODEID;
                     }
                 }
             }
 
             // sort by distance to make pruning effective
             std::sort(candidates.begin(), candidates.end(),
-                [](const std::pair<PhantomNode, double>& lhs, const std::pair<PhantomNode, double>& rhs) {
-                    return lhs.second < rhs.second;
+                [](const std::pair<double, PhantomNode>& lhs, const std::pair<double, PhantomNode>& rhs) {
+                    return lhs.first < rhs.first;
                 });
 
             candidates_lists.push_back(std::move(candidates));

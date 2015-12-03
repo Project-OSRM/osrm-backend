@@ -67,7 +67,7 @@ class ManyToManyRouting final
     ~ManyToManyRouting() {}
 
     std::shared_ptr<std::vector<EdgeWeight>>
-    operator()(const PhantomNodeArray &phantom_nodes_array) const
+    operator()(const std::vector<PhantomNodePair> &phantom_nodes_array) const
     {
         const auto number_of_locations = phantom_nodes_array.size();
         std::shared_ptr<std::vector<EdgeWeight>> result_table =
@@ -82,25 +82,35 @@ class ManyToManyRouting final
         SearchSpaceWithBuckets search_space_with_buckets;
 
         unsigned target_id = 0;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
+        for (const auto &pair : phantom_nodes_array)
         {
             query_heap.Clear();
             // insert target(s) at distance 0
 
-            for (const PhantomNode &phantom_node : phantom_node_vector)
+            if (SPECIAL_NODEID != pair.first.forward_node_id)
             {
-                if (SPECIAL_NODEID != phantom_node.forward_node_id)
-                {
-                    query_heap.Insert(phantom_node.forward_node_id,
-                                      phantom_node.GetForwardWeightPlusOffset(),
-                                      phantom_node.forward_node_id);
-                }
-                if (SPECIAL_NODEID != phantom_node.reverse_node_id)
-                {
-                    query_heap.Insert(phantom_node.reverse_node_id,
-                                      phantom_node.GetReverseWeightPlusOffset(),
-                                      phantom_node.reverse_node_id);
-                }
+                query_heap.Insert(pair.first.forward_node_id,
+                                  pair.first.GetForwardWeightPlusOffset(),
+                                  pair.first.forward_node_id);
+            }
+            if (SPECIAL_NODEID != pair.first.reverse_node_id)
+            {
+                query_heap.Insert(pair.first.reverse_node_id,
+                                  pair.first.GetReverseWeightPlusOffset(),
+                                  pair.first.reverse_node_id);
+            }
+
+            if (SPECIAL_NODEID != pair.second.forward_node_id)
+            {
+                query_heap.Insert(pair.second.forward_node_id,
+                                  pair.second.GetForwardWeightPlusOffset(),
+                                  pair.second.forward_node_id);
+            }
+            if (SPECIAL_NODEID != pair.second.reverse_node_id)
+            {
+                query_heap.Insert(pair.second.reverse_node_id,
+                                  pair.second.GetReverseWeightPlusOffset(),
+                                  pair.second.reverse_node_id);
             }
 
             // explore search space
@@ -113,24 +123,35 @@ class ManyToManyRouting final
 
         // for each source do forward search
         unsigned source_id = 0;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
+        for (const auto &pair : phantom_nodes_array)
         {
             query_heap.Clear();
-            for (const PhantomNode &phantom_node : phantom_node_vector)
+            // insert target(s) at distance 0
+
+            if (SPECIAL_NODEID != pair.first.forward_node_id)
             {
-                // insert sources at distance 0
-                if (SPECIAL_NODEID != phantom_node.forward_node_id)
-                {
-                    query_heap.Insert(phantom_node.forward_node_id,
-                                      -phantom_node.GetForwardWeightPlusOffset(),
-                                      phantom_node.forward_node_id);
-                }
-                if (SPECIAL_NODEID != phantom_node.reverse_node_id)
-                {
-                    query_heap.Insert(phantom_node.reverse_node_id,
-                                      -phantom_node.GetReverseWeightPlusOffset(),
-                                      phantom_node.reverse_node_id);
-                }
+                query_heap.Insert(pair.first.forward_node_id,
+                                  -pair.first.GetForwardWeightPlusOffset(),
+                                  pair.first.forward_node_id);
+            }
+            if (SPECIAL_NODEID != pair.first.reverse_node_id)
+            {
+                query_heap.Insert(pair.first.reverse_node_id,
+                                  -pair.first.GetReverseWeightPlusOffset(),
+                                  pair.first.reverse_node_id);
+            }
+
+            if (SPECIAL_NODEID != pair.second.forward_node_id)
+            {
+                query_heap.Insert(pair.second.forward_node_id,
+                                  -pair.second.GetForwardWeightPlusOffset(),
+                                  pair.second.forward_node_id);
+            }
+            if (SPECIAL_NODEID != pair.second.reverse_node_id)
+            {
+                query_heap.Insert(pair.second.reverse_node_id,
+                                  -pair.second.GetReverseWeightPlusOffset(),
+                                  pair.second.reverse_node_id);
             }
 
             // explore search space
