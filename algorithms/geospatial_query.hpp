@@ -135,6 +135,8 @@ template <typename RTreeT> class GeospatialQuery
         auto transformed =
             std::make_pair(current_perpendicular_distance, PhantomNode{data, point_on_segment});
 
+        ratio = std::min(1.f, std::max(0.f, ratio));
+
         if (SPECIAL_NODEID != transformed.second.forward_node_id)
         {
             transformed.second.forward_weight *= ratio;

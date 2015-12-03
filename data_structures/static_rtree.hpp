@@ -380,6 +380,7 @@ class StaticRTree
             if (terminate(results.size(), current_query_node.min_dist))
             {
                 traversal_queue = std::priority_queue<QueryCandidate>{};
+                break;
             }
 
             traversal_queue.pop();

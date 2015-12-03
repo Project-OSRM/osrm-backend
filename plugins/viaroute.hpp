@@ -105,6 +105,8 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
             phantom_node_pair_list[i] = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+            BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_pair_list[i].second.is_valid(facade->GetNumberOfNodes()));
         }
 
         const auto check_component_id_is_tiny = [](const PhantomNodePair &phantom_pair)
