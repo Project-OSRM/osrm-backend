@@ -58,14 +58,6 @@ def request_route waypoints, bearings, user_params
   return request_path "viaroute", params
 end
 
-def request_locate node, user_params
-  defaults = [['output', 'json']]
-  params = overwrite_params defaults, user_params
-  params << ["loc", "#{node.lat},#{node.lon}"]
-
-  return request_path "locate", params
-end
-
 def request_nearest node, user_params
   defaults = [['output', 'json']]
   params = overwrite_params defaults, user_params

@@ -87,7 +87,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             return 400;
         }
 
-        std::vector<phantom_node_pair> phantom_node_pair_list(route_parameters.coordinates.size());
+        std::vector<PhantomNodePair> phantom_node_pair_list(route_parameters.coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
@@ -96,34 +96,26 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 !route_parameters.hints[i].empty())
             {
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i],
-                                                phantom_node_pair_list[i]);
+                                                phantom_node_pair_list[i].first);
                 if (phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
                 {
                     continue;
                 }
             }
-            std::vector<PhantomNode> phantom_node_vector;
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
-            if (facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                                phantom_node_vector, 1, bearing, range))
-            {
-                BOOST_ASSERT(!phantom_node_vector.empty());
-                phantom_node_pair_list[i].first = phantom_node_vector.front();
-                if (phantom_node_vector.size() > 1)
-                {
-                    phantom_node_pair_list[i].second = phantom_node_vector.back();
-                }
-
-            }
-            else
+            phantom_node_pair_list[i] = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+            // we didn't found a fitting node, return error
+            if (!phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
             {
                 json_result.values["status_message"] = std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
                 return 400;
             }
+            BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_pair_list[i].second.is_valid(facade->GetNumberOfNodes()));
         }
 
-        const auto check_component_id_is_tiny = [](const phantom_node_pair &phantom_pair)
+        const auto check_component_id_is_tiny = [](const PhantomNodePair &phantom_pair)
         {
             return phantom_pair.first.component.is_tiny;
         };
@@ -133,18 +125,18 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                         check_component_id_is_tiny);
 
         // are all phantoms from a tiny cc?
-        const auto check_all_in_same_component = [](const std::vector<phantom_node_pair> &nodes)
+        const auto check_all_in_same_component = [](const std::vector<PhantomNodePair> &nodes)
         {
             const auto component_id = nodes.front().first.component.id;
 
             return std::all_of(std::begin(nodes), std::end(nodes),
-                               [component_id](const phantom_node_pair &phantom_pair)
+                               [component_id](const PhantomNodePair &phantom_pair)
                                {
                                    return component_id == phantom_pair.first.component.id;
                                });
         };
 
-        auto swap_phantom_from_big_cc_into_front = [](phantom_node_pair &phantom_pair)
+        auto swap_phantom_from_big_cc_into_front = [](PhantomNodePair &phantom_pair)
         {
             if (phantom_pair.first.component.is_tiny && phantom_pair.second.is_valid() && !phantom_pair.second.component.is_tiny)
             {
@@ -167,7 +159,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         InternalRouteResult raw_route;
         auto build_phantom_pairs =
-            [&raw_route](const phantom_node_pair &first_pair, const phantom_node_pair &second_pair)
+            [&raw_route](const PhantomNodePair &first_pair, const PhantomNodePair &second_pair)
         {
             raw_route.segment_end_coordinates.emplace_back(
                 PhantomNodes{first_pair.first, second_pair.first});

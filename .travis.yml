@@ -141,5 +141,6 @@ script:
   - make benchmarks
   - ./algorithm-tests
   - ./datastructure-tests
+  - ./util-tests
   - cd ..
   - cucumber -p verify

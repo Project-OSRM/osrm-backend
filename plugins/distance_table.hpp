@@ -108,8 +108,8 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
-        PhantomNodeArray phantom_node_source_vector(number_of_sources);
-        PhantomNodeArray phantom_node_target_vector(number_of_destination);
+        std::vector<PhantomNodePair> phantom_node_source_vector(number_of_sources);
+        std::vector<PhantomNodePair> phantom_node_target_vector(number_of_destination);
         auto phantom_node_source_out_iter = phantom_node_source_vector.begin();
         auto phantom_node_target_out_iter = phantom_node_target_vector.begin();
         for (const auto i : osrm::irange<std::size_t>(0u, route_parameters.coordinates.size()))
@@ -123,7 +123,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 {
                     if (route_parameters.is_source[i])
                     {
-                        phantom_node_source_out_iter->emplace_back(std::move(current_phantom_node));
+                        *phantom_node_source_out_iter = std::make_pair(current_phantom_node, current_phantom_node);
                         if (route_parameters.is_destination[i])
                         {
                             *phantom_node_target_out_iter = *phantom_node_source_out_iter;
@@ -134,7 +134,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                     else
                     {
                         BOOST_ASSERT(route_parameters.is_destination[i] && !route_parameters.is_source[i]);
-                        phantom_node_target_out_iter->emplace_back(std::move(current_phantom_node));
+                        *phantom_node_target_out_iter = std::make_pair(current_phantom_node, current_phantom_node);
                         phantom_node_target_out_iter++;
                     }
                     continue;
@@ -146,11 +146,14 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                                   : 180;
             if (route_parameters.is_source[i])
             {
-                facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                                *phantom_node_source_out_iter, 1,
-                                                                bearing, range);
-                BOOST_ASSERT(
-                    phantom_node_source_out_iter->front().is_valid(facade->GetNumberOfNodes()));
+                *phantom_node_source_out_iter = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+                // we didn't found a fitting node, return error
+                if (!phantom_node_source_out_iter->first.is_valid(facade->GetNumberOfNodes()))
+                {
+                    json_result.values["status_message"] = std::string("Could not find matching road for via ") + std::to_string(i);
+                    return 400;
+                }
+
                 if (route_parameters.is_destination[i])
                 {
                     *phantom_node_target_out_iter = *phantom_node_source_out_iter;
@@ -161,14 +164,16 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             else
             {
                 BOOST_ASSERT(route_parameters.is_destination[i] && !route_parameters.is_source[i]);
-                facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                                *phantom_node_target_out_iter, 1,
-                                                                bearing, range);
-                BOOST_ASSERT(
-                    phantom_node_target_out_iter->front().is_valid(facade->GetNumberOfNodes()));
+
+                *phantom_node_target_out_iter = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+                // we didn't found a fitting node, return error
+                if (!phantom_node_target_out_iter->first.is_valid(facade->GetNumberOfNodes()))
+                {
+                    json_result.values["status_message"] = std::string("Could not find matching road for via ") + std::to_string(i);
+                    return 400;
+                }
                 phantom_node_target_out_iter++;
             }
-
         }
         BOOST_ASSERT((phantom_node_source_out_iter - phantom_node_source_vector.begin()) ==
                      number_of_sources);
@@ -195,20 +200,20 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         }
         json_result.values["distance_table"] = matrix_json_array;
         osrm::json::Array target_coord_json_array;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_node_target_vector)
+        for (const auto &pair : phantom_node_target_vector)
         {
             osrm::json::Array json_coord;
-            FixedPointCoordinate coord = phantom_node_vector[0].location;
+            FixedPointCoordinate coord = pair.first.location;
             json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
             json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
             target_coord_json_array.values.push_back(json_coord);
         }
         json_result.values["destination_coordinates"] = target_coord_json_array;
         osrm::json::Array source_coord_json_array;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_node_source_vector)
+        for (const auto &pair : phantom_node_source_vector)
         {
             osrm::json::Array json_coord;
-            FixedPointCoordinate coord = phantom_node_vector[0].location;
+            FixedPointCoordinate coord = pair.first.location;
             json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
             json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
             source_coord_json_array.values.push_back(json_coord);

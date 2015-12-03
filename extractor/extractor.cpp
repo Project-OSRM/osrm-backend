@@ -573,11 +573,20 @@ void extractor::WriteNodeMapping(const std::vector<QueryNode> & internal_to_exte
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
 void extractor::BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_list,
-                         const std::vector<QueryNode> &internal_to_external_node_map)
+                           const std::vector<QueryNode> &internal_to_external_node_map)
 {
+    SimpleLogger().Write() << "constructing r-tree of " << node_based_edge_list.size()
+                           << " edge elements build on-top of " << internal_to_external_node_map.size()
+                           << " coordinates";
+
+    TIMER_START(construction);
     StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path.c_str(),
                                config.rtree_leafs_output_path.c_str(),
                                internal_to_external_node_map);
+
+    TIMER_STOP(construction);
+    SimpleLogger().Write() << "finished r-tree construction in " << TIMER_SEC(construction)
+                           << " seconds";
 }
 
 void extractor::WriteEdgeBasedGraph(std::string const &output_file_filename, 

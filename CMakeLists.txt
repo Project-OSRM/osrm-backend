@@ -46,7 +46,7 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(tests DEPENDS datastructure-tests algorithm-tests)
+add_custom_target(tests DEPENDS datastructure-tests algorithm-tests util-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
@@ -85,6 +85,7 @@ file(GLOB HttpGlob server/http/*.cpp)
 file(GLOB LibOSRMGlob library/*.cpp)
 file(GLOB DataStructureTestsGlob unit_tests/data_structures/*.cpp data_structures/hilbert_value.cpp)
 file(GLOB AlgorithmTestsGlob unit_tests/algorithms/*.cpp algorithms/graph_compressor.cpp)
+file(GLOB UtilTestsGlob unit_tests/util/*.cpp)
 
 set(
   OSRMSources
@@ -109,6 +110,7 @@ add_executable(osrm-datastore datastore.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGE
 # Unit tests
 add_executable(datastructure-tests EXCLUDE_FROM_ALL unit_tests/datastructure_tests.cpp ${DataStructureTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR> $<TARGET_OBJECTS:COMPRESSEDEDGE> $<TARGET_OBJECTS:GRAPHCOMPRESSOR> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:RASTERSOURCE>)
 add_executable(algorithm-tests EXCLUDE_FROM_ALL unit_tests/algorithm_tests.cpp ${AlgorithmTestsGlob} $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:RESTRICTION> $<TARGET_OBJECTS:COMPRESSEDEDGE>)
+add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTestsGlob})
 
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL benchmarks/static_rtree.cpp $<TARGET_OBJECTS:COORDINATE> $<TARGET_OBJECTS:LOGGER> $<TARGET_OBJECTS:PHANTOMNODE> $<TARGET_OBJECTS:EXCEPTION> $<TARGET_OBJECTS:MERCATOR>)
@@ -262,6 +264,7 @@ target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSR
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES})
 target_link_libraries(datastructure-tests ${Boost_LIBRARIES})
 target_link_libraries(algorithm-tests ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
+target_link_libraries(util-tests ${Boost_LIBRARIES})
 target_link_libraries(rtree-bench ${Boost_LIBRARIES})
 
 find_package(Threads REQUIRED)
