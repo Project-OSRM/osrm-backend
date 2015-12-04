@@ -406,7 +406,7 @@ class StaticRTree
 
 
                 auto use_segment = filter(current_segment);
-                if (!use_segment.first || !use_segment.second)
+                if (!use_segment.first && !use_segment.second)
                 {
                     continue;
                 }
