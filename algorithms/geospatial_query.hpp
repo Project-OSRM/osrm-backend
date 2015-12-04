@@ -104,8 +104,13 @@ template <typename RTreeT> class GeospatialQuery
                 return num_results > 0 && has_big_component;
             });
 
-        BOOST_ASSERT(results.size() > 0);
 
+        if (results.size() == 0)
+        {
+            return std::make_pair(PhantomNode {}, PhantomNode {});
+        }
+
+        BOOST_ASSERT(results.size() > 0);
         return std::make_pair(MakePhantomNode(input_coordinate, results.front()).second, MakePhantomNode(input_coordinate, results.back()).second);
     }
 

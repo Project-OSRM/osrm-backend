@@ -105,6 +105,12 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
             phantom_node_pair_list[i] = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+            // we didn't found a fitting node, return error
+            if (!phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
+            {
+                json_result.values["status_message"] = std::string("Could not find matching road for via ") + std::to_string(i);
+                return 400;
+            }
             BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
             BOOST_ASSERT(phantom_node_pair_list[i].second.is_valid(facade->GetNumberOfNodes()));
         }
