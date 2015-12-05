@@ -25,15 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../data_structures/original_edge_data.hpp"
 #include "../data_structures/query_node.hpp"
-#include "../data_structures/shared_memory_vector_wrapper.hpp"
 #include "../data_structures/static_rtree.hpp"
 #include "../data_structures/edge_based_node.hpp"
+#include "../algorithms/geospatial_query.hpp"
+#include "../util/timing_util.hpp"
 
 #include <osrm/coordinate.hpp>
 
 #include <random>
+#include <iostream>
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
 constexpr unsigned RANDOM_SEED = 13;
@@ -45,6 +46,7 @@ constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 using RTreeLeaf = EdgeBasedNode;
 using FixedPointCoordinateListPtr = std::shared_ptr<std::vector<FixedPointCoordinate>>;
 using BenchStaticRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>;
+using BenchQuery = GeospatialQuery<BenchStaticRTree>;
 
 FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path &nodes_file)
 {
@@ -65,7 +67,28 @@ FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path &nodes
     return coords;
 }
 
-void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
+template <typename QueryT>
+void BenchmarkQuery(const std::vector<FixedPointCoordinate> &queries,
+                    std::string name,
+                    QueryT query)
+{
+    std::cout << "Running " << name << " with " << queries.size() << " coordinates: " << std::flush;
+
+    TIMER_START(query);
+    for (const auto &q : queries)
+    {
+        auto result = query(q);
+    }
+    TIMER_STOP(query);
+
+    std::cout << "Took " << TIMER_SEC(query) << " seconds "
+              << "(" << TIMER_MSEC(query) << "ms"
+              << ")  ->  " << TIMER_MSEC(query) / queries.size() << " ms/query "
+              << "(" << TIMER_MSEC(query) << "ms"
+              << ")" << std::endl;
+}
+
+void Benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_queries)
 {
     std::mt19937 mt_rand(RANDOM_SEED);
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
@@ -76,88 +99,33 @@ void Benchmark(BenchStaticRTree &rtree, unsigned num_queries)
         queries.emplace_back(FixedPointCoordinate(lat_udist(mt_rand), lon_udist(mt_rand)));
     }
 
-    {
-        const unsigned num_results = 5;
-        std::cout << "#### IncrementalFindPhantomNodeForCoordinate : " << num_results
-                  << " phantom nodes"
-                  << "\n";
+    BenchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const FixedPointCoordinate &q)
+                   {
+                       return rtree.Nearest(q, 1);
+                   });
+    BenchmarkQuery(queries, "raw RTree queries (10 results)",
+                   [&rtree](const FixedPointCoordinate &q)
+                   {
+                       return rtree.Nearest(q, 10);
+                   });
 
-        TIMER_START(query_phantom);
-        std::vector<PhantomNode> phantom_node_vector;
-        for (const auto &q : queries)
-        {
-            phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 3, num_results);
-            phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 17, num_results);
-        }
-        TIMER_STOP(query_phantom);
-
-        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries
-                  << " queries."
-                  << "\n";
-        std::cout << TIMER_MSEC(query_phantom) / ((double)num_queries) << " msec/query."
-                  << "\n";
-
-        std::cout << "#### LocateClosestEndPointForCoordinate"
-                  << "\n";
-    }
-
-    TIMER_START(query_endpoint);
-    FixedPointCoordinate result;
-    for (const auto &q : queries)
-    {
-        rtree.LocateClosestEndPointForCoordinate(q, result, 3);
-    }
-    TIMER_STOP(query_endpoint);
-
-    std::cout << "Took " << TIMER_MSEC(query_endpoint) << " msec for " << num_queries << " queries."
-              << "\n";
-    std::cout << TIMER_MSEC(query_endpoint) / ((double)num_queries) << " msec/query."
-              << "\n";
-
-    std::cout << "#### FindPhantomNodeForCoordinate"
-              << "\n";
-
-    TIMER_START(query_node);
-    for (const auto &q : queries)
-    {
-        PhantomNode phantom;
-        rtree.FindPhantomNodeForCoordinate(q, phantom, 3);
-    }
-    TIMER_STOP(query_node);
-
-    std::cout << "Took " << TIMER_MSEC(query_node) << " msec for " << num_queries << " queries."
-              << "\n";
-    std::cout << TIMER_MSEC(query_node) / ((double)num_queries) << " msec/query."
-              << "\n";
-
-    {
-        const unsigned num_results = 1;
-        std::cout << "#### IncrementalFindPhantomNodeForCoordinate : " << num_results
-                  << " phantom nodes"
-                  << "\n";
-
-        TIMER_START(query_phantom);
-        std::vector<PhantomNode> phantom_node_vector;
-        for (const auto &q : queries)
-        {
-            phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 3, num_results);
-            phantom_node_vector.clear();
-            rtree.IncrementalFindPhantomNodeForCoordinate(q, phantom_node_vector, 17, num_results);
-        }
-        TIMER_STOP(query_phantom);
-
-        std::cout << "Took " << TIMER_MSEC(query_phantom) << " msec for " << num_queries
-                  << " queries."
-                  << "\n";
-        std::cout << TIMER_MSEC(query_phantom) / ((double)num_queries) << " msec/query."
-                  << "\n";
-
-        std::cout << "#### LocateClosestEndPointForCoordinate"
-                  << "\n";
-    }
+    BenchmarkQuery(queries, "big component alternative queries",
+                   [&geo_query](const FixedPointCoordinate &q)
+                   {
+                       return geo_query.NearestPhantomNodeWithAlternativeFromBigComponent(q);
+                   });
+    BenchmarkQuery(queries, "max distance 1000", [&geo_query](const FixedPointCoordinate &q)
+                   {
+                       return geo_query.NearestPhantomNodesInRange(q, 1000);
+                   });
+    BenchmarkQuery(queries, "PhantomNode query (1 result)", [&geo_query](const FixedPointCoordinate &q)
+                   {
+                       return geo_query.NearestPhantomNodes(q, 1);
+                   });
+    BenchmarkQuery(queries, "PhantomNode query (10 result)", [&geo_query](const FixedPointCoordinate &q)
+                   {
+                       return geo_query.NearestPhantomNodes(q, 10);
+                   });
 }
 
 int main(int argc, char **argv)
@@ -176,8 +144,9 @@ int main(int argc, char **argv)
     auto coords = LoadCoordinates(nodesPath);
 
     BenchStaticRTree rtree(ramPath, filePath, coords);
+    BenchQuery query(rtree, coords);
 
-    Benchmark(rtree, 10000);
+    Benchmark(rtree, query, 10000);
 
     return 0;
 }
