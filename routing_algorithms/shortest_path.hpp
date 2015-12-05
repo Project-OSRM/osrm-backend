@@ -114,10 +114,8 @@ class ShortestPathRouting final
     // ------^
     void SearchLoop(QueryHeap &forward_heap,
                 QueryHeap &reverse_heap,
-                const bool search_from_forward_node,
-                const bool search_from_reverse_node,
-                const bool search_to_forward_node,
-                const bool search_to_reverse_node,
+                const bool search_forward_node,
+                const bool search_reverse_node,
                 const PhantomNode &source_phantom,
                 const PhantomNode &target_phantom,
                 const int total_distance_to_forward,
@@ -127,16 +125,10 @@ class ShortestPathRouting final
                 std::vector<NodeID> &leg_packed_path_forward,
                 std::vector<NodeID> &leg_packed_path_reverse) const
     {
-        // silence unused warning
-        (void) search_from_forward_node;
-        (void) search_from_reverse_node;
-
-        BOOST_ASSERT(search_from_reverse_node == search_to_reverse_node);
-        BOOST_ASSERT(search_from_forward_node == search_to_forward_node);
         BOOST_ASSERT(source_phantom.forward_node_id == target_phantom.forward_node_id);
         BOOST_ASSERT(source_phantom.reverse_node_id == target_phantom.reverse_node_id);
 
-        if (search_to_forward_node)
+        if (search_forward_node)
         {
             forward_heap.Clear();
             reverse_heap.Clear();
@@ -173,7 +165,7 @@ class ShortestPathRouting final
             std::reverse(leg_packed_path_forward.begin(), leg_packed_path_forward.end());
         }
 
-        if (search_to_reverse_node)
+        if (search_reverse_node)
         {
             forward_heap.Clear();
             reverse_heap.Clear();
@@ -401,9 +393,10 @@ class ShortestPathRouting final
             {
                 search_to_forward_node = target_phantom.forward_node_id != SPECIAL_NODEID;
                 search_to_reverse_node = target_phantom.reverse_node_id != SPECIAL_NODEID;
+                BOOST_ASSERT(search_from_reverse_node == search_to_reverse_node);
+                BOOST_ASSERT(search_from_forward_node == search_to_forward_node);
                 SearchLoop(forward_heap, reverse_heap, search_from_forward_node,
-                       search_from_reverse_node, search_to_forward_node, search_to_reverse_node,
-                       source_phantom, target_phantom, total_distance_to_forward,
+                       search_from_reverse_node, source_phantom, target_phantom, total_distance_to_forward,
                        total_distance_to_reverse, new_total_distance_to_forward,
                        new_total_distance_to_reverse, packed_leg_to_forward, packed_leg_to_reverse);
             }
