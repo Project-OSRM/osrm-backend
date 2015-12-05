@@ -82,7 +82,13 @@ struct RouteParameters
 
     void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
 
+    void addDestination(const boost::fusion::vector<double, double> &received_coordinates);
+
+    void addSource(const boost::fusion::vector<double, double> &received_coordinates);
+
     void getCoordinatesFromGeometry(const std::string &geometry_string);
+
+    void setMappedPointsFlag(const bool flag);
 
     short zoom_level;
     bool print_instructions;
@@ -92,6 +98,7 @@ struct RouteParameters
     bool deprecatedAPI;
     bool uturn_default;
     bool classify;
+    bool mapped_points;
     double matching_beta;
     double gps_precision;
     unsigned check_sum;
@@ -105,6 +112,8 @@ struct RouteParameters
     std::vector<std::pair<const int,const boost::optional<int>>> bearings;
     std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
+    std::vector<FixedPointCoordinate> destinations;
+    std::vector<FixedPointCoordinate> sources;
 };
 
 #endif // ROUTE_PARAMETERS_HPP

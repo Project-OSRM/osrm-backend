@@ -45,9 +45,9 @@ class BasePlugin
     virtual const std::string GetDescriptor() const = 0;
     virtual int HandleRequest(const RouteParameters &, osrm::json::Object &) = 0;
     virtual bool
-    check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates) const final
+    check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates, const unsigned min = 2) const final
     {
-        if (2 > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
+        if (min > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
                                                   [](const FixedPointCoordinate &coordinate)
                                                   {
                                                       return !coordinate.is_valid();
