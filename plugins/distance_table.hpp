@@ -70,35 +70,49 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
-        const bool useSameTgtSrc = route_parameters.coordinates.size() ? true : false;
-        if ((useSameTgtSrc && route_parameters.destinations.size()) || (useSameTgtSrc && route_parameters.sources.size()))
+        if (!check_all_coordinates(route_parameters.coordinates))
         {
-            return 400;
-        }
-
-        if ((useSameTgtSrc && !check_all_coordinates(route_parameters.coordinates)) ||
-            (!useSameTgtSrc && !check_all_coordinates(route_parameters.destinations, 2) && !check_all_coordinates(route_parameters.sources, 1)))
-        {
+            json_result.values["status_message"] = "Coordinates are invalid.";
             return 400;
         }
 
         const auto &input_bearings = route_parameters.bearings;
-        unsigned nb_coordinates = useSameTgtSrc ? route_parameters.coordinates.size() : (route_parameters.destinations.size() + route_parameters.sources.size());
-        if (input_bearings.size() > 0 && nb_coordinates != input_bearings.size())
+        if (input_bearings.size() > 0 &&
+            route_parameters.coordinates.size() != input_bearings.size())
         {
-            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            json_result.values["status_message"] =
+                "Number of bearings does not match number of coordinates.";
+            return 400;
+        }
+
+        auto number_of_sources =
+            std::count_if(route_parameters.is_source.begin(), route_parameters.is_source.end(),
+                          [](const bool is_source)
+                          {
+                              return is_source;
+                          });
+        auto number_of_destination =
+            std::count_if(route_parameters.is_destination.begin(),
+                          route_parameters.is_destination.end(), [](const bool is_destination)
+                          {
+                              return is_destination;
+                          });
+
+        if (number_of_sources * number_of_destination >
+            max_locations_distance_table * max_locations_distance_table)
+        {
+            json_result.values["status_message"] =
+                "Number of bearings does not match number of coordinates.";
             return 400;
         }
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
-        unsigned max_locations = useSameTgtSrc ?
-            std::min(static_cast<unsigned>(max_locations_distance_table),
-                     static_cast<unsigned>(route_parameters.coordinates.size())) :
-            std::min(static_cast<unsigned>(max_locations_distance_table),
-                     static_cast<unsigned>(route_parameters.destinations.size()));
 
-        PhantomNodeArray phantom_node_target_vector(max_locations);
-        for (const auto i : osrm::irange(0u, max_locations))
+        PhantomNodeArray phantom_node_source_vector(number_of_sources);
+        PhantomNodeArray phantom_node_target_vector(number_of_destination);
+        auto phantom_node_source_out_iter = phantom_node_source_vector.begin();
+        auto phantom_node_target_out_iter = phantom_node_target_vector.begin();
+        for (const auto i : osrm::irange<std::size_t>(0u, route_parameters.coordinates.size()))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -107,92 +121,99 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
-                    phantom_node_target_vector[i].emplace_back(std::move(current_phantom_node));
+                    if (route_parameters.is_source[i])
+                    {
+                        phantom_node_source_out_iter->emplace_back(std::move(current_phantom_node));
+                        if (route_parameters.is_destination[i])
+                        {
+                            *phantom_node_target_out_iter = *phantom_node_source_out_iter;
+                            phantom_node_target_out_iter++;
+                        }
+                        phantom_node_source_out_iter++;
+                    }
+                    else
+                    {
+                        BOOST_ASSERT(route_parameters.is_destination[i] && !route_parameters.is_source[i]);
+                        phantom_node_target_out_iter->emplace_back(std::move(current_phantom_node));
+                        phantom_node_target_out_iter++;
+                    }
                     continue;
                 }
             }
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
-            const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
-            facade->IncrementalFindPhantomNodeForCoordinate(useSameTgtSrc ? route_parameters.coordinates[i] : route_parameters.destinations[i],
-                                                            phantom_node_target_vector[i], 1, bearing, range);
-
-            BOOST_ASSERT(phantom_node_target_vector[i].front().is_valid(facade->GetNumberOfNodes()));
-        }
-        unsigned shift_coordinates = (useSameTgtSrc) ? 0 : route_parameters.destinations.size();
-        max_locations = 0;
-        if (!useSameTgtSrc)
-        {
-            max_locations = std::min(static_cast<unsigned>(max_locations_distance_table),
-                                     static_cast<unsigned>(route_parameters.sources.size()));
-        }
-        PhantomNodeArray phantom_node_source_vector(max_locations);
-        for (const auto i : osrm::irange(0u, max_locations))
-        {
-            if (checksum_OK && i < route_parameters.hints.size() - shift_coordinates &&
-                !route_parameters.hints[i + shift_coordinates].empty())
+            const int range = input_bearings.size() > 0
+                                  ? (input_bearings[i].second ? *input_bearings[i].second : 10)
+                                  : 180;
+            if (route_parameters.is_source[i])
             {
-                PhantomNode current_phantom_node;
-                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i + shift_coordinates], current_phantom_node);
-                if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
+                facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
+                                                                *phantom_node_source_out_iter, 1,
+                                                                bearing, range);
+                BOOST_ASSERT(
+                    phantom_node_source_out_iter->front().is_valid(facade->GetNumberOfNodes()));
+                if (route_parameters.is_destination[i])
                 {
-                    phantom_node_source_vector[i].emplace_back(std::move(current_phantom_node));
-                    continue;
+                    *phantom_node_target_out_iter = *phantom_node_source_out_iter;
+                    phantom_node_target_out_iter++;
                 }
+                phantom_node_source_out_iter++;
             }
-            const int bearing = input_bearings.size() > 0 ? input_bearings[i + shift_coordinates].first : 0;
-            const int range = input_bearings.size() > 0 ? (input_bearings[i + shift_coordinates].second?*input_bearings[i + shift_coordinates].second:10) : 180;
-            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.sources[i],
-                                                            phantom_node_source_vector[i], 1, bearing, range);
+            else
+            {
+                BOOST_ASSERT(route_parameters.is_destination[i] && !route_parameters.is_source[i]);
+                facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
+                                                                *phantom_node_target_out_iter, 1,
+                                                                bearing, range);
+                BOOST_ASSERT(
+                    phantom_node_target_out_iter->front().is_valid(facade->GetNumberOfNodes()));
+                phantom_node_target_out_iter++;
+            }
 
-            BOOST_ASSERT(phantom_node_source_vector[i].front().is_valid(facade->GetNumberOfNodes()));
         }
+        BOOST_ASSERT((phantom_node_source_out_iter - phantom_node_source_vector.begin()) ==
+                     number_of_sources);
+        BOOST_ASSERT((phantom_node_target_out_iter - phantom_node_target_vector.begin()) ==
+                     number_of_destination);
 
-        // TIMER_START(distance_table);
-        std::shared_ptr<std::vector<EdgeWeight>> result_table =
-            search_engine_ptr->distance_table(phantom_node_target_vector, phantom_node_source_vector);
-        // TIMER_STOP(distance_table);
+        std::shared_ptr<std::vector<EdgeWeight>> result_table = search_engine_ptr->distance_table(
+            phantom_node_source_vector, phantom_node_target_vector);
 
         if (!result_table)
         {
+            json_result.values["status_message"] = "No distance table found.";
             return 400;
         }
 
         osrm::json::Array matrix_json_array;
-        const auto number_of_targets = phantom_node_target_vector.size();
-        const auto number_of_sources = (phantom_node_source_vector.size()) ? phantom_node_source_vector.size() : number_of_targets;
         for (const auto row : osrm::irange<std::size_t>(0, number_of_sources))
         {
             osrm::json::Array json_row;
-            auto row_begin_iterator = result_table->begin() + (row * number_of_targets);
-            auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_targets);
+            auto row_begin_iterator = result_table->begin() + (row * number_of_destination);
+            auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_destination);
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
             matrix_json_array.values.push_back(json_row);
         }
         json_result.values["distance_table"] = matrix_json_array;
-        if (route_parameters.mapped_points) {
-            osrm::json::Array target_coord_json_array;
-            for (const std::vector<PhantomNode> &phantom_node_vector : phantom_node_target_vector)
-            {
-                osrm::json::Array json_coord;
-                FixedPointCoordinate coord = phantom_node_vector[0].location;
-                json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
-                json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
-                target_coord_json_array.values.push_back(json_coord);
-            }
-            json_result.values["target_mapped_coordinates"] = target_coord_json_array;
-            osrm::json::Array source_coord_json_array;
-            for (const std::vector<PhantomNode> &phantom_node_vector : phantom_node_source_vector)
-            {
-                osrm::json::Array json_coord;
-                FixedPointCoordinate coord = phantom_node_vector[0].location;
-                json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
-                json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
-                source_coord_json_array.values.push_back(json_coord);
-            }
-            if (source_coord_json_array.values.size())
-                json_result.values["source_mapped_coordinates"] = source_coord_json_array;
+        osrm::json::Array target_coord_json_array;
+        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_node_target_vector)
+        {
+            osrm::json::Array json_coord;
+            FixedPointCoordinate coord = phantom_node_vector[0].location;
+            json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
+            json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
+            target_coord_json_array.values.push_back(json_coord);
         }
-        // osrm::json::render(reply.content, json_object);
+        json_result.values["destination_coordinates"] = target_coord_json_array;
+        osrm::json::Array source_coord_json_array;
+        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_node_source_vector)
+        {
+            osrm::json::Array json_coord;
+            FixedPointCoordinate coord = phantom_node_vector[0].location;
+            json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
+            json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
+            source_coord_json_array.values.push_back(json_coord);
+        }
+        json_result.values["source_coordinates"] = source_coord_json_array;
         return 200;
     }
 

@@ -256,7 +256,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         // compute the distance table of all phantom nodes
         const auto result_table = DistTableWrapper<EdgeWeight>(
-            *search_engine_ptr->distance_table(phantom_node_vector), number_of_locations);
+            *search_engine_ptr->distance_table(phantom_node_vector, phantom_node_vector), number_of_locations);
 
         if (result_table.size() == 0)
         {

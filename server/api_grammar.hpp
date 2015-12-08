@@ -42,7 +42,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                    *(query) >> -(uturns);
         query = ('?') >> (+(zoom | output | jsonp | checksum | location | destination | source | hint | timestamp | bearing | u | cmp |
                             language | instruction | geometry | alt_route | old_API | num_results |
-                            matching_beta | gps_precision | classify | locs | mapped_points));
+                            matching_beta | gps_precision | classify | locs));
 
         zoom = (-qi::lit('&')) >> qi::lit('z') >> '=' >>
                qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
@@ -93,8 +93,6 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
             qi::bool_[boost::bind(&HandlerT::setClassify, handler, ::_1)];
         locs = (-qi::lit('&')) >> qi::lit("locs") >> '=' >>
             stringforPolyline[boost::bind(&HandlerT::getCoordinatesFromGeometry, handler, ::_1)];
-        mapped_points = (-qi::lit('&')) >> qi::lit("mapped_points") >> '=' >>
-                      qi::bool_[boost::bind(&HandlerT::setMappedPointsFlag, handler, ::_1)];
 
         string = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));
@@ -105,8 +103,8 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
 
     qi::rule<Iterator> api_call, query;
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location, destination, source,
-        hint, timestamp, bearing, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
-        uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, mapped_points, stringforPolyline;
+        hint, timestamp, bearing, stringwithDot, stringwithPercent, language, geometry, cmp, alt_route, u,
+        uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, instruction, stringforPolyline;
 
     HandlerT *handler;
 };
