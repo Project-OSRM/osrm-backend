@@ -308,6 +308,7 @@ class ShortestPathRouting final
                     const std::vector<bool> &uturn_indicators,
                     InternalRouteResult &raw_route_data) const
     {
+        BOOST_ASSERT(uturn_indicators.size() == phantom_nodes_vector.size() + 1);
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
@@ -342,8 +343,8 @@ class ShortestPathRouting final
             const auto &target_phantom = phantom_node_pair.target_phantom;
 
 
-            const bool allow_u_turn_at_via = uturn_indicators.size() > current_leg &&
-                                             uturn_indicators[current_leg];
+            BOOST_ASSERT(current_leg + 1 < uturn_indicators.size());
+            const bool allow_u_turn_at_via = uturn_indicators[current_leg + 1];
 
             bool search_to_forward_node = target_phantom.forward_node_id != SPECIAL_NODEID;
             bool search_to_reverse_node = target_phantom.reverse_node_id != SPECIAL_NODEID;

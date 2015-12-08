@@ -368,7 +368,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             }
             search_engine_ptr->shortest_path(
                 raw_route.segment_end_coordinates,
-                std::vector<bool>(raw_route.segment_end_coordinates.size(), true), raw_route);
+                std::vector<bool>(raw_route.segment_end_coordinates.size() + 1, true), raw_route);
 
             BOOST_ASSERT(raw_route.shortest_path_length != INVALID_EDGE_WEIGHT);
 

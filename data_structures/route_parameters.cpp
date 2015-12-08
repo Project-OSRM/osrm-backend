@@ -61,11 +61,9 @@ void RouteParameters::setAlternateRouteFlag(const bool flag) { alternate_route =
 
 void RouteParameters::setUTurn(const bool flag)
 {
-    uturns.resize(coordinates.size(), uturn_default);
-    if (!uturns.empty())
-    {
-        uturns.back() = flag;
-    }
+    // the API grammar should make sure this never happens
+    BOOST_ASSERT(!uturns.empty());
+    uturns.back() = flag;
 }
 
 void RouteParameters::setAllUTurns(const bool flag)
@@ -148,6 +146,7 @@ void RouteParameters::addCoordinate(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
     is_source.emplace_back(true);
     is_destination.emplace_back(true);
+    uturns.push_back(uturn_default);
 }
 
 void RouteParameters::addDestination(
@@ -158,6 +157,7 @@ void RouteParameters::addDestination(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
     is_source.emplace_back(false);
     is_destination.emplace_back(true);
+    uturns.push_back(uturn_default);
 }
 
 void RouteParameters::addSource(
@@ -168,6 +168,7 @@ void RouteParameters::addSource(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
     is_source.emplace_back(true);
     is_destination.emplace_back(false);
+    uturns.push_back(uturn_default);
 }
 
 void RouteParameters::getCoordinatesFromGeometry(const std::string &geometry_string)

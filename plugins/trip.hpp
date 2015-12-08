@@ -215,6 +215,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         PhantomNodes viapoint;
         const auto start = std::begin(trip);
         const auto end = std::end(trip);
+        // computes a roundtrip from the nodes in trip
         for (auto it = start; it != end; ++it)
         {
             const auto from_node = *it;
@@ -225,9 +226,15 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
             min_route.segment_end_coordinates.emplace_back(viapoint);
         }
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
 
-        search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns,
-                                         min_route);
+        std::vector<bool> uturns(trip.size() + 1);
+        std::transform(trip.begin(), trip.end(), uturns.begin(), [&route_parameters](const NodeID idx) {
+              return route_parameters.uturns[idx];
+            });
+        uturns.back() = route_parameters.uturns[trip.front()];
+
+        search_engine_ptr->shortest_path(min_route.segment_end_coordinates, uturns, min_route);
 
         BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
         return min_route;
