@@ -381,13 +381,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         if (sub_matchings.empty())
         {
-            json_result.values["status"] = 0;
-            json_result.values["status_message"] = "Found matchings.";
+            json_result.values["status"] = 207;
+            json_result.values["status_message"] = "Cannot find matchings.";
         }
         else
         {
-            json_result.values["status"] = 207;
-            json_result.values["status_message"] = "Cannot find matchings.";
+            json_result.values["status"] = 0;
+            json_result.values["status_message"] = "Found matchings.";
         }
 
         return 200;
