@@ -38,7 +38,7 @@ When /^I plan a trip I should get$/ do |table|
           if v=='(nil)'
             params[$1]=nil
           elsif v!=nil
-            params[$1]=v
+            params[$1]=[v]
           end
           got[k]=v
         end

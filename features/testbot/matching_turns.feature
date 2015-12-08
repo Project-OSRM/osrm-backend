@@ -5,6 +5,8 @@ Feature: Turn directions/codes
         Given the profile "testbot"
 
     Scenario: Turn directions
+        Given the query options
+            | instructions | true |
         Given the node map
             | o | p | a | b | c |
             | n |   |   |   | d |
@@ -31,7 +33,7 @@ Feature: Turn directions/codes
             | xo    |
             | xp    |
 
-        When I match with turns I should get
+        When I match I should get
             | trace | route | turns                         | matchings |
             | im    | xi,xm | head,left,destination         | im        |
             | io    | xi,xo | head,slight_left,destination  | io        |
@@ -82,6 +84,8 @@ Feature: Turn directions/codes
             | gc    | xg,xc | head,right,destination        | gc        |
 
     Scenario: Turn directions
+        Given the query options
+            | instructions | true |
         Given the node map
             | o | p | a | b | c |
             | n |   |   |   | d |
@@ -108,7 +112,7 @@ Feature: Turn directions/codes
             | xo    |
             | xp    |
 
-        When I match with turns I should get
+        When I match I should get
             | trace | route | turns                         | matchings | duration |
             | im    | xi,xm | head,left,destination         | im        | 80       |
             | io    | xi,xo | head,slight_left,destination  | io        | 88       |

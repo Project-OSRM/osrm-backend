@@ -53,5 +53,5 @@ Then /^stdout should contain (\d+) lines?$/ do |lines|
 end
 
 Given (/^the query options$/) do |table|
-  @query_params = table.rows_hash
+  table.rows_hash.each { |k,v| @query_params << [k, v] }
 end

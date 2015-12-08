@@ -7,19 +7,26 @@ When /^I route I should get$/ do |table|
         got = {'request' => row['request'] }
         response = request_url row['request']
       else
-        params = @query_params
+        default_params = @query_params
+        user_params = []
         got = {}
         row.each_pair do |k,v|
           if k =~ /param:(.*)/
             if v=='(nil)'
-              params[$1]=nil
+              user_params << [$1, nil]
             elsif v!=nil
-              params[$1]=v
+              user_params << [$1, v]
             end
             got[k]=v
           end
         end
+        params = overwrite_params default_params, user_params
         waypoints = []
+        bearings = []
+        if row['bearings']
+          got['bearings'] = row['bearings']
+          bearings = row['bearings'].split(' ').compact
+        end
         if row['from'] and row['to']
           node = find_node_by_name(row['from'])
           raise "*** unknown from-node '#{row['from']}" unless node
@@ -30,7 +37,7 @@ When /^I route I should get$/ do |table|
           waypoints << node
 
           got = got.merge({'from' => row['from'], 'to' => row['to'] })
-          response = request_route waypoints, params
+          response = request_route waypoints, bearings, params
         elsif row['waypoints']
           row['waypoints'].split(',').each do |n|
             node = find_node_by_name(n.strip)
@@ -38,7 +45,7 @@ When /^I route I should get$/ do |table|
             waypoints << node
           end
           got = got.merge({'waypoints' => row['waypoints'] })
-          response = request_route waypoints, params
+          response = request_route waypoints, bearings, params
         else
           raise "*** no waypoints"
         end

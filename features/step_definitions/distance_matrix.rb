@@ -3,20 +3,26 @@ When /^I request a travel time matrix I should get$/ do |table|
   
   raise "*** Top-left cell of matrix table must be empty" unless table.headers[0]==""
   
-  nodes = []
-  sources = []
+  waypoints = []
   column_headers = table.headers[1..-1]
   row_headers = table.rows.map { |h| h.first }
-  column_headers.each do |node_name|
-    node = find_node_by_name(node_name)
-    raise "*** unknown node '#{node_name}" unless node
-    nodes << node
-  end
-  if column_headers!=row_headers
+  symmetric = Set.new(column_headers) == Set.new(row_headers)
+  if symmetric then
+    column_headers.each do |node_name|
+      node = find_node_by_name(node_name)
+      raise "*** unknown node '#{node_name}" unless node
+      waypoints << {:coord => node, :type => "loc"}
+    end
+  else
+    column_headers.each do |node_name|
+      node = find_node_by_name(node_name)
+      raise "*** unknown node '#{node_name}" unless node
+      waypoints << {:coord => node, :type => "dst"}
+    end
     row_headers.each do |node_name|
       node = find_node_by_name(node_name)
       raise "*** unknown node '#{node_name}" unless node
-      sources << node
+      waypoints << {:coord => node, :type => "src"}
     end
   end
   
@@ -27,18 +33,18 @@ When /^I request a travel time matrix I should get$/ do |table|
     
     # compute matrix
     params = @query_params
-    response = request_table nodes, sources, params
+    response = request_table waypoints, params
     if response.body.empty? == false
-      json = JSON.parse response.body
-      result = json['distance_table']
+      json_result = JSON.parse response.body
+      result = json_result["distance_table"]
     end
+
     
     # compare actual and expected result, one row at a time
     table.rows.each_with_index do |row,ri|
-      
       # fuzzy match
       ok = true
-      0.upto(nodes.size-1) do |i|
+      0.upto(result[ri].size-1) do |i|
         if FuzzyMatch.match result[ri][i], row[i+1]
           result[ri][i] = row[i+1]
         elsif row[i+1]=="" and result[ri][i]==no_route
