@@ -144,8 +144,8 @@ void RouteParameters::addCoordinate(
     coordinates.emplace_back(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
-    is_source.emplace_back(true);
-    is_destination.emplace_back(true);
+    is_source.push_back(true);
+    is_destination.push_back(true);
     uturns.push_back(uturn_default);
 }
 
@@ -155,8 +155,8 @@ void RouteParameters::addDestination(
     coordinates.emplace_back(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
-    is_source.emplace_back(false);
-    is_destination.emplace_back(true);
+    is_source.push_back(false);
+    is_destination.push_back(true);
     uturns.push_back(uturn_default);
 }
 
@@ -166,8 +166,8 @@ void RouteParameters::addSource(
     coordinates.emplace_back(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
-    is_source.emplace_back(true);
-    is_destination.emplace_back(false);
+    is_source.push_back(true);
+    is_destination.push_back(false);
     uturns.push_back(uturn_default);
 }
 
