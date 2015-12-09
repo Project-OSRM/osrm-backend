@@ -417,7 +417,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const FixedPointCoordinate &input_coordinate,
                                                       const int bearing = 0,
-                                                      const int bearing_range = 180)
+                                                      const int bearing_range = 180) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {

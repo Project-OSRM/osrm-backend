@@ -439,8 +439,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodes(input, 5);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results.back().second.forward_node_id, 0);
-        BOOST_CHECK_EQUAL(results.back().second.reverse_node_id, 1);
+        BOOST_CHECK_EQUAL(results.back().phantom_node.forward_node_id, 0);
+        BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_node_id, 1);
     }
 
     {
@@ -451,10 +451,10 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodes(input, 5, 45, 10);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results[0].second.forward_node_id, 1);
-        BOOST_CHECK_EQUAL(results[0].second.reverse_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].second.forward_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].second.reverse_node_id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_node_id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_node_id, SPECIAL_NODEID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_node_id, SPECIAL_NODEID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_node_id, 1);
     }
 
     {
@@ -470,10 +470,10 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodesInRange(input, 11000, 45, 10);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results[0].second.forward_node_id, 1);
-        BOOST_CHECK_EQUAL(results[0].second.reverse_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].second.forward_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].second.reverse_node_id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_node_id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_node_id, SPECIAL_NODEID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_node_id, SPECIAL_NODEID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_node_id, 1);
     }
 }
 
