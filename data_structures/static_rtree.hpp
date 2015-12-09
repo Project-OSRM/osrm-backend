@@ -412,7 +412,7 @@ class StaticRTree
                 }
 
                 // store phantom node in result vector
-                results.emplace_back(std::move(current_segment));
+                results.push_back(std::move(current_segment));
 
                 if (!use_segment.first)
                 {
@@ -476,7 +476,7 @@ class StaticRTree
         }
         if (!leaves_stream.good())
         {
-            leaves_stream.clear(std::ios::goodbit);
+          throw osrm::exception("Could not read from leaf file.");
         }
         const uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
         leaves_stream.seekg(seek_pos);

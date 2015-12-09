@@ -93,13 +93,13 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 
-    virtual std::vector<std::pair<double, PhantomNode>>
+    virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
                                const int bearing_range = 180) = 0;
 
-    virtual std::vector<std::pair<double, PhantomNode>>
+    virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const FixedPointCoordinate &input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,

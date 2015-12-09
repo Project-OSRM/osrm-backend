@@ -360,7 +360,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
 
-    std::vector<std::pair<double, PhantomNode>>
+    std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
@@ -375,7 +375,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance, bearing, bearing_range);
     }
 
-    std::vector<std::pair<double, PhantomNode>>
+    std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const FixedPointCoordinate &input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,

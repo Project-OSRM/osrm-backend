@@ -124,6 +124,12 @@ static_assert(sizeof(PhantomNode) == 48, "PhantomNode has more padding then expe
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 
+struct PhantomNodeWithDistance
+{
+    PhantomNode phantom_node;
+    double distance;
+};
+
 struct PhantomNodes
 {
     PhantomNode source_phantom;

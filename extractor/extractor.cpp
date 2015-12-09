@@ -580,8 +580,8 @@ void extractor::BuildRTree(const std::vector<EdgeBasedNode> &node_based_edge_lis
                            << " coordinates";
 
     TIMER_START(construction);
-    StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path.c_str(),
-                               config.rtree_leafs_output_path.c_str(),
+    StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path,
+                               config.rtree_leafs_output_path,
                                internal_to_external_node_map);
 
     TIMER_STOP(construction);

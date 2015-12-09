@@ -71,7 +71,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
         const int range = input_bearings.size() > 0 ? (input_bearings.front().second?*input_bearings.front().second:10) : 180;
         auto phantom_node_vector = facade->NearestPhantomNodes(route_parameters.coordinates.front(), number_of_results, bearing, range);
 
-        if (phantom_node_vector.empty() || !phantom_node_vector.front().second.is_valid())
+        if (phantom_node_vector.empty() || !phantom_node_vector.front().phantom_node.is_valid())
         {
             json_result.values["status"] = 207;
         }
@@ -88,7 +88,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                 for (const auto i :
                      osrm::irange<std::size_t>(0, std::min(number_of_results, vector_length)))
                 {
-                    const auto& node = phantom_node_vector[i].second;
+                    const auto& node = phantom_node_vector[i].phantom_node;
                     osrm::json::Array json_coordinate;
                     osrm::json::Object result;
                     json_coordinate.values.push_back(node.location.lat / COORDINATE_PRECISION);
@@ -103,13 +103,13 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
             else
             {
                 osrm::json::Array json_coordinate;
-                json_coordinate.values.push_back(phantom_node_vector.front().second.location.lat /
+                json_coordinate.values.push_back(phantom_node_vector.front().phantom_node.location.lat /
                                                  COORDINATE_PRECISION);
-                json_coordinate.values.push_back(phantom_node_vector.front().second.location.lon /
+                json_coordinate.values.push_back(phantom_node_vector.front().phantom_node.location.lon /
                                                  COORDINATE_PRECISION);
                 json_result.values["mapped_coordinate"] = json_coordinate;
                 json_result.values["name"] =
-                    facade->get_name_for_id(phantom_node_vector.front().second.name_id);
+                    facade->get_name_for_id(phantom_node_vector.front().phantom_node.name_id);
             }
         }
         return 200;

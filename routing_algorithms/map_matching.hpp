@@ -57,7 +57,7 @@ struct SubMatching
     double confidence;
 };
 
-using CandidateList = std::vector<std::pair<double, PhantomNode>>;
+using CandidateList = std::vector<PhantomNodeWithDistance>;
 using CandidateLists = std::vector<CandidateList>;
 using HMM = HiddenMarkovModel<CandidateLists>;
 using SubMatchingList = std::vector<SubMatching>;
@@ -232,7 +232,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     // how likely is candidate s_prime at time t to be emitted?
                     // FIXME this can be pre-computed
                     const double emission_pr =
-                        emission_log_probability(candidates_list[t][s_prime].first);
+                        emission_log_probability(candidates_list[t][s_prime].distance);
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
                     {
@@ -244,8 +244,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto network_distance = super::get_network_distance(
-                        forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].second,
-                        current_timestamps_list[s_prime].second);
+                        forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].phantom_node,
+                        current_timestamps_list[s_prime].phantom_node);
 
                     const auto d_t = std::abs(network_distance - haversine_distance);
 
@@ -365,7 +365,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 const auto location_index = reconstructed_indices[i].second;
 
                 matching.indices[i] = timestamp_index;
-                matching.nodes[i] = candidates_list[timestamp_index][location_index].second;
+                matching.nodes[i] = candidates_list[timestamp_index][location_index].phantom_node;
                 matching.length += model.path_lengths[timestamp_index][location_index];
 
                 matching_debug.add_chosen(timestamp_index, location_index);

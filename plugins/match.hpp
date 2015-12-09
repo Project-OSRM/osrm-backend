@@ -135,18 +135,18 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             // sort by foward id, then by reverse id and then by distance
             std::sort(candidates.begin(), candidates.end(),
-                [](const std::pair<double, PhantomNode>& lhs, const std::pair<double, PhantomNode>& rhs) {
-                    return lhs.second.forward_node_id < rhs.second.forward_node_id ||
-                            (lhs.second.forward_node_id == rhs.second.forward_node_id &&
-                             (lhs.second.reverse_node_id < rhs.second.reverse_node_id ||
-                              (lhs.second.reverse_node_id == rhs.second.reverse_node_id &&
-                               lhs.first < rhs.first)));
+                [](const PhantomNodeWithDistance& lhs, const PhantomNodeWithDistance& rhs) {
+                    return lhs.phantom_node.forward_node_id < rhs.phantom_node.forward_node_id ||
+                            (lhs.phantom_node.forward_node_id == rhs.phantom_node.forward_node_id &&
+                             (lhs.phantom_node.reverse_node_id < rhs.phantom_node.reverse_node_id ||
+                              (lhs.phantom_node.reverse_node_id == rhs.phantom_node.reverse_node_id &&
+                               lhs.distance < rhs.distance)));
                 });
 
             auto new_end = std::unique(candidates.begin(), candidates.end(),
-                [](const std::pair<double, PhantomNode>& lhs, const std::pair<double, PhantomNode>& rhs) {
-                    return lhs.second.forward_node_id == rhs.second.forward_node_id &&
-                           lhs.second.reverse_node_id == rhs.second.reverse_node_id;
+                [](const PhantomNodeWithDistance& lhs, const PhantomNodeWithDistance& rhs) {
+                    return lhs.phantom_node.forward_node_id == rhs.phantom_node.forward_node_id &&
+                           lhs.phantom_node.reverse_node_id == rhs.phantom_node.reverse_node_id;
                 });
             candidates.resize(new_end - candidates.begin());
 
@@ -156,22 +156,22 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 for (const auto i : osrm::irange<std::size_t>(0, compact_size))
                 {
                     // Split edge if it is bidirectional and append reverse direction to end of list
-                    if (candidates[i].second.forward_node_id != SPECIAL_NODEID &&
-                        candidates[i].second.reverse_node_id != SPECIAL_NODEID)
+                    if (candidates[i].phantom_node.forward_node_id != SPECIAL_NODEID &&
+                        candidates[i].phantom_node.reverse_node_id != SPECIAL_NODEID)
                     {
-                        PhantomNode reverse_node(candidates[i].second);
+                        PhantomNode reverse_node(candidates[i].phantom_node);
                         reverse_node.forward_node_id = SPECIAL_NODEID;
-                        candidates.push_back(std::make_pair(candidates[i].first, reverse_node));
+                        candidates.push_back(PhantomNodeWithDistance { reverse_node, candidates[i].distance});
 
-                        candidates[i].second.reverse_node_id = SPECIAL_NODEID;
+                        candidates[i].phantom_node.reverse_node_id = SPECIAL_NODEID;
                     }
                 }
             }
 
             // sort by distance to make pruning effective
             std::sort(candidates.begin(), candidates.end(),
-                [](const std::pair<double, PhantomNode>& lhs, const std::pair<double, PhantomNode>& rhs) {
-                    return lhs.first < rhs.first;
+                [](const PhantomNodeWithDistance& lhs, const PhantomNodeWithDistance& rhs) {
+                    return lhs.distance < rhs.distance;
                 });
 
             candidates_lists.push_back(std::move(candidates));

@@ -97,7 +97,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
             auto phantom_nodes = facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range);
             // FIXME we only use the pair because that is what DistanceTable expects
-            phantom_node_pair_list[i] = std::make_pair(phantom_nodes.front().second, phantom_nodes.front().second);
+            phantom_node_pair_list[i] = std::make_pair(phantom_nodes.front().phantom_node, phantom_nodes.front().phantom_node);
             BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
         }
     }

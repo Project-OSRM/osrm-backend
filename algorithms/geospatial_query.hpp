@@ -28,7 +28,7 @@ template <typename RTreeT> class GeospatialQuery
 
     // Returns nearest PhantomNodes in the given bearing range within max_distance.
     // Does not filter by small/big component!
-    std::vector<std::pair<double, PhantomNode>>
+    std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
@@ -50,7 +50,7 @@ template <typename RTreeT> class GeospatialQuery
 
     // Returns max_results nearest PhantomNodes in the given bearing range.
     // Does not filter by small/big component!
-    std::vector<std::pair<double, PhantomNode>>
+    std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const FixedPointCoordinate &input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,
@@ -84,7 +84,7 @@ template <typename RTreeT> class GeospatialQuery
              &has_small_component](const EdgeData &data)
             {
                 auto use_segment =
-                    (!has_small_component || (!has_big_component && !data.component.is_tiny)) ;
+                    (!has_small_component || (!has_big_component && !data.component.is_tiny));
                 auto use_directions = std::make_pair(use_segment, use_segment);
 
                 if (use_segment)
@@ -104,22 +104,22 @@ template <typename RTreeT> class GeospatialQuery
                 return num_results > 0 && has_big_component;
             });
 
-
         if (results.size() == 0)
         {
-            return std::make_pair(PhantomNode {}, PhantomNode {});
+            return std::make_pair(PhantomNode{}, PhantomNode{});
         }
 
         BOOST_ASSERT(results.size() > 0);
-        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).second, MakePhantomNode(input_coordinate, results.back()).second);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
     }
 
   private:
-    inline std::vector<std::pair<double, PhantomNode>>
+    std::vector<PhantomNodeWithDistance>
     MakePhantomNodes(const FixedPointCoordinate &input_coordinate,
                      const std::vector<EdgeData> &results) const
     {
-        std::vector<std::pair<double, PhantomNode>> distance_and_phantoms(results.size());
+        std::vector<PhantomNodeWithDistance> distance_and_phantoms(results.size());
         std::transform(results.begin(), results.end(), distance_and_phantoms.begin(),
                        [this, &input_coordinate](const EdgeData &data)
                        {
@@ -128,8 +128,8 @@ template <typename RTreeT> class GeospatialQuery
         return distance_and_phantoms;
     }
 
-    inline std::pair<double, PhantomNode>
-    MakePhantomNode(const FixedPointCoordinate &input_coordinate, const EdgeData &data) const
+    PhantomNodeWithDistance MakePhantomNode(const FixedPointCoordinate &input_coordinate,
+                                                   const EdgeData &data) const
     {
         FixedPointCoordinate point_on_segment;
         float ratio;
@@ -138,24 +138,24 @@ template <typename RTreeT> class GeospatialQuery
             ratio);
 
         auto transformed =
-            std::make_pair(current_perpendicular_distance, PhantomNode{data, point_on_segment});
+            PhantomNodeWithDistance { PhantomNode{data, point_on_segment}, current_perpendicular_distance };
 
         ratio = std::min(1.f, std::max(0.f, ratio));
 
-        if (SPECIAL_NODEID != transformed.second.forward_node_id)
+        if (SPECIAL_NODEID != transformed.phantom_node.forward_node_id)
         {
-            transformed.second.forward_weight *= ratio;
+            transformed.phantom_node.forward_weight *= ratio;
         }
-        if (SPECIAL_NODEID != transformed.second.reverse_node_id)
+        if (SPECIAL_NODEID != transformed.phantom_node.reverse_node_id)
         {
-            transformed.second.reverse_weight *= 1.f - ratio;
+            transformed.phantom_node.reverse_weight *= 1.f - ratio;
         }
         return transformed;
     }
 
-    inline std::pair<bool, bool> checkSegmentBearing(const EdgeData &segment,
-                                                     const float filter_bearing,
-                                                     const float filter_bearing_range)
+    std::pair<bool, bool> checkSegmentBearing(const EdgeData &segment,
+                                              const float filter_bearing,
+                                              const float filter_bearing_range)
     {
         const float forward_edge_bearing =
             coordinate_calculation::bearing(coordinates->at(segment.u), coordinates->at(segment.v));

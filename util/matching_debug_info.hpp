@@ -62,8 +62,8 @@ struct MatchingDebugInfo
                 osrm::json::Object state;
                 state.values["transitions"] = osrm::json::Array();
                 state.values["coordinate"] =
-                    osrm::json::make_array(elem_s.second.location.lat / COORDINATE_PRECISION,
-                                           elem_s.second.location.lon / COORDINATE_PRECISION);
+                    osrm::json::make_array(elem_s.phantom_node.location.lat / COORDINATE_PRECISION,
+                                           elem_s.phantom_node.location.lon / COORDINATE_PRECISION);
                 state.values["viterbi"] =
                     osrm::json::clamp_float(osrm::matching::IMPOSSIBLE_LOG_PROB);
                 state.values["pruned"] = 0u;

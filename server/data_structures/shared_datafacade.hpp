@@ -40,6 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../util/make_unique.hpp"
 #include "../../util/simple_logger.hpp"
 
+#include <boost/thread.hpp>
+
 #include <algorithm>
 #include <limits>
 #include <memory>
@@ -382,7 +384,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return m_travel_mode_list.at(id);
     }
 
-    std::vector<std::pair<double, PhantomNode>>
+    std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
@@ -397,7 +399,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance, bearing, bearing_range);
     }
 
-    std::vector<std::pair<double, PhantomNode>>
+    std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const FixedPointCoordinate &input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,

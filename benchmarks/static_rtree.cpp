@@ -69,7 +69,7 @@ FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path &nodes
 
 template <typename QueryT>
 void BenchmarkQuery(const std::vector<FixedPointCoordinate> &queries,
-                    std::string name,
+                    const std::string& name,
                     QueryT query)
 {
     std::cout << "Running " << name << " with " << queries.size() << " coordinates: " << std::flush;
@@ -96,7 +96,7 @@ void Benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_quer
     std::vector<FixedPointCoordinate> queries;
     for (unsigned i = 0; i < num_queries; i++)
     {
-        queries.emplace_back(FixedPointCoordinate(lat_udist(mt_rand), lon_udist(mt_rand)));
+        queries.emplace_back(lat_udist(mt_rand), lon_udist(mt_rand));
     }
 
     BenchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const FixedPointCoordinate &q)
