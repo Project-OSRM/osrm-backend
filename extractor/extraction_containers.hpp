@@ -64,14 +64,14 @@ class ExtractionContainers
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
     using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
     using STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
-    using STXXLStringVector = stxxl::vector<std::string>;
     using STXXLRestrictionsVector = stxxl::vector<InputRestrictionContainer>;
     using STXXLWayIDStartEndVector = stxxl::vector<FirstAndLastSegmentOfWay>;
 
     STXXLNodeIDVector used_node_id_list;
     STXXLNodeVector all_nodes_list;
     STXXLEdgeVector all_edges_list;
-    STXXLStringVector name_list;
+    stxxl::vector<char> name_char_data;
+    std::vector<unsigned> name_offsets;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
