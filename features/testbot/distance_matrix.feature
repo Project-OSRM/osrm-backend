@@ -136,15 +136,12 @@ Feature: Basic Distance Matrix
             | a | 100 | 200 | 300 |
             | b | 0   | 100 | 200 |
 
-    # There is a 1100m limit when searching for nearest neighbours
-    # so we set the grid size to something that makes it easy to
-    # put nodes inside/outside that limit
-    Scenario: Testbog - Check snapping on on small components
+    Scenario: Testbog - All coordinates are from same small component
         Given a grid size of 300 meters
         Given the extract extra arguments "--small-component-size 4"
         Given the node map
-            | a | b |  |   | m |  | x |
-            | d | e |  |   | n |  | y |
+            | a | b |  | f |
+            | d | e |  | g |
 
         And the ways
             | nodes |
@@ -152,13 +149,33 @@ Feature: Basic Distance Matrix
             | be    |
             | ed    |
             | da    |
-            | xy    |
+            | fg    |
 
         When I request a travel time matrix I should get
-            |   | a   | b   | x   | y   | m   | n   |
-            | a | 0   | 300 |     |     | 300 | 600 |
-            | b | 300 |  0  |     |     | 0   | 300 |
-            | x |     |     | 0   | 300 |     |     |
-            | y |     |     | 300 | 0   |     |     |
-            | m | 300 | 0   |     |     | 0   | 300 |
-            | n | 600 | 300 |     |     | 300 | 0   |
+            |   | f   | g   |
+            | f | 0   | 300 |
+            | g | 300 |  0  |
+
+    Scenario: Testbog - Coordinates are from different small component and snap to big CC
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the node map
+            | a | b |  | f | h |
+            | d | e |  | g | i |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | be    |
+            | ed    |
+            | da    |
+            | fg    |
+            | hi    |
+
+        When I request a travel time matrix I should get
+            |   | f   | g   | h   | i   |
+            | f | 0   | 300 | 0   | 300 |
+            | g | 300 |  0  | 300 | 0   |
+            | h | 0   | 300 | 0   | 300 |
+            | i | 300 |  0  | 300 | 0   |
+
