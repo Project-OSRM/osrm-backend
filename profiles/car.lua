@@ -448,6 +448,9 @@ function way_function (way, result)
     end
     result.backward_speed = math.min(penalized_speed, scaled_speed)
   end
+
+  -- only allow this road as start point if it not a ferry
+  result.is_startpoint = result.forward_mode == mode_normal or result.backward_mode == mode_normal
 end
 
 function turn_function (angle)
