@@ -183,8 +183,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         const bool target_traversed_in_reverse =
             (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_node_id);
 
-        const auto packed_path_size = std::distance(packed_path_begin, packed_path_end);
-        BOOST_ASSERT(packed_path_size > 0);
+        BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
 
         // We have to push the path in reverse order onto the stack because it's LIFO.
