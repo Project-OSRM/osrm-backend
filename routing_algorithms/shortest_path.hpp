@@ -375,7 +375,15 @@ class ShortestPathRouting final
                                     search_to_reverse_node, source_phantom, target_phantom,
                                     total_distance_to_forward, total_distance_to_reverse,
                                     new_total_distance_to_forward, packed_leg_to_forward);
-                    if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+                    // if only the reverse node is valid (e.g. when using the match plugin) we actually need to move
+                    if (target_phantom.forward_node_id == SPECIAL_NODEID)
+                    {
+                        BOOST_ASSERT(target_phantom.reverse_node_id != SPECIAL_NODEID);
+                        new_total_distance_to_reverse = new_total_distance_to_forward;
+                        packed_leg_to_reverse = std::move(packed_leg_to_forward);
+                        new_total_distance_to_forward = INVALID_EDGE_WEIGHT;
+                    }
+                    else if (target_phantom.reverse_node_id != SPECIAL_NODEID)
                     {
                         new_total_distance_to_reverse = new_total_distance_to_forward;
                         packed_leg_to_reverse = packed_leg_to_forward;

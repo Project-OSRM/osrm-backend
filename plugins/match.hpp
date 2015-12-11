@@ -133,6 +133,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             auto range = input_bearings.size() > 0 ? (input_bearings[current_coordinate].second ? *input_bearings[current_coordinate].second : 10 ) : 180;
             auto candidates = facade->NearestPhantomNodesInRange(input_coords[current_coordinate], query_radius, bearing, range);
 
+            if (candidates.size() == 0)
+            {
+                return false;
+            }
+
             // sort by foward id, then by reverse id and then by distance
             std::sort(candidates.begin(), candidates.end(),
                 [](const PhantomNodeWithDistance& lhs, const PhantomNodeWithDistance& rhs) {
@@ -361,6 +366,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             {
                 current_phantom_node_pair.source_phantom = sub.nodes[i];
                 current_phantom_node_pair.target_phantom = sub.nodes[i + 1];
+                BOOST_ASSERT(current_phantom_node_pair.source_phantom.is_valid());
+                BOOST_ASSERT(current_phantom_node_pair.target_phantom.is_valid());
                 raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
             }
             search_engine_ptr->shortest_path(
