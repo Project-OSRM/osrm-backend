@@ -44,6 +44,7 @@ struct NodeBasedEdge
                            bool backward,
                            bool roundabout,
                            bool access_restricted,
+                           bool startpoint,
                            TravelMode travel_mode,
                            bool is_split);
 
@@ -55,6 +56,7 @@ struct NodeBasedEdge
     bool backward : 1;
     bool roundabout : 1;
     bool access_restricted : 1;
+    bool startpoint : 1;
     bool is_split : 1;
     TravelMode travel_mode : 4;
 };
@@ -69,9 +71,10 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                            bool backward,
                            bool roundabout,
                            bool access_restricted,
+                           bool startpoint,
                            TravelMode travel_mode,
                            bool is_split)
-        : NodeBasedEdge(SPECIAL_NODEID, SPECIAL_NODEID, name_id, weight, forward, backward, roundabout, access_restricted, travel_mode, is_split),
+        : NodeBasedEdge(SPECIAL_NODEID, SPECIAL_NODEID, name_id, weight, forward, backward, roundabout, access_restricted, startpoint, travel_mode, is_split),
         osm_source_id(source), osm_target_id(target) {}
 
     OSMNodeID osm_source_id;

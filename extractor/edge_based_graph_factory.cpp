@@ -78,6 +78,11 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
     nodes.swap(m_edge_based_node_list);
 }
 
+void EdgeBasedGraphFactory::GetStartPointMarkers(std::vector<bool> &node_is_startpoint)
+{
+    m_edge_based_node_is_startpoint.swap(node_is_startpoint);
+}
+
 unsigned EdgeBasedGraphFactory::GetHighestEdgeID()
 {
     return m_max_edge_id;
@@ -165,6 +170,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
                 reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
                 false, INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
+            m_edge_based_node_is_startpoint.push_back(forward_data.startpoint || reverse_data.startpoint);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -208,6 +214,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
             forward_data.name_id, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
             false, INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
+        m_edge_based_node_is_startpoint.push_back(forward_data.startpoint || reverse_data.startpoint);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -335,6 +342,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
             }
         }
     }
+
+    BOOST_ASSERT(m_edge_based_node_list.size() == m_edge_based_node_is_startpoint.size());
 
     SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                            << " nodes in edge-expanded graph";

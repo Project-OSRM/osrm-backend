@@ -50,7 +50,7 @@ bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 NodeBasedEdge::NodeBasedEdge()
     : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), forward(false),
       backward(false), roundabout(false),
-      access_restricted(false), is_split(false), travel_mode(false)
+      access_restricted(false), startpoint(true), is_split(false), travel_mode(false)
 {
 }
 
@@ -62,11 +62,12 @@ NodeBasedEdge::NodeBasedEdge(NodeID source,
                              bool backward,
                              bool roundabout,
                              bool access_restricted,
+                             bool startpoint,
                              TravelMode travel_mode,
                              bool is_split)
     : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
       backward(backward), roundabout(roundabout),
-      access_restricted(access_restricted), is_split(is_split), travel_mode(travel_mode)
+      access_restricted(access_restricted), startpoint(startpoint), is_split(is_split), travel_mode(travel_mode)
 {
 }
 

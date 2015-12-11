@@ -86,6 +86,7 @@ class EdgeBasedGraphFactory
     void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
 
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
+    void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
 
     unsigned GetHighestEdgeID();
 
@@ -96,6 +97,9 @@ class EdgeBasedGraphFactory
   private:
     using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
+    //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the graph
+    std::vector<bool> m_edge_based_node_is_startpoint;
+    //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
     unsigned m_max_edge_id;

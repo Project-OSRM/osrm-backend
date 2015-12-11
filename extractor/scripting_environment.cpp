@@ -117,6 +117,7 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
             .def_readwrite("name", &ExtractionWay::name)
             .def_readwrite("roundabout", &ExtractionWay::roundabout)
             .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
+            .def_readwrite("is_startpoint", &ExtractionWay::is_startpoint)
             .def_readwrite("duration", &ExtractionWay::duration)
             .property("forward_mode", &ExtractionWay::get_forward_mode,
                       &ExtractionWay::set_forward_mode)

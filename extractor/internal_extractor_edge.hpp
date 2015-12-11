@@ -63,7 +63,7 @@ struct InternalExtractorEdge
     };
 
     explicit InternalExtractorEdge()
-        : result(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, 0, false, false, false, false,
+        : result(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, 0, false, false, false, false, true,
                 TRAVEL_MODE_INACCESSIBLE, false)
     {
     }
@@ -76,6 +76,7 @@ struct InternalExtractorEdge
                                    bool backward,
                                    bool roundabout,
                                    bool access_restricted,
+                                   bool startpoint,
                                    TravelMode travel_mode,
                                    bool is_split)
         : result(OSMNodeID(source),
@@ -86,6 +87,7 @@ struct InternalExtractorEdge
                  backward,
                  roundabout,
                  access_restricted,
+                 startpoint,
                  travel_mode,
                  is_split),
           weight_data(std::move(weight_data))
@@ -104,12 +106,12 @@ struct InternalExtractorEdge
     static InternalExtractorEdge min_osm_value()
     {
         return InternalExtractorEdge(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, WeightData(), false, false, false,
-                                     false, TRAVEL_MODE_INACCESSIBLE, false);
+                                     false, true, TRAVEL_MODE_INACCESSIBLE, false);
     }
     static InternalExtractorEdge max_osm_value()
     {
         return InternalExtractorEdge(MAX_OSM_NODEID, MAX_OSM_NODEID, 0, WeightData(), false,
-                                     false, false, false, TRAVEL_MODE_INACCESSIBLE, false);
+                                     false, false, false, true, TRAVEL_MODE_INACCESSIBLE, false);
     }
 
     static InternalExtractorEdge min_internal_value()
