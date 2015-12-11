@@ -105,6 +105,8 @@ class BasePlugin
             // update check with new component ids
             all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
         }
+
+        return all_in_same_component;
     }
 };
 
