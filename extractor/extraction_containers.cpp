@@ -51,6 +51,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <chrono>
 #include <limits>
 
+static const int WRITE_BLOCK_BUFFER_SIZE = 8000;
+
 ExtractionContainers::ExtractionContainers()
 {
     // Check if stxxl can be instantiated
@@ -130,8 +132,23 @@ void ExtractionContainers::WriteNames(const std::string& names_file_name) const
 
     name_file_stream.write((char *)&total_length, sizeof(unsigned));
 
+
     // write all chars consecutively
-    name_file_stream.write((const char *)&name_char_data[0], name_char_data.size());
+    char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
+    unsigned buffer_len = 0;
+
+    for (const char &c : name_char_data)
+    {
+        write_buffer[buffer_len++] = c;
+
+        if (buffer_len >= WRITE_BLOCK_BUFFER_SIZE)
+        {
+            name_file_stream.write(write_buffer, WRITE_BLOCK_BUFFER_SIZE);
+            buffer_len = 0;
+        }
+    }
+
+    name_file_stream.write(write_buffer, buffer_len);
 
     name_file_stream.close();
     TIMER_STOP(write_name_index);
