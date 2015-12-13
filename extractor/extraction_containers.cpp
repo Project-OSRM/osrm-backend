@@ -57,8 +57,8 @@ ExtractionContainers::ExtractionContainers()
 {
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
-    name_char_data.push_back('\0');
-    name_offsets.push_back(1);
+    // Insert the empty string, it has no data and is zero length
+    name_lengths.push_back(0);
 }
 
 ExtractionContainers::~ExtractionContainers()
@@ -68,7 +68,7 @@ ExtractionContainers::~ExtractionContainers()
     all_nodes_list.clear();
     all_edges_list.clear();
     name_char_data.clear();
-    name_offsets.clear();
+    name_lengths.clear();
     restrictions_list.clear();
     way_start_end_id_list.clear();
 }
@@ -121,13 +121,13 @@ void ExtractionContainers::WriteNames(const std::string& names_file_name) const
 
     unsigned total_length = 0;
 
-    for (const unsigned &name_offset : name_offsets)
+    for (const unsigned &name_length : name_lengths)
     {
-        total_length += name_offset;
+        total_length += name_length;
     }
 
     // builds and writes the index
-    RangeTable<> name_index_range(name_offsets);
+    RangeTable<> name_index_range(name_lengths);
     name_file_stream << name_index_range;
 
     name_file_stream.write((char *)&total_length, sizeof(unsigned));

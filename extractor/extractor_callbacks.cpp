@@ -153,7 +153,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     // Get the unique identifier for the street name
     const auto &string_map_iterator = string_map.find(parsed_way.name);
-    unsigned name_id = external_memory.name_offsets.size();
+    unsigned name_id = external_memory.name_lengths.size();
     if (string_map.end() == string_map_iterator)
     {
         unsigned name_length = 0;
@@ -167,7 +167,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             external_memory.name_char_data.push_back(c);
             name_length++;
         }
-        external_memory.name_offsets.push_back(name_length);
+        external_memory.name_lengths.push_back(name_length);
         string_map.insert(std::make_pair(parsed_way.name, name_id));
     }
     else
