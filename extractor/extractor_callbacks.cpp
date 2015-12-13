@@ -156,17 +156,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     unsigned name_id = external_memory.name_lengths.size();
     if (string_map.end() == string_map_iterator)
     {
-        unsigned name_length = 0;
-        for (const char &c : parsed_way.name)
-        {
-            // Cap name length at 255 characters
-            if (name_length == 255u)
-            {
-                break;
-            }
-            external_memory.name_char_data.push_back(c);
-            name_length++;
-        }
+        auto name_length = std::min<unsigned>(255u, parsed_way.name.size());
+        std::copy(parsed_way.name.c_str(), parsed_way.name.c_str() + name_length, std::back_inserter(external_memory.name_char_data));
         external_memory.name_lengths.push_back(name_length);
         string_map.insert(std::make_pair(parsed_way.name, name_id));
     }
