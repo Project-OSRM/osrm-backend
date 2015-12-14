@@ -62,7 +62,7 @@ class named_mutex;
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(libosrm_config &lib_config)
+OSRM_impl::OSRM_impl(LibOSRMConfig lib_config)
 {
     if (lib_config.use_shared_memory)
     {
@@ -88,26 +88,14 @@ OSRM_impl::OSRM_impl(libosrm_config &lib_config)
     RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
 }
 
-OSRM_impl::~OSRM_impl()
+void OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
 {
-    delete query_data_facade;
-    for (PluginMap::value_type &plugin_pointer : plugin_map)
-    {
-        delete plugin_pointer.second;
-    }
+    std::unique_ptr<BasePlugin> plugin_ptr(raw_plugin_ptr);
+    SimpleLogger().Write() << "loaded plugin: " << plugin_ptr->GetDescriptor();
+    plugin_map[plugin_ptr->GetDescriptor()] = std::move(plugin_ptr);
 }
 
-void OSRM_impl::RegisterPlugin(BasePlugin *plugin)
-{
-    SimpleLogger().Write() << "loaded plugin: " << plugin->GetDescriptor();
-    if (plugin_map.find(plugin->GetDescriptor()) != plugin_map.end())
-    {
-        delete plugin_map.find(plugin->GetDescriptor())->second;
-    }
-    plugin_map.emplace(plugin->GetDescriptor(), plugin);
-}
-
-int OSRM_impl::RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result)
+int OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
 {
     const auto &plugin_iterator = plugin_map.find(route_parameters.service);
 
@@ -171,11 +159,11 @@ void OSRM_impl::increase_concurrent_query_count()
 }
 
 // proxy code for compilation firewall
-OSRM::OSRM(libosrm_config &lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config)) {}
+OSRM::OSRM(LibOSRMConfig lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(std::move(lib_config))) {}
 
 OSRM::~OSRM() { OSRM_pimpl_.reset(); }
 
-int OSRM::RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result)
+int OSRM::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
 {
     return OSRM_pimpl_->RunQuery(route_parameters, json_result);
 }

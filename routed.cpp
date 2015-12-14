@@ -72,10 +72,7 @@ int main(int argc, const char *argv[]) try
     std::string ip_address;
     int ip_port, requested_thread_num;
 
-    libosrm_config lib_config;
-    // make the behaviour of routed backward compatible
-    lib_config.use_shared_memory = false;
-
+    LibOSRMConfig lib_config;
     const unsigned init_result = GenerateServerProgramOptions(
         argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
         lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table,

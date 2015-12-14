@@ -182,13 +182,13 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         "threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
         "Number of threads to use")(
         "shared-memory,s",
-        boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
+        boost::program_options::value<bool>(&use_shared_memory)->implicit_value(false),
         "Load data from shared memory")(
         "max-table-size",
         boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
         "Max. locations supported in distance table query")(
         "max-matching-size",
-        boost::program_options::value<int>(&max_locations_map_matching)->default_value(2),
+        boost::program_options::value<int>(&max_locations_map_matching)->default_value(100),
         "Max. locations supported in map matching query");
 
     // hidden options, will be allowed both on command line and in config
@@ -262,9 +262,9 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     {
         return INIT_OK_START_ENGINE;
     }
-    if (1 > max_locations_distance_table)
+    if (2 > max_locations_distance_table)
     {
-        throw osrm::exception("Max location for distance table must be a positive number");
+        throw osrm::exception("Max location for distance table must be at least two");
     }
     if (2 > max_locations_map_matching)
     {

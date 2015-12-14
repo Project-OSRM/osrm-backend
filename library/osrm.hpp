@@ -49,9 +49,9 @@ class OSRM
     std::unique_ptr<OSRM_impl> OSRM_pimpl_;
 
   public:
-    explicit OSRM(libosrm_config &lib_config);
+    explicit OSRM(LibOSRMConfig lib_config);
     ~OSRM();
-    int RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result);
+    int RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result);
 };
 
 #endif // OSRM_HPP
