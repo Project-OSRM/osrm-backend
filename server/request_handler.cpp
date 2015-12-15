@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "http/reply.hpp"
 #include "http/request.hpp"
 
-#include "../library/osrm.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/string_util.hpp"
@@ -40,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/route_parameters.hpp>
 #include <osrm/json_container.hpp>
+#include <osrm/osrm.hpp>
 
 #include <ctime>
 

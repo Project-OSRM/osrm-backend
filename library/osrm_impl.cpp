@@ -34,7 +34,6 @@ class named_mutex;
 }
 
 #include "osrm_impl.hpp"
-#include "osrm.hpp"
 
 #include "../plugins/distance_table.hpp"
 #include "../plugins/hello_world.hpp"
@@ -56,13 +55,15 @@ class named_mutex;
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include <osrm/route_parameters.hpp>
+#include <osrm/libosrm_config.hpp>
+#include <osrm/osrm.hpp>
 
 #include <algorithm>
 #include <fstream>
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(LibOSRMConfig lib_config)
+OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig& lib_config)
 {
     if (lib_config.use_shared_memory)
     {
@@ -88,14 +89,14 @@ OSRM_impl::OSRM_impl(LibOSRMConfig lib_config)
     RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
 }
 
-void OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
+void OSRM::OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
 {
     std::unique_ptr<BasePlugin> plugin_ptr(raw_plugin_ptr);
     SimpleLogger().Write() << "loaded plugin: " << plugin_ptr->GetDescriptor();
     plugin_map[plugin_ptr->GetDescriptor()] = std::move(plugin_ptr);
 }
 
-int OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
+int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
 {
     const auto &plugin_iterator = plugin_map.find(route_parameters.service);
 
@@ -111,7 +112,7 @@ int OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::json::Obj
 }
 
 // decrease number of concurrent queries
-void OSRM_impl::decrease_concurrent_query_count()
+void OSRM::OSRM_impl::decrease_concurrent_query_count()
 {
     if (!barrier)
     {
@@ -133,7 +134,7 @@ void OSRM_impl::decrease_concurrent_query_count()
 }
 
 // increase number of concurrent queries
-void OSRM_impl::increase_concurrent_query_count()
+void OSRM::OSRM_impl::increase_concurrent_query_count()
 {
     if (!barrier)
     {
@@ -159,9 +160,10 @@ void OSRM_impl::increase_concurrent_query_count()
 }
 
 // proxy code for compilation firewall
-OSRM::OSRM(LibOSRMConfig lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(std::move(lib_config))) {}
+OSRM::OSRM(LibOSRMConfig &lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config)) {}
 
-OSRM::~OSRM() { OSRM_pimpl_.reset(); }
+// needed because unique_ptr needs the size of OSRM_impl for delete
+OSRM::~OSRM() {}
 
 int OSRM::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
 {

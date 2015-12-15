@@ -25,11 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "library/osrm.hpp"
 #include "server/server.hpp"
 #include "util/version.hpp"
 #include "util/routed_options.hpp"
 #include "util/simple_logger.hpp"
+
+#include <osrm/osrm.hpp>
+#include <osrm/libosrm_config.hpp>
 
 #ifdef __linux__
 #include <sys/mman.h>

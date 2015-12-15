@@ -45,7 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "typedefs.h"
 
 #include <osrm/coordinate.hpp>
-#include <osrm/server_paths.hpp>
 
 using RTreeLeaf = BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf;
 using RTreeNode = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode;
@@ -121,7 +120,7 @@ int main(const int argc, const char *argv[]) try
 
     SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
-    ServerPaths server_paths;
+    std::unordered_map<std::string, boost::filesystem::path> server_paths;
     if (!GenerateDataStoreOptions(argc, argv, server_paths))
     {
         return EXIT_SUCCESS;
@@ -160,7 +159,7 @@ int main(const int argc, const char *argv[]) try
         throw osrm::exception("no core file found");
     }
 
-    ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
+    auto paths_iterator = server_paths.find("hsgrdata");
     BOOST_ASSERT(server_paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &hsgr_path = paths_iterator->second;

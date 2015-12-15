@@ -375,7 +375,7 @@ if(BUILD_TOOLS)
   install(TARGETS osrm-springclean DESTINATION bin)
 endif()
 
-file(GLOB InstallGlob include/osrm/*.hpp library/osrm.hpp)
+file(GLOB InstallGlob include/osrm/*.hpp)
 file(GLOB VariantGlob third_party/variant/*.hpp)
 
 # Add RPATH info to executables so that when they are run after being installed

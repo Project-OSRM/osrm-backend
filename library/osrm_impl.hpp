@@ -35,6 +35,7 @@ struct RouteParameters;
 
 #include <osrm/json_container.hpp>
 #include <osrm/libosrm_config.hpp>
+#include <osrm/osrm.hpp>
 
 #include <memory>
 #include <unordered_map>
@@ -43,13 +44,13 @@ struct RouteParameters;
 struct SharedBarriers;
 template <class EdgeDataT> class BaseDataFacade;
 
-class OSRM_impl final
+class OSRM::OSRM_impl final
 {
   private:
     using PluginMap = std::unordered_map<std::string, std::unique_ptr<BasePlugin>>;
 
   public:
-    OSRM_impl(LibOSRMConfig lib_config);
+    OSRM_impl(LibOSRMConfig &lib_config);
     OSRM_impl(const OSRM_impl &) = delete;
     int RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result);
 

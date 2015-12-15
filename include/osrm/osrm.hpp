@@ -28,11 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_HPP
 #define OSRM_HPP
 
-#include <osrm/libosrm_config.hpp>
-
 #include <memory>
 
-class OSRM_impl;
+class LibOSRMConfig;
 struct RouteParameters;
 
 namespace osrm
@@ -46,11 +44,12 @@ struct Object;
 class OSRM
 {
   private:
+    class OSRM_impl;
     std::unique_ptr<OSRM_impl> OSRM_pimpl_;
 
   public:
-    explicit OSRM(LibOSRMConfig lib_config);
-    ~OSRM();
+    OSRM(LibOSRMConfig &lib_config);
+    ~OSRM(); // needed because we need to define it with the implementation of OSRM_impl
     int RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result);
 };
 
