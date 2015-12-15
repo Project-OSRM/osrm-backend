@@ -301,7 +301,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         // enforce maximum number of locations for performance reasons
         if (max_locations_map_matching > 0 &&
-            static_cast<int>(input_coords.size()) < max_locations_map_matching)
+            static_cast<int>(input_coords.size()) > max_locations_map_matching)
         {
             json_result.values["status"] = 400;
             json_result.values["status_message"] = "Too many coodindates.";
