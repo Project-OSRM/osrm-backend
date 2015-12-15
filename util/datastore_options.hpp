@@ -33,16 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "osrm_exception.hpp"
 #include "simple_logger.hpp"
 
-#include <osrm/server_paths.hpp>
-
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <string>
+#include <unordered_map>
 
 // generate boost::program_options object for the routing part
-bool GenerateDataStoreOptions(const int argc, const char *argv[], ServerPaths &paths)
+bool GenerateDataStoreOptions(const int argc, const char *argv[], std::unordered_map<std::string, boost::filesystem::path> &paths)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");

@@ -36,15 +36,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/any.hpp>
 #include <boost/program_options.hpp>
 
-#include <osrm/server_paths.hpp>
-
+#include <unordered_map>
 #include <fstream>
 #include <string>
 const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
-inline void populate_base_path(ServerPaths &server_paths)
+inline void populate_base_path(std::unordered_map<std::string, boost::filesystem::path> &server_paths)
 {
     // populate the server_path object
     auto path_iterator = server_paths.find("base");
@@ -138,7 +137,7 @@ inline void populate_base_path(ServerPaths &server_paths)
 // generate boost::program_options object for the routing part
 inline unsigned GenerateServerProgramOptions(const int argc,
                                              const char *argv[],
-                                             ServerPaths &paths,
+                                             std::unordered_map<std::string, boost::filesystem::path> &paths,
                                              std::string &ip_address,
                                              int &ip_port,
                                              int &requested_num_threads,
