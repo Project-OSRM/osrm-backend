@@ -7,5 +7,5 @@ Description: Project OSRM library
 Version: v@OSRM_VERSION_MAJOR@.@OSRM_VERSION_MINOR@.@OSRM_VERSION_PATCH@
 Requires:
 Libs: -L${libdir} -lOSRM
-Libs.private: @BOOST_LIBRARY_LISTING@
+Libs.private: @BOOST_LIBRARY_LISTING@ @TBB_LIBRARY_LISTING@
 Cflags: -I${includedir}
