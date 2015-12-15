@@ -269,7 +269,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     {
         return INIT_OK_START_ENGINE;
     }
-    else
+    else if (use_shared_memory && option_variables.count("base"))
     {
         SimpleLogger().Write(logWARNING) << "Shared memory settings conflict with path settings.";
     }
