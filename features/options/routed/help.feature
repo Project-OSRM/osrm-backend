@@ -27,7 +27,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--shared-memory"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And stdout should contain 26 lines
+        And stdout should contain 27 lines
         And it should exit with code 0
 
     Scenario: osrm-routed - Help, short
@@ -53,7 +53,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--shared-memory"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And stdout should contain 26 lines
+        And stdout should contain 27 lines
         And it should exit with code 0
 
     Scenario: osrm-routed - Help, long
@@ -79,5 +79,5 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--shared-memory"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And stdout should contain 26 lines
+        And stdout should contain 27 lines
         And it should exit with code 0
