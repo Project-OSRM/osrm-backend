@@ -44,7 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../util/simple_logger.hpp"
 
 #include <osrm/coordinate.hpp>
-#include <osrm/server_paths.hpp>
 
 #include <boost/thread.hpp>
 
@@ -260,7 +259,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         m_geospatial_query.reset();
     }
 
-    explicit InternalDataFacade(const ServerPaths &server_paths)
+    explicit InternalDataFacade(const std::unordered_map<std::string, boost::filesystem::path> &server_paths)
     {
         // cache end iterator to quickly check .find against
         const auto end_it = end(server_paths);
