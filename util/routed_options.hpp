@@ -181,7 +181,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         "threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
         "Number of threads to use")(
         "shared-memory,s",
-        boost::program_options::value<bool>(&use_shared_memory)->implicit_value(false),
+        boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true)->default_value(false),
         "Load data from shared memory")(
         "max-table-size",
         boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
@@ -252,15 +252,6 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     {
         throw osrm::exception("Number of threads must be a positive number");
     }
-
-    if (!use_shared_memory && option_variables.count("base"))
-    {
-        return INIT_OK_START_ENGINE;
-    }
-    if (use_shared_memory && !option_variables.count("base"))
-    {
-        return INIT_OK_START_ENGINE;
-    }
     if (2 > max_locations_distance_table)
     {
         throw osrm::exception("Max location for distance table must be at least two");
@@ -269,6 +260,20 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     {
         throw osrm::exception("Max location for map matching must be at least two");
     }
+
+    if (!use_shared_memory && option_variables.count("base"))
+    {
+        return INIT_OK_START_ENGINE;
+    }
+    else if (use_shared_memory && !option_variables.count("base"))
+    {
+        return INIT_OK_START_ENGINE;
+    }
+    else
+    {
+        SimpleLogger().Write(logWARNING) << "Shared memory settings conflict with path settings.";
+    }
+
 
     SimpleLogger().Write() << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
