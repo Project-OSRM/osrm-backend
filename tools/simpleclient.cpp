@@ -25,7 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../library/osrm.hpp"
 #include "util/version.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/routed_options.hpp"
@@ -34,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/json_container.hpp>
 #include <osrm/libosrm_config.hpp>
 #include <osrm/route_parameters.hpp>
+#include <osrm/osrm.hpp>
 
 #include <string>
 
@@ -45,7 +45,7 @@ int main(int argc, const char *argv[])
         std::string ip_address;
         int ip_port, requested_thread_num, max_locations_map_matching;
         bool trial_run = false;
-        libosrm_config lib_config;
+        LibOSRMConfig lib_config;
         const unsigned init_result = GenerateServerProgramOptions(
             argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
             lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table,
