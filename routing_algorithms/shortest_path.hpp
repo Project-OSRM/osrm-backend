@@ -352,16 +352,15 @@ class ShortestPathRouting final
             BOOST_ASSERT(!search_from_forward_node || source_phantom.forward_node_id != SPECIAL_NODEID);
             BOOST_ASSERT(!search_from_reverse_node || source_phantom.reverse_node_id != SPECIAL_NODEID);
 
-
             if (source_phantom.forward_node_id == target_phantom.forward_node_id &&
                 source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
             {
-                search_to_forward_node = false;
+                search_to_forward_node = search_from_reverse_node;
             }
             if (source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
                 source_phantom.GetReverseWeightPlusOffset() > target_phantom.GetReverseWeightPlusOffset())
             {
-                search_to_reverse_node = false;
+                search_to_reverse_node = search_from_forward_node;
             }
 
             BOOST_ASSERT(search_from_forward_node || search_from_reverse_node);
