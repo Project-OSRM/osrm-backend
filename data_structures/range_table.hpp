@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <vector>
 #include <array>
+#include <stxxl/vector>
 
 /*
  * These pre-declarations are needed because parsing C++ is hard
@@ -82,7 +83,7 @@ template <unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY> class RangeTable
     }
 
     // construct table from length vector
-    explicit RangeTable(const std::vector<unsigned> &lengths)
+    explicit RangeTable(const stxxl::vector<unsigned> &lengths)
     {
         const unsigned number_of_blocks = [&lengths]()
         {
