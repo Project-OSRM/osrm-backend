@@ -46,14 +46,14 @@ class BasePlugin
     virtual ~BasePlugin() {}
     virtual const std::string GetDescriptor() const = 0;
     virtual int HandleRequest(const RouteParameters &, osrm::json::Object &) = 0;
-    virtual bool
-    check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates, const unsigned min = 2) const final
+    virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates,
+                                       const unsigned min = 2) const final
     {
         if (min > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
-                                                  [](const FixedPointCoordinate &coordinate)
-                                                  {
-                                                      return !coordinate.is_valid();
-                                                  }))
+                                                    [](const FixedPointCoordinate &coordinate)
+                                                    {
+                                                        return !coordinate.is_valid();
+                                                    }))
         {
             return false;
         }
@@ -62,16 +62,18 @@ class BasePlugin
 
     // Decides whether to use the phantom node from a big or small component if both are found.
     // Returns true if all phantom nodes are in the same component after snapping.
-    bool snapPhantomNodes(std::vector<std::pair<PhantomNode, PhantomNode>> &phantom_node_pair_list) const
+    std::vector<PhantomNode> snapPhantomNodes(
+        const std::vector<std::pair<PhantomNode, PhantomNode>> &phantom_node_pair_list) const
     {
-        const auto check_component_id_is_tiny = [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
+        const auto check_component_id_is_tiny =
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
         {
             return phantom_pair.first.component.is_tiny;
         };
 
-
         // are all phantoms from a tiny cc?
-        const auto check_all_in_same_component = [](const std::vector<std::pair<PhantomNode, PhantomNode>> &nodes)
+        const auto check_all_in_same_component =
+            [](const std::vector<std::pair<PhantomNode, PhantomNode>> &nodes)
         {
             const auto component_id = nodes.front().first.component.id;
 
@@ -82,13 +84,20 @@ class BasePlugin
                                });
         };
 
-        const auto swap_phantom_from_big_cc_into_front = [](std::pair<PhantomNode, PhantomNode> &phantom_pair)
+        const auto fallback_to_big_component =
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
         {
-            if (phantom_pair.first.component.is_tiny && phantom_pair.second.is_valid() && !phantom_pair.second.component.is_tiny)
+            if (phantom_pair.first.component.is_tiny && phantom_pair.second.is_valid() &&
+                !phantom_pair.second.component.is_tiny)
             {
-                using std::swap;
-                swap(phantom_pair.first, phantom_pair.second);
+                return phantom_pair.second;
             }
+            return phantom_pair.first;
+        };
+
+        const auto use_closed_phantom = [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
+        {
+            return phantom_pair.first;
         };
 
         const bool every_phantom_is_in_tiny_cc =
@@ -96,17 +105,23 @@ class BasePlugin
                         check_component_id_is_tiny);
         auto all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
 
-        // The only case we don't snap to the big component if all phantoms are in the same small component
-        if (!every_phantom_is_in_tiny_cc || !all_in_same_component)
-        {
-            std::for_each(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
-                          swap_phantom_from_big_cc_into_front);
+        std::vector<PhantomNode> snapped_phantoms;
+        snapped_phantoms.reserve(phantom_node_pair_list.size());
 
-            // update check with new component ids
-            all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
+        // The only case we don't snap to the big component if all phantoms are in the same small
+        // component
+        if (every_phantom_is_in_tiny_cc && all_in_same_component)
+        {
+            std::transform(phantom_node_pair_list.begin(), phantom_node_pair_list.end(),
+                           std::back_inserter(snapped_phantoms), use_closed_phantom);
+        }
+        else
+        {
+            std::transform(phantom_node_pair_list.begin(), phantom_node_pair_list.end(),
+                           std::back_inserter(snapped_phantoms), fallback_to_big_component);
         }
 
-        return all_in_same_component;
+        return snapped_phantoms;
     }
 };
 

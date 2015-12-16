@@ -77,13 +77,16 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
+            json_result.values["status_message"] = "Invalid coordinates.";
             return 400;
         }
 
         const auto &input_bearings = route_parameters.bearings;
-        if (input_bearings.size() > 0 && route_parameters.coordinates.size() != input_bearings.size())
+        if (input_bearings.size() > 0 &&
+            route_parameters.coordinates.size() != input_bearings.size())
         {
-            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            json_result.values["status_message"] =
+                "Number of bearings does not match number of coordinates.";
             return 400;
         }
 
@@ -103,28 +106,32 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 }
             }
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
-            const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
-            phantom_node_pair_list[i] = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+            const int range = input_bearings.size() > 0
+                                  ? (input_bearings[i].second ? *input_bearings[i].second : 10)
+                                  : 180;
+            phantom_node_pair_list[i] = facade->NearestPhantomNodeWithAlternativeFromBigComponent(
+                route_parameters.coordinates[i], bearing, range);
             // we didn't found a fitting node, return error
             if (!phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
             {
-                json_result.values["status_message"] = std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
+                json_result.values["status_message"] =
+                    std::string("Could not find a matching segment for coordinate ") +
+                    std::to_string(i);
                 return 400;
             }
             BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
             BOOST_ASSERT(phantom_node_pair_list[i].second.is_valid(facade->GetNumberOfNodes()));
         }
 
-        auto all_in_same_component = snapPhantomNodes(phantom_node_pair_list);
+        auto snapped_phantoms = snapPhantomNodes(phantom_node_pair_list);
 
         InternalRouteResult raw_route;
-        auto build_phantom_pairs =
-            [&raw_route](const PhantomNodePair &first_pair, const PhantomNodePair &second_pair)
+        auto build_phantom_pairs = [&raw_route](const PhantomNode &first_node,
+                                                const PhantomNode &second_node)
         {
-            raw_route.segment_end_coordinates.emplace_back(
-                PhantomNodes{first_pair.first, second_pair.first});
+            raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
         };
-        osrm::for_each_pair(phantom_node_pair_list, build_phantom_pairs);
+        osrm::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
         if (1 == raw_route.segment_end_coordinates.size())
         {
@@ -171,10 +178,20 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         // we can only know this after the fact, different SCC ids still
         // allow for connection in one direction.
-        if (!all_in_same_component && no_route)
+        if (no_route)
         {
-            json_result.values["status_message"] = "Impossible route between points.";
-            return 400;
+            auto first_component_id = snapped_phantoms.front().component.id;
+            auto not_in_same_component =
+                std::any_of(snapped_phantoms.begin(), snapped_phantoms.end(),
+                            [first_component_id](const PhantomNode &node)
+                            {
+                                return node.component.id != first_component_id;
+                            });
+            if (not_in_same_component)
+            {
+                json_result.values["status_message"] = "Impossible route between points.";
+                return 400;
+            }
         }
 
         return 200;

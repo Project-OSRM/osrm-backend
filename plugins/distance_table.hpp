@@ -181,11 +181,11 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         BOOST_ASSERT((phantom_node_target_out_iter - phantom_node_target_vector.begin()) ==
                      number_of_destination);
 
-        snapPhantomNodes(phantom_node_source_vector);
-        snapPhantomNodes(phantom_node_target_vector);
+        // FIXME we should clear phantom_node_source_vector and phantom_node_target_vector after this
+        auto snapped_source_phantoms = snapPhantomNodes(phantom_node_source_vector);
+        auto snapped_target_phantoms = snapPhantomNodes(phantom_node_target_vector);
 
-        std::shared_ptr<std::vector<EdgeWeight>> result_table = search_engine_ptr->distance_table(
-            phantom_node_source_vector, phantom_node_target_vector);
+        auto result_table = search_engine_ptr->distance_table(snapped_source_phantoms, snapped_target_phantoms);
 
         if (!result_table)
         {
@@ -203,23 +203,22 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             matrix_json_array.values.push_back(json_row);
         }
         json_result.values["distance_table"] = matrix_json_array;
+
         osrm::json::Array target_coord_json_array;
-        for (const auto &pair : phantom_node_target_vector)
+        for (const auto &phantom : snapped_target_phantoms)
         {
             osrm::json::Array json_coord;
-            FixedPointCoordinate coord = pair.first.location;
-            json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
-            json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
+            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
+            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
             target_coord_json_array.values.push_back(json_coord);
         }
         json_result.values["destination_coordinates"] = target_coord_json_array;
         osrm::json::Array source_coord_json_array;
-        for (const auto &pair : phantom_node_source_vector)
+        for (const auto &phantom : snapped_source_phantoms)
         {
             osrm::json::Array json_coord;
-            FixedPointCoordinate coord = pair.first.location;
-            json_coord.values.push_back(coord.lat / COORDINATE_PRECISION);
-            json_coord.values.push_back(coord.lon / COORDINATE_PRECISION);
+            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
+            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
             source_coord_json_array.values.push_back(json_coord);
         }
         json_result.values["source_coordinates"] = source_coord_json_array;

@@ -72,11 +72,13 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    void GetPhantomNodes(const RouteParameters &route_parameters,
-                         std::vector<PhantomNodePair> &phantom_node_pair_list)
+    std::vector<PhantomNode> GetPhantomNodes(const RouteParameters &route_parameters)
     {
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
         const auto &input_bearings = route_parameters.bearings;
+
+        std::vector<PhantomNode> phantom_node_list;
+        phantom_node_list.reserve(route_parameters.coordinates.size());
 
         // find phantom nodes for all input coords
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
@@ -89,17 +91,17 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
-                    phantom_node_pair_list[i] = std::make_pair(current_phantom_node, current_phantom_node);
+                    phantom_node_list.push_back(std::move(current_phantom_node));
                     continue;
                 }
             }
             const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
             const int range = input_bearings.size() > 0 ? (input_bearings[i].second?*input_bearings[i].second:10) : 180;
-            auto phantom_nodes = facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range);
-            // FIXME we only use the pair because that is what DistanceTable expects
-            phantom_node_pair_list[i] = std::make_pair(phantom_nodes.front().phantom_node, phantom_nodes.front().phantom_node);
-            BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
+            phantom_node_list.push_back(facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range).front().phantom_node);
+            BOOST_ASSERT(phantom_node_list.back().is_valid(facade->GetNumberOfNodes()));
         }
+
+        return phantom_node_list;
     }
 
     // Object to hold all strongly connected components (scc) of a graph
@@ -203,7 +205,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         json_result.values["permutation"] = json_permutation;
     }
 
-    InternalRouteResult ComputeRoute(const std::vector<PhantomNodePair> &phantom_node_pair_list,
+    InternalRouteResult ComputeRoute(const std::vector<PhantomNode> &phantom_node_list,
                                      const RouteParameters &route_parameters,
                                      const std::vector<NodeID> &trip)
     {
@@ -220,7 +222,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             const auto to_node = std::next(it) != end ? *std::next(it) : *start;
 
             viapoint =
-                PhantomNodes{phantom_node_pair_list[from_node].first, phantom_node_pair_list[to_node].first};
+                PhantomNodes{phantom_node_list[from_node], phantom_node_list[to_node]};
             min_route.segment_end_coordinates.emplace_back(viapoint);
         }
         BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
@@ -243,24 +245,24 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // check if all inputs are coordinates
         if (!check_all_coordinates(route_parameters.coordinates))
         {
+            json_result.values["status_message"] = "Invalid coordinates.";
             return 400;
         }
 
         const auto &input_bearings = route_parameters.bearings;
         if (input_bearings.size() > 0 && route_parameters.coordinates.size() != input_bearings.size())
         {
-            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            json_result.values["status_message"] = "Number of bearings does not match number of coordinates.";
             return 400;
         }
 
         // get phantom nodes
-        std::vector<PhantomNodePair> phantom_node_pair_list(route_parameters.coordinates.size());
-        GetPhantomNodes(route_parameters, phantom_node_pair_list);
-        const auto number_of_locations = phantom_node_pair_list.size();
+        auto phantom_node_list = GetPhantomNodes(route_parameters);
+        const auto number_of_locations = phantom_node_list.size();
 
         // compute the distance table of all phantom nodes
         const auto result_table = DistTableWrapper<EdgeWeight>(
-            *search_engine_ptr->distance_table(phantom_node_pair_list, phantom_node_pair_list), number_of_locations);
+            *search_engine_ptr->distance_table(phantom_node_list, phantom_node_list), number_of_locations);
 
         if (result_table.size() == 0)
         {
@@ -328,7 +330,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         comp_route.reserve(route_result.size());
         for (auto &elem : route_result)
         {
-            comp_route.push_back(ComputeRoute(phantom_node_pair_list, route_parameters, elem));
+            comp_route.push_back(ComputeRoute(phantom_node_list, route_parameters, elem));
         }
 
         TIMER_STOP(TRIP_TIMER);
