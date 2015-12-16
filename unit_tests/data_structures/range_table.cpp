@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/test/test_case_template.hpp>
 
 #include <numeric>
+#include <stxxl/vector>
 
 constexpr unsigned BLOCK_SIZE = 16;
 typedef RangeTable<BLOCK_SIZE, false> TestRangeTable;
