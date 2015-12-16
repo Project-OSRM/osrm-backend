@@ -69,9 +69,6 @@ class BasePlugin
             return phantom_pair.first.component.is_tiny;
         };
 
-        const bool every_phantom_is_in_tiny_cc =
-            std::all_of(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
-                        check_component_id_is_tiny);
 
         // are all phantoms from a tiny cc?
         const auto check_all_in_same_component = [](const std::vector<std::pair<PhantomNode, PhantomNode>> &nodes)
@@ -85,19 +82,22 @@ class BasePlugin
                                });
         };
 
-        auto swap_phantom_from_big_cc_into_front = [](std::pair<PhantomNode, PhantomNode> &phantom_pair)
+        const auto swap_phantom_from_big_cc_into_front = [](std::pair<PhantomNode, PhantomNode> &phantom_pair)
         {
             if (phantom_pair.first.component.is_tiny && phantom_pair.second.is_valid() && !phantom_pair.second.component.is_tiny)
             {
-                using namespace std;
+                using std::swap;
                 swap(phantom_pair.first, phantom_pair.second);
             }
         };
 
+        const bool every_phantom_is_in_tiny_cc =
+            std::all_of(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
+                        check_component_id_is_tiny);
         auto all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
 
-        // this case is true if we take phantoms from the big CC
-        if (every_phantom_is_in_tiny_cc && !all_in_same_component)
+        // The only case we don't snap to the big component if all phantoms are in the same small component
+        if (!every_phantom_is_in_tiny_cc || !all_in_same_component)
         {
             std::for_each(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
                           swap_phantom_from_big_cc_into_front);
