@@ -76,6 +76,26 @@ Feature: Snap start/end point to the nearest way
             | a    | k  | jkla      |
             | a    | l  | jkla      |
 
+    Scenario: Snapping in viaroute
+        Given the extract extra arguments "--small-component-size 4"
+        Given the node map
+            | a |   | c | e |
+            | b |   | d | f |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | cd    |
+            | df    |
+            | fe    |
+            | ec    |
+
+        When I route I should get
+            | from | to | route |
+            | a    | b  | ab    |
+            | a    | d  | cd    |
+            | c    | d  | cd    |
+
     Scenario: Snap to correct way at large scales
         Given a grid size of 1000 meters
         Given the node map
