@@ -125,7 +125,7 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
     for (std::size_t j = 2; j < component_size; ++j)
     {
 
-        auto farthest_distance = 0;
+        auto farthest_distance = -std::numeric_limits<int>::max();
         auto next_node = -1;
         NodeIDIter next_insert_point;
 
