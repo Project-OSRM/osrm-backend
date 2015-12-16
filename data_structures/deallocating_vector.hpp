@@ -237,6 +237,12 @@ class DeallocatingVectorRemoveIterator
     }
 };
 
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
+class DeallocatingVector;
+
+template<typename T, std::size_t S>
+void swap(DeallocatingVector<T, S>& lhs, DeallocatingVector<T, S>& rhs);
+
 template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK = 8388608 / sizeof(ElementT)>
 class DeallocatingVector
 {
@@ -256,6 +262,8 @@ class DeallocatingVector
     }
 
     ~DeallocatingVector() { clear(); }
+
+    friend void swap<>(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK>& lhs, DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK>& rhs);
 
     void swap(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &other)
     {
@@ -385,5 +393,11 @@ class DeallocatingVector
         }
     }
 };
+
+template<typename T, std::size_t S>
+void swap(DeallocatingVector<T, S>& lhs, DeallocatingVector<T, S>& rhs)
+{
+    lhs.swap(rhs);
+}
 
 #endif /* DEALLOCATING_VECTOR_HPP */

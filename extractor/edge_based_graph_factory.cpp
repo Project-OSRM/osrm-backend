@@ -61,7 +61,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
 void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &output_edge_list)
 {
     BOOST_ASSERT_MSG(0 == output_edge_list.size(), "Vector is not empty");
-    std::swap(m_edge_based_edge_list, output_edge_list);
+    using std::swap; // Koenig swap
+    swap(m_edge_based_edge_list, output_edge_list);
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
@@ -75,12 +76,14 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
         BOOST_ASSERT(m_node_info_list.at(node.v).lat != INT_MAX);
     }
 #endif
-    std::swap(nodes, m_edge_based_node_list);
+    using std::swap; // Koenig swap
+    swap(nodes, m_edge_based_node_list);
 }
 
 void EdgeBasedGraphFactory::GetStartPointMarkers(std::vector<bool> &node_is_startpoint)
 {
-    std::swap(m_edge_based_node_is_startpoint, node_is_startpoint);
+    using std::swap; // Koenig swap
+    swap(m_edge_based_node_is_startpoint, node_is_startpoint);
 }
 
 unsigned EdgeBasedGraphFactory::GetHighestEdgeID()
