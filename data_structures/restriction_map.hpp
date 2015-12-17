@@ -154,9 +154,14 @@ class RestrictionMap
 
             for (RestrictionTarget &restriction_target : bucket)
             {
+                unsigned via_ways_length = restriction_target.via_ways.size();
                 if (node_v == restriction_target.target_node)
                 {
                     restriction_target.target_node = node_w;
+                }
+                else if (via_ways_length && node_v == restriction_target.via_ways[via_ways_length - 1])
+                {
+                    restriction_target.via_ways[via_ways_length - 1] = node_w;
                 }
             }
         }

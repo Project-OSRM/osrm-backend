@@ -86,6 +86,7 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
                 BOOST_ASSERT(via_way_target.via_nodes.size() == 0 && via_way_target.target_node == SPECIAL_NODEID);
 
                 m_restriction_start_nodes.insert(restriction.from.node);
+                m_no_turn_via_node_set.insert(restriction.via.node);
 
                 RestrictionSource restriction_source = {static_cast<NodeID>(restriction.from.node), static_cast<NodeID>(restriction.via.node)};
 
@@ -99,11 +100,14 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
             }
             else if (IsViaWay(restriction))
             {
+                m_no_turn_via_node_set.insert(restriction.via.node);
                 via_way_target.via_nodes.push_back(restriction.via.node);
             }
             else if (IsToWay(restriction))
             {
                 BOOST_ASSERT(via_way_targets.via_nodes.size() >= 1);
+                m_no_turn_via_node_set.insert(restriction.via.node);
+                m_no_turn_via_node_set.insert(restriction.to.node);
 
                 via_way_target.via_nodes.push_back(restriction.via.node);
                 via_way_target.via_nodes.push_back(restriction.to.node);
