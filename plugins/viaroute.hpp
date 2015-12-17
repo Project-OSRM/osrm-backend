@@ -75,7 +75,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &route_parameters,
+    Status HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
         if (max_locations_viaroute > 0 &&
@@ -84,13 +84,13 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             json_result.values["status_message"] =
                 "Number of entries " + std::to_string(route_parameters.coordinates.size()) +
                 " is higher than current maximum (" + std::to_string(max_locations_viaroute) + ")";
-            return 400;
+            return Status::Error;
         }
 
         if (!check_all_coordinates(route_parameters.coordinates))
         {
             json_result.values["status_message"] = "Invalid coordinates.";
-            return 400;
+            return Status::Error;
         }
 
         const auto &input_bearings = route_parameters.bearings;
@@ -99,7 +99,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         {
             json_result.values["status_message"] =
                 "Number of bearings does not match number of coordinates.";
-            return 400;
+            return Status::Error;
         }
 
         std::vector<PhantomNodePair> phantom_node_pair_list(route_parameters.coordinates.size());
@@ -129,7 +129,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 json_result.values["status_message"] =
                     std::string("Could not find a matching segment for coordinate ") +
                     std::to_string(i);
-                return 400;
+                return Status::NoSegment;
             }
             BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
             BOOST_ASSERT(phantom_node_pair_list[i].second.is_valid(facade->GetNumberOfNodes()));
@@ -166,11 +166,6 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         bool no_route = INVALID_EDGE_WEIGHT == raw_route.shortest_path_length;
 
-        if (no_route)
-        {
-            SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
-        }
-
         std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
         switch (descriptor_table.get_id(route_parameters.output_format))
         {
@@ -201,13 +196,12 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                             });
             if (not_in_same_component)
             {
-                SimpleLogger().Write(logDEBUG) << "Coordinates not in same component.";
                 json_result.values["status_message"] = "Impossible route between points.";
-                return 207;
+                return Status::EmptyResult;
             }
         }
 
-        return 200;
+        return Status::Ok;
     }
 };
 

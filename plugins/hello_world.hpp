@@ -46,7 +46,7 @@ class HelloWorldPlugin final : public BasePlugin
     virtual ~HelloWorldPlugin() {}
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &routeParameters,
+    Status HandleRequest(const RouteParameters &routeParameters,
                       osrm::json::Object &json_result) override final
     {
         std::string temp_string;
@@ -96,7 +96,7 @@ class HelloWorldPlugin final : public BasePlugin
             ++counter;
         }
         json_result.values["hints"] = json_hints;
-        return 200;
+        return Status::Ok;
     }
 
   private:

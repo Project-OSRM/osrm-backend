@@ -41,11 +41,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class BasePlugin
 {
   public:
+    enum class Status : int
+    {
+      Ok = 200,
+      EmptyResult = 207,
+      NoSegment = 208,
+      Error = 400
+    };
+
     BasePlugin() {}
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BasePlugin() {}
     virtual const std::string GetDescriptor() const = 0;
-    virtual int HandleRequest(const RouteParameters &, osrm::json::Object &) = 0;
+    virtual Status HandleRequest(const RouteParameters &, osrm::json::Object &) = 0;
     virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates,
                                        const unsigned min = 2) const final
     {

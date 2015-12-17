@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../descriptors/json_descriptor.hpp"          // to make json output
 #include "../util/make_unique.hpp"
 #include "../util/timing_util.hpp"        // to time runtime
-#include "../util/simple_logger.hpp"      // for logging output
+//#include "../util/simple_logger.hpp"      // for logging output
 #include "../util/dist_table_wrapper.hpp" // to access the dist
                                           // table more easily
 
@@ -101,10 +101,12 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             const int range = input_bearings.size() > 0
                                   ? (input_bearings[i].second ? *input_bearings[i].second : 10)
                                   : 180;
-            phantom_node_list.push_back(
-                facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range)
-                    .front()
-                    .phantom_node);
+            auto results = facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range);
+            if (results.empty())
+            {
+                break;
+            }
+            phantom_node_list.push_back(std::move(results.front().phantom_node));
             BOOST_ASSERT(phantom_node_list.back().is_valid(facade->GetNumberOfNodes()));
         }
 
@@ -246,7 +248,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         return min_route;
     }
 
-    int HandleRequest(const RouteParameters &route_parameters,
+    Status HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
         if (max_locations_trip > 0 &&
@@ -255,14 +257,14 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             json_result.values["status_message"] =
                 "Number of entries " + std::to_string(route_parameters.coordinates.size()) +
                 " is higher than current maximum (" + std::to_string(max_locations_trip) + ")";
-            return 400;
+            return Status::Error;
         }
 
         // check if all inputs are coordinates
         if (!check_all_coordinates(route_parameters.coordinates))
         {
             json_result.values["status_message"] = "Invalid coordinates.";
-            return 400;
+            return Status::Error;
         }
 
         const auto &input_bearings = route_parameters.bearings;
@@ -271,11 +273,20 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         {
             json_result.values["status_message"] =
                 "Number of bearings does not match number of coordinates.";
-            return 400;
+            return Status::Error;
         }
 
         // get phantom nodes
         auto phantom_node_list = GetPhantomNodes(route_parameters);
+        if (phantom_node_list.size() != route_parameters.coordinates.size())
+        {
+            BOOST_ASSERT(phantom_node_list.size() < route_parameters.coordinates.size());
+            json_result.values["status_message"] =
+                std::string("Could not find a matching segment for coordinate ") +
+                std::to_string(phantom_node_list.size());
+            return Status::NoSegment;
+        }
+
         const auto number_of_locations = phantom_node_list.size();
 
         // compute the distance table of all phantom nodes
@@ -285,7 +296,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         if (result_table.size() == 0)
         {
-            return 400;
+            return Status::Error;
         }
 
         const constexpr std::size_t BF_MAX_FEASABLE = 10;
@@ -354,9 +365,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         TIMER_STOP(TRIP_TIMER);
 
-        SimpleLogger().Write() << "Trip calculation took: " << TIMER_MSEC(TRIP_TIMER) / 1000.
-                               << "s";
-
         // prepare JSON output
         // create a json object for every trip
         osrm::json::Array trip;
@@ -381,11 +389,11 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         if (trip.values.empty())
         {
             json_result.values["status_message"] = "Cannot find trips.";
-            return 207;
+            return Status::EmptyResult;
         }
 
         json_result.values["status_message"] = "Found trips.";
-        return 200;
+        return Status::Ok;
     }
 };
 

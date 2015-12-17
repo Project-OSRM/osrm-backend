@@ -67,13 +67,13 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &route_parameters,
+    Status HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
             json_result.values["status_message"] = "Coordinates are invalid.";
-            return 400;
+            return Status::Error;
         }
 
         const auto &input_bearings = route_parameters.bearings;
@@ -82,7 +82,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         {
             json_result.values["status_message"] =
                 "Number of bearings does not match number of coordinates.";
-            return 400;
+            return Status::Error;
         }
 
         auto number_of_sources =
@@ -106,7 +106,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 "Number of entries " + std::to_string(number_of_sources * number_of_destination) +
                 " is higher than current maximum (" +
                 std::to_string(max_locations_distance_table * max_locations_distance_table) + ")";
-            return 400;
+            return Status::Error;
         }
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
@@ -160,7 +160,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 {
                     json_result.values["status_message"] =
                         std::string("Could not find matching road for via ") + std::to_string(i);
-                    return 400;
+                    return Status::NoSegment;
                 }
 
                 if (route_parameters.is_destination[i])
@@ -182,7 +182,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 {
                     json_result.values["status_message"] =
                         std::string("Could not find matching road for via ") + std::to_string(i);
-                    return 400;
+                    return Status::NoSegment;
                 }
                 phantom_node_target_out_iter++;
             }
@@ -204,7 +204,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         if (!result_table)
         {
             json_result.values["status_message"] = "No distance table found.";
-            return 400;
+            return Status::EmptyResult;
         }
 
         osrm::json::Array matrix_json_array;
@@ -236,7 +236,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             source_coord_json_array.values.push_back(json_coord);
         }
         json_result.values["source_coordinates"] = source_coord_json_array;
-        return 200;
+        return Status::Ok;
     }
 
   private:

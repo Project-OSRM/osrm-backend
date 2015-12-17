@@ -93,14 +93,17 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return label_with_confidence;
     }
 
-    bool getCandidates(const std::vector<FixedPointCoordinate> &input_coords,
-                      const std::vector<std::pair<const int,const boost::optional<int>>> &input_bearings,
-                      const double gps_precision,
-                      std::vector<double> &sub_trace_lengths,
-                      osrm::matching::CandidateLists &candidates_lists)
+    osrm::matching::CandidateLists getCandidates(
+        const std::vector<FixedPointCoordinate> &input_coords,
+        const std::vector<std::pair<const int, const boost::optional<int>>> &input_bearings,
+        const double gps_precision,
+        std::vector<double> &sub_trace_lengths)
     {
+        osrm::matching::CandidateLists candidates_lists;
+
         double query_radius = 10 * gps_precision;
-        double last_distance = coordinate_calculation::haversine_distance(input_coords[0], input_coords[1]);
+        double last_distance =
+            coordinate_calculation::haversine_distance(input_coords[0], input_coords[1]);
 
         sub_trace_lengths.resize(input_coords.size());
         sub_trace_lengths[0] = 0;
@@ -109,7 +112,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             bool allow_uturn = false;
             if (0 < current_coordinate)
             {
-                last_distance = coordinate_calculation::haversine_distance(input_coords[current_coordinate - 1], input_coords[current_coordinate]);
+                last_distance = coordinate_calculation::haversine_distance(
+                    input_coords[current_coordinate - 1], input_coords[current_coordinate]);
 
                 sub_trace_lengths[current_coordinate] +=
                     sub_trace_lengths[current_coordinate - 1] + last_distance;
@@ -130,26 +134,36 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             // Use bearing values if supplied, otherwise fallback to 0,180 defaults
             auto bearing = input_bearings.size() > 0 ? input_bearings[current_coordinate].first : 0;
-            auto range = input_bearings.size() > 0 ? (input_bearings[current_coordinate].second ? *input_bearings[current_coordinate].second : 10 ) : 180;
-            auto candidates = facade->NearestPhantomNodesInRange(input_coords[current_coordinate], query_radius, bearing, range);
+            auto range = input_bearings.size() > 0
+                             ? (input_bearings[current_coordinate].second
+                                    ? *input_bearings[current_coordinate].second
+                                    : 10)
+                             : 180;
+            auto candidates = facade->NearestPhantomNodesInRange(input_coords[current_coordinate],
+                                                                 query_radius, bearing, range);
 
             if (candidates.size() == 0)
             {
-                return false;
+                break;
             }
 
             // sort by foward id, then by reverse id and then by distance
-            std::sort(candidates.begin(), candidates.end(),
-                [](const PhantomNodeWithDistance& lhs, const PhantomNodeWithDistance& rhs) {
+            std::sort(
+                candidates.begin(), candidates.end(),
+                [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
+                {
                     return lhs.phantom_node.forward_node_id < rhs.phantom_node.forward_node_id ||
-                            (lhs.phantom_node.forward_node_id == rhs.phantom_node.forward_node_id &&
-                             (lhs.phantom_node.reverse_node_id < rhs.phantom_node.reverse_node_id ||
-                              (lhs.phantom_node.reverse_node_id == rhs.phantom_node.reverse_node_id &&
-                               lhs.distance < rhs.distance)));
+                           (lhs.phantom_node.forward_node_id == rhs.phantom_node.forward_node_id &&
+                            (lhs.phantom_node.reverse_node_id < rhs.phantom_node.reverse_node_id ||
+                             (lhs.phantom_node.reverse_node_id ==
+                                  rhs.phantom_node.reverse_node_id &&
+                              lhs.distance < rhs.distance)));
                 });
 
-            auto new_end = std::unique(candidates.begin(), candidates.end(),
-                [](const PhantomNodeWithDistance& lhs, const PhantomNodeWithDistance& rhs) {
+            auto new_end = std::unique(
+                candidates.begin(), candidates.end(),
+                [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
+                {
                     return lhs.phantom_node.forward_node_id == rhs.phantom_node.forward_node_id &&
                            lhs.phantom_node.reverse_node_id == rhs.phantom_node.reverse_node_id;
                 });
@@ -166,7 +180,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                     {
                         PhantomNode reverse_node(candidates[i].phantom_node);
                         reverse_node.forward_node_id = SPECIAL_NODEID;
-                        candidates.push_back(PhantomNodeWithDistance { reverse_node, candidates[i].distance});
+                        candidates.push_back(
+                            PhantomNodeWithDistance{reverse_node, candidates[i].distance});
 
                         candidates[i].phantom_node.reverse_node_id = SPECIAL_NODEID;
                     }
@@ -175,14 +190,15 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             // sort by distance to make pruning effective
             std::sort(candidates.begin(), candidates.end(),
-                [](const PhantomNodeWithDistance& lhs, const PhantomNodeWithDistance& rhs) {
-                    return lhs.distance < rhs.distance;
-                });
+                      [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
+                      {
+                          return lhs.distance < rhs.distance;
+                      });
 
             candidates_lists.push_back(std::move(candidates));
         }
 
-        return true;
+        return candidates_lists;
     }
 
     osrm::json::Object submatchingToJSON(const osrm::matching::SubMatching &sub,
@@ -230,18 +246,18 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             if (route_parameters.geometry)
             {
-                subtrace.values["geometry"] = factory.AppendGeometryString(route_parameters.compression);
+                subtrace.values["geometry"] =
+                    factory.AppendGeometryString(route_parameters.compression);
             }
-
 
             if (route_parameters.print_instructions)
             {
                 std::vector<typename JSONDescriptor<DataFacadeT>::Segment> temp_segments;
-                subtrace.values["instructions"] = json_descriptor.BuildTextualDescription(factory, temp_segments);
+                subtrace.values["instructions"] =
+                    json_descriptor.BuildTextualDescription(factory, temp_segments);
             }
 
-            factory.BuildRouteSummary(factory.get_entire_length(),
-                                              raw_route.shortest_path_length);
+            factory.BuildRouteSummary(factory.get_entire_length(), raw_route.shortest_path_length);
             osrm::json::Object json_route_summary;
             json_route_summary.values["total_distance"] = factory.summary.distance;
             json_route_summary.values["total_time"] = factory.summary.duration;
@@ -262,61 +278,65 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         osrm::json::Array names;
         for (const auto &node : sub.nodes)
         {
-            names.values.emplace_back( facade->get_name_for_id(node.name_id) );
+            names.values.emplace_back(facade->get_name_for_id(node.name_id));
         }
         subtrace.values["matched_names"] = names;
 
         return subtrace;
     }
 
-    int HandleRequest(const RouteParameters &route_parameters,
-                      osrm::json::Object &json_result) final override
+    Status HandleRequest(const RouteParameters &route_parameters,
+                         osrm::json::Object &json_result) final override
     {
         // enforce maximum number of locations for performance reasons
         if (max_locations_map_matching > 0 &&
             static_cast<int>(route_parameters.coordinates.size()) > max_locations_map_matching)
         {
             json_result.values["status_message"] = "Too many coodindates.";
-            return 400;
+            return Status::Error;
         }
 
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))
         {
             json_result.values["status_message"] = "Invalid coordinates.";
-            return 400;
+            return Status::Error;
         }
 
         std::vector<double> sub_trace_lengths;
-        osrm::matching::CandidateLists candidates_lists;
         const auto &input_coords = route_parameters.coordinates;
         const auto &input_timestamps = route_parameters.timestamps;
         const auto &input_bearings = route_parameters.bearings;
         if (input_timestamps.size() > 0 && input_coords.size() != input_timestamps.size())
         {
-            json_result.values["status_message"] = "Number of timestamps does not match number of coordinates.";
-            return 400;
+            json_result.values["status_message"] =
+                "Number of timestamps does not match number of coordinates.";
+            return Status::Error;
         }
 
         if (input_bearings.size() > 0 && input_coords.size() != input_bearings.size())
         {
-            json_result.values["status_message"] = "Number of bearings does not match number of coordinates.";
-            return 400;
+            json_result.values["status_message"] =
+                "Number of bearings does not match number of coordinates.";
+            return Status::Error;
         }
 
         // enforce maximum number of locations for performance reasons
         if (static_cast<int>(input_coords.size()) < 2)
         {
             json_result.values["status_message"] = "At least two coordinates needed.";
-            return 400;
+            return Status::Error;
         }
 
-        const bool found_candidates =
-            getCandidates(input_coords, input_bearings, route_parameters.gps_precision, sub_trace_lengths, candidates_lists);
-        if (!found_candidates)
+        const auto candidates_lists = getCandidates(
+            input_coords, input_bearings, route_parameters.gps_precision, sub_trace_lengths);
+        if (candidates_lists.size() != input_coords.size())
         {
-            json_result.values["status_message"] = "No suitable matching candidates found.";
-            return 400;
+            BOOST_ASSERT(candidates_lists.size() < input_coords.size());
+            json_result.values["status_message"] =
+                std::string("Could not find a matching segment for coordinate ") +
+                std::to_string(candidates_lists.size());
+            return Status::NoSegment;
         }
 
         // setup logging if enabled
@@ -380,11 +400,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (sub_matchings.empty())
         {
             json_result.values["status_message"] = "Cannot find matchings.";
-            return 207;
+            return Status::EmptyResult;
         }
 
         json_result.values["status_message"] = "Found matchings.";
-        return 200;
+        return Status::Ok;
     }
 
   private:

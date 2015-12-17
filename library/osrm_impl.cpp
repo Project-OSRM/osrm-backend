@@ -111,7 +111,7 @@ int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::jso
     increase_concurrent_query_count();
     auto return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
     decrease_concurrent_query_count();
-    return return_code;
+    return static_cast<int>(return_code);
 }
 
 // decrease number of concurrent queries
