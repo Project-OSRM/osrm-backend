@@ -29,49 +29,111 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_list) : m_count(0)
 {
+    RestrictionTarget via_way_target;
+    std::size_t via_way_index;
+
     // decompose restriction consisting of a start, via and end node into a
     // a pair of starting edge and a list of all end nodes
     for (auto &restriction : restriction_list)
     {
-        // This downcasting is OK because when this is called, the node IDs have been
-        // renumbered into internal values, which should be well under 2^32
-        // This will be a problem if we have more than 2^32 actual restrictions
-        BOOST_ASSERT(restriction.from.node < std::numeric_limits<NodeID>::max());
-        BOOST_ASSERT(restriction.via.node < std::numeric_limits<NodeID>::max());
-        m_restriction_start_nodes.insert(restriction.from.node);
-        m_no_turn_via_node_set.insert(restriction.via.node);
-
-        // This explicit downcasting is also OK for the same reason.
-        RestrictionSource restriction_source = {static_cast<NodeID>(restriction.from.node), static_cast<NodeID>(restriction.via.node)};
-
-        std::size_t index;
-        auto restriction_iter = m_restriction_map.find(restriction_source);
-        if (restriction_iter == m_restriction_map.end())
+        if (!restriction.flags.uses_via_way)
         {
-            index = m_restriction_bucket_list.size();
-            m_restriction_bucket_list.resize(index + 1);
-            m_restriction_map.emplace(restriction_source, index);
+            // This downcasting is OK because when this is called, the node IDs have been
+            // renumbered into internal values, which should be well under 2^32
+            // This will be a problem if we have more than 2^32 actual restrictions
+            BOOST_ASSERT(restriction.from.node < std::numeric_limits<NodeID>::max());
+            BOOST_ASSERT(restriction.via.node < std::numeric_limits<NodeID>::max());
+            m_restriction_start_nodes.insert(restriction.from.node);
+            m_no_turn_via_node_set.insert(restriction.via.node);
+
+            // This explicit downcasting is also OK for the same reason.
+            RestrictionSource restriction_source = {static_cast<NodeID>(restriction.from.node), static_cast<NodeID>(restriction.via.node)};
+
+            std::size_t index;
+            auto restriction_iter = m_restriction_map.find(restriction_source);
+            if (restriction_iter == m_restriction_map.end())
+            {
+                index = m_restriction_bucket_list.size();
+                m_restriction_bucket_list.resize(index + 1);
+                m_restriction_map.emplace(restriction_source, index);
+            }
+            else
+            {
+                index = restriction_iter->second;
+                // Map already contains an is_only_*-restriction
+                if (m_restriction_bucket_list.at(index).begin()->is_only)
+                {
+                    continue;
+                }
+                else if (restriction.flags.is_only)
+                {
+                    // We are going to insert an is_only_*-restriction. There can be only one.
+                    m_count -= m_restriction_bucket_list.at(index).size();
+                    m_restriction_bucket_list.at(index).clear();
+                }
+            }
+            ++m_count;
+            BOOST_ASSERT(restriction.to.node < std::numeric_limits<NodeID>::max());
+            m_restriction_bucket_list.at(index)
+                .emplace_back(restriction.to.node, restriction.flags.is_only);
         }
         else
         {
-            index = restriction_iter->second;
-            // Map already contains an is_only_*-restriction
-            if (m_restriction_bucket_list.at(index).begin()->is_only)
+            // We are parsing the restrictions from the file in order, so we keep track of
+            // one restriction (and its nodes) at a time (i.e. via_way_target)
+            if (IsFromWay(restriction))
             {
-                continue;
+                BOOST_ASSERT(via_way_target.via_nodes.size() == 0 && via_way_target.target_node == SPECIAL_NODEID);
+
+                m_restriction_start_nodes.insert(restriction.from.node);
+
+                RestrictionSource restriction_source = {static_cast<NodeID>(restriction.from.node), static_cast<NodeID>(restriction.via.node)};
+
+                auto restriction_iter = m_restriction_map.find(restriction_source);
+                if (restriction_iter == m_restriction_map.end())
+                {
+                    via_way_index = m_restriction_bucket_list.size();
+                    m_restriction_bucket_list.resize(via_way_index + 1);
+                    m_restriction_map.emplace(restriction_source, via_way_index);
+                }
             }
-            else if (restriction.flags.is_only)
+            else if (IsViaWay(restriction))
             {
-                // We are going to insert an is_only_*-restriction. There can be only one.
-                m_count -= m_restriction_bucket_list.at(index).size();
-                m_restriction_bucket_list.at(index).clear();
+                via_way_target.via_nodes.push_back(restriction.via.node);
+            }
+            else if (IsToWay(restriction))
+            {
+                BOOST_ASSERT(via_way_targets.via_nodes.size() >= 1);
+
+                via_way_target.via_nodes.push_back(restriction.via.node);
+                via_way_target.via_nodes.push_back(restriction.to.node);
+                m_restriction_bucket_list.at(via_way_index).push_back(via_way_target);
+                ++m_count;
+                via_way_target.reset();
             }
         }
-        ++m_count;
-        BOOST_ASSERT(restriction.to.node < std::numeric_limits<NodeID>::max());
-        m_restriction_bucket_list.at(index)
-            .emplace_back(restriction.to.node, restriction.flags.is_only);
     }
+}
+
+bool RestrictionMap::IsFromWay(const TurnRestriction &restriction) const
+{
+    return  restriction.from.node != SPECIAL_NODEID &&
+            restriction.via.node != SPECIAL_NODEID &&
+            restriction.to.node == SPECIAL_NODEID;
+}
+
+bool RestrictionMap::IsViaWay(const TurnRestriction &restriction) const
+{
+    return  restriction.from.node == SPECIAL_NODEID &&
+            restriction.via.node != SPECIAL_NODEID &&
+            restriction.to.node == SPECIAL_NODEID;
+}
+
+bool RestrictionMap::IsToWay(const TurnRestriction &restriction) const
+{
+    return  restriction.from.node == SPECIAL_NODEID &&
+            restriction.via.node != SPECIAL_NODEID &&
+            restriction.to.node != SPECIAL_NODEID;
 }
 
 bool RestrictionMap::IsViaNode(const NodeID node) const
@@ -132,6 +194,37 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID node_u, const No
         }
     }
     return SPECIAL_NODEID;
+}
+
+// Checks if a turn restriction is a via way restriction and returns the nodes associated with
+// each of the restriction.
+std::vector<std::vector<NodeID>> RestrictionMap::CheckForViaWayRestrictions(const NodeID node_u,
+                                                                            const NodeID node_v) const
+{
+    BOOST_ASSERT(node_u != SPECIAL_NODEID);
+    BOOST_ASSERT(node_v != SPECIAL_NODEID);
+
+    std::vector<std::vector<NodeID>> via_way_nodes_list;
+
+    if (!IsSourceNode(node_u))
+    {
+        return via_way_nodes_list;
+    }
+
+    const auto restriction_iter = m_restriction_map.find({node_u, node_v});
+    if (restriction_iter != m_restriction_map.end())
+    {
+        const unsigned index = restriction_iter->second;
+        const auto &bucket = m_restriction_bucket_list.at(index);
+        for (const RestrictionTarget &restriction_target : bucket)
+        {
+            if (restriction_target.via_nodes.size())
+            {
+                via_way_nodes_list.push_back(restriction_target.via_nodes);
+            }
+        }
+    }
+    return via_way_nodes_list;
 }
 
 // Checks if turn <u,v,w> is actually a turn restriction.
