@@ -8,8 +8,8 @@ def test_routability_row i
     r[:query] = @query
     r[:json] = JSON.parse(r[:response].body)
 
-    r[:status] = route_status r[:response]
-    if r[:status].empty? == false
+    r[:status] = (route_status r[:response]) == 200 ? 'x' : nil
+    if r[:status] then
       r[:route] = way_list r[:json]['route_instructions']
 
       if r[:route]=="w#{i}"

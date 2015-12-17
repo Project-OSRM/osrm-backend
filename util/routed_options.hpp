@@ -43,7 +43,8 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
-inline void populate_base_path(std::unordered_map<std::string, boost::filesystem::path> &server_paths)
+inline void
+populate_base_path(std::unordered_map<std::string, boost::filesystem::path> &server_paths)
 {
     // populate the server_path object
     auto path_iterator = server_paths.find("base");
@@ -135,67 +136,69 @@ inline void populate_base_path(std::unordered_map<std::string, boost::filesystem
 }
 
 // generate boost::program_options object for the routing part
-inline unsigned GenerateServerProgramOptions(const int argc,
-                                             const char *argv[],
-                                             std::unordered_map<std::string, boost::filesystem::path> &paths,
-                                             std::string &ip_address,
-                                             int &ip_port,
-                                             int &requested_num_threads,
-                                             bool &use_shared_memory,
-                                             bool &trial,
-                                             int &max_locations_distance_table,
-                                             int &max_locations_map_matching)
+inline unsigned
+GenerateServerProgramOptions(const int argc,
+                             const char *argv[],
+                             std::unordered_map<std::string, boost::filesystem::path> &paths,
+                             std::string &ip_address,
+                             int &ip_port,
+                             int &requested_num_threads,
+                             bool &use_shared_memory,
+                             bool &trial,
+                             int &max_locations_trip,
+                             int &max_locations_viaroute,
+                             int &max_locations_distance_table,
+                             int &max_locations_map_matching)
 {
+    using boost::program_options::value;
+    using boost::filesystem::path;
+
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "config,c", boost::program_options::value<boost::filesystem::path>(&paths["config"])
-                        ->default_value("server.ini"),
-        "Path to a configuration file")(
-        "trial", boost::program_options::value<bool>(&trial)->implicit_value(true),
-        "Quit after initialization");
+    generic_options.add_options()                                         //
+        ("version,v", "Show version")("help,h", "Show this help message") //
+        ("config,c", value<boost::filesystem::path>(&paths["config"])->default_value("server.ini"),
+         "Path to a configuration file") //
+        ("trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
 
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "hsgrdata", boost::program_options::value<boost::filesystem::path>(&paths["hsgrdata"]),
-        ".hsgr file")("nodesdata",
-                      boost::program_options::value<boost::filesystem::path>(&paths["nodesdata"]),
-                      ".nodes file")(
-        "edgesdata", boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
-        ".edges file")("geometry",
-                       boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
-                       ".geometry file")(
-        "ramindex", boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
-        ".ramIndex file")(
-        "fileindex", boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
-        "File index file")(
-        "namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
-        ".names file")("timestamp",
-                       boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
-                       ".timestamp file")(
-        "ip,i", boost::program_options::value<std::string>(&ip_address)->default_value("0.0.0.0"),
-        "IP address")("port,p", boost::program_options::value<int>(&ip_port)->default_value(5000),
-                      "TCP/IP port")(
-        "threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
-        "Number of threads to use")(
-        "shared-memory,s",
-        boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true)->default_value(false),
-        "Load data from shared memory")(
-        "max-table-size",
-        boost::program_options::value<int>(&max_locations_distance_table)->default_value(100),
-        "Max. locations supported in distance table query")(
-        "max-matching-size",
-        boost::program_options::value<int>(&max_locations_map_matching)->default_value(100),
-        "Max. locations supported in map matching query");
+    config_options.add_options()                                                             //
+        ("hsgrdata", value<boost::filesystem::path>(&paths["hsgrdata"]), ".hsgr file")       //
+        ("nodesdata", value<boost::filesystem::path>(&paths["nodesdata"]), ".nodes file")    //
+        ("edgesdata", value<boost::filesystem::path>(&paths["edgesdata"]), ".edges file")    //
+        ("geometry", value<boost::filesystem::path>(&paths["geometries"]), ".geometry file") //
+        ("ramindex", value<boost::filesystem::path>(&paths["ramindex"]), ".ramIndex file")   //
+        ("fileindex", value<boost::filesystem::path>(&paths["fileindex"]),
+         "File index file") //
+        ("namesdata", value<boost::filesystem::path>(&paths["namesdata"]),
+         ".names file") //
+        ("timestamp", value<boost::filesystem::path>(&paths["timestamp"]),
+         ".timestamp file") //
+        ("ip,i", value<std::string>(&ip_address)->default_value("0.0.0.0"),
+         "IP address") //
+        ("port,p", value<int>(&ip_port)->default_value(5000),
+         "TCP/IP port") //
+        ("threads,t", value<int>(&requested_num_threads)->default_value(8),
+         "Number of threads to use") //
+        ("shared-memory,s",
+         value<bool>(&use_shared_memory)->implicit_value(true)->default_value(false),
+         "Load data from shared memory") //
+        ("max-viaroute-size", value<int>(&max_locations_viaroute)->default_value(500),
+         "Max. locations supported in viaroute query") //
+        ("max-trip-size", value<int>(&max_locations_trip)->default_value(100),
+         "Max. locations supported in trip query") //
+        ("max-table-size", value<int>(&max_locations_distance_table)->default_value(100),
+         "Max. locations supported in distance table query") //
+        ("max-matching-size", value<int>(&max_locations_map_matching)->default_value(100),
+         "Max. locations supported in map matching query");
 
     // hidden options, will be allowed both on command line and in config
     // file, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "base,b", boost::program_options::value<boost::filesystem::path>(&paths["base"]),
-        "base path to .osrm file");
+    hidden_options.add_options()("base,b", value<boost::filesystem::path>(&paths["base"]),
+                                 "base path to .osrm file");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -273,7 +276,6 @@ inline unsigned GenerateServerProgramOptions(const int argc,
     {
         SimpleLogger().Write(logWARNING) << "Shared memory settings conflict with path settings.";
     }
-
 
     SimpleLogger().Write() << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;

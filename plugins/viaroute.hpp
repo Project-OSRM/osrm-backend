@@ -57,9 +57,12 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
     std::string descriptor_string;
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
     DataFacadeT *facade;
+    int max_locations_viaroute;
 
   public:
-    explicit ViaRoutePlugin(DataFacadeT *facade) : descriptor_string("viaroute"), facade(facade)
+    explicit ViaRoutePlugin(DataFacadeT *facade, int max_locations_viaroute)
+        : descriptor_string("viaroute"), facade(facade),
+          max_locations_viaroute(max_locations_viaroute)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
 
@@ -75,6 +78,15 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
     int HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
+        if (max_locations_viaroute > 0 &&
+            (static_cast<int>(route_parameters.coordinates.size()) > max_locations_viaroute))
+        {
+            json_result.values["status_message"] =
+                "Number of entries " + std::to_string(route_parameters.coordinates.size()) +
+                " is higher than current maximum (" + std::to_string(max_locations_viaroute) + ")";
+            return 400;
+        }
+
         if (!check_all_coordinates(route_parameters.coordinates))
         {
             json_result.values["status_message"] = "Invalid coordinates.";
@@ -189,8 +201,9 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                             });
             if (not_in_same_component)
             {
+                SimpleLogger().Write(logDEBUG) << "Coordinates not in same component.";
                 json_result.values["status_message"] = "Impossible route between points.";
-                return 400;
+                return 207;
             }
         }
 

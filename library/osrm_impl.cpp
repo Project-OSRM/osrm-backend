@@ -85,8 +85,10 @@ OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig& lib_config)
     RegisterPlugin(new MapMatchingPlugin<BaseDataFacade<QueryEdge::EdgeData>>(
         query_data_facade, lib_config.max_locations_map_matching));
     RegisterPlugin(new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
-    RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
-    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
+    RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
+                lib_config.max_locations_viaroute));
+    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
+                lib_config.max_locations_trip));
 }
 
 void OSRM::OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
@@ -102,13 +104,14 @@ int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::jso
 
     if (plugin_map.end() == plugin_iterator)
     {
+        json_result.values["status_message"] = "Service not found";
         return 400;
     }
 
     increase_concurrent_query_count();
-    plugin_iterator->second->HandleRequest(route_parameters, json_result);
+    auto return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
     decrease_concurrent_query_count();
-    return 200;
+    return return_code;
 }
 
 // decrease number of concurrent queries

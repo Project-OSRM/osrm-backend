@@ -99,7 +99,7 @@ end
 def got_route? response
   if response.code == "200" && !response.body.empty?
     json = JSON.parse response.body
-    if json['status'] == 0
+    if json['status'] == 200
       return way_list( json['route_instructions']).empty? == false
     end
   end
@@ -109,17 +109,7 @@ end
 def route_status response
   if response.code == "200" && !response.body.empty?
     json = JSON.parse response.body
-    if json['status'] == 0
-      if way_list(json['route_instructions']).empty?
-        return 'Empty route'
-      else
-        return 'x'
-      end
-    elsif json['status'] == 207
-      ''
-    else
-      "Status #{json['status']}"
-    end
+    return json['status']
   else
     "HTTP #{response.code}"
   end

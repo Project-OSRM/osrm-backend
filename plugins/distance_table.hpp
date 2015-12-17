@@ -98,11 +98,14 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                               return is_destination;
                           });
 
-        if (number_of_sources * number_of_destination >
-            max_locations_distance_table * max_locations_distance_table)
+        if (max_locations_distance_table > 0 &&
+            (number_of_sources * number_of_destination >
+             max_locations_distance_table * max_locations_distance_table))
         {
             json_result.values["status_message"] =
-                "Number of bearings does not match number of coordinates.";
+                "Number of entries " + std::to_string(number_of_sources * number_of_destination) +
+                " is higher than current maximum (" +
+                std::to_string(max_locations_distance_table * max_locations_distance_table) + ")";
             return 400;
         }
 
@@ -123,7 +126,8 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 {
                     if (route_parameters.is_source[i])
                     {
-                        *phantom_node_source_out_iter = std::make_pair(current_phantom_node, current_phantom_node);
+                        *phantom_node_source_out_iter =
+                            std::make_pair(current_phantom_node, current_phantom_node);
                         if (route_parameters.is_destination[i])
                         {
                             *phantom_node_target_out_iter = *phantom_node_source_out_iter;
@@ -133,8 +137,10 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                     }
                     else
                     {
-                        BOOST_ASSERT(route_parameters.is_destination[i] && !route_parameters.is_source[i]);
-                        *phantom_node_target_out_iter = std::make_pair(current_phantom_node, current_phantom_node);
+                        BOOST_ASSERT(route_parameters.is_destination[i] &&
+                                     !route_parameters.is_source[i]);
+                        *phantom_node_target_out_iter =
+                            std::make_pair(current_phantom_node, current_phantom_node);
                         phantom_node_target_out_iter++;
                     }
                     continue;
@@ -146,11 +152,14 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                                   : 180;
             if (route_parameters.is_source[i])
             {
-                *phantom_node_source_out_iter = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+                *phantom_node_source_out_iter =
+                    facade->NearestPhantomNodeWithAlternativeFromBigComponent(
+                        route_parameters.coordinates[i], bearing, range);
                 // we didn't found a fitting node, return error
                 if (!phantom_node_source_out_iter->first.is_valid(facade->GetNumberOfNodes()))
                 {
-                    json_result.values["status_message"] = std::string("Could not find matching road for via ") + std::to_string(i);
+                    json_result.values["status_message"] =
+                        std::string("Could not find matching road for via ") + std::to_string(i);
                     return 400;
                 }
 
@@ -165,11 +174,14 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             {
                 BOOST_ASSERT(route_parameters.is_destination[i] && !route_parameters.is_source[i]);
 
-                *phantom_node_target_out_iter = facade->NearestPhantomNodeWithAlternativeFromBigComponent(route_parameters.coordinates[i], bearing, range);
+                *phantom_node_target_out_iter =
+                    facade->NearestPhantomNodeWithAlternativeFromBigComponent(
+                        route_parameters.coordinates[i], bearing, range);
                 // we didn't found a fitting node, return error
                 if (!phantom_node_target_out_iter->first.is_valid(facade->GetNumberOfNodes()))
                 {
-                    json_result.values["status_message"] = std::string("Could not find matching road for via ") + std::to_string(i);
+                    json_result.values["status_message"] =
+                        std::string("Could not find matching road for via ") + std::to_string(i);
                     return 400;
                 }
                 phantom_node_target_out_iter++;
@@ -181,11 +193,13 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         BOOST_ASSERT((phantom_node_target_out_iter - phantom_node_target_vector.begin()) ==
                      number_of_destination);
 
-        // FIXME we should clear phantom_node_source_vector and phantom_node_target_vector after this
+        // FIXME we should clear phantom_node_source_vector and phantom_node_target_vector after
+        // this
         auto snapped_source_phantoms = snapPhantomNodes(phantom_node_source_vector);
         auto snapped_target_phantoms = snapPhantomNodes(phantom_node_target_vector);
 
-        auto result_table = search_engine_ptr->distance_table(snapped_source_phantoms, snapped_target_phantoms);
+        auto result_table =
+            search_engine_ptr->distance_table(snapped_source_phantoms, snapped_target_phantoms);
 
         if (!result_table)
         {

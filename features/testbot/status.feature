@@ -14,8 +14,8 @@ Feature: Status messages
 
         When I route I should get
             | from | to | route | status | message                    |
-            | a    | b  | ab    | 0      | Found route between points |
-            | b    | a  | ab    | 0      | Found route between points |
+            | a    | b  | ab    | 200    | Found route between points |
+            | b    | a  | ab    | 200    | Found route between points |
 
     Scenario: No route found
         Given the node map
@@ -30,8 +30,8 @@ Feature: Status messages
 
         When I route I should get
             | from | to | route | status | message                          |
-            | a    | b  | ab    | 0      | Found route between points       |
-            | c    | d  | cd    | 0      | Found route between points       |
+            | a    | b  | ab    | 200    | Found route between points       |
+            | c    | d  | cd    | 200    | Found route between points       |
             | a    | c  |       | 207    | Impossible route between points. |
             | b    | d  |       | 207    | Impossible route between points. |
 
@@ -46,22 +46,22 @@ Feature: Status messages
             | ab    |
 
         When I route I should get
-            | request                     | status | message                                    |
-            | viaroute?loc=1,1&loc=1.01,1 | 0      | Found route between points                 |
-            | nonsense                    | 400    | Bad Request                                |
-            | nonsense?loc=1,1&loc=1.01,1 | 400    | Bad Request                                |
-            |                             | 400    | Query string malformed close to position 0 |
-            | /                           | 400    | Query string malformed close to position 0 |
-            | ?                           | 400    | Query string malformed close to position 0 |
-            | viaroute/loc=               | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1              | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1            | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1,1          | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=x              | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=x,y            | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1&loc=       | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1&loc=1      | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1&loc=1,1    | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1&loc=1,1,1  | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1&loc=x      | 400    | Query string malformed close to position 9 |
-            | viaroute/loc=1,1&loc=x,y    | 400    | Query string malformed close to position 9 |
+            | request                     | status | message                                     |
+            | viaroute?loc=1,1&loc=1.01,1 | 200    | Found route between points                  |
+            | nonsense                    | 400    | Service not found                           |
+            | nonsense?loc=1,1&loc=1.01,1 | 400    | Service not found                           |
+            |                             | 400    | Query string malformed close to position 0  |
+            | /                           | 400    | Query string malformed close to position 0  |
+            | ?                           | 400    | Query string malformed close to position 0  |
+            | viaroute?loc=               | 400    | Query string malformed close to position 9  |
+            | viaroute?loc=1              | 400    | Query string malformed close to position 9  |
+            | viaroute?loc=1,1            | 400    | Invalid coordinates.                        |
+            | viaroute?loc=1,1,1          | 400    | Query string malformed close to position 17 |
+            | viaroute?loc=x              | 400    | Query string malformed close to position 9  |
+            | viaroute?loc=x,y            | 400    | Query string malformed close to position 9  |
+            | viaroute?loc=1,1&loc=       | 400    | Query string malformed close to position 17 |
+            | viaroute?loc=1,1&loc=1      | 400    | Query string malformed close to position 17 |
+            | viaroute?loc=1,1&loc=1,1    | 200    | Found route between points                  |
+            | viaroute?loc=1,1&loc=1,1,1  | 400    | Query string malformed close to position 25 |
+            | viaroute?loc=1,1&loc=x      | 400    | Query string malformed close to position 17 |
+            | viaroute?loc=1,1&loc=x,y    | 400    | Query string malformed close to position 17 |

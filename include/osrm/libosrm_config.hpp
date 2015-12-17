@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct LibOSRMConfig
 {
     std::unordered_map<std::string, boost::filesystem::path> server_paths;
+    int max_locations_trip = -1;
+    int max_locations_viaroute = -1;
     int max_locations_distance_table = -1;
     int max_locations_map_matching = -1;
     bool use_shared_memory = true;

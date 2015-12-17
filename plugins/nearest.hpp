@@ -62,7 +62,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
         const auto &input_bearings = route_parameters.bearings;
         if (input_bearings.size() > 0 && route_parameters.coordinates.size() != input_bearings.size())
         {
-            json_result.values["status"] = "Number of bearings does not match number of coordinates .";
+            json_result.values["status_message"] = "Number of bearings does not match number of coordinates.";
             return 400;
         }
 
@@ -73,13 +73,12 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
 
         if (phantom_node_vector.empty() || !phantom_node_vector.front().phantom_node.is_valid())
         {
-            json_result.values["status"] = 207;
+            json_result.values["status_message"] = "No nearest edge found.";
+            return 207;
         }
         else
         {
-            // reply.status = http::Reply::ok;
-            json_result.values["status"] = 0;
-
+            json_result.values["status_message"] = "Found nearest edge.";
             if (number_of_results > 1)
             {
                 osrm::json::Array results;
