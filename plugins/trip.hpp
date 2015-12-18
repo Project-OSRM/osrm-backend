@@ -384,7 +384,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             trip.values.push_back(std::move(scc_trip));
         }
 
-        json_result.values["trips"] = std::move(trip);
 
         if (trip.values.empty())
         {
@@ -392,6 +391,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             return Status::EmptyResult;
         }
 
+        json_result.values["trips"] = std::move(trip);
         json_result.values["status_message"] = "Found trips";
         return Status::Ok;
     }
