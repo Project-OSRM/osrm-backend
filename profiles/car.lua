@@ -138,7 +138,7 @@ local turn_bias                 = 1.2
 
 local obey_oneway               = true
 local ignore_areas              = true
-u_turn_penalty            		= 20
+u_turn_penalty                  = 20
 
 local abs = math.abs
 local min = math.min
