@@ -106,20 +106,23 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     osrm::matching::SubMatchingList &sub_matchings) const
     {
         BOOST_ASSERT(candidates_list.size() == trace_coordinates.size());
+        BOOST_ASSERT(candidates_list.size() > 1);
+
+        const bool use_timestamps = trace_timestamps.size() > 1;
 
         const auto median_sample_time = [&]() {
-            if (trace_timestamps.size() > 1)
+            if (use_timestamps)
             {
-                return GetMedianSampleTime(trace_timestamps);
+                return std::max(1u, GetMedianSampleTime(trace_timestamps));
             }
             else
             {
-                return 0u;
+                return 1u;
             }
         }();
         const auto max_broken_time = median_sample_time * osrm::matching::MAX_BROKEN_STATES;
         const auto max_distance_delta = [&]() {
-            if (trace_timestamps.size() > 1)
+            if (use_timestamps)
             {
                 return median_sample_time * osrm::matching::MAX_SPEED;
             }
@@ -161,7 +164,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             bool trace_split = prev_unbroken_timestamps.empty();
 
             // use temporal information if available to determine a split
-            if (!trace_timestamps.empty())
+            if (use_timestamps)
             {
                 trace_split =
                     trace_split ||
