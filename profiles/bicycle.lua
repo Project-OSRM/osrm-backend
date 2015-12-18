@@ -90,12 +90,13 @@ surface_speeds = {
   ["sand"] = 3
 }
 
+-- these need to be global because they are accesed externaly
 traffic_signal_penalty          = 2
 use_turn_restrictions           = false
+u_turn_penalty                  = 20
 
 local obey_oneway               = true
 local ignore_areas              = true
-u_turn_penalty                  = 20
 local turn_penalty              = 60
 local turn_bias                 = 1.4
 -- reduce the driving speed by 30% for unsafe roads
