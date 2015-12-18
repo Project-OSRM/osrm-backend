@@ -89,7 +89,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            json_result.values["status_message"] = "Invalid coordinates.";
+            json_result.values["status_message"] = "Invalid coordinates";
             return Status::Error;
         }
 
@@ -98,7 +98,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             route_parameters.coordinates.size() != input_bearings.size())
         {
             json_result.values["status_message"] =
-                "Number of bearings does not match number of coordinates.";
+                "Number of bearings does not match number of coordinate";
             return Status::Error;
         }
 
@@ -196,9 +196,13 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                             });
             if (not_in_same_component)
             {
-                json_result.values["status_message"] = "Impossible route between points.";
+                json_result.values["status_message"] = "Impossible route between points";
                 return Status::EmptyResult;
             }
+        }
+        else
+        {
+            json_result.values["status_message"] = "Found route between points";
         }
 
         return Status::Ok;

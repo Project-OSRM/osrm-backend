@@ -263,7 +263,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // check if all inputs are coordinates
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            json_result.values["status_message"] = "Invalid coordinates.";
+            json_result.values["status_message"] = "Invalid coordinates";
             return Status::Error;
         }
 
@@ -272,7 +272,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             route_parameters.coordinates.size() != input_bearings.size())
         {
             json_result.values["status_message"] =
-                "Number of bearings does not match number of coordinates.";
+                "Number of bearings does not match number of coordinates";
             return Status::Error;
         }
 
@@ -301,7 +301,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         const constexpr std::size_t BF_MAX_FEASABLE = 10;
         BOOST_ASSERT_MSG(result_table.size() == number_of_locations * number_of_locations,
-                         "Distance Table has wrong size.");
+                         "Distance Table has wrong size");
 
         // get scc components
         SCC_Component scc = SplitUnaccessibleLocations(number_of_locations, result_table);
@@ -388,11 +388,11 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         if (trip.values.empty())
         {
-            json_result.values["status_message"] = "Cannot find trips.";
+            json_result.values["status_message"] = "Cannot find trips";
             return Status::EmptyResult;
         }
 
-        json_result.values["status_message"] = "Found trips.";
+        json_result.values["status_message"] = "Found trips";
         return Status::Ok;
     }
 };

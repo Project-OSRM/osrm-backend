@@ -32,8 +32,8 @@ Feature: Status messages
             | from | to | route | status | message                          |
             | a    | b  | ab    | 200    | Found route between points       |
             | c    | d  | cd    | 200    | Found route between points       |
-            | a    | c  |       | 207    | Impossible route between points. |
-            | b    | d  |       | 207    | Impossible route between points. |
+            | a    | c  |       | 207    | Impossible route between points  |
+            | b    | d  |       | 207    | Impossible route between points  |
 
     Scenario: Malformed requests
         Given the node locations
@@ -55,7 +55,7 @@ Feature: Status messages
             | ?                           | 400    | Query string malformed close to position 0  |
             | viaroute?loc=               | 400    | Query string malformed close to position 9  |
             | viaroute?loc=1              | 400    | Query string malformed close to position 9  |
-            | viaroute?loc=1,1            | 400    | Invalid coordinates.                        |
+            | viaroute?loc=1,1            | 400    | Invalid coordinates                         |
             | viaroute?loc=1,1,1          | 400    | Query string malformed close to position 17 |
             | viaroute?loc=x              | 400    | Query string malformed close to position 9  |
             | viaroute?loc=x,y            | 400    | Query string malformed close to position 9  |

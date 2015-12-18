@@ -103,8 +103,6 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
-            json_result.values["status"] = 207;
-            json_result.values["status_message"] = "Cannot find route between points";
             return;
         }
 
@@ -115,8 +113,6 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         description_factory.SetStartSegment(
             raw_route.segment_end_coordinates.front().source_phantom,
             raw_route.source_traversed_in_reverse.front());
-        json_result.values["status"] = 0;
-        json_result.values["status_message"] = "Found route between points";
 
         // for each unpacked segment add the leg to the description
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))

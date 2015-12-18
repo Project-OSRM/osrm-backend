@@ -292,14 +292,14 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (max_locations_map_matching > 0 &&
             static_cast<int>(route_parameters.coordinates.size()) > max_locations_map_matching)
         {
-            json_result.values["status_message"] = "Too many coodindates.";
+            json_result.values["status_message"] = "Too many coodindates";
             return Status::Error;
         }
 
         // check number of parameters
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            json_result.values["status_message"] = "Invalid coordinates.";
+            json_result.values["status_message"] = "Invalid coordinates";
             return Status::Error;
         }
 
@@ -310,21 +310,21 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (input_timestamps.size() > 0 && input_coords.size() != input_timestamps.size())
         {
             json_result.values["status_message"] =
-                "Number of timestamps does not match number of coordinates.";
+                "Number of timestamps does not match number of coordinates";
             return Status::Error;
         }
 
         if (input_bearings.size() > 0 && input_coords.size() != input_bearings.size())
         {
             json_result.values["status_message"] =
-                "Number of bearings does not match number of coordinates.";
+                "Number of bearings does not match number of coordinates";
             return Status::Error;
         }
 
         // enforce maximum number of locations for performance reasons
         if (static_cast<int>(input_coords.size()) < 2)
         {
-            json_result.values["status_message"] = "At least two coordinates needed.";
+            json_result.values["status_message"] = "At least two coordinates needed";
             return Status::Error;
         }
 
@@ -399,11 +399,11 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
         if (sub_matchings.empty())
         {
-            json_result.values["status_message"] = "Cannot find matchings.";
+            json_result.values["status_message"] = "Cannot find matchings";
             return Status::EmptyResult;
         }
 
-        json_result.values["status_message"] = "Found matchings.";
+        json_result.values["status_message"] = "Found matchings";
         return Status::Ok;
     }
 

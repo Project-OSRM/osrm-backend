@@ -64,7 +64,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
             route_parameters.coordinates.size() != input_bearings.size())
         {
             json_result.values["status_message"] =
-                "Number of bearings does not match number of coordinates.";
+                "Number of bearings does not match number of coordinates";
             return Status::Error;
         }
 
@@ -80,12 +80,12 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
         if (phantom_node_vector.empty())
         {
             json_result.values["status_message"] =
-                std::string("Could not find a matching segments for coordinate.");
+                std::string("Could not find a matching segments for coordinate");
             return Status::NoSegment;
         }
         else
         {
-            json_result.values["status_message"] = "Found nearest edge.";
+            json_result.values["status_message"] = "Found nearest edge";
             if (number_of_results > 1)
             {
                 osrm::json::Array results;

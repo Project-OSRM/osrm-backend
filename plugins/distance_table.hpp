@@ -72,7 +72,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            json_result.values["status_message"] = "Coordinates are invalid.";
+            json_result.values["status_message"] = "Coordinates are invalid";
             return Status::Error;
         }
 
@@ -81,7 +81,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             route_parameters.coordinates.size() != input_bearings.size())
         {
             json_result.values["status_message"] =
-                "Number of bearings does not match number of coordinates.";
+                "Number of bearings does not match number of coordinates";
             return Status::Error;
         }
 
@@ -203,7 +203,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
         if (!result_table)
         {
-            json_result.values["status_message"] = "No distance table found.";
+            json_result.values["status_message"] = "No distance table found";
             return Status::EmptyResult;
         }
 
