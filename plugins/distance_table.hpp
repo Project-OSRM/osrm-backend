@@ -159,7 +159,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 if (!phantom_node_source_out_iter->first.is_valid(facade->GetNumberOfNodes()))
                 {
                     json_result.values["status_message"] =
-                        std::string("Could not find matching road for via ") + std::to_string(i);
+                        std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
                     return Status::NoSegment;
                 }
 
@@ -181,7 +181,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 if (!phantom_node_target_out_iter->first.is_valid(facade->GetNumberOfNodes()))
                 {
                     json_result.values["status_message"] =
-                        std::string("Could not find matching road for via ") + std::to_string(i);
+                        std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
                     return Status::NoSegment;
                 }
                 phantom_node_target_out_iter++;
