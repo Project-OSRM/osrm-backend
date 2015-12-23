@@ -1,21 +1,10 @@
 require 'net/http'
 
 # Converts an array [["param","val1"], ["param","val2"]] into ?param=val1&param=val2
-def params_to_url params
+def params_to_string params
   kv_pairs = params.map { |kv| kv[0].to_s + "=" + kv[1].to_s }
-  url = kv_pairs.size > 0 ? ("?" + kv_pairs.join("&")) : ""
+  url = kv_pairs.size > 0 ? kv_pairs.join("&") : ""
   return url
-end
-
-# Converts an array [["param","val1"], ["param","val2"]] into ["param"=>["val1", "val2"]]
-def params_to_map params
-  result = {}
-  params.each do |pair|
-    if not result.has_key? pair[0]
-      result[pair[0]] = []
-    end
-    result[pair[0]] << [pair[1]]
-  end
 end
 
 def send_request base_uri, parameters
@@ -23,9 +12,11 @@ def send_request base_uri, parameters
     if @http_method.eql? "POST"
       uri = URI.parse base_uri
       @query = uri.to_s
-      response = Net::HTTP.post_form uri, (params_to_map parameters)
+      req = Net::HTTP::Post.new('localhost:8000')
+      req.body = params_to_string parameters
+      response = Net::HTTP.start(uri.hostname, uri.port) do |http| http.request(req) end
     else
-      uri = URI.parse base_uri+(params_to_url parameters)
+      uri = URI.parse(base_uri + "?" + params_to_string(parameters))
       @query = uri.to_s
       response = Net::HTTP.get_response uri
     end
