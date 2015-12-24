@@ -40,8 +40,6 @@ Thumbs.db
 # build related files #
 #######################
 /build/
-/util/fingerprint_impl.hpp
-/util/git_sha.cpp
 /cmake/postinst
 
 # Eclipse related files #

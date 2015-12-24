@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/regex.hpp>
 
 #include <limits>
+#include <string>
 
 bool simple_duration_is_valid(const std::string &s)
 {
@@ -89,18 +90,18 @@ unsigned parseDuration(const std::string &s)
         {
             if (1 == result.size())
             {
-                minutes = cast::string_to_int(result[0]);
+                minutes = std::stoul(result[0]);
             }
             if (2 == result.size())
             {
-                minutes = cast::string_to_int(result[1]);
-                hours = cast::string_to_int(result[0]);
+                minutes = std::stoul(result[1]);
+                hours = std::stoul(result[0]);
             }
             if (3 == result.size())
             {
-                seconds = cast::string_to_int(result[2]);
-                minutes = cast::string_to_int(result[1]);
-                hours = cast::string_to_int(result[0]);
+                seconds = std::stoul(result[2]);
+                minutes = std::stoul(result[1]);
+                hours = std::stoul(result[0]);
             }
             return (3600 * hours + 60 * minutes + seconds);
         }

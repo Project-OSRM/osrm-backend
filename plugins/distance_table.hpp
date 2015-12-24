@@ -67,21 +67,55 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    int HandleRequest(const RouteParameters &route_parameters,
+    Status HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            return 400;
+            json_result.values["status_message"] = "Coordinates are invalid";
+            return Status::Error;
+        }
+
+        const auto &input_bearings = route_parameters.bearings;
+        if (input_bearings.size() > 0 &&
+            route_parameters.coordinates.size() != input_bearings.size())
+        {
+            json_result.values["status_message"] =
+                "Number of bearings does not match number of coordinates";
+            return Status::Error;
+        }
+
+        auto number_of_sources =
+            std::count_if(route_parameters.is_source.begin(), route_parameters.is_source.end(),
+                          [](const bool is_source)
+                          {
+                              return is_source;
+                          });
+        auto number_of_destination =
+            std::count_if(route_parameters.is_destination.begin(),
+                          route_parameters.is_destination.end(), [](const bool is_destination)
+                          {
+                              return is_destination;
+                          });
+
+        if (max_locations_distance_table > 0 &&
+            (number_of_sources * number_of_destination >
+             max_locations_distance_table * max_locations_distance_table))
+        {
+            json_result.values["status_message"] =
+                "Number of entries " + std::to_string(number_of_sources * number_of_destination) +
+                " is higher than current maximum (" +
+                std::to_string(max_locations_distance_table * max_locations_distance_table) + ")";
+            return Status::Error;
         }
 
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
-        unsigned max_locations =
-            std::min(static_cast<unsigned>(max_locations_distance_table),
-                     static_cast<unsigned>(route_parameters.coordinates.size()));
 
-        PhantomNodeArray phantom_node_vector(max_locations);
-        for (const auto i : osrm::irange(0u, max_locations))
+        std::vector<PhantomNodePair> phantom_node_source_vector(number_of_sources);
+        std::vector<PhantomNodePair> phantom_node_target_vector(number_of_destination);
+        auto phantom_node_source_out_iter = phantom_node_source_vector.begin();
+        auto phantom_node_target_out_iter = phantom_node_target_vector.begin();
+        for (const auto i : osrm::irange<std::size_t>(0u, route_parameters.coordinates.size()))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -90,39 +124,119 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
-                    phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
+                    if (route_parameters.is_source[i])
+                    {
+                        *phantom_node_source_out_iter =
+                            std::make_pair(current_phantom_node, current_phantom_node);
+                        if (route_parameters.is_destination[i])
+                        {
+                            *phantom_node_target_out_iter = *phantom_node_source_out_iter;
+                            phantom_node_target_out_iter++;
+                        }
+                        phantom_node_source_out_iter++;
+                    }
+                    else
+                    {
+                        BOOST_ASSERT(route_parameters.is_destination[i] &&
+                                     !route_parameters.is_source[i]);
+                        *phantom_node_target_out_iter =
+                            std::make_pair(current_phantom_node, current_phantom_node);
+                        phantom_node_target_out_iter++;
+                    }
                     continue;
                 }
             }
-            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i], 1);
+            const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
+            const int range = input_bearings.size() > 0
+                                  ? (input_bearings[i].second ? *input_bearings[i].second : 10)
+                                  : 180;
+            if (route_parameters.is_source[i])
+            {
+                *phantom_node_source_out_iter =
+                    facade->NearestPhantomNodeWithAlternativeFromBigComponent(
+                        route_parameters.coordinates[i], bearing, range);
+                // we didn't found a fitting node, return error
+                if (!phantom_node_source_out_iter->first.is_valid(facade->GetNumberOfNodes()))
+                {
+                    json_result.values["status_message"] =
+                        std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
+                    return Status::NoSegment;
+                }
 
-            BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
+                if (route_parameters.is_destination[i])
+                {
+                    *phantom_node_target_out_iter = *phantom_node_source_out_iter;
+                    phantom_node_target_out_iter++;
+                }
+                phantom_node_source_out_iter++;
+            }
+            else
+            {
+                BOOST_ASSERT(route_parameters.is_destination[i] && !route_parameters.is_source[i]);
+
+                *phantom_node_target_out_iter =
+                    facade->NearestPhantomNodeWithAlternativeFromBigComponent(
+                        route_parameters.coordinates[i], bearing, range);
+                // we didn't found a fitting node, return error
+                if (!phantom_node_target_out_iter->first.is_valid(facade->GetNumberOfNodes()))
+                {
+                    json_result.values["status_message"] =
+                        std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
+                    return Status::NoSegment;
+                }
+                phantom_node_target_out_iter++;
+            }
         }
 
-        // TIMER_START(distance_table);
-        std::shared_ptr<std::vector<EdgeWeight>> result_table =
-            search_engine_ptr->distance_table(phantom_node_vector);
-        // TIMER_STOP(distance_table);
+        BOOST_ASSERT((phantom_node_source_out_iter - phantom_node_source_vector.begin()) ==
+                     number_of_sources);
+        BOOST_ASSERT((phantom_node_target_out_iter - phantom_node_target_vector.begin()) ==
+                     number_of_destination);
+
+        // FIXME we should clear phantom_node_source_vector and phantom_node_target_vector after
+        // this
+        auto snapped_source_phantoms = snapPhantomNodes(phantom_node_source_vector);
+        auto snapped_target_phantoms = snapPhantomNodes(phantom_node_target_vector);
+
+        auto result_table =
+            search_engine_ptr->distance_table(snapped_source_phantoms, snapped_target_phantoms);
 
         if (!result_table)
         {
-            return 400;
+            json_result.values["status_message"] = "No distance table found";
+            return Status::EmptyResult;
         }
 
-        osrm::json::Array json_array;
-        const auto number_of_locations = phantom_node_vector.size();
-        for (const auto row : osrm::irange<std::size_t>(0, number_of_locations))
+        osrm::json::Array matrix_json_array;
+        for (const auto row : osrm::irange<std::size_t>(0, number_of_sources))
         {
             osrm::json::Array json_row;
-            auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
-            auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
+            auto row_begin_iterator = result_table->begin() + (row * number_of_destination);
+            auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_destination);
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
-            json_array.values.push_back(json_row);
+            matrix_json_array.values.push_back(json_row);
         }
-        json_result.values["distance_table"] = json_array;
-        // osrm::json::render(reply.content, json_object);
-        return 200;
+        json_result.values["distance_table"] = matrix_json_array;
+
+        osrm::json::Array target_coord_json_array;
+        for (const auto &phantom : snapped_target_phantoms)
+        {
+            osrm::json::Array json_coord;
+            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
+            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
+            target_coord_json_array.values.push_back(json_coord);
+        }
+        json_result.values["destination_coordinates"] = target_coord_json_array;
+        osrm::json::Array source_coord_json_array;
+        for (const auto &phantom : snapped_source_phantoms)
+        {
+            osrm::json::Array json_coord;
+            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
+            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
+            source_coord_json_array.values.push_back(json_coord);
+        }
+        json_result.values["source_coordinates"] = source_coord_json_array;
+        return Status::Ok;
     }
 
   private:

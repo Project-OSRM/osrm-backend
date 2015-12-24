@@ -1,0 +1,43 @@
+PROJECT_NAME           = "Project OSRM"
+PROJECT_BRIEF          = "Open Source Routing Machine"
+BUILTIN_STL_SUPPORT    = YES
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_PACKAGE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_ANON_NSPACES   = YES
+
+QUIET                  = YES
+
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/README.md
+FILE_PATTERNS          = *.h *.hpp *.c *.cc *.cpp *.md
+RECURSIVE              = YES
+
+EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/third_party \
+                         @CMAKE_CURRENT_SOURCE_DIR@/build \
+                         @CMAKE_CURRENT_SOURCE_DIR@/unit_tests \
+			 @CMAKE_CURRENT_SOURCE_DIR@/benchmarks \
+                         @CMAKE_CURRENT_SOURCE_DIR@/features
+
+SOURCE_BROWSER         = YES
+
+CLANG_ASSISTED_PARSING = NO
+
+HTML_COLORSTYLE_HUE    = 217
+HTML_COLORSTYLE_SAT    = 71
+HTML_COLORSTYLE_GAMMA  = 50
+
+GENERATE_TREEVIEW      = YES
+
+HAVE_DOT               = @DOXYGEN_DOT_FOUND@
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+DOT_GRAPH_MAX_NODES    = 500
+DOT_TRANSPARENT        = YES
+DOT_MULTI_TARGETS      = YES

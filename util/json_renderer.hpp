@@ -76,7 +76,7 @@ struct Renderer : mapbox::util::static_visitor<>
     void operator()(const Array &array) const
     {
         out << "[";
-        for (auto it = array.values.cend(), end = array.values.cend(); it != end;)
+        for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
             mapbox::util::apply_visitor(Renderer(out), *it);
             if (++it != end)
@@ -111,7 +111,7 @@ struct ArrayRenderer : mapbox::util::static_visitor<>
 
     void operator()(const Number &number) const
     {
-        const std::string number_string = cast::double_fixed_to_string(number.value);
+        const std::string number_string = cast::to_string_with_precision(number.value);
         out.insert(out.end(), number_string.begin(), number_string.end());
     }
 

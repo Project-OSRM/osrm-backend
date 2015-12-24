@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "connection.hpp"
 #include "request_handler.hpp"
 
-#include "../util/cast.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/simple_logger.hpp"
 
@@ -44,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <thread>
 #include <vector>
+#include <string>
 
 class Server
 {
@@ -62,7 +62,7 @@ class Server
         : thread_pool_size(thread_pool_size), acceptor(io_service),
           new_connection(std::make_shared<http::Connection>(io_service, request_handler))
     {
-        const std::string port_string = cast::integral_to_string(port);
+        const auto port_string = std::to_string(port);
 
         boost::asio::ip::tcp::resolver resolver(io_service);
         boost::asio::ip::tcp::resolver::query query(address, port_string);

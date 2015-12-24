@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "datafacade_base.hpp"
 
+#include "../../algorithms/geospatial_query.hpp"
 #include "../../data_structures/original_edge_data.hpp"
 #include "../../data_structures/query_node.hpp"
 #include "../../data_structures/query_edge.hpp"
@@ -39,12 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../data_structures/static_graph.hpp"
 #include "../../data_structures/static_rtree.hpp"
 #include "../../data_structures/range_table.hpp"
-#include "../../util/boost_filesystem_2_fix.hpp"
 #include "../../util/graph_loader.hpp"
 #include "../../util/simple_logger.hpp"
 
 #include <osrm/coordinate.hpp>
-#include <osrm/server_paths.hpp>
+
+#include <boost/thread.hpp>
 
 #include <limits>
 
@@ -56,12 +57,14 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     using QueryGraph = StaticGraph<typename super::EdgeData>;
     using InputEdge = typename QueryGraph::InputEdge;
     using RTreeLeaf = typename super::RTreeLeaf;
+    using InternalRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>;
+    using InternalGeospatialQuery = GeospatialQuery<InternalRTree>;
 
     InternalDataFacade() {}
 
     unsigned m_check_sum;
     unsigned m_number_of_nodes;
-    QueryGraph *m_query_graph;
+    std::unique_ptr<QueryGraph> m_query_graph;
     std::string m_timestamp;
 
     std::shared_ptr<ShM<FixedPointCoordinate, false>::vector> m_coordinate_list;
@@ -75,8 +78,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     ShM<unsigned, false>::vector m_geometry_list;
     ShM<bool, false>::vector m_is_core_node;
 
-    boost::thread_specific_ptr<
-        StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>> m_static_rtree;
+    boost::thread_specific_ptr<InternalRTree> m_static_rtree;
+    boost::thread_specific_ptr<InternalGeospatialQuery> m_geospatial_query;
     boost::filesystem::path ram_index_path;
     boost::filesystem::path file_index_path;
     RangeTable<16, false> m_name_table;
@@ -117,7 +120,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         // BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
         SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
                                << " edges";
-        m_query_graph = new QueryGraph(node_list, edge_list);
+        m_query_graph = std::unique_ptr<QueryGraph>(new QueryGraph(node_list, edge_list));
 
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
@@ -179,7 +182,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         core_stream.read((char *)&number_of_markers, sizeof(unsigned));
 
         std::vector<char> unpacked_core_markers(number_of_markers);
-        core_stream.read((char *)unpacked_core_markers.data(), sizeof(char)*number_of_markers);
+        core_stream.read((char *)unpacked_core_markers.data(), sizeof(char) * number_of_markers);
 
         // in this case we have nothing to do
         if (number_of_markers <= 0)
@@ -227,8 +230,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     {
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
-        m_static_rtree.reset(
-            new StaticRTree<RTreeLeaf>(ram_index_path, file_index_path, m_coordinate_list));
+        m_static_rtree.reset(new InternalRTree(ram_index_path, file_index_path, m_coordinate_list));
+        m_geospatial_query.reset(new InternalGeospatialQuery(*m_static_rtree, m_coordinate_list));
     }
 
     void LoadStreetNames(const boost::filesystem::path &names_file)
@@ -252,96 +255,43 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
   public:
     virtual ~InternalDataFacade()
     {
-        delete m_query_graph;
         m_static_rtree.reset();
+        m_geospatial_query.reset();
     }
 
-    explicit InternalDataFacade(const ServerPaths &server_paths)
+    explicit InternalDataFacade(const std::unordered_map<std::string, boost::filesystem::path> &server_paths)
     {
-        // generate paths of data files
-        if (server_paths.find("hsgrdata") == server_paths.end())
-        {
-            throw osrm::exception("no hsgr file given in ini file");
-        }
-        if (server_paths.find("ramindex") == server_paths.end())
-        {
-            throw osrm::exception("no ram index file given in ini file");
-        }
-        if (server_paths.find("fileindex") == server_paths.end())
-        {
-            throw osrm::exception("no leaf index file given in ini file");
-        }
-        if (server_paths.find("geometries") == server_paths.end())
-        {
-            throw osrm::exception("no geometries file given in ini file");
-        }
-        if (server_paths.find("nodesdata") == server_paths.end())
-        {
-            throw osrm::exception("no nodes file given in ini file");
-        }
-        if (server_paths.find("coredata") == server_paths.end())
-        {
-            throw osrm::exception("no core file given in ini file");
-        }
-        if (server_paths.find("edgesdata") == server_paths.end())
-        {
-            throw osrm::exception("no edges file given in ini file");
-        }
-        if (server_paths.find("namesdata") == server_paths.end())
-        {
-            throw osrm::exception("no names file given in ini file");
-        }
+        // cache end iterator to quickly check .find against
+        const auto end_it = end(server_paths);
 
-        auto paths_iterator = server_paths.find("hsgrdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &hsgr_path = paths_iterator->second;
-        paths_iterator = server_paths.find("timestamp");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &timestamp_path = paths_iterator->second;
-        paths_iterator = server_paths.find("ramindex");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        ram_index_path = paths_iterator->second;
-        paths_iterator = server_paths.find("fileindex");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        file_index_path = paths_iterator->second;
-        paths_iterator = server_paths.find("nodesdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &nodes_data_path = paths_iterator->second;
-        paths_iterator = server_paths.find("edgesdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &edges_data_path = paths_iterator->second;
-        paths_iterator = server_paths.find("namesdata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &names_data_path = paths_iterator->second;
-        paths_iterator = server_paths.find("geometries");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &geometries_path = paths_iterator->second;
-        paths_iterator = server_paths.find("coredata");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &core_data_path = paths_iterator->second;
+        const auto file_for = [&server_paths, &end_it](const std::string &path)
+        {
+            const auto it = server_paths.find(path);
+            if (it == end_it || !boost::filesystem::is_regular_file(it->second))
+                throw osrm::exception("no valid " + path + " file given in ini file");
+            return it->second;
+        };
 
-        // load data
+        ram_index_path = file_for("ramindex");
+        file_index_path = file_for("fileindex");
+
         SimpleLogger().Write() << "loading graph data";
-        AssertPathExists(hsgr_path);
-        LoadGraph(hsgr_path);
+        LoadGraph(file_for("hsgrdata"));
+
         SimpleLogger().Write() << "loading edge information";
-        AssertPathExists(nodes_data_path);
-        AssertPathExists(edges_data_path);
-        LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
+        LoadNodeAndEdgeInformation(file_for("nodesdata"), file_for("edgesdata"));
+
         SimpleLogger().Write() << "loading core information";
-        AssertPathExists(core_data_path);
-        LoadCoreInformation(core_data_path);
+        LoadCoreInformation(file_for("coredata"));
+
         SimpleLogger().Write() << "loading geometries";
-        AssertPathExists(geometries_path);
-        LoadGeometries(geometries_path);
-        SimpleLogger().Write() << "loading r-tree";
-        AssertPathExists(ram_index_path);
-        AssertPathExists(file_index_path);
+        LoadGeometries(file_for("geometries"));
+
         SimpleLogger().Write() << "loading timestamp";
-        LoadTimestamp(timestamp_path);
+        LoadTimestamp(file_for("timestamp"));
+
         SimpleLogger().Write() << "loading street names";
-        AssertPathExists(names_data_path);
-        LoadStreetNames(names_data_path);
+        LoadStreetNames(file_for("namesdata"));
     }
 
     // search graph access
@@ -408,61 +358,51 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_travel_mode_list.at(id);
     }
 
-    bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                            FixedPointCoordinate &result,
-                                            const unsigned zoom_level = 18) override final
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
+                               const float max_distance,
+                               const int bearing = 0,
+                               const int bearing_range = 180) override final
     {
         if (!m_static_rtree.get())
         {
             LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_static_rtree->LocateClosestEndPointForCoordinate(input_coordinate, result,
-                                                                  zoom_level);
+        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance, bearing, bearing_range);
     }
 
-    bool IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                                 PhantomNode &resulting_phantom_node) override final
-    {
-        std::vector<PhantomNode> resulting_phantom_node_vector;
-        auto result = IncrementalFindPhantomNodeForCoordinate(input_coordinate,
-                                                              resulting_phantom_node_vector, 1);
-        if (result)
-        {
-            BOOST_ASSERT(!resulting_phantom_node_vector.empty());
-            resulting_phantom_node = resulting_phantom_node_vector.front();
-        }
-
-        return result;
-    }
-
-    bool
-    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                            std::vector<PhantomNode> &resulting_phantom_node_vector,
-                                            const unsigned number_of_results) override final
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const FixedPointCoordinate &input_coordinate,
+                        const unsigned max_results,
+                        const int bearing = 0,
+                        const int bearing_range = 180) override final
     {
         if (!m_static_rtree.get())
         {
             LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_static_rtree->IncrementalFindPhantomNodeForCoordinate(
-            input_coordinate, resulting_phantom_node_vector, number_of_results);
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing, bearing_range);
     }
 
-    bool IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
-        const FixedPointCoordinate &input_coordinate,
-        std::vector<std::pair<PhantomNode, double>> &resulting_phantom_node_vector,
-        const double max_distance) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const FixedPointCoordinate &input_coordinate,
+                                                      const int bearing = 0,
+                                                      const int bearing_range = 180) override final
     {
         if (!m_static_rtree.get())
         {
             LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_static_rtree->IncrementalFindPhantomNodeForCoordinateWithDistance(
-            input_coordinate, resulting_phantom_node_vector, max_distance);
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(input_coordinate, bearing, bearing_range);
     }
+
 
     unsigned GetCheckSum() const override final { return m_check_sum; }
 
@@ -493,6 +433,11 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
     {
         return m_via_node_list.at(id);
+    }
+
+    virtual std::size_t GetCoreSize() const override final
+    {
+        return m_is_core_node.size();
     }
 
     virtual bool IsCoreNode(const NodeID id) const override final

@@ -28,158 +28,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CAST_HPP
 #define CAST_HPP
 
-#include <boost/spirit/include/karma.hpp>
-#include <boost/spirit/include/qi.hpp>
-
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include <type_traits>
 
-struct cast
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
+namespace cast
 {
-    // convert scoped enums to integers
-    template <typename Enumeration>
-    static auto enum_to_underlying(Enumeration const value) ->
-        typename std::underlying_type<Enumeration>::type
-    {
-        return static_cast<typename std::underlying_type<Enumeration>::type>(value);
-    }
+template <typename Enumeration>
+inline auto enum_to_underlying(Enumeration const value) ->
+    typename std::underlying_type<Enumeration>::type
+{
+    return static_cast<typename std::underlying_type<Enumeration>::type>(value);
+}
 
-    template <typename Number>
-    static typename std::enable_if<std::is_integral<Number>::value, std::string>::type
-    integral_to_string(const Number value)
-    {
-        std::string output;
-        std::back_insert_iterator<std::string> sink(output);
+template <typename T, int Precision = 6> inline std::string to_string_with_precision(const T x)
+{
+    static_assert(std::is_arithmetic<T>::value, "integral or floating point type required");
 
-        if (8 == sizeof(Number))
-        {
-            boost::spirit::karma::generate(sink, boost::spirit::karma::long_long, value);
-        }
-        else
-        {
-            if (std::is_signed<Number>::value)
-            {
-                boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
-            }
-            else
-            {
-                boost::spirit::karma::generate(sink, boost::spirit::karma::uint_, value);
-            }
-        }
-        return output;
-    }
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(Precision) << x;
+    auto rv = out.str();
 
-    static int string_to_int(const std::string &input)
-    {
-        auto first_digit = input.begin();
-        // Delete any trailing white-spaces
-        while (first_digit != input.end() && std::isspace(*first_digit))
-        {
-            ++first_digit;
-        }
-        int value = 0;
-        boost::spirit::qi::parse(first_digit, input.end(), boost::spirit::int_, value);
-        return value;
-    }
+    // Javascript has no separation of float / int, digits without a '.' are integral typed
+    // X.Y.0 -> X.Y
+    // X.0 -> X
+    boost::trim_right_if(rv, boost::is_any_of("0"));
+    boost::trim_right_if(rv, boost::is_any_of("."));
+    // Note:
+    //  - assumes the locale to use '.' as digit separator
+    //  - this is not identical to:  trim_right_if(rv, is_any_of('0 .'))
 
-    static unsigned string_to_uint(const std::string &input)
-    {
-        auto first_digit = input.begin();
-        // Delete any trailing white-spaces
-        while (first_digit != input.end() && (std::isspace(*first_digit) || '-' == *first_digit))
-        {
-            ++first_digit;
-        }
-        unsigned value = 0;
-        boost::spirit::qi::parse(first_digit, input.end(), boost::spirit::uint_, value);
-        return value;
-    }
-
-    static uint64_t string_to_uint64(const std::string &input)
-    {
-        auto first_digit = input.begin();
-        // Delete any trailing white-spaces
-        while (first_digit != input.end() && std::isspace(*first_digit))
-        {
-            ++first_digit;
-        }
-        uint64_t value = 0;
-        boost::spirit::qi::parse(first_digit, input.end(), boost::spirit::long_long, value);
-        return value;
-    }
-
-    // source: http://tinodidriksen.com/2011/05/28/cpp-convert-string-to-double-speed/
-    static double string_to_double(const char *p) noexcept
-    {
-        double r = 0.0;
-        bool neg = false;
-        if (*p == '-')
-        {
-            neg = true;
-            ++p;
-        }
-        while (*p >= '0' && *p <= '9')
-        {
-            r = (r * 10.0) + (*p - '0');
-            ++p;
-        }
-        if (*p == '.')
-        {
-            double f = 0.0;
-            int n = 0;
-            ++p;
-            while (*p >= '0' && *p <= '9')
-            {
-                f = (f * 10.0) + (*p - '0');
-                ++p;
-                ++n;
-            }
-            r += f / std::pow(10.0, n);
-        }
-        if (neg)
-        {
-            r = -r;
-        }
-        return r;
-    }
-
-    template <typename T> struct scientific_policy : boost::spirit::karma::real_policies<T>
-    {
-        //  we want the numbers always to be in fixed format
-        static int floatfield(T) { return boost::spirit::karma::real_policies<T>::fmtflags::fixed; }
-        static unsigned int precision(T) { return 6; }
-    };
-    using science_type = boost::spirit::karma::real_generator<double, scientific_policy<double>>;
-
-    static std::string double_fixed_to_string(const double value)
-    {
-        std::string output;
-        std::back_insert_iterator<std::string> sink(output);
-        boost::spirit::karma::generate(sink, science_type(), value);
-        if (output.size() >= 2 && output[output.size() - 2] == '.' &&
-            output[output.size() - 1] == '0')
-        {
-            output.resize(output.size() - 2);
-        }
-        return output;
-    }
-
-    static std::string double_to_string(const double value)
-    {
-        std::string output;
-        std::back_insert_iterator<std::string> sink(output);
-        boost::spirit::karma::generate(sink, value);
-        return output;
-    }
-
-    static void double_with_two_digits_to_string(const double value, std::string &output)
-    {
-        // The largest 32-bit integer is 4294967295, that is 10 chars
-        // On the safe side, add 1 for sign, and 1 for trailing zero
-        char buffer[12];
-        sprintf(buffer, "%g", value);
-        output = buffer;
-    }
-};
+    return rv;
+}
+}
 
 #endif // CAST_HPP

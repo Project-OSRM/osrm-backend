@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../data_structures/segment_information.hpp"
 #include "../data_structures/turn_instructions.hpp"
 #include "../util/bearing.hpp"
+#include "../util/cast.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/simple_logger.hpp"
@@ -43,7 +44,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/json_container.hpp>
 
+#include <limits>
 #include <algorithm>
+#include <string>
 
 template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<DataFacadeT>
 {
@@ -100,9 +103,6 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
-            json_result.values["status"] = 207;
-            json_result.values["status_message"] = "Cannot find route between points";
-            // osrm::json::render(reply.content, json_result);
             return;
         }
 
@@ -113,8 +113,6 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         description_factory.SetStartSegment(
             raw_route.segment_end_coordinates.front().source_phantom,
             raw_route.source_traversed_in_reverse.front());
-        json_result.values["status"] = 0;
-        json_result.values["status_message"] = "Found route between points";
 
         // for each unpacked segment add the leg to the description
         for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
@@ -293,14 +291,13 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                                                      std::vector<Segment> &route_segments_list) const
     {
         osrm::json::Array json_instruction_array;
-
         // Segment information has following format:
         //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]
         unsigned necessary_segments_running_index = 0;
 
         struct RoundAbout
         {
-            RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
+            RoundAbout() : start_index(std::numeric_limits<int>::max()), name_id(INVALID_NAMEID), leave_at_exit(std::numeric_limits<int>::max()) {}
             int start_index;
             unsigned name_id;
             int leave_at_exit;
@@ -327,18 +324,18 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     std::string current_turn_instruction;
                     if (TurnInstruction::LeaveRoundAbout == current_instruction)
                     {
-                        temp_instruction = cast::integral_to_string(
+                        temp_instruction = std::to_string(
                             cast::enum_to_underlying(TurnInstruction::EnterRoundAbout));
                         current_turn_instruction += temp_instruction;
                         current_turn_instruction += "-";
-                        temp_instruction = cast::integral_to_string(round_about.leave_at_exit + 1);
+                        temp_instruction = std::to_string(round_about.leave_at_exit + 1);
                         current_turn_instruction += temp_instruction;
                         round_about.leave_at_exit = 0;
                     }
                     else
                     {
                         temp_instruction =
-                            cast::integral_to_string(cast::enum_to_underlying(current_instruction));
+                            std::to_string(cast::enum_to_underlying(current_instruction));
                         current_turn_instruction += temp_instruction;
                     }
                     json_instruction_row.values.push_back(current_turn_instruction);
@@ -348,17 +345,27 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                     json_instruction_row.values.push_back(necessary_segments_running_index);
                     json_instruction_row.values.push_back(std::round(segment.duration / 10.));
                     json_instruction_row.values.push_back(
-                        cast::integral_to_string(static_cast<unsigned>(segment.length)) + "m");
-                    const double bearing_value = (segment.bearing / 10.);
-                    json_instruction_row.values.push_back(bearing::get(bearing_value));
+                        std::to_string(static_cast<unsigned>(segment.length)) + "m");
+
+                    // post turn bearing
+                    const double post_turn_bearing_value = (segment.post_turn_bearing / 10.);
+                    json_instruction_row.values.push_back(bearing::get(post_turn_bearing_value));
                     json_instruction_row.values.push_back(
-                        static_cast<unsigned>(round(bearing_value)));
+                        static_cast<unsigned>(round(post_turn_bearing_value)));
+
                     json_instruction_row.values.push_back(segment.travel_mode);
+
+                    // pre turn bearing
+                    const double pre_turn_bearing_value = (segment.pre_turn_bearing / 10.);
+                    json_instruction_row.values.push_back(bearing::get(pre_turn_bearing_value));
+                    json_instruction_row.values.push_back(
+                        static_cast<unsigned>(round(pre_turn_bearing_value)));
+
+                    json_instruction_array.values.push_back(json_instruction_row);
 
                     route_segments_list.emplace_back(
                         segment.name_id, static_cast<int>(segment.length),
                         static_cast<unsigned>(route_segments_list.size()));
-                    json_instruction_array.values.push_back(json_instruction_row);
                 }
             }
             else if (TurnInstruction::StayOnRoundAbout == current_instruction)
@@ -372,14 +379,16 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         }
 
         osrm::json::Array json_last_instruction_row;
-        temp_instruction = cast::integral_to_string(
-            cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
+        temp_instruction =
+            std::to_string(cast::enum_to_underlying(TurnInstruction::ReachedYourDestination));
         json_last_instruction_row.values.push_back(temp_instruction);
         json_last_instruction_row.values.push_back("");
         json_last_instruction_row.values.push_back(0);
         json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
         json_last_instruction_row.values.push_back(0);
         json_last_instruction_row.values.push_back("0m");
+        json_last_instruction_row.values.push_back(bearing::get(0.0));
+        json_last_instruction_row.values.push_back(0.);
         json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
         json_instruction_array.values.push_back(json_last_instruction_row);

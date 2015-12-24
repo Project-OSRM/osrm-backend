@@ -3,25 +3,10 @@ require 'net/http'
 HOST = "http://127.0.0.1:#{OSRM_PORT}"
 DESTINATION_REACHED = 15      #OSRM instruction code
 
-class Hash
-  def to_param(namespace = nil)
-    collect do |key, value|
-      "#{key}=#{value}"
-    end.sort
-  end
-end
-
-def request_path path, waypoints=[], options={}
-  locs = waypoints.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
-  params = (locs + options.to_param).join('&')
-  params = nil if params==""
-  
-  if params == nil
-    uri = generate_request_url (path)
-  else
-    uri = generate_request_url (path + '?' + params)
-  end
-  response = send_request uri, waypoints, options
+def request_path service, params
+  uri = "#{HOST}/" + service
+  response = send_request uri, params
+  return response
 end
 
 def request_url path
@@ -36,40 +21,95 @@ rescue Timeout::Error
   raise "*** osrm-routed did not respond."
 end
 
-def request_route waypoints, params={}
-  defaults = { 'output' => 'json', 'instructions' => true, 'alt' => false }
-  request_path "viaroute", waypoints, defaults.merge(params)
+# Overwriters the default values in defaults.
+# e.g. [[a, 1], [b, 2]], [[a, 5], [d, 10]] => [[a, 5], [b, 2], [d, 10]]
+def overwrite_params defaults, other
+  merged = []
+  defaults.each do |k,v|
+    idx = other.index { |p| p[0] == k }
+    if idx == nil then
+      merged << [k, v]
+    else
+      merged << [k, other[idx][1]]
+    end
+  end
+  other.each do |k,v|
+    if merged.index { |pair| pair[0] == k} == nil then
+      merged << [k, v]
+    end
+  end
+
+  return merged
 end
 
-def request_table waypoints, params={}
-  defaults = { 'output' => 'json' }
-  request_path "table", waypoints, defaults.merge(params)
+def request_route waypoints, bearings, user_params
+  raise "*** number of bearings does not equal the number of waypoints" unless bearings.size == 0 || bearings.size == waypoints.size
+
+  defaults = [['output','json'], ['instructions',true], ['alt',false]]
+  params = overwrite_params defaults, user_params
+  encoded_waypoint = waypoints.map{ |w| ["loc","#{w.lat},#{w.lon}"] }
+  if bearings.size > 0
+    encoded_bearings = bearings.map { |b| ["b", b.to_s]}
+    parasm = params.concat encoded_waypoint.zip(encoded_bearings).flatten! 1
+  else
+    params = params.concat encoded_waypoint
+  end
+
+  return request_path "viaroute", params
+end
+
+def request_nearest node, user_params
+  defaults = [['output', 'json']]
+  params = overwrite_params defaults, user_params
+  params << ["loc", "#{node.lat},#{node.lon}"]
+
+  return request_path "nearest", params
+end
+
+def request_table waypoints, user_params
+  defaults = [['output', 'json']]
+  params = overwrite_params defaults, user_params
+  params = params.concat waypoints.map{ |w| [w[:type],"#{w[:coord].lat},#{w[:coord].lon}"] }
+
+  return request_path "table", params
+end
+
+def request_trip waypoints, user_params
+  defaults = [['output', 'json']]
+  params = overwrite_params defaults, user_params
+  params = params.concat waypoints.map{ |w| ["loc","#{w.lat},#{w.lon}"] }
+
+  return request_path "trip", params
+end
+
+def request_matching waypoints, timestamps, user_params
+  defaults = [['output', 'json']]
+  params = overwrite_params defaults, user_params
+  encoded_waypoint = waypoints.map{ |w| ["loc","#{w.lat},#{w.lon}"] }
+  if timestamps.size > 0
+    encoded_timestamps = timestamps.map { |t| ["t", t.to_s]}
+    parasm = params.concat encoded_waypoint.zip(encoded_timestamps).flatten! 1
+  else
+    params = params.concat encoded_waypoint
+  end
+
+  return request_path "match", params
 end
 
 def got_route? response
   if response.code == "200" && !response.body.empty?
     json = JSON.parse response.body
-    if json['status'] == 0
+    if json['status'] == 200
       return way_list( json['route_instructions']).empty? == false
     end
   end
-  false
+  return false
 end
 
 def route_status response
   if response.code == "200" && !response.body.empty?
     json = JSON.parse response.body
-    if json['status'] == 0
-      if way_list( json['route_instructions']).empty?
-        return 'Empty route'
-      else
-        return 'x'
-      end
-    elsif json['status'] == 207
-      ''
-    else
-      "Status #{json['status']}"
-    end
+    return json['status']
   else
     "HTTP #{response.code}"
   end

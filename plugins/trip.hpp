@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../descriptors/json_descriptor.hpp"          // to make json output
 #include "../util/make_unique.hpp"
 #include "../util/timing_util.hpp"        // to time runtime
-#include "../util/simple_logger.hpp"      // for logging output
+//#include "../util/simple_logger.hpp"      // for logging output
 #include "../util/dist_table_wrapper.hpp" // to access the dist
                                           // table more easily
 
@@ -63,19 +63,24 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     std::string descriptor_string;
     DataFacadeT *facade;
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
+    int max_locations_trip;
 
   public:
-    explicit RoundTripPlugin(DataFacadeT *facade) : descriptor_string("trip"), facade(facade)
+    explicit RoundTripPlugin(DataFacadeT *facade, int max_locations_trip)
+        : descriptor_string("trip"), facade(facade), max_locations_trip(max_locations_trip)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
 
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
-    void GetPhantomNodes(const RouteParameters &route_parameters,
-                         PhantomNodeArray &phantom_node_vector)
+    std::vector<PhantomNode> GetPhantomNodes(const RouteParameters &route_parameters)
     {
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
+        const auto &input_bearings = route_parameters.bearings;
+
+        std::vector<PhantomNode> phantom_node_list;
+        phantom_node_list.reserve(route_parameters.coordinates.size());
 
         // find phantom nodes for all input coords
         for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
@@ -88,18 +93,24 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
                 if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
                 {
-                    phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
+                    phantom_node_list.push_back(std::move(current_phantom_node));
                     continue;
                 }
             }
-            facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates[i],
-                                                            phantom_node_vector[i], 1);
-            if (phantom_node_vector[i].size() > 1)
+            const int bearing = input_bearings.size() > 0 ? input_bearings[i].first : 0;
+            const int range = input_bearings.size() > 0
+                                  ? (input_bearings[i].second ? *input_bearings[i].second : 10)
+                                  : 180;
+            auto results = facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range);
+            if (results.empty())
             {
-                phantom_node_vector[i].erase(std::begin(phantom_node_vector[i]));
+                break;
             }
-            BOOST_ASSERT(phantom_node_vector[i].front().is_valid(facade->GetNumberOfNodes()));
+            phantom_node_list.push_back(std::move(results.front().phantom_node));
+            BOOST_ASSERT(phantom_node_list.back().is_valid(facade->GetNumberOfNodes()));
         }
+
+        return phantom_node_list;
     }
 
     // Object to hold all strongly connected components (scc) of a graph
@@ -116,25 +127,24 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         //          => in_component = [0, 1, 2, 4, 5, 3, 6, 7, 8]
         //          => in_range = [0, 5]
         SCC_Component(std::vector<NodeID> in_component, std::vector<size_t> in_range)
-            : component(in_component), range(in_range)
+            : component(std::move(in_component)), range(std::move(in_range))
         {
-            range.push_back(in_component.size());
+            range.push_back(component.size());
 
-            BOOST_ASSERT_MSG(in_component.size() >= in_range.size(),
+            BOOST_ASSERT_MSG(component.size() >= range.size(),
                              "scc component and its ranges do not match");
-            BOOST_ASSERT_MSG(in_component.size() > 0, "there's no scc component");
-            BOOST_ASSERT_MSG(*std::max_element(in_range.begin(), in_range.end()) <=
-                                 in_component.size(),
+            BOOST_ASSERT_MSG(component.size() > 0, "there's no scc component");
+            BOOST_ASSERT_MSG(*std::max_element(range.begin(), range.end()) <= component.size(),
                              "scc component ranges are out of bound");
-            BOOST_ASSERT_MSG(*std::min_element(in_range.begin(), in_range.end()) >= 0,
+            BOOST_ASSERT_MSG(*std::min_element(range.begin(), range.end()) >= 0,
                              "invalid scc component range");
-            BOOST_ASSERT_MSG(std::is_sorted(std::begin(in_range), std::end(in_range)),
+            BOOST_ASSERT_MSG(std::is_sorted(std::begin(range), std::end(range)),
                              "invalid component ranges");
         };
 
         // constructor to use when whole graph is one single scc
         SCC_Component(std::vector<NodeID> in_component)
-            : component(in_component), range({0, in_component.size()}){};
+            : component(std::move(in_component)), range({0, component.size()}){};
 
         std::size_t GetNumberOfComponents() const
         {
@@ -203,7 +213,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         json_result.values["permutation"] = json_permutation;
     }
 
-    InternalRouteResult ComputeRoute(const PhantomNodeArray &phantom_node_vector,
+    InternalRouteResult ComputeRoute(const std::vector<PhantomNode> &phantom_node_list,
                                      const RouteParameters &route_parameters,
                                      const std::vector<NodeID> &trip)
     {
@@ -212,50 +222,86 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         PhantomNodes viapoint;
         const auto start = std::begin(trip);
         const auto end = std::end(trip);
+        // computes a roundtrip from the nodes in trip
         for (auto it = start; it != end; ++it)
         {
             const auto from_node = *it;
             // if from_node is the last node, compute the route from the last to the first location
             const auto to_node = std::next(it) != end ? *std::next(it) : *start;
 
-            viapoint =
-                PhantomNodes{phantom_node_vector[from_node][0], phantom_node_vector[to_node][0]};
+            viapoint = PhantomNodes{phantom_node_list[from_node], phantom_node_list[to_node]};
             min_route.segment_end_coordinates.emplace_back(viapoint);
         }
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
 
-        search_engine_ptr->shortest_path(min_route.segment_end_coordinates, route_parameters.uturns,
-                                         min_route);
+        std::vector<bool> uturns(trip.size() + 1);
+        std::transform(trip.begin(), trip.end(), uturns.begin(),
+                       [&route_parameters](const NodeID idx)
+                       {
+                           return route_parameters.uturns[idx];
+                       });
+        uturns.back() = route_parameters.uturns[trip.front()];
+
+        search_engine_ptr->shortest_path(min_route.segment_end_coordinates, uturns, min_route);
 
         BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
         return min_route;
     }
 
-    int HandleRequest(const RouteParameters &route_parameters,
+    Status HandleRequest(const RouteParameters &route_parameters,
                       osrm::json::Object &json_result) override final
     {
+        if (max_locations_trip > 0 &&
+            (static_cast<int>(route_parameters.coordinates.size()) > max_locations_trip))
+        {
+            json_result.values["status_message"] =
+                "Number of entries " + std::to_string(route_parameters.coordinates.size()) +
+                " is higher than current maximum (" + std::to_string(max_locations_trip) + ")";
+            return Status::Error;
+        }
+
         // check if all inputs are coordinates
         if (!check_all_coordinates(route_parameters.coordinates))
         {
-            return 400;
+            json_result.values["status_message"] = "Invalid coordinates";
+            return Status::Error;
+        }
+
+        const auto &input_bearings = route_parameters.bearings;
+        if (input_bearings.size() > 0 &&
+            route_parameters.coordinates.size() != input_bearings.size())
+        {
+            json_result.values["status_message"] =
+                "Number of bearings does not match number of coordinates";
+            return Status::Error;
         }
 
         // get phantom nodes
-        PhantomNodeArray phantom_node_vector(route_parameters.coordinates.size());
-        GetPhantomNodes(route_parameters, phantom_node_vector);
-        const auto number_of_locations = phantom_node_vector.size();
+        auto phantom_node_list = GetPhantomNodes(route_parameters);
+        if (phantom_node_list.size() != route_parameters.coordinates.size())
+        {
+            BOOST_ASSERT(phantom_node_list.size() < route_parameters.coordinates.size());
+            json_result.values["status_message"] =
+                std::string("Could not find a matching segment for coordinate ") +
+                std::to_string(phantom_node_list.size());
+            return Status::NoSegment;
+        }
+
+        const auto number_of_locations = phantom_node_list.size();
 
         // compute the distance table of all phantom nodes
         const auto result_table = DistTableWrapper<EdgeWeight>(
-            *search_engine_ptr->distance_table(phantom_node_vector), number_of_locations);
+            *search_engine_ptr->distance_table(phantom_node_list, phantom_node_list),
+            number_of_locations);
 
         if (result_table.size() == 0)
         {
-            return 400;
+            return Status::Error;
         }
 
         const constexpr std::size_t BF_MAX_FEASABLE = 10;
         BOOST_ASSERT_MSG(result_table.size() == number_of_locations * number_of_locations,
-                         "Distance Table has wrong size.");
+                         "Distance Table has wrong size");
 
         // get scc components
         SCC_Component scc = SplitUnaccessibleLocations(number_of_locations, result_table);
@@ -312,16 +358,12 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         // compute all round trip routes
         std::vector<InternalRouteResult> comp_route;
         comp_route.reserve(route_result.size());
-        for (std::size_t r = 0; r < route_result.size(); ++r)
+        for (auto &elem : route_result)
         {
-            comp_route.push_back(
-                ComputeRoute(phantom_node_vector, route_parameters, route_result[r]));
+            comp_route.push_back(ComputeRoute(phantom_node_list, route_parameters, elem));
         }
 
         TIMER_STOP(TRIP_TIMER);
-
-        SimpleLogger().Write() << "Trip calculation took: " << TIMER_MSEC(TRIP_TIMER) / 1000.
-                               << "s";
 
         // prepare JSON output
         // create a json object for every trip
@@ -342,11 +384,16 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             trip.values.push_back(std::move(scc_trip));
         }
 
+
+        if (trip.values.empty())
+        {
+            json_result.values["status_message"] = "Cannot find trips";
+            return Status::EmptyResult;
+        }
+
         json_result.values["trips"] = std::move(trip);
-
-
-
-        return 200;
+        json_result.values["status_message"] = "Found trips";
+        return Status::Ok;
     }
 };
 

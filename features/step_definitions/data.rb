@@ -6,6 +6,10 @@ Given(/^the import format "(.*?)"$/) do |format|
   set_input_format format
 end
 
+Given /^the extract extra arguments "(.*?)"$/ do |args|
+    set_extract_args args
+end
+
 Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
@@ -28,7 +32,7 @@ Given /^the node map$/ do |table|
         raise "*** invalid node name '#{name}', must me alphanumeric" unless name.match /[a-z0-9]/
         if name.match /[a-z]/
           raise "*** duplicate node '#{name}'" if name_node_hash[name]
-          add_osm_node name, *table_coord_to_lonlat(ci,ri)
+          add_osm_node name, *table_coord_to_lonlat(ci,ri), nil
         else
           raise "*** duplicate node '#{name}'" if location_hash[name]
           add_location name, *table_coord_to_lonlat(ci,ri)
@@ -43,7 +47,9 @@ Given /^the node locations$/ do |table|
     name = row['node']
     raise "*** duplicate node '#{name}'" if find_node_by_name name
     if name.match /[a-z]/
-      add_osm_node name, row['lon'].to_f, row['lat'].to_f
+      id = row['id']
+      id = id.to_i if id
+      add_osm_node name, row['lon'].to_f, row['lat'].to_f, id
     else
       add_location name, row['lon'].to_f, row['lat'].to_f
     end

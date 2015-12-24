@@ -47,10 +47,10 @@ struct NodeBasedEdgeData
 
     NodeBasedEdgeData(int distance, unsigned edge_id, unsigned name_id,
             bool access_restricted, bool reversed,
-            bool roundabout, TravelMode travel_mode)
+            bool roundabout, bool startpoint, TravelMode travel_mode)
         : distance(distance), edge_id(edge_id), name_id(name_id),
           access_restricted(access_restricted), reversed(reversed),
-          roundabout(roundabout), travel_mode(travel_mode)
+          roundabout(roundabout), startpoint(startpoint), travel_mode(travel_mode)
     {
     }
 
@@ -60,6 +60,7 @@ struct NodeBasedEdgeData
     bool access_restricted : 1;
     bool reversed : 1;
     bool roundabout : 1;
+    bool startpoint : 1;
     TravelMode travel_mode : 4;
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
@@ -72,10 +73,10 @@ struct NodeBasedEdgeData
 using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 
 /// Factory method to create NodeBasedDynamicGraph from NodeBasedEdges
-/// The since DynamicGraph expects directed edges, we need to insert
+/// Since DynamicGraph expects directed edges, we need to insert
 /// two edges for undirected edges.
 inline std::shared_ptr<NodeBasedDynamicGraph>
-NodeBasedDynamicGraphFromEdges(int number_of_nodes, const std::vector<NodeBasedEdge> &input_edge_list)
+NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes, const std::vector<NodeBasedEdge> &input_edge_list)
 {
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(input_edge_list,
         [](NodeBasedDynamicGraph::InputEdge& output_edge, const NodeBasedEdge& input_edge)
@@ -87,6 +88,7 @@ NodeBasedDynamicGraphFromEdges(int number_of_nodes, const std::vector<NodeBasedE
             output_edge.data.name_id = input_edge.name_id;
             output_edge.data.access_restricted = input_edge.access_restricted;
             output_edge.data.travel_mode = input_edge.travel_mode;
+            output_edge.data.startpoint = input_edge.startpoint;
         }
     );
 

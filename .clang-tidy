@@ -1,0 +1,4 @@
+---
+Checks:          '-clang-analyzer-*,google-*,llvm-*,misc-*,readability-*,-google-build-explicit-make-pair,-google-explicit-constructor,-google-readability-braces-around-statements,-google-readability-casting,-google-readability-namespace-comments,-google-readability-function,-google-readability-todo,-google-runtime-int,-llvm-namespace-comment,-llvm-header-guard,-llvm-twine-local,-misc-argument-comment,-readability-braces-around-statements,-readability-identifier-naming'
+...
+

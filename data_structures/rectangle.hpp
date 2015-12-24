@@ -121,35 +121,35 @@ struct RectangleInt2D
         switch (d)
         {
         case NORTH:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(max_lat, location.lon));
             break;
         case SOUTH:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(min_lat, location.lon));
             break;
         case WEST:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(location.lat, min_lon));
             break;
         case EAST:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(location.lat, max_lon));
             break;
         case NORTH_EAST:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(max_lat, max_lon));
             break;
         case NORTH_WEST:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(max_lat, min_lon));
             break;
         case SOUTH_EAST:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(min_lat, max_lon));
             break;
         case SOUTH_WEST:
-            min_dist = coordinate_calculation::euclidean_distance(
+            min_dist = coordinate_calculation::great_circle_distance(
                 location, FixedPointCoordinate(min_lat, min_lon));
             break;
         default:
@@ -170,25 +170,25 @@ struct RectangleInt2D
         const FixedPointCoordinate lower_right(min_lat, max_lon);
         const FixedPointCoordinate lower_left(min_lat, min_lon);
 
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::euclidean_distance(location, upper_left),
-                              coordinate_calculation::euclidean_distance(location, upper_right)));
+        min_max_dist = std::min(
+            min_max_dist,
+            std::max(coordinate_calculation::great_circle_distance(location, upper_left),
+                     coordinate_calculation::great_circle_distance(location, upper_right)));
+
+        min_max_dist = std::min(
+            min_max_dist,
+            std::max(coordinate_calculation::great_circle_distance(location, upper_right),
+                     coordinate_calculation::great_circle_distance(location, lower_right)));
 
         min_max_dist =
             std::min(min_max_dist,
-                     std::max(coordinate_calculation::euclidean_distance(location, upper_right),
-                              coordinate_calculation::euclidean_distance(location, lower_right)));
+                     std::max(coordinate_calculation::great_circle_distance(location, lower_right),
+                              coordinate_calculation::great_circle_distance(location, lower_left)));
 
         min_max_dist =
             std::min(min_max_dist,
-                     std::max(coordinate_calculation::euclidean_distance(location, lower_right),
-                              coordinate_calculation::euclidean_distance(location, lower_left)));
-
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::euclidean_distance(location, lower_left),
-                              coordinate_calculation::euclidean_distance(location, upper_left)));
+                     std::max(coordinate_calculation::great_circle_distance(location, lower_left),
+                              coordinate_calculation::great_circle_distance(location, upper_left)));
         return min_max_dist;
     }
 
@@ -197,14 +197,6 @@ struct RectangleInt2D
         const bool lats_contained = (location.lat >= min_lat) && (location.lat <= max_lat);
         const bool lons_contained = (location.lon >= min_lon) && (location.lon <= max_lon);
         return lats_contained && lons_contained;
-    }
-
-    friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
-    {
-        out << rect.min_lat / COORDINATE_PRECISION << "," << rect.min_lon / COORDINATE_PRECISION
-            << " " << rect.max_lat / COORDINATE_PRECISION << ","
-            << rect.max_lon / COORDINATE_PRECISION;
-        return out;
     }
 };
 

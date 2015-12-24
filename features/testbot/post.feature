@@ -62,24 +62,6 @@ Feature: POST request
             | d | 200 | 300 | 0   | 300 |
             | e | 300 | 400 | 100 | 0   |
 
-    Scenario: Testbot - locate POST request
-        Given the node locations
-            | node | lat | lon  |
-            | a    | -85 | -180 |
-            | b    | 0   | 0    |
-            | c    | 85  | 180  |
-            | x    | -84 | -180 |
-            | y    | 84  | 180  |
-
-        And the ways
-            | nodes |
-            | abc   |
-
-        When I request locate I should get
-            | in | out |
-            | x  | a   |
-            | y  | c   |
-            
     Scenario: Testbot - nearest POST request
         Given the node locations
             | node | lat     | lon  |

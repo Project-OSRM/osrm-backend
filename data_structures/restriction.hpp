@@ -36,8 +36,8 @@ struct TurnRestriction
 {
     union WayOrNode
     {
-        NodeID node;
-        EdgeID way;
+        OSMNodeID_weak node;
+        OSMEdgeID_weak way;
     };
     WayOrNode via;
     WayOrNode from;

@@ -26,15 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../../data_structures/dynamic_graph.hpp"
-#include "../../util/make_unique.hpp"
 #include "../../typedefs.h"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
-#include <boost/mpl/list.hpp>
 
-#include <random>
-#include <unordered_map>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE(dynamic_graph)
 

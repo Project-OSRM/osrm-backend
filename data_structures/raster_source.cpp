@@ -42,8 +42,8 @@ RasterSource::RasterSource(RasterGrid _raster_data,
                            int _ymin,
                            int _ymax)
     : xstep(calcSize(_xmin, _xmax, _width)), ystep(calcSize(_ymin, _ymax, _height)),
-      raster_data(_raster_data), width(_width), height(_height), xmin(_xmin), xmax(_xmax),
-      ymin(_ymin), ymax(_ymax)
+      raster_data(std::move(_raster_data)), width(_width), height(_height), xmin(_xmin),
+      xmax(_xmax), ymin(_ymin), ymax(_ymax)
 {
     BOOST_ASSERT(xstep != 0);
     BOOST_ASSERT(ystep != 0);

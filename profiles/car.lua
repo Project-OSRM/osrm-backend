@@ -128,6 +128,8 @@ maxspeed_table = {
   ["uk:motorway"] = (70*1609)/1000
 }
 
+-- these need to be global because they are accesed externaly
+u_turn_penalty                  = 20
 traffic_signal_penalty          = 2
 use_turn_restrictions           = true
 
@@ -138,7 +140,6 @@ local turn_bias                 = 1.2
 
 local obey_oneway               = true
 local ignore_areas              = true
-local u_turn_penalty            = 20
 
 local abs = math.abs
 local min = math.min
@@ -180,15 +181,6 @@ local function parse_maxspeed(source)
   end
   return n
 end
-
--- FIXME Why was this commented out?
--- function turn_function (angle)
---   -- print ("called at angle " .. angle )
---   local index = math.abs(math.floor(angle/10+0.5))+1 -- +1 'coz LUA starts as idx 1
---   local penalty = turn_cost_table[index]
---   -- print ("index: " .. index .. ", bias: " .. penalty )
---   return penalty
--- end
 
 function node_function (node, result)
   -- parse access and barrier tags
@@ -388,8 +380,8 @@ function way_function (way, result)
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
-  local maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way:get_value_by_key( "maxspeed:backward"))
+  local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward"))
+  local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward"))
   if maxspeed_forward and maxspeed_forward > 0 then
     if 0 ~= result.forward_mode and 0 ~= result.backward_mode then
       result.backward_speed = result.forward_speed
@@ -398,6 +390,29 @@ function way_function (way, result)
   end
   if maxspeed_backward and maxspeed_backward > 0 then
     result.backward_speed = maxspeed_backward
+  end
+
+  -- Override speed settings if advisory forward/backward maxspeeds are given
+  local advisory_speed = parse_maxspeed(way:get_value_by_key("maxspeed:advisory"))
+  local advisory_forward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:forward"))
+  local advisory_backward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:backward"))
+  -- apply bi-directional advisory speed first
+  if advisory_speed and advisory_speed > 0 then
+    if 0 ~= result.forward_mode then
+      result.forward_speed = advisory_speed
+    end
+    if 0 ~= result.backward_mode then
+      result.backward_speed = advisory_speed
+    end
+  end
+  if advisory_forward and advisory_forward > 0 then
+    if 0 ~= result.forward_mode and 0 ~= result.backward_mode then
+      result.backward_speed = result.forward_speed
+    end
+    result.forward_speed = advisory_forward
+  end
+  if advisory_backward and advisory_backward > 0 then
+    result.backward_speed = advisory_backward
   end
 
   local width = math.huge
@@ -434,6 +449,9 @@ function way_function (way, result)
     end
     result.backward_speed = math.min(penalized_speed, scaled_speed)
   end
+
+  -- only allow this road as start point if it not a ferry
+  result.is_startpoint = result.forward_mode == mode_normal or result.backward_mode == mode_normal
 end
 
 function turn_function (angle)

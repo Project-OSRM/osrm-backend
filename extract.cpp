@@ -31,53 +31,59 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem.hpp>
 
+#include <cstdlib>
 #include <exception>
+#include <new>
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) try
 {
-    try
+    LogPolicy::GetInstance().Unmute();
+    ExtractorConfig extractor_config;
+
+    const return_code result = ExtractorOptions::ParseArguments(argc, argv, extractor_config);
+
+    if (return_code::fail == result)
     {
-        LogPolicy::GetInstance().Unmute();
-        ExtractorConfig extractor_config;
-
-        const return_code result = ExtractorOptions::ParseArguments(argc, argv, extractor_config);
-
-        if (return_code::fail == result)
-        {
-            return 1;
-        }
-
-        if (return_code::exit == result)
-        {
-            return 0;
-        }
-
-        ExtractorOptions::GenerateOutputFilesNames(extractor_config);
-
-        if (1 > extractor_config.requested_num_threads)
-        {
-            SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
-            return 1;
-        }
-
-        if (!boost::filesystem::is_regular_file(extractor_config.input_path))
-        {
-            SimpleLogger().Write(logWARNING)
-                << "Input file " << extractor_config.input_path.string() << " not found!";
-            return 1;
-        }
-
-        if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
-        {
-            SimpleLogger().Write(logWARNING) << "Profile " << extractor_config.profile_path.string()
-                                             << " not found!";
-            return 1;
-        }
-        return extractor(extractor_config).run();
+        return EXIT_FAILURE;
     }
-    catch (const std::exception &e)
+
+    if (return_code::exit == result)
     {
-        SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-        return 1;
+        return EXIT_SUCCESS;
     }
+
+    ExtractorOptions::GenerateOutputFilesNames(extractor_config);
+
+    if (1 > extractor_config.requested_num_threads)
+    {
+        SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
+        return EXIT_FAILURE;
+    }
+
+    if (!boost::filesystem::is_regular_file(extractor_config.input_path))
+    {
+        SimpleLogger().Write(logWARNING) << "Input file " << extractor_config.input_path.string()
+                                         << " not found!";
+        return EXIT_FAILURE;
+    }
+
+    if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
+    {
+        SimpleLogger().Write(logWARNING) << "Profile " << extractor_config.profile_path.string()
+                                         << " not found!";
+        return EXIT_FAILURE;
+    }
+    return extractor(extractor_config).run();
+}
+catch (const std::bad_alloc &e)
+{
+    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    SimpleLogger().Write(logWARNING)
+        << "Please provide more memory or consider using a larger swapfile";
+    return EXIT_FAILURE;
+}
+catch (const std::exception &e)
+{
+    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    return EXIT_FAILURE;
 }

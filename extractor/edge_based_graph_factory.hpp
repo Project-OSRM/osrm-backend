@@ -50,6 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_set>
 #include <vector>
 
+#include <boost/filesystem/fstream.hpp>
+
 struct lua_State;
 
 class EdgeBasedGraphFactory
@@ -66,12 +68,25 @@ class EdgeBasedGraphFactory
                                    const std::vector<QueryNode> &node_info_list,
                                    SpeedProfileProperties speed_profile);
 
+#ifdef DEBUG_GEOMETRY
     void Run(const std::string &original_edge_data_filename,
-             lua_State *lua_state);
+             lua_State *lua_state,
+             const std::string &edge_segment_lookup_filename,
+             const std::string &edge_penalty_filename,
+             const bool generate_edge_lookup,
+             const std::string &debug_turns_path);
+#else
+    void Run(const std::string &original_edge_data_filename,
+             lua_State *lua_state,
+             const std::string &edge_segment_lookup_filename,
+             const std::string &edge_penalty_filename,
+             const bool generate_edge_lookup);
+#endif
 
     void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
 
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
+    void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
 
     unsigned GetHighestEdgeID();
 
@@ -82,6 +97,9 @@ class EdgeBasedGraphFactory
   private:
     using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
+    //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the graph
+    std::vector<bool> m_edge_based_node_is_startpoint;
+    //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
     unsigned m_max_edge_id;
@@ -99,8 +117,20 @@ class EdgeBasedGraphFactory
     void CompressGeometry();
     unsigned RenumberEdges();
     void GenerateEdgeExpandedNodes();
+#ifdef DEBUG_GEOMETRY
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
-                                   lua_State *lua_state);
+                                   lua_State *lua_state,
+                                   const std::string &edge_segment_lookup_filename,
+                                   const std::string &edge_fixed_penalties_filename,
+                                   const bool generate_edge_lookup,
+                                   const std::string &debug_turns_path);
+#else
+    void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
+                                   lua_State *lua_state,
+                                   const std::string &edge_segment_lookup_filename,
+                                   const std::string &edge_fixed_penalties_filename,
+                                   const bool generate_edge_lookup);
+#endif 
 
     void InsertEdgeBasedNode(const NodeID u, const NodeID v);
 

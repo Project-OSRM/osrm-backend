@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/coordinate.hpp>
 
 #include <boost/fusion/container/vector/vector_fwd.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include <string>
 #include <vector>
@@ -71,6 +72,8 @@ struct RouteParameters
 
     void addTimestamp(const unsigned timestamp);
 
+    void addBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing, boost::spirit::qi::unused_type unused, bool& pass);
+
     void setLanguage(const std::string &language);
 
     void setGeometryFlag(const bool flag);
@@ -78,6 +81,10 @@ struct RouteParameters
     void setCompressionFlag(const bool flag);
 
     void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
+
+    void addDestination(const boost::fusion::vector<double, double> &received_coordinates);
+
+    void addSource(const boost::fusion::vector<double, double> &received_coordinates);
 
     void getCoordinatesFromGeometry(const std::string &geometry_string);
 
@@ -99,8 +106,11 @@ struct RouteParameters
     std::string language;
     std::vector<std::string> hints;
     std::vector<unsigned> timestamps;
+    std::vector<std::pair<const int,const boost::optional<int>>> bearings;
     std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
+    std::vector<bool> is_destination;
+    std::vector<bool> is_source;
 };
 
 #endif // ROUTE_PARAMETERS_HPP

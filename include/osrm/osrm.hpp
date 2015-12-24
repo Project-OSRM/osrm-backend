@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM contributors
+Copyright (c) 2015, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,14 +25,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVER_PATH_H
-#define SERVER_PATH_H
+#ifndef OSRM_HPP
+#define OSRM_HPP
 
-#include <boost/filesystem.hpp>
+#include <memory>
 
-#include <unordered_map>
-#include <string>
+struct LibOSRMConfig;
+struct RouteParameters;
 
-using ServerPaths = std::unordered_map<std::string, boost::filesystem::path>;
+namespace osrm
+{
+namespace json
+{
+struct Object;
+}
+}
 
-#endif // SERVER_PATH_H
+class OSRM
+{
+  private:
+    class OSRM_impl;
+    std::unique_ptr<OSRM_impl> OSRM_pimpl_;
+
+  public:
+    OSRM(LibOSRMConfig &lib_config);
+    ~OSRM(); // needed because we need to define it with the implementation of OSRM_impl
+    int RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result);
+};
+
+#endif // OSRM_HPP

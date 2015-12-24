@@ -1,63 +1,146 @@
 language: cpp
-compiler:
-  - gcc
-#  - clang
-# Make sure CMake is installed
-install:
- - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
- - sudo add-apt-repository -y ppa:boost-latest/ppa
- - sudo apt-get update >/dev/null
- - sudo apt-get -q install libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev lua5.1 liblua5.1-0-dev rubygems libtbb-dev
- - sudo apt-get -q install g++-4.8
- - sudo apt-get install libboost1.54-all-dev
- - sudo apt-get install libgdal-dev
- # luabind
- - curl https://gist.githubusercontent.com/DennisOSRM/f2eb7b948e6fe1ae319e/raw/install-luabind.sh | sudo bash
- # osmosis
- - curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
- # cmake
- - curl -s https://gist.githubusercontent.com/DennisOSRM/5fad9bee5c7f09fd7fc9/raw/ | sudo bash
-before_script:
- - rvm use 1.9.3
- - gem install bundler
- - bundle install
- - mkdir build
- - cd build
- - cmake .. $CMAKEOPTIONS -DBUILD_TOOLS=1
-script:
- - make
- - make tests
- - make benchmarks
- - ./algorithm-tests
- - ./datastructure-tests
- - cd ..
- - cucumber -p verify
-after_script:
-# - cd ..
-# - cucumber -p verify
+sudo: required
+dist: trusty
+
+notifications:
+  email: false
+
 branches:
   only:
     - master
     - develop
-cache:
-- bundler
-- apt
-env:
- - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-4.8" OSRM_PORT=5000 OSRM_TIMEOUT=60
- - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++-4.8" OSRM_PORT=5010 OSRM_TIMEOUT=60
- - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_CXX_COMPILER=g++-4.8" OSRM_PORT=5020 OSRM_TIMEOUT=60
-notifications:
- slack: mapbox:4A6euphDwfxAQnhLurXbu6A1
- irc:
-  channels:
-    - irc.oftc.net#osrm
-  on_success: change
-  on_failure: always
-  use_notice: true
-  skip_join: false
 
-  recipients:
-    - patrick@mapbox.com
-  email:
-    on_success: change
-    on_failure: always
+matrix:
+  include:
+
+    # 1/ Linux Clang Builds
+
+    - os: linux
+      compiler: clang
+      addons: &clang38
+        apt:
+          sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
+          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: COMPILER='clang++-3.8' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: clang
+      addons: &clang38
+        apt:
+          sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
+          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: COMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+
+    - os: linux
+      compiler: clang
+      addons: *clang38
+      env: COMPILER='clang++-3.8' BUILD_TYPE='Debug'
+
+
+    # 2/ Linux GCC Builds
+    - os: linux
+      compiler: gcc
+      addons: &gcc48
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: COMPILER='g++-4.8' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: gcc
+      addons: *gcc48
+      env: COMPILER='g++-4.8' BUILD_TYPE='Debug'
+
+
+    - os: linux
+      compiler: gcc
+      addons: &gcc5
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: COMPILER='g++-5' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: gcc
+      addons: &gcc5
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: COMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+
+    - os: linux
+      compiler: gcc
+      addons: *gcc5
+      env: COMPILER='g++-5' BUILD_TYPE='Debug'
+
+
+    # Disabled until tests all pass on OSX:
+    #
+    # 3/ OSX Clang Builds
+    #- os: osx
+    #  osx_image: xcode6.4
+    #  compiler: clang
+    #  env: COMPILER='clang++' BUILD_TYPE='Debug'
+
+    #- os: osx
+    #  osx_image: xcode6.4
+    #  compiler: clang
+    #  env: COMPILER='clang++' BUILD_TYPE='Release'
+
+    #- os: osx
+    #  osx_image: xcode6.4
+    #  compiler: clang
+    #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+
+    #- os: osx
+    #  osx_image: xcode7
+    #  compiler: clang
+    #  env: COMPILER='clang++' BUILD_TYPE='Debug'
+
+    #- os: osx
+    #  osx_image: xcode7
+    #  compiler: clang
+    #  env: COMPILER='clang++' BUILD_TYPE='Release'
+
+    #- os: osx
+    #  osx_image: xcode7
+    #  compiler: clang
+    #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+
+
+install:
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      CMAKE_URL="http://www.cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz"
+      mkdir cmake && travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+
+      OSMOSIS_URL="http://bretth.dev.openstreetmap.org/osmosis-build/osmosis-latest.tgz"
+      mkdir osmosis && travis_retry wget --quiet -O - ${OSMOSIS_URL} | tar -xz -C osmosis
+      export PATH=${DEPS_DIR}/osmosis/bin:${PATH}
+
+    elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      brew install cmake boost libzip libstxxl libxml2 lua51 luabind tbb GDAL osmosis
+    fi
+
+before_script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - rvm use 1.9.3
+  - gem install bundler
+  - bundle install
+  - mkdir build && cd build
+  - export CXX=${COMPILER}
+  - export OSRM_PORT=5000 OSRM_TIMEOUT=60
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1
+
+script:
+  - make --jobs=2
+  - make tests --jobs=2
+  - make benchmarks
+  - ./algorithm-tests
+  - ./datastructure-tests
+  - ./util-tests
+  - cd ..
+  - cucumber -p verify

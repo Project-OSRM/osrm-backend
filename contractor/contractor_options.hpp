@@ -45,16 +45,16 @@ struct ContractorConfig
 
     boost::filesystem::path config_file_path;
     boost::filesystem::path osrm_input_path;
-    boost::filesystem::path restrictions_path;
     boost::filesystem::path profile_path;
 
-    std::string node_output_path;
+    std::string level_output_path;
     std::string core_output_path;
-    std::string edge_output_path;
-    std::string geometry_output_path;
     std::string graph_output_path;
-    std::string rtree_nodes_output_path;
-    std::string rtree_leafs_output_path;
+    std::string edge_based_graph_path;
+
+    std::string edge_segment_lookup_path;
+    std::string edge_penalty_path;
+    bool use_cached_priority;
 
     unsigned requested_num_threads;
 
@@ -63,6 +63,12 @@ struct ContractorConfig
     //The remaining vertices form the core of the hierarchy 
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
     double core_factor;
+
+    std::string segment_speed_lookup_path;
+
+#ifdef DEBUG_GEOMETRY
+    std::string debug_geometry_path;
+#endif
 };
 
 struct ContractorOptions

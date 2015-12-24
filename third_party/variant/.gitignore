@@ -1,3 +1,5 @@
 .DS_Store
 out
 profiling
+build
+deps

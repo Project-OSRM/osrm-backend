@@ -57,13 +57,13 @@ struct MatchingDebugInfo
         for (auto &elem : candidates_list)
         {
             osrm::json::Array timestamps;
-            for (unsigned s = 0; s < elem.size(); s++)
+            for (auto &elem_s : elem)
             {
                 osrm::json::Object state;
                 state.values["transitions"] = osrm::json::Array();
                 state.values["coordinate"] =
-                    osrm::json::make_array(elem[s].first.location.lat / COORDINATE_PRECISION,
-                                           elem[s].first.location.lon / COORDINATE_PRECISION);
+                    osrm::json::make_array(elem_s.phantom_node.location.lat / COORDINATE_PRECISION,
+                                           elem_s.phantom_node.location.lon / COORDINATE_PRECISION);
                 state.values["viterbi"] =
                     osrm::json::clamp_float(osrm::matching::IMPOSSIBLE_LOG_PROB);
                 state.values["pruned"] = 0u;
@@ -82,7 +82,7 @@ struct MatchingDebugInfo
                              const double emission_pr,
                              const double transition_pr,
                              const double network_distance,
-                             const double great_circle_distance)
+                             const double haversine_distance)
     {
         // json logger not enabled
         if (!logger)
@@ -94,7 +94,7 @@ struct MatchingDebugInfo
         transistion.values["to"] = osrm::json::make_array(current_t, current_state);
         transistion.values["properties"] = osrm::json::make_array(
             osrm::json::clamp_float(prev_viterbi), osrm::json::clamp_float(emission_pr),
-            osrm::json::clamp_float(transition_pr), network_distance, great_circle_distance);
+            osrm::json::clamp_float(transition_pr), network_distance, haversine_distance);
 
         osrm::json::get(*object, "states", prev_t, prev_state, "transitions")
             .get<mapbox::util::recursive_wrapper<osrm::json::Array>>()

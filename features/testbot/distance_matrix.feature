@@ -100,3 +100,82 @@ Feature: Basic Distance Matrix
             | y | 500 | 0   | 300 | 200 |
             | d | 200 | 300 | 0   | 300 |
             | e | 300 | 400 | 100 | 0   |
+
+    Scenario: Testbot - Travel time matrix and with only one source
+        Given the node map
+            | a | b | c |
+            | d | e | f |
+
+        And the ways
+            | nodes |
+            | abc   |
+            | def   |
+            | ad    |
+            | be    |
+            | cf    |
+
+        When I request a travel time matrix I should get
+            |   | a   | b   | e   | f   |
+            | a | 0   | 100 | 200 | 300 |
+
+     Scenario: Testbot - Travel time 3x2 matrix
+        Given the node map
+            | a | b | c |
+            | d | e | f |
+
+        And the ways
+            | nodes |
+            | abc   |
+            | def   |
+            | ad    |
+            | be    |
+            | cf    |
+
+        When I request a travel time matrix I should get
+            |   | b   | e   | f   |
+            | a | 100 | 200 | 300 |
+            | b | 0   | 100 | 200 |
+
+    Scenario: Testbog - All coordinates are from same small component
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the node map
+            | a | b |  | f |
+            | d | e |  | g |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | be    |
+            | ed    |
+            | da    |
+            | fg    |
+
+        When I request a travel time matrix I should get
+            |   | f   | g   |
+            | f | 0   | 300 |
+            | g | 300 |  0  |
+
+    Scenario: Testbog - Coordinates are from different small component and snap to big CC
+        Given a grid size of 300 meters
+        Given the extract extra arguments "--small-component-size 4"
+        Given the node map
+            | a | b |  | f | h |
+            | d | e |  | g | i |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | be    |
+            | ed    |
+            | da    |
+            | fg    |
+            | hi    |
+
+        When I request a travel time matrix I should get
+            |   | f   | g   | h   | i   |
+            | f | 0   | 300 | 0   | 300 |
+            | g | 300 |  0  | 300 | 0   |
+            | h | 0   | 300 | 0   | 300 |
+            | i | 300 |  0  | 300 | 0   |
+

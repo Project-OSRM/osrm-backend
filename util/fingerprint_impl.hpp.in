@@ -25,16 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "osrm_exception.hpp"
+#include "util/osrm_exception.hpp"
 
 #include <boost/uuid/name_generator.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 #include <cstring>
 
 #include <algorithm>
 #include <string>
 
-#cmakedefine01 HAS64BITS
 #cmakedefine MD5PREPARE "${MD5PREPARE}"
 #cmakedefine MD5RTREE "${MD5RTREE}"
 #cmakedefine MD5GRAPH "${MD5GRAPH}"
@@ -46,6 +46,13 @@ FingerPrint FingerPrint::GetValid()
 
     fingerprint.magic_number = 1297240911;
     fingerprint.md5_prepare[32] = fingerprint.md5_tree[32] = fingerprint.md5_graph[32] = fingerprint.md5_objects[32] = '\0';
+
+    // 6ba7b810-9dad-11d1-80b4-00c04fd430c8 is a Well Known UUID representing the DNS
+    // namespace.  Its use here indicates that we own this part of the UUID space
+    // in the DNS realm.  *Usually*, we would then generate a UUID based on "something.project-osrm.org",
+    // but this whole class is a hack.  Anyway, named_uuid needs to be initialized to something
+    // before it can be used, and this is as good as anything else for these purposes.
+    fingerprint.named_uuid = boost::uuids::string_generator()( "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}");
 
     boost::uuids::name_generator gen(fingerprint.named_uuid);
     std::string temp_string;
@@ -60,7 +67,6 @@ FingerPrint FingerPrint::GetValid()
     temp_string += fingerprint.md5_objects;
 
     fingerprint.named_uuid = gen(temp_string);
-    fingerprint.has_64_bits = HAS64BITS;
 
     return fingerprint;
 }

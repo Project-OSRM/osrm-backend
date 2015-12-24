@@ -90,6 +90,21 @@ struct value_traits
         (direct_index == invalid_value) ? convertible_type<T, Types...>::index : direct_index;
 };
 
+// check if T is in Types...
+template <typename T, typename...Types>
+struct has_type;
+
+template <typename T, typename First, typename... Types>
+struct has_type<T, First, Types...>
+{
+    static constexpr bool value = std::is_same<T, First>::value
+        || has_type<T, Types...>::value;
+};
+
+template <typename T>
+struct has_type<T> : std::false_type {};
+//
+
 template <typename T, typename...Types>
 struct is_valid_type;
 
@@ -214,6 +229,20 @@ struct variant_helper<T, Types...>
             variant_helper<Types...>::copy(old_id, old_value, new_value);
         }
     }
+
+    VARIANT_INLINE static void direct_swap(const std::size_t id, void * lhs, void * rhs)
+    {
+        using std::swap; //enable ADL
+        if (id == sizeof...(Types))
+        {
+            // both lhs and rhs hold T
+            swap(*reinterpret_cast<T*>(lhs), *reinterpret_cast<T*>(rhs));
+        }
+        else
+        {
+            variant_helper<Types...>::direct_swap(id, lhs, rhs);
+        }
+    }
 };
 
 template<> struct variant_helper<>
@@ -221,6 +250,7 @@ template<> struct variant_helper<>
     VARIANT_INLINE static void destroy(const std::size_t, void *) {}
     VARIANT_INLINE static void move(const std::size_t, void *, void *) {}
     VARIANT_INLINE static void copy(const std::size_t, const void *, void *) {}
+    VARIANT_INLINE static void direct_swap(const std::size_t, void *, void *) {}
 };
 
 namespace detail {
@@ -561,16 +591,33 @@ public:
         helper_type::move(old.type_index, &old.data, &data);
     }
 
-    friend void swap(variant<Types...> & first, variant<Types...> & second)
+private:
+    VARIANT_INLINE void copy_assign(variant<Types...> const& rhs)
     {
-        using std::swap; //enable ADL
-        swap(first.type_index, second.type_index);
-        swap(first.data, second.data);
+        helper_type::destroy(type_index, &data);
+        type_index = detail::invalid_value;
+        helper_type::copy(rhs.type_index, &rhs.data, &data);
+        type_index = rhs.type_index;
     }
 
-    VARIANT_INLINE variant<Types...>& operator=(variant<Types...> other)
+    VARIANT_INLINE void move_assign(variant<Types...> && rhs)
     {
-        swap(*this, other);
+        helper_type::destroy(type_index, &data);
+        type_index = detail::invalid_value;
+        helper_type::move(rhs.type_index, &rhs.data, &data);
+        type_index = rhs.type_index;
+    }
+
+public:
+    VARIANT_INLINE variant<Types...>& operator=(variant<Types...> &&  other)
+    {
+        move_assign(std::move(other));
+        return *this;
+    }
+
+    VARIANT_INLINE variant<Types...>& operator=(variant<Types...> const& other)
+    {
+        copy_assign(other);
         return *this;
     }
 
@@ -580,7 +627,7 @@ public:
     VARIANT_INLINE variant<Types...>& operator=(T && rhs) noexcept
     {
         variant<Types...> temp(std::forward<T>(rhs));
-        swap(*this, temp);
+        move_assign(std::move(temp));
         return *this;
     }
 
@@ -589,13 +636,14 @@ public:
     VARIANT_INLINE variant<Types...>& operator=(T const& rhs)
     {
         variant<Types...> temp(rhs);
-        swap(*this, temp);
+        copy_assign(temp);
         return *this;
     }
 
     template<typename T>
     VARIANT_INLINE bool is() const
     {
+        static_assert(detail::has_type<T, Types...>::value, "invalid type in T in `is<T>()` for this variant");
         return (type_index == detail::direct_type<T, Types...>::index);
     }
 
@@ -613,7 +661,9 @@ public:
     }
 
     // get<T>()
-    template<typename T, typename std::enable_if<(detail::direct_type<T, Types...>::index != detail::invalid_value)>::type* = nullptr>
+    template<typename T, typename std::enable_if<
+                         (detail::direct_type<T, Types...>::index != detail::invalid_value)
+                         >::type* = nullptr>
     VARIANT_INLINE T& get()
     {
         if (type_index == detail::direct_type<T, Types...>::index)

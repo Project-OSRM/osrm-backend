@@ -28,7 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INTEGER_RANGE_HPP
 #define INTEGER_RANGE_HPP
 
+#include <boost/assert.hpp>
+
 #include <type_traits>
+
+#include <cstdint>
 
 namespace osrm
 {
@@ -36,12 +40,13 @@ namespace osrm
 template <typename Integer> class range
 {
   private:
-    Integer last;
+    const Integer last;
     Integer iter;
 
   public:
     range(Integer start, Integer end) noexcept : last(end), iter(start)
     {
+        BOOST_ASSERT_MSG(start <= end, "backwards counting ranges not suppoted");
         static_assert(std::is_integral<Integer>::value, "range type must be integral");
     }
 
@@ -50,7 +55,10 @@ template <typename Integer> class range
     const range &end() const noexcept { return *this; }
     Integer front() const noexcept { return iter; }
     Integer back() const noexcept { return last - 1; }
-    Integer size() const noexcept { return last - iter; }
+    std::size_t size() const noexcept
+    {
+        return static_cast<std::size_t>(last - iter);
+    }
 
     // Iterator functions
     bool operator!=(const range &) const noexcept { return iter < last; }

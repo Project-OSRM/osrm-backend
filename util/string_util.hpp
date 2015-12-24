@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STRING_UTIL_HPP
 #define STRING_UTIL_HPP
 
-#include <boost/algorithm/string.hpp>
-
 #include <cctype>
 
 #include <random>
@@ -81,11 +79,6 @@ template <int length, int precision> static inline char *printInt(char *buffer, 
         *buffer = '-';
     }
     return buffer;
-}
-
-inline void replaceAll(std::string &s, const std::string &sub, const std::string &other)
-{
-    boost::replace_all(s, sub, other);
 }
 
 inline std::string escape_JSON(const std::string &input)

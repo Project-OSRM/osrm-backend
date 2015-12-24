@@ -140,7 +140,7 @@ template <class CandidateLists> struct HiddenMarkovModel
             for (const auto s : osrm::irange<std::size_t>(0u, viterbi[initial_timestamp].size()))
             {
                 viterbi[initial_timestamp][s] =
-                    emission_log_probability(candidates_list[initial_timestamp][s].second);
+                    emission_log_probability(candidates_list[initial_timestamp][s].distance);
                 parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
                 pruned[initial_timestamp][s] =
                     viterbi[initial_timestamp][s] < osrm::matching::MINIMAL_LOG_PROB;

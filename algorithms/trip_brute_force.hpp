@@ -73,6 +73,8 @@ std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
                                    const std::size_t number_of_locations,
                                    const DistTableWrapper<EdgeWeight> &dist_table)
 {
+    (void)number_of_locations; // unused
+
     const auto component_size = std::distance(start, end);
 
     std::vector<NodeID> perm(start, end);

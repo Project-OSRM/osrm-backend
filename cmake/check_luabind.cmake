@@ -1,7 +1,7 @@
 INCLUDE (CheckCXXSourceCompiles)
 unset(LUABIND_WORKS CACHE)
 unset(LUABIND51_WORKS CACHE)
-set (LUABIND_CHECK_SRC "#include  \"lua.h\"\n#include <luabind/luabind.hpp>\n int main() { lua_State *myLuaState = luaL_newstate(); luabind::open(myLuaState);  return 0;}")
+set (LUABIND_CHECK_SRC "extern \"C\" {\n#include \"lua.h\"\n#include \"lauxlib.h\"\n}\n#include <luabind/open.hpp>\nint main() { lua_State *x = luaL_newstate(); luabind::open(x); }")
 set (CMAKE_TRY_COMPILE_CONFIGURATION ${CMAKE_BUILD_TYPE})
 set (CMAKE_REQUIRED_INCLUDES "${Boost_INCLUDE_DIR};${LUABIND_INCLUDE_DIR};${LUA_INCLUDE_DIR}")
 set (CMAKE_REQUIRED_LIBRARIES "${LUABIND_LIBRARY};${LUA_LIBRARY}")

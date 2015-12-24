@@ -13,11 +13,12 @@ Feature: osrm-prepare command line options: help
         And stdout should contain "--help"
         And stdout should contain "--config"
         And stdout should contain "Configuration:"
-        And stdout should contain "--restrictions"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
         And stdout should contain "--core"
-        And stdout should contain 17 lines
+        And stdout should contain "--level-cache"
+        And stdout should contain "--segment-speed-file"
+        And stdout should contain 21 lines
         And it should exit with code 1
 
     Scenario: osrm-prepare - Help, short
@@ -29,11 +30,12 @@ Feature: osrm-prepare command line options: help
         And stdout should contain "--help"
         And stdout should contain "--config"
         And stdout should contain "Configuration:"
-        And stdout should contain "--restrictions"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
         And stdout should contain "--core"
-        And stdout should contain 17 lines
+        And stdout should contain "--level-cache"
+        And stdout should contain "--segment-speed-file"
+        And stdout should contain 21 lines
         And it should exit with code 0
 
     Scenario: osrm-prepare - Help, long
@@ -45,9 +47,10 @@ Feature: osrm-prepare command line options: help
         And stdout should contain "--help"
         And stdout should contain "--config"
         And stdout should contain "Configuration:"
-        And stdout should contain "--restrictions"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
         And stdout should contain "--core"
-        And stdout should contain 17 lines
+        And stdout should contain "--level-cache"
+        And stdout should contain "--segment-speed-file"
+        And stdout should contain 21 lines
         And it should exit with code 0

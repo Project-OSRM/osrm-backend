@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/coordinate.hpp>
 
 #include <string>
+#include <boost/optional.hpp>
 
 using EdgeRange = osrm::range<EdgeID>;
 
@@ -92,22 +93,22 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 
-    virtual bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                                    FixedPointCoordinate &result,
-                                                    const unsigned zoom_level = 18) = 0;
+    virtual std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
+                               const float max_distance,
+                               const int bearing = 0,
+                               const int bearing_range = 180) = 0;
 
-    virtual bool
-    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                            std::vector<PhantomNode> &resulting_phantom_node_vector,
-                                            const unsigned number_of_results) = 0;
+    virtual std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const FixedPointCoordinate &input_coordinate,
+                        const unsigned max_results,
+                        const int bearing = 0,
+                        const int bearing_range = 180) = 0;
 
-    virtual bool
-    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
-                                            PhantomNode &resulting_phantom_node) = 0;
-    virtual bool IncrementalFindPhantomNodeForCoordinateWithMaxDistance(
-        const FixedPointCoordinate &input_coordinate,
-        std::vector<std::pair<PhantomNode, double>> &resulting_phantom_node_vector,
-        const double max_distance) = 0;
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const FixedPointCoordinate &input_coordinate,
+                                                      const int bearing = 0,
+                                                      const int bearing_range = 180) = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 
@@ -116,6 +117,8 @@ template <class EdgeDataT> class BaseDataFacade
     virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const = 0;
 
     virtual std::string get_name_for_id(const unsigned name_id) const = 0;
+
+    virtual std::size_t GetCoreSize() const = 0;
 
     virtual std::string GetTimestamp() const = 0;
 };

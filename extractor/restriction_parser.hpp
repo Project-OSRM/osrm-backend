@@ -30,16 +30,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../data_structures/restriction.hpp"
 
-#include <osmium/osm.hpp>
-#include <osmium/tags/regex_filter.hpp>
-
-#include <variant/optional.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <string>
 #include <vector>
 
 struct lua_State;
-class ScriptingEnvironment;
+namespace osmium
+{
+class Relation;
+}
 
 /**
  * Parses the relations that represents turn restrictions.
@@ -63,8 +63,7 @@ class RestrictionParser
 {
   public:
     RestrictionParser(lua_State *lua_state);
-    mapbox::util::optional<InputRestrictionContainer>
-    TryParse(const osmium::Relation &relation) const;
+    boost::optional<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
 
   private:
     void ReadUseRestrictionsSetting(lua_State *lua_state);

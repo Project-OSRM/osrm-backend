@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "extractor_options.hpp"
 
-#include "../util/git_sha.hpp"
+#include "util/version.hpp"
 #include "../util/ini_file.hpp"
 #include "../util/simple_logger.hpp"
 
@@ -42,6 +42,12 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        /*
+         * TODO: re-enable this
+        "restrictions,r",
+        boost::program_options::value<boost::filesystem::path>(&extractor_config.restrictions_path),
+        "Restrictions file in .osrm.restrictions format")(
+        */
         "config,c", boost::program_options::value<boost::filesystem::path>(
                         &extractor_config.config_file_path)->default_value("extractor.ini"),
         "Path to a configuration file.");
@@ -55,7 +61,20 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
             ->default_value(tbb::task_scheduler_init::default_num_threads()),
-        "Number of threads to use");
+        "Number of threads to use")(
+            "generate-edge-lookup",boost::program_options::value<bool>(
+                                                &extractor_config.generate_edge_lookup)->implicit_value(true)->default_value(false),
+                                 "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs")(
+        "small-component-size",
+        boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
+            ->default_value(1000),
+        "Number of nodes required before a strongly-connected-componennt is considered big (affects nearest neighbor snapping)");
+
+#ifdef DEBUG_GEOMETRY
+        config_options.add_options()("debug-turns",
+            boost::program_options::value<std::string>(&extractor_config.debug_turns_path),
+            "Write out GeoJSON with turn penalty data");
+#endif // DEBUG_GEOMETRY
 
     // hidden options, will be allowed both on command line and in config file, but will not be
     // shown to the user
@@ -63,6 +82,7 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
     hidden_options.add_options()("input,i", boost::program_options::value<boost::filesystem::path>(
                                                 &extractor_config.input_path),
                                  "Input file in .osm, .osm.bz2 or .osm.pbf format");
+
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -90,7 +110,7 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
                                       option_variables);
         if (option_variables.count("version"))
         {
-            SimpleLogger().Write() << g_GIT_DESCRIPTION;
+            SimpleLogger().Write() << OSRM_VERSION;
             return return_code::exit;
         }
 
@@ -137,6 +157,14 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
     extractor_config.restriction_file_name = input_path.string();
     extractor_config.names_file_name = input_path.string();
     extractor_config.timestamp_file_name = input_path.string();
+    extractor_config.geometry_output_path = input_path.string();
+    extractor_config.edge_output_path = input_path.string();
+    extractor_config.edge_graph_output_path = input_path.string();
+    extractor_config.node_output_path = input_path.string();
+    extractor_config.rtree_nodes_output_path = input_path.string();
+    extractor_config.rtree_leafs_output_path = input_path.string();
+    extractor_config.edge_segment_lookup_path = input_path.string();
+    extractor_config.edge_penalty_path = input_path.string();
     std::string::size_type pos = extractor_config.output_file_name.find(".osm.bz2");
     if (pos == std::string::npos)
     {
@@ -159,6 +187,14 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.restriction_file_name.append(".osrm.restrictions");
             extractor_config.names_file_name.append(".osrm.names");
             extractor_config.timestamp_file_name.append(".osrm.timestamp");
+            extractor_config.geometry_output_path.append(".osrm.geometry");
+            extractor_config.node_output_path.append(".osrm.nodes");
+            extractor_config.edge_output_path.append(".osrm.edges");
+            extractor_config.edge_graph_output_path.append(".osrm.ebg");
+            extractor_config.rtree_nodes_output_path.append(".osrm.ramIndex");
+            extractor_config.rtree_leafs_output_path.append(".osrm.fileIndex");
+            extractor_config.edge_segment_lookup_path.append(".osrm.edge_segment_lookup");
+            extractor_config.edge_penalty_path.append(".osrm.edge_penalties");
         }
         else
         {
@@ -166,6 +202,14 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.restriction_file_name.replace(pos, 5, ".osrm.restrictions");
             extractor_config.names_file_name.replace(pos, 5, ".osrm.names");
             extractor_config.timestamp_file_name.replace(pos, 5, ".osrm.timestamp");
+            extractor_config.geometry_output_path.replace(pos, 5, ".osrm.geometry");
+            extractor_config.node_output_path.replace(pos, 5, ".osrm.nodes");
+            extractor_config.edge_output_path.replace(pos, 5, ".osrm.edges");
+            extractor_config.edge_graph_output_path.replace(pos, 5, ".osrm.ebg");
+            extractor_config.rtree_nodes_output_path.replace(pos, 5, ".osrm.ramIndex");
+            extractor_config.rtree_leafs_output_path.replace(pos, 5, ".osrm.fileIndex");
+            extractor_config.edge_segment_lookup_path.replace(pos,5, ".osrm.edge_segment_lookup");
+            extractor_config.edge_penalty_path.replace(pos,5, ".osrm.edge_penalties");
         }
     }
     else
@@ -174,5 +218,13 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
         extractor_config.restriction_file_name.replace(pos, 8, ".osrm.restrictions");
         extractor_config.names_file_name.replace(pos, 8, ".osrm.names");
         extractor_config.timestamp_file_name.replace(pos, 8, ".osrm.timestamp");
+        extractor_config.geometry_output_path.replace(pos, 8, ".osrm.geometry");
+        extractor_config.node_output_path.replace(pos, 8, ".osrm.nodes");
+        extractor_config.edge_output_path.replace(pos, 8, ".osrm.edges");
+        extractor_config.edge_graph_output_path.replace(pos, 8, ".osrm.ebg");
+        extractor_config.rtree_nodes_output_path.replace(pos, 8, ".osrm.ramIndex");
+        extractor_config.rtree_leafs_output_path.replace(pos, 8, ".osrm.fileIndex");
+        extractor_config.edge_segment_lookup_path.replace(pos,8, ".osrm.edge_segment_lookup");
+        extractor_config.edge_penalty_path.replace(pos,8, ".osrm.edge_penalties");
     }
 }

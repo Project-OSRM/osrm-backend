@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM contributors
+Copyright (c) 2014, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,33 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_HPP
-#define OSRM_HPP
+#define BOOST_TEST_MODULE util tests
 
-#include <osrm/libosrm_config.hpp>
+#include <boost/test/unit_test.hpp>
 
-#include <memory>
-
-class OSRM_impl;
-struct RouteParameters;
-
-namespace osrm
-{
-namespace json
-{
-struct Object;
-}
-}
-
-class OSRM
-{
-  private:
-    std::unique_ptr<OSRM_impl> OSRM_pimpl_;
-
-  public:
-    explicit OSRM(libosrm_config &lib_config);
-    ~OSRM();
-    int RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result);
-};
-
-#endif // OSRM_HPP
+/*
+ * This file will contain an automatically generated main function.
+ */

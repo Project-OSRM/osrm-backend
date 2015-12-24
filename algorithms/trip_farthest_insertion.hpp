@@ -54,6 +54,7 @@ GetShortestRoundTrip(const NodeID new_loc,
                      const std::size_t number_of_locations,
                      std::vector<NodeID> &route)
 {
+    (void)number_of_locations; // unused
 
     auto min_trip_distance = INVALID_EDGE_WEIGHT;
     NodeIDIter next_insert_point_candidate;
@@ -76,7 +77,13 @@ GetShortestRoundTrip(const NodeID new_loc,
 
         BOOST_ASSERT_MSG(dist_from != INVALID_EDGE_WEIGHT, "distance has invalid edge weight");
         BOOST_ASSERT_MSG(dist_to != INVALID_EDGE_WEIGHT, "distance has invalid edge weight");
-        BOOST_ASSERT_MSG(trip_dist >= 0, "previous trip was not minimal. something's wrong");
+        // This is not neccessarily true:
+        // Lets say you have an edge (u, v) with duration 100. If you place a coordinate exactly in
+        // the middle of the segment yielding (u, v'), the adjusted duration will be 100 * 0.5 = 50.
+        // Now imagine two coordinates. One placed at 0.99 and one at 0.999. This means (u, v') now
+        // has a duration of 100 * 0.99 = 99, but (u, v'') also has a duration of 100 * 0.995 = 99.
+        // In which case (v', v'') has a duration of 0.
+        // BOOST_ASSERT_MSG(trip_dist >= 0, "previous trip was not minimal. something's wrong");
 
         // from all possible insertions to the current trip, choose the shortest of all insertions
         if (trip_dist < min_trip_distance)
@@ -118,7 +125,7 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
     for (std::size_t j = 2; j < component_size; ++j)
     {
 
-        auto farthest_distance = 0;
+        auto farthest_distance = std::numeric_limits<int>::min();
         auto next_node = -1;
         NodeIDIter next_insert_point;
 

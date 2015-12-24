@@ -4,12 +4,12 @@ def test_routability_row i
     a = Location.new @origin[0]+(1+WAY_SPACING*i)*@zoom, @origin[1]
     b = Location.new @origin[0]+(3+WAY_SPACING*i)*@zoom, @origin[1]
     r = {}
-    r[:response] = request_route (direction=='forw' ? [a,b] : [b,a]), @query_params
+    r[:response] = request_route (direction=='forw' ? [a,b] : [b,a]), [], @query_params
     r[:query] = @query
     r[:json] = JSON.parse(r[:response].body)
 
-    r[:status] = route_status r[:response]
-    if r[:status].empty? == false
+    r[:status] = (route_status r[:response]) == 200 ? 'x' : nil
+    if r[:status] then
       r[:route] = way_list r[:json]['route_instructions']
 
       if r[:route]=="w#{i}"

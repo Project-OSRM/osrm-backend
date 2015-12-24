@@ -25,8 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../library/osrm.hpp"
-#include "../util/git_sha.hpp"
+#include "util/version.hpp"
 #include "../util/json_renderer.hpp"
 #include "../util/routed_options.hpp"
 #include "../util/simple_logger.hpp"
@@ -34,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/json_container.hpp>
 #include <osrm/libosrm_config.hpp>
 #include <osrm/route_parameters.hpp>
+#include <osrm/osrm.hpp>
 
 #include <string>
 
@@ -43,13 +43,14 @@ int main(int argc, const char *argv[])
     try
     {
         std::string ip_address;
-        int ip_port, requested_thread_num, max_locations_map_matching;
+        int ip_port, requested_thread_num;
         bool trial_run = false;
-        libosrm_config lib_config;
+        LibOSRMConfig lib_config;
         const unsigned init_result = GenerateServerProgramOptions(
             argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
-            lib_config.use_shared_memory, trial_run, lib_config.max_locations_distance_table,
-            max_locations_map_matching);
+            lib_config.use_shared_memory, trial_run, lib_config.max_locations_trip,
+            lib_config.max_locations_viaroute, lib_config.max_locations_distance_table,
+            lib_config.max_locations_map_matching);
 
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
@@ -59,7 +60,7 @@ int main(int argc, const char *argv[])
         {
             return 1;
         }
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
         OSRM routing_machine(lib_config);
 

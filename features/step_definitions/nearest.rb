@@ -9,10 +9,10 @@ When /^I request nearest I should get$/ do |table|
       out_node = find_node_by_name row['out']
       raise "*** unknown out-node '#{row['out']}" unless out_node
 
-      response = request_nearest(in_node)
+      response = request_nearest in_node, @query_params
       if response.code == "200" && response.body.empty? == false
         json = JSON.parse response.body
-        if json['status'] == 0
+        if json['status'] == 200
           coord =  json['mapped_coordinate']
         end
       end

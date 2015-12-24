@@ -34,11 +34,9 @@ class named_mutex;
 }
 
 #include "osrm_impl.hpp"
-#include "osrm.hpp"
 
 #include "../plugins/distance_table.hpp"
 #include "../plugins/hello_world.hpp"
-#include "../plugins/locate.hpp"
 #include "../plugins/nearest.hpp"
 #include "../plugins/timestamp.hpp"
 #include "../plugins/trip.hpp"
@@ -57,13 +55,15 @@ class named_mutex;
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include <osrm/route_parameters.hpp>
+#include <osrm/libosrm_config.hpp>
+#include <osrm/osrm.hpp>
 
 #include <algorithm>
 #include <fstream>
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(libosrm_config &lib_config)
+OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig& lib_config)
 {
     if (lib_config.use_shared_memory)
     {
@@ -81,51 +81,41 @@ OSRM_impl::OSRM_impl(libosrm_config &lib_config)
     RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(
         query_data_facade, lib_config.max_locations_distance_table));
     RegisterPlugin(new HelloWorldPlugin());
-    RegisterPlugin(new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
     RegisterPlugin(new MapMatchingPlugin<BaseDataFacade<QueryEdge::EdgeData>>(
         query_data_facade, lib_config.max_locations_map_matching));
     RegisterPlugin(new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
-    RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
-    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
+    RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
+                lib_config.max_locations_viaroute));
+    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
+                lib_config.max_locations_trip));
 }
 
-OSRM_impl::~OSRM_impl()
+void OSRM::OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
 {
-    delete query_data_facade;
-    for (PluginMap::value_type &plugin_pointer : plugin_map)
-    {
-        delete plugin_pointer.second;
-    }
+    std::unique_ptr<BasePlugin> plugin_ptr(raw_plugin_ptr);
+    SimpleLogger().Write() << "loaded plugin: " << plugin_ptr->GetDescriptor();
+    plugin_map[plugin_ptr->GetDescriptor()] = std::move(plugin_ptr);
 }
 
-void OSRM_impl::RegisterPlugin(BasePlugin *plugin)
-{
-    SimpleLogger().Write() << "loaded plugin: " << plugin->GetDescriptor();
-    if (plugin_map.find(plugin->GetDescriptor()) != plugin_map.end())
-    {
-        delete plugin_map.find(plugin->GetDescriptor())->second;
-    }
-    plugin_map.emplace(plugin->GetDescriptor(), plugin);
-}
-
-int OSRM_impl::RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result)
+int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
 {
     const auto &plugin_iterator = plugin_map.find(route_parameters.service);
 
     if (plugin_map.end() == plugin_iterator)
     {
+        json_result.values["status_message"] = "Service not found";
         return 400;
     }
 
     increase_concurrent_query_count();
-    plugin_iterator->second->HandleRequest(route_parameters, json_result);
+    auto return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
     decrease_concurrent_query_count();
-    return 200;
+    return static_cast<int>(return_code);
 }
 
 // decrease number of concurrent queries
-void OSRM_impl::decrease_concurrent_query_count()
+void OSRM::OSRM_impl::decrease_concurrent_query_count()
 {
     if (!barrier)
     {
@@ -147,7 +137,7 @@ void OSRM_impl::decrease_concurrent_query_count()
 }
 
 // increase number of concurrent queries
-void OSRM_impl::increase_concurrent_query_count()
+void OSRM::OSRM_impl::increase_concurrent_query_count()
 {
     if (!barrier)
     {
@@ -173,11 +163,12 @@ void OSRM_impl::increase_concurrent_query_count()
 }
 
 // proxy code for compilation firewall
-OSRM::OSRM(libosrm_config &lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config)) {}
+OSRM::OSRM(LibOSRMConfig &lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config)) {}
 
-OSRM::~OSRM() { OSRM_pimpl_.reset(); }
+// needed because unique_ptr needs the size of OSRM_impl for delete
+OSRM::~OSRM() {}
 
-int OSRM::RunQuery(RouteParameters &route_parameters, osrm::json::Object &json_result)
+int OSRM::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
 {
     return OSRM_pimpl_->RunQuery(route_parameters, json_result);
 }

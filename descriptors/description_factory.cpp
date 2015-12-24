@@ -127,7 +127,7 @@ void DescriptionFactory::Run(const unsigned zoom_level)
     {
         // move down names by one, q&d hack
         path_description[i - 1].name_id = path_description[i].name_id;
-        path_description[i].length = coordinate_calculation::euclidean_distance(
+        path_description[i].length = coordinate_calculation::great_circle_distance(
             path_description[i - 1].location, path_description[i].location);
     }
 
@@ -230,18 +230,20 @@ void DescriptionFactory::Run(const unsigned zoom_level)
                 return;
             }
 
-            ++necessary_segments;
-
             if (first.is_via_location)
             { // mark the end of a leg (of several segments)
                 via_indices.push_back(necessary_segments);
             }
 
-            const double angle = coordinate_calculation::bearing(first.location, second.location);
-            first.bearing = static_cast<short>(angle * 10);
+            const double post_turn_bearing = coordinate_calculation::bearing(first.location, second.location);
+            const double pre_turn_bearing = coordinate_calculation::bearing(second.location, first.location);
+            first.post_turn_bearing = static_cast<short>(post_turn_bearing * 10);
+            first.pre_turn_bearing = static_cast<short>(pre_turn_bearing * 10);
+
+            ++necessary_segments;
         });
 
-    via_indices.push_back(necessary_segments + 1);
+    via_indices.push_back(necessary_segments);
     BOOST_ASSERT(via_indices.size() >= 2);
     return;
 }

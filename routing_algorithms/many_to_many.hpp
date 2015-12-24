@@ -67,11 +67,12 @@ class ManyToManyRouting final
     ~ManyToManyRouting() {}
 
     std::shared_ptr<std::vector<EdgeWeight>>
-    operator()(const PhantomNodeArray &phantom_nodes_array) const
+    operator()(const std::vector<PhantomNode> &phantom_sources_array, const std::vector<PhantomNode> &phantom_targets_array) const
     {
-        const auto number_of_locations = phantom_nodes_array.size();
+        const auto number_of_sources = phantom_sources_array.size();
+        const auto number_of_targets = phantom_targets_array.size();
         std::shared_ptr<std::vector<EdgeWeight>> result_table =
-            std::make_shared<std::vector<EdgeWeight>>(number_of_locations * number_of_locations,
+            std::make_shared<std::vector<EdgeWeight>>(number_of_targets * number_of_sources,
                                                       std::numeric_limits<EdgeWeight>::max());
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
@@ -82,25 +83,22 @@ class ManyToManyRouting final
         SearchSpaceWithBuckets search_space_with_buckets;
 
         unsigned target_id = 0;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
+        for (const auto &phantom : phantom_targets_array)
         {
             query_heap.Clear();
             // insert target(s) at distance 0
 
-            for (const PhantomNode &phantom_node : phantom_node_vector)
+            if (SPECIAL_NODEID != phantom.forward_node_id)
             {
-                if (SPECIAL_NODEID != phantom_node.forward_node_id)
-                {
-                    query_heap.Insert(phantom_node.forward_node_id,
-                                      phantom_node.GetForwardWeightPlusOffset(),
-                                      phantom_node.forward_node_id);
-                }
-                if (SPECIAL_NODEID != phantom_node.reverse_node_id)
-                {
-                    query_heap.Insert(phantom_node.reverse_node_id,
-                                      phantom_node.GetReverseWeightPlusOffset(),
-                                      phantom_node.reverse_node_id);
-                }
+                query_heap.Insert(phantom.forward_node_id,
+                                  phantom.GetForwardWeightPlusOffset(),
+                                  phantom.forward_node_id);
+            }
+            if (SPECIAL_NODEID != phantom.reverse_node_id)
+            {
+                query_heap.Insert(phantom.reverse_node_id,
+                                  phantom.GetReverseWeightPlusOffset(),
+                                  phantom.reverse_node_id);
             }
 
             // explore search space
@@ -113,41 +111,39 @@ class ManyToManyRouting final
 
         // for each source do forward search
         unsigned source_id = 0;
-        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
+        for (const auto &phantom : phantom_sources_array)
         {
             query_heap.Clear();
-            for (const PhantomNode &phantom_node : phantom_node_vector)
+            // insert target(s) at distance 0
+
+            if (SPECIAL_NODEID != phantom.forward_node_id)
             {
-                // insert sources at distance 0
-                if (SPECIAL_NODEID != phantom_node.forward_node_id)
-                {
-                    query_heap.Insert(phantom_node.forward_node_id,
-                                      -phantom_node.GetForwardWeightPlusOffset(),
-                                      phantom_node.forward_node_id);
-                }
-                if (SPECIAL_NODEID != phantom_node.reverse_node_id)
-                {
-                    query_heap.Insert(phantom_node.reverse_node_id,
-                                      -phantom_node.GetReverseWeightPlusOffset(),
-                                      phantom_node.reverse_node_id);
-                }
+                query_heap.Insert(phantom.forward_node_id,
+                                 -phantom.GetForwardWeightPlusOffset(),
+                                  phantom.forward_node_id);
+            }
+            if (SPECIAL_NODEID != phantom.reverse_node_id)
+            {
+                query_heap.Insert(phantom.reverse_node_id,
+                                 -phantom.GetReverseWeightPlusOffset(),
+                                  phantom.reverse_node_id);
             }
 
             // explore search space
             while (!query_heap.Empty())
             {
-                ForwardRoutingStep(source_id, number_of_locations, query_heap,
+                ForwardRoutingStep(source_id, number_of_targets, query_heap,
                                    search_space_with_buckets, result_table);
             }
 
             ++source_id;
         }
-        BOOST_ASSERT(source_id == target_id);
+        // BOOST_ASSERT(source_id == target_id);
         return result_table;
     }
 
     void ForwardRoutingStep(const unsigned source_id,
-                            const unsigned number_of_locations,
+                            const unsigned number_of_targets,
                             QueryHeap &query_heap,
                             const SearchSpaceWithBuckets &search_space_with_buckets,
                             std::shared_ptr<std::vector<EdgeWeight>> result_table) const
@@ -167,12 +163,12 @@ class ManyToManyRouting final
                 const unsigned target_id = current_bucket.target_id;
                 const int target_distance = current_bucket.distance;
                 const EdgeWeight current_distance =
-                    (*result_table)[source_id * number_of_locations + target_id];
+                    (*result_table)[source_id * number_of_targets + target_id];
                 // check if new distance is better
                 const EdgeWeight new_distance = source_distance + target_distance;
                 if (new_distance >= 0 && new_distance < current_distance)
                 {
-                    (*result_table)[source_id * number_of_locations + target_id] =
+                    (*result_table)[source_id * number_of_targets + target_id] =
                         (source_distance + target_distance);
                 }
             }

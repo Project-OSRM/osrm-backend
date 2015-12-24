@@ -39,11 +39,21 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     explicit APIGrammar(HandlerT *h) : APIGrammar::base_type(api_call), handler(h)
     {
         api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >>
-                   *(query) >> -(uturns);
-        query = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | timestamp | u | cmp |
+                   -query;
+        query = ('?') >> +(zoom | output | jsonp | checksum | uturns | location_with_options | destination_with_options | source_with_options |  cmp |
                             language | instruction | geometry | alt_route | old_API | num_results |
-                            matching_beta | gps_precision | classify | locs));
-
+                            matching_beta | gps_precision | classify | locs);
+        // all combinations of timestamp, uturn, hint and bearing without duplicates
+        t_u = (u >> -timestamp) | (timestamp >> -u);
+        t_h = (hint >> -timestamp) | (timestamp >> -hint);
+        u_h = (u >> -hint) | (hint >> -u);
+        t_u_h = (hint >> -t_u) | (u >> -t_h) | (timestamp >> -u_h);
+        location_options = (bearing >> -t_u_h) | (t_u_h >> -bearing) | //
+                           (u >> bearing >> -t_h) | (timestamp >> bearing >> -u_h) | (hint >> bearing >> t_u) | //
+                           (t_h >> bearing >> -u) | (u_h >> bearing >> -timestamp) | (t_u >> bearing >> -hint);
+        location_with_options = location >> -location_options;
+        source_with_options = source >> -location_options;
+        destination_with_options = destination >> -location_options;
         zoom = (-qi::lit('&')) >> qi::lit('z') >> '=' >>
                qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
         output = (-qi::lit('&')) >> qi::lit("output") >> '=' >>
@@ -61,10 +71,18 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         location = (-qi::lit('&')) >> qi::lit("loc") >> '=' >>
                    (qi::double_ >> qi::lit(',') >>
                     qi::double_)[boost::bind(&HandlerT::addCoordinate, handler, ::_1)];
+        destination = (-qi::lit('&')) >> qi::lit("dst") >> '=' >>
+                   (qi::double_ >> qi::lit(',') >>
+                    qi::double_)[boost::bind(&HandlerT::addDestination, handler, ::_1)];
+        source = (-qi::lit('&')) >> qi::lit("src") >> '=' >>
+                   (qi::double_ >> qi::lit(',') >>
+                    qi::double_)[boost::bind(&HandlerT::addSource, handler, ::_1)];
         hint = (-qi::lit('&')) >> qi::lit("hint") >> '=' >>
                stringwithDot[boost::bind(&HandlerT::addHint, handler, ::_1)];
         timestamp = (-qi::lit('&')) >> qi::lit("t") >> '=' >>
                qi::uint_[boost::bind(&HandlerT::addTimestamp, handler, ::_1)];
+        bearing = (-qi::lit('&')) >> qi::lit("b") >> '=' >>
+               (qi::int_ >> -(qi::lit(',') >> qi::int_ | qi::attr(10)))[boost::bind(&HandlerT::addBearing, handler, ::_1, ::_2, ::_3)];
         u = (-qi::lit('&')) >> qi::lit("u") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::setUTurn, handler, ::_1)];
         uturns = (-qi::lit('&')) >> qi::lit("uturns") >> '=' >>
@@ -93,10 +111,10 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         stringforPolyline = +(qi::char_("a-zA-Z0-9_.-[]{}@?|\\%~`^"));
     }
 
-    qi::rule<Iterator> api_call, query;
-    qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
-        hint, timestamp, stringwithDot, stringwithPercent, language, instruction, geometry, cmp, alt_route, u,
-        uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, stringforPolyline;
+    qi::rule<Iterator> api_call, query, location_options, location_with_options, destination_with_options, source_with_options, t_u, t_h, u_h, t_u_h;
+    qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location, destination, source,
+        hint, timestamp, bearing, stringwithDot, stringwithPercent, language, geometry, cmp, alt_route, u,
+        uturns, old_API, num_results, matching_beta, gps_precision, classify, locs, instruction, stringforPolyline;
 
     HandlerT *handler;
 };

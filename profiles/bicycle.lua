@@ -90,12 +90,13 @@ surface_speeds = {
   ["sand"] = 3
 }
 
+-- these need to be global because they are accesed externaly
 traffic_signal_penalty          = 2
 use_turn_restrictions           = false
+u_turn_penalty                  = 20
 
 local obey_oneway               = true
 local ignore_areas              = true
-local u_turn_penalty            = 20
 local turn_penalty              = 60
 local turn_bias                 = 1.4
 -- reduce the driving speed by 30% for unsafe roads
@@ -169,7 +170,7 @@ function way_function (way, result)
   local public_transport = way:get_value_by_key("public_transport")
   local bridge = way:get_value_by_key("bridge")
   if (not highway or highway == '') and
-  (not use_public_transport or not route or route == '') and
+  (not route or route == '') and
   (not use_public_transport or not railway or railway=='') and
   (not amenity or amenity=='') and
   (not man_made or man_made=='') and

@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "contractor_options.hpp"
 
-#include "../util/git_sha.hpp"
+#include "util/version.hpp"
 #include "../util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
@@ -48,19 +48,27 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
     // declare a group of options that will be allowed both on command line and in config file
     boost::program_options::options_description config_options("Configuration");
     config_options.add_options()(
-        "restrictions,r",
-        boost::program_options::value<boost::filesystem::path>(&contractor_config.restrictions_path),
-        "Restrictions file in .osrm.restrictions format")(
-        "profile,p", boost::program_options::value<boost::filesystem::path>(&contractor_config.profile_path)
-                         ->default_value("profile.lua"),
+        "profile,p",
+        boost::program_options::value<boost::filesystem::path>(&contractor_config.profile_path)
+            ->default_value("profile.lua"),
         "Path to LUA routing profile")(
-        "threads,t", boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
-                         ->default_value(tbb::task_scheduler_init::default_num_threads()),
+        "threads,t",
+        boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
+            ->default_value(tbb::task_scheduler_init::default_num_threads()),
         "Number of threads to use")(
 		"core,k", boost::program_options::value<double>(&contractor_config.core_factor)
-						 ->default_value(1.0),"Percentage of the graph (in vertices) to contract [0.1]");
+						 ->default_value(1.0),"Percentage of the graph (in vertices) to contract [0..1]")(
+		"segment-speed-file", boost::program_options::value<std::string>(&contractor_config.segment_speed_lookup_path),
+						 "Lookup file containing nodeA,nodeB,speed data to adjust edge weights")(
+        "level-cache,o",
+        boost::program_options::value<bool>(&contractor_config.use_cached_priority)->default_value(false),
+        "Use .level file to retain the contaction level for each node from the last run.");
 
-
+#ifdef DEBUG_GEOMETRY
+    config_options.add_options()(
+		"debug-geometry", boost::program_options::value<std::string>(&contractor_config.debug_geometry_path)
+						 ,"Write out edge-weight debugging geometry data in GeoJSON format to this file");
+#endif
 
     // hidden options, will be allowed both on command line and in config file, but will not be
     // shown to the user
@@ -102,7 +110,7 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 
     if (option_variables.count("version"))
     {
-        SimpleLogger().Write() << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << OSRM_VERSION;
         return return_code::exit;
     }
 
@@ -113,11 +121,6 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
     }
 
     boost::program_options::notify(option_variables);
-
-    if (!option_variables.count("restrictions"))
-    {
-        contractor_config.restrictions_path = contractor_config.osrm_input_path.string() + ".restrictions";
-    }
 
     if (!option_variables.count("input"))
     {
@@ -130,11 +133,10 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 
 void ContractorOptions::GenerateOutputFilesNames(ContractorConfig &contractor_config)
 {
-    contractor_config.node_output_path = contractor_config.osrm_input_path.string() + ".nodes";
+    contractor_config.level_output_path = contractor_config.osrm_input_path.string() + ".level";
     contractor_config.core_output_path = contractor_config.osrm_input_path.string() + ".core";
-    contractor_config.edge_output_path = contractor_config.osrm_input_path.string() + ".edges";
-    contractor_config.geometry_output_path = contractor_config.osrm_input_path.string() + ".geometry";
     contractor_config.graph_output_path = contractor_config.osrm_input_path.string() + ".hsgr";
-    contractor_config.rtree_nodes_output_path = contractor_config.osrm_input_path.string() + ".ramIndex";
-    contractor_config.rtree_leafs_output_path = contractor_config.osrm_input_path.string() + ".fileIndex";
+    contractor_config.edge_based_graph_path = contractor_config.osrm_input_path.string() + ".ebg";
+    contractor_config.edge_segment_lookup_path = contractor_config.osrm_input_path.string() + ".edge_segment_lookup";
+    contractor_config.edge_penalty_path = contractor_config.osrm_input_path.string() + ".edge_penalties";
 }

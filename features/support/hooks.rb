@@ -15,7 +15,7 @@ Before do |scenario|
   end
   
   @load_method  = DEFAULT_LOAD_METHOD
-  @query_params = {}
+  @query_params = []
   @scenario_time = Time.now.strftime("%Y-%m-%dT%H:%m:%SZ")
   reset_data
   @has_logged_preprocess_info = false

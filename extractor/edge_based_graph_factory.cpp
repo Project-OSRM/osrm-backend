@@ -26,12 +26,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "edge_based_graph_factory.hpp"
+#include "../algorithms/coordinate_calculation.hpp"
 #include "../data_structures/percent.hpp"
 #include "../util/compute_angle.hpp"
 #include "../util/integer_range.hpp"
 #include "../util/lua_util.hpp"
 #include "../util/simple_logger.hpp"
 #include "../util/timing_util.hpp"
+#include "../util/osrm_exception.hpp"
+
+#include "../util/debug_geometry.hpp"
 
 #include <boost/assert.hpp>
 
@@ -57,7 +61,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
 void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &output_edge_list)
 {
     BOOST_ASSERT_MSG(0 == output_edge_list.size(), "Vector is not empty");
-    m_edge_based_edge_list.swap(output_edge_list);
+    using std::swap; // Koenig swap
+    swap(m_edge_based_edge_list, output_edge_list);
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
@@ -71,7 +76,14 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
         BOOST_ASSERT(m_node_info_list.at(node.v).lat != INT_MAX);
     }
 #endif
-    nodes.swap(m_edge_based_node_list);
+    using std::swap; // Koenig swap
+    swap(nodes, m_edge_based_node_list);
+}
+
+void EdgeBasedGraphFactory::GetStartPointMarkers(std::vector<bool> &node_is_startpoint)
+{
+    using std::swap; // Koenig swap
+    swap(m_edge_based_node_is_startpoint, node_is_startpoint);
 }
 
 unsigned EdgeBasedGraphFactory::GetHighestEdgeID()
@@ -160,7 +172,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
                 forward_data.name_id, forward_geometry[i].second,
                 reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
                 reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
-                INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
+                false, INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
+            m_edge_based_node_is_startpoint.push_back(forward_data.startpoint || reverse_data.startpoint);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -203,7 +216,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v,
             forward_data.name_id, forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID,
-            INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
+            false, INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
+        m_edge_based_node_is_startpoint.push_back(forward_data.startpoint || reverse_data.startpoint);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -220,8 +234,20 @@ void EdgeBasedGraphFactory::FlushVectorToStream(
     original_edge_data_vector.clear();
 }
 
+#ifdef DEBUG_GEOMETRY
 void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
-                                lua_State *lua_state)
+                                lua_State *lua_state,
+                                const std::string &edge_segment_lookup_filename,
+                                const std::string &edge_penalty_filename,
+                                const bool generate_edge_lookup,
+                                const std::string &debug_turns_path)
+#else
+void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
+                                lua_State *lua_state,
+                                const std::string &edge_segment_lookup_filename,
+                                const std::string &edge_penalty_filename,
+                                const bool generate_edge_lookup)
+#endif
 {
     TIMER_START(renumber);
     m_max_edge_id = RenumberEdges() - 1;
@@ -232,7 +258,16 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
     TIMER_STOP(generate_nodes);
 
     TIMER_START(generate_edges);
-    GenerateEdgeExpandedEdges(original_edge_data_filename, lua_state);
+#ifdef DEBUG_GEOMETRY
+    GenerateEdgeExpandedEdges(original_edge_data_filename, lua_state,
+            edge_segment_lookup_filename,edge_penalty_filename, 
+            generate_edge_lookup, debug_turns_path);
+#else
+    GenerateEdgeExpandedEdges(original_edge_data_filename, lua_state,
+            edge_segment_lookup_filename,edge_penalty_filename, 
+            generate_edge_lookup);
+#endif
+
     TIMER_STOP(generate_edges);
 
     SimpleLogger().Write() << "Timing statistics for edge-expanded graph:";
@@ -311,13 +346,27 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
         }
     }
 
+    BOOST_ASSERT(m_edge_based_node_list.size() == m_edge_based_node_is_startpoint.size());
+
     SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                            << " nodes in edge-expanded graph";
 }
 
 /// Actually it also generates OriginalEdgeData and serializes them...
+#ifdef DEBUG_GEOMETRY
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
-    const std::string &original_edge_data_filename, lua_State *lua_state)
+    const std::string &original_edge_data_filename, lua_State *lua_state,
+    const std::string &edge_segment_lookup_filename,
+    const std::string &edge_fixed_penalties_filename,
+    const bool generate_edge_lookup, 
+    const std::string &debug_turns_path)
+#else
+void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
+    const std::string &original_edge_data_filename, lua_State *lua_state,
+    const std::string &edge_segment_lookup_filename,
+    const std::string &edge_fixed_penalties_filename,
+    const bool generate_edge_lookup)
+#endif
 {
     SimpleLogger().Write() << "generating edge-expanded edges";
 
@@ -325,6 +374,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     unsigned original_edges_counter = 0;
 
     std::ofstream edge_data_file(original_edge_data_filename.c_str(), std::ios::binary);
+    std::ofstream edge_segment_file;
+    std::ofstream edge_penalty_file;
+
+    if (generate_edge_lookup)
+    {
+        edge_segment_file.open(edge_segment_lookup_filename.c_str(), std::ios::binary);
+        edge_penalty_file.open(edge_fixed_penalties_filename.c_str(), std::ios::binary);
+    }
 
     // writes a dummy value that is updated later
     edge_data_file.write((char *)&original_edges_counter, sizeof(unsigned));
@@ -342,9 +399,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     Percent progress(m_node_based_graph->GetNumberOfNodes());
 
+#ifdef DEBUG_GEOMETRY
+    DEBUG_TURNS_START(debug_turns_path);
+#endif
+
     for (const auto node_u : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
-        progress.printStatus(node_u);
+        //progress.printStatus(node_u);
         for (const EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
             if (m_node_based_graph->GetEdgeData(e1).reversed)
@@ -415,6 +476,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 if (m_traffic_lights.find(node_v) != m_traffic_lights.end())
                 {
                     distance += speed_profile.traffic_signal_penalty;
+
+                    DEBUG_SIGNAL(node_v, m_node_info_list, speed_profile.traffic_signal_penalty);
                 }
 
                 // unpack last node of first segment if packed
@@ -437,7 +500,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 if (turn_instruction == TurnInstruction::UTurn)
                 {
                     distance += speed_profile.u_turn_penalty;
-                }
+
+                    DEBUG_UTURN(node_v, m_node_info_list, speed_profile.u_turn_penalty);
+                } 
+
+                DEBUG_TURN(node_v, m_node_info_list, first_coordinate, turn_angle, turn_penalty);
+
                 distance += turn_penalty;
 
                 const bool edge_is_compressed = m_compressed_edge_container.HasEntryForID(e1);
@@ -462,11 +530,70 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
                 BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
 
+
+                // NOTE: potential overflow here if we hit 2^32 routable edges
+                BOOST_ASSERT(m_edge_based_edge_list.size() <= std::numeric_limits<NodeID>::max());
                 m_edge_based_edge_list.emplace_back(edge_data1.edge_id, edge_data2.edge_id,
                                   m_edge_based_edge_list.size(), distance, true, false);
+
+
+                // Here is where we write out the mapping between the edge-expanded edges, and
+                // the node-based edges that are originally used to calculate the `distance`
+                // for the edge-expanded edges.  About 40 lines back, there is:
+                //
+                //                 unsigned distance = edge_data1.distance;
+                //
+                // This tells us that the weight for an edge-expanded-edge is based on the weight
+                // of the *source* node-based edge.  Therefore, we will look up the individual
+                // segments of the source node-based edge, and write out a mapping between
+                // those and the edge-based-edge ID.
+                // External programs can then use this mapping to quickly perform
+                // updates to the edge-expanded-edge based directly on its ID.
+                if (generate_edge_lookup)
+                {
+                    unsigned fixed_penalty = distance - edge_data1.distance;
+                    edge_penalty_file.write(reinterpret_cast<const char *>(&fixed_penalty), sizeof(fixed_penalty));
+                    if (edge_is_compressed)
+                    {
+                        const auto node_based_edges = m_compressed_edge_container.GetBucketReference(e1);
+                        NodeID previous = node_u;
+
+                        const unsigned node_count = node_based_edges.size()+1;
+                        edge_segment_file.write(reinterpret_cast<const char *>(&node_count), sizeof(node_count));
+                        const QueryNode &first_node = m_node_info_list[previous];
+                        edge_segment_file.write(reinterpret_cast<const char *>(&first_node.node_id), sizeof(first_node.node_id));
+
+                        for (auto target_node : node_based_edges)
+                        {
+                            const QueryNode &from = m_node_info_list[previous];
+                            const QueryNode &to = m_node_info_list[target_node.first];
+                            const double segment_length = coordinate_calculation::great_circle_distance(from.lat, from.lon, to.lat, to.lon);
+
+                            edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id), sizeof(to.node_id));
+                            edge_segment_file.write(reinterpret_cast<const char *>(&segment_length), sizeof(segment_length));
+                            edge_segment_file.write(reinterpret_cast<const char *>(&target_node.second), sizeof(target_node.second));
+                            previous = target_node.first;
+                        }
+                    }
+                    else
+                    {
+                        static const unsigned node_count = 2;
+                        const QueryNode from = m_node_info_list[node_u];
+                        const QueryNode to = m_node_info_list[node_v];
+                        const double segment_length = coordinate_calculation::great_circle_distance(from.lat, from.lon, to.lat, to.lon);
+                        edge_segment_file.write(reinterpret_cast<const char *>(&node_count), sizeof(node_count));
+                        edge_segment_file.write(reinterpret_cast<const char *>(&from.node_id), sizeof(from.node_id));
+                        edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id), sizeof(to.node_id));
+                        edge_segment_file.write(reinterpret_cast<const char *>(&segment_length), sizeof(segment_length));
+                        edge_segment_file.write(reinterpret_cast<const char *>(&edge_data1.distance), sizeof(edge_data1.distance));
+                    }
+                }
             }
         }
     }
+
+    DEBUG_TURNS_STOP();
+
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
     edge_data_file.seekp(std::ios::beg);

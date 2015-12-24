@@ -123,8 +123,9 @@ def table_coord_to_lonlat ci,ri
   [@origin[0]+ci*@zoom, @origin[1]-ri*@zoom]
 end
 
-def add_osm_node name,lon,lat
-  node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
+def add_osm_node name,lon,lat,id
+  id = make_osm_id if id == nil
+  node = OSM::Node.new id, OSM_USER, OSM_TIMESTAMP, lon, lat
   node << { :name => name }
   node.uid = OSM_UID
   osm_db << node
@@ -273,12 +274,13 @@ def extract_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Extracting #{osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm#{'.pbf' if pbf?} #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
     begin
-      ["osrm","osrm.names","osrm.restrictions"].each do |file|
+      ["osrm","osrm.names","osrm.restrictions","osrm.ebg","osrm.edges","osrm.fileIndex","osrm.geometry","osrm.nodes","osrm.ramIndex"].each do |file|
+        log "Renaming #{osm_file}.#{file} to #{extracted_file}.#{file}", :preprocess
         File.rename "#{osm_file}.#{file}", "#{extracted_file}.#{file}"
       end
     rescue Exception => e
@@ -296,14 +298,16 @@ def prepare_data
       raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
     end
     begin
-      ["osrm.hsgr","osrm.fileIndex","osrm.geometry","osrm.nodes","osrm.ramIndex","osrm.core"].each do |file|
+      ["osrm.hsgr","osrm.fileIndex","osrm.geometry","osrm.nodes","osrm.ramIndex","osrm.core","osrm.edges"].each do |file|
+        log "Renaming #{extracted_file}.#{file} to #{prepared_file}.#{file}", :preprocess
         File.rename "#{extracted_file}.#{file}", "#{prepared_file}.#{file}"
       end
     rescue Exception => e
       raise FileError.new nil, "failed to rename data file after preparing."
     end
     begin
-      ["osrm.names","osrm.edges","osrm.restrictions"].each do |file|
+      ["osrm.names","osrm.restrictions","osrm"].each do |file|
+        log "Copying #{extracted_file}.#{file} to #{prepared_file}.#{file}", :preprocess
         FileUtils.cp "#{extracted_file}.#{file}", "#{prepared_file}.#{file}"
       end
     rescue Exception => e

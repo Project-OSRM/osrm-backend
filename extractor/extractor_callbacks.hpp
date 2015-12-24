@@ -28,12 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_CALLBACKS_HPP
 #define EXTRACTOR_CALLBACKS_HPP
 
-#include "extraction_way.hpp"
 #include "../typedefs.h"
-
-#include <osmium/osm.hpp>
-
-#include <variant/optional.hpp>
+#include <boost/optional/optional_fwd.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -42,6 +38,12 @@ struct ExternalMemoryNode;
 class ExtractionContainers;
 struct InputRestrictionContainer;
 struct ExtractionNode;
+struct ExtractionWay;
+namespace osmium
+{
+class Node;
+class Way;
+}
 
 /**
  * This class is uses by the extractor with the results of the
@@ -66,7 +68,7 @@ class ExtractorCallbacks
     void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);
 
     // warning: caller needs to take care of synchronization!
-    void ProcessRestriction(const mapbox::util::optional<InputRestrictionContainer> &restriction);
+    void ProcessRestriction(const boost::optional<InputRestrictionContainer> &restriction);
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);

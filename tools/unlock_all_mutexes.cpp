@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../util/git_sha.hpp"
+#include "util/version.hpp"
 #include "../util/simple_logger.hpp"
 #include "../server/data_structures/shared_barriers.hpp"
 
@@ -36,7 +36,7 @@ int main()
     LogPolicy::GetInstance().Unmute();
     try
     {
-        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION;
+        SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
         SimpleLogger().Write() << "Releasing all locks";
         SharedBarriers barrier;
         barrier.pending_update_mutex.unlock();
