@@ -51,7 +51,7 @@ namespace
 int lua_error_callback(lua_State *lua_state)
 {
     std::string error_msg = lua_tostring(lua_state, -1);
-    throw osrm::exception("ERROR occured in profile script:\n" + error_msg);
+    throw osrm::exception("ERROR occurred in profile script:\n" + error_msg);
 }
 }
 

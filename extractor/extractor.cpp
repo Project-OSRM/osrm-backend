@@ -342,14 +342,14 @@ void extractor::SetupScriptingEnvironment(lua_State *lua_state,
     if (0 != luaL_dofile(lua_state, config.profile_path.string().c_str()))
     {
         std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occured in scripting block";
+        msg << lua_tostring(lua_state, -1) << " occurred in scripting block";
         throw osrm::exception(msg.str());
     }
 
     if (0 != luaL_dostring(lua_state, "return traffic_signal_penalty\n"))
     {
         std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occured in scripting block";
+        msg << lua_tostring(lua_state, -1) << " occurred in scripting block";
         throw osrm::exception(msg.str());
     }
     speed_profile.traffic_signal_penalty = 10 * lua_tointeger(lua_state, -1);
@@ -359,7 +359,7 @@ void extractor::SetupScriptingEnvironment(lua_State *lua_state,
     if (0 != luaL_dostring(lua_state, "return u_turn_penalty\n"))
     {
         std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occured in scripting block";
+        msg << lua_tostring(lua_state, -1) << " occurred in scripting block";
         throw osrm::exception(msg.str());
     }
 
