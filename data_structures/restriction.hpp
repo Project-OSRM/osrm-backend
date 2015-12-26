@@ -46,14 +46,14 @@ struct TurnRestriction
     struct Bits
     { // mostly unused
         Bits()
-            : is_only(false), uses_via_way(false), unused2(false), unused3(false), unused4(false),
+            : is_only(false), uses_via_way(false), ignore_write(false), unused3(false), unused4(false),
               unused5(false), unused6(false), unused7(false)
         {
         }
 
         bool is_only : 1;
         bool uses_via_way : 1;
-        bool unused2 : 1;
+        bool ignore_write : 1;
         bool unused3 : 1;
         bool unused4 : 1;
         bool unused5 : 1;
@@ -79,7 +79,7 @@ struct TurnRestriction
 
 /**
  * This is just a wrapper around TurnRestriction used in the extractor.
- * 
+ *
  * Could be merged with TurnRestriction. For now the type-destiction makes sense
  * as the format in which the restriction is presented in the extractor and in the
  * preprocessing is different. (see restriction_parser.cpp)
@@ -98,6 +98,7 @@ struct InputRestrictionContainer
     {
         restriction.from.way = SPECIAL_EDGEID;
         restriction.to.way = SPECIAL_EDGEID;
+        restriction.via.way = SPECIAL_EDGEID;
         restriction.via.node = SPECIAL_NODEID;
         restriction.flags.is_only = is_only;
     }
@@ -126,6 +127,17 @@ struct CmpRestrictionContainerByTo
     bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b) const
     {
         return a.restriction.to.way < b.restriction.to.way;
+    }
+    value_type max_value() const { return InputRestrictionContainer::max_value(); }
+    value_type min_value() const { return InputRestrictionContainer::min_value(); }
+};
+
+struct CmpRestrictionContainerByVia
+{
+    using value_type = InputRestrictionContainer;
+    bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b) const
+    {
+        return a.restriction.via.way < b.restriction.via.way;
     }
     value_type max_value() const { return InputRestrictionContainer::max_value(); }
     value_type min_value() const { return InputRestrictionContainer::min_value(); }

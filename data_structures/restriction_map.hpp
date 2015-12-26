@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <algorithm>
 #include <vector>
 
 struct RestrictionSource
@@ -56,12 +57,30 @@ struct RestrictionTarget
 {
     NodeID target_node;
     bool is_only;
+    // If restriction is a via_way, via_nodes will be populated with nodes from restriction
+    std::vector<NodeID> via_nodes;
 
     explicit RestrictionTarget(NodeID target, bool only) : target_node(target), is_only(only) {}
 
+    explicit RestrictionTarget() : target_node(SPECIAL_NODEID), is_only(false) {}
+
+    void reset()
+    {
+        target_node = SPECIAL_NODEID;
+        is_only = false;
+        via_nodes.clear();
+    }
+
     friend inline bool operator==(const RestrictionTarget &lhs, const RestrictionTarget &rhs)
     {
-        return (lhs.target_node == rhs.target_node && lhs.is_only == rhs.is_only);
+        return (lhs.target_node == rhs.target_node && lhs.is_only == rhs.is_only) &&
+            (lhs.via_nodes.size() == rhs.via_nodes.size()) &&
+            (std::equal(
+                lhs.via_nodes.begin(),
+                lhs.via_nodes.begin() + lhs.via_nodes.size(),
+                rhs.via_nodes.begin()
+                )
+            );
     }
 };
 
@@ -135,15 +154,23 @@ class RestrictionMap
 
             for (RestrictionTarget &restriction_target : bucket)
             {
+                unsigned via_ways_length = restriction_target.via_ways.size();
                 if (node_v == restriction_target.target_node)
                 {
                     restriction_target.target_node = node_w;
+                }
+                else if (via_ways_length && node_v == restriction_target.via_ways[via_ways_length - 1])
+                {
+                    restriction_target.via_ways[via_ways_length - 1] = node_w;
                 }
             }
         }
     }
 
     bool IsViaNode(const NodeID node) const;
+    bool IsFromWay(const TurnRestriction &restriction) const;
+    bool IsViaWay(const TurnRestriction &restriction) const;
+    bool IsToWay(const TurnRestriction &restriction) const;
 
     // Replaces start edge (v, w) with (u, w). Only start node changes.
     void
@@ -155,6 +182,11 @@ class RestrictionMap
     // Checks if turn <u,v,w> is actually a turn restriction.
     bool
     CheckIfTurnIsRestricted(const NodeID node_u, const NodeID node_v, const NodeID node_w) const;
+
+    // Checks if a turn restriction is a via way restriction and returns the nodes associated with
+    // the restriction.
+    std::vector<std::vector<NodeID>>
+    CheckForViaWayRestrictions(const NodeID node_u, const NodeID node_v) const;
 
     std::size_t size() const { return m_count; }
 

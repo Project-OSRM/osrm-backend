@@ -28,14 +28,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTION_CONTAINERS_HPP
 #define EXTRACTION_CONTAINERS_HPP
 
-#include "internal_extractor_edge.hpp"
 #include "first_and_last_segment_of_way.hpp"
 #include "scripting_environment.hpp"
+#include "internal_extractor_edge.hpp"
+
 #include "../data_structures/external_memory_node.hpp"
 #include "../data_structures/restriction.hpp"
 
 #include <stxxl/vector>
 #include <unordered_map>
+#include <vector>
 
 /**
  * Uses external memory containers from stxxl to store all the data that
@@ -54,12 +56,16 @@ class ExtractionContainers
 #endif
     void PrepareNodes();
     void PrepareRestrictions();
+    void PrepareViaWayRestrictions();
     void PrepareEdges(lua_State *segment_state);
 
     void WriteNodes(std::ofstream& file_out_stream) const;
     void WriteRestrictions(const std::string& restrictions_file_name) const;
     void WriteEdges(std::ofstream& file_out_stream) const;
     void WriteNames(const std::string& names_file_name) const;
+
+    NodeID findConnectingNodeID(const std::vector<InternalExtractorEdge> &way_edges1, const std::vector<InternalExtractorEdge> &way_edges2);
+
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
     using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
@@ -73,8 +79,10 @@ class ExtractionContainers
     stxxl::vector<char> name_char_data;
     stxxl::vector<unsigned> name_lengths;
     STXXLRestrictionsVector restrictions_list;
+    std::vector<InputRestrictionContainer> unfolded_restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
+    std::unordered_map<OSMWayID, std::vector<InternalExtractorEdge>> way_to_edges_map;
     unsigned max_internal_node_id;
 
     ExtractionContainers();

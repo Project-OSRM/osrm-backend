@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../util/lua_util.hpp"
 #include "../util/osrm_exception.hpp"
 #include "../util/simple_logger.hpp"
+#include "../typedefs.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
@@ -207,11 +208,18 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
             {
                 restriction_container.restriction.to.way = member.ref();
             }
-            // else if (0 == strcmp("via", role))
-            // {
-            //     not yet suppported
-            //     restriction_container.restriction.via.way = member.ref();
-            // }
+            // For now we'll only deal with 3-member via-way turn restrictions.
+            else if (0 == strcmp("via", role))
+            {
+                if (restriction_container.restriction.via.way == SPECIAL_EDGEID) {
+                    restriction_container.restriction.flags.uses_via_way = true;
+                    restriction_container.restriction.flags.ignore_write = true;
+                    restriction_container.restriction.via.way = member.ref();
+                }
+                else {
+                    return boost::optional<InputRestrictionContainer>();
+                }
+            }
             break;
         case osmium::item_type::relation:
             // not yet supported, but who knows what the future holds...

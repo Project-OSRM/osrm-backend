@@ -85,6 +85,8 @@ void ExtractorCallbacks::ProcessRestriction(
  * Takes the geometry contained in the ```input_way``` and the tags computed
  * by the lua profile inside ```parsed_way``` and computes all edge segments.
  *
+ * Updates the extraction container's datastructure: way_to_edges_map
+ *
  * Depending on the forward/backwards weights the edges are split into forward
  * and backward edges.
  *
@@ -194,7 +196,17 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                     OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
                                     backward_weight_data, true, false, parsed_way.roundabout,
                                     parsed_way.is_access_restricted, parsed_way.is_startpoint,
-                                    parsed_way.backward_travel_mode, false));
+                                    parsed_way.backward_travel_mode, false
+                                    ));
+
+                                InternalExtractorEdge new_edge(
+                                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
+                                    backward_weight_data, true, false, parsed_way.roundabout,
+                                    parsed_way.is_access_restricted, parsed_way.is_startpoint,
+                                    parsed_way.backward_travel_mode, false);
+                                new_edge.result.source = first_node.ref();
+                                new_edge.result.target = last_node.ref();
+                                external_memory.way_to_edges_map[OSMWayID(input_way.id())].push_back(new_edge);
                             });
 
         external_memory.way_start_end_id_list.push_back(
@@ -216,10 +228,20 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                     true, !forward_only, parsed_way.roundabout,
                                     parsed_way.is_access_restricted, parsed_way.is_startpoint, parsed_way.forward_travel_mode,
                                     split_edge));
+
+                                InternalExtractorEdge new_edge(
+                                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id, forward_weight_data,
+                                    true, !forward_only, parsed_way.roundabout,
+                                    parsed_way.is_access_restricted, parsed_way.is_startpoint, parsed_way.forward_travel_mode,
+                                    split_edge);
+                                new_edge.result.source = first_node.ref();
+                                new_edge.result.target = last_node.ref();
+                                external_memory.way_to_edges_map[OSMWayID(input_way.id())].push_back(new_edge);
                             });
         if (split_edge)
         {
             BOOST_ASSERT(parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
+
             osrm::for_each_pair(
                 input_way.nodes().cbegin(), input_way.nodes().cend(),
                 [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
@@ -228,6 +250,15 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                         OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id, backward_weight_data, false,
                         true, parsed_way.roundabout, parsed_way.is_access_restricted,
                         parsed_way.is_startpoint, parsed_way.backward_travel_mode, true));
+
+                    InternalExtractorEdge new_edge(
+                        OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id, backward_weight_data, false,
+                        true, parsed_way.roundabout, parsed_way.is_access_restricted,
+                        parsed_way.is_startpoint, parsed_way.backward_travel_mode, true);
+
+                    new_edge.result.source = first_node.ref();
+                    new_edge.result.target = last_node.ref();
+                    external_memory.way_to_edges_map[OSMWayID(input_way.id())].push_back(new_edge);
                 });
         }
 
