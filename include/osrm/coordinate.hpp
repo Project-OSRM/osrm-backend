@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace
 {
-constexpr static const float COORDINATE_PRECISION = 1000000.f;
+constexpr static const double COORDINATE_PRECISION = 1000000.0;
 }
 
 struct FixedPointCoordinate
@@ -58,7 +58,7 @@ struct FixedPointCoordinate
     bool is_valid() const;
     bool operator==(const FixedPointCoordinate &other) const;
 
-    float bearing(const FixedPointCoordinate &other) const;
+    double bearing(const FixedPointCoordinate &other) const;
     void output(std::ostream &out) const;
 };
 

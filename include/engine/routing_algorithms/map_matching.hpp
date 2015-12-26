@@ -359,7 +359,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 continue;
             }
 
-            matching.length = 0.0f;
+            matching.length = 0.0;
             matching.nodes.resize(reconstructed_indices.size());
             matching.indices.resize(reconstructed_indices.size());
             for (const auto i : osrm::irange<std::size_t>(0u, reconstructed_indices.size()))
