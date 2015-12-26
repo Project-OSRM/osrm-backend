@@ -147,7 +147,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
                 break;
             }
 
-            // sort by foward id, then by reverse id and then by distance
+            // sort by forward id, then by reverse id and then by distance
             std::sort(
                 candidates.begin(), candidates.end(),
                 [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
@@ -321,7 +321,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             return Status::Error;
         }
 
-        // enforce maximum number of locations for performance reasons
+        // at least two coordinates are needed for map matching
         if (static_cast<int>(input_coords.size()) < 2)
         {
             json_result.values["status_message"] = "At least two coordinates needed";
