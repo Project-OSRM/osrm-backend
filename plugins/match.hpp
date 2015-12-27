@@ -202,8 +202,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     }
 
     osrm::json::Object submatchingToJSON(const osrm::matching::SubMatching &sub,
-                                         const RouteParameters &route_parameters,
-                                         const InternalRouteResult &raw_route)
+                                         const RouteParameters &route_parameters)
     {
         osrm::json::Object subtrace;
 
@@ -215,10 +214,28 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         JSONDescriptor<DataFacadeT> json_descriptor(facade);
         json_descriptor.SetConfig(route_parameters);
 
-        subtrace.values["hint_data"] = json_descriptor.BuildHintData(raw_route);
-
         if (route_parameters.geometry || route_parameters.print_instructions)
         {
+            // FIXME we only run this to obtain the geometry
+            // The clean way would be to get this directly from the map matching plugin
+            InternalRouteResult raw_route;
+            PhantomNodes current_phantom_node_pair;
+            for (unsigned i = 0; i < sub.nodes.size() - 1; ++i)
+            {
+                current_phantom_node_pair.source_phantom = sub.nodes[i];
+                current_phantom_node_pair.target_phantom = sub.nodes[i + 1];
+                BOOST_ASSERT(current_phantom_node_pair.source_phantom.is_valid());
+                BOOST_ASSERT(current_phantom_node_pair.target_phantom.is_valid());
+                raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
+            }
+            search_engine_ptr->shortest_path(
+                raw_route.segment_end_coordinates,
+                std::vector<bool>(raw_route.segment_end_coordinates.size() + 1, true), raw_route);
+
+            BOOST_ASSERT(raw_route.shortest_path_length != INVALID_EDGE_WEIGHT);
+
+            subtrace.values["hint_data"] = json_descriptor.BuildHintData(raw_route);
+
             DescriptionFactory factory;
             FixedPointCoordinate current_coordinate;
             factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
@@ -372,25 +389,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             BOOST_ASSERT(sub.nodes.size() > 1);
 
-            // FIXME we only run this to obtain the geometry
-            // The clean way would be to get this directly from the map matching plugin
-            InternalRouteResult raw_route;
-            PhantomNodes current_phantom_node_pair;
-            for (unsigned i = 0; i < sub.nodes.size() - 1; ++i)
-            {
-                current_phantom_node_pair.source_phantom = sub.nodes[i];
-                current_phantom_node_pair.target_phantom = sub.nodes[i + 1];
-                BOOST_ASSERT(current_phantom_node_pair.source_phantom.is_valid());
-                BOOST_ASSERT(current_phantom_node_pair.target_phantom.is_valid());
-                raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
-            }
-            search_engine_ptr->shortest_path(
-                raw_route.segment_end_coordinates,
-                std::vector<bool>(raw_route.segment_end_coordinates.size() + 1, true), raw_route);
-
-            BOOST_ASSERT(raw_route.shortest_path_length != INVALID_EDGE_WEIGHT);
-
-            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
+            matchings.values.emplace_back(submatchingToJSON(sub, route_parameters));
         }
 
         if (osrm::json::Logger::get())
