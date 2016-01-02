@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#define BOOST_TEST_MODULE algorithm tests
+#define BOOST_TEST_MODULE engine tests
 
 #include <boost/test/unit_test.hpp>
 

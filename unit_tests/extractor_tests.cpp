@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#define BOOST_TEST_MODULE datastructure tests
+#define BOOST_TEST_MODULE extractor tests
 
 #include <boost/test/unit_test.hpp>
 
