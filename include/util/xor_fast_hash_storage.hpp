@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef XOR_FAST_HASH_STORAGE_HPP
 #define XOR_FAST_HASH_STORAGE_HPP
 
-#include "xor_fast_hash.hpp"
+#include "util/xor_fast_hash.hpp"
 
 #include <limits>
 #include <vector>

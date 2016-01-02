@@ -28,12 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RAW_ROUTE_DATA_H
 #define RAW_ROUTE_DATA_H
 
-#include "../data_structures/phantom_node.hpp"
-#include "../data_structures/travel_mode.hpp"
-#include "../data_structures/turn_instructions.hpp"
-#include "../typedefs.h"
+#include "engine/phantom_node.hpp"
+#include "extractor/travel_mode.hpp"
+#include "extractor/turn_instructions.hpp"
+#include "util/typedefs.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <vector>
 

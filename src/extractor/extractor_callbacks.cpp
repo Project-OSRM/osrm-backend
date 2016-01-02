@@ -25,21 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "extractor_callbacks.hpp"
-#include "extraction_containers.hpp"
-#include "extraction_node.hpp"
-#include "extraction_way.hpp"
+#include "extractor/extractor_callbacks.hpp"
+#include "extractor/extraction_containers.hpp"
+#include "extractor/extraction_node.hpp"
+#include "extractor/extraction_way.hpp"
 
-#include "../data_structures/external_memory_node.hpp"
-#include "../data_structures/restriction.hpp"
-#include "../util/container.hpp"
-#include "../util/simple_logger.hpp"
+#include "extractor/external_memory_node.hpp"
+#include "extractor/restriction.hpp"
+#include "util/container.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/optional/optional.hpp>
 
 #include <osmium/osm.hpp>
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <limits>
 #include <string>

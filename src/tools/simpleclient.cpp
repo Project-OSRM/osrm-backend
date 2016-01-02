@@ -26,14 +26,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "util/version.hpp"
-#include "../util/json_renderer.hpp"
-#include "../util/routed_options.hpp"
-#include "../util/simple_logger.hpp"
+#include "util/json_renderer.hpp"
+#include "util/routed_options.hpp"
+#include "util/simple_logger.hpp"
 
-#include <osrm/json_container.hpp>
-#include <osrm/libosrm_config.hpp>
-#include <osrm/route_parameters.hpp>
-#include <osrm/osrm.hpp>
+#include "osrm/json_container.hpp"
+#include "osrm/libosrm_config.hpp"
+#include "osrm/route_parameters.hpp"
+#include "osrm/osrm.hpp"
 
 #include <string>
 

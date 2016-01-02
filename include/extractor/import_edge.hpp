@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef IMPORT_EDGE_HPP
 #define IMPORT_EDGE_HPP
 
-#include "../data_structures/travel_mode.hpp"
-#include "../typedefs.h"
+#include "extractor/travel_mode.hpp"
+#include "util/typedefs.hpp"
 
 struct NodeBasedEdge
 {

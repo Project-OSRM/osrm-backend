@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DOUGLAS_PEUCKER_HPP_
 #define DOUGLAS_PEUCKER_HPP_
 
-#include "../data_structures/segment_information.hpp"
+#include "engine/segment_information.hpp"
 
 #include <array>
 #include <stack>

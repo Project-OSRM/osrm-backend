@@ -28,18 +28,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TARJAN_SCC_HPP
 #define TARJAN_SCC_HPP
 
-#include "../typedefs.h"
-#include "../data_structures/deallocating_vector.hpp"
-#include "../data_structures/import_edge.hpp"
-#include "../data_structures/query_node.hpp"
-#include "../data_structures/percent.hpp"
+#include "util/typedefs.hpp"
+#include "util/deallocating_vector.hpp"
+#include "extractor/import_edge.hpp"
+#include "extractor/query_node.hpp"
+#include "util/percent.hpp"
 
-#include "../util/integer_range.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/std_hash.hpp"
-#include "../util/timing_util.hpp"
+#include "util/integer_range.hpp"
+#include "util/simple_logger.hpp"
+#include "util/std_hash.hpp"
+#include "util/timing_util.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 #include <boost/assert.hpp>
 #include <cstdint>
 

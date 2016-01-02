@@ -29,9 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DATASTORE_OPTIONS_HPP
 
 #include "util/version.hpp"
-#include "ini_file.hpp"
-#include "osrm_exception.hpp"
-#include "simple_logger.hpp"
+#include "util/ini_file.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>

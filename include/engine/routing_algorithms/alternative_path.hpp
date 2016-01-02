@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ALTERNATIVE_PATH_ROUTING_HPP
 #define ALTERNATIVE_PATH_ROUTING_HPP
 
-#include "routing_base.hpp"
-#include "../data_structures/search_engine_data.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/container.hpp"
+#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/search_engine_data.hpp"
+#include "util/integer_range.hpp"
+#include "util/container.hpp"
 
 #include <boost/assert.hpp>
 

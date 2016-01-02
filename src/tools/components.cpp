@@ -25,16 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../typedefs.h"
-#include "../algorithms/tarjan_scc.hpp"
-#include "../algorithms/coordinate_calculation.hpp"
-#include "../data_structures/dynamic_graph.hpp"
-#include "../data_structures/static_graph.hpp"
-#include "../util/fingerprint.hpp"
-#include "../util/graph_loader.hpp"
-#include "../util/make_unique.hpp"
-#include "../util/osrm_exception.hpp"
-#include "../util/simple_logger.hpp"
+#include "util/typedefs.hpp"
+#include "extractor/tarjan_scc.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/dynamic_graph.hpp"
+#include "util/static_graph.hpp"
+#include "util/fingerprint.hpp"
+#include "util/graph_loader.hpp"
+#include "util/make_unique.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gdal/ogrsf_frmts.h>
 #endif
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <fstream>
 #include <memory>

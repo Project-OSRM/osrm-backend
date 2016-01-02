@@ -28,12 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SEGMENT_INFORMATION_HPP
 #define SEGMENT_INFORMATION_HPP
 
-#include "turn_instructions.hpp"
+#include "extractor/turn_instructions.hpp"
 
-#include "../data_structures/travel_mode.hpp"
-#include "../typedefs.h"
+#include "extractor/travel_mode.hpp"
+#include "util/typedefs.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 #include <utility>
 
 // Struct fits everything in one cache line

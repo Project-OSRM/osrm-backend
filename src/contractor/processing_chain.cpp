@@ -25,22 +25,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "processing_chain.hpp"
-#include "contractor.hpp"
+#include "contractor/processing_chain.hpp"
+#include "contractor/contractor.hpp"
 
-#include "contractor.hpp"
+#include "contractor/contractor.hpp"
 
-#include "../data_structures/deallocating_vector.hpp"
+#include "util/deallocating_vector.hpp"
 
-#include "../algorithms/crc32_processor.hpp"
-#include "../util/graph_loader.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/lua_util.hpp"
-#include "../util/osrm_exception.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/string_util.hpp"
-#include "../util/timing_util.hpp"
-#include "../typedefs.h"
+#include "contractor/crc32_processor.hpp"
+#include "util/graph_loader.hpp"
+#include "util/integer_range.hpp"
+#include "util/lua_util.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
+#include "util/string_util.hpp"
+#include "util/timing_util.hpp"
+#include "util/typedefs.hpp"
 
 #include <fast-cpp-csv-parser/csv.h>
 
@@ -55,7 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <thread>
 #include <vector>
 
-#include "../util/debug_geometry.hpp"
+#include "util/debug_geometry.hpp"
 
 Prepare::~Prepare() {}
 

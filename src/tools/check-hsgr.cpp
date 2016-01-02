@@ -24,13 +24,13 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "../data_structures/percent.hpp"
-#include "../data_structures/query_edge.hpp"
-#include "../data_structures/static_graph.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/graph_loader.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/osrm_exception.hpp"
+#include "util/percent.hpp"
+#include "contractor/query_edge.hpp"
+#include "util/static_graph.hpp"
+#include "util/integer_range.hpp"
+#include "util/graph_loader.hpp"
+#include "util/simple_logger.hpp"
+#include "util/osrm_exception.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "restriction_parser.hpp"
-#include "extraction_way.hpp"
+#include "extractor/restriction_parser.hpp"
+#include "extractor/extraction_way.hpp"
 
-#include "../data_structures/external_memory_node.hpp"
-#include "../util/lua_util.hpp"
-#include "../util/osrm_exception.hpp"
-#include "../util/simple_logger.hpp"
+#include "extractor/external_memory_node.hpp"
+#include "util/lua_util.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>

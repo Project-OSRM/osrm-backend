@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRIGONOMETRY_TABLE_HPP
 #define TRIGONOMETRY_TABLE_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 #include <cmath>
 
 #include <limits>

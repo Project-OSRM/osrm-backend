@@ -26,9 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "util/version.hpp"
-#include "../util/osrm_exception.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/timing_util.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

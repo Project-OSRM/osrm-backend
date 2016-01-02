@@ -28,17 +28,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONTRACTOR_HPP
 #define CONTRACTOR_HPP
 
-#include "../data_structures/binary_heap.hpp"
-#include "../data_structures/deallocating_vector.hpp"
-#include "../data_structures/dynamic_graph.hpp"
-#include "../data_structures/percent.hpp"
-#include "../data_structures/query_edge.hpp"
-#include "../data_structures/xor_fast_hash.hpp"
-#include "../data_structures/xor_fast_hash_storage.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/timing_util.hpp"
-#include "../typedefs.h"
+#include "util/binary_heap.hpp"
+#include "util/deallocating_vector.hpp"
+#include "util/dynamic_graph.hpp"
+#include "util/percent.hpp"
+#include "contractor/query_edge.hpp"
+#include "util/xor_fast_hash.hpp"
+#include "util/xor_fast_hash_storage.hpp"
+#include "util/integer_range.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 

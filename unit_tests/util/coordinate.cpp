@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/test/unit_test.hpp>
 
-#include "../../algorithms/coordinate_calculation.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <osrm/coordinate.hpp>
 

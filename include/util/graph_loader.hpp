@@ -28,14 +28,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GRAPH_LOADER_HPP
 #define GRAPH_LOADER_HPP
 
-#include "fingerprint.hpp"
-#include "osrm_exception.hpp"
-#include "simple_logger.hpp"
-#include "../data_structures/external_memory_node.hpp"
-#include "../data_structures/import_edge.hpp"
-#include "../data_structures/query_node.hpp"
-#include "../data_structures/restriction.hpp"
-#include "../typedefs.h"
+#include "util/fingerprint.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
+#include "extractor/external_memory_node.hpp"
+#include "extractor/import_edge.hpp"
+#include "extractor/query_node.hpp"
+#include "extractor/restriction.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

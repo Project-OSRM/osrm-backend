@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REQUEST_PARSER_HPP
 #define REQUEST_PARSER_HPP
 
-#include "http/compression_type.hpp"
-#include "http/header.hpp"
-#include "../data_structures/tribool.hpp"
+#include "server/http/compression_type.hpp"
+#include "server/http/header.hpp"
+#include "util/tribool.hpp"
 
 #include <tuple>
 

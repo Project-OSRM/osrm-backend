@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HELLO_WORLD_HPP
 #define HELLO_WORLD_HPP
 
-#include "plugin_base.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "../util/json_renderer.hpp"
+#include "util/json_renderer.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <string>
 

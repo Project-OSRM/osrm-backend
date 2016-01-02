@@ -30,16 +30,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Exposes all data access interfaces to the algorithms via base class ptr
 
-#include "../../data_structures/edge_based_node.hpp"
-#include "../../data_structures/external_memory_node.hpp"
-#include "../../data_structures/phantom_node.hpp"
-#include "../../data_structures/turn_instructions.hpp"
-#include "../../util/integer_range.hpp"
-#include "../../util/osrm_exception.hpp"
-#include "../../util/string_util.hpp"
-#include "../../typedefs.h"
+#include "extractor/edge_based_node.hpp"
+#include "extractor/external_memory_node.hpp"
+#include "engine/phantom_node.hpp"
+#include "extractor/turn_instructions.hpp"
+#include "util/integer_range.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/string_util.hpp"
+#include "util/typedefs.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <string>
 #include <boost/optional.hpp>

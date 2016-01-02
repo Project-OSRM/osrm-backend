@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "douglas_peucker.hpp"
+#include "engine/douglas_peucker.hpp"
 
-#include "../data_structures/segment_information.hpp"
+#include "engine/segment_information.hpp"
 
 #include <boost/assert.hpp>
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <cmath>
 #include <algorithm>

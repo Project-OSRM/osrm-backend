@@ -25,9 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../../data_structures/raster_source.hpp"
-#include "../../typedefs.h"
-#include "../../util/osrm_exception.hpp"
+#include "extractor/raster_source.hpp"
+#include "util/typedefs.hpp"
+#include "util/osrm_exception.hpp"
 
 #include <osrm/coordinate.hpp>
 

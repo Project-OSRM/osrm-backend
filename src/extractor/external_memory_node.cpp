@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "external_memory_node.hpp"
-#include "query_node.hpp"
+#include "extractor/external_memory_node.hpp"
+#include "extractor/query_node.hpp"
 
 #include <limits>
 

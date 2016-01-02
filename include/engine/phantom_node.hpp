@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PHANTOM_NODES_H
 #define PHANTOM_NODES_H
 
-#include "travel_mode.hpp"
-#include "../typedefs.h"
+#include "extractor/travel_mode.hpp"
+#include "util/typedefs.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <iostream>
 #include <utility>

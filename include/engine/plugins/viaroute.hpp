@@ -28,20 +28,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VIA_ROUTE_HPP
 #define VIA_ROUTE_HPP
 
-#include "plugin_base.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "../algorithms/object_encoder.hpp"
-#include "../data_structures/search_engine.hpp"
-#include "../descriptors/descriptor_base.hpp"
-#include "../descriptors/gpx_descriptor.hpp"
-#include "../descriptors/json_descriptor.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/json_renderer.hpp"
-#include "../util/make_unique.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/timing_util.hpp"
+#include "engine/object_encoder.hpp"
+#include "engine/search_engine.hpp"
+#include "engine/descriptors/descriptor_base.hpp"
+#include "engine/descriptors/gpx_descriptor.hpp"
+#include "engine/descriptors/json_descriptor.hpp"
+#include "util/integer_range.hpp"
+#include "util/json_renderer.hpp"
+#include "util/make_unique.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <cstdlib>
 

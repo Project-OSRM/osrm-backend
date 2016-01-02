@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TYPEDEFS_H
 
 #include <limits>
-#include <osrm/strong_typedef.hpp>
+#include "osrm/strong_typedef.hpp"
 #include <cstddef>
 
 // Necessary workaround for Windows as VS doesn't implement C99

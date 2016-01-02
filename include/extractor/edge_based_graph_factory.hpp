@@ -30,16 +30,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EDGE_BASED_GRAPH_FACTORY_HPP_
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
-#include "speed_profile.hpp"
-#include "../typedefs.h"
-#include "../data_structures/compressed_edge_container.hpp"
-#include "../data_structures/deallocating_vector.hpp"
-#include "../data_structures/edge_based_node.hpp"
-#include "../data_structures/original_edge_data.hpp"
-#include "../data_structures/query_node.hpp"
-#include "../data_structures/turn_instructions.hpp"
-#include "../data_structures/node_based_graph.hpp"
-#include "../data_structures/restriction_map.hpp"
+#include "extractor/speed_profile.hpp"
+#include "util/typedefs.hpp"
+#include "extractor/compressed_edge_container.hpp"
+#include "util/deallocating_vector.hpp"
+#include "extractor/edge_based_node.hpp"
+#include "extractor/original_edge_data.hpp"
+#include "extractor/query_node.hpp"
+#include "extractor/turn_instructions.hpp"
+#include "util/node_based_graph.hpp"
+#include "extractor/restriction_map.hpp"
 
 #include <algorithm>
 #include <iosfwd>

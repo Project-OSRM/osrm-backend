@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstddef>
 #include <iterator>
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 // This Wrapper provides all methods that are needed for TarjanSCC, when the graph is given in a
 // matrix representation (e.g. as output from a distance table call)

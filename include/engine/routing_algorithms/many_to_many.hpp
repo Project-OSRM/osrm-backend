@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MANY_TO_MANY_ROUTING_HPP
 #define MANY_TO_MANY_ROUTING_HPP
 
-#include "routing_base.hpp"
-#include "../data_structures/search_engine_data.hpp"
-#include "../typedefs.h"
+#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/search_engine_data.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 

@@ -28,25 +28,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRIP_HPP
 #define TRIP_HPP
 
-#include "plugin_base.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "../algorithms/object_encoder.hpp"
-#include "../algorithms/tarjan_scc.hpp"
-#include "../algorithms/trip_nearest_neighbour.hpp"
-#include "../algorithms/trip_farthest_insertion.hpp"
-#include "../algorithms/trip_brute_force.hpp"
-#include "../data_structures/search_engine.hpp"
-#include "../data_structures/matrix_graph_wrapper.hpp" // wrapper to use tarjan
+#include "engine/object_encoder.hpp"
+#include "extractor/tarjan_scc.hpp"
+#include "engine/trip/trip_nearest_neighbour.hpp"
+#include "engine/trip/trip_farthest_insertion.hpp"
+#include "engine/trip/trip_brute_force.hpp"
+#include "engine/search_engine.hpp"
+#include "util/matrix_graph_wrapper.hpp" // wrapper to use tarjan
                                                        // scc on dist table
-#include "../descriptors/descriptor_base.hpp"          // to make json output
-#include "../descriptors/json_descriptor.hpp"          // to make json output
-#include "../util/make_unique.hpp"
-#include "../util/timing_util.hpp"        // to time runtime
-//#include "../util/simple_logger.hpp"      // for logging output
-#include "../util/dist_table_wrapper.hpp" // to access the dist
+#include "engine/descriptors/descriptor_base.hpp"          // to make json output
+#include "engine/descriptors/json_descriptor.hpp"          // to make json output
+#include "util/make_unique.hpp"
+#include "util/timing_util.hpp"        // to time runtime
+//#include "util/simple_logger.hpp"      // for logging output
+#include "util/dist_table_wrapper.hpp" // to access the dist
                                           // table more easily
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 #include <boost/assert.hpp>
 
 #include <cstdlib>

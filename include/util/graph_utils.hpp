@@ -1,7 +1,7 @@
 #ifndef GRAPH_UTILS_HPP
 #define GRAPH_UTILS_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 #include <vector>

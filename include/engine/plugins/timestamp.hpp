@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TIMESTAMP_PLUGIN_H
 #define TIMESTAMP_PLUGIN_H
 
-#include "plugin_base.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "../util/json_renderer.hpp"
+#include "util/json_renderer.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <string>
 

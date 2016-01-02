@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GPX_DESCRIPTOR_HPP
 #define GPX_DESCRIPTOR_HPP
 
-#include "descriptor_base.hpp"
-#include "../util/xml_renderer.hpp"
+#include "engine/descriptors/descriptor_base.hpp"
+#include "util/xml_renderer.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <iostream>
 

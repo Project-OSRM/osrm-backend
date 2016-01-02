@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HIDDEN_MARKOV_MODEL
 #define HIDDEN_MARKOV_MODEL
 
-#include "../util/integer_range.hpp"
+#include "util/integer_range.hpp"
 
 #include <boost/assert.hpp>
 

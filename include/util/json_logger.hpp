@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_LOGGER_HPP
 #define JSON_LOGGER_HPP
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <boost/thread/tss.hpp>
 

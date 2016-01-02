@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RESTRICTION_PARSER_HPP
 #define RESTRICTION_PARSER_HPP
 
-#include "../data_structures/restriction.hpp"
+#include "extractor/restriction.hpp"
 
 #include <boost/optional/optional.hpp>
 

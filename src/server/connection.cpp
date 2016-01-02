@@ -25,9 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "connection.hpp"
-#include "request_handler.hpp"
-#include "request_parser.hpp"
+#include "server/connection.hpp"
+#include "server/request_handler.hpp"
+#include "server/request_parser.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>

@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "polyline_formatter.hpp"
+#include "engine/polyline_formatter.hpp"
 
-#include "polyline_compressor.hpp"
-#include "../data_structures/segment_information.hpp"
+#include "engine/polyline_compressor.hpp"
+#include "engine/segment_information.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 osrm::json::String
 PolylineFormatter::printEncodedString(const std::vector<SegmentInformation> &polyline) const

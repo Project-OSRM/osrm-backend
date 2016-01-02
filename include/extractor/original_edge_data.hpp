@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ORIGINAL_EDGE_DATA_HPP
 #define ORIGINAL_EDGE_DATA_HPP
 
-#include "travel_mode.hpp"
-#include "turn_instructions.hpp"
-#include "../typedefs.h"
+#include "extractor/travel_mode.hpp"
+#include "extractor/turn_instructions.hpp"
+#include "util/typedefs.hpp"
 
 #include <limits>
 

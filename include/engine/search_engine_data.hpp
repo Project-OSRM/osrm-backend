@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/thread/tss.hpp>
 
-#include "../typedefs.h"
-#include "binary_heap.hpp"
+#include "util/typedefs.hpp"
+#include "util/binary_heap.hpp"
 
 struct HeapData
 {

@@ -28,19 +28,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MATCH_HPP
 #define MATCH_HPP
 
-#include "plugin_base.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "../algorithms/bayes_classifier.hpp"
-#include "../algorithms/object_encoder.hpp"
-#include "../data_structures/search_engine.hpp"
-#include "../descriptors/descriptor_base.hpp"
-#include "../descriptors/json_descriptor.hpp"
-#include "../routing_algorithms/map_matching.hpp"
-#include "../util/compute_angle.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/json_logger.hpp"
-#include "../util/json_util.hpp"
-#include "../util/string_util.hpp"
+#include "engine/map_matching/bayes_classifier.hpp"
+#include "engine/object_encoder.hpp"
+#include "engine/search_engine.hpp"
+#include "engine/descriptors/descriptor_base.hpp"
+#include "engine/descriptors/json_descriptor.hpp"
+#include "engine/routing_algorithms/map_matching.hpp"
+#include "util/compute_angle.hpp"
+#include "util/integer_range.hpp"
+#include "util/json_logger.hpp"
+#include "util/json_util.hpp"
+#include "util/string_util.hpp"
 
 #include <cstdlib>
 

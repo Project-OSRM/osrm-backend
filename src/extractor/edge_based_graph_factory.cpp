@@ -25,17 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "edge_based_graph_factory.hpp"
-#include "../algorithms/coordinate_calculation.hpp"
-#include "../data_structures/percent.hpp"
-#include "../util/compute_angle.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/lua_util.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/timing_util.hpp"
-#include "../util/osrm_exception.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/percent.hpp"
+#include "util/compute_angle.hpp"
+#include "util/integer_range.hpp"
+#include "util/lua_util.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
+#include "util/osrm_exception.hpp"
 
-#include "../util/debug_geometry.hpp"
+#include "util/debug_geometry.hpp"
 
 #include <boost/assert.hpp>
 

@@ -25,31 +25,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "extractor.hpp"
+#include "extractor/extractor.hpp"
 
-#include "extraction_containers.hpp"
-#include "extraction_node.hpp"
-#include "extraction_way.hpp"
-#include "extractor_callbacks.hpp"
-#include "restriction_parser.hpp"
-#include "scripting_environment.hpp"
+#include "extractor/extraction_containers.hpp"
+#include "extractor/extraction_node.hpp"
+#include "extractor/extraction_way.hpp"
+#include "extractor/extractor_callbacks.hpp"
+#include "extractor/restriction_parser.hpp"
+#include "extractor/scripting_environment.hpp"
 
-#include "../data_structures/raster_source.hpp"
-#include "../util/make_unique.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/timing_util.hpp"
-#include "../util/lua_util.hpp"
-#include "../util/graph_loader.hpp"
+#include "extractor/raster_source.hpp"
+#include "util/make_unique.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
+#include "util/lua_util.hpp"
+#include "util/graph_loader.hpp"
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
-#include "../data_structures/static_graph.hpp"
-#include "../data_structures/static_rtree.hpp"
-#include "../data_structures/restriction_map.hpp"
-#include "../data_structures/compressed_edge_container.hpp"
+#include "util/static_graph.hpp"
+#include "util/static_rtree.hpp"
+#include "extractor/restriction_map.hpp"
+#include "extractor/compressed_edge_container.hpp"
 
-#include "../algorithms/tarjan_scc.hpp"
-#include "../algorithms/crc32_processor.hpp"
+#include "extractor/tarjan_scc.hpp"
+#include "contractor/crc32_processor.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

@@ -25,14 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "coordinate_calculation.hpp"
+#include "util/coordinate_calculation.hpp"
 
-#include "../util/mercator.hpp"
-#include "../util/string_util.hpp"
+#include "util/mercator.hpp"
+#include "util/string_util.hpp"
 
 #include <boost/assert.hpp>
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <cmath>
 

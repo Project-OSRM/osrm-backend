@@ -1,12 +1,12 @@
-#include "graph_compressor.hpp"
+#include "extractor/graph_compressor.hpp"
 
-#include "../data_structures/compressed_edge_container.hpp"
-#include "../data_structures/dynamic_graph.hpp"
-#include "../data_structures/node_based_graph.hpp"
-#include "../data_structures/restriction_map.hpp"
-#include "../data_structures/percent.hpp"
+#include "extractor/compressed_edge_container.hpp"
+#include "util/dynamic_graph.hpp"
+#include "util/node_based_graph.hpp"
+#include "extractor/restriction_map.hpp"
+#include "util/percent.hpp"
 
-#include "../util/simple_logger.hpp"
+#include "util/simple_logger.hpp"
 
 GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
     : speed_profile(std::move(speed_profile))

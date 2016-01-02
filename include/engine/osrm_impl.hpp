@@ -31,11 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class BasePlugin;
 struct RouteParameters;
 
-#include "../data_structures/query_edge.hpp"
+#include "contractor/query_edge.hpp"
 
-#include <osrm/json_container.hpp>
-#include <osrm/libosrm_config.hpp>
-#include <osrm/osrm.hpp>
+#include "osrm/json_container.hpp"
+#include "osrm/libosrm_config.hpp"
+#include "osrm/osrm.hpp"
 
 #include <memory>
 #include <unordered_map>

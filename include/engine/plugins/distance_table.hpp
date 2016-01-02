@@ -28,18 +28,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DISTANCE_TABLE_HPP
 #define DISTANCE_TABLE_HPP
 
-#include "plugin_base.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "../algorithms/object_encoder.hpp"
-#include "../data_structures/query_edge.hpp"
-#include "../data_structures/search_engine.hpp"
-#include "../descriptors/descriptor_base.hpp"
-#include "../util/json_renderer.hpp"
-#include "../util/make_unique.hpp"
-#include "../util/string_util.hpp"
-#include "../util/timing_util.hpp"
+#include "engine/object_encoder.hpp"
+#include "contractor/query_edge.hpp"
+#include "engine/search_engine.hpp"
+#include "engine/descriptors/descriptor_base.hpp"
+#include "util/json_renderer.hpp"
+#include "util/make_unique.hpp"
+#include "util/string_util.hpp"
+#include "util/timing_util.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <cstdlib>
 

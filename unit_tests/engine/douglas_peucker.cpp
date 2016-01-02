@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../../algorithms/douglas_peucker.hpp"
-#include "../../data_structures/segment_information.hpp"
+#include "engine/douglas_peucker.hpp"
+#include "engine/segment_information.hpp"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>

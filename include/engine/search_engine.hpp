@@ -28,12 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SEARCH_ENGINE_HPP
 #define SEARCH_ENGINE_HPP
 
-#include "search_engine_data.hpp"
-#include "../routing_algorithms/alternative_path.hpp"
-#include "../routing_algorithms/many_to_many.hpp"
-#include "../routing_algorithms/map_matching.hpp"
-#include "../routing_algorithms/shortest_path.hpp"
-#include "../routing_algorithms/direct_shortest_path.hpp"
+#include "engine/search_engine_data.hpp"
+#include "engine/routing_algorithms/alternative_path.hpp"
+#include "engine/routing_algorithms/many_to_many.hpp"
+#include "engine/routing_algorithms/map_matching.hpp"
+#include "engine/routing_algorithms/shortest_path.hpp"
+#include "engine/routing_algorithms/direct_shortest_path.hpp"
 
 #include <type_traits>
 

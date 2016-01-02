@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_HPP
 #define EXTRACTOR_HPP
 
-#include "extractor_options.hpp"
-#include "edge_based_graph_factory.hpp"
-#include "../algorithms/graph_compressor.hpp"
+#include "extractor/extractor_options.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
+#include "extractor/graph_compressor.hpp"
 
 class extractor
 {

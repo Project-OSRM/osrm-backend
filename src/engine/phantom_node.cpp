@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "phantom_node.hpp"
+#include "engine/phantom_node.hpp"
 
-#include "../typedefs.h"
-#include "travel_mode.hpp"
+#include "util/typedefs.hpp"
+#include "extractor/travel_mode.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <limits>
 

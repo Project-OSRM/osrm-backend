@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "simple_logger.hpp"
+#include "util/simple_logger.hpp"
 #ifdef _MSC_VER
 #include <io.h>
 #define isatty _isatty

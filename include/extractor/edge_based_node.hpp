@@ -28,12 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EDGE_BASED_NODE_HPP
 #define EDGE_BASED_NODE_HPP
 
-#include "../data_structures/travel_mode.hpp"
-#include "../typedefs.h"
+#include "extractor/travel_mode.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <limits>
 

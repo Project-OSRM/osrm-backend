@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../algorithms/coordinate_calculation.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #ifndef NDEBUG
-#include "../util/simple_logger.hpp"
+#include "util/simple_logger.hpp"
 #endif
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #ifndef NDEBUG
 #include <bitset>

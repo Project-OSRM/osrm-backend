@@ -28,14 +28,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTOR_BASE_HPP
 #define DESCRIPTOR_BASE_HPP
 
-#include "../algorithms/coordinate_calculation.hpp"
-#include "../data_structures/internal_route_result.hpp"
-#include "../data_structures/phantom_node.hpp"
-#include "../typedefs.h"
+#include "util/coordinate_calculation.hpp"
+#include "engine/internal_route_result.hpp"
+#include "engine/phantom_node.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <string>
 #include <unordered_map>

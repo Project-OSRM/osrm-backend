@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_CALLBACKS_HPP
 #define EXTRACTOR_CALLBACKS_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 #include <boost/optional/optional_fwd.hpp>
 
 #include <string>

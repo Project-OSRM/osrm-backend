@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RESTRICTION_HPP
 #define RESTRICTION_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 #include <limits>
 

@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRIP_FARTHEST_INSERTION_HPP
 #define TRIP_FARTHEST_INSERTION_HPP
 
-#include "../data_structures/search_engine.hpp"
-#include "../util/dist_table_wrapper.hpp"
+#include "engine/search_engine.hpp"
+#include "util/dist_table_wrapper.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 #include <boost/assert.hpp>
 
 #include <cstdlib>

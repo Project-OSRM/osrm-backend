@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef XML_RENDERER_HPP
 #define XML_RENDERER_HPP
 
-#include "cast.hpp"
+#include "util/cast.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 namespace osrm
 {

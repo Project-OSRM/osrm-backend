@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTION_WAY_HPP
 #define EXTRACTION_WAY_HPP
 
-#include "../data_structures/travel_mode.hpp"
-#include "../typedefs.h"
+#include "extractor/travel_mode.hpp"
+#include "util/typedefs.hpp"
 
 #include <string>
 #include <vector>

@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTERNAL_MEMORY_NODE_HPP_
 #define EXTERNAL_MEMORY_NODE_HPP_
 
-#include "query_node.hpp"
+#include "extractor/query_node.hpp"
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 struct ExternalMemoryNode : QueryNode
 {

@@ -31,10 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_RENDERER_HPP
 #define JSON_RENDERER_HPP
 
-#include "cast.hpp"
-#include "string_util.hpp"
+#include "util/cast.hpp"
+#include "util/string_util.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 namespace osrm
 {

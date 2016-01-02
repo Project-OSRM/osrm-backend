@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RECTANGLE_HPP
 #define RECTANGLE_HPP
 
-#include "../algorithms/coordinate_calculation.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <boost/assert.hpp>
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <algorithm>
 #include <cstdint>

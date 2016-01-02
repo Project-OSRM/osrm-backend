@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "connection.hpp"
-#include "request_handler.hpp"
+#include "server/connection.hpp"
+#include "server/request_handler.hpp"
 
-#include "../util/integer_range.hpp"
-#include "../util/simple_logger.hpp"
+#include "util/integer_range.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>

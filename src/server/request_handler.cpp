@@ -25,21 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "request_handler.hpp"
+#include "server/request_handler.hpp"
 
-#include "api_grammar.hpp"
-#include "http/reply.hpp"
-#include "http/request.hpp"
+#include "server/api_grammar.hpp"
+#include "server/http/reply.hpp"
+#include "server/http/request.hpp"
 
-#include "../util/json_renderer.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/string_util.hpp"
-#include "../util/xml_renderer.hpp"
-#include "../typedefs.h"
+#include "util/json_renderer.hpp"
+#include "util/simple_logger.hpp"
+#include "util/string_util.hpp"
+#include "util/xml_renderer.hpp"
+#include "util/typedefs.hpp"
 
-#include <osrm/route_parameters.hpp>
-#include <osrm/json_container.hpp>
-#include <osrm/osrm.hpp>
+#include "osrm/route_parameters.hpp"
+#include "osrm/json_container.hpp"
+#include "osrm/osrm.hpp"
 
 #include <ctime>
 

@@ -25,9 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "search_engine_data.hpp"
+#include "engine/search_engine_data.hpp"
 
-#include "binary_heap.hpp"
+#include "util/binary_heap.hpp"
 
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
 {

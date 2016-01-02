@@ -1,9 +1,9 @@
-#include "../../algorithms/graph_compressor.hpp"
-#include "../../data_structures/compressed_edge_container.hpp"
-#include "../../data_structures/restriction_map.hpp"
-#include "../../data_structures/node_based_graph.hpp"
-#include "../../extractor/speed_profile.hpp"
-#include "../../typedefs.h"
+#include "extractor/graph_compressor.hpp"
+#include "extractor/compressed_edge_container.hpp"
+#include "extractor/restriction_map.hpp"
+#include "util/node_based_graph.hpp"
+#include "extractor/speed_profile.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>

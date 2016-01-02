@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef NODE_BASED_GRAPH_HPP
 #define NODE_BASED_GRAPH_HPP
 
-#include "dynamic_graph.hpp"
-#include "import_edge.hpp"
-#include "../util/graph_utils.hpp"
+#include "util/dynamic_graph.hpp"
+#include "extractor/import_edge.hpp"
+#include "util/graph_utils.hpp"
 
 #include <tbb/parallel_sort.h>
 

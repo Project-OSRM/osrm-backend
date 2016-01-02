@@ -28,15 +28,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTION_FACTORY_HPP
 #define DESCRIPTION_FACTORY_HPP
 
-#include "../algorithms/douglas_peucker.hpp"
-#include "../data_structures/phantom_node.hpp"
-#include "../data_structures/segment_information.hpp"
-#include "../data_structures/turn_instructions.hpp"
+#include "engine/douglas_peucker.hpp"
+#include "engine/phantom_node.hpp"
+#include "engine/segment_information.hpp"
+#include "extractor/turn_instructions.hpp"
 
 #include <boost/assert.hpp>
 
-#include <osrm/coordinate.hpp>
-#include <osrm/json_container.hpp>
+#include "osrm/coordinate.hpp"
+#include "osrm/json_container.hpp"
 
 #include <cmath>
 

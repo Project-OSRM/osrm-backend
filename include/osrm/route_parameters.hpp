@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTE_PARAMETERS_HPP
 #define ROUTE_PARAMETERS_HPP
 
-#include <osrm/coordinate.hpp>
+#include "coordinate.hpp"
 
 #include <boost/fusion/container/vector/vector_fwd.hpp>
 #include <boost/spirit/include/qi.hpp>

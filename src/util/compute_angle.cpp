@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "compute_angle.hpp"
+#include "util/compute_angle.hpp"
 
-#include "trigonometry_table.hpp"
-#include "../util/mercator.hpp"
+#include "util/trigonometry_table.hpp"
+#include "util/mercator.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <cmath>
 

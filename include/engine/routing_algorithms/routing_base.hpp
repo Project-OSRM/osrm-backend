@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTING_BASE_HPP
 #define ROUTING_BASE_HPP
 
-#include "../algorithms/coordinate_calculation.hpp"
-#include "../data_structures/internal_route_result.hpp"
-#include "../data_structures/search_engine_data.hpp"
-#include "../data_structures/turn_instructions.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "engine/internal_route_result.hpp"
+#include "engine/search_engine_data.hpp"
+#include "extractor/turn_instructions.hpp"
 
 #include <boost/assert.hpp>
 

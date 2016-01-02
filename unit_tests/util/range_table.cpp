@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../../data_structures/range_table.hpp"
-#include "../../typedefs.h"
+#include "util/range_table.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>

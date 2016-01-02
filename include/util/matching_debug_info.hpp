@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MATCHING_DEBUG_INFO_HPP
 #define MATCHING_DEBUG_INFO_HPP
 
-#include "json_logger.hpp"
-#include "json_util.hpp"
-#include "../data_structures/hidden_markov_model.hpp"
+#include "util/json_logger.hpp"
+#include "util/json_util.hpp"
+#include "engine/map_matching/hidden_markov_model.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 // Provides the debug interface for introspection tools
 struct MatchingDebugInfo

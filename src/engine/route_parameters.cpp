@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-#include <osrm/route_parameters.hpp>
+#include "osrm/route_parameters.hpp"
 
-#include "../algorithms/polyline_compressor.hpp"
+#include "engine/polyline_compressor.hpp"
 
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),

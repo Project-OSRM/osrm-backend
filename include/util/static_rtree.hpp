@@ -28,19 +28,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATIC_RTREE_HPP
 #define STATIC_RTREE_HPP
 
-#include "deallocating_vector.hpp"
-#include "hilbert_value.hpp"
-#include "rectangle.hpp"
-#include "shared_memory_factory.hpp"
-#include "shared_memory_vector_wrapper.hpp"
+#include "util/deallocating_vector.hpp"
+#include "util/hilbert_value.hpp"
+#include "util/rectangle.hpp"
+#include "datastore/shared_memory_factory.hpp"
+#include "util/shared_memory_vector_wrapper.hpp"
 
-#include "../util/bearing.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/mercator.hpp"
-#include "../util/osrm_exception.hpp"
-#include "../typedefs.h"
+#include "util/bearing.hpp"
+#include "util/integer_range.hpp"
+#include "util/mercator.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/typedefs.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

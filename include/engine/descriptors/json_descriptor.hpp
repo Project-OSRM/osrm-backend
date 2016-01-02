@@ -28,21 +28,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_DESCRIPTOR_HPP
 #define JSON_DESCRIPTOR_HPP
 
-#include "descriptor_base.hpp"
-#include "description_factory.hpp"
-#include "../algorithms/object_encoder.hpp"
-#include "../algorithms/route_name_extraction.hpp"
-#include "../data_structures/segment_information.hpp"
-#include "../data_structures/turn_instructions.hpp"
-#include "../util/bearing.hpp"
-#include "../util/cast.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/json_renderer.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/string_util.hpp"
-#include "../util/timing_util.hpp"
+#include "engine/descriptors/descriptor_base.hpp"
+#include "engine/descriptors/description_factory.hpp"
+#include "engine/object_encoder.hpp"
+#include "engine/route_name_extraction.hpp"
+#include "engine/segment_information.hpp"
+#include "extractor/turn_instructions.hpp"
+#include "util/bearing.hpp"
+#include "util/cast.hpp"
+#include "util/integer_range.hpp"
+#include "util/json_renderer.hpp"
+#include "util/simple_logger.hpp"
+#include "util/string_util.hpp"
+#include "util/timing_util.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <limits>
 #include <algorithm>

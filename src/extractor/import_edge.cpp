@@ -25,10 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "import_edge.hpp"
+#include "extractor/import_edge.hpp"
 
-#include "travel_mode.hpp"
-#include "../typedefs.h"
+#include "extractor/travel_mode.hpp"
+#include "util/typedefs.hpp"
 
 bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 {

@@ -27,10 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 
-#include "../data_structures/shared_memory_factory.hpp"
-#include "../server/data_structures/shared_datatype.hpp"
+#include "datastore/shared_memory_factory.hpp"
+#include "engine/datafacade/shared_datatype.hpp"
 #include "util/version.hpp"
-#include "../util/simple_logger.hpp"
+#include "util/simple_logger.hpp"
 
 void delete_region(const SharedDataType region)
 {

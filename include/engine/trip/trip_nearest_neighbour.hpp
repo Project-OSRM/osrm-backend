@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRIP_NEAREST_NEIGHBOUR_HPP
 #define TRIP_NEAREST_NEIGHBOUR_HPP
 
-#include "../data_structures/search_engine.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/dist_table_wrapper.hpp"
+#include "engine/search_engine.hpp"
+#include "util/simple_logger.hpp"
+#include "util/dist_table_wrapper.hpp"
 
-#include <osrm/json_container.hpp>
+#include "osrm/json_container.hpp"
 
 #include <cstdlib>
 #include <algorithm>

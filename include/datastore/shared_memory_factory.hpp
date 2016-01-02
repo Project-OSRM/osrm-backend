@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_MEMORY_FACTORY_HPP
 #define SHARED_MEMORY_FACTORY_HPP
 
-#include "../util/osrm_exception.hpp"
-#include "../util/simple_logger.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

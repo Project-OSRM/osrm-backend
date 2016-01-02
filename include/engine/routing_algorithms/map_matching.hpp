@@ -28,12 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MAP_MATCHING_HPP
 #define MAP_MATCHING_HPP
 
-#include "routing_base.hpp"
+#include "engine/routing_algorithms/routing_base.hpp"
 
-#include "../algorithms/coordinate_calculation.hpp"
-#include "../data_structures/hidden_markov_model.hpp"
-#include "../util/json_logger.hpp"
-#include "../util/matching_debug_info.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "engine/map_matching/hidden_markov_model.hpp"
+#include "util/json_logger.hpp"
+#include "util/matching_debug_info.hpp"
 
 #include <cstddef>
 

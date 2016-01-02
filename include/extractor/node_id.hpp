@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef NODE_ID_HPP
 #define NODE_ID_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 struct Cmp
 {

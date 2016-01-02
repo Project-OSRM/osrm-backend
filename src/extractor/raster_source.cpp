@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "raster_source.hpp"
+#include "extractor/raster_source.hpp"
 
-#include "../util/simple_logger.hpp"
-#include "../util/timing_util.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <cmath>
 

@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../data_structures/query_node.hpp"
-#include "../data_structures/static_rtree.hpp"
-#include "../data_structures/edge_based_node.hpp"
-#include "../algorithms/geospatial_query.hpp"
-#include "../util/timing_util.hpp"
+#include "extractor/query_node.hpp"
+#include "util/static_rtree.hpp"
+#include "extractor/edge_based_node.hpp"
+#include "engine/geospatial_query.hpp"
+#include "util/timing_util.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <random>
 #include <iostream>

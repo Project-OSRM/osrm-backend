@@ -25,18 +25,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "extraction_containers.hpp"
-#include "extraction_way.hpp"
+#include "extractor/extraction_containers.hpp"
+#include "extractor/extraction_way.hpp"
 
-#include "../algorithms/coordinate_calculation.hpp"
-#include "../data_structures/node_id.hpp"
-#include "../data_structures/range_table.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "extractor/node_id.hpp"
+#include "util/range_table.hpp"
 
-#include "../util/osrm_exception.hpp"
-#include "../util/simple_logger.hpp"
-#include "../util/timing_util.hpp"
-#include "../util/fingerprint.hpp"
-#include "../util/lua_util.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
+#include "util/fingerprint.hpp"
+#include "util/lua_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DYNAMICGRAPH_HPP
 #define DYNAMICGRAPH_HPP
 
-#include "deallocating_vector.hpp"
-#include "../util/integer_range.hpp"
-#include "../typedefs.h"
+#include "util/deallocating_vector.hpp"
+#include "util/integer_range.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 

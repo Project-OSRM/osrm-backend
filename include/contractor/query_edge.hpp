@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef QUERYEDGE_HPP
 #define QUERYEDGE_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 #include <tuple>
 

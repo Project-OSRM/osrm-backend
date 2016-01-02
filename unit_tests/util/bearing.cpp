@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../../util/bearing.hpp"
-#include "../../typedefs.h"
+#include "util/bearing.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>

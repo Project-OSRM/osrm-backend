@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef FIRST_AND_LAST_SEGMENT_OF_WAY_HPP
 #define FIRST_AND_LAST_SEGMENT_OF_WAY_HPP
 
-#include "../data_structures/external_memory_node.hpp"
-#include "../typedefs.h"
+#include "extractor/external_memory_node.hpp"
+#include "util/typedefs.hpp"
 
 #include <limits>
 #include <string>

@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "../../algorithms/polyline_compressor.hpp"
-#include "../../algorithms/coordinate_calculation.hpp"
+#include "engine/polyline_compressor.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <osrm/coordinate.hpp>
 

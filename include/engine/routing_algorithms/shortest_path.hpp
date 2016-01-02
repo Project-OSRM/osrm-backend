@@ -28,12 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHORTEST_PATH_HPP
 #define SHORTEST_PATH_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
-#include "routing_base.hpp"
+#include "engine/routing_algorithms/routing_base.hpp"
 
-#include "../data_structures/search_engine_data.hpp"
-#include "../util/integer_range.hpp"
+#include "engine/search_engine_data.hpp"
+#include "util/integer_range.hpp"
 
 #include <boost/assert.hpp>
 

@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "http/compression_type.hpp"
-#include "http/reply.hpp"
-#include "http/request.hpp"
-#include "request_parser.hpp"
+#include "server/http/compression_type.hpp"
+#include "server/http/reply.hpp"
+#include "server/http/request.hpp"
+#include "server/request_parser.hpp"
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>

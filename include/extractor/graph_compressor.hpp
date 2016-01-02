@@ -27,10 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GEOMETRY_COMPRESSOR_HPP
 #define GEOMETRY_COMPRESSOR_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
-#include "../extractor/speed_profile.hpp"
-#include "../data_structures/node_based_graph.hpp"
+#include "extractor/speed_profile.hpp"
+#include "util/node_based_graph.hpp"
 
 #include <memory>
 #include <unordered_set>

@@ -30,15 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // implements all data storage when shared memory _IS_ used
 
-#include "datafacade_base.hpp"
-#include "shared_datatype.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
+#include "engine/datafacade/shared_datatype.hpp"
 
-#include "../../algorithms/geospatial_query.hpp"
-#include "../../data_structures/range_table.hpp"
-#include "../../data_structures/static_graph.hpp"
-#include "../../data_structures/static_rtree.hpp"
-#include "../../util/make_unique.hpp"
-#include "../../util/simple_logger.hpp"
+#include "engine/geospatial_query.hpp"
+#include "util/range_table.hpp"
+#include "util/static_graph.hpp"
+#include "util/static_rtree.hpp"
+#include "util/make_unique.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/thread.hpp>
 

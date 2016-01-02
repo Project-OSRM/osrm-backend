@@ -33,30 +33,30 @@ class named_mutex;
 }
 }
 
-#include "osrm_impl.hpp"
+#include "engine/osrm_impl.hpp"
 
-#include "../plugins/distance_table.hpp"
-#include "../plugins/hello_world.hpp"
-#include "../plugins/nearest.hpp"
-#include "../plugins/timestamp.hpp"
-#include "../plugins/trip.hpp"
-#include "../plugins/viaroute.hpp"
-#include "../plugins/match.hpp"
-#include "../server/data_structures/datafacade_base.hpp"
-#include "../server/data_structures/internal_datafacade.hpp"
-#include "../server/data_structures/shared_barriers.hpp"
-#include "../server/data_structures/shared_datafacade.hpp"
-#include "../util/make_unique.hpp"
-#include "../util/routed_options.hpp"
-#include "../util/simple_logger.hpp"
+#include "engine/plugins/distance_table.hpp"
+#include "engine/plugins/hello_world.hpp"
+#include "engine/plugins/nearest.hpp"
+#include "engine/plugins/timestamp.hpp"
+#include "engine/plugins/trip.hpp"
+#include "engine/plugins/viaroute.hpp"
+#include "engine/plugins/match.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
+#include "engine/datafacade/internal_datafacade.hpp"
+#include "engine/datafacade/shared_barriers.hpp"
+#include "engine/datafacade/shared_datafacade.hpp"
+#include "util/make_unique.hpp"
+#include "util/routed_options.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
-#include <osrm/route_parameters.hpp>
-#include <osrm/libosrm_config.hpp>
-#include <osrm/osrm.hpp>
+#include "osrm/route_parameters.hpp"
+#include "osrm/libosrm_config.hpp"
+#include "osrm/osrm.hpp"
 
 #include <algorithm>
 #include <fstream>

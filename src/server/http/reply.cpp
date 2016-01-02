@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "reply.hpp"
+#include "server/http/reply.hpp"
 
 #include <string>
 

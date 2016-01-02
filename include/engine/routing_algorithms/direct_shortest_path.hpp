@@ -31,11 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 #include <iterator>
 
-#include "routing_base.hpp"
-#include "../data_structures/search_engine_data.hpp"
-#include "../util/integer_range.hpp"
-#include "../util/timing_util.hpp"
-#include "../typedefs.h"
+#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/search_engine_data.hpp"
+#include "util/integer_range.hpp"
+#include "util/timing_util.hpp"
+#include "util/typedefs.hpp"
 
 /// This is a striped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only

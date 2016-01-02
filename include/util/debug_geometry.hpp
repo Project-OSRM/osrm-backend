@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEBUG_GEOMETRY_H
 #define DEBUG_GEOMETRY_H
 
-#include "../contractor/contractor_options.hpp"
-#include "../data_structures/query_node.hpp"
+#include "contractor/contractor_options.hpp"
+#include "extractor/query_node.hpp"
 
 #ifndef DEBUG_GEOMETRY
 
@@ -57,8 +57,8 @@ inline void DEBUG_TURNS_STOP() {}
 #include <iomanip>
 #include <iostream>
 
-#include "../include/osrm/coordinate.hpp"
-#include "../algorithms/coordinate_calculation.hpp"
+#include "util/coordinate.hpp"
+#include "util/coordinate_calculation.hpp"
 
 boost::filesystem::ofstream debug_geometry_file;
 bool dg_output_debug_geometry = false;

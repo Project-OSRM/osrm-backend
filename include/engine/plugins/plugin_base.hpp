@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASE_PLUGIN_HPP
 #define BASE_PLUGIN_HPP
 
-#include "../data_structures/phantom_node.hpp"
+#include "engine/phantom_node.hpp"
 
-#include <osrm/coordinate.hpp>
-#include <osrm/json_container.hpp>
-#include <osrm/route_parameters.hpp>
+#include "osrm/coordinate.hpp"
+#include "osrm/json_container.hpp"
+#include "osrm/route_parameters.hpp"
 
 #include <algorithm>
 #include <string>

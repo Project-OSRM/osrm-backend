@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../../algorithms/coordinate_calculation.hpp"
-#include "../../algorithms/geospatial_query.hpp"
-#include "../../data_structures/static_rtree.hpp"
-#include "../../data_structures/query_node.hpp"
-#include "../../data_structures/edge_based_node.hpp"
-#include "../../util/floating_point.hpp"
-#include "../../typedefs.h"
+#include "util/coordinate_calculation.hpp"
+#include "engine/geospatial_query.hpp"
+#include "util/static_rtree.hpp"
+#include "extractor/query_node.hpp"
+#include "extractor/edge_based_node.hpp"
+#include "util/floating_point.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>

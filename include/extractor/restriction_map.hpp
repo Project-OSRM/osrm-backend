@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RESTRICTION_MAP_HPP
 #define RESTRICTION_MAP_HPP
 
-#include "restriction.hpp"
-#include "../util/std_hash.hpp"
-#include "../typedefs.h"
+#include "extractor/restriction.hpp"
+#include "util/std_hash.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 

@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "compressed_edge_container.hpp"
-#include "../util/simple_logger.hpp"
+#include "extractor/compressed_edge_container.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

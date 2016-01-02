@@ -25,15 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "description_factory.hpp"
+#include "engine/descriptors/description_factory.hpp"
 
-#include "../algorithms/polyline_formatter.hpp"
-#include "../algorithms/coordinate_calculation.hpp"
-#include "../data_structures/internal_route_result.hpp"
-#include "../data_structures/turn_instructions.hpp"
-#include "../util/container.hpp"
-#include "../util/integer_range.hpp"
-#include "../typedefs.h"
+#include "engine/polyline_formatter.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "engine/internal_route_result.hpp"
+#include "extractor/turn_instructions.hpp"
+#include "util/container.hpp"
+#include "util/integer_range.hpp"
+#include "util/typedefs.hpp"
 
 DescriptionFactory::DescriptionFactory() : entire_length(0) { via_indices.push_back(0); }
 

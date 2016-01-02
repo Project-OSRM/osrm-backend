@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REPLY_HPP
 #define REPLY_HPP
 
-#include "header.hpp"
+#include "server/http/header.hpp"
 
 #include <boost/asio.hpp>
 

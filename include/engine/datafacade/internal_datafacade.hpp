@@ -30,20 +30,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // implements all data storage when shared memory is _NOT_ used
 
-#include "datafacade_base.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 
-#include "../../algorithms/geospatial_query.hpp"
-#include "../../data_structures/original_edge_data.hpp"
-#include "../../data_structures/query_node.hpp"
-#include "../../data_structures/query_edge.hpp"
-#include "../../data_structures/shared_memory_vector_wrapper.hpp"
-#include "../../data_structures/static_graph.hpp"
-#include "../../data_structures/static_rtree.hpp"
-#include "../../data_structures/range_table.hpp"
-#include "../../util/graph_loader.hpp"
-#include "../../util/simple_logger.hpp"
+#include "engine/geospatial_query.hpp"
+#include "extractor/original_edge_data.hpp"
+#include "extractor/query_node.hpp"
+#include "contractor/query_edge.hpp"
+#include "util/shared_memory_vector_wrapper.hpp"
+#include "util/static_graph.hpp"
+#include "util/static_rtree.hpp"
+#include "util/range_table.hpp"
+#include "util/graph_loader.hpp"
+#include "util/simple_logger.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <boost/thread.hpp>
 

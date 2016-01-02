@@ -25,18 +25,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "scripting_environment.hpp"
+#include "extractor/scripting_environment.hpp"
 
-#include "extraction_helper_functions.hpp"
-#include "extraction_node.hpp"
-#include "extraction_way.hpp"
-#include "internal_extractor_edge.hpp"
-#include "../data_structures/external_memory_node.hpp"
-#include "../data_structures/raster_source.hpp"
-#include "../util/lua_util.hpp"
-#include "../util/osrm_exception.hpp"
-#include "../util/simple_logger.hpp"
-#include "../typedefs.h"
+#include "extractor/extraction_helper_functions.hpp"
+#include "extractor/extraction_node.hpp"
+#include "extractor/extraction_way.hpp"
+#include "extractor/internal_extractor_edge.hpp"
+#include "extractor/external_memory_node.hpp"
+#include "extractor/raster_source.hpp"
+#include "util/lua_util.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
+#include "util/typedefs.hpp"
 
 #include <luabind/tag_function.hpp>
 #include <luabind/operator.hpp>

@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEALLOCATING_VECTOR_HPP
 #define DEALLOCATING_VECTOR_HPP
 
-#include "../util/integer_range.hpp"
+#include "util/integer_range.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 

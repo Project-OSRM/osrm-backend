@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "util/version.hpp"
-#include "../util/simple_logger.hpp"
-#include "../server/data_structures/shared_barriers.hpp"
+#include "util/simple_logger.hpp"
+#include "engine/datafacade/shared_barriers.hpp"
 
 #include <iostream>
 

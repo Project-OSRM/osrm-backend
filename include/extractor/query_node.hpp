@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef QUERY_NODE_HPP
 #define QUERY_NODE_HPP
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <limits>
 

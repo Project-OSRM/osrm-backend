@@ -28,13 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INTERNAL_EXTRACTOR_EDGE_HPP
 #define INTERNAL_EXTRACTOR_EDGE_HPP
 
-#include "../typedefs.h"
-#include "../data_structures/travel_mode.hpp"
-#include "../data_structures/import_edge.hpp"
+#include "util/typedefs.hpp"
+#include "extractor/travel_mode.hpp"
+#include "extractor/import_edge.hpp"
 
 #include <boost/assert.hpp>
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 #include <utility>
 
 struct InternalExtractorEdge

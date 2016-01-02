@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "osrm_exception.hpp"
+#include "util/osrm_exception.hpp"
 
 namespace osrm
 {

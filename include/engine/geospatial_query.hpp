@@ -1,12 +1,12 @@
 #ifndef GEOSPATIAL_QUERY_HPP
 #define GEOSPATIAL_QUERY_HPP
 
-#include "coordinate_calculation.hpp"
-#include "../typedefs.h"
-#include "../data_structures/phantom_node.hpp"
-#include "../util/bearing.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/typedefs.hpp"
+#include "engine/phantom_node.hpp"
+#include "util/bearing.hpp"
 
-#include <osrm/coordinate.hpp>
+#include "osrm/coordinate.hpp"
 
 #include <vector>
 #include <memory>

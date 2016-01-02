@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GEOMETRY_COMPRESSOR_HPP_
 #define GEOMETRY_COMPRESSOR_HPP_
 
-#include "../typedefs.h"
+#include "util/typedefs.hpp"
 
 #include <unordered_map>
 
