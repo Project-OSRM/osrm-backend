@@ -1,10 +1,10 @@
-set(OLDFILE ${OUTPUT_DIR}/util/fingerprint_impl.hpp)
+set(OLDFILE ${OUTPUT_DIR}/include/util/fingerprint_impl.hpp)
 set(NEWFILE ${OLDFILE}.tmp)
-set(INFILE ${SOURCE_DIR}/util/fingerprint_impl.hpp.in)
-file(MD5 ${SOURCE_DIR}/prepare.cpp MD5PREPARE)
-file(MD5 ${SOURCE_DIR}/data_structures/static_rtree.hpp MD5RTREE)
-file(MD5 ${SOURCE_DIR}/util/graph_loader.hpp MD5GRAPH)
-file(MD5 ${SOURCE_DIR}/server/data_structures/internal_datafacade.hpp MD5OBJECTS)
+set(INFILE ${SOURCE_DIR}/include/util/fingerprint_impl.hpp.in)
+file(MD5 ${SOURCE_DIR}/src/tools/contract.cpp MD5PREPARE)
+file(MD5 ${SOURCE_DIR}/include/util/static_rtree.hpp MD5RTREE)
+file(MD5 ${SOURCE_DIR}/include/util/graph_loader.hpp MD5GRAPH)
+file(MD5 ${SOURCE_DIR}/include/engine/datafacade/internal_datafacade.hpp MD5OBJECTS)
 
 CONFIGURE_FILE(${INFILE} ${NEWFILE})
 
