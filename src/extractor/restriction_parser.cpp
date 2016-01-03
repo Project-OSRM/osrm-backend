@@ -9,9 +9,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
 #include <boost/regex.hpp>
-#include <boost/optional/optional.hpp>
 
 #include <osmium/osm.hpp>
 #include <osmium/tags/regex_filter.hpp>
@@ -218,12 +218,8 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     return std::any_of(std::begin(exceptions), std::end(exceptions),
                        [&](const std::string &current_string)
                        {
-                           if (std::end(restriction_exceptions) !=
+                           return std::end(restriction_exceptions) !=
                                std::find(std::begin(restriction_exceptions),
-                                         std::end(restriction_exceptions), current_string))
-                           {
-                               return true;
-                           }
-                           return false;
+                                         std::end(restriction_exceptions), current_string);
                        });
 }

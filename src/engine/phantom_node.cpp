@@ -1,8 +1,6 @@
 #include "engine/phantom_node.hpp"
-
-#include "util/typedefs.hpp"
 #include "extractor/travel_mode.hpp"
-
+#include "util/typedefs.hpp"
 #include "osrm/coordinate.hpp"
 
 #include <limits>

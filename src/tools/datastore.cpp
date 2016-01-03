@@ -6,15 +6,15 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "extractor/travel_mode.hpp"
 #include "extractor/turn_instructions.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/shared_datatype.hpp"
 #include "engine/datafacade/shared_barriers.hpp"
 #include "util/datastore_options.hpp"
-#include "util/simple_logger.hpp"
-#include "util/osrm_exception.hpp"
 #include "util/fingerprint.hpp"
+#include "util/osrm_exception.hpp"
+#include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
@@ -33,8 +33,8 @@ using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 #include <cstdint>
 
 #include <fstream>
-#include <string>
 #include <new>
+#include <string>
 
 // delete a shared memory region. report warning if it could not be deleted
 void delete_region(const SharedDataType region)

@@ -27,9 +27,9 @@ class named_mutex;
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
-#include "osrm/route_parameters.hpp"
 #include "osrm/libosrm_config.hpp"
 #include "osrm/osrm.hpp"
+#include "osrm/route_parameters.hpp"
 
 #include <algorithm>
 #include <fstream>

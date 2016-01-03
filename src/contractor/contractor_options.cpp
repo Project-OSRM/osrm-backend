@@ -1,7 +1,7 @@
 #include "contractor/contractor_options.hpp"
 
-#include "util/version.hpp"
 #include "util/simple_logger.hpp"
+#include "util/version.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>

@@ -36,12 +36,8 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon
 
 bool FixedPointCoordinate::is_valid() const
 {
-    if (lat > 90 * COORDINATE_PRECISION || lat < -90 * COORDINATE_PRECISION ||
-        lon > 180 * COORDINATE_PRECISION || lon < -180 * COORDINATE_PRECISION)
-    {
-        return false;
-    }
-    return true;
+    return !(lat > 90 * COORDINATE_PRECISION || lat < -90 * COORDINATE_PRECISION ||
+        lon > 180 * COORDINATE_PRECISION || lon < -180 * COORDINATE_PRECISION);
 }
 
 bool FixedPointCoordinate::operator==(const FixedPointCoordinate &other) const

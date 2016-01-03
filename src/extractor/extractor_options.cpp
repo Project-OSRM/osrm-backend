@@ -1,7 +1,7 @@
 #include "extractor/extractor_options.hpp"
 
-#include "util/version.hpp"
 #include "util/ini_file.hpp"
+#include "util/version.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>

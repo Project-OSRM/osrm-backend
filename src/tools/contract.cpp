@@ -8,8 +8,8 @@
 
 #include <cstdlib>
 #include <exception>
-#include <ostream>
 #include <new>
+#include <ostream>
 
 int main(int argc, char *argv[]) try
 {

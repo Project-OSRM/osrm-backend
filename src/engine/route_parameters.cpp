@@ -50,7 +50,7 @@ void RouteParameters::setAllUTurns(const bool flag)
     }
 }
 
-void RouteParameters::setDeprecatedAPIFlag(const std::string &) { deprecatedAPI = true; }
+void RouteParameters::setDeprecatedAPIFlag(const std::string & /*unused*/) { deprecatedAPI = true; }
 
 void RouteParameters::setChecksum(const unsigned sum) { check_sum = sum; }
 

@@ -149,9 +149,5 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
 // check of node is the start of any restriction
 bool RestrictionMap::IsSourceNode(const NodeID node) const
 {
-    if (m_restriction_start_nodes.find(node) == m_restriction_start_nodes.end())
-    {
-        return false;
-    }
-    return true;
+    return m_restriction_start_nodes.find(node) != m_restriction_start_nodes.end();
 }

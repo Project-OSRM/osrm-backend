@@ -1,5 +1,5 @@
 #include "server/server.hpp"
-#include "util/version.hpp"
+#include "util/ini_file.hpp"
 #include "util/routed_options.hpp"
 #include "util/simple_logger.hpp"
 
@@ -17,8 +17,8 @@
 #include <chrono>
 #include <future>
 #include <iostream>
-#include <thread>
 #include <new>
+#include <thread>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;

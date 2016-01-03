@@ -18,8 +18,8 @@
 
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
-#include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/restriction_map.hpp"
 
 #include "extractor/tarjan_scc.hpp"
 #include "contractor/crc32_processor.hpp"
@@ -573,7 +573,7 @@ void extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
     node_based_edge_list.resize(new_size);
 
     TIMER_START(construction);
-    StaticRTree<EdgeBasedNode>(node_based_edge_list, config.rtree_nodes_output_path,
+    StaticRTree<EdgeBasedNode> rtree(node_based_edge_list, config.rtree_nodes_output_path,
                                config.rtree_leafs_output_path, internal_to_external_node_map);
 
     TIMER_STOP(construction);

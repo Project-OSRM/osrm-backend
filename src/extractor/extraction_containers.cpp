@@ -14,8 +14,8 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/ref.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/ref.hpp>
 
 #include <luabind/luabind.hpp>
 

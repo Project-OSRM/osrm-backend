@@ -6,8 +6,8 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <random>
 #include <iostream>
+#include <random>
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
 constexpr unsigned RANDOM_SEED = 13;

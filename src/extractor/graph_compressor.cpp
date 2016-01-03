@@ -1,9 +1,9 @@
 #include "extractor/graph_compressor.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/restriction_map.hpp"
 #include "util/dynamic_graph.hpp"
 #include "util/node_based_graph.hpp"
-#include "extractor/restriction_map.hpp"
 #include "util/percent.hpp"
 
 #include "util/simple_logger.hpp"
