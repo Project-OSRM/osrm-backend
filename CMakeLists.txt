@@ -33,8 +33,8 @@ option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" 
 option(DEBUG_GEOMETRY "Enables an option to dump GeoJSON of the final routing graph" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
+include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
 
