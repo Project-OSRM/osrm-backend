@@ -139,8 +139,8 @@ script:
   - make --jobs=2
   - make tests --jobs=2
   - make benchmarks
-  - ./algorithm-tests
-  - ./datastructure-tests
+  - ./extractor-tests
+  - ./engine-tests
   - ./util-tests
   - cd ..
   - cucumber -p verify
