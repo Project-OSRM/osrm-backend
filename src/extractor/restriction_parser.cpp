@@ -19,9 +19,8 @@
 #include <algorithm>
 #include <iterator>
 
-namespace
-{
-int lua_error_callback(lua_State *lua_state)
+namespace {
+int luaErrorCallback(lua_State *lua_state)
 {
     std::string error_msg = lua_tostring(lua_state, -1);
     throw osrm::exception("ERROR occurred in profile script:\n" + error_msg);
@@ -60,7 +59,7 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
 {
     if (lua_function_exists(lua_state, "get_exceptions"))
     {
-        luabind::set_pcall_callback(&lua_error_callback);
+        luabind::set_pcall_callback(&luaErrorCallback);
         // get list of turn restriction exceptions
         luabind::call_function<void>(lua_state, "get_exceptions",
                                      boost::ref(restriction_exceptions));

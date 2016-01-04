@@ -26,10 +26,10 @@ auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_v
     return object.get_value_by_key(key, "");
 }
 
-int lua_error_callback(lua_State *L) // This is so I can use my own function as an
-// exception handler, pcall_log()
+// Error handler
+int luaErrorCallback(lua_State *state)
 {
-    std::string error_msg = lua_tostring(L, -1);
+    std::string error_msg = lua_tostring(state, -1);
     std::ostringstream error_stream;
     error_stream << error_msg;
     throw osrm::exception("ERROR occurred in profile script:\n" + error_stream.str());
@@ -41,7 +41,7 @@ ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_
     SimpleLogger().Write() << "Using script " << file_name;
 }
 
-void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
+void ScriptingEnvironment::InitLuaState(lua_State *lua_state)
 {
     typedef double (osmium::Location::*location_member_ptr_type)() const;
 
@@ -126,7 +126,7 @@ void ScriptingEnvironment::init_lua_state(lua_State *lua_state)
     }
 }
 
-lua_State *ScriptingEnvironment::get_lua_state()
+lua_State *ScriptingEnvironment::GetLuaState()
 {
     std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
@@ -135,9 +135,9 @@ lua_State *ScriptingEnvironment::get_lua_state()
     {
         std::shared_ptr<lua_State> state(luaL_newstate(), lua_close);
         ref = state;
-        init_lua_state(ref.get());
+        InitLuaState(ref.get());
     }
-    luabind::set_pcall_callback(&lua_error_callback);
+    luabind::set_pcall_callback(&luaErrorCallback);
 
     return ref.get();
 }

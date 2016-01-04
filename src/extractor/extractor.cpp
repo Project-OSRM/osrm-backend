@@ -99,7 +99,7 @@ int extractor::run()
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
-        lua_State *segment_state = scripting_environment.get_lua_state();
+        lua_State *segment_state = scripting_environment.GetLuaState();
 
         if (lua_function_exists(segment_state, "source_function"))
         {
@@ -135,7 +135,7 @@ int extractor::run()
         tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
         // setup restriction parser
-        const RestrictionParser restriction_parser(scripting_environment.get_lua_state());
+        const RestrictionParser restriction_parser(scripting_environment.GetLuaState());
 
         while (const osmium::memory::Buffer buffer = reader.read())
         {
@@ -158,7 +158,7 @@ int extractor::run()
                 {
                     ExtractionNode result_node;
                     ExtractionWay result_way;
-                    lua_State *local_state = scripting_environment.get_lua_state();
+                    lua_State *local_state = scripting_environment.GetLuaState();
 
                     for (auto x = range.begin(), end = range.end(); x != end; ++x)
                     {

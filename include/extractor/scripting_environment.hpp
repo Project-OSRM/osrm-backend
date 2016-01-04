@@ -21,10 +21,10 @@ class ScriptingEnvironment
     ScriptingEnvironment() = delete;
     explicit ScriptingEnvironment(const std::string &file_name);
 
-    lua_State *get_lua_state();
+    lua_State *GetLuaState();
 
   private:
-    void init_lua_state(lua_State *lua_state);
+    void InitLuaState(lua_State *lua_state);
     std::mutex init_mutex;
     std::string file_name;
     tbb::enumerable_thread_specific<std::shared_ptr<lua_State>> script_contexts;
