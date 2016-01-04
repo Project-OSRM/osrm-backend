@@ -14,7 +14,7 @@
 
 #=============================================================================
 # Copyright 2007-2009 Kitware, Inc.
-# Copyright 2013 for Project-OSRM, Lua5.1 => Lua5.2
+# Copyright 2016 for Project-OSRM, Lua5.1 => Lua5.2
 #
 # Distributed under the OSI-approved BSD License (the "License");
 # see accompanying file Copyright.txt for details.
