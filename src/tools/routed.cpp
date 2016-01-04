@@ -65,21 +65,21 @@ int main(int argc, const char *argv[]) try
 #ifdef __linux__
     struct MemoryLocker final
     {
-        explicit MemoryLocker(bool shouldLock_) : shouldLock(shouldLock_)
+        explicit MemoryLocker(bool should_lock) : should_lock(should_lock)
         {
-            if (shouldLock && -1 == mlockall(MCL_CURRENT | MCL_FUTURE))
+            if (should_lock && -1 == mlockall(MCL_CURRENT | MCL_FUTURE))
             {
-                couldLock = false;
+                could_lock = false;
                 SimpleLogger().Write(logWARNING) << "memory could not be locked to RAM";
             }
         }
         ~MemoryLocker()
         {
-            if (shouldLock && couldLock)
+            if (should_lock && could_lock)
                 (void)munlockall();
         }
-        bool shouldLock = false, couldLock = true;
-    } memoryLocker(lib_config.use_shared_memory);
+        bool should_lock = false, could_lock = true;
+    } memory_locker(lib_config.use_shared_memory);
 #endif
     SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
