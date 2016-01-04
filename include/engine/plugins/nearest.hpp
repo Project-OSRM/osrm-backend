@@ -27,7 +27,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() ||
-            !route_parameters.coordinates.front().is_valid())
+            !route_parameters.coordinates.front().IsValid())
         {
             return Status::Error;
         }

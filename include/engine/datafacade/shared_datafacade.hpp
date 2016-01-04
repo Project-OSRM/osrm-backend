@@ -270,7 +270,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             SimpleLogger().Write() << "number of geometries: " << m_coordinate_list->size();
             for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
             {
-                if (!GetCoordinateOfNode(i).is_valid())
+                if (!GetCoordinateOfNode(i).IsValid())
                 {
                     SimpleLogger().Write() << "coordinate " << i << " not valid";
                 }

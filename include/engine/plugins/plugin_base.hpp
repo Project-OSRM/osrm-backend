@@ -33,7 +33,7 @@ class BasePlugin
         if (min > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
                                                     [](const FixedPointCoordinate &coordinate)
                                                     {
-                                                        return !coordinate.is_valid();
+                                                        return !coordinate.IsValid();
                                                     }))
         {
             return false;

@@ -55,17 +55,11 @@ struct FixedPointCoordinate
                       "coordinate types incompatible");
     }
 
-    bool is_valid() const;
+    bool IsValid() const;
     bool operator==(const FixedPointCoordinate &other) const;
-
-    double bearing(const FixedPointCoordinate &other) const;
-    void output(std::ostream &out) const;
+    friend std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate);
 };
 
-inline std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate const &coordinate)
-{
-    coordinate.output(out_stream);
-    return out_stream;
-}
+std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate);
 
 #endif /* COORDINATE_HPP_ */

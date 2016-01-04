@@ -124,7 +124,7 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &segment
                                              FixedPointCoordinate &nearest_location,
                                              double &ratio)
 {
-    BOOST_ASSERT(query_location.is_valid());
+    BOOST_ASSERT(query_location.IsValid());
 
     // initialize values
     const double x = projected_coordinate.first;
@@ -188,7 +188,7 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &segment
         nearest_location.lat = static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
-    BOOST_ASSERT(nearest_location.is_valid());
+    BOOST_ASSERT(nearest_location.IsValid());
 
     const double approximate_distance = greatCircleDistance(query_location, nearest_location);
     BOOST_ASSERT(0.0 <= approximate_distance);

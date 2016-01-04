@@ -34,7 +34,7 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon
 #endif
 }
 
-bool FixedPointCoordinate::is_valid() const
+bool FixedPointCoordinate::IsValid() const
 {
     return !(lat > 90 * COORDINATE_PRECISION || lat < -90 * COORDINATE_PRECISION ||
              lon > 180 * COORDINATE_PRECISION || lon < -180 * COORDINATE_PRECISION);
@@ -45,12 +45,8 @@ bool FixedPointCoordinate::operator==(const FixedPointCoordinate &other) const
     return lat == other.lat && lon == other.lon;
 }
 
-void FixedPointCoordinate::output(std::ostream &out) const
+std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate)
 {
-    out << "(" << lat / COORDINATE_PRECISION << "," << lon / COORDINATE_PRECISION << ")";
-}
-
-double FixedPointCoordinate::bearing(const FixedPointCoordinate &other) const
-{
-    return coordinate_calculation::bearing(other, *this);
+    out << "(" << static_cast<double>(coordinate.lat / COORDINATE_PRECISION) << "," << static_cast<double>(coordinate.lon / COORDINATE_PRECISION) << ")";
+    return out;
 }

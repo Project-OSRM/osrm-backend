@@ -65,12 +65,12 @@ bool PhantomNode::is_compressed() const { return (forward_offset != 0) || (rever
 
 bool PhantomNode::is_valid(const unsigned number_of_nodes) const
 {
-    return location.is_valid() &&
+    return location.IsValid() &&
            ((forward_node_id < number_of_nodes) || (reverse_node_id < number_of_nodes)) &&
            ((forward_weight != INVALID_EDGE_WEIGHT) || (reverse_weight != INVALID_EDGE_WEIGHT)) &&
            (component.id != INVALID_COMPONENTID) && (name_id != INVALID_NAMEID);
 }
 
-bool PhantomNode::is_valid() const { return location.is_valid() && (name_id != INVALID_NAMEID); }
+bool PhantomNode::is_valid() const { return location.IsValid() && (name_id != INVALID_NAMEID); }
 
 bool PhantomNode::operator==(const PhantomNode &other) const { return location == other.location; }
