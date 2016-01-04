@@ -27,7 +27,7 @@ struct Statistics
     double min, max, med, mean, dev;
 };
 
-void RunStatistics(std::vector<double> &timings_vector, Statistics &stats)
+void runStatistics(std::vector<double> &timings_vector, Statistics &stats)
 {
     std::sort(timings_vector.begin(), timings_vector.end());
     stats.min = timings_vector.front();
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                 random_csv << i << ", " << timing_results_raw_random[i] << std::endl;
             }
             random_csv.close();
-            RunStatistics(timing_results_raw_random, stats);
+            runStatistics(timing_results_raw_random, stats);
 
             SimpleLogger().Write() << "raw random I/O: " << std::setprecision(5) << std::fixed
                                    << "min: " << stats.min << "ms, "
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
                 seq_csv << i << ", " << timing_results_raw_seq[i] << std::endl;
             }
             seq_csv.close();
-            RunStatistics(timing_results_raw_seq, stats);
+            runStatistics(timing_results_raw_seq, stats);
             SimpleLogger().Write() << "raw sequential I/O: " << std::setprecision(5) << std::fixed
                                    << "min: " << stats.min << "ms, "
                                    << "mean: " << stats.mean << "ms, "
