@@ -1,11 +1,3 @@
-namespace boost
-{
-namespace interprocess
-{
-class named_mutex;
-}
-}
-
 #include "engine/osrm_impl.hpp"
 
 #include "engine/plugins/distance_table.hpp"
