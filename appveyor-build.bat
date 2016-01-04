@@ -81,11 +81,14 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 SET PATH=%PROJECT_DIR%\osrm-deps\libs\bin;%PATH%
 
-ECHO running datastructure-tests.exe ...
-%Configuration%\datastructure-tests.exe
+ECHO running engine-tests.exe ...
+%Configuration%\engine-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-ECHO running algorithm-tests.exe ...
-%Configuration%\algorithm-tests.exe
+ECHO running extractor-tests.exe ...
+%Configuration%\extractor-tests.exe
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+ECHO running util-tests.exe ...
+%Configuration%\util-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE
