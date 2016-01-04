@@ -5,7 +5,7 @@
 #include "util/version.hpp"
 #include "util/simple_logger.hpp"
 
-void delete_region(const SharedDataType region)
+void deleteRegion(const SharedDataType region)
 {
     if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
     {
@@ -38,11 +38,11 @@ void delete_region(const SharedDataType region)
 void springclean()
 {
     SimpleLogger().Write() << "spring-cleaning all shared memory regions";
-    delete_region(DATA_1);
-    delete_region(LAYOUT_1);
-    delete_region(DATA_2);
-    delete_region(LAYOUT_2);
-    delete_region(CURRENT_REGIONS);
+    deleteRegion(DATA_1);
+    deleteRegion(LAYOUT_1);
+    deleteRegion(DATA_2);
+    deleteRegion(LAYOUT_2);
+    deleteRegion(CURRENT_REGIONS);
 }
 
 int main()
