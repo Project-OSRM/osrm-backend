@@ -37,7 +37,7 @@ using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 #include <string>
 
 // delete a shared memory region. report warning if it could not be deleted
-void delete_region(const SharedDataType region)
+void deleteRegion(const SharedDataType region)
 {
     if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
     {
@@ -552,8 +552,8 @@ int main(const int argc, const char *argv[]) try
     data_timestamp_ptr->layout = layout_region;
     data_timestamp_ptr->data = data_region;
     data_timestamp_ptr->timestamp += 1;
-    delete_region(previous_data_region);
-    delete_region(previous_layout_region);
+    deleteRegion(previous_data_region);
+    deleteRegion(previous_layout_region);
     SimpleLogger().Write() << "all data loaded";
 
     shared_layout_ptr->PrintInformation();
