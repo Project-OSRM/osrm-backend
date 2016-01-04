@@ -21,7 +21,7 @@ using FixedPointCoordinateListPtr = std::shared_ptr<std::vector<FixedPointCoordi
 using BenchStaticRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>;
 using BenchQuery = GeospatialQuery<BenchStaticRTree>;
 
-FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path &nodes_file)
+FixedPointCoordinateListPtr loadCoordinates(const boost::filesystem::path &nodes_file)
 {
     boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
@@ -41,7 +41,7 @@ FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path &nodes
 }
 
 template <typename QueryT>
-void BenchmarkQuery(const std::vector<FixedPointCoordinate> &queries,
+void benchmarkQuery(const std::vector<FixedPointCoordinate> &queries,
                     const std::string &name,
                     QueryT query)
 {
@@ -61,7 +61,7 @@ void BenchmarkQuery(const std::vector<FixedPointCoordinate> &queries,
               << ")" << std::endl;
 }
 
-void Benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_queries)
+void benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_queries)
 {
     std::mt19937 mt_rand(RANDOM_SEED);
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
@@ -72,31 +72,31 @@ void Benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_quer
         queries.emplace_back(lat_udist(mt_rand), lon_udist(mt_rand));
     }
 
-    BenchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const FixedPointCoordinate &q)
+    benchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const FixedPointCoordinate &q)
                    {
                        return rtree.Nearest(q, 1);
                    });
-    BenchmarkQuery(queries, "raw RTree queries (10 results)",
+    benchmarkQuery(queries, "raw RTree queries (10 results)",
                    [&rtree](const FixedPointCoordinate &q)
                    {
                        return rtree.Nearest(q, 10);
                    });
 
-    BenchmarkQuery(queries, "big component alternative queries",
+    benchmarkQuery(queries, "big component alternative queries",
                    [&geo_query](const FixedPointCoordinate &q)
                    {
                        return geo_query.NearestPhantomNodeWithAlternativeFromBigComponent(q);
                    });
-    BenchmarkQuery(queries, "max distance 1000", [&geo_query](const FixedPointCoordinate &q)
+    benchmarkQuery(queries, "max distance 1000", [&geo_query](const FixedPointCoordinate &q)
                    {
                        return geo_query.NearestPhantomNodesInRange(q, 1000);
                    });
-    BenchmarkQuery(queries, "PhantomNode query (1 result)",
+    benchmarkQuery(queries, "PhantomNode query (1 result)",
                    [&geo_query](const FixedPointCoordinate &q)
                    {
                        return geo_query.NearestPhantomNodes(q, 1);
                    });
-    BenchmarkQuery(queries, "PhantomNode query (10 result)",
+    benchmarkQuery(queries, "PhantomNode query (10 result)",
                    [&geo_query](const FixedPointCoordinate &q)
                    {
                        return geo_query.NearestPhantomNodes(q, 10);
@@ -112,16 +112,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    const char *ramPath = argv[1];
-    const char *filePath = argv[2];
-    const char *nodesPath = argv[3];
+    const char *ram_path = argv[1];
+    const char *file_path = argv[2];
+    const char *nodes_path = argv[3];
 
-    auto coords = LoadCoordinates(nodesPath);
+    auto coords = loadCoordinates(nodes_path);
 
-    BenchStaticRTree rtree(ramPath, filePath, coords);
+    BenchStaticRTree rtree(ram_path, file_path, coords);
     BenchQuery query(rtree, coords);
 
-    Benchmark(rtree, query, 10000);
+    benchmark(rtree, query, 10000);
 
     return 0;
 }
