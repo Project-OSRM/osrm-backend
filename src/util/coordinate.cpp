@@ -81,7 +81,7 @@ void FixedPointCoordinate::output(std::ostream &out) const
     out << "(" << lat / COORDINATE_PRECISION << "," << lon / COORDINATE_PRECISION << ")";
 }
 
-float FixedPointCoordinate::bearing(const FixedPointCoordinate &other) const
+double FixedPointCoordinate::bearing(const FixedPointCoordinate &other) const
 {
     return coordinate_calculation::bearing(other, *this);
 }

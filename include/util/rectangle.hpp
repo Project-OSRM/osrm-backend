@@ -84,7 +84,7 @@ struct RectangleInt2D
                 Contains(lower_left));
     }
 
-    float GetMinDist(const FixedPointCoordinate &location) const
+    double GetMinDist(const FixedPointCoordinate &location) const
     {
         const bool is_contained = Contains(location);
         if (is_contained)
@@ -117,7 +117,7 @@ struct RectangleInt2D
 
         BOOST_ASSERT(d != INVALID);
 
-        float min_dist = std::numeric_limits<float>::max();
+        double min_dist = std::numeric_limits<double>::max();
         switch (d)
         {
         case NORTH:
@@ -156,14 +156,14 @@ struct RectangleInt2D
             break;
         }
 
-        BOOST_ASSERT(min_dist < std::numeric_limits<float>::max());
+        BOOST_ASSERT(min_dist < std::numeric_limits<double>::max());
 
         return min_dist;
     }
 
-    float GetMinMaxDist(const FixedPointCoordinate &location) const
+    double GetMinMaxDist(const FixedPointCoordinate &location) const
     {
-        float min_max_dist = std::numeric_limits<float>::max();
+        double min_max_dist = std::numeric_limits<double>::max();
         // Get minmax distance to each of the four sides
         const FixedPointCoordinate upper_left(max_lat, min_lon);
         const FixedPointCoordinate upper_right(max_lat, max_lon);

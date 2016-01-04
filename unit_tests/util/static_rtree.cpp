@@ -88,11 +88,11 @@ template <typename DataT> class LinearSearchNN
             local_edges.begin(), local_edges.begin() + num_results, local_edges.end(),
             [this, &input_coordinate](const DataT &lhs, const DataT &rhs)
             {
-                float current_ratio = 0.;
+                double current_ratio = 0.;
                 FixedPointCoordinate nearest;
-                const float lhs_dist = coordinate_calculation::perpendicular_distance(
+                const double lhs_dist = coordinate_calculation::perpendicular_distance(
                     coords->at(lhs.u), coords->at(lhs.v), input_coordinate, nearest, current_ratio);
-                const float rhs_dist = coordinate_calculation::perpendicular_distance(
+                const double rhs_dist = coordinate_calculation::perpendicular_distance(
                     coords->at(rhs.u), coords->at(rhs.v), input_coordinate, nearest, current_ratio);
                 return lhs_dist < rhs_dist;
             });
@@ -165,7 +165,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 
 struct GraphFixture
 {
-    GraphFixture(const std::vector<std::pair<float, float>> &input_coords,
+    GraphFixture(const std::vector<std::pair<double, double>> &input_coords,
                  const std::vector<std::pair<unsigned, unsigned>> &input_edges)
         : coords(std::make_shared<std::vector<FixedPointCoordinate>>())
     {
@@ -253,13 +253,13 @@ void sampling_verify_rtree(RTreeT &rtree, LinearSearchNN<TestData> &lsnn, const 
         auto lsnn_u = result_lsnn.back().u;
         auto lsnn_v = result_lsnn.back().v;
 
-        float current_ratio = 0.;
+        double current_ratio = 0.;
         FixedPointCoordinate nearest;
-        const float rtree_dist = coordinate_calculation::perpendicular_distance(
+        const double rtree_dist = coordinate_calculation::perpendicular_distance(
             coords[rtree_u], coords[rtree_v], q, nearest, current_ratio);
-        const float lsnn_dist = coordinate_calculation::perpendicular_distance(
+        const double lsnn_dist = coordinate_calculation::perpendicular_distance(
             coords[lsnn_u], coords[lsnn_v], q, nearest, current_ratio);
-        BOOST_CHECK_LE(std::abs(rtree_dist - lsnn_dist), std::numeric_limits<float>::epsilon());
+        BOOST_CHECK_LE(std::abs(rtree_dist - lsnn_dist), std::numeric_limits<double>::epsilon());
     }
 }
 
@@ -324,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(construct_multiple_levels_test, TestRandomGraphFixture_M
 // one BB will be pruned, even if it could contain a nearer match.
 BOOST_AUTO_TEST_CASE(regression_test)
 {
-    using Coord = std::pair<float, float>;
+    using Coord = std::pair<double, double>;
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(rectangle_test)
 
 BOOST_AUTO_TEST_CASE(bearing_tests)
 {
-    using Coord = std::pair<float, float>;
+    using Coord = std::pair<double, double>;
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
