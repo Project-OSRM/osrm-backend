@@ -415,7 +415,7 @@ class StaticRTree
         {
             auto &current_edge = current_leaf_node.objects[i];
             const float current_perpendicular_distance =
-                coordinate_calculation::perpendicular_distance_from_projected_coordinate(
+                coordinate_calculation::perpendicularDistanceFromProjectedCoordinate(
                     m_coordinate_list->at(current_edge.u), m_coordinate_list->at(current_edge.v),
                     input_coordinate, projected_coordinate);
             // distance must be non-negative

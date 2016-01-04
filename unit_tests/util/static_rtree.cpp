@@ -63,9 +63,9 @@ template <typename DataT> class LinearSearchNN
             {
                 double current_ratio = 0.;
                 FixedPointCoordinate nearest;
-                const double lhs_dist = coordinate_calculation::perpendicular_distance(
+                const double lhs_dist = coordinate_calculation::perpendicularDistance(
                     coords->at(lhs.u), coords->at(lhs.v), input_coordinate, nearest, current_ratio);
-                const double rhs_dist = coordinate_calculation::perpendicular_distance(
+                const double rhs_dist = coordinate_calculation::perpendicularDistance(
                     coords->at(rhs.u), coords->at(rhs.v), input_coordinate, nearest, current_ratio);
                 return lhs_dist < rhs_dist;
             });
@@ -231,9 +231,9 @@ void sampling_verify_rtree(RTreeT &rtree,
 
         double current_ratio = 0.;
         FixedPointCoordinate nearest;
-        const double rtree_dist = coordinate_calculation::perpendicular_distance(
+        const double rtree_dist = coordinate_calculation::perpendicularDistance(
             coords[rtree_u], coords[rtree_v], q, nearest, current_ratio);
-        const double lsnn_dist = coordinate_calculation::perpendicular_distance(
+        const double lsnn_dist = coordinate_calculation::perpendicularDistance(
             coords[lsnn_u], coords[lsnn_v], q, nearest, current_ratio);
         BOOST_CHECK_LE(std::abs(rtree_dist - lsnn_dist), std::numeric_limits<double>::epsilon());
     }
@@ -358,30 +358,30 @@ void TestRectangle(double width, double height, double center_lat, double center
 
     /* Distance to line segments of rectangle */
     BOOST_CHECK_EQUAL(rect.GetMinDist(north),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           north, FixedPointCoordinate(rect.max_lat, north.lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(south),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           south, FixedPointCoordinate(rect.min_lat, south.lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(west),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           west, FixedPointCoordinate(west.lat, rect.min_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(east),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           east, FixedPointCoordinate(east.lat, rect.max_lon)));
 
     /* Distance to corner points */
     BOOST_CHECK_EQUAL(rect.GetMinDist(north_east),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           north_east, FixedPointCoordinate(rect.max_lat, rect.max_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(north_west),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           north_west, FixedPointCoordinate(rect.max_lat, rect.min_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(south_east),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           south_east, FixedPointCoordinate(rect.min_lat, rect.max_lon)));
     BOOST_CHECK_EQUAL(rect.GetMinDist(south_west),
-                      coordinate_calculation::great_circle_distance(
+                      coordinate_calculation::greatCircleDistance(
                           south_west, FixedPointCoordinate(rect.min_lat, rect.min_lon)));
 }
 

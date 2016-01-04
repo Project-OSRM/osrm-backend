@@ -22,7 +22,7 @@ constexpr static const double earth_radius = 6372797.560856;
 namespace coordinate_calculation
 {
 
-double haversine_distance(const int lat1, const int lon1, const int lat2, const int lon2)
+double haversineDistance(const int lat1, const int lon1, const int lat2, const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
@@ -38,30 +38,30 @@ double haversine_distance(const int lat1, const int lon1, const int lat2, const 
     const double dlat2 = lt2 * (RAD);
     const double dlong2 = ln2 * (RAD);
 
-    const double dLong = dlong1 - dlong2;
-    const double dLat = dlat1 - dlat2;
+    const double dlong = dlong1 - dlong2;
+    const double dlat = dlat1 - dlat2;
 
-    const double aHarv = std::pow(std::sin(dLat / 2.0), 2.0) +
-                         std::cos(dlat1) * std::cos(dlat2) * std::pow(std::sin(dLong / 2.), 2);
-    const double cHarv = 2. * std::atan2(std::sqrt(aHarv), std::sqrt(1.0 - aHarv));
-    return earth_radius * cHarv;
+    const double aharv = std::pow(std::sin(dlat / 2.0), 2.0) +
+                         std::cos(dlat1) * std::cos(dlat2) * std::pow(std::sin(dlong / 2.), 2);
+    const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
+    return earth_radius * charv;
 }
 
-double haversine_distance(const FixedPointCoordinate &coordinate_1,
-                          const FixedPointCoordinate &coordinate_2)
+double haversineDistance(const FixedPointCoordinate &coordinate_1,
+                         const FixedPointCoordinate &coordinate_2)
 {
-    return haversine_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
-                              coordinate_2.lon);
+    return haversineDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+                             coordinate_2.lon);
 }
 
-double great_circle_distance(const FixedPointCoordinate &coordinate_1,
-                             const FixedPointCoordinate &coordinate_2)
+double greatCircleDistance(const FixedPointCoordinate &coordinate_1,
+                           const FixedPointCoordinate &coordinate_2)
 {
-    return great_circle_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
-                                 coordinate_2.lon);
+    return greatCircleDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+                               coordinate_2.lon);
 }
 
-double great_circle_distance(const int lat1, const int lon1, const int lat2, const int lon2)
+double greatCircleDistance(const int lat1, const int lon1, const int lat2, const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
@@ -78,51 +78,51 @@ double great_circle_distance(const int lat1, const int lon1, const int lat2, con
     return std::hypot(x_value, y_value) * earth_radius;
 }
 
-double perpendicular_distance(const FixedPointCoordinate &source_coordinate,
-                              const FixedPointCoordinate &target_coordinate,
-                              const FixedPointCoordinate &query_location)
+double perpendicularDistance(const FixedPointCoordinate &source_coordinate,
+                             const FixedPointCoordinate &target_coordinate,
+                             const FixedPointCoordinate &query_location)
 {
     double ratio;
     FixedPointCoordinate nearest_location;
 
-    return perpendicular_distance(source_coordinate, target_coordinate, query_location,
-                                  nearest_location, ratio);
+    return perpendicularDistance(source_coordinate, target_coordinate, query_location,
+                                 nearest_location, ratio);
 }
 
-double perpendicular_distance(const FixedPointCoordinate &segment_source,
-                              const FixedPointCoordinate &segment_target,
-                              const FixedPointCoordinate &query_location,
-                              FixedPointCoordinate &nearest_location,
-                              double &ratio)
+double perpendicularDistance(const FixedPointCoordinate &segment_source,
+                             const FixedPointCoordinate &segment_target,
+                             const FixedPointCoordinate &query_location,
+                             FixedPointCoordinate &nearest_location,
+                             double &ratio)
 {
-    return perpendicular_distance_from_projected_coordinate(
+    return perpendicularDistanceFromProjectedCoordinate(
         segment_source, segment_target, query_location,
         {mercator::lat2y(query_location.lat / COORDINATE_PRECISION),
          query_location.lon / COORDINATE_PRECISION},
         nearest_location, ratio);
 }
 
-double perpendicular_distance_from_projected_coordinate(
-    const FixedPointCoordinate &source_coordinate,
-    const FixedPointCoordinate &target_coordinate,
-    const FixedPointCoordinate &query_location,
-    const std::pair<double, double> &projected_coordinate)
+double
+perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &source_coordinate,
+                                             const FixedPointCoordinate &target_coordinate,
+                                             const FixedPointCoordinate &query_location,
+                                             const std::pair<double, double> &projected_coordinate)
 {
     double ratio;
     FixedPointCoordinate nearest_location;
 
-    return perpendicular_distance_from_projected_coordinate(source_coordinate, target_coordinate,
-                                                            query_location, projected_coordinate,
-                                                            nearest_location, ratio);
+    return perpendicularDistanceFromProjectedCoordinate(source_coordinate, target_coordinate,
+                                                        query_location, projected_coordinate,
+                                                        nearest_location, ratio);
 }
 
-double perpendicular_distance_from_projected_coordinate(
-    const FixedPointCoordinate &segment_source,
-    const FixedPointCoordinate &segment_target,
-    const FixedPointCoordinate &query_location,
-    const std::pair<double, double> &projected_coordinate,
-    FixedPointCoordinate &nearest_location,
-    double &ratio)
+double
+perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &segment_source,
+                                             const FixedPointCoordinate &segment_target,
+                                             const FixedPointCoordinate &query_location,
+                                             const std::pair<double, double> &projected_coordinate,
+                                             FixedPointCoordinate &nearest_location,
+                                             double &ratio)
 {
     BOOST_ASSERT(query_location.is_valid());
 
@@ -133,7 +133,7 @@ double perpendicular_distance_from_projected_coordinate(
     const double b = segment_source.lon / COORDINATE_PRECISION;
     const double c = mercator::lat2y(segment_target.lat / COORDINATE_PRECISION);
     const double d = segment_target.lon / COORDINATE_PRECISION;
-    double p, q /*,mX*/, nY;
+    double p, q /*,mX*/, new_y;
     if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
     {
         const double m = (d - b) / (c - a); // slope
@@ -146,16 +146,16 @@ double perpendicular_distance_from_projected_coordinate(
         p = c;
         q = y;
     }
-    nY = (d * p - c * q) / (a * d - b * c);
+    new_y = (d * p - c * q) / (a * d - b * c);
 
     // discretize the result to coordinate precision. it's a hack!
-    if (std::abs(nY) < (1.0 / COORDINATE_PRECISION))
+    if (std::abs(new_y) < (1.0 / COORDINATE_PRECISION))
     {
-        nY = 0.0;
+        new_y = 0.0;
     }
 
     // compute ratio
-    ratio = static_cast<double>((p - nY * a) /
+    ratio = static_cast<double>((p - new_y * a) /
                                 c); // These values are actually n/m+n and m/m+n , we need
     // not calculate the explicit values of m an n as we
     // are just interested in the ratio
@@ -190,34 +190,27 @@ double perpendicular_distance_from_projected_coordinate(
     }
     BOOST_ASSERT(nearest_location.is_valid());
 
-    const double approximate_distance = great_circle_distance(query_location, nearest_location);
+    const double approximate_distance = greatCircleDistance(query_location, nearest_location);
     BOOST_ASSERT(0.0 <= approximate_distance);
     return approximate_distance;
 }
 
-void lat_or_lon_to_string(const int value, std::string &output)
-{
-    char buffer[12];
-    buffer[11] = 0; // zero termination
-    output = printInt<11, 6>(buffer, value);
-}
+double degToRad(const double degree) { return degree * (static_cast<double>(M_PI) / 180.0); }
 
-double deg_to_rad(const double degree) { return degree * (static_cast<double>(M_PI) / 180.0); }
-
-double rad_to_deg(const double radian) { return radian * (180.0 * static_cast<double>(M_1_PI)); }
+double radToDeg(const double radian) { return radian * (180.0 * static_cast<double>(M_1_PI)); }
 
 double bearing(const FixedPointCoordinate &first_coordinate,
                const FixedPointCoordinate &second_coordinate)
 {
     const double lon_diff =
         second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
-    const double lon_delta = deg_to_rad(lon_diff);
-    const double lat1 = deg_to_rad(first_coordinate.lat / COORDINATE_PRECISION);
-    const double lat2 = deg_to_rad(second_coordinate.lat / COORDINATE_PRECISION);
+    const double lon_delta = degToRad(lon_diff);
+    const double lat1 = degToRad(first_coordinate.lat / COORDINATE_PRECISION);
+    const double lat2 = degToRad(second_coordinate.lat / COORDINATE_PRECISION);
     const double y = std::sin(lon_delta) * std::cos(lat2);
     const double x =
         std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
-    double result = rad_to_deg(std::atan2(y, x));
+    double result = radToDeg(std::atan2(y, x));
     while (result < 0.0)
     {
         result += 360.0;

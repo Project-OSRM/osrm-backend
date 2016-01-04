@@ -3,16 +3,27 @@
 
 #include "engine/descriptors/descriptor_base.hpp"
 #include "util/xml_renderer.hpp"
+#include "util/string_util.hpp"
 
 #include "osrm/json_container.hpp"
 
 #include <iostream>
+
+
 
 template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<DataFacadeT>
 {
   private:
     DescriptorConfig config;
     DataFacadeT *facade;
+
+    template<std::size_t digits>
+    void fixedIntToString(const int value, std::string &output)
+    {
+        char buffer[digits];
+        buffer[digits-1] = 0; // zero termination
+        output = printInt<11, 6>(buffer, value);
+    }
 
     void AddRoutePoint(const FixedPointCoordinate &coordinate, osrm::json::Array &json_route)
     {
@@ -22,10 +33,10 @@ template <class DataFacadeT> class GPXDescriptor final : public BaseDescriptor<D
 
         std::string tmp;
 
-        coordinate_calculation::lat_or_lon_to_string(coordinate.lat, tmp);
+        fixedIntToString<12>(coordinate.lat, tmp);
         json_lat.values["_lat"] = tmp;
 
-        coordinate_calculation::lat_or_lon_to_string(coordinate.lon, tmp);
+        fixedIntToString<12>(coordinate.lon, tmp);
         json_lon.values["_lon"] = tmp;
 
         json_row.values.push_back(json_lat);

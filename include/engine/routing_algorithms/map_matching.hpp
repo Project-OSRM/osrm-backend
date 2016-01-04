@@ -196,7 +196,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto &current_coordinate = trace_coordinates[t];
 
             const auto haversine_distance =
-                coordinate_calculation::haversine_distance(prev_coordinate, current_coordinate);
+                coordinate_calculation::haversineDistance(prev_coordinate, current_coordinate);
 
             // compute d_t for this timestamp and the next one
             for (const auto s : osrm::irange<std::size_t>(0u, prev_viterbi.size()))

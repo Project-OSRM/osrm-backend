@@ -541,7 +541,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             const QueryNode &from = m_node_info_list[previous];
                             const QueryNode &to = m_node_info_list[target_node.first];
                             const double segment_length =
-                                coordinate_calculation::great_circle_distance(from.lat, from.lon,
+                                coordinate_calculation::greatCircleDistance(from.lat, from.lon,
                                                                               to.lat, to.lon);
 
                             edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id),
@@ -559,7 +559,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         static const unsigned node_count = 2;
                         const QueryNode from = m_node_info_list[node_u];
                         const QueryNode to = m_node_info_list[node_v];
-                        const double segment_length = coordinate_calculation::great_circle_distance(
+                        const double segment_length = coordinate_calculation::greatCircleDistance(
                             from.lat, from.lon, to.lat, to.lon);
                         edge_segment_file.write(reinterpret_cast<const char *>(&node_count),
                                                 sizeof(node_count));

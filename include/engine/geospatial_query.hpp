@@ -133,7 +133,7 @@ template <typename RTreeT> class GeospatialQuery
     {
         FixedPointCoordinate point_on_segment;
         double ratio;
-        const auto current_perpendicular_distance = coordinate_calculation::perpendicular_distance(
+        const auto current_perpendicular_distance = coordinate_calculation::perpendicularDistance(
             coordinates->at(data.u), coordinates->at(data.v), input_coordinate, point_on_segment,
             ratio);
 

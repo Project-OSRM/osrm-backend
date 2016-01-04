@@ -94,35 +94,35 @@ struct RectangleInt2D
         switch (d)
         {
         case NORTH:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(max_lat, location.lon));
             break;
         case SOUTH:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(min_lat, location.lon));
             break;
         case WEST:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(location.lat, min_lon));
             break;
         case EAST:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(location.lat, max_lon));
             break;
         case NORTH_EAST:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(max_lat, max_lon));
             break;
         case NORTH_WEST:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(max_lat, min_lon));
             break;
         case SOUTH_EAST:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(min_lat, max_lon));
             break;
         case SOUTH_WEST:
-            min_dist = coordinate_calculation::great_circle_distance(
+            min_dist = coordinate_calculation::greatCircleDistance(
                 location, FixedPointCoordinate(min_lat, min_lon));
             break;
         default:
@@ -145,23 +145,23 @@ struct RectangleInt2D
 
         min_max_dist = std::min(
             min_max_dist,
-            std::max(coordinate_calculation::great_circle_distance(location, upper_left),
-                     coordinate_calculation::great_circle_distance(location, upper_right)));
+            std::max(coordinate_calculation::greatCircleDistance(location, upper_left),
+                     coordinate_calculation::greatCircleDistance(location, upper_right)));
 
         min_max_dist = std::min(
             min_max_dist,
-            std::max(coordinate_calculation::great_circle_distance(location, upper_right),
-                     coordinate_calculation::great_circle_distance(location, lower_right)));
+            std::max(coordinate_calculation::greatCircleDistance(location, upper_right),
+                     coordinate_calculation::greatCircleDistance(location, lower_right)));
 
         min_max_dist =
             std::min(min_max_dist,
-                     std::max(coordinate_calculation::great_circle_distance(location, lower_right),
-                              coordinate_calculation::great_circle_distance(location, lower_left)));
+                     std::max(coordinate_calculation::greatCircleDistance(location, lower_right),
+                              coordinate_calculation::greatCircleDistance(location, lower_left)));
 
         min_max_dist =
             std::min(min_max_dist,
-                     std::max(coordinate_calculation::great_circle_distance(location, lower_left),
-                              coordinate_calculation::great_circle_distance(location, upper_left)));
+                     std::max(coordinate_calculation::greatCircleDistance(location, lower_left),
+                              coordinate_calculation::greatCircleDistance(location, upper_left)));
         return min_max_dist;
     }
 
