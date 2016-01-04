@@ -3,17 +3,14 @@
 
 #include "engine/plugins/plugin_base.hpp"
 
+#include "engine/api_response_generator.hpp"
 #include "engine/object_encoder.hpp"
 #include "engine/search_engine.hpp"
-#include "engine/descriptors/descriptor_base.hpp"
-#include "engine/descriptors/gpx_descriptor.hpp"
-#include "engine/descriptors/json_descriptor.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_renderer.hpp"
 #include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
-
 #include "osrm/json_container.hpp"
 
 #include <cstdlib>
@@ -26,7 +23,6 @@
 template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 {
   private:
-    DescriptorTable descriptor_table;
     std::string descriptor_string;
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
     DataFacadeT *facade;
@@ -38,10 +34,6 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
           max_locations_viaroute(max_locations_viaroute)
     {
         search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
-
-        descriptor_table.emplace("json", 0);
-        descriptor_table.emplace("gpx", 1);
-        // descriptor_table.emplace("geojson", 2);
     }
 
     virtual ~ViaRoutePlugin() {}
@@ -139,22 +131,8 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         bool no_route = INVALID_EDGE_WEIGHT == raw_route.shortest_path_length;
 
-        std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor;
-        switch (descriptor_table.get_id(route_parameters.output_format))
-        {
-        case 1:
-            descriptor = osrm::make_unique<GPXDescriptor<DataFacadeT>>(facade);
-            break;
-        // case 2:
-        //      descriptor = osrm::make_unique<GEOJSONDescriptor<DataFacadeT>>();
-        //      break;
-        default:
-            descriptor = osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
-            break;
-        }
-
-        descriptor->SetConfig(route_parameters);
-        descriptor->Run(raw_route, json_result);
+        auto generator = osrm::engine::MakeApiResponseGenerator(facade);
+        generator.DescribeRoute(route_parameters, raw_route, json_result);
 
         // we can only know this after the fact, different SCC ids still
         // allow for connection in one direction.

@@ -3,8 +3,6 @@
 
 #include "engine/plugins/plugin_base.hpp"
 
-#include "util/json_renderer.hpp"
-
 #include "osrm/json_container.hpp"
 
 #include <string>

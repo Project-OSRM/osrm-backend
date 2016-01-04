@@ -6,8 +6,9 @@
 #include "engine/map_matching/bayes_classifier.hpp"
 #include "engine/object_encoder.hpp"
 #include "engine/search_engine.hpp"
-#include "engine/descriptors/descriptor_base.hpp"
-#include "engine/descriptors/json_descriptor.hpp"
+#include "engine/guidance/textual_route_annotation.hpp"
+#include "engine/guidance/segment_list.hpp"
+#include "engine/api_response_generator.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
 #include "util/compute_angle.hpp"
 #include "util/integer_range.hpp"
@@ -185,55 +186,37 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             subtrace.values["confidence"] = sub.confidence;
         }
 
-        JSONDescriptor<DataFacadeT> json_descriptor(facade);
-        json_descriptor.SetConfig(route_parameters);
+        auto response_generator = osrm::engine::MakeApiResponseGenerator(facade);
 
-        subtrace.values["hint_data"] = json_descriptor.BuildHintData(raw_route);
+        subtrace.values["hint_data"] = response_generator.BuildHintData(raw_route);
 
         if (route_parameters.geometry || route_parameters.print_instructions)
         {
-            DescriptionFactory factory;
-            FixedPointCoordinate current_coordinate;
-            factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
-                                    raw_route.source_traversed_in_reverse.front());
-            for (const auto i :
-                 osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
-            {
-                for (const PathData &path_data : raw_route.unpacked_path_segments[i])
-                {
-                    current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-                    factory.AppendSegment(current_coordinate, path_data);
-                }
-                factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom,
-                                      raw_route.target_traversed_in_reverse[i],
-                                      raw_route.is_via_leg(i));
-            }
-
-            factory.Run(route_parameters.zoom_level);
-
-            // we need because we don't run path simplification
-            for (auto &segment : factory.path_description)
-            {
-                segment.necessary = true;
-            }
+            using SegmentList =  osrm::engine::guidance::SegmentList<DataFacadeT>;
+            //Passing false to extract_alternative extracts the route.
+            const constexpr bool EXTRACT_ROUTE = false;
+            // by passing false to segment_list, we skip the douglas peucker simplification
+            // and mark all segments as necessary within the generation process
+            const constexpr bool NO_ROUTE_SIMPLIFICATION = false;
+            SegmentList segment_list(raw_route, EXTRACT_ROUTE, route_parameters.zoom_level,
+                                      NO_ROUTE_SIMPLIFICATION, facade);
 
             if (route_parameters.geometry)
             {
                 subtrace.values["geometry"] =
-                    factory.AppendGeometryString(route_parameters.compression);
+                    response_generator.GetGeometry(route_parameters.compression, segment_list);
             }
 
             if (route_parameters.print_instructions)
             {
-                std::vector<typename JSONDescriptor<DataFacadeT>::Segment> temp_segments;
                 subtrace.values["instructions"] =
-                    json_descriptor.BuildTextualDescription(factory, temp_segments);
+                    osrm::engine::guidance::AnnotateRoute<DataFacadeT>(
+                        segment_list.Get(), facade);
             }
 
-            factory.BuildRouteSummary(factory.get_entire_length(), raw_route.shortest_path_length);
             osrm::json::Object json_route_summary;
-            json_route_summary.values["total_distance"] = factory.summary.distance;
-            json_route_summary.values["total_time"] = factory.summary.duration;
+            json_route_summary.values["total_distance"] = segment_list.GetDistance();
+            json_route_summary.values["total_time"] = segment_list.GetDuration();
             subtrace.values["route_summary"] = json_route_summary;
         }
 

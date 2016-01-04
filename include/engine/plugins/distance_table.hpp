@@ -4,21 +4,15 @@
 #include "engine/plugins/plugin_base.hpp"
 
 #include "engine/object_encoder.hpp"
-#include "contractor/query_edge.hpp"
 #include "engine/search_engine.hpp"
-#include "engine/descriptors/descriptor_base.hpp"
-#include "util/json_renderer.hpp"
 #include "util/make_unique.hpp"
 #include "util/string_util.hpp"
-#include "util/timing_util.hpp"
-
 #include "osrm/json_container.hpp"
 
 #include <cstdlib>
 
 #include <algorithm>
 #include <memory>
-#include <unordered_map>
 #include <string>
 #include <vector>
 

@@ -2,11 +2,8 @@
 #define NEAREST_HPP
 
 #include "engine/plugins/plugin_base.hpp"
-
 #include "engine/phantom_node.hpp"
 #include "util/integer_range.hpp"
-#include "util/json_renderer.hpp"
-
 #include "osrm/json_container.hpp"
 
 #include <string>

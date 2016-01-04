@@ -9,17 +9,12 @@
 #include "engine/trip/trip_farthest_insertion.hpp"
 #include "engine/trip/trip_brute_force.hpp"
 #include "engine/search_engine.hpp"
-#include "util/matrix_graph_wrapper.hpp"          // wrapper to use tarjan
-                                                  // scc on dist table
-#include "engine/descriptors/descriptor_base.hpp" // to make json output
-#include "engine/descriptors/json_descriptor.hpp" // to make json output
+#include "util/matrix_graph_wrapper.hpp" // wrapper to use tarjan scc on dist table
+#include "engine/api_response_generator.hpp"
 #include "util/make_unique.hpp"
-#include "util/timing_util.hpp" // to time runtime
-//#include "util/simple_logger.hpp"      // for logging output
-#include "util/dist_table_wrapper.hpp" // to access the dist
-                                       // table more easily
-
+#include "util/dist_table_wrapper.hpp" // to access the dist table more easily
 #include "osrm/json_container.hpp"
+
 #include <boost/assert.hpp>
 
 #include <cstdlib>
@@ -284,7 +279,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         std::vector<std::vector<NodeID>> route_result;
         route_result.reserve(scc.GetNumberOfComponents());
-        TIMER_START(TRIP_TIMER);
         // run Trip computation for every SCC
         for (std::size_t k = 0; k < scc.GetNumberOfComponents(); ++k)
         {
@@ -337,24 +331,20 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             comp_route.push_back(ComputeRoute(phantom_node_list, route_parameters, elem));
         }
 
-        TIMER_STOP(TRIP_TIMER);
-
         // prepare JSON output
         // create a json object for every trip
         osrm::json::Array trip;
         for (std::size_t i = 0; i < route_result.size(); ++i)
         {
-            std::unique_ptr<BaseDescriptor<DataFacadeT>> descriptor =
-                osrm::make_unique<JSONDescriptor<DataFacadeT>>(facade);
-            descriptor->SetConfig(route_parameters);
-
             osrm::json::Object scc_trip;
+
+            // annotate comp_route[i] as a json trip
+            auto generator = osrm::engine::MakeApiResponseGenerator(facade);
+            generator.DescribeRoute(route_parameters, comp_route[i], scc_trip);
 
             // set permutation output
             SetLocPermutationOutput(route_result[i], scc_trip);
             // set viaroute output
-            descriptor->Run(comp_route[i], scc_trip);
-
             trip.values.push_back(std::move(scc_trip));
         }
 
