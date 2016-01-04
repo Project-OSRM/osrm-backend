@@ -40,7 +40,7 @@ struct TarjanEdgeData
 using TarjanGraph = StaticGraph<TarjanEdgeData>;
 using TarjanEdge = TarjanGraph::InputEdge;
 
-void DeleteFileIfExists(const std::string &file_name)
+void deleteFileIfExists(const std::string &file_name)
 {
     if (boost::filesystem::exists(file_name))
     {
@@ -49,7 +49,7 @@ void DeleteFileIfExists(const std::string &file_name)
 }
 }
 
-std::size_t LoadGraph(const char *path,
+std::size_t loadGraph(const char *path,
                       std::vector<QueryNode> &coordinate_list,
                       std::vector<TarjanEdge> &graph_edge_list)
 {
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         }
 
         std::vector<TarjanEdge> graph_edge_list;
-        auto number_of_nodes = LoadGraph(argv[1], coordinate_list, graph_edge_list);
+        auto number_of_nodes = loadGraph(argv[1], coordinate_list, graph_edge_list);
 
         tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
         const auto graph = std::make_shared<TarjanGraph>(number_of_nodes, graph_edge_list);
@@ -129,34 +129,34 @@ int main(int argc, char *argv[])
         TIMER_START(SCC_RUN_SETUP);
 
         // remove files from previous run if exist
-        DeleteFileIfExists("component.dbf");
-        DeleteFileIfExists("component.shx");
-        DeleteFileIfExists("component.shp");
+        deleteFileIfExists("component.dbf");
+        deleteFileIfExists("component.shx");
+        deleteFileIfExists("component.shp");
 
         Percent percentage(graph->GetNumberOfNodes());
 
         OGRRegisterAll();
 
-        const char *pszDriverName = "ESRI Shapefile";
-        OGRSFDriver *poDriver =
-            OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(pszDriverName);
-        if (nullptr == poDriver)
+        const char *psz_driver_name = "ESRI Shapefile";
+        auto *po_driver =
+            OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(psz_driver_name);
+        if (nullptr == po_driver)
         {
             throw osrm::exception("ESRI Shapefile driver not available");
         }
-        OGRDataSource *poDS = poDriver->CreateDataSource("component.shp", nullptr);
+        auto *po_datasource = po_driver->CreateDataSource("component.shp", nullptr);
 
-        if (nullptr == poDS)
+        if (nullptr == po_datasource)
         {
             throw osrm::exception("Creation of output file failed");
         }
 
-        OGRSpatialReference *poSRS = new OGRSpatialReference();
-        poSRS->importFromEPSG(4326);
+        auto *po_srs = new OGRSpatialReference();
+        po_srs->importFromEPSG(4326);
 
-        OGRLayer *poLayer = poDS->CreateLayer("component", poSRS, wkbLineString, nullptr);
+        auto *po_layer = po_datasource->CreateLayer("component", po_srs, wkbLineString, nullptr);
 
-        if (nullptr == poLayer)
+        if (nullptr == po_layer)
         {
             throw osrm::exception("Layer creation failed.");
         }
@@ -192,26 +192,26 @@ int main(int argc, char *argv[])
                     // edges that end on bollard nodes may actually be in two distinct components
                     if (size_of_containing_component < 1000)
                     {
-                        OGRLineString lineString;
-                        lineString.addPoint(coordinate_list[source].lon / COORDINATE_PRECISION,
-                                            coordinate_list[source].lat / COORDINATE_PRECISION);
-                        lineString.addPoint(coordinate_list[target].lon / COORDINATE_PRECISION,
+                        OGRLineString line_string;
+                        line_string.addPoint(coordinate_list[source].lon / COORDINATE_PRECISION,
+                                             coordinate_list[source].lat / COORDINATE_PRECISION);
+                        line_string.addPoint(coordinate_list[target].lon / COORDINATE_PRECISION,
                                             coordinate_list[target].lat / COORDINATE_PRECISION);
 
-                        OGRFeature *poFeature = OGRFeature::CreateFeature(poLayer->GetLayerDefn());
+                        OGRFeature *po_feature = OGRFeature::CreateFeature(po_layer->GetLayerDefn());
 
-                        poFeature->SetGeometry(&lineString);
-                        if (OGRERR_NONE != poLayer->CreateFeature(poFeature))
+                        po_feature->SetGeometry(&line_string);
+                        if (OGRERR_NONE != po_layer->CreateFeature(po_feature))
                         {
                             throw osrm::exception("Failed to create feature in shapefile.");
                         }
-                        OGRFeature::DestroyFeature(poFeature);
+                        OGRFeature::DestroyFeature(po_feature);
                     }
                 }
             }
         }
-        OGRSpatialReference::DestroySpatialReference(poSRS);
-        OGRDataSource::DestroyDataSource(poDS);
+        OGRSpatialReference::DestroySpatialReference(po_srs);
+        OGRDataSource::DestroyDataSource(po_datasource);
         TIMER_STOP(SCC_OUTPUT);
         SimpleLogger().Write() << "generating output took: " << TIMER_MSEC(SCC_OUTPUT) / 1000.
                                << "s";
