@@ -1,7 +1,7 @@
 #ifndef ROUTED_OPTIONS_HPP
 #define ROUTED_OPTIONS_HPP
 
-#include "util/version.hpp"
+#include "util/ini_file.hpp"
 #include "util/version.hpp"
 #include "util/osrm_exception.hpp"
 #include "util/simple_logger.hpp"

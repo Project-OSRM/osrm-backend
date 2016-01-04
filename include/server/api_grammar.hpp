@@ -12,7 +12,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     explicit APIGrammar(HandlerT *h) : APIGrammar::base_type(api_call), handler(h)
     {
         api_call =
-            qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >> -query;
+            qi::lit('/') >> string[boost::bind(&HandlerT::SetService, handler, ::_1)] >> -query;
         query = ('?') >> +(zoom | output | jsonp | checksum | uturns | location_with_options |
                            destination_with_options | source_with_options | cmp | language |
                            instruction | geometry | alt_route | old_API | num_results |
@@ -30,56 +30,56 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         source_with_options = source >> -location_options;
         destination_with_options = destination >> -location_options;
         zoom = (-qi::lit('&')) >> qi::lit('z') >> '=' >>
-               qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
+               qi::short_[boost::bind(&HandlerT::SetZoomLevel, handler, ::_1)];
         output = (-qi::lit('&')) >> qi::lit("output") >> '=' >>
-                 string[boost::bind(&HandlerT::setOutputFormat, handler, ::_1)];
+                 string[boost::bind(&HandlerT::SetOutputFormat, handler, ::_1)];
         jsonp = (-qi::lit('&')) >> qi::lit("jsonp") >> '=' >>
-                stringwithPercent[boost::bind(&HandlerT::setJSONpParameter, handler, ::_1)];
+                stringwithPercent[boost::bind(&HandlerT::SetJSONpParameter, handler, ::_1)];
         checksum = (-qi::lit('&')) >> qi::lit("checksum") >> '=' >>
-                   qi::uint_[boost::bind(&HandlerT::setChecksum, handler, ::_1)];
+                   qi::uint_[boost::bind(&HandlerT::SetChecksum, handler, ::_1)];
         instruction = (-qi::lit('&')) >> qi::lit("instructions") >> '=' >>
-                      qi::bool_[boost::bind(&HandlerT::setInstructionFlag, handler, ::_1)];
+                      qi::bool_[boost::bind(&HandlerT::SetInstructionFlag, handler, ::_1)];
         geometry = (-qi::lit('&')) >> qi::lit("geometry") >> '=' >>
-                   qi::bool_[boost::bind(&HandlerT::setGeometryFlag, handler, ::_1)];
+                   qi::bool_[boost::bind(&HandlerT::SetGeometryFlag, handler, ::_1)];
         cmp = (-qi::lit('&')) >> qi::lit("compression") >> '=' >>
-              qi::bool_[boost::bind(&HandlerT::setCompressionFlag, handler, ::_1)];
+              qi::bool_[boost::bind(&HandlerT::SetCompressionFlag, handler, ::_1)];
         location = (-qi::lit('&')) >> qi::lit("loc") >> '=' >>
                    (qi::double_ >> qi::lit(',') >>
-                    qi::double_)[boost::bind(&HandlerT::addCoordinate, handler, ::_1)];
+                    qi::double_)[boost::bind(&HandlerT::AddCoordinate, handler, ::_1)];
         destination = (-qi::lit('&')) >> qi::lit("dst") >> '=' >>
                       (qi::double_ >> qi::lit(',') >>
-                       qi::double_)[boost::bind(&HandlerT::addDestination, handler, ::_1)];
+                       qi::double_)[boost::bind(&HandlerT::AddDestination, handler, ::_1)];
         source = (-qi::lit('&')) >> qi::lit("src") >> '=' >>
                  (qi::double_ >> qi::lit(',') >>
-                  qi::double_)[boost::bind(&HandlerT::addSource, handler, ::_1)];
+                  qi::double_)[boost::bind(&HandlerT::AddSource, handler, ::_1)];
         hint = (-qi::lit('&')) >> qi::lit("hint") >> '=' >>
-               stringwithDot[boost::bind(&HandlerT::addHint, handler, ::_1)];
+               stringwithDot[boost::bind(&HandlerT::AddHint, handler, ::_1)];
         timestamp = (-qi::lit('&')) >> qi::lit("t") >> '=' >>
-                    qi::uint_[boost::bind(&HandlerT::addTimestamp, handler, ::_1)];
+                    qi::uint_[boost::bind(&HandlerT::AddTimestamp, handler, ::_1)];
         bearing = (-qi::lit('&')) >> qi::lit("b") >> '=' >>
                   (qi::int_ >>
                    -(qi::lit(',') >> qi::int_ |
-                     qi::attr(10)))[boost::bind(&HandlerT::addBearing, handler, ::_1, ::_2, ::_3)];
+                     qi::attr(10)))[boost::bind(&HandlerT::AddBearing, handler, ::_1, ::_2, ::_3)];
         u = (-qi::lit('&')) >> qi::lit("u") >> '=' >>
-            qi::bool_[boost::bind(&HandlerT::setUTurn, handler, ::_1)];
+            qi::bool_[boost::bind(&HandlerT::SetUTurn, handler, ::_1)];
         uturns = (-qi::lit('&')) >> qi::lit("uturns") >> '=' >>
-                 qi::bool_[boost::bind(&HandlerT::setAllUTurns, handler, ::_1)];
+                 qi::bool_[boost::bind(&HandlerT::SetAllUTurns, handler, ::_1)];
         language = (-qi::lit('&')) >> qi::lit("hl") >> '=' >>
-                   string[boost::bind(&HandlerT::setLanguage, handler, ::_1)];
+                   string[boost::bind(&HandlerT::SetLanguage, handler, ::_1)];
         alt_route = (-qi::lit('&')) >> qi::lit("alt") >> '=' >>
-                    qi::bool_[boost::bind(&HandlerT::setAlternateRouteFlag, handler, ::_1)];
+                    qi::bool_[boost::bind(&HandlerT::SetAlternateRouteFlag, handler, ::_1)];
         old_API = (-qi::lit('&')) >> qi::lit("geomformat") >> '=' >>
-                  string[boost::bind(&HandlerT::setDeprecatedAPIFlag, handler, ::_1)];
+                  string[boost::bind(&HandlerT::SetDeprecatedAPIFlag, handler, ::_1)];
         num_results = (-qi::lit('&')) >> qi::lit("num_results") >> '=' >>
-                      qi::short_[boost::bind(&HandlerT::setNumberOfResults, handler, ::_1)];
+                      qi::short_[boost::bind(&HandlerT::SetNumberOfResults, handler, ::_1)];
         matching_beta = (-qi::lit('&')) >> qi::lit("matching_beta") >> '=' >>
-                        qi::float_[boost::bind(&HandlerT::setMatchingBeta, handler, ::_1)];
+                        qi::float_[boost::bind(&HandlerT::SetMatchingBeta, handler, ::_1)];
         gps_precision = (-qi::lit('&')) >> qi::lit("gps_precision") >> '=' >>
-                        qi::float_[boost::bind(&HandlerT::setGPSPrecision, handler, ::_1)];
+                        qi::float_[boost::bind(&HandlerT::SetGPSPrecision, handler, ::_1)];
         classify = (-qi::lit('&')) >> qi::lit("classify") >> '=' >>
-                   qi::bool_[boost::bind(&HandlerT::setClassify, handler, ::_1)];
+                   qi::bool_[boost::bind(&HandlerT::SetClassify, handler, ::_1)];
         locs = (-qi::lit('&')) >> qi::lit("locs") >> '=' >>
-               stringforPolyline[boost::bind(&HandlerT::getCoordinatesFromGeometry, handler, ::_1)];
+               stringforPolyline[boost::bind(&HandlerT::SetCoordinatesFromGeometry, handler, ::_1)];
 
         string = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));

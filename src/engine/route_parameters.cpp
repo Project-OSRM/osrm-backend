@@ -14,7 +14,7 @@ RouteParameters::RouteParameters()
 {
 }
 
-void RouteParameters::setZoomLevel(const short level)
+void RouteParameters::SetZoomLevel(const short level)
 {
     if (18 >= level && 0 <= level)
     {
@@ -22,7 +22,7 @@ void RouteParameters::setZoomLevel(const short level)
     }
 }
 
-void RouteParameters::setNumberOfResults(const short number)
+void RouteParameters::SetNumberOfResults(const short number)
 {
     if (number > 0 && number <= 100)
     {
@@ -30,16 +30,16 @@ void RouteParameters::setNumberOfResults(const short number)
     }
 }
 
-void RouteParameters::setAlternateRouteFlag(const bool flag) { alternate_route = flag; }
+void RouteParameters::SetAlternateRouteFlag(const bool flag) { alternate_route = flag; }
 
-void RouteParameters::setUTurn(const bool flag)
+void RouteParameters::SetUTurn(const bool flag)
 {
     // the API grammar should make sure this never happens
     BOOST_ASSERT(!uturns.empty());
     uturns.back() = flag;
 }
 
-void RouteParameters::setAllUTurns(const bool flag)
+void RouteParameters::SetAllUTurns(const bool flag)
 {
     // if the flag flips the default, then we erase everything.
     if (flag)
@@ -50,28 +50,28 @@ void RouteParameters::setAllUTurns(const bool flag)
     }
 }
 
-void RouteParameters::setDeprecatedAPIFlag(const std::string & /*unused*/) { deprecatedAPI = true; }
+void RouteParameters::SetDeprecatedAPIFlag(const std::string & /*unused*/) { deprecatedAPI = true; }
 
-void RouteParameters::setChecksum(const unsigned sum) { check_sum = sum; }
+void RouteParameters::SetChecksum(const unsigned sum) { check_sum = sum; }
 
-void RouteParameters::setInstructionFlag(const bool flag) { print_instructions = flag; }
+void RouteParameters::SetInstructionFlag(const bool flag) { print_instructions = flag; }
 
-void RouteParameters::setService(const std::string &service_string) { service = service_string; }
+void RouteParameters::SetService(const std::string &service_string) { service = service_string; }
 
-void RouteParameters::setClassify(const bool flag) { classify = flag; }
+void RouteParameters::SetClassify(const bool flag) { classify = flag; }
 
-void RouteParameters::setMatchingBeta(const double beta) { matching_beta = beta; }
+void RouteParameters::SetMatchingBeta(const double beta) { matching_beta = beta; }
 
-void RouteParameters::setGPSPrecision(const double precision) { gps_precision = precision; }
+void RouteParameters::SetGPSPrecision(const double precision) { gps_precision = precision; }
 
-void RouteParameters::setOutputFormat(const std::string &format) { output_format = format; }
+void RouteParameters::SetOutputFormat(const std::string &format) { output_format = format; }
 
-void RouteParameters::setJSONpParameter(const std::string &parameter)
+void RouteParameters::SetJSONpParameter(const std::string &parameter)
 {
     jsonp_parameter = parameter;
 }
 
-void RouteParameters::addHint(const std::string &hint)
+void RouteParameters::AddHint(const std::string &hint)
 {
     hints.resize(coordinates.size());
     if (!hints.empty())
@@ -80,7 +80,7 @@ void RouteParameters::addHint(const std::string &hint)
     }
 }
 
-void RouteParameters::addTimestamp(const unsigned timestamp)
+void RouteParameters::AddTimestamp(const unsigned timestamp)
 {
     timestamps.resize(coordinates.size());
     if (!timestamps.empty())
@@ -89,7 +89,7 @@ void RouteParameters::addTimestamp(const unsigned timestamp)
     }
 }
 
-void RouteParameters::addBearing(
+void RouteParameters::AddBearing(
     const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
     boost::spirit::qi::unused_type /* unused */,
     bool &pass)
@@ -105,16 +105,16 @@ void RouteParameters::addBearing(
     pass = true;
 }
 
-void RouteParameters::setLanguage(const std::string &language_string)
+void RouteParameters::SetLanguage(const std::string &language_string)
 {
     language = language_string;
 }
 
-void RouteParameters::setGeometryFlag(const bool flag) { geometry = flag; }
+void RouteParameters::SetGeometryFlag(const bool flag) { geometry = flag; }
 
-void RouteParameters::setCompressionFlag(const bool flag) { compression = flag; }
+void RouteParameters::SetCompressionFlag(const bool flag) { compression = flag; }
 
-void RouteParameters::addCoordinate(
+void RouteParameters::AddCoordinate(
     const boost::fusion::vector<double, double> &received_coordinates)
 {
     coordinates.emplace_back(
@@ -125,7 +125,7 @@ void RouteParameters::addCoordinate(
     uturns.push_back(uturn_default);
 }
 
-void RouteParameters::addDestination(
+void RouteParameters::AddDestination(
     const boost::fusion::vector<double, double> &received_coordinates)
 {
     coordinates.emplace_back(
@@ -136,7 +136,7 @@ void RouteParameters::addDestination(
     uturns.push_back(uturn_default);
 }
 
-void RouteParameters::addSource(const boost::fusion::vector<double, double> &received_coordinates)
+void RouteParameters::AddSource(const boost::fusion::vector<double, double> &received_coordinates)
 {
     coordinates.emplace_back(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
@@ -146,7 +146,7 @@ void RouteParameters::addSource(const boost::fusion::vector<double, double> &rec
     uturns.push_back(uturn_default);
 }
 
-void RouteParameters::getCoordinatesFromGeometry(const std::string &geometry_string)
+void RouteParameters::SetCoordinatesFromGeometry(const std::string &geometry_string)
 {
     PolylineCompressor pc;
     coordinates = pc.decode_string(geometry_string);
