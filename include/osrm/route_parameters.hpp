@@ -40,55 +40,55 @@ struct RouteParameters
 {
     RouteParameters();
 
-    void setZoomLevel(const short level);
+    void SetZoomLevel(const short level);
 
-    void setNumberOfResults(const short number);
+    void SetNumberOfResults(const short number);
 
-    void setAlternateRouteFlag(const bool flag);
+    void SetAlternateRouteFlag(const bool flag);
 
-    void setUTurn(const bool flag);
+    void SetUTurn(const bool flag);
 
-    void setAllUTurns(const bool flag);
+    void SetAllUTurns(const bool flag);
 
-    void setClassify(const bool classify);
+    void SetClassify(const bool classify);
 
-    void setMatchingBeta(const double beta);
+    void SetMatchingBeta(const double beta);
 
-    void setGPSPrecision(const double precision);
+    void SetGPSPrecision(const double precision);
 
-    void setDeprecatedAPIFlag(const std::string &);
+    void SetDeprecatedAPIFlag(const std::string &);
 
-    void setChecksum(const unsigned check_sum);
+    void SetChecksum(const unsigned check_sum);
 
-    void setInstructionFlag(const bool flag);
+    void SetInstructionFlag(const bool flag);
 
-    void setService(const std::string &service);
+    void SetService(const std::string &service);
 
-    void setOutputFormat(const std::string &format);
+    void SetOutputFormat(const std::string &format);
 
-    void setJSONpParameter(const std::string &parameter);
+    void SetJSONpParameter(const std::string &parameter);
 
-    void addHint(const std::string &hint);
+    void AddHint(const std::string &hint);
 
-    void addTimestamp(const unsigned timestamp);
+    void AddTimestamp(const unsigned timestamp);
 
-    void addBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
+    void AddBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
                     boost::spirit::qi::unused_type unused,
                     bool &pass);
 
-    void setLanguage(const std::string &language);
+    void SetLanguage(const std::string &language);
 
-    void setGeometryFlag(const bool flag);
+    void SetGeometryFlag(const bool flag);
 
-    void setCompressionFlag(const bool flag);
+    void SetCompressionFlag(const bool flag);
 
-    void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
+    void AddCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
 
-    void addDestination(const boost::fusion::vector<double, double> &received_coordinates);
+    void AddDestination(const boost::fusion::vector<double, double> &received_coordinates);
 
-    void addSource(const boost::fusion::vector<double, double> &received_coordinates);
+    void AddSource(const boost::fusion::vector<double, double> &received_coordinates);
 
-    void getCoordinatesFromGeometry(const std::string &geometry_string);
+    void SetCoordinatesFromGeometry(const std::string &geometry_string);
 
     short zoom_level;
     bool print_instructions;
