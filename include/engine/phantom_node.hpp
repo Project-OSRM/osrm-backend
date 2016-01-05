@@ -81,13 +81,13 @@ struct PhantomNode
 
     int GetReverseWeightPlusOffset() const;
 
-    bool is_bidirected() const;
+    bool IsBidirected() const;
 
-    bool is_compressed() const;
+    bool IsCompressed() const;
 
     bool is_valid(const unsigned numberOfNodes) const;
 
-    bool is_valid() const;
+    bool IsValid() const;
 
     bool operator==(const PhantomNode &other) const;
 };

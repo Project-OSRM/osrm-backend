@@ -353,8 +353,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             {
                 current_phantom_node_pair.source_phantom = sub.nodes[i];
                 current_phantom_node_pair.target_phantom = sub.nodes[i + 1];
-                BOOST_ASSERT(current_phantom_node_pair.source_phantom.is_valid());
-                BOOST_ASSERT(current_phantom_node_pair.target_phantom.is_valid());
+                BOOST_ASSERT(current_phantom_node_pair.source_phantom.IsValid());
+                BOOST_ASSERT(current_phantom_node_pair.target_phantom.IsValid());
                 raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
             }
             search_engine_ptr->shortest_path(

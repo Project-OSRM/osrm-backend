@@ -68,7 +68,7 @@ class BasePlugin
         const auto fallback_to_big_component =
             [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
         {
-            if (phantom_pair.first.component.is_tiny && phantom_pair.second.is_valid() &&
+            if (phantom_pair.first.component.is_tiny && phantom_pair.second.IsValid() &&
                 !phantom_pair.second.component.is_tiny)
             {
                 return phantom_pair.second;

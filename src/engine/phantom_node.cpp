@@ -56,12 +56,12 @@ int PhantomNode::GetReverseWeightPlusOffset() const
     return reverse_offset + reverse_weight;
 }
 
-bool PhantomNode::is_bidirected() const
+bool PhantomNode::IsBidirected() const
 {
     return (forward_node_id != SPECIAL_NODEID) && (reverse_node_id != SPECIAL_NODEID);
 }
 
-bool PhantomNode::is_compressed() const { return (forward_offset != 0) || (reverse_offset != 0); }
+bool PhantomNode::IsCompressed() const { return (forward_offset != 0) || (reverse_offset != 0); }
 
 bool PhantomNode::is_valid(const unsigned number_of_nodes) const
 {
@@ -71,6 +71,6 @@ bool PhantomNode::is_valid(const unsigned number_of_nodes) const
            (component.id != INVALID_COMPONENTID) && (name_id != INVALID_NAMEID);
 }
 
-bool PhantomNode::is_valid() const { return location.IsValid() && (name_id != INVALID_NAMEID); }
+bool PhantomNode::IsValid() const { return location.IsValid() && (name_id != INVALID_NAMEID); }
 
 bool PhantomNode::operator==(const PhantomNode &other) const { return location == other.location; }

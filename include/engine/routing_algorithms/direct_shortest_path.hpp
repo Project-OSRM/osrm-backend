@@ -53,8 +53,8 @@ class DirectShortestPathRouting final
         forward_heap.Clear();
         reverse_heap.Clear();
 
-        BOOST_ASSERT(source_phantom.is_valid());
-        BOOST_ASSERT(target_phantom.is_valid());
+        BOOST_ASSERT(source_phantom.IsValid());
+        BOOST_ASSERT(target_phantom.IsValid());
 
         if (source_phantom.forward_node_id != SPECIAL_NODEID)
         {
