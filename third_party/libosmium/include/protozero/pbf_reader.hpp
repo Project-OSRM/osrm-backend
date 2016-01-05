@@ -16,7 +16,6 @@ documentation.
  * @brief Contains the pbf_reader class.
  */
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -24,17 +23,13 @@ documentation.
 #include <string>
 #include <utility>
 
-#include <protozero/pbf_types.hpp>
+#include <protozero/config.hpp>
 #include <protozero/exception.hpp>
+#include <protozero/pbf_types.hpp>
 #include <protozero/varint.hpp>
 
-#if __BYTE_ORDER != __LITTLE_ENDIAN
+#if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
 # include <protozero/byteswap.hpp>
-#endif
-
-/// Wrapper for assert() used for testing
-#ifndef protozero_assert
-# define protozero_assert(x) assert(x)
 #endif
 
 namespace protozero {
@@ -77,19 +72,27 @@ class pbf_reader {
     // The tag of the current field.
     pbf_tag_type m_tag = 0;
 
+    // Copy N bytes from src to dest on little endian machines, on big endian
+    // swap the bytes in the process.
+    template <int N>
+    static void copy_or_byteswap(const char* src, void* dest) noexcept {
+#if PROTOZERO_BYTE_ORDER == PROTOZERO_LITTLE_ENDIAN
+        memcpy(dest, src, N);
+#else
+        byteswap<N>(src, reinterpret_cast<char*>(dest));
+#endif
+    }
+
     template <typename T>
     inline T get_fixed() {
         T result;
         skip_bytes(sizeof(T));
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-        memcpy(&result, m_data - sizeof(T), sizeof(T));
-#else
-        byteswap<sizeof(T)>(m_data - sizeof(T), reinterpret_cast<char*>(&result));
-#endif
+        copy_or_byteswap<sizeof(T)>(m_data - sizeof(T), &result);
         return result;
     }
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#ifdef PROTOZERO_USE_BARE_POINTER_FOR_PACKED_FIXED
+
     template <typename T>
     inline std::pair<const T*, const T*> packed_fixed() {
         protozero_assert(tag() != 0 && "call next() before accessing field value");
@@ -128,7 +131,7 @@ class pbf_reader {
 
         T operator*() {
             T result;
-            byteswap<sizeof(T)>(m_data, reinterpret_cast<char*>(&result));
+            copy_or_byteswap<sizeof(T)>(m_data , &result);
             return result;
         }
 
@@ -161,6 +164,7 @@ class pbf_reader {
         return std::make_pair(const_fixed_iterator<T>(m_data-len, m_data),
                               const_fixed_iterator<T>(m_data, m_data));
     }
+
 #endif
 
     template <typename T> inline T get_varint();
@@ -866,8 +870,16 @@ bool pbf_reader::next() {
     protozero_assert(((m_tag > 0 && m_tag < 19000) || (m_tag > 19999 && m_tag <= ((1 << 29) - 1))) && "tag out of range");
 
     m_wire_type = pbf_wire_type(value & 0x07);
-// XXX do we want this check? or should it throw an exception?
-//        protozero_assert((m_wire_type <=2 || m_wire_type == 5) && "illegal wire type");
+    switch (m_wire_type) {
+        case pbf_wire_type::varint:
+        case pbf_wire_type::fixed64:
+        case pbf_wire_type::length_delimited:
+        case pbf_wire_type::fixed32:
+            break;
+        default:
+            throw unknown_pbf_wire_type_exception();
+    }
+
     return true;
 }
 

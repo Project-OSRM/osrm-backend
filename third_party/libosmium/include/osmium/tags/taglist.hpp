@@ -45,17 +45,17 @@ namespace osmium {
      */
     namespace tags {
 
-        template <class TFilter>
+        template <typename TFilter>
         inline bool match_any_of(const osmium::TagList& tag_list, TFilter&& filter) {
             return std::any_of(tag_list.cbegin(), tag_list.cend(), std::forward<TFilter>(filter));
         }
 
-        template <class TFilter>
+        template <typename TFilter>
         inline bool match_all_of(const osmium::TagList& tag_list, TFilter&& filter) {
             return std::all_of(tag_list.cbegin(), tag_list.cend(), std::forward<TFilter>(filter));
         }
 
-        template <class TFilter>
+        template <typename TFilter>
         inline bool match_none_of(const osmium::TagList& tag_list, TFilter&& filter) {
             return std::none_of(tag_list.cbegin(), tag_list.cend(), std::forward<TFilter>(filter));
         }

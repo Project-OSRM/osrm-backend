@@ -46,8 +46,7 @@ namespace osmium {
 
         public:
 
-            DiffHandler() {
-            }
+            DiffHandler() = default;
 
             void node(const osmium::DiffNode&) const {
             }

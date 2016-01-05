@@ -154,14 +154,14 @@ namespace osmium {
          * Box is valid, ie. defined and inside usual bounds
          * (-180<=lon<=180, -90<=lat<=90).
          */
-        OSMIUM_CONSTEXPR bool valid() const noexcept {
+        constexpr bool valid() const noexcept {
             return bottom_left().valid() && top_right().valid();
         }
 
         /**
          * Access bottom-left location.
          */
-        OSMIUM_CONSTEXPR Location bottom_left() const noexcept {
+        constexpr Location bottom_left() const noexcept {
             return m_bottom_left;
         }
 
@@ -175,7 +175,7 @@ namespace osmium {
         /**
          * Access top-right location.
          */
-        OSMIUM_CONSTEXPR Location top_right() const noexcept {
+        constexpr Location top_right() const noexcept {
             return m_top_right;
         }
 
@@ -216,7 +216,7 @@ namespace osmium {
      * Boxes are equal if both locations are equal. Undefined boxes will
      * compare equal.
      */
-    inline OSMIUM_CONSTEXPR bool operator==(const Box& lhs, const Box& rhs) noexcept {
+    inline constexpr bool operator==(const Box& lhs, const Box& rhs) noexcept {
         return lhs.bottom_left() == rhs.bottom_left() &&
                lhs.top_right() == rhs.top_right();
     }

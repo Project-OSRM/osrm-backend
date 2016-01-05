@@ -88,11 +88,11 @@ set_tests_properties(testdata-overview PROPERTIES
 #
 #-----------------------------------------------------------------------------
 
-find_package(Ruby 1.9)
+find_program(RUBY ruby)
 find_package(Gem COMPONENTS json)
 find_program(SPATIALITE spatialite)
 
-if(RUBY_FOUND AND GEM_json_FOUND AND SPATIALITE)
+if(RUBY AND GEM_json_FOUND AND SPATIALITE)
     add_executable(testdata-multipolygon testdata-multipolygon.cpp)
     target_link_libraries(testdata-multipolygon
                         ${OSMIUM_XML_LIBRARIES}
@@ -102,7 +102,7 @@ if(RUBY_FOUND AND GEM_json_FOUND AND SPATIALITE)
     add_test(NAME testdata-multipolygon
             COMMAND ${CMAKE_COMMAND}
                 -D OSM_TESTDATA=${OSM_TESTDATA}
-                -D RUBY=${RUBY_EXECUTABLE}
+                -D RUBY=${RUBY}
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run-testdata-multipolygon.cmake)
 
     set_tests_properties(testdata-multipolygon PROPERTIES LABELS "data;slow")

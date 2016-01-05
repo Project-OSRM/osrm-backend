@@ -42,34 +42,12 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libgdal`.
  */
 
-#ifdef _MSC_VER
-# pragma warning(push)
-# pragma warning(disable : 4458)
-#else
-# pragma GCC diagnostic push
-# ifdef __clang__
-#  pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
-# endif
-# pragma GCC diagnostic ignored "-Wfloat-equal"
-# pragma GCC diagnostic ignored "-Wold-style-cast"
-# pragma GCC diagnostic ignored "-Wpadded"
-# pragma GCC diagnostic ignored "-Wredundant-decls"
-# pragma GCC diagnostic ignored "-Wshadow"
-#endif
-
-#include <ogr_api.h>
-#include <ogrsf_frmts.h>
-
-#ifdef _MSC_VER
-# pragma warning(pop)
-#else
-# pragma GCC diagnostic pop
-#endif
-
 #include <memory>
-#include <stdexcept>
+
+#include <gdalcpp.hpp>
 
 #include <osmium/area/problem_reporter.hpp>
+#include <osmium/geom/factory.hpp>
 #include <osmium/geom/ogr.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/types.hpp>
@@ -86,24 +64,15 @@ namespace osmium {
 
             osmium::geom::OGRFactory<> m_ogr_factory;
 
-            OGRDataSource* m_data_source;
-
-            OGRLayer* m_layer_perror;
-            OGRLayer* m_layer_lerror;
+            gdalcpp::Layer m_layer_perror;
+            gdalcpp::Layer m_layer_lerror;
 
             void write_point(const char* problem_type, osmium::object_id_type id1, osmium::object_id_type id2, osmium::Location location) {
-                OGRFeature* feature = OGRFeature::CreateFeature(m_layer_perror->GetLayerDefn());
-                std::unique_ptr<OGRPoint> ogr_point = m_ogr_factory.create_point(location);
-                feature->SetGeometry(ogr_point.get());
-                feature->SetField("id1", static_cast<double>(id1));
-                feature->SetField("id2", static_cast<double>(id2));
-                feature->SetField("problem_type", problem_type);
-
-                if (m_layer_perror->CreateFeature(feature) != OGRERR_NONE) {
-                    std::runtime_error("Failed to create feature on layer 'perrors'");
-                }
-
-                OGRFeature::DestroyFeature(feature);
+                gdalcpp::Feature feature(m_layer_perror, m_ogr_factory.create_point(location));
+                feature.set_field("id1", static_cast<double>(id1));
+                feature.set_field("id2", static_cast<double>(id2));
+                feature.set_field("problem_type", problem_type);
+                feature.add_to_layer();
             }
 
             void write_line(const char* problem_type, osmium::object_id_type id1, osmium::object_id_type id2, osmium::Location loc1, osmium::Location loc2) {
@@ -112,83 +81,30 @@ namespace osmium {
                 std::unique_ptr<OGRLineString> ogr_linestring = std::unique_ptr<OGRLineString>(new OGRLineString());
                 ogr_linestring->addPoint(ogr_point1.get());
                 ogr_linestring->addPoint(ogr_point2.get());
-                OGRFeature* feature = OGRFeature::CreateFeature(m_layer_lerror->GetLayerDefn());
-                feature->SetGeometry(ogr_linestring.get());
-                feature->SetField("id1", static_cast<double>(id1));
-                feature->SetField("id2", static_cast<double>(id2));
-                feature->SetField("problem_type", problem_type);
 
-                if (m_layer_lerror->CreateFeature(feature) != OGRERR_NONE) {
-                    std::runtime_error("Failed to create feature on layer 'lerrors'");
-                }
-
-                OGRFeature::DestroyFeature(feature);
+                gdalcpp::Feature feature(m_layer_lerror, std::move(ogr_linestring));
+                feature.set_field("id1", static_cast<double>(id1));
+                feature.set_field("id2", static_cast<double>(id2));
+                feature.set_field("problem_type", problem_type);
+                feature.add_to_layer();
             }
 
         public:
 
-            explicit ProblemReporterOGR(OGRDataSource* data_source) :
-                m_data_source(data_source) {
+            explicit ProblemReporterOGR(gdalcpp::Dataset& dataset) :
+                m_layer_perror(dataset, "perrors", wkbPoint),
+                m_layer_lerror(dataset, "lerrors", wkbLineString) {
 
-                OGRSpatialReference sparef;
-                sparef.SetWellKnownGeogCS("WGS84");
+                m_layer_perror.add_field("id1", OFTReal, 10);
+                m_layer_perror.add_field("id2", OFTReal, 10);
+                m_layer_perror.add_field("problem_type", OFTString, 30);
 
-                m_layer_perror = m_data_source->CreateLayer("perrors", &sparef, wkbPoint, nullptr);
-                if (!m_layer_perror) {
-                    std::runtime_error("Layer creation failed for layer 'perrors'");
-                }
-
-                OGRFieldDefn layer_perror_field_id1("id1", OFTReal);
-                layer_perror_field_id1.SetWidth(10);
-
-                if (m_layer_perror->CreateField(&layer_perror_field_id1) != OGRERR_NONE) {
-                    std::runtime_error("Creating field 'id1' failed for layer 'perrors'");
-                }
-
-                OGRFieldDefn layer_perror_field_id2("id2", OFTReal);
-                layer_perror_field_id2.SetWidth(10);
-
-                if (m_layer_perror->CreateField(&layer_perror_field_id2) != OGRERR_NONE) {
-                    std::runtime_error("Creating field 'id2' failed for layer 'perrors'");
-                }
-
-                OGRFieldDefn layer_perror_field_problem_type("problem_type", OFTString);
-                layer_perror_field_problem_type.SetWidth(30);
-
-                if (m_layer_perror->CreateField(&layer_perror_field_problem_type) != OGRERR_NONE) {
-                    std::runtime_error("Creating field 'problem_type' failed for layer 'perrors'");
-                }
-
-                /**************/
-
-                m_layer_lerror = m_data_source->CreateLayer("lerrors", &sparef, wkbLineString, nullptr);
-                if (!m_layer_lerror) {
-                    std::runtime_error("Layer creation failed for layer 'lerrors'");
-                }
-
-                OGRFieldDefn layer_lerror_field_id1("id1", OFTReal);
-                layer_lerror_field_id1.SetWidth(10);
-
-                if (m_layer_lerror->CreateField(&layer_lerror_field_id1) != OGRERR_NONE) {
-                    std::runtime_error("Creating field 'id1' failed for layer 'lerrors'");
-                }
-
-                OGRFieldDefn layer_lerror_field_id2("id2", OFTReal);
-                layer_lerror_field_id2.SetWidth(10);
-
-                if (m_layer_lerror->CreateField(&layer_lerror_field_id2) != OGRERR_NONE) {
-                    std::runtime_error("Creating field 'id2' failed for layer 'lerrors'");
-                }
-
-                OGRFieldDefn layer_lerror_field_problem_type("problem_type", OFTString);
-                layer_lerror_field_problem_type.SetWidth(30);
-
-                if (m_layer_lerror->CreateField(&layer_lerror_field_problem_type) != OGRERR_NONE) {
-                    std::runtime_error("Creating field 'problem_type' failed for layer 'lerrors'");
-                }
+                m_layer_lerror.add_field("id1", OFTReal, 10);
+                m_layer_lerror.add_field("id2", OFTReal, 10);
+                m_layer_lerror.add_field("problem_type", OFTString, 30);
             }
 
-            virtual ~ProblemReporterOGR() = default;
+            ~ProblemReporterOGR() override = default;
 
             void report_duplicate_node(osmium::object_id_type node_id1, osmium::object_id_type node_id2, osmium::Location location) override {
                 write_point("duplicate_node", node_id1, node_id2, location);

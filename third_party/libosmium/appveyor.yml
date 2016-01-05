@@ -9,16 +9,10 @@ environment:
   - config: Dev
   - config: RelWithDebInfo
 
-# branches to build
-branches:
-  # whitelist
-  only:
-    - master
-
 shallow_clone: true
 
 # Operating system (build VM template)
-os: Visual Studio 2014 CTP4
+os: Visual Studio 2015
 
 # scripts that are called at very beginning, before repo cloning
 init:
@@ -46,6 +40,8 @@ install:
   - set PATH=%LODEPSDIR%\expat\lib;%PATH%
   #libtiff.dll
   - set PATH=%LODEPSDIR%\libtiff\lib;%PATH%
+  #jpeg.dll
+  - set PATH=%LODEPSDIR%\jpeg\lib;%PATH%
   #zlibwapi.dll
   - set PATH=%LODEPSDIR%\zlib\lib;%PATH%
   #convert backslashes in bzip2 path to forward slashes
@@ -71,27 +67,16 @@ build_script:
   # This will produce lots of LNK4099 warnings which can be ignored.
   # Unfortunately they can't be disabled, see
   # http://stackoverflow.com/questions/661606/visual-c-how-to-disable-specific-linker-warnings
-  - cmake .. -LA -G "Visual Studio 14 Win64"
+  - cmake -LA -G "Visual Studio 14 Win64"
     -DOsmium_DEBUG=TRUE
     -DCMAKE_BUILD_TYPE=%config%
     -DBUILD_HEADERS=OFF
     -DBOOST_ROOT=%LODEPSDIR%\boost
-    -DBoost_PROGRAM_OPTIONS_LIBRARY=%LODEPSDIR%\boost\lib\libboost_program_options-vc140-mt-1_57.lib
+    -DBoost_PROGRAM_OPTIONS_LIBRARY=%LODEPSDIR%\boost\lib\libboost_program_options-vc140-mt-1_58.lib
     -DZLIB_LIBRARY=%LODEPSDIR%\zlib\lib\zlibwapi.lib
-    -DZLIB_INCLUDE_DIR=%LODEPSDIR%\zlib\include
-    -DEXPAT_LIBRARY=%LODEPSDIR%\expat\lib\libexpat.lib
-    -DEXPAT_INCLUDE_DIR=%LODEPSDIR%\expat\include
-    -DBZIP2_LIBRARIES=%LIBBZIP2%
-    -DBZIP2_INCLUDE_DIR=%LODEPSDIR%\bzip2\include
-    -DGDAL_LIBRARY=%LODEPSDIR%\gdal\lib\gdal_i.lib
-    -DGDAL_INCLUDE_DIR=%LODEPSDIR%\gdal\include
-    -DGEOS_LIBRARY=%LODEPSDIR%\geos\lib\geos.lib
-    -DGEOS_INCLUDE_DIR=%LODEPSDIR%\geos\include
-    -DPROJ_LIBRARY=%LODEPSDIR%\proj\lib\proj.lib
-    -DPROJ_INCLUDE_DIR=%LODEPSDIR%\proj\include
-    -DSPARSEHASH_INCLUDE_DIR=%LODEPSDIR%\sparsehash\include
-    -DGETOPT_LIBRARY=%LODEPSDIR%\wingetopt\lib\wingetopt.lib
-    -DGETOPT_INCLUDE_DIR=%LODEPSDIR%\wingetopt\include
+    -DBZIP2_LIBRARY_RELEASE=%LIBBZIP2%
+    -DCMAKE_PREFIX_PATH=%LODEPSDIR%\zlib;%LODEPSDIR%\expat;%LODEPSDIR%\bzip2;%LODEPSDIR%\geos;%LODEPSDIR%\gdal;%LODEPSDIR%\proj;%LODEPSDIR%\sparsehash;%LODEPSDIR%\wingetopt
+    ..
   - msbuild libosmium.sln /p:Configuration=%config% /toolsversion:14.0 /p:Platform=x64 /p:PlatformToolset=v140
   #- cmake .. -LA -G "NMake Makefiles"
   #  -DOsmium_DEBUG=TRUE

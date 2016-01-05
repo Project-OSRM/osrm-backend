@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <zlib.h>
 
+#include <osmium/io/error.hpp>
 #include <osmium/util/cast.hpp>
 
 namespace osmium {
@@ -69,7 +70,7 @@ namespace osmium {
                 );
 
                 if (result != Z_OK) {
-                    throw std::runtime_error(std::string("failed to compress data: ") + zError(result));
+                    throw io_error(std::string("failed to compress data: ") + zError(result));
                 }
 
                 output.resize(output_size);
@@ -99,7 +100,7 @@ namespace osmium {
                 );
 
                 if (result != Z_OK) {
-                    throw std::runtime_error(std::string("failed to uncompress data: ") + zError(result));
+                    throw io_error(std::string("failed to uncompress data: ") + zError(result));
                 }
 
                 return std::make_pair(output.data(), output.size());

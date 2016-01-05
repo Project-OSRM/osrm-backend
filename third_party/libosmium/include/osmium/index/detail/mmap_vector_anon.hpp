@@ -54,6 +54,8 @@ namespace osmium {
                 mmap_vector_base<T>() {
             }
 
+            ~mmap_vector_anon() noexcept = default;
+
         }; // class mmap_vector_anon
 
     } // namespace detail

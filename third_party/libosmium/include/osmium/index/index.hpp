@@ -89,7 +89,7 @@ namespace osmium {
          * the full range, so the max value is a good "empty" value.
          */
         template <>
-        inline OSMIUM_CONSTEXPR size_t empty_value<size_t>() {
+        inline constexpr size_t empty_value<size_t>() {
             return std::numeric_limits<size_t>::max();
         }
 

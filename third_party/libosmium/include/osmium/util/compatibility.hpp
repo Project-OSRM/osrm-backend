@@ -34,14 +34,20 @@ DEALINGS IN THE SOFTWARE.
 */
 
 // Workarounds for MSVC which doesn't support
-// * constexpr in all cases yet
 // * [[noreturn]]
 #ifdef _MSC_VER
-# define OSMIUM_CONSTEXPR
 # define OSMIUM_NORETURN __declspec(noreturn)
 #else
-# define OSMIUM_CONSTEXPR constexpr
 # define OSMIUM_NORETURN [[noreturn]]
+#endif
+
+// [[deprecated]] is only available in C++14, use this for the time being
+#ifdef __GNUC__
+# define OSMIUM_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+# define OSMIUM_DEPRECATED __declspec(deprecated)
+#else
+# define OSMIUM_DEPRECATED
 #endif
 
 #endif // OSMIUM_UTIL_COMPATIBILITY_HPP

@@ -49,7 +49,7 @@ namespace osmium {
             if (env) {
                 return std::atoi(env);
             }
-            return -2;
+            return 0;
         }
 
         inline bool use_pool_threads_for_pbf_parsing() {

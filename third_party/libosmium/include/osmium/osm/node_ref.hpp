@@ -54,15 +54,21 @@ namespace osmium {
 
     public:
 
-        NodeRef(const osmium::object_id_type ref = 0, const osmium::Location& location = Location()) noexcept :
+        constexpr NodeRef(const osmium::object_id_type ref = 0, const osmium::Location& location = Location()) noexcept :
             m_ref(ref),
             m_location(location) {
         }
 
-        osmium::object_id_type ref() const noexcept {
+        /**
+         * Get reference ID of this NodeRef.
+         */
+        constexpr osmium::object_id_type ref() const noexcept {
             return m_ref;
         }
 
+        /**
+         * Get absolute value of the reference ID of this NodeRef.
+         */
         osmium::unsigned_object_id_type positive_ref() const noexcept {
             return static_cast<osmium::unsigned_object_id_type>(std::abs(m_ref));
         }
@@ -74,31 +80,60 @@ namespace osmium {
             return m_location;
         }
 
-        osmium::Location location() const noexcept {
+        /**
+         * Get location of this NodeRef.
+         */
+        constexpr osmium::Location location() const noexcept {
             return m_location;
         }
 
+        /**
+         * Get longitude of the location in this NodeRef.
+         *
+         * @throws osmium::invalid_location if the location is not set.
+         */
         double lon() const {
             return m_location.lon();
         }
 
+        /**
+         * Get latitude of the location in this NodeRef.
+         *
+         * @throws osmium::invalid_location if the location is not set.
+         */
         double lat() const {
             return m_location.lat();
         }
 
-        int32_t x() const noexcept {
+        /**
+         * Get internal x value of the location in this NodeRef.
+         */
+        constexpr int32_t x() const noexcept {
             return m_location.x();
         }
 
-        int32_t y() const noexcept {
+        /**
+         * Get internal y value of the location in this NodeRef.
+         */
+        constexpr int32_t y() const noexcept {
             return m_location.y();
         }
 
+        /**
+         * Set the referenced ID.
+         *
+         * @returns Reference to this NodeRef for chaining calls.
+         */
         NodeRef& set_ref(const osmium::object_id_type ref) noexcept {
             m_ref = ref;
             return *this;
         }
 
+        /**
+         * Set the location.
+         *
+         * @returns Reference to this NodeRef for chaining calls.
+         */
         NodeRef& set_location(const osmium::Location& location) noexcept {
             m_location = location;
             return *this;
@@ -106,27 +141,50 @@ namespace osmium {
 
     }; // class NodeRef
 
-    inline bool operator==(const NodeRef& lhs, const NodeRef& rhs) noexcept {
+    /**
+     * Compare two NodeRefs. They are equal if they reference the same Node ID.
+     */
+    inline constexpr bool operator==(const NodeRef& lhs, const NodeRef& rhs) noexcept {
         return lhs.ref() == rhs.ref();
     }
 
-    inline bool operator!=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
+    /**
+     * Compare two NodeRefs. They are not equal if they reference different
+     * Node IDs.
+     */
+    inline constexpr bool operator!=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
         return ! (lhs == rhs);
     }
 
-    inline bool operator<(const NodeRef& lhs, const NodeRef& rhs) noexcept {
+    /**
+     * Compare two NodeRefs. NodeRefs are ordered according to the Node ID
+     * they reference.
+     */
+    inline constexpr bool operator<(const NodeRef& lhs, const NodeRef& rhs) noexcept {
         return lhs.ref() < rhs.ref();
     }
 
-    inline bool operator>(const NodeRef& lhs, const NodeRef& rhs) noexcept {
+    /**
+     * Compare two NodeRefs. NodeRefs are ordered according to the Node ID
+     * they reference.
+     */
+    inline constexpr bool operator>(const NodeRef& lhs, const NodeRef& rhs) noexcept {
         return rhs < lhs;
     }
 
-    inline bool operator<=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
+    /**
+     * Compare two NodeRefs. NodeRefs are ordered according to the Node ID
+     * they reference.
+     */
+    inline constexpr bool operator<=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
         return ! (rhs < lhs);
     }
 
-    inline bool operator>=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
+    /**
+     * Compare two NodeRefs. NodeRefs are ordered according to the Node ID
+     * they reference.
+     */
+    inline constexpr bool operator>=(const NodeRef& lhs, const NodeRef& rhs) noexcept {
         return ! (lhs < rhs);
     }
 
@@ -139,32 +197,32 @@ namespace osmium {
     }
 
     /**
-     * Functor to compare NodeRefs by Location instead of id.
+     * Functor to compare NodeRefs by Location instead of ID.
      */
     struct location_equal {
 
-        bool operator()(const NodeRef& lhs, const NodeRef& rhs) const noexcept {
+        constexpr bool operator()(const NodeRef& lhs, const NodeRef& rhs) const noexcept {
             return lhs.location() == rhs.location();
         }
 
-        typedef NodeRef first_argument_type;
-        typedef NodeRef second_argument_type;
-        typedef bool result_type;
+        using first_argument_type = NodeRef;
+        using second_argument_type = NodeRef;
+        using result_type = bool;
 
     }; // struct location_equal
 
     /**
-     * Functor to compare NodeRefs by Location instead of id.
+     * Functor to compare NodeRefs by Location instead of ID.
      */
     struct location_less {
 
-        bool operator()(const NodeRef& lhs, const NodeRef& rhs) const noexcept {
+        constexpr bool operator()(const NodeRef& lhs, const NodeRef& rhs) const noexcept {
             return lhs.location() < rhs.location();
         }
 
-        typedef NodeRef first_argument_type;
-        typedef NodeRef second_argument_type;
-        typedef bool result_type;
+        using first_argument_type = NodeRef;
+        using second_argument_type = NodeRef;
+        using result_type = bool;
 
     }; // struct location_less
 

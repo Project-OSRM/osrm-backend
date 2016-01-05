@@ -33,20 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-namespace osmium {
-
-    namespace io {
-
-        /**
-         * Allow overwriting of existing file.
-         */
-        enum class overwrite : bool {
-            no    = false,
-            allow = true
-        };
-
-    } // namespace io
-
-} // namespace osmium
+#pragma message("Including overwrite.hpp is deprecated, #include <osmium/io/writer_options.hpp> instead.")
+#include <osmium/io/writer_options.hpp>
 
 #endif // OSMIUM_IO_OVERWRITE_HPP

@@ -113,7 +113,7 @@ namespace osmium {
                     return m_second;
                 }
 
-                bool to_left_of(const osmium::Location location) const {
+                bool to_left_of(const osmium::Location& location) const {
     //                std::cerr << "segment " << first() << "--" << second() << " to_left_of(" << location << "\n";
 
                     if (first().location() == location || second().location() == location) {
@@ -195,8 +195,8 @@ namespace osmium {
             }
 
             inline bool y_range_overlap(const NodeRefSegment& s1, const NodeRefSegment& s2) {
-                auto m1 = std::minmax(s1.first().location().y(), s1.second().location().y());
-                auto m2 = std::minmax(s2.first().location().y(), s2.second().location().y());
+                const std::pair<int32_t, int32_t> m1 = std::minmax(s1.first().location().y(), s1.second().location().y());
+                const std::pair<int32_t, int32_t> m2 = std::minmax(s2.first().location().y(), s2.second().location().y());
                 if (m1.first > m2.second || m2.first > m1.second) {
                     return false;
                 }
@@ -204,19 +204,25 @@ namespace osmium {
             }
 
             /**
-             * Calculate the intersection between to NodeRefSegments. The result is returned
-             * as a Location. Note that because the Location uses integers with limited
-             * precision internally, the result might be slightly different than the
-             * numerically correct location.
+             * Calculate the intersection between two NodeRefSegments. The
+             * result is returned as a Location. Note that because the Location
+             * uses integers with limited precision internally, the result
+             * might be slightly different than the numerically correct
+             * location.
              *
-             * If the segments touch in one of their endpoints, it doesn't count as an
-             * intersection.
+             * This function uses integer arithmentic as much as possible and
+             * will not work if the segments are longer than about half the
+             * planet. This shouldn't happen with real data, so it isn't a big
+             * problem.
              *
-             * If the segments intersect not in a single point but in multiple points, ie
-             * if they overlap, this is NOT detected.
+             * If the segments touch in one of their endpoints, it doesn't
+             * count as an intersection.
              *
-             * @returns Undefined osmium::Location if there is no intersection or a defined
-             *          Location if the segments intersect.
+             * If the segments intersect not in a single point but in multiple
+             * points, ie if they overlap, this is NOT detected.
+             *
+             * @returns Undefined osmium::Location if there is no intersection
+             *          or a defined Location if the segments intersect.
              */
             inline osmium::Location calculate_intersection(const NodeRefSegment& s1, const NodeRefSegment& s2) {
                 if (s1.first().location()  == s2.first().location()  ||
@@ -226,26 +232,32 @@ namespace osmium {
                     return osmium::Location();
                 }
 
-                auto d = (static_cast<int64_t>(s2.second().y()) - static_cast<int64_t>(s2.first().y())) *
-                         (static_cast<int64_t>(s1.second().x()) - static_cast<int64_t>(s1.first().x())) -
-                         (static_cast<int64_t>(s2.second().x()) - static_cast<int64_t>(s2.first().x())) *
-                         (static_cast<int64_t>(s1.second().y()) - static_cast<int64_t>(s1.first().y()));
+                int64_t s1ax = s1.first().x();
+                int64_t s1ay = s1.first().y();
+                int64_t s1bx = s1.second().x();
+                int64_t s1by = s1.second().y();
+                int64_t s2ax = s2.first().x();
+                int64_t s2ay = s2.first().y();
+                int64_t s2bx = s2.second().x();
+                int64_t s2by = s2.second().y();
+
+                int64_t d = (s2by - s2ay) * (s1bx - s1ax) -
+                            (s2bx - s2ax) * (s1by - s1ay);
 
                 if (d != 0) {
-                    double denom  = ((s2.second().lat() - s2.first().lat())*(s1.second().lon() - s1.first().lon())) -
-                                    ((s2.second().lon() - s2.first().lon())*(s1.second().lat() - s1.first().lat()));
+                    int64_t na = (s2bx - s2ax) * (s1ay - s2ay) -
+                                 (s2by - s2ay) * (s1ax - s2ax);
 
-                    double nume_a = ((s2.second().lon() - s2.first().lon())*(s1.first().lat() - s2.first().lat())) -
-                                    ((s2.second().lat() - s2.first().lat())*(s1.first().lon() - s2.first().lon()));
+                    int64_t nb = (s1bx - s1ax) * (s1ay - s2ay) -
+                                 (s1by - s1ay) * (s1ax - s2ax);
 
-                    double nume_b = ((s1.second().lon() - s1.first().lon())*(s1.first().lat() - s2.first().lat())) -
-                                    ((s1.second().lat() - s1.first().lat())*(s1.first().lon() - s2.first().lon()));
+                    if ((d > 0 && na >= 0 && na <= d && nb >= 0 && nb <= d) ||
+                        (d < 0 && na <= 0 && na >= d && nb <= 0 && nb >= d)) {
 
-                    if ((denom > 0 && nume_a >= 0 && nume_a <= denom && nume_b >= 0 && nume_b <= denom) ||
-                        (denom < 0 && nume_a <= 0 && nume_a >= denom && nume_b <= 0 && nume_b >= denom)) {
-                        double ua = nume_a / denom;
-                        double ix = s1.first().lon() + ua*(s1.second().lon() - s1.first().lon());
-                        double iy = s1.first().lat() + ua*(s1.second().lat() - s1.first().lat());
+                        double ua = double(na) / d;
+                        int32_t ix = int32_t(s1ax + ua*(s1bx - s1ax));
+                        int32_t iy = int32_t(s1ay + ua*(s1by - s1ay));
+
                         return osmium::Location(ix, iy);
                     }
                 }

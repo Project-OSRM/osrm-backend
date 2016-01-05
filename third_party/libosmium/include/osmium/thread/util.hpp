@@ -49,7 +49,7 @@ namespace osmium {
          * the exception stored in the future if there was one. Otherwise it
          * will just return.
          */
-        template <class T>
+        template <typename T>
         inline void check_for_exception(std::future<T>& future) {
             if (future.valid() && future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
                 future.get();
@@ -60,7 +60,7 @@ namespace osmium {
          * Wait until the given future becomes ready. Will block if the future
          * is not ready. Can be called more than once unlike future.get().
          */
-        template <class T>
+        template <typename T>
         inline void wait_until_done(std::future<T>& future) {
             if (future.valid()) {
                 future.get();
@@ -71,14 +71,43 @@ namespace osmium {
          * Set name of current thread for debugging. This only works on Linux.
          */
 #ifdef __linux__
-        inline void set_thread_name(const char* name) {
+        inline void set_thread_name(const char* name) noexcept {
             prctl(PR_SET_NAME, name, 0, 0, 0);
         }
 #else
-        inline void set_thread_name(const char*) {
+        inline void set_thread_name(const char*) noexcept {
             // intentionally left blank
         }
 #endif
+
+        class thread_handler {
+
+            std::thread m_thread;
+
+        public:
+
+            thread_handler() :
+                m_thread() {
+            }
+
+            template <typename TFunction, typename... TArgs>
+            explicit thread_handler(TFunction&& f, TArgs&&... args) :
+                m_thread(std::forward<TFunction>(f), std::forward<TArgs>(args)...) {
+            }
+
+            thread_handler(const thread_handler&) = delete;
+            thread_handler& operator=(const thread_handler&) = delete;
+
+            thread_handler(thread_handler&&) = default;
+            thread_handler& operator=(thread_handler&&) = default;
+
+            ~thread_handler() {
+                if (m_thread.joinable()) {
+                    m_thread.join();
+                }
+            }
+
+        }; // class thread_handler
 
     } // namespace thread
 

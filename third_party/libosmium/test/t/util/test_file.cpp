@@ -3,6 +3,7 @@
 #include <osmium/util/file.hpp>
 
 #ifdef _WIN32
+#include <crtdbg.h>
 // https://msdn.microsoft.com/en-us/library/ksazx244.aspx
 // https://msdn.microsoft.com/en-us/library/a9yf33zb.aspx
 class DoNothingInvalidParameterHandler {
@@ -23,6 +24,7 @@ public:
 
     DoNothingInvalidParameterHandler() :
         old_handler(_set_invalid_parameter_handler(invalid_parameter_handler)) {
+        _CrtSetReportMode(_CRT_ASSERT, 0);
     }
 
     ~DoNothingInvalidParameterHandler() {

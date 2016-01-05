@@ -10,6 +10,12 @@ documentation.
 
 *****************************************************************************/
 
+/**
+ * @file pbf_builder.hpp
+ *
+ * @brief Contains the pbf_builder template class.
+ */
+
 #include <type_traits>
 
 #include <protozero/pbf_types.hpp>
@@ -17,10 +23,22 @@ documentation.
 
 namespace protozero {
 
+/**
+ * The pbf_builder is used to write PBF formatted messages into a buffer. It
+ * is based on the pbf_writer class and has all the same methods. The
+ * difference is that whereever the pbf_writer class takes an integer tag,
+ * this template class takes a tag of the template type T.
+ *
+ * Almost all methods in this class can throw an std::bad_alloc exception if
+ * the std::string used as a buffer wants to resize.
+ *
+ * Read the tutorial to understand how this class is used.
+ */
 template <typename T>
 class pbf_builder : public pbf_writer {
 
-    static_assert(std::is_same<pbf_tag_type, typename std::underlying_type<T>::type>::value, "T must be enum with underlying type protozero::pbf_tag_type");
+    static_assert(std::is_same<pbf_tag_type, typename std::underlying_type<T>::type>::value,
+                  "T must be enum with underlying type protozero::pbf_tag_type");
 
 public:
 
@@ -35,6 +53,7 @@ public:
         pbf_writer(parent_writer, pbf_tag_type(tag)) {
     }
 
+/// @cond INTERNAL
 #define PROTOZERO_WRITER_WRAP_ADD_SCALAR(name, type) \
     inline void add_##name(T tag, type value) { \
         pbf_writer::add_##name(pbf_tag_type(tag), value); \
@@ -54,6 +73,9 @@ public:
     PROTOZERO_WRITER_WRAP_ADD_SCALAR(sfixed64, int64_t)
     PROTOZERO_WRITER_WRAP_ADD_SCALAR(float, float)
     PROTOZERO_WRITER_WRAP_ADD_SCALAR(double, double)
+
+#undef PROTOZERO_WRITER_WRAP_ADD_SCALAR
+/// @endcond
 
     inline void add_bytes(T tag, const char* value, size_t size) {
         pbf_writer::add_bytes(pbf_tag_type(tag), value, size);
@@ -83,6 +105,7 @@ public:
         pbf_writer::add_message(pbf_tag_type(tag), value);
     }
 
+/// @cond INTERNAL
 #define PROTOZERO_WRITER_WRAP_ADD_PACKED(name) \
     template <typename InputIterator> \
     inline void add_packed_##name(T tag, InputIterator first, InputIterator last) { \
@@ -103,6 +126,9 @@ public:
     PROTOZERO_WRITER_WRAP_ADD_PACKED(sfixed64)
     PROTOZERO_WRITER_WRAP_ADD_PACKED(float)
     PROTOZERO_WRITER_WRAP_ADD_PACKED(double)
+
+#undef PROTOZERO_WRITER_WRAP_ADD_PACKED
+/// @endcond
 
 };
 

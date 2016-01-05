@@ -43,7 +43,7 @@ namespace osmium {
 
     namespace builder {
         class Builder;
-    }
+    } // namespace builder
 
     namespace memory {
 
@@ -102,10 +102,10 @@ namespace osmium {
             uint16_t m_removed : 1;
             uint16_t m_padding : 15;
 
-            template <class TMember>
+            template <typename TMember>
             friend class CollectionIterator;
 
-            template <class TMember>
+            template <typename TMember>
             friend class ItemIterator;
 
             friend class osmium::builder::Builder;

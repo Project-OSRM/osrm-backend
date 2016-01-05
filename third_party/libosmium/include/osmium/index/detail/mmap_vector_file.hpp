@@ -50,16 +50,20 @@ namespace osmium {
 
         public:
 
-            explicit mmap_vector_file() : mmap_vector_base<T>(
+            mmap_vector_file() :
+                mmap_vector_base<T>(
                     osmium::detail::create_tmp_file(),
                     osmium::detail::mmap_vector_size_increment) {
             }
 
-            explicit mmap_vector_file(int fd) : mmap_vector_base<T>(
+            explicit mmap_vector_file(int fd) :
+                mmap_vector_base<T>(
                     fd,
                     osmium::util::file_size(fd) / sizeof(T),
                     osmium::util::file_size(fd) / sizeof(T)) {
             }
+
+            ~mmap_vector_file() noexcept = default;
 
         }; // class mmap_vector_file
 

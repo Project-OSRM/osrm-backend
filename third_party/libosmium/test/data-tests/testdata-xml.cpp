@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 
+#include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/xml_input.hpp>
 #include <osmium/io/gzip_compression.hpp>
 #include <osmium/visitor.hpp>
@@ -72,24 +73,27 @@ std::string read_gz_file(const char* test_id, const char* suffix) {
 
 
 header_buffer_type parse_xml(std::string input) {
-    osmium::thread::Queue<std::string> input_queue;
-    osmium::thread::Queue<osmium::memory::Buffer> output_queue;
+    osmium::io::detail::future_string_queue_type input_queue;
+    osmium::io::detail::future_buffer_queue_type output_queue;
     std::promise<osmium::io::Header> header_promise;
-    std::atomic<bool> done {false};
-    input_queue.push(input);
-    input_queue.push(std::string()); // EOF marker
+    std::future<osmium::io::Header> header_future = header_promise.get_future();
 
-    osmium::io::detail::XMLParser parser(input_queue, output_queue, header_promise, osmium::osm_entity_bits::all, done);
-    parser();
+    osmium::io::detail::add_to_queue(input_queue, std::move(input));
+    osmium::io::detail::add_to_queue(input_queue, std::string{});
+
+    osmium::io::detail::XMLParser parser(input_queue, output_queue, header_promise, osmium::osm_entity_bits::all);
+    parser.parse();
 
     header_buffer_type result;
-    result.header = header_promise.get_future().get();
-    output_queue.wait_and_pop(result.buffer);
+    result.header = header_future.get();
+    std::future<osmium::memory::Buffer> future_buffer;
+    output_queue.wait_and_pop(future_buffer);
+    result.buffer = future_buffer.get();
 
     if (result.buffer) {
-        osmium::memory::Buffer buffer;
-        output_queue.wait_and_pop(buffer);
-        assert(!buffer);
+        std::future<osmium::memory::Buffer> future_buffer2;
+        output_queue.wait_and_pop(future_buffer2);
+        assert(!future_buffer2.get());
     }
 
     return result;
@@ -534,9 +538,10 @@ TEST_CASE("Reading OSM XML 200") {
         osmium::io::Header header = reader.header();
         REQUIRE(header.get("generator") == "testdata");
 
-        osmium::memory::Buffer buffer = reader.read();
-        REQUIRE(0 == buffer.committed());
-        REQUIRE(! buffer);
+        REQUIRE_THROWS({
+            reader.read();
+        });
+
         reader.close();
     }
 
