@@ -48,7 +48,7 @@ namespace osmium {
 
         namespace map {
 
-            template <class TVector, typename TId, typename TValue>
+            template <typename TVector, typename TId, typename TValue>
             class VectorBasedDenseMap : public Map<TId, TValue> {
 
                 TVector m_vector;
@@ -68,20 +68,20 @@ namespace osmium {
                     m_vector(fd) {
                 }
 
-                ~VectorBasedDenseMap() = default;
+                ~VectorBasedDenseMap() noexcept final = default;
 
-                void reserve(const size_t size) override final {
+                void reserve(const size_t size) final {
                     m_vector.reserve(size);
                 }
 
-                void set(const TId id, const TValue value) override final {
+                void set(const TId id, const TValue value) final {
                     if (size() <= id) {
                         m_vector.resize(id+1);
                     }
                     m_vector[id] = value;
                 }
 
-                const TValue get(const TId id) const override final {
+                const TValue get(const TId id) const final {
                     try {
                         const TValue& value = m_vector.at(id);
                         if (value == osmium::index::empty_value<TValue>()) {
@@ -93,7 +93,7 @@ namespace osmium {
                     }
                 }
 
-                size_t size() const override final {
+                size_t size() const final {
                     return m_vector.size();
                 }
 
@@ -101,16 +101,16 @@ namespace osmium {
                     return m_vector.size() * sizeof(element_type);
                 }
 
-                size_t used_memory() const override final {
+                size_t used_memory() const final {
                     return sizeof(TValue) * size();
                 }
 
-                void clear() override final {
+                void clear() final {
                     m_vector.clear();
                     m_vector.shrink_to_fit();
                 }
 
-                void dump_as_array(const int fd) override final {
+                void dump_as_array(const int fd) final {
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(m_vector.data()), byte_size());
                 }
 
@@ -161,17 +161,17 @@ namespace osmium {
                     m_vector() {
                 }
 
-                VectorBasedSparseMap(int fd) :
+                explicit VectorBasedSparseMap(int fd) :
                     m_vector(fd) {
                 }
 
-                ~VectorBasedSparseMap() override final = default;
+                ~VectorBasedSparseMap() final = default;
 
-                void set(const TId id, const TValue value) override final {
+                void set(const TId id, const TValue value) final {
                     m_vector.push_back(element_type(id, value));
                 }
 
-                const TValue get(const TId id) const override final {
+                const TValue get(const TId id) const final {
                     const element_type element {
                         id,
                         osmium::index::empty_value<TValue>()
@@ -186,7 +186,7 @@ namespace osmium {
                     }
                 }
 
-                size_t size() const override final {
+                size_t size() const final {
                     return m_vector.size();
                 }
 
@@ -194,20 +194,20 @@ namespace osmium {
                     return m_vector.size() * sizeof(element_type);
                 }
 
-                size_t used_memory() const override final {
+                size_t used_memory() const final {
                     return sizeof(element_type) * size();
                 }
 
-                void clear() override final {
+                void clear() final {
                     m_vector.clear();
                     m_vector.shrink_to_fit();
                 }
 
-                void sort() override final {
+                void sort() final {
                     std::sort(m_vector.begin(), m_vector.end());
                 }
 
-                void dump_as_list(const int fd) override final {
+                void dump_as_list(const int fd) final {
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(m_vector.data()), byte_size());
                 }
 

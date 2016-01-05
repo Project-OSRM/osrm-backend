@@ -10,6 +10,12 @@ documentation.
 
 *****************************************************************************/
 
+/**
+ * @file pbf_message.hpp
+ *
+ * @brief Contains the pbf_message class.
+ */
+
 #include <type_traits>
 
 #include <protozero/pbf_reader.hpp>
@@ -17,6 +23,44 @@ documentation.
 
 namespace protozero {
 
+/**
+ * This class represents a protobuf message. Either a top-level message or
+ * a nested sub-message. Top-level messages can be created from any buffer
+ * with a pointer and length:
+ *
+ * @code
+ *    enum class Message : protozero::pbf_tag_type {
+ *       ...
+ *    };
+ *
+ *    std::string buffer;
+ *    // fill buffer...
+ *    pbf_message<Message> message(buffer.data(), buffer.size());
+ * @endcode
+ *
+ * Sub-messages are created using get_message():
+ *
+ * @code
+ *    enum class SubMessage : protozero::pbf_tag_type {
+ *       ...
+ *    };
+ *
+ *    pbf_message<Message> message(...);
+ *    message.next();
+ *    pbf_message<SubMessage> submessage = message.get_message();
+ * @endcode
+ *
+ * All methods of the pbf_message class except get_bytes() and get_string()
+ * provide the strong exception guarantee, ie they either succeed or do not
+ * change the pbf_message object they are called on. Use the get_data() method
+ * instead of get_bytes() or get_string(), if you need this guarantee.
+ *
+ * This template class is based on the pbf_reader class and has all the same
+ * methods. The difference is that whereever the pbf_reader class takes an
+ * integer tag, this template class takes a tag of the template type T.
+ *
+ * Read the tutorial to understand how this class is used.
+ */
 template <typename T>
 class pbf_message : public pbf_reader {
 

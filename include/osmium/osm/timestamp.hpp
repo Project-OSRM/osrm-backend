@@ -47,17 +47,18 @@ namespace osmium {
 
     /**
      * A timestamp. Internal representation is an unsigned 32bit integer
-     * holding seconds since epoch, so this will overflow in 2038.
+     * holding seconds since epoch (1970-01-01T00:00:00Z), so this will
+     * overflow in 2106. We can use an unsigned integer here, because the
+     * OpenStreetMap project was started long after 1970, so there will
+     * never be dates before that.
      */
     class Timestamp {
 
         // length of ISO timestamp string yyyy-mm-ddThh:mm:ssZ\0
         static constexpr int timestamp_length = 20 + 1;
 
-        /**
-         * The timestamp format for OSM timestamps in strftime(3) format.
-         * This is the ISO-Format yyyy-mm-ddThh:mm:ssZ
-         */
+        // The timestamp format for OSM timestamps in strftime(3) format.
+        // This is the ISO-Format "yyyy-mm-ddThh:mm:ssZ".
         static const char* timestamp_format() {
             static const char f[timestamp_length] = "%Y-%m-%dT%H:%M:%SZ";
             return f;
@@ -67,19 +68,32 @@ namespace osmium {
 
     public:
 
+        /**
+         * Default construct an invalid Timestamp.
+         */
         constexpr Timestamp() noexcept :
             m_timestamp(0) {
         }
 
-        // Not "explicit" so that conversions from time_t work
-        // like in node.timestamp(123);
-        constexpr Timestamp(time_t timestamp) noexcept :
-            m_timestamp(static_cast<uint32_t>(timestamp)) {
+        /**
+         * Construct a Timestamp from any integer type containing the seconds
+         * since the epoch. This will not check for overruns, you have to
+         * make sure the value fits into a uint32_t which is used internally
+         * in the Timestamp.
+         *
+         * The constructor is not declared "explicit" so that conversions
+         * like @code node.set_timestamp(123); @endcode work.
+         */
+        template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+        constexpr Timestamp(T timestamp) noexcept :
+            m_timestamp(uint32_t(timestamp)) {
         }
 
         /**
-         * Construct timestamp from ISO date/time string.
-         * Throws std::invalid_argument, if the timestamp can not be parsed.
+         * Construct timestamp from ISO date/time string in the format
+         * "yyyy-mm-ddThh:mm:ssZ".
+         *
+         * @throws std::invalid_argument if the timestamp can not be parsed.
          */
         explicit Timestamp(const char* timestamp) {
 #ifndef _WIN32
@@ -105,16 +119,51 @@ namespace osmium {
 #endif
         }
 
+        /**
+         * Construct timestamp from ISO date/time string in the format
+         * "yyyy-mm-ddThh:mm:ssZ".
+         *
+         * @throws std::invalid_argument if the timestamp can not be parsed.
+         */
+        explicit Timestamp(const std::string& timestamp) :
+            Timestamp(timestamp.c_str()) {
+        }
+
+        /**
+         * Returns true if this timestamp is valid (ie set to something other
+         * than 0).
+         */
+        bool valid() const noexcept {
+            return m_timestamp != 0;
+        }
+
+        /// Explicit conversion into bool.
+        explicit constexpr operator bool() const noexcept {
+            return m_timestamp != 0;
+        }
+
+        /// Explicit conversion into time_t.
         constexpr time_t seconds_since_epoch() const noexcept {
-            return static_cast<time_t>(m_timestamp);
+            return time_t(m_timestamp);
         }
 
-        constexpr operator time_t() const noexcept {
-            return static_cast<time_t>(m_timestamp);
-        }
-
+        /// Explicit conversion into uint32_t.
         explicit constexpr operator uint32_t() const noexcept {
-            return m_timestamp;
+            return uint32_t(m_timestamp);
+        }
+
+        /// Explicit conversion into uint64_t.
+        explicit constexpr operator uint64_t() const noexcept {
+            return uint64_t(m_timestamp);
+        }
+
+        /**
+         * Implicit conversion into time_t.
+         *
+         * @deprecated You should call seconds_since_epoch() explicitly instead.
+         */
+        OSMIUM_DEPRECATED constexpr operator time_t() const noexcept {
+            return static_cast<time_t>(m_timestamp);
         }
 
         template <typename T>
@@ -128,7 +177,8 @@ namespace osmium {
         }
 
         /**
-         * Return UTC Unix time as string in ISO date/time format.
+         * Return UTC Unix time as string in ISO date/time
+         * ("yyyy-mm-ddThh:mm:ssZ") format.
          */
         std::string to_iso() const {
             std::string s;
@@ -156,18 +206,50 @@ namespace osmium {
 
     }; // class Timestamp
 
-    inline OSMIUM_CONSTEXPR Timestamp start_of_time() noexcept {
+    /**
+     * A special Timestamp guaranteed to be ordered before any other valid
+     * Timestamp.
+     */
+    inline constexpr Timestamp start_of_time() noexcept {
         return Timestamp(1);
     }
 
-    inline OSMIUM_CONSTEXPR Timestamp end_of_time() noexcept {
-        return Timestamp(std::numeric_limits<time_t>::max());
+    /**
+     * A special Timestamp guaranteed to be ordered after any other valid
+     * Timestamp.
+     */
+    inline constexpr Timestamp end_of_time() noexcept {
+        return Timestamp(std::numeric_limits<uint32_t>::max());
     }
 
     template <typename TChar, typename TTraits>
     inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, Timestamp timestamp) {
         out << timestamp.to_iso();
         return out;
+    }
+
+    inline bool operator==(const Timestamp& lhs, const Timestamp& rhs) noexcept {
+        return uint32_t(lhs) == uint32_t(rhs);
+    }
+
+    inline bool operator!=(const Timestamp& lhs, const Timestamp& rhs) noexcept {
+        return !(lhs == rhs);
+    }
+
+    inline bool operator<(const Timestamp& lhs, const Timestamp& rhs) noexcept {
+        return uint32_t(lhs) < uint32_t(rhs);
+    }
+
+    inline bool operator>(const Timestamp& lhs, const Timestamp& rhs) noexcept {
+        return rhs < lhs;
+    }
+
+    inline bool operator<=(const Timestamp& lhs, const Timestamp& rhs) noexcept {
+        return ! (rhs < lhs);
+    }
+
+    inline bool operator>=(const Timestamp& lhs, const Timestamp& rhs) noexcept {
+        return ! (lhs < rhs);
     }
 
     template <>

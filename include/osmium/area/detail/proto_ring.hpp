@@ -34,12 +34,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
-#include <cassert>
+#include <cstdint>
+#include <cstdlib>
 #include <iostream>
-#include <list>
+#include <iterator>
 #include <set>
 #include <vector>
 
+#include <osmium/osm/location.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/area/detail/node_ref_segment.hpp>
 
@@ -148,7 +150,8 @@ namespace osmium {
                 }
 
                 void swap_segments(ProtoRing& other) {
-                    std::swap(m_segments, other.m_segments);
+                    using std::swap;
+                    swap(m_segments, other.m_segments);
                 }
 
                 void add_inner_ring(ProtoRing* ring) {

@@ -56,25 +56,25 @@ namespace osmium {
 
                 Dummy() = default;
 
-                ~Dummy() override final = default;
+                ~Dummy() noexcept final = default;
 
-                void set(const TId, const TValue) override final {
+                void set(const TId, const TValue) final {
                     // intentionally left blank
                 }
 
-                const TValue get(const TId id) const override final {
+                const TValue get(const TId id) const final {
                     not_found_error(id);
                 }
 
-                size_t size() const override final {
+                size_t size() const final {
                     return 0;
                 }
 
-                size_t used_memory() const override final {
+                size_t used_memory() const final {
                     return 0;
                 }
 
-                void clear() override final {
+                void clear() final {
                 }
 
             }; // class Dummy

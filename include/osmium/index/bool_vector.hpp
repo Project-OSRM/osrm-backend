@@ -56,11 +56,13 @@ namespace osmium {
         public:
 
             BoolVector() = default;
+
             BoolVector(const BoolVector&) = default;
             BoolVector(BoolVector&&) = default;
             BoolVector& operator=(const BoolVector&) = default;
             BoolVector& operator=(BoolVector&&) = default;
-            ~BoolVector() = default;
+
+            ~BoolVector() noexcept = default;
 
             void set(T id, bool value = true) {
                 if (m_bits.size() <= id) {

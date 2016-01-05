@@ -38,11 +38,13 @@ DEALINGS IN THE SOFTWARE.
 #include <stdexcept>
 #include <system_error>
 
+#include <osmium/util/compatibility.hpp>
 #include <osmium/util/file.hpp>
 
 #ifndef _WIN32
 # include <sys/mman.h>
 #else
+# include <fcntl.h>
 # include <io.h>
 # include <windows.h>
 # include <sys/types.h>
@@ -85,6 +87,9 @@ namespace osmium {
          * On Unix systems this wraps the mmap(), munmap(), and the mremap()
          * system calls. On Windows it wraps the CreateFileMapping(),
          * CloseHandle(), MapViewOfFile(), and UnmapViewOfFile() functions.
+         *
+         * On Windows the file will be set to binary mode before the memory
+         * mapping.
          */
         class MemoryMapping {
 
@@ -169,7 +174,8 @@ private:
              * created, otherwise a mapping based on the file descriptor will
              * be created.
              *
-             * @pre size > 0 or mode == write_shared oder write_private
+             * @pre @code size > 0 @endcode or
+             *      @code mode == write_shared || mode == write_private @endcode
              *
              * @param size Size of the mapping in bytes
              * @param mode Mapping mode: readonly, or writable (shared or private)
@@ -179,8 +185,12 @@ private:
              */
             MemoryMapping(size_t size, mapping_mode mode, int fd=-1, off_t offset=0);
 
-            /// DEPRECATED: For backwards compatibility
-            MemoryMapping(size_t size, bool writable=true, int fd=-1, off_t offset=0) :
+            /**
+             * @deprecated
+             * For backwards compatibility only. Use the constructor taking
+             * a mapping_mode as second argument instead.
+             */
+            OSMIUM_DEPRECATED MemoryMapping(size_t size, bool writable=true, int fd=-1, off_t offset=0) :
                 MemoryMapping(size, writable ? mapping_mode::write_shared : mapping_mode::readonly, fd, offset)  {
             }
 
@@ -209,7 +219,7 @@ private:
                 try {
                     unmap();
                 } catch (std::system_error&) {
-                    // ignore
+                    // Ignore any exceptions because destructor must not throw.
                 }
             }
 
@@ -228,8 +238,9 @@ private:
              * systems it will unmap and remap the memory. This can only be
              * done for file-based mappings, not anonymous mappings!
              *
-             * @param new_size Number of bytes to resize to
-             * @throws std::system_error if the remapping fails
+             * @param new_size Number of bytes to resize to (must be > 0).
+             *
+             * @throws std::system_error if the remapping fails.
              */
             void resize(size_t new_size);
 
@@ -237,7 +248,7 @@ private:
              * In a boolean context a MemoryMapping is true when it is a valid
              * existing mapping.
              */
-            operator bool() const noexcept {
+            explicit operator bool() const noexcept {
                 return is_valid();
             }
 
@@ -349,8 +360,12 @@ private:
                 m_mapping(sizeof(T) * size, mode, fd, sizeof(T) * offset) {
             }
 
-            /// DEPRECATED: For backwards compatibility
-            TypedMemoryMapping(size_t size, bool writable, int fd, off_t offset = 0) :
+            /**
+             * @deprecated
+             * For backwards compatibility only. Use the constructor taking
+             * a mapping_mode as second argument instead.
+             */
+            OSMIUM_DEPRECATED TypedMemoryMapping(size_t size, bool writable, int fd, off_t offset = 0) :
                 m_mapping(sizeof(T) * size, writable ? MemoryMapping::mapping_mode::write_shared : MemoryMapping::mapping_mode::readonly, fd, sizeof(T) * offset) {
             }
 
@@ -375,7 +390,7 @@ private:
              * Releases the mapping by calling unmap(). Will never throw.
              * Call unmap() instead if you want to be notified of any error.
              */
-            ~TypedMemoryMapping() = default;
+            ~TypedMemoryMapping() noexcept = default;
 
             /**
              * Unmap a mapping. If the mapping is not valid, it will do
@@ -405,7 +420,7 @@ private:
              * In a boolean context a TypedMemoryMapping is true when it is
              * a valid existing mapping.
              */
-            operator bool() const noexcept {
+            explicit operator bool() const noexcept {
                 return !!m_mapping;
             }
 
@@ -655,6 +670,9 @@ inline HANDLE osmium::util::MemoryMapping::get_handle() const noexcept {
 }
 
 inline HANDLE osmium::util::MemoryMapping::create_file_mapping() const noexcept {
+    if (m_fd != -1) {
+        _setmode(m_fd, _O_BINARY);
+    }
     return CreateFileMapping(get_handle(), nullptr, get_protection(), osmium::util::dword_hi(static_cast<uint64_t>(m_size) + m_offset), osmium::util::dword_lo(static_cast<uint64_t>(m_size) + m_offset), nullptr);
 }
 

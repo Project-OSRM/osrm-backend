@@ -60,7 +60,7 @@ namespace osmium {
 
         public:
 
-            explicit mmap_vector_base(int fd, size_t capacity, size_t size = 0) :
+            mmap_vector_base(int fd, size_t capacity, size_t size = 0) :
                 m_size(size),
                 m_mapping(capacity, osmium::util::MemoryMapping::mapping_mode::write_shared, fd) {
             }
@@ -70,6 +70,8 @@ namespace osmium {
                 m_mapping(capacity) {
             }
 
+            ~mmap_vector_base() noexcept = default;
+
             typedef T value_type;
             typedef T& reference;
             typedef const T& const_reference;
@@ -77,8 +79,6 @@ namespace osmium {
             typedef const T* const_pointer;
             typedef T* iterator;
             typedef const T* const_iterator;
-
-            ~mmap_vector_base() = default;
 
             void close() {
                 m_mapping.unmap();

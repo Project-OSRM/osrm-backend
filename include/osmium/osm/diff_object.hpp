@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
+
+#include <osmium/fwd.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/timestamp.hpp>
@@ -40,75 +43,158 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
-    class Node;
-    class Way;
-    class Relation;
-
+    /**
+     * A DiffObject holds pointers to three OSMObjects, the current object,
+     * the previous, and the next. They always have the same type (Node, Way,
+     * or Relation) and the same ID, but may have different versions.
+     *
+     * It is used when iterating over OSM files with history data to make
+     * working with versioned OSM objects easier. Because you have access to
+     * the previous and next objects as well as the current one, comparisons
+     * between object versions is easy.
+     *
+     * If the current object is the first version available, the previous
+     * pointer must be the same as the current one. If the current object is
+     * the last version available, the next pointer must be the same as the
+     * current one.
+     *
+     * DiffObjects are immutable.
+     */
     class DiffObject {
 
-    protected:
-
-        osmium::OSMObject* m_prev;
-        osmium::OSMObject* m_curr;
-        osmium::OSMObject* m_next;
+        const osmium::OSMObject* m_prev;
+        const osmium::OSMObject* m_curr;
+        const osmium::OSMObject* m_next;
 
     public:
 
+        /**
+         * Default construct an empty DiffObject. Most methods of this class
+         * can not be called on empty DiffObjects.
+         */
         DiffObject() noexcept :
             m_prev(nullptr),
             m_curr(nullptr),
             m_next(nullptr) {
         }
 
-        explicit DiffObject(osmium::OSMObject& prev, osmium::OSMObject& curr, osmium::OSMObject& next) noexcept :
+        /**
+         * Construct a non-empty DiffObject from the given OSMObjects. All
+         * OSMObjects must be of the same type (Node, Way, or Relation) and
+         * have the same ID.
+         */
+        DiffObject(const osmium::OSMObject& prev, const osmium::OSMObject& curr, const osmium::OSMObject& next) noexcept :
             m_prev(&prev),
             m_curr(&curr),
             m_next(&next) {
+            assert(prev.type() == curr.type() && curr.type() == next.type());
+            assert(prev.id()   == curr.id()   && curr.id()   == next.id());
         }
 
-        DiffObject(const DiffObject&) = default;
-        DiffObject& operator=(const DiffObject&) = default;
+        /**
+         * Check whether the DiffObject was created empty.
+         */
+        bool empty() const noexcept {
+            return m_prev == nullptr;
+        }
 
-        DiffObject(DiffObject&&) = default;
-        DiffObject& operator=(DiffObject&&) = default;
-
+        /**
+         * Get the previous object stored.
+         *
+         * @pre DiffObject must not be empty.
+         */
         const osmium::OSMObject& prev() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return *m_prev;
         }
 
+        /**
+         * Get the current object stored.
+         *
+         * @pre DiffObject must not be empty.
+         */
         const osmium::OSMObject& curr() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return *m_curr;
         }
 
+        /**
+         * Get the next object stored.
+         *
+         * @pre DiffObject must not be empty.
+         */
         const osmium::OSMObject& next() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return *m_next;
         }
 
+        /**
+         * Is the current object version the first (with this type and ID)?
+         *
+         * @pre DiffObject must not be empty.
+         */
         bool first() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return m_prev == m_curr;
         }
 
+        /**
+         * Is the current object version the last (with this type and ID)?
+         *
+         * @pre DiffObject must not be empty.
+         */
         bool last() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return m_curr == m_next;
         }
 
+        /**
+         * Return the type of the current object.
+         *
+         * @pre DiffObject must not be empty.
+         */
         osmium::item_type type() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return m_curr->type();
         }
 
+        /**
+         * Return the ID of the current object.
+         *
+         * @pre DiffObject must not be empty.
+         */
         osmium::object_id_type id() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return m_curr->id();
         }
 
+        /**
+         * Return the version of the current object.
+         *
+         * @pre DiffObject must not be empty.
+         */
         osmium::object_version_type version() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return m_curr->version();
         }
 
+        /**
+         * Return the changeset ID of the current object.
+         *
+         * @pre DiffObject must not be empty.
+         */
         osmium::changeset_id_type changeset() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return m_curr->changeset();
         }
 
+        /**
+         * Return the timestamp when the current object version was created.
+         *
+         * @pre DiffObject must not be empty.
+         */
         const osmium::Timestamp start_time() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return m_curr->timestamp();
         }
 
@@ -118,8 +204,11 @@ namespace osmium {
          * is valid. If this is the last version of the object, this will
          * return a special "end of time" timestamp that is guaranteed to
          * be larger than any normal timestamp.
+         *
+         * @pre DiffObject must not be empty.
          */
         const osmium::Timestamp end_time() const noexcept {
+            assert(m_prev && m_curr && m_next);
             return last() ? osmium::end_of_time() : m_next->timestamp();
         }
 
@@ -129,8 +218,11 @@ namespace osmium {
          *
          * This is a bit more complex than you'd think, because we have to
          * handle the case properly where the start_time() == end_time().
+         *
+         * @pre DiffObject must not be empty.
          */
         bool is_between(const osmium::Timestamp& from, const osmium::Timestamp& to) const noexcept {
+            assert(m_prev && m_curr && m_next);
             return start_time() < to &&
                    ((start_time() != end_time() && end_time() >  from) ||
                     (start_time() == end_time() && end_time() >= from));
@@ -138,45 +230,42 @@ namespace osmium {
 
         /**
          * Current object version is visible at the given timestamp.
+         *
+         * @pre DiffObject must not be empty.
          */
         bool is_visible_at(const osmium::Timestamp& timestamp) const noexcept {
+            assert(m_prev && m_curr && m_next);
             return start_time() <= timestamp && end_time() > timestamp && m_curr->visible();
         }
 
     }; // class DiffObject
 
-    template <class T>
+    template <typename T>
     class DiffObjectDerived : public DiffObject {
 
     public:
 
-        DiffObjectDerived(T& prev, T& curr, T& next) noexcept :
+        DiffObjectDerived(const T& prev, const T& curr, const T& next) noexcept :
             DiffObject(prev, curr, next) {
         }
 
-        DiffObjectDerived(const DiffObjectDerived&) = default;
-        DiffObjectDerived& operator=(const DiffObjectDerived&) = default;
-
-        DiffObjectDerived(DiffObjectDerived&&) = default;
-        DiffObjectDerived& operator=(DiffObjectDerived&&) = default;
-
         const T& prev() const noexcept {
-            return *static_cast<const T*>(m_prev);
+            return static_cast<const T&>(DiffObject::prev());
         }
 
         const T& curr() const noexcept {
-            return *static_cast<const T*>(m_curr);
+            return static_cast<const T&>(DiffObject::curr());
         }
 
         const T& next() const noexcept {
-            return *static_cast<const T*>(m_next);
+            return static_cast<const T&>(DiffObject::next());
         }
 
     }; // class DiffObjectDerived
 
-    typedef DiffObjectDerived<osmium::Node>     DiffNode;
-    typedef DiffObjectDerived<osmium::Way>      DiffWay;
-    typedef DiffObjectDerived<osmium::Relation> DiffRelation;
+    using DiffNode     = DiffObjectDerived<osmium::Node>;
+    using DiffWay      = DiffObjectDerived<osmium::Way>;
+    using DiffRelation = DiffObjectDerived<osmium::Relation>;
 
 } // namespace osmium
 

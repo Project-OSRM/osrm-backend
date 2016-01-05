@@ -100,3 +100,14 @@ TEST_CASE("empty keys and values are okay") {
     REQUIRE(std::string("") == tl.get_value_by_key("empty value"));
     REQUIRE(std::string("empty key") == tl.get_value_by_key(""));
 }
+
+TEST_CASE("tag key or value is too long") {
+    osmium::memory::Buffer buffer(10240);
+    osmium::builder::TagListBuilder builder(buffer);
+
+    const char kv[2000] = "";
+    builder.add_tag(kv, 1, kv, 1000);
+    REQUIRE_THROWS(builder.add_tag(kv, 1500, kv, 1));
+    REQUIRE_THROWS(builder.add_tag(kv, 1, kv, 1500));
+}
+

@@ -46,7 +46,7 @@ namespace osmium {
              * A geometry factory implementation that can be used with the
              * RapidJSON (https://github.com/miloyip/rapidjson) JSON writer.
              */
-            template <class TWriter>
+            template <typename TWriter>
             class RapidGeoJSONFactoryImpl {
 
                 TWriter* m_writer;
@@ -180,7 +180,7 @@ namespace osmium {
 
         } // namespace detail
 
-        template <class TWriter, class TProjection = IdentityProjection>
+        template <typename TWriter, typename TProjection = IdentityProjection>
         using RapidGeoJSONFactory = GeometryFactory<detail::RapidGeoJSONFactoryImpl<TWriter>, TProjection>;
 
     } // namespace geom

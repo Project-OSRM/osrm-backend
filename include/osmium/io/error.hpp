@@ -43,15 +43,27 @@ namespace osmium {
      */
     struct io_error : public std::runtime_error {
 
-        io_error(const std::string& what) :
+        explicit io_error(const std::string& what) :
             std::runtime_error(what) {
         }
 
-        io_error(const char* what) :
+        explicit io_error(const char* what) :
             std::runtime_error(what) {
         }
 
     }; // struct io_error
+
+    struct unsupported_file_format_error : public io_error {
+
+        explicit unsupported_file_format_error(const std::string& what) :
+            io_error(what) {
+        }
+
+        explicit unsupported_file_format_error(const char* what) :
+            io_error(what) {
+        }
+
+    }; // struct unsupported_file_format_error
 
 } // namespace osmium
 

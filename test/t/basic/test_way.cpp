@@ -36,7 +36,7 @@ SECTION("way_builder") {
     REQUIRE(333 == way.changeset());
     REQUIRE(21 == way.uid());
     REQUIRE(std::string("foo") == way.user());
-    REQUIRE(123 == way.timestamp());
+    REQUIRE(123 == uint32_t(way.timestamp()));
     REQUIRE(2 == way.tags().size());
     REQUIRE(3 == way.nodes().size());
     REQUIRE(1 == way.nodes()[0].ref());
@@ -45,7 +45,7 @@ SECTION("way_builder") {
     REQUIRE(! way.is_closed());
 
     crc32.update(way);
-    REQUIRE(crc32().checksum() == 0x20fe7a30);
+    REQUIRE(crc32().checksum() == 0x7676d0c2);
 }
 
 SECTION("closed_way") {

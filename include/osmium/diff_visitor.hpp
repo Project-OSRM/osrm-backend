@@ -43,7 +43,7 @@ namespace osmium {
 
     namespace detail {
 
-        template <class THandler>
+        template <typename THandler>
         inline void apply_diff_iterator_recurse(const osmium::DiffObject& diff, THandler& handler) {
             switch (diff.type()) {
                 case osmium::item_type::node:
@@ -60,7 +60,7 @@ namespace osmium {
             }
         }
 
-        template <class THandler, class ...TRest>
+        template <typename THandler, typename... TRest>
         inline void apply_diff_iterator_recurse(const osmium::DiffObject& diff, THandler& handler, TRest&... more) {
             apply_diff_iterator_recurse(diff, handler);
             apply_diff_iterator_recurse(diff, more...);
@@ -68,9 +68,9 @@ namespace osmium {
 
     } // namespace detail
 
-    template <class TIterator, class ...THandlers>
+    template <typename TIterator, typename... THandlers>
     inline void apply_diff(TIterator it, TIterator end, THandlers&... handlers) {
-        typedef osmium::DiffIterator<TIterator> diff_iterator;
+        using diff_iterator = osmium::DiffIterator<TIterator>;
 
         diff_iterator dit(it, end);
         diff_iterator dend(end, end);
@@ -82,19 +82,19 @@ namespace osmium {
 
     class OSMObject;
 
-    template <class TSource, class ...THandlers>
+    template <typename TSource, typename... THandlers>
     inline void apply_diff(TSource& source, THandlers&... handlers) {
         apply_diff(osmium::io::InputIterator<TSource, osmium::OSMObject> {source},
                    osmium::io::InputIterator<TSource, osmium::OSMObject> {},
                    handlers...);
     }
 
-    template <class ...THandlers>
+    template <typename... THandlers>
     inline void apply_diff(osmium::memory::Buffer& buffer, THandlers&... handlers) {
         apply_diff(buffer.begin(), buffer.end(), handlers...);
     }
 
-    template <class ...THandlers>
+    template <typename... THandlers>
     inline void apply_diff(const osmium::memory::Buffer& buffer, THandlers&... handlers) {
         apply_diff(buffer.cbegin(), buffer.cend(), handlers...);
     }

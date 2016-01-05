@@ -75,9 +75,9 @@ namespace osmium {
                     m_vector(fd) {
                 }
 
-                ~VectorBasedSparseMultimap() = default;
+                ~VectorBasedSparseMultimap() noexcept final = default;
 
-                void set(const TId id, const TValue value) override final {
+                void set(const TId id, const TValue value) final {
                     m_vector.push_back(element_type(id, value));
                 }
 
@@ -105,7 +105,7 @@ namespace osmium {
                     });
                 }
 
-                size_t size() const override final {
+                size_t size() const final {
                     return m_vector.size();
                 }
 
@@ -113,16 +113,16 @@ namespace osmium {
                     return m_vector.size() * sizeof(element_type);
                 }
 
-                size_t used_memory() const override final {
+                size_t used_memory() const final {
                     return sizeof(element_type) * size();
                 }
 
-                void clear() override final {
+                void clear() final {
                     m_vector.clear();
                     m_vector.shrink_to_fit();
                 }
 
-                void sort() override final {
+                void sort() final {
                     std::sort(m_vector.begin(), m_vector.end());
                 }
 
@@ -147,7 +147,7 @@ namespace osmium {
                     );
                 }
 
-                void dump_as_list(const int fd) override final {
+                void dump_as_list(const int fd) final {
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(m_vector.data()), byte_size());
                 }
 

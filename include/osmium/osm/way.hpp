@@ -43,8 +43,8 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     namespace builder {
-        template <class T> class ObjectBuilder;
-    }
+        template <typename T> class ObjectBuilder;
+    } // namespace builder
 
     /**
      * List of node references (id and location) in a way.

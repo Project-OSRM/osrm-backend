@@ -48,7 +48,7 @@ namespace osmium {
 
     namespace builder {
         template <class T> class ObjectBuilder;
-    }
+    } // namespace builder
 
     /**
      * An outer ring of an Area.
@@ -167,6 +167,7 @@ namespace osmium {
                     case osmium::item_type::way_node_list:
                     case osmium::item_type::relation_member_list:
                     case osmium::item_type::relation_member_list_with_full_members:
+                    case osmium::item_type::changeset_discussion:
                         assert(false && "Children of Area can only be outer/inner_ring and tag_list.");
                         break;
                 }

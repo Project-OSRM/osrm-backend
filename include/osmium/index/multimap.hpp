@@ -118,7 +118,7 @@ namespace osmium {
 
             }; // class Multimap
 
-        } // namespace map
+        } // namespace multimap
 
     } // namespace index
 

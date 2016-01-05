@@ -144,7 +144,7 @@ namespace osmium {
          * @param begin Begin of iterator range
          * @param end End of iterator range
          */
-        template <class TIter>
+        template <typename TIter>
         inline typename std::iterator_traits<TIter>::difference_type count_not_removed(TIter begin, TIter end) {
             return std::count_if(begin, end, [](MemberMeta& mm) {
                 return !mm.removed();

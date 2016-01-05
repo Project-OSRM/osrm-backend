@@ -46,7 +46,7 @@ namespace osmium {
 
     namespace tags {
 
-        template <class TKey>
+        template <typename TKey>
         struct match_key {
             bool operator()(const TKey& rule_key, const char* tag_key) {
                 return rule_key == tag_key;
@@ -59,7 +59,7 @@ namespace osmium {
             }
         }; // struct match_key_prefix
 
-        template <class TValue>
+        template <typename TValue>
         struct match_value {
             bool operator()(const TValue& rule_value, const char* tag_value) {
                 return rule_value == tag_value;
@@ -73,7 +73,7 @@ namespace osmium {
             }
         }; // struct match_value<void>
 
-        template <class TKey, class TValue=void, class TKeyComp=match_key<TKey>, class TValueComp=match_value<TValue>>
+        template <typename TKey, typename TValue=void, typename TKeyComp=match_key<TKey>, typename TValueComp=match_value<TValue>>
         class Filter {
 
             typedef TKey key_type;
@@ -115,7 +115,7 @@ namespace osmium {
                 m_default_result(default_result) {
             }
 
-            template <class V=TValue, typename std::enable_if<!std::is_void<V>::value, int>::type = 0>
+            template <typename V=TValue, typename std::enable_if<!std::is_void<V>::value, int>::type = 0>
             Filter& add(bool result, const key_type& key, const value_type& value) {
                 m_rules.emplace_back(result, false, key, value);
                 return *this;

@@ -34,14 +34,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <atomic>
-#include <chrono>
-#include <ratio>
+#include <exception>
 #include <string>
 #include <thread>
 #include <utility>
 
 #include <osmium/io/compression.hpp>
-#include <osmium/thread/queue.hpp>
+#include <osmium/io/detail/queue_util.hpp>
 #include <osmium/thread/util.hpp>
 
 namespace osmium {
@@ -50,52 +49,80 @@ namespace osmium {
 
         namespace detail {
 
-            class ReadThread {
+            /**
+             * This code uses an internally managed thread to read data from
+             * the input file and (optionally) decompress it. The result is
+             * sent to the given queue. Any exceptions will also be send to
+             * the queue.
+             */
+            class ReadThreadManager {
 
-                osmium::thread::Queue<std::string>& m_queue;
-                osmium::io::Decompressor* m_decompressor;
+                // only used in the sub-thread
+                osmium::io::Decompressor& m_decompressor;
+                future_string_queue_type& m_queue;
 
-                // If this is set in the main thread, we have to wrap up at the
-                // next possible moment.
-                std::atomic<bool>& m_done;
+                // used in both threads
+                std::atomic<bool> m_done;
 
-            public:
+                // only used in the main thread
+                std::thread m_thread;
 
-                explicit ReadThread(osmium::thread::Queue<std::string>& queue, osmium::io::Decompressor* decompressor, std::atomic<bool>& done) :
-                    m_queue(queue),
-                    m_decompressor(decompressor),
-                    m_done(done) {
-                }
-
-                bool operator()() {
-                    osmium::thread::set_thread_name("_osmium_input");
+                void run_in_thread() {
+                    osmium::thread::set_thread_name("_osmium_read");
 
                     try {
                         while (!m_done) {
-                            std::string data {m_decompressor->read()};
-                            if (data.empty()) {
-                                m_queue.push(std::move(data));
+                            std::string data {m_decompressor.read()};
+                            if (at_end_of_data(data)) {
                                 break;
                             }
-                            m_queue.push(std::move(data));
-                            while (m_queue.size() > 10 && !m_done) {
-                                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                            }
+                            add_to_queue(m_queue, std::move(data));
                         }
 
-                        m_decompressor->close();
+                        m_decompressor.close();
                     } catch (...) {
-                        // If there is an exception in this thread, we make sure
-                        // to push an empty string onto the queue to signal the
-                        // end-of-data to the reading thread so that it will not
-                        // hang. Then we re-throw the exception.
-                        m_queue.push(std::string());
-                        throw;
+                        add_to_queue(m_queue, std::current_exception());
                     }
-                    return true;
+
+                    add_end_of_data_to_queue(m_queue);
                 }
 
-            }; // class ReadThread
+            public:
+
+                ReadThreadManager(osmium::io::Decompressor& decompressor,
+                                  future_string_queue_type& queue) :
+                    m_decompressor(decompressor),
+                    m_queue(queue),
+                    m_done(false),
+                    m_thread(std::thread(&ReadThreadManager::run_in_thread, this)) {
+                }
+
+                ReadThreadManager(const ReadThreadManager&) = delete;
+                ReadThreadManager& operator=(const ReadThreadManager&) = delete;
+
+                ReadThreadManager(ReadThreadManager&&) = delete;
+                ReadThreadManager& operator=(ReadThreadManager&&) = delete;
+
+                ~ReadThreadManager() noexcept {
+                    try {
+                        close();
+                    } catch (...) {
+                        // Ignore any exceptions because destructor must not throw.
+                    }
+                }
+
+                void stop() noexcept {
+                    m_done = true;
+                }
+
+                void close() {
+                    stop();
+                    if (m_thread.joinable()) {
+                        m_thread.join();
+                    }
+                }
+
+            }; // class ReadThreadManager
 
         } // namespace detail
 

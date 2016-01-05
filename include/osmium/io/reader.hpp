@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <atomic>
 #include <cerrno>
 #include <cstdlib>
 #include <fcntl.h>
+#include <future>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -55,12 +55,13 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/detail/input_format.hpp>
 #include <osmium/io/detail/read_thread.hpp>
 #include <osmium/io/detail/read_write.hpp>
+#include <osmium/io/detail/queue_util.hpp>
+#include <osmium/io/error.hpp>
 #include <osmium/io/file.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/thread/util.hpp>
-#include <osmium/thread/queue.hpp>
 
 namespace osmium {
 
@@ -74,17 +75,46 @@ namespace osmium {
          */
         class Reader {
 
+            static constexpr size_t max_input_queue_size = 20; // XXX
+            static constexpr size_t max_osmdata_queue_size = 20; // XXX
+
             osmium::io::File m_file;
             osmium::osm_entity_bits::type m_read_which_entities;
-            std::atomic<bool> m_input_done;
+
+            enum class status {
+                okay   = 0, // normal reading
+                error  = 1, // some error occurred while reading
+                closed = 2, // close() called successfully after eof
+                eof    = 3  // eof of file was reached without error
+            } m_status;
+
             int m_childpid;
 
-            osmium::thread::Queue<std::string> m_input_queue;
+            detail::future_string_queue_type m_input_queue;
 
             std::unique_ptr<osmium::io::Decompressor> m_decompressor;
-            std::future<bool> m_read_future;
 
-            std::unique_ptr<osmium::io::detail::InputFormat> m_input;
+            osmium::io::detail::ReadThreadManager m_read_thread_manager;
+
+            detail::future_buffer_queue_type m_osmdata_queue;
+            detail::queue_wrapper<osmium::memory::Buffer> m_osmdata_queue_wrapper;
+
+            std::future<osmium::io::Header> m_header_future;
+            osmium::io::Header m_header;
+
+            osmium::thread::thread_handler m_thread;
+
+            // This function will run in a separate thread.
+            static void parser_thread(const osmium::io::File& file,
+                                      detail::future_string_queue_type& input_queue,
+                                      detail::future_buffer_queue_type& osmdata_queue,
+                                      std::promise<osmium::io::Header>&& header_promise,
+                                      osmium::osm_entity_bits::type read_which_entities) {
+                std::promise<osmium::io::Header> promise = std::move(header_promise);
+                auto creator = detail::ParserFactory::instance().get_creator_function(file);
+                auto parser = creator(input_queue, osmdata_queue, promise, read_which_entities);
+                parser->parse();
+            }
 
 #ifndef _WIN32
             /**
@@ -149,7 +179,7 @@ namespace osmium {
 #ifndef _WIN32
                     return execute("curl", filename, childpid);
 #else
-                    throw std::runtime_error("Reading OSM files from the network currently not supported on Windows.");
+                    throw io_error("Reading OSM files from the network currently not supported on Windows.");
 #endif
                 } else {
                     return osmium::io::detail::open_for_reading(filename);
@@ -168,16 +198,23 @@ namespace osmium {
              *                            parsed.
              */
             explicit Reader(const osmium::io::File& file, osmium::osm_entity_bits::type read_which_entities = osmium::osm_entity_bits::all) :
-                m_file(file),
+                m_file(file.check()),
                 m_read_which_entities(read_which_entities),
-                m_input_done(false),
+                m_status(status::okay),
                 m_childpid(0),
-                m_input_queue(20, "raw_input"), // XXX
+                m_input_queue(max_input_queue_size, "raw_input"),
                 m_decompressor(m_file.buffer() ?
                     osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), m_file.buffer(), m_file.buffer_size()) :
                     osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), open_input_file_or_url(m_file.filename(), &m_childpid))),
-                m_read_future(std::async(std::launch::async, detail::ReadThread(m_input_queue, m_decompressor.get(), m_input_done))),
-                m_input(osmium::io::detail::InputFormatFactory::instance().create_input(m_file, m_read_which_entities, m_input_queue)) {
+                m_read_thread_manager(*m_decompressor, m_input_queue),
+                m_osmdata_queue(max_osmdata_queue_size, "parser_results"),
+                m_osmdata_queue_wrapper(m_osmdata_queue),
+                m_header_future(),
+                m_header(),
+                m_thread() {
+                std::promise<osmium::io::Header> header_promise;
+                m_header_future = header_promise.get_future();
+                m_thread = osmium::thread::thread_handler{parser_thread, std::ref(m_file), std::ref(m_input_queue), std::ref(m_osmdata_queue), std::move(header_promise), read_which_entities};
             }
 
             explicit Reader(const std::string& filename, osmium::osm_entity_bits::type read_types = osmium::osm_entity_bits::all) :
@@ -191,27 +228,37 @@ namespace osmium {
             Reader(const Reader&) = delete;
             Reader& operator=(const Reader&) = delete;
 
-            ~Reader() {
+            Reader(Reader&&) = default;
+            Reader& operator=(Reader&&) = default;
+
+            ~Reader() noexcept {
                 try {
                     close();
-                }
-                catch (...) {
+                } catch (...) {
+                    // Ignore any exceptions because destructor must not throw.
                 }
             }
 
             /**
              * Close down the Reader. A call to this is optional, because the
              * destructor of Reader will also call this. But if you don't call
-             * this function first, the destructor might throw an exception
-             * which is not good.
+             * this function first, you might miss an exception, because the
+             * destructor is not allowed to throw.
              *
-             * @throws Some form of std::runtime_error when there is a problem.
+             * @throws Some form of osmium::io_error when there is a problem.
              */
             void close() {
-                // Signal to input child process that it should wrap up.
-                m_input_done = true;
+                m_status = status::closed;
 
-                m_input->close();
+                m_read_thread_manager.stop();
+
+                m_osmdata_queue_wrapper.drain();
+
+                try {
+                    m_read_thread_manager.close();
+                } catch (...) {
+                    // Ignore any exceptions.
+                }
 
 #ifndef _WIN32
                 if (m_childpid) {
@@ -226,15 +273,32 @@ namespace osmium {
                     m_childpid = 0;
                 }
 #endif
-
-                osmium::thread::wait_until_done(m_read_future);
             }
 
             /**
              * Get the header data from the file.
+             *
+             * @returns Header.
+             * @throws Some form of osmium::io_error if there is an error.
              */
-            osmium::io::Header header() const {
-                return m_input->header();
+            osmium::io::Header header() {
+                if (m_status == status::error) {
+                    throw io_error("Can not get header from reader when in status 'error'");
+                }
+
+                try {
+                    if (m_header_future.valid()) {
+                        m_header = m_header_future.get();
+                        if (m_read_which_entities == osmium::osm_entity_bits::nothing) {
+                            m_status = status::eof;
+                        }
+                    }
+                } catch (...) {
+                    close();
+                    m_status = status::error;
+                    throw;
+                }
+                return m_header;
             }
 
             /**
@@ -245,32 +309,36 @@ namespace osmium {
              * constructed.
              *
              * @returns Buffer.
-             * @throws Some form of std::runtime_error if there is an error.
+             * @throws Some form of osmium::io_error if there is an error.
              */
             osmium::memory::Buffer read() {
-                // If an exception happened in the input thread, re-throw
-                // it in this (the main) thread.
-                osmium::thread::check_for_exception(m_read_future);
+                osmium::memory::Buffer buffer;
 
-                if (m_read_which_entities == osmium::osm_entity_bits::nothing || m_input_done) {
-                    // If the caller didn't want anything but the header, it will
-                    // always get an empty buffer here.
-                    return osmium::memory::Buffer();
+                if (m_status != status::okay ||
+                    m_read_which_entities == osmium::osm_entity_bits::nothing) {
+                    throw io_error("Can not read from reader when in status 'closed', 'eof', or 'error'");
                 }
 
-                // m_input->read() can return an invalid buffer to signal EOF,
-                // or a valid buffer with or without data. A valid buffer
-                // without data is not an error, it just means we have to
-                // keep getting the next buffer until there is one with data.
-                while (true) {
-                    osmium::memory::Buffer buffer = m_input->read();
-                    if (!buffer) {
-                        m_input_done = true;
-                        return buffer;
+                try {
+                    // m_input_format.read() can return an invalid buffer to signal EOF,
+                    // or a valid buffer with or without data. A valid buffer
+                    // without data is not an error, it just means we have to
+                    // keep getting the next buffer until there is one with data.
+                    while (true) {
+                        buffer = m_osmdata_queue_wrapper.pop();
+                        if (detail::at_end_of_data(buffer)) {
+                            m_status = status::eof;
+                            m_read_thread_manager.close();
+                            return buffer;
+                        }
+                        if (buffer.committed() > 0) {
+                            return buffer;
+                        }
                     }
-                    if (buffer.committed() > 0) {
-                        return buffer;
-                    }
+                } catch (...) {
+                    close();
+                    m_status = status::error;
+                    throw;
                 }
             }
 
@@ -279,7 +347,7 @@ namespace osmium {
              * data has been read. It is also set by calling close().
              */
             bool eof() const {
-                return m_input_done;
+                return m_status == status::eof || m_status == status::closed;
             }
 
         }; // class Reader
@@ -292,7 +360,7 @@ namespace osmium {
          * unless you are working with small OSM files and/or have lots of
          * RAM.
          */
-        template <class... TArgs>
+        template <typename... TArgs>
         osmium::memory::Buffer read_file(TArgs&&... args) {
             osmium::memory::Buffer buffer(1024*1024, osmium::memory::Buffer::auto_grow::yes);
 

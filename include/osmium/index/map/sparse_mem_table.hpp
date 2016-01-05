@@ -88,16 +88,16 @@ namespace osmium {
                     m_elements(grow_size) {
                 }
 
-                ~SparseMemTable() override final = default;
+                ~SparseMemTable() noexcept final = default;
 
-                void set(const TId id, const TValue value) override final {
+                void set(const TId id, const TValue value) final {
                     if (id >= m_elements.size()) {
                         m_elements.resize(id + m_grow_size);
                     }
                     m_elements[id] = value;
                 }
 
-                const TValue get(const TId id) const override final {
+                const TValue get(const TId id) const final {
                     if (id >= m_elements.size()) {
                         not_found_error(id);
                     }
@@ -107,22 +107,23 @@ namespace osmium {
                     return m_elements[id];
                 }
 
-                size_t size() const override final {
+                size_t size() const final {
                     return m_elements.size();
                 }
 
-                size_t used_memory() const override final {
+                size_t used_memory() const final {
                     // unused elements use 1 bit, used elements sizeof(TValue) bytes
                     // http://google-sparsehash.googlecode.com/svn/trunk/doc/sparsetable.html
                     return (m_elements.size() / 8) + (m_elements.num_nonempty() * sizeof(TValue));
                 }
 
-                void clear() override final {
+                void clear() final {
                     m_elements.clear();
                 }
 
-                void dump_as_list(const int fd) override final {
+                void dump_as_list(const int fd) final {
                     std::vector<std::pair<TId, TValue>> v;
+                    v.reserve(m_elements.size());
                     int n = 0;
                     for (const TValue value : m_elements) {
                         if (value != osmium::index::empty_value<TValue>()) {

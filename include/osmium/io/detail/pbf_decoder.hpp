@@ -37,8 +37,12 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdint>
 #include <cstring>
 #include <algorithm>
-#include <iterator>
 #include <limits>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <protozero/pbf_message.hpp>
 
@@ -62,13 +66,14 @@ namespace osmium {
         namespace detail {
 
             using ptr_len_type = std::pair<const char*, size_t>;
+            using osm_string_len_type = std::pair<const char*, osmium::string_size_type>;
 
             class PBFPrimitiveBlockDecoder {
 
                 static constexpr size_t initial_buffer_size = 2 * 1024 * 1024;
 
                 ptr_len_type m_data;
-                std::vector<ptr_len_type> m_stringtable;
+                std::vector<osm_string_len_type> m_stringtable;
 
                 int64_t m_lon_offset = 0;
                 int64_t m_lat_offset = 0;
@@ -86,7 +91,11 @@ namespace osmium {
 
                     protozero::pbf_message<OSMFormat::StringTable> pbf_string_table(data);
                     while (pbf_string_table.next(OSMFormat::StringTable::repeated_bytes_s)) {
-                        m_stringtable.push_back(pbf_string_table.get_data());
+                        auto str_len = pbf_string_table.get_data();
+                        if (str_len.second > osmium::max_osm_string_length) {
+                            throw osmium::pbf_error("overlong string in string table");
+                        }
+                        m_stringtable.emplace_back(str_len.first, osmium::string_size_type(str_len.second));
                     }
                 }
 
@@ -156,8 +165,8 @@ namespace osmium {
                     }
                 }
 
-                ptr_len_type decode_info(const ptr_len_type& data, osmium::OSMObject& object) {
-                    ptr_len_type user = std::make_pair("", 0);
+                osm_string_len_type decode_info(const ptr_len_type& data, osmium::OSMObject& object) {
+                    osm_string_len_type user = std::make_pair("", 0);
 
                     protozero::pbf_message<OSMFormat::Info> pbf_info(data);
                     while (pbf_info.next()) {
@@ -220,7 +229,7 @@ namespace osmium {
                 }
 
                 int32_t convert_pbf_coordinate(int64_t c) const {
-                    return (c * m_granularity + m_lon_offset) / resolution_convert;
+                    return int32_t((c * m_granularity + m_lon_offset) / resolution_convert);
                 }
 
                 void decode_node(const ptr_len_type& data) {
@@ -232,7 +241,7 @@ namespace osmium {
                     int64_t lon = std::numeric_limits<int64_t>::max();
                     int64_t lat = std::numeric_limits<int64_t>::max();
 
-                    ptr_len_type user = { "", 0 };
+                    osm_string_len_type user = { "", 0 };
 
                     protozero::pbf_message<OSMFormat::Node> pbf_node(data);
                     while (pbf_node.next()) {
@@ -285,7 +294,7 @@ namespace osmium {
                     kv_type vals;
                     std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> refs;
 
-                    ptr_len_type user = { "", 0 };
+                    osm_string_len_type user = { "", 0 };
 
                     protozero::pbf_message<OSMFormat::Way> pbf_way(data);
                     while (pbf_way.next()) {
@@ -334,7 +343,7 @@ namespace osmium {
                     std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> refs;
                     std::pair<protozero::pbf_reader::const_int32_iterator,  protozero::pbf_reader::const_int32_iterator> types;
 
-                    ptr_len_type user = { "", 0 };
+                    osm_string_len_type user = { "", 0 };
 
                     protozero::pbf_message<OSMFormat::Relation> pbf_relation(data);
                     while (pbf_relation.next()) {
@@ -512,7 +521,7 @@ namespace osmium {
                                     // this is against the spec, must have same number of elements
                                     throw osmium::pbf_error("PBF format error");
                                 }
-                                visible = *visibles.first++;
+                                visible = (*visibles.first++) != 0;
                             }
                             node.set_visible(visible);
 
@@ -522,10 +531,14 @@ namespace osmium {
                             builder.add_user("");
                         }
 
+                        // even if the node isn't visible, there's still a record
+                        // of its lat/lon in the dense arrays.
+                        const auto lon = dense_longitude.update(*lons.first++);
+                        const auto lat = dense_latitude.update(*lats.first++);
                         if (visible) {
                             builder.object().set_location(osmium::Location(
-                                    convert_pbf_coordinate(dense_longitude.update(*lons.first++)),
-                                    convert_pbf_coordinate(dense_latitude.update(*lats.first++))
+                                    convert_pbf_coordinate(lon),
+                                    convert_pbf_coordinate(lat)
                             ));
                         }
 
@@ -552,7 +565,7 @@ namespace osmium {
 
             public:
 
-                explicit PBFPrimitiveBlockDecoder(const ptr_len_type& data, osmium::osm_entity_bits::type read_types) :
+                PBFPrimitiveBlockDecoder(const ptr_len_type& data, osmium::osm_entity_bits::type read_types) :
                     m_data(data),
                     m_read_types(read_types) {
                 }
@@ -563,7 +576,7 @@ namespace osmium {
                 PBFPrimitiveBlockDecoder(PBFPrimitiveBlockDecoder&&) = delete;
                 PBFPrimitiveBlockDecoder& operator=(PBFPrimitiveBlockDecoder&&) = delete;
 
-                ~PBFPrimitiveBlockDecoder() = default;
+                ~PBFPrimitiveBlockDecoder() noexcept = default;
 
                 osmium::memory::Buffer operator()() {
                     try {
@@ -579,8 +592,8 @@ namespace osmium {
             }; // class PBFPrimitiveBlockDecoder
 
             inline ptr_len_type decode_blob(const std::string& blob_data, std::string& output) {
-                int32_t raw_size;
-                std::pair<const char*, protozero::pbf_length_type> zlib_data;
+                int32_t raw_size = 0;
+                std::pair<const char*, protozero::pbf_length_type> zlib_data = {nullptr, 0};
 
                 protozero::pbf_message<FileFormat::Blob> pbf_blob(blob_data);
                 while (pbf_blob.next()) {
@@ -609,7 +622,7 @@ namespace osmium {
                     }
                 }
 
-                if (zlib_data.second != 0) {
+                if (zlib_data.second != 0 && raw_size != 0) {
                     return osmium::io::detail::zlib_uncompress_string(
                         zlib_data.first,
                         static_cast<unsigned long>(zlib_data.second),
@@ -694,7 +707,11 @@ namespace osmium {
                             header.set("generator", pbf_header_block.get_string());
                             break;
                         case OSMFormat::HeaderBlock::optional_int64_osmosis_replication_timestamp:
-                            header.set("osmosis_replication_timestamp", osmium::Timestamp(pbf_header_block.get_int64()).to_iso());
+                            {
+                                auto timestamp = osmium::Timestamp(pbf_header_block.get_int64()).to_iso();
+                                header.set("osmosis_replication_timestamp", timestamp);
+                                header.set("timestamp", timestamp);
+                            }
                             break;
                         case OSMFormat::HeaderBlock::optional_int64_osmosis_replication_sequence_number:
                             header.set("osmosis_replication_sequence_number", std::to_string(pbf_header_block.get_int64()));
@@ -741,7 +758,7 @@ namespace osmium {
                 PBFDataBlobDecoder(PBFDataBlobDecoder&&) = default;
                 PBFDataBlobDecoder& operator=(PBFDataBlobDecoder&&) = default;
 
-                ~PBFDataBlobDecoder() = default;
+                ~PBFDataBlobDecoder() noexcept = default;
 
                 osmium::memory::Buffer operator()() {
                     std::string output;

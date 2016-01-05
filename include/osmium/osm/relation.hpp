@@ -47,9 +47,9 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     namespace builder {
-        template <class> class ObjectBuilder;
+        template <typename> class ObjectBuilder;
         class RelationMemberListBuilder;
-    }
+    } // namespace builder
 
     class RelationMember : public osmium::memory::detail::ItemHelper {
 
@@ -74,23 +74,21 @@ namespace osmium {
             return data() + osmium::memory::padded_length(sizeof(RelationMember) + m_role_size);
         }
 
-        template <class TMember>
+        template <typename TMember>
         friend class osmium::memory::CollectionIterator;
 
         unsigned char* next() {
             if (full_member()) {
                 return endpos() + reinterpret_cast<osmium::memory::Item*>(endpos())->byte_size();
-            } else {
-                return endpos();
             }
+            return endpos();
         }
 
         unsigned const char* next() const {
             if (full_member()) {
                 return endpos() + reinterpret_cast<const osmium::memory::Item*>(endpos())->byte_size();
-            } else {
-                return endpos();
             }
+            return endpos();
         }
 
         void set_role_size(string_size_type size) noexcept {
