@@ -1,10 +1,15 @@
 #ifndef COORDINATE_CALCULATION
 #define COORDINATE_CALCULATION
 
-struct FixedPointCoordinate;
-
 #include <string>
 #include <utility>
+
+namespace osrm
+{
+namespace util
+{
+
+struct FixedPointCoordinate;
 
 namespace coordinate_calculation
 {
@@ -47,6 +52,9 @@ double radToDeg(const double radian);
 
 double bearing(const FixedPointCoordinate &first_coordinate,
                const FixedPointCoordinate &second_coordinate);
+}
+
+}
 }
 
 #endif // COORDINATE_CALCULATION

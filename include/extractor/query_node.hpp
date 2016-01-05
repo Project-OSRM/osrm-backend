@@ -9,6 +9,11 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct QueryNode
 {
     using key_type = OSMNodeID; // type of NodeID
@@ -54,5 +59,8 @@ struct QueryNode
         return std::numeric_limits<int>::lowest();
     }
 };
+
+}
+}
 
 #endif // QUERY_NODE_HPP

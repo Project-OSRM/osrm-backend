@@ -1,6 +1,11 @@
 #ifndef SPEED_PROFILE_PROPERTIES_HPP
 #define SPEED_PROFILE_PROPERTIES_HPP
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct SpeedProfileProperties
 {
     SpeedProfileProperties()
@@ -12,5 +17,8 @@ struct SpeedProfileProperties
     int u_turn_penalty;
     bool has_turn_penalty_function;
 };
+
+}
+}
 
 #endif

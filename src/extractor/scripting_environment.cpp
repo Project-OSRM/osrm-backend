@@ -17,6 +17,11 @@
 #include <osmium/osm.hpp>
 
 #include <sstream>
+
+namespace osrm
+{
+namespace extractor
+{
 namespace
 {
 // wrapper method as luabind doesn't automatically overload funcs w/ default parameters
@@ -32,13 +37,13 @@ int luaErrorCallback(lua_State *state)
     std::string error_msg = lua_tostring(state, -1);
     std::ostringstream error_stream;
     error_stream << error_msg;
-    throw osrm::exception("ERROR occurred in profile script:\n" + error_stream.str());
+    throw util::exception("ERROR occurred in profile script:\n" + error_stream.str());
 }
 }
 
 ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_name(file_name)
 {
-    SimpleLogger().Write() << "Using script " << file_name;
+    util::SimpleLogger().Write() << "Using script " << file_name;
 }
 
 void ScriptingEnvironment::InitLuaState(lua_State *lua_state)
@@ -49,11 +54,11 @@ void ScriptingEnvironment::InitLuaState(lua_State *lua_state)
     // open utility libraries string library;
     luaL_openlibs(lua_state);
 
-    luaAddScriptFolderToLoadPath(lua_state, file_name.c_str());
+    util::luaAddScriptFolderToLoadPath(lua_state, file_name.c_str());
 
     // Add our function to the state's global scope
     luabind::module(lua_state)
-        [luabind::def("print", LUA_print<std::string>),
+        [luabind::def("print", util::LUA_print<std::string>),
          luabind::def("durationIsValid", durationIsValid),
          luabind::def("parseDuration", parseDuration),
          luabind::class_<SourceContainer>("sources")
@@ -110,9 +115,9 @@ void ScriptingEnvironment::InitLuaState(lua_State *lua_state)
          luabind::class_<ExternalMemoryNode>("EdgeTarget")
              .property("lat", &ExternalMemoryNode::lat)
              .property("lon", &ExternalMemoryNode::lon),
-         luabind::class_<FixedPointCoordinate>("Coordinate")
-             .property("lat", &FixedPointCoordinate::lat)
-             .property("lon", &FixedPointCoordinate::lon),
+         luabind::class_<util::FixedPointCoordinate>("Coordinate")
+             .property("lat", &util::FixedPointCoordinate::lat)
+             .property("lon", &util::FixedPointCoordinate::lon),
          luabind::class_<RasterDatum>("RasterDatum")
              .property("datum", &RasterDatum::datum)
              .def("invalid_data", &RasterDatum::get_invalid)];
@@ -122,7 +127,7 @@ void ScriptingEnvironment::InitLuaState(lua_State *lua_state)
         luabind::object error_msg(luabind::from_stack(lua_state, -1));
         std::ostringstream error_stream;
         error_stream << error_msg;
-        throw osrm::exception("ERROR occurred in profile script:\n" + error_stream.str());
+        throw util::exception("ERROR occurred in profile script:\n" + error_stream.str());
     }
 }
 
@@ -140,4 +145,6 @@ lua_State *ScriptingEnvironment::GetLuaState()
     luabind::set_pcall_callback(&luaErrorCallback);
 
     return ref.get();
+}
+}
 }

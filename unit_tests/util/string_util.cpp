@@ -7,6 +7,9 @@
 
 BOOST_AUTO_TEST_SUITE(string_util)
 
+using namespace osrm;
+using namespace osrm::util;
+
 BOOST_AUTO_TEST_CASE(json_escaping)
 {
     std::string input{"\b\\"};

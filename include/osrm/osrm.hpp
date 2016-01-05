@@ -30,10 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
 
-struct LibOSRMConfig;
-struct RouteParameters;
-
 namespace osrm
+{
+
+struct LibOSRMConfig;
+
+namespace util
 {
 namespace json
 {
@@ -41,6 +43,8 @@ struct Object;
 }
 }
 
+namespace engine {
+struct RouteParameters;
 class OSRM
 {
   private:
@@ -50,7 +54,12 @@ class OSRM
   public:
     OSRM(LibOSRMConfig &lib_config);
     ~OSRM(); // needed because we need to define it with the implementation of OSRM_impl
-    int RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result);
+    int RunQuery(const RouteParameters &route_parameters, util::json::Object &json_result);
 };
+}
+
+using engine::OSRM;
+
+}
 
 #endif // OSRM_HPP

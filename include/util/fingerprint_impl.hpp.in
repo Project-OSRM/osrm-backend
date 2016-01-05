@@ -13,6 +13,11 @@
 #cmakedefine MD5GRAPH "${MD5GRAPH}"
 #cmakedefine MD5OBJECTS "${MD5OBJECTS}"
 
+namespace osrm
+{
+namespace util
+{
+
 FingerPrint FingerPrint::GetValid()
 {
     FingerPrint fingerprint;
@@ -52,7 +57,7 @@ bool FingerPrint::TestGraphUtil(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw osrm::exception("hsgr input file misses magic number. Check or reprocess the file");
+        throw exception("hsgr input file misses magic number. Check or reprocess the file");
     }
     return std::equal(md5_graph, md5_graph + 32, other.md5_graph);
 }
@@ -61,7 +66,7 @@ bool FingerPrint::TestPrepare(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw osrm::exception("osrm input file misses magic number. Check or reprocess the file");
+        throw exception("osrm input file misses magic number. Check or reprocess the file");
     }
     return std::equal(md5_prepare, md5_prepare + 32, other.md5_prepare);
 }
@@ -70,7 +75,7 @@ bool FingerPrint::TestRTree(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw osrm::exception("r-tree input file misses magic number. Check or reprocess the file");
+        throw exception("r-tree input file misses magic number. Check or reprocess the file");
     }
     return std::equal(md5_tree, md5_tree + 32, other.md5_tree);
 }
@@ -79,7 +84,10 @@ bool FingerPrint::TestQueryObjects(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw osrm::exception("missing magic number. Check or reprocess the file");
+        throw exception("missing magic number. Check or reprocess the file");
     }
     return std::equal(md5_objects, md5_objects + 32, other.md5_objects);
+}
+
+}
 }

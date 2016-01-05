@@ -10,6 +10,11 @@
 #include <stxxl/vector>
 #include <unordered_map>
 
+namespace osrm
+{
+namespace extractor
+{
+
 /**
  * Uses external memory containers from stxxl to store all the data that
  * is collected by the extractor callbacks.
@@ -60,5 +65,8 @@ class ExtractionContainers
                      const std::string &names_file_name,
                      lua_State *segment_state);
 };
+
+}
+}
 
 #endif /* EXTRACTION_CONTAINERS_HPP */

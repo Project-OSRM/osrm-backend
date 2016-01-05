@@ -6,6 +6,11 @@
 #include "util/typedefs.hpp"
 #include "util/binary_heap.hpp"
 
+namespace osrm
+{
+namespace engine
+{
+
 struct HeapData
 {
     NodeID parent;
@@ -14,7 +19,7 @@ struct HeapData
 
 struct SearchEngineData
 {
-    using QueryHeap = BinaryHeap<NodeID, NodeID, int, HeapData, UnorderedMapStorage<NodeID, int>>;
+    using QueryHeap = util::BinaryHeap<NodeID, NodeID, int, HeapData, util::UnorderedMapStorage<NodeID, int>>;
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
 
     static SearchEngineHeapPtr forward_heap_1;
@@ -30,5 +35,8 @@ struct SearchEngineData
 
     void InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes);
 };
+
+}
+}
 
 #endif // SEARCH_ENGINE_DATA_HPP

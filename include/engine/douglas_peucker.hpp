@@ -8,6 +8,11 @@
 #include <utility>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+
 /* This class object computes the bitvector of indicating generalized input
  * points according to the (Ramer-)Douglas-Peucker algorithm.
  *
@@ -50,5 +55,8 @@ class DouglasPeucker
     void Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level);
     void Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level);
 };
+
+}
+}
 
 #endif /* DOUGLAS_PEUCKER_HPP_ */

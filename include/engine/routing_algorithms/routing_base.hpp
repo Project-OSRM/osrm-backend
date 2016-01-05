@@ -10,12 +10,21 @@
 
 #include <stack>
 
+namespace osrm
+{
+namespace engine
+{
+
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_1;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_1;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_2;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_2;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
+
+namespace routing_algorithms
+{
+
 
 template <class DataFacadeT, class Derived> class BasicRoutingInterface
 {
@@ -222,8 +231,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
-                const TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
+                const extractor::TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
+                const extractor::TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
 
                 if (!facade->EdgeIsCompressed(ed.id))
                 {
@@ -251,7 +260,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
                         unpacked_path.emplace_back(id_vector[i], name_index,
-                                                   TurnInstruction::NoTurn, 0, travel_mode);
+                                                   extractor::TurnInstruction::NoTurn, 0, travel_mode);
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().segment_duration = ed.distance;
@@ -296,7 +305,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(i < id_vector.size());
                 BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
                 unpacked_path.emplace_back(PathData{
-                    id_vector[i], phantom_node_pair.target_phantom.name_id, TurnInstruction::NoTurn,
+                    id_vector[i], phantom_node_pair.target_phantom.name_id, extractor::TurnInstruction::NoTurn,
                     0, phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
@@ -642,21 +651,25 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             nodes.target_phantom = target_phantom;
             UnpackPath(packed_leg.begin(), packed_leg.end(), nodes, unpacked_path);
 
-            FixedPointCoordinate previous_coordinate = source_phantom.location;
-            FixedPointCoordinate current_coordinate;
+            util::FixedPointCoordinate previous_coordinate = source_phantom.location;
+            util::FixedPointCoordinate current_coordinate;
             distance = 0;
             for (const auto &p : unpacked_path)
             {
                 current_coordinate = facade->GetCoordinateOfNode(p.node);
-                distance += coordinate_calculation::haversineDistance(previous_coordinate,
+                distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
                                                                        current_coordinate);
                 previous_coordinate = current_coordinate;
             }
-            distance += coordinate_calculation::haversineDistance(previous_coordinate,
+            distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
                                                                    target_phantom.location);
         }
         return distance;
     }
 };
+
+}
+}
+}
 
 #endif // ROUTING_BASE_HPP

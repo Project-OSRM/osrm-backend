@@ -5,6 +5,11 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct TurnRestriction
 {
     union WayOrNode
@@ -103,5 +108,8 @@ struct CmpRestrictionContainerByTo
     value_type max_value() const { return InputRestrictionContainer::max_value(); }
     value_type min_value() const { return InputRestrictionContainer::min_value(); }
 };
+
+}
+}
 
 #endif // RESTRICTION_HPP

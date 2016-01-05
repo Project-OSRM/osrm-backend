@@ -7,6 +7,9 @@
 
 namespace osrm
 {
+namespace util
+{
+
 namespace detail
 {
 // Culled by SFINAE if reserve does not exist or is not accessible
@@ -81,4 +84,6 @@ void append_to_container(Container &&container, T value, Args &&... args)
 }
 
 } // namespace osrm
+}
+
 #endif /* CONTAINER_HPP */

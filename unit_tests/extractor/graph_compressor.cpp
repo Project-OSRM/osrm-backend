@@ -12,6 +12,11 @@
 
 BOOST_AUTO_TEST_SUITE(graph_compressor)
 
+using namespace osrm;
+using namespace osrm::extractor;
+using InputEdge = util::NodeBasedDynamicGraph::InputEdge;
+using Graph = util::NodeBasedDynamicGraph;
+
 BOOST_AUTO_TEST_CASE(long_road_test)
 {
     //
@@ -25,7 +30,6 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     RestrictionMap map;
     CompressedEdgeContainer container;
 
-    using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
         // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout,
         // travel_mode
@@ -42,7 +46,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     BOOST_ASSERT(edges[2].data.IsCompatibleTo(edges[4].data));
     BOOST_ASSERT(edges[4].data.IsCompatibleTo(edges[6].data));
 
-    NodeBasedDynamicGraph graph(5, edges);
+    Graph graph(5, edges);
     compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
 
     BOOST_CHECK_EQUAL(graph.FindEdge(0, 1), SPECIAL_EDGEID);
@@ -67,7 +71,6 @@ BOOST_AUTO_TEST_CASE(loop_test)
     RestrictionMap map;
     CompressedEdgeContainer container;
 
-    using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
         // source, target, distance, edge_id, name_id, access_restricted, forward, backward,
         // roundabout, travel_mode
@@ -98,7 +101,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
     BOOST_ASSERT(edges[9].data.IsCompatibleTo(edges[10].data));
     BOOST_ASSERT(edges[10].data.IsCompatibleTo(edges[11].data));
 
-    NodeBasedDynamicGraph graph(6, edges);
+    Graph graph(6, edges);
     compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
 
     BOOST_CHECK_EQUAL(graph.FindEdge(5, 0), SPECIAL_EDGEID);
@@ -125,7 +128,6 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     RestrictionMap map;
     CompressedEdgeContainer container;
 
-    using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
         // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout,
         // travel_mode
@@ -143,7 +145,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     BOOST_ASSERT(edges[3].data.IsCompatibleTo(edges[4].data));
     BOOST_ASSERT(edges[4].data.IsCompatibleTo(edges[5].data));
 
-    NodeBasedDynamicGraph graph(4, edges);
+    Graph graph(4, edges);
     compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);
@@ -164,7 +166,6 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     RestrictionMap map;
     CompressedEdgeContainer container;
 
-    using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
         // source, target, distance, edge_id, name_id, access_restricted, forward, backward,
         // roundabout, travel_mode
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[1].data));
     BOOST_ASSERT(edges[2].data.IsCompatibleTo(edges[3].data));
 
-    NodeBasedDynamicGraph graph(5, edges);
+    Graph graph(5, edges);
     compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);
@@ -197,7 +198,6 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     RestrictionMap map;
     CompressedEdgeContainer container;
 
-    using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
         // source, target, distance, edge_id, name_id, access_restricted, reverse, roundabout,
         // travel_mode
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
         {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
     };
 
-    NodeBasedDynamicGraph graph(5, edges);
+    Graph graph(5, edges);
     compressor.Compress(barrier_nodes, traffic_lights, map, graph, container);
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);

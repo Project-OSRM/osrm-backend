@@ -2,8 +2,16 @@
 
 #include "datastore/shared_memory_factory.hpp"
 #include "engine/datafacade/shared_datatype.hpp"
-#include "util/version.hpp"
 #include "util/simple_logger.hpp"
+
+namespace osrm
+{
+namespace tools
+{
+
+// FIXME remove after folding back into datastore
+using namespace datastore;
+using namespace engine::datafacade;
 
 void deleteRegion(const SharedDataType region)
 {
@@ -30,46 +38,47 @@ void deleteRegion(const SharedDataType region)
             }
         }();
 
-        SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
+        util::SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
     }
 }
 
 // find all existing shmem regions and remove them.
 void springclean()
 {
-    SimpleLogger().Write() << "spring-cleaning all shared memory regions";
+    util::SimpleLogger().Write() << "spring-cleaning all shared memory regions";
     deleteRegion(DATA_1);
     deleteRegion(LAYOUT_1);
     deleteRegion(DATA_2);
     deleteRegion(LAYOUT_2);
     deleteRegion(CURRENT_REGIONS);
 }
+}
+}
 
 int main()
 {
-    LogPolicy::GetInstance().Unmute();
+    osrm::util::LogPolicy::GetInstance().Unmute();
     try
     {
-        SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION << "\n\n";
-        SimpleLogger().Write() << "Releasing all locks";
-        SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
-        SimpleLogger().Write() << "----------------------";
-        SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
-        SimpleLogger().Write() << "Type 'Y' to acknowledge that you know what your are doing.";
-        SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated "
+        osrm::util::SimpleLogger().Write() << "Releasing all locks";
+        osrm::util::SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
+        osrm::util::SimpleLogger().Write() << "----------------------";
+        osrm::util::SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
+        osrm::util::SimpleLogger().Write() << "Type 'Y' to acknowledge that you know what your are doing.";
+        osrm::util::SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated "
                                << "by osrm-datastore? [type 'Y' to confirm]";
 
         const auto letter = getchar();
         if (letter != 'Y')
         {
-            SimpleLogger().Write() << "aborted.";
+            osrm::util::SimpleLogger().Write() << "aborted.";
             return 0;
         }
-        springclean();
+        osrm::tools::springclean();
     }
     catch (const std::exception &e)
     {
-        SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
+        osrm::util::SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
     }
     return 0;
 }

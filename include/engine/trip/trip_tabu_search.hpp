@@ -14,6 +14,8 @@
 
 namespace osrm
 {
+namespace engine
+{
 namespace trip
 {
 
@@ -32,6 +34,9 @@ void TabuSearchTrip(const PhantomNodeArray &phantom_node_vector,
                     std::vector<int> &min_loc_permutation)
 {
 }
+
 }
 }
+}
+
 #endif // TRIP_BRUTE_FORCE_HPP

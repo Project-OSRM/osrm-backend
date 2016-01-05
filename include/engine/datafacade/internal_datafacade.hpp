@@ -22,15 +22,22 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace engine
+{
+namespace datafacade
+{
+
 template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacade<EdgeDataT>
 {
 
   private:
     using super = BaseDataFacade<EdgeDataT>;
-    using QueryGraph = StaticGraph<typename super::EdgeData>;
+    using QueryGraph = util::StaticGraph<typename super::EdgeData>;
     using InputEdge = typename QueryGraph::InputEdge;
     using RTreeLeaf = typename super::RTreeLeaf;
-    using InternalRTree = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>;
+    using InternalRTree = util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, false>::vector, false>;
     using InternalGeospatialQuery = GeospatialQuery<InternalRTree>;
 
     InternalDataFacade() {}
@@ -40,32 +47,32 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     std::unique_ptr<QueryGraph> m_query_graph;
     std::string m_timestamp;
 
-    std::shared_ptr<ShM<FixedPointCoordinate, false>::vector> m_coordinate_list;
-    ShM<NodeID, false>::vector m_via_node_list;
-    ShM<unsigned, false>::vector m_name_ID_list;
-    ShM<TurnInstruction, false>::vector m_turn_instruction_list;
-    ShM<TravelMode, false>::vector m_travel_mode_list;
-    ShM<char, false>::vector m_names_char_list;
-    ShM<bool, false>::vector m_edge_is_compressed;
-    ShM<unsigned, false>::vector m_geometry_indices;
-    ShM<unsigned, false>::vector m_geometry_list;
-    ShM<bool, false>::vector m_is_core_node;
+    std::shared_ptr<util::ShM<util::FixedPointCoordinate, false>::vector> m_coordinate_list;
+    util::ShM<NodeID, false>::vector m_via_node_list;
+    util::ShM<unsigned, false>::vector m_name_ID_list;
+    util::ShM<extractor::TurnInstruction, false>::vector m_turn_instruction_list;
+    util::ShM<extractor::TravelMode, false>::vector m_travel_mode_list;
+    util::ShM<char, false>::vector m_names_char_list;
+    util::ShM<bool, false>::vector m_edge_is_compressed;
+    util::ShM<unsigned, false>::vector m_geometry_indices;
+    util::ShM<unsigned, false>::vector m_geometry_list;
+    util::ShM<bool, false>::vector m_is_core_node;
 
     boost::thread_specific_ptr<InternalRTree> m_static_rtree;
     boost::thread_specific_ptr<InternalGeospatialQuery> m_geospatial_query;
     boost::filesystem::path ram_index_path;
     boost::filesystem::path file_index_path;
-    RangeTable<16, false> m_name_table;
+    util::RangeTable<16, false> m_name_table;
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
     {
         if (boost::filesystem::exists(timestamp_path))
         {
-            SimpleLogger().Write() << "Loading Timestamp";
+            util::SimpleLogger().Write() << "Loading Timestamp";
             boost::filesystem::ifstream timestamp_stream(timestamp_path);
             if (!timestamp_stream)
             {
-                SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
+                util::SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
             }
             getline(timestamp_stream, m_timestamp);
             timestamp_stream.close();
@@ -82,22 +89,22 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
     {
-        typename ShM<typename QueryGraph::NodeArrayEntry, false>::vector node_list;
-        typename ShM<typename QueryGraph::EdgeArrayEntry, false>::vector edge_list;
+        typename util::ShM<typename QueryGraph::NodeArrayEntry, false>::vector node_list;
+        typename util::ShM<typename QueryGraph::EdgeArrayEntry, false>::vector edge_list;
 
-        SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
+        util::SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 
         m_number_of_nodes = readHSGRFromStream(hsgr_path, node_list, edge_list, &m_check_sum);
 
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
         // BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
-        SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
+        util::SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
                                << " edges";
         m_query_graph = std::unique_ptr<QueryGraph>(new QueryGraph(node_list, edge_list));
 
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
-        SimpleLogger().Write() << "Data checksum is " << m_check_sum;
+        util::SimpleLogger().Write() << "Data checksum is " << m_check_sum;
     }
 
     void LoadNodeAndEdgeInformation(const boost::filesystem::path &nodes_file,
@@ -105,15 +112,15 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     {
         boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
-        QueryNode current_node;
+        extractor::QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list =
-            std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
+            std::make_shared<std::vector<util::FixedPointCoordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
-            nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
-            m_coordinate_list->at(i) = FixedPointCoordinate(current_node.lat, current_node.lon);
+            nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
+            m_coordinate_list->at(i) = util::FixedPointCoordinate(current_node.lat, current_node.lon);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
         }
@@ -130,10 +137,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
         unsigned compressed = 0;
 
-        OriginalEdgeData current_edge_data;
+        extractor::OriginalEdgeData current_edge_data;
         for (unsigned i = 0; i < number_of_edges; ++i)
         {
-            edges_input_stream.read((char *)&(current_edge_data), sizeof(OriginalEdgeData));
+            edges_input_stream.read((char *)&(current_edge_data), sizeof(extractor::OriginalEdgeData));
             m_via_node_list[i] = current_edge_data.via_node;
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
@@ -220,7 +227,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         name_stream.read((char *)&m_names_char_list[0], number_of_chars * sizeof(char));
         if (0 == m_names_char_list.size())
         {
-            SimpleLogger().Write(logWARNING) << "list of street names is empty";
+            util::SimpleLogger().Write(logWARNING) << "list of street names is empty";
         }
         name_stream.close();
     }
@@ -242,29 +249,29 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         {
             const auto it = server_paths.find(path);
             if (it == end_it || !boost::filesystem::is_regular_file(it->second))
-                throw osrm::exception("no valid " + path + " file given in ini file");
+                throw util::exception("no valid " + path + " file given in ini file");
             return it->second;
         };
 
         ram_index_path = file_for("ramindex");
         file_index_path = file_for("fileindex");
 
-        SimpleLogger().Write() << "loading graph data";
+        util::SimpleLogger().Write() << "loading graph data";
         LoadGraph(file_for("hsgrdata"));
 
-        SimpleLogger().Write() << "loading edge information";
+        util::SimpleLogger().Write() << "loading edge information";
         LoadNodeAndEdgeInformation(file_for("nodesdata"), file_for("edgesdata"));
 
-        SimpleLogger().Write() << "loading core information";
+        util::SimpleLogger().Write() << "loading core information";
         LoadCoreInformation(file_for("coredata"));
 
-        SimpleLogger().Write() << "loading geometries";
+        util::SimpleLogger().Write() << "loading geometries";
         LoadGeometries(file_for("geometries"));
 
-        SimpleLogger().Write() << "loading timestamp";
+        util::SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(file_for("timestamp"));
 
-        SimpleLogger().Write() << "loading street names";
+        util::SimpleLogger().Write() << "loading street names";
         LoadStreetNames(file_for("namesdata"));
     }
 
@@ -312,7 +319,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     // node and edge information access
-    FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const override final
+    util::FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const override final
     {
         return m_coordinate_list->at(id);
     };
@@ -322,18 +329,18 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_edge_is_compressed.at(id);
     }
 
-    TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }
 
-    TravelMode GetTravelModeForEdgeID(const unsigned id) const override final
+    extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const override final
     {
         return m_travel_mode_list.at(id);
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodesInRange(const util::FixedPointCoordinate &input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
                                const int bearing_range = 180) override final
@@ -349,7 +356,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodes(const util::FixedPointCoordinate &input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,
                         const int bearing_range = 180) override final
@@ -365,7 +372,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::FixedPointCoordinate &input_coordinate,
                                                       const int bearing = 0,
                                                       const int bearing_range = 180) override final
     {
@@ -437,5 +444,9 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 };
+
+}
+}
+}
 
 #endif // INTERNAL_DATAFACADE_HPP

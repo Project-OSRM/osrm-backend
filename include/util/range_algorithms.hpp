@@ -5,6 +5,8 @@
 
 namespace osrm
 {
+namespace util
+{
 
 template <class Container>
 auto max_element(const Container &c) -> decltype(std::max_element(c.begin(), c.end()))
@@ -16,6 +18,8 @@ template <class Container>
 auto max_element(const Container &c) -> decltype(std::max_element(c.cbegin(), c.cend()))
 {
     return std::max_element(c.cbegin(), c.cend());
+}
+
 }
 }
 

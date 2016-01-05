@@ -6,6 +6,11 @@
 #include <limits>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 template <typename NodeID, typename Key> class XORFastHashStorage
 {
   public:
@@ -70,5 +75,8 @@ template <typename NodeID, typename Key> class XORFastHashStorage
     XORFastHash fast_hasher;
     unsigned current_timestamp;
 };
+
+}
+}
 
 #endif // XOR_FAST_HASH_STORAGE_HPP

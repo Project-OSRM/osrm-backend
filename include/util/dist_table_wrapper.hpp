@@ -6,6 +6,11 @@
 #include <boost/assert.hpp>
 #include <cstddef>
 
+namespace osrm
+{
+namespace util
+{
+
 // This Wrapper provides an easier access to a distance table that is given as an linear vector
 
 template <typename T> class DistTableWrapper
@@ -57,5 +62,8 @@ template <typename T> class DistTableWrapper
     std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
+
+}
+}
 
 #endif // DIST_TABLE_WRAPPER_H

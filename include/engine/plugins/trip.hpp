@@ -25,6 +25,13 @@
 #include <vector>
 #include <iterator>
 
+namespace osrm
+{
+namespace engine
+{
+namespace plugins
+{
+
 template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 {
   private:
@@ -37,7 +44,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     explicit RoundTripPlugin(DataFacadeT *facade, int max_locations_trip)
         : descriptor_string("trip"), facade(facade), max_locations_trip(max_locations_trip)
     {
-        search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
+        search_engine_ptr = util::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
 
     const std::string GetDescriptor() const override final { return descriptor_string; }
@@ -51,7 +58,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         phantom_node_list.reserve(route_parameters.coordinates.size());
 
         // find phantom nodes for all input coords
-        for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
+        for (const auto i : util::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
             // if client hints are helpful, encode hints
             if (checksum_OK && i < route_parameters.hints.size() &&
@@ -129,7 +136,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     // identifies and splits the graph in its strongly connected components (scc)
     // and returns an SCC_Component
     SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
-                                             const DistTableWrapper<EdgeWeight> &result_table)
+                                             const util::DistTableWrapper<EdgeWeight> &result_table)
     {
 
         if (std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
@@ -142,9 +149,9 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
 
         // Run TarjanSCC
-        auto wrapper = std::make_shared<MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
+        auto wrapper = std::make_shared<util::MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
                                                                         number_of_locations);
-        auto scc = TarjanSCC<MatrixGraphWrapper<EdgeWeight>>(wrapper);
+        auto scc = extractor::TarjanSCC<util::MatrixGraphWrapper<EdgeWeight>>(wrapper);
         scc.run();
 
         const auto number_of_components = scc.get_number_of_components();
@@ -174,9 +181,9 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     }
 
     void SetLocPermutationOutput(const std::vector<NodeID> &permutation,
-                                 osrm::json::Object &json_result)
+                                 util::json::Object &json_result)
     {
-        osrm::json::Array json_permutation;
+        util::json::Array json_permutation;
         json_permutation.values.insert(std::end(json_permutation.values), std::begin(permutation),
                                        std::end(permutation));
         json_result.values["permutation"] = json_permutation;
@@ -218,7 +225,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     }
 
     Status HandleRequest(const RouteParameters &route_parameters,
-                         osrm::json::Object &json_result) override final
+                         util::json::Object &json_result) override final
     {
         if (max_locations_trip > 0 &&
             (static_cast<int>(route_parameters.coordinates.size()) > max_locations_trip))
@@ -259,7 +266,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         const auto number_of_locations = phantom_node_list.size();
 
         // compute the distance table of all phantom nodes
-        const auto result_table = DistTableWrapper<EdgeWeight>(
+        const auto result_table = util::DistTableWrapper<EdgeWeight>(
             *search_engine_ptr->distance_table(phantom_node_list, phantom_node_list),
             number_of_locations);
 
@@ -295,16 +302,16 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 if (component_size < BF_MAX_FEASABLE)
                 {
                     scc_route =
-                        osrm::trip::BruteForceTrip(start, end, number_of_locations, result_table);
+                        trip::BruteForceTrip(start, end, number_of_locations, result_table);
                 }
                 else
                 {
-                    scc_route = osrm::trip::FarthestInsertionTrip(start, end, number_of_locations,
+                    scc_route = trip::FarthestInsertionTrip(start, end, number_of_locations,
                                                                   result_table);
                 }
 
                 // use this output if debugging of route is needed:
-                // SimpleLogger().Write() << "Route #" << k << ": " << [&scc_route]()
+                // util::SimpleLogger().Write() << "Route #" << k << ": " << [&scc_route]()
                 // {
                 //     std::string s = "";
                 //     for (auto x : scc_route)
@@ -333,13 +340,13 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
         // prepare JSON output
         // create a json object for every trip
-        osrm::json::Array trip;
+        util::json::Array trip;
         for (std::size_t i = 0; i < route_result.size(); ++i)
         {
-            osrm::json::Object scc_trip;
+            util::json::Object scc_trip;
 
             // annotate comp_route[i] as a json trip
-            auto generator = osrm::engine::MakeApiResponseGenerator(facade);
+            auto generator = MakeApiResponseGenerator(facade);
             generator.DescribeRoute(route_parameters, comp_route[i], scc_trip);
 
             // set permutation output
@@ -359,5 +366,9 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         return Status::Ok;
     }
 };
+
+}
+}
+}
 
 #endif // TRIP_HPP

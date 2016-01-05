@@ -5,6 +5,11 @@
 
 #include <tuple>
 
+namespace osrm
+{
+namespace contractor
+{
+
 struct QueryEdge
 {
     NodeID source;
@@ -48,5 +53,8 @@ struct QueryEdge
                 data.id == right.data.id);
     }
 };
+
+}
+}
 
 #endif // QUERYEDGE_HPP

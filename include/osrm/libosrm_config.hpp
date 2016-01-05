@@ -33,6 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <string>
 
+namespace osrm
+{
+
 struct LibOSRMConfig
 {
     std::unordered_map<std::string, boost::filesystem::path> server_paths;
@@ -42,5 +45,7 @@ struct LibOSRMConfig
     int max_locations_map_matching = -1;
     bool use_shared_memory = true;
 };
+
+}
 
 #endif // SERVER_CONFIG_HPP

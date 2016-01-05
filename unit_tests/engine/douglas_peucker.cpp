@@ -10,9 +10,12 @@
 
 BOOST_AUTO_TEST_SUITE(douglas_peucker)
 
+using namespace osrm;
+using namespace osrm::engine;
+
 SegmentInformation getTestInfo(int lat, int lon, bool necessary)
 {
-    return SegmentInformation(FixedPointCoordinate(lat, lon), 0, 0, 0, TurnInstruction::HeadOn,
+    return SegmentInformation(util::FixedPointCoordinate(lat, lon), 0, 0, 0, extractor::TurnInstruction::HeadOn,
                               necessary, false, 0);
 }
 

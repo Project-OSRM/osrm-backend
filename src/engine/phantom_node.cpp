@@ -5,6 +5,11 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace engine
+{
+
 PhantomNode::PhantomNode(NodeID forward_node_id,
                          NodeID reverse_node_id,
                          unsigned name_id,
@@ -15,10 +20,10 @@ PhantomNode::PhantomNode(NodeID forward_node_id,
                          unsigned packed_geometry_id,
                          bool is_tiny_component,
                          unsigned component_id,
-                         FixedPointCoordinate &location,
+                         util::FixedPointCoordinate &location,
                          unsigned short fwd_segment_position,
-                         TravelMode forward_travel_mode,
-                         TravelMode backward_travel_mode)
+                         extractor::TravelMode forward_travel_mode,
+                         extractor::TravelMode backward_travel_mode)
     : forward_node_id(forward_node_id), reverse_node_id(reverse_node_id), name_id(name_id),
       forward_weight(forward_weight), reverse_weight(reverse_weight),
       forward_offset(forward_offset), reverse_offset(reverse_offset),
@@ -74,3 +79,5 @@ bool PhantomNode::is_valid(const unsigned number_of_nodes) const
 bool PhantomNode::IsValid() const { return location.IsValid() && (name_id != INVALID_NAMEID); }
 
 bool PhantomNode::operator==(const PhantomNode &other) const { return location == other.location; }
+}
+}

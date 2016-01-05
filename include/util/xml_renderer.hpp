@@ -7,6 +7,8 @@
 
 namespace osrm
 {
+namespace util
+{
 namespace json
 {
 
@@ -105,6 +107,9 @@ template <class JSONObject> inline void gpx_render(std::vector<char> &out, const
     const std::string footer{"</rte></gpx>"};
     out.insert(out.end(), footer.begin(), footer.end());
 }
+
 } // namespace json
+} // namespace util
 } // namespace osrm
+
 #endif // XML_RENDERER_HPP

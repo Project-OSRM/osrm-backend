@@ -31,6 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <functional>
 
+namespace osrm
+{
+
 /* Creates strongly typed wrappers around scalar types.
  * Useful for stopping accidental assignment of lats to lons,
  * etc.  Also clarifies what this random "int" value is
@@ -65,5 +68,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         }                                                                                          \
     };                                                                                             \
     }
+
+}
 
 #endif // OSRM_STRONG_TYPEDEF_HPP

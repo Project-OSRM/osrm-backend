@@ -5,6 +5,11 @@
 
 #include "util/typedefs.hpp"
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct ExternalMemoryNode : QueryNode
 {
     ExternalMemoryNode(int lat, int lon, OSMNodeID id, bool barrier, bool traffic_light);
@@ -26,5 +31,8 @@ struct ExternalMemoryNodeSTXXLCompare
     value_type max_value();
     value_type min_value();
 };
+
+}
+}
 
 #endif /* EXTERNAL_MEMORY_NODE_HPP_ */

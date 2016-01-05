@@ -6,6 +6,11 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace util
+{
+
 constexpr unsigned short atan_table[4096] = {
     0x0000, 0x0014, 0x0028, 0x003d, 0x0051, 0x0065, 0x007a, 0x008e, 0x00a3, 0x00b7, 0x00cb, 0x00e0,
     0x00f4, 0x0108, 0x011d, 0x0131, 0x0146, 0x015a, 0x016e, 0x0183, 0x0197, 0x01ab, 0x01c0, 0x01d4,
@@ -416,6 +421,9 @@ inline double atan2_lookup(double y, double x)
         break;
     }
     return angle;
+}
+
+}
 }
 
 #endif // TRIGONOMETRY_TABLE_HPP

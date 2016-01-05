@@ -26,6 +26,11 @@
 #include <memory>
 #include <vector>
 
+namespace osrm
+{
+namespace contractor
+{
+
 class Contractor
 {
 
@@ -65,12 +70,12 @@ class Contractor
         ContractorHeapData(short h, bool t) : hop(h), target(t) {}
     };
 
-    using ContractorGraph = DynamicGraph<ContractorEdgeData>;
-    //    using ContractorHeap = BinaryHeap<NodeID, NodeID, int, ContractorHeapData,
+    using ContractorGraph = util::DynamicGraph<ContractorEdgeData>;
+    //    using ContractorHeap = util::BinaryHeap<NodeID, NodeID, int, ContractorHeapData,
     //    ArrayStorage<NodeID, NodeID>
     //    >;
     using ContractorHeap =
-        BinaryHeap<NodeID, NodeID, int, ContractorHeapData, XORFastHashStorage<NodeID, NodeID>>;
+        util::BinaryHeap<NodeID, NodeID, int, ContractorHeapData, util::XORFastHashStorage<NodeID, NodeID>>;
     using ContractorEdge = ContractorGraph::InputEdge;
 
     struct ContractorThreadData
@@ -151,7 +156,7 @@ class Contractor
 #ifndef NDEBUG
             if (static_cast<unsigned int>(std::max(diter->weight, 1)) > 24 * 60 * 60 * 10)
             {
-                SimpleLogger().Write(logWARNING)
+                util::SimpleLogger().Write(logWARNING)
                     << "Edge weight large -> "
                     << static_cast<unsigned int>(std::max(diter->weight, 1)) << " : "
                     << static_cast<unsigned int>(diter->source) << " -> "
@@ -253,11 +258,11 @@ class Contractor
         //            }
         //        }
         //
-        //        SimpleLogger().Write() << "edges at node with id " << highestNode << " has degree
+        //        util::SimpleLogger().Write() << "edges at node with id " << highestNode << " has degree
         //        " << maxdegree;
         //        for(unsigned i = contractor_graph->BeginEdges(highestNode); i <
         //        contractor_graph->EndEdges(highestNode); ++i) {
-        //            SimpleLogger().Write() << " ->(" << highestNode << "," <<
+        //            util::SimpleLogger().Write() << " ->(" << highestNode << "," <<
         //            contractor_graph->GetTarget(i)
         //            << "); via: " << contractor_graph->GetEdgeData(i).via;
         //        }
@@ -281,7 +286,7 @@ class Contractor
         constexpr size_t DeleteGrainSize = 1;
 
         const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
-        Percent p(number_of_nodes);
+        util::Percent p(number_of_nodes);
 
         ThreadDataContainer thread_data_list(number_of_nodes);
 
@@ -340,7 +345,7 @@ class Contractor
             if (!flushed_contractor && (number_of_contracted_nodes >
                                         static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
             {
-                DeallocatingVector<ContractorEdge> new_edge_set; // this one is not explicitely
+                util::DeallocatingVector<ContractorEdge> new_edge_set; // this one is not explicitely
                                                                  // cleared since it goes out of
                                                                  // scope anywa
                 std::cout << " [flush " << number_of_contracted_nodes << " nodes] " << std::flush;
@@ -357,7 +362,7 @@ class Contractor
                 // remaining graph
                 std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, UINT_MAX);
 
-                for (const auto new_node_id : osrm::irange<std::size_t>(0, remaining_nodes.size()))
+                for (const auto new_node_id : util::irange<std::size_t>(0, remaining_nodes.size()))
                 {
                     auto &node = remaining_nodes[new_node_id];
                     BOOST_ASSERT(node_priorities.size() > node.id);
@@ -365,7 +370,7 @@ class Contractor
                 }
 
                 // build forward and backward renumbering map and remap ids in remaining_nodes
-                for (const auto new_node_id : osrm::irange<std::size_t>(0, remaining_nodes.size()))
+                for (const auto new_node_id : util::irange<std::size_t>(0, remaining_nodes.size()))
                 {
                     auto &node = remaining_nodes[new_node_id];
                     // create renumbering maps in both directions
@@ -375,7 +380,7 @@ class Contractor
                 }
                 // walk over all nodes
                 for (const auto source :
-                     osrm::irange<NodeID>(0, contractor_graph->GetNumberOfNodes()))
+                     util::irange<NodeID>(0, contractor_graph->GetNumberOfNodes()))
                 {
                     for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
                     {
@@ -389,7 +394,7 @@ class Contractor
                         else
                         {
                             // node is not yet contracted.
-                            // add (renumbered) outgoing edges to new DynamicGraph.
+                            // add (renumbered) outgoing edges to new util::DynamicGraph.
                             ContractorEdge new_edge = {new_node_id_from_orig_id_map[source],
                                                        new_node_id_from_orig_id_map[target], data};
 
@@ -590,7 +595,7 @@ class Contractor
             //            avgdegree /= std::max((unsigned)1,(unsigned)remaining_nodes.size() );
             //            quaddegree /= std::max((unsigned)1,(unsigned)remaining_nodes.size() );
             //
-            //            SimpleLogger().Write() << "rest: " << remaining_nodes.size() << ", max: "
+            //            util::SimpleLogger().Write() << "rest: " << remaining_nodes.size() << ", max: "
             //            << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ",
             //            quad: " << quaddegree;
 
@@ -633,7 +638,7 @@ class Contractor
             is_core_node.clear();
         }
 
-        SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes "
+        util::SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes "
                                << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
 
         thread_data_list.data.clear();
@@ -649,15 +654,15 @@ class Contractor
         out_node_levels.swap(node_levels);
     }
 
-    template <class Edge> inline void GetEdges(DeallocatingVector<Edge> &edges)
+    template <class Edge> inline void GetEdges(util::DeallocatingVector<Edge> &edges)
     {
-        Percent p(contractor_graph->GetNumberOfNodes());
-        SimpleLogger().Write() << "Getting edges of minimized graph";
+        util::Percent p(contractor_graph->GetNumberOfNodes());
+        util::SimpleLogger().Write() << "Getting edges of minimized graph";
         const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
         if (contractor_graph->GetNumberOfNodes())
         {
             Edge new_edge;
-            for (const auto node : osrm::irange(0u, number_of_nodes))
+            for (const auto node : util::irange(0u, number_of_nodes))
             {
                 p.printStatus(node);
                 for (auto edge : contractor_graph->GetAdjacentEdgeRange(node))
@@ -940,7 +945,7 @@ class Contractor
         std::sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
-        for (const auto i : osrm::irange<std::size_t>(0, neighbours.size()))
+        for (const auto i : util::irange<std::size_t>(0, neighbours.size()))
         {
             contractor_graph->DeleteEdgesTo(neighbours[i], node);
         }
@@ -1060,7 +1065,10 @@ class Contractor
     std::vector<NodeID> orig_node_id_from_new_node_id_map;
     std::vector<float> node_levels;
     std::vector<bool> is_core_node;
-    XORFastHash fast_hash;
+    util::XORFastHash fast_hash;
 };
+
+}
+}
 
 #endif // CONTRACTOR_HPP

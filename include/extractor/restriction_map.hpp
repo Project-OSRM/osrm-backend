@@ -12,6 +12,11 @@
 #include <unordered_set>
 #include <vector>
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct RestrictionSource
 {
     NodeID start_node;
@@ -37,26 +42,33 @@ struct RestrictionTarget
         return (lhs.target_node == rhs.target_node && lhs.is_only == rhs.is_only);
     }
 };
+}
+}
 
 namespace std
 {
-template <> struct hash<RestrictionSource>
+template <> struct hash<osrm::extractor::RestrictionSource>
 {
-    size_t operator()(const RestrictionSource &r_source) const
+    size_t operator()(const osrm::extractor::RestrictionSource &r_source) const
     {
         return hash_val(r_source.start_node, r_source.via_node);
     }
 };
 
-template <> struct hash<RestrictionTarget>
+template <> struct hash<osrm::extractor::RestrictionTarget>
 {
-    size_t operator()(const RestrictionTarget &r_target) const
+    size_t operator()(const osrm::extractor::RestrictionTarget &r_target) const
     {
         return hash_val(r_target.target_node, r_target.is_only);
     }
 };
 }
 
+
+namespace osrm
+{
+namespace extractor
+{
 /**
     \brief Efficent look up if an edge is the start + via node of a TurnRestriction
     EdgeBasedEdgeFactory decides by it if edges are inserted or geometry is compressed
@@ -145,5 +157,8 @@ class RestrictionMap
     std::unordered_set<NodeID> m_restriction_start_nodes;
     std::unordered_set<NodeID> m_no_turn_via_node_set;
 };
+
+}
+}
 
 #endif // RESTRICTION_MAP_HPP

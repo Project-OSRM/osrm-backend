@@ -24,6 +24,11 @@
 #include <chrono>
 #include <limits>
 
+namespace osrm
+{
+namespace extractor
+{
+
 static const int WRITE_BLOCK_BUFFER_SIZE = 8000;
 
 ExtractionContainers::ExtractionContainers()
@@ -65,8 +70,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     {
         std::ofstream file_out_stream;
         file_out_stream.open(output_file_name.c_str(), std::ios::binary);
-        const FingerPrint fingerprint = FingerPrint::GetValid();
-        file_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
+        const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
+        file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
 
         PrepareNodes();
         WriteNodes(file_out_stream);
@@ -100,7 +105,7 @@ void ExtractionContainers::WriteNames(const std::string &names_file_name) const
     }
 
     // builds and writes the index
-    RangeTable<> name_index_range(name_lengths);
+    util::RangeTable<> name_index_range(name_lengths);
     name_file_stream << name_index_range;
 
     name_file_stream.write((char *)&total_length, sizeof(unsigned));
@@ -182,7 +187,7 @@ void ExtractionContainers::PrepareNodes()
     }
     if (internal_id > std::numeric_limits<NodeID>::max())
     {
-        throw osrm::exception("There are too many nodes remaining after filtering, OSRM only "
+        throw util::exception("There are too many nodes remaining after filtering, OSRM only "
                               "supports 2^32 unique nodes");
     }
     max_internal_node_id = boost::numeric_cast<NodeID>(internal_id);
@@ -212,7 +217,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     {
         if (edge_iterator->result.osm_source_id < node_iterator->node_id)
         {
-            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
+            util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
                                                        << edge_iterator->result.source;
             edge_iterator->result.source = SPECIAL_NODEID;
             ++edge_iterator;
@@ -249,7 +254,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
     auto markSourcesInvalid = [](InternalExtractorEdge &edge)
     {
-        SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
+        util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
                                                    << edge.result.source;
         edge.result.source = SPECIAL_NODEID;
         edge.result.osm_source_id = SPECIAL_OSM_NODEID;
@@ -284,7 +289,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         if (edge_iterator->result.osm_target_id < node_iterator->node_id)
         {
-            SimpleLogger().Write(LogLevel::logWARNING)
+            util::SimpleLogger().Write(LogLevel::logWARNING)
                 << "Found invalid node reference "
                 << OSMNodeID_to_uint64_t(edge_iterator->result.osm_target_id);
             edge_iterator->result.target = SPECIAL_NODEID;
@@ -302,11 +307,11 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         BOOST_ASSERT(edge_iterator->source_coordinate.lat != std::numeric_limits<int>::min());
         BOOST_ASSERT(edge_iterator->source_coordinate.lon != std::numeric_limits<int>::min());
 
-        const double distance = coordinate_calculation::greatCircleDistance(
+        const double distance = util::coordinate_calculation::greatCircleDistance(
             edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
             node_iterator->lat, node_iterator->lon);
 
-        if (lua_function_exists(segment_state, "segment_function"))
+        if (util::lua_function_exists(segment_state, "segment_function"))
         {
             luabind::call_function<void>(
                 segment_state, "segment_function", boost::cref(edge_iterator->source_coordinate),
@@ -325,7 +330,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
                 return (distance * 10.) / (data.speed / 3.6);
                 break;
             case InternalExtractorEdge::WeightType::INVALID:
-                osrm::exception("invalid weight type");
+                util::exception("invalid weight type");
             }
             return -1.0;
         }(edge_iterator->weight_data);
@@ -356,7 +361,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
     auto markTargetsInvalid = [](InternalExtractorEdge &edge)
     {
-        SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
+        util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
                                                    << edge.result.target;
         edge.result.target = SPECIAL_NODEID;
     };
@@ -488,7 +493,7 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
 
     if (used_edges_counter > std::numeric_limits<unsigned>::max())
     {
-        throw osrm::exception("There are too many edges, OSRM only supports 2^32");
+        throw util::exception("There are too many edges, OSRM only supports 2^32");
     }
     TIMER_STOP(write_edges);
     std::cout << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
@@ -501,7 +506,7 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
     file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(unsigned));
     std::cout << "ok" << std::endl;
 
-    SimpleLogger().Write() << "Processed " << used_edges_counter << " edges";
+    util::SimpleLogger().Write() << "Processed " << used_edges_counter << " edges";
 }
 
 void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
@@ -541,7 +546,7 @@ void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
     TIMER_STOP(write_nodes);
     std::cout << "ok, after " << TIMER_SEC(write_nodes) << "s" << std::endl;
 
-    SimpleLogger().Write() << "Processed " << max_internal_node_id << " nodes";
+    util::SimpleLogger().Write() << "Processed " << max_internal_node_id << " nodes";
 }
 
 void ExtractionContainers::WriteRestrictions(const std::string &path) const
@@ -550,8 +555,8 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
     std::ofstream restrictions_out_stream;
     unsigned written_restriction_count = 0;
     restrictions_out_stream.open(path.c_str(), std::ios::binary);
-    const FingerPrint fingerprint = FingerPrint::GetValid();
-    restrictions_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
+    const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
+    restrictions_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
     const auto count_position = restrictions_out_stream.tellp();
     restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
 
@@ -569,7 +574,7 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
     restrictions_out_stream.seekp(count_position);
     restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
     restrictions_out_stream.close();
-    SimpleLogger().Write() << "usable restrictions: " << written_restriction_count;
+    util::SimpleLogger().Write() << "usable restrictions: " << written_restriction_count;
 }
 
 void ExtractionContainers::PrepareRestrictions()
@@ -609,7 +614,7 @@ void ExtractionContainers::PrepareRestrictions()
         if (way_start_and_end_iterator->way_id >
             OSMWayID(restrictions_iterator->restriction.from.way))
         {
-            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
+            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
                                                      << restrictions_iterator->restriction.from.way;
             restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
             ++restrictions_iterator;
@@ -625,7 +630,7 @@ void ExtractionContainers::PrepareRestrictions()
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
         if (via_id_iter == external_to_internal_node_id_map.end())
         {
-            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid node: "
+            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid node: "
                                                      << restrictions_iterator->restriction.via.node;
             restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
             ++restrictions_iterator;
@@ -686,7 +691,7 @@ void ExtractionContainers::PrepareRestrictions()
         if (way_start_and_end_iterator->way_id >
             OSMWayID(restrictions_iterator->restriction.to.way))
         {
-            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
+            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
                                                      << restrictions_iterator->restriction.to.way;
             restrictions_iterator->restriction.to.way = SPECIAL_NODEID;
             ++restrictions_iterator;
@@ -719,4 +724,6 @@ void ExtractionContainers::PrepareRestrictions()
     }
     TIMER_STOP(fix_restriction_ends);
     std::cout << "ok, after " << TIMER_SEC(fix_restriction_ends) << "s" << std::endl;
+}
+}
 }

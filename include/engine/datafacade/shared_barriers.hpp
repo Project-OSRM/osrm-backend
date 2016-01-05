@@ -4,6 +4,13 @@
 #include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 
+namespace osrm
+{
+namespace engine
+{
+namespace datafacade
+{
+
 struct SharedBarriers
 {
 
@@ -29,5 +36,9 @@ struct SharedBarriers
     // Is there any query?
     int number_of_queries;
 };
+
+}
+}
+}
 
 #endif // SHARED_BARRIERS_HPP

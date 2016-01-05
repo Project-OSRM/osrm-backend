@@ -10,6 +10,11 @@
 #include <unordered_map>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 template <typename NodeID, typename Key> class ArrayStorage
 {
   public:
@@ -285,5 +290,8 @@ class BinaryHeap
 #endif
     }
 };
+
+}
+}
 
 #endif // BINARY_HEAP_H

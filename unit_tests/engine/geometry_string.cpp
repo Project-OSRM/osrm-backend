@@ -9,23 +9,28 @@
 #include <cmath>
 #include <vector>
 
-BOOST_AUTO_TEST_CASE(geometry_string)
+BOOST_AUTO_TEST_SUITE(polyline)
+
+using namespace osrm;
+using namespace osrm::engine;
+
+BOOST_AUTO_TEST_CASE(decode)
 {
     // Polyline string for the 5 coordinates
     const std::string polyline = "_gjaR_gjaR_pR_ibE_pR_ibE_pR_ibE_pR_ibE";
     PolylineCompressor pc;
-    std::vector<FixedPointCoordinate> coords = pc.decode_string(polyline);
+    std::vector<util::FixedPointCoordinate> coords = pc.decode_string(polyline);
 
     // Test coordinates; these would be the coordinates we give the loc parameter,
     // e.g. loc=10.00,10.0&loc=10.01,10.1...
-    FixedPointCoordinate coord1(10.00 * COORDINATE_PRECISION, 10.0 * COORDINATE_PRECISION);
-    FixedPointCoordinate coord2(10.01 * COORDINATE_PRECISION, 10.1 * COORDINATE_PRECISION);
-    FixedPointCoordinate coord3(10.02 * COORDINATE_PRECISION, 10.2 * COORDINATE_PRECISION);
-    FixedPointCoordinate coord4(10.03 * COORDINATE_PRECISION, 10.3 * COORDINATE_PRECISION);
-    FixedPointCoordinate coord5(10.04 * COORDINATE_PRECISION, 10.4 * COORDINATE_PRECISION);
+    util::FixedPointCoordinate coord1(10.00 * COORDINATE_PRECISION, 10.0 * COORDINATE_PRECISION);
+    util::FixedPointCoordinate coord2(10.01 * COORDINATE_PRECISION, 10.1 * COORDINATE_PRECISION);
+    util::FixedPointCoordinate coord3(10.02 * COORDINATE_PRECISION, 10.2 * COORDINATE_PRECISION);
+    util::FixedPointCoordinate coord4(10.03 * COORDINATE_PRECISION, 10.3 * COORDINATE_PRECISION);
+    util::FixedPointCoordinate coord5(10.04 * COORDINATE_PRECISION, 10.4 * COORDINATE_PRECISION);
 
     // Put the test coordinates into the vector for comparison
-    std::vector<FixedPointCoordinate> cmp_coords;
+    std::vector<util::FixedPointCoordinate> cmp_coords;
     cmp_coords.emplace_back(coord1);
     cmp_coords.emplace_back(coord2);
     cmp_coords.emplace_back(coord3);
@@ -45,3 +50,5 @@ BOOST_AUTO_TEST_CASE(geometry_string)
         BOOST_CHECK_CLOSE(cmp1_lon, cmp2_lon, 0.0001);
     }
 }
+
+BOOST_AUTO_TEST_SUITE_END()

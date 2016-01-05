@@ -9,6 +9,11 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
+namespace osrm
+{
+namespace util
+{
+
 namespace cast
 {
 template <typename Enumeration>
@@ -36,6 +41,9 @@ template <typename T, int Precision = 6> inline std::string to_string_with_preci
     //  - this is not identical to:  trim_right_if(rv, is_any_of('0 .'))
 
     return rv;
+}
+}
+
 }
 }
 

@@ -1,6 +1,11 @@
 #ifndef TURN_INSTRUCTIONS_HPP
 #define TURN_INSTRUCTIONS_HPP
 
+namespace osrm
+{
+namespace extractor
+{
+
 enum class TurnInstruction : unsigned char
 {
     NoTurn = 0,
@@ -74,5 +79,8 @@ struct TurnInstructionsClass
         return true;
     }
 };
+
+}
+}
 
 #endif /* TURN_INSTRUCTIONS_HPP */

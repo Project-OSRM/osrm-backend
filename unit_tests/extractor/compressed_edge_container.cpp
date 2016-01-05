@@ -6,6 +6,9 @@
 
 BOOST_AUTO_TEST_SUITE(compressed_edge_container)
 
+using namespace osrm;
+using namespace osrm::extractor;
+
 BOOST_AUTO_TEST_CASE(long_road_test)
 {
     //   0   1    2    3

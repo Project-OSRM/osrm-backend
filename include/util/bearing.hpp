@@ -4,6 +4,11 @@
 #include <boost/assert.hpp>
 #include <string>
 
+namespace osrm
+{
+namespace util
+{
+
 namespace bearing
 {
 inline std::string get(const double heading)
@@ -83,6 +88,9 @@ inline bool CheckInBounds(const int A, const int B, const int range)
     {
         return normalized_B - range <= normalized_A && normalized_A <= normalized_B + range;
     }
+}
+}
+
 }
 }
 

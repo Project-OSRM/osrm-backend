@@ -8,6 +8,11 @@
 
 #include "util/simple_logger.hpp"
 
+namespace osrm
+{
+namespace extractor
+{
+
 GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
     : speed_profile(std::move(speed_profile))
 {
@@ -16,15 +21,15 @@ GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                const std::unordered_set<NodeID> &traffic_lights,
                                RestrictionMap &restriction_map,
-                               NodeBasedDynamicGraph &graph,
+                               util::NodeBasedDynamicGraph &graph,
                                CompressedEdgeContainer &geometry_compressor)
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
 
-    Percent progress(original_number_of_nodes);
+    util::Percent progress(original_number_of_nodes);
 
-    for (const NodeID node_v : osrm::irange(0u, original_number_of_nodes))
+    for (const NodeID node_v : util::irange(0u, original_number_of_nodes))
     {
         progress.printStatus(node_v);
 
@@ -163,13 +168,13 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
 
 void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,
                                       unsigned original_number_of_edges,
-                                      const NodeBasedDynamicGraph &graph) const
+                                      const util::NodeBasedDynamicGraph &graph) const
 {
 
     unsigned new_node_count = 0;
     unsigned new_edge_count = 0;
 
-    for (const auto i : osrm::irange(0u, graph.GetNumberOfNodes()))
+    for (const auto i : util::irange(0u, graph.GetNumberOfNodes()))
     {
         if (graph.GetOutDegree(i) > 0)
         {
@@ -177,8 +182,10 @@ void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,
             new_edge_count += (graph.EndEdges(i) - graph.BeginEdges(i));
         }
     }
-    SimpleLogger().Write() << "Node compression ratio: "
+    util::SimpleLogger().Write() << "Node compression ratio: "
                            << new_node_count / (double)original_number_of_nodes;
-    SimpleLogger().Write() << "Edge compression ratio: "
+    util::SimpleLogger().Write() << "Edge compression ratio: "
                            << new_edge_count / (double)original_number_of_edges;
+}
+}
 }

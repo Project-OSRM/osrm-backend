@@ -16,6 +16,13 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+namespace plugins
+{
+
 template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
 {
   private:
@@ -27,7 +34,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         : max_locations_distance_table(max_locations_distance_table), descriptor_string("table"),
           facade(facade)
     {
-        search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
+        search_engine_ptr = util::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
 
     virtual ~DistanceTablePlugin() {}
@@ -35,7 +42,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     Status HandleRequest(const RouteParameters &route_parameters,
-                         osrm::json::Object &json_result) override final
+                         util::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
@@ -82,7 +89,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         std::vector<PhantomNodePair> phantom_node_target_vector(number_of_destination);
         auto phantom_node_source_out_iter = phantom_node_source_vector.begin();
         auto phantom_node_target_out_iter = phantom_node_target_vector.begin();
-        for (const auto i : osrm::irange<std::size_t>(0u, route_parameters.coordinates.size()))
+        for (const auto i : util::irange<std::size_t>(0u, route_parameters.coordinates.size()))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -176,10 +183,10 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return Status::EmptyResult;
         }
 
-        osrm::json::Array matrix_json_array;
-        for (const auto row : osrm::irange<std::size_t>(0, number_of_sources))
+        util::json::Array matrix_json_array;
+        for (const auto row : util::irange<std::size_t>(0, number_of_sources))
         {
-            osrm::json::Array json_row;
+            util::json::Array json_row;
             auto row_begin_iterator = result_table->begin() + (row * number_of_destination);
             auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_destination);
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
@@ -187,19 +194,19 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
         }
         json_result.values["distance_table"] = matrix_json_array;
 
-        osrm::json::Array target_coord_json_array;
+        util::json::Array target_coord_json_array;
         for (const auto &phantom : snapped_target_phantoms)
         {
-            osrm::json::Array json_coord;
+            util::json::Array json_coord;
             json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
             json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
             target_coord_json_array.values.push_back(json_coord);
         }
         json_result.values["destination_coordinates"] = target_coord_json_array;
-        osrm::json::Array source_coord_json_array;
+        util::json::Array source_coord_json_array;
         for (const auto &phantom : snapped_source_phantoms)
         {
-            osrm::json::Array json_coord;
+            util::json::Array json_coord;
             json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
             json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
             source_coord_json_array.values.push_back(json_coord);
@@ -212,5 +219,9 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     std::string descriptor_string;
     DataFacadeT *facade;
 };
+
+}
+}
+}
 
 #endif // DISTANCE_TABLE_HPP

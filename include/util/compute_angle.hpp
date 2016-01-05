@@ -1,6 +1,11 @@
 #ifndef COMPUTE_ANGLE_HPP
 #define COMPUTE_ANGLE_HPP
 
+namespace osrm
+{
+namespace util
+{
+
 struct FixedPointCoordinate;
 
 struct ComputeAngle
@@ -11,5 +16,8 @@ struct ComputeAngle
                                                const FixedPointCoordinate &second,
                                                const FixedPointCoordinate &third) noexcept;
 };
+
+}
+}
 
 #endif // COMPUTE_ANGLE_HPP

@@ -2,6 +2,11 @@
 
 #include "osrm/coordinate.hpp"
 
+namespace osrm
+{
+namespace util
+{
+
 uint64_t HilbertCode::operator()(const FixedPointCoordinate &current_coordinate) const
 {
     unsigned location[2];
@@ -70,4 +75,6 @@ void HilbertCode::TransposeCoordinate(uint32_t *X) const
     {
         X[i] ^= t;
     }
+}
+}
 }

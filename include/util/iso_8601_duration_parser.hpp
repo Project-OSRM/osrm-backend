@@ -5,6 +5,11 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_action.hpp>
 
+namespace osrm
+{
+namespace util
+{
+
 namespace qi = boost::spirit::qi;
 
 template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator>
@@ -71,5 +76,8 @@ template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator>
         return temp;
     }
 };
+
+}
+}
 
 #endif // ISO_8601_DURATION_PARSER_HPP

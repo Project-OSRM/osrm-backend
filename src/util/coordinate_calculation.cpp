@@ -11,6 +11,11 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace util
+{
+
 namespace
 {
 constexpr static const double RAD = 0.017453292519943295769236907684886;
@@ -221,5 +226,7 @@ double bearing(const FixedPointCoordinate &first_coordinate,
         result -= 360.0;
     }
     return result;
+}
+}
 }
 }

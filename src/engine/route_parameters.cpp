@@ -7,6 +7,11 @@
 
 #include "engine/polyline_compressor.hpp"
 
+namespace osrm
+{
+namespace engine
+{
+
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
       compression(true), deprecatedAPI(false), uturn_default(false), classify(false),
@@ -150,4 +155,6 @@ void RouteParameters::SetCoordinatesFromGeometry(const std::string &geometry_str
 {
     PolylineCompressor pc;
     coordinates = pc.decode_string(geometry_string);
+}
+}
 }

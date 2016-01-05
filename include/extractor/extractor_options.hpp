@@ -5,6 +5,11 @@
 
 #include <string>
 
+namespace osrm
+{
+namespace extractor
+{
+
 enum class return_code : unsigned
 {
     ok,
@@ -47,5 +52,8 @@ struct ExtractorOptions
 
     static void GenerateOutputFilesNames(ExtractorConfig &extractor_config);
 };
+
+}
+}
 
 #endif // EXTRACTOR_OPTIONS_HPP

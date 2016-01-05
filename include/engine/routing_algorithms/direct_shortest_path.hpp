@@ -10,6 +10,13 @@
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 
+namespace osrm
+{
+namespace engine
+{
+namespace routing_algorithms
+{
+
 /// This is a striped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
 /// necessary in case of vias, where the directions of the start node is constrainted
@@ -124,5 +131,9 @@ class DirectShortestPathRouting final
                           raw_route_data.unpacked_path_segments.front());
     }
 };
+
+}
+}
+}
 
 #endif /* DIRECT_SHORTEST_PATH_HPP */

@@ -10,6 +10,8 @@
 
 namespace osrm
 {
+namespace util
+{
 namespace json
 {
 
@@ -17,7 +19,7 @@ namespace json
 // thread safe manner.
 class Logger
 {
-    using MapT = std::unordered_map<std::string, osrm::json::Value>;
+    using MapT = std::unordered_map<std::string, Value>;
 
   public:
     static Logger *get()
@@ -53,6 +55,8 @@ class Logger
 
     boost::thread_specific_ptr<MapT> map;
 };
+
+}
 }
 }
 

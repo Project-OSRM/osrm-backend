@@ -7,6 +7,11 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace extractor
+{
+
 /**
  * This struct is the direct result of the call to ```way_function```
  * in the lua based profile.
@@ -98,5 +103,8 @@ struct ExtractionWay
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
 };
+
+}
+}
 
 #endif // EXTRACTION_WAY_HPP

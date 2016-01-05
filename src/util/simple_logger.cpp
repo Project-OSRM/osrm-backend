@@ -11,6 +11,11 @@
 #include <mutex>
 #include <string>
 
+namespace osrm
+{
+namespace util
+{
+
 namespace
 {
 static const char COL_RESET[]{"\x1b[0m"};
@@ -91,4 +96,6 @@ SimpleLogger::~SimpleLogger()
             break;
         }
     }
+}
+}
 }

@@ -6,6 +6,11 @@
 #include <boost/assert.hpp>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 /// This function checks if the graph (consisting of directed edges) is undirected
 template <typename GraphT> bool isUndirectedGraph(const GraphT &graph)
 {
@@ -91,4 +96,7 @@ std::vector<OutputEdgeT> directedEdgesFromCompressed(const std::vector<InputEdge
 
     return output_edge_list;
 }
+}
+}
+
 #endif

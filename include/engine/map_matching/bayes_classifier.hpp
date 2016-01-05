@@ -6,6 +6,13 @@
 #include <vector>
 #include <utility>
 
+namespace osrm
+{
+namespace engine
+{
+namespace map_matching
+{
+
 struct NormalDistribution
 {
     NormalDistribution(const double mean, const double standard_deviation)
@@ -87,5 +94,9 @@ class BayesClassifier
     double positive_apriori_probability;
     double negative_apriori_probability;
 };
+
+}
+}
+}
 
 #endif // BAYES_CLASSIFIER_HPP

@@ -8,6 +8,13 @@
 
 #include <array>
 
+namespace osrm
+{
+namespace engine
+{
+namespace datafacade
+{
+
 namespace
 {
 // Added at the start and end of each block as sanity check
@@ -46,41 +53,41 @@ struct SharedDataLayout
 
     void PrintInformation() const
     {
-        SimpleLogger().Write(logDEBUG) << "NAME_OFFSETS         "
+        util::SimpleLogger().Write(logDEBUG) << "NAME_OFFSETS         "
                                        << ": " << GetBlockSize(NAME_OFFSETS);
-        SimpleLogger().Write(logDEBUG) << "NAME_BLOCKS          "
+        util::SimpleLogger().Write(logDEBUG) << "NAME_BLOCKS          "
                                        << ": " << GetBlockSize(NAME_BLOCKS);
-        SimpleLogger().Write(logDEBUG) << "NAME_CHAR_LIST       "
+        util::SimpleLogger().Write(logDEBUG) << "NAME_CHAR_LIST       "
                                        << ": " << GetBlockSize(NAME_CHAR_LIST);
-        SimpleLogger().Write(logDEBUG) << "NAME_ID_LIST         "
+        util::SimpleLogger().Write(logDEBUG) << "NAME_ID_LIST         "
                                        << ": " << GetBlockSize(NAME_ID_LIST);
-        SimpleLogger().Write(logDEBUG) << "VIA_NODE_LIST        "
+        util::SimpleLogger().Write(logDEBUG) << "VIA_NODE_LIST        "
                                        << ": " << GetBlockSize(VIA_NODE_LIST);
-        SimpleLogger().Write(logDEBUG) << "GRAPH_NODE_LIST      "
+        util::SimpleLogger().Write(logDEBUG) << "GRAPH_NODE_LIST      "
                                        << ": " << GetBlockSize(GRAPH_NODE_LIST);
-        SimpleLogger().Write(logDEBUG) << "GRAPH_EDGE_LIST      "
+        util::SimpleLogger().Write(logDEBUG) << "GRAPH_EDGE_LIST      "
                                        << ": " << GetBlockSize(GRAPH_EDGE_LIST);
-        SimpleLogger().Write(logDEBUG) << "COORDINATE_LIST      "
+        util::SimpleLogger().Write(logDEBUG) << "COORDINATE_LIST      "
                                        << ": " << GetBlockSize(COORDINATE_LIST);
-        SimpleLogger().Write(logDEBUG) << "TURN_INSTRUCTION     "
+        util::SimpleLogger().Write(logDEBUG) << "TURN_INSTRUCTION     "
                                        << ": " << GetBlockSize(TURN_INSTRUCTION);
-        SimpleLogger().Write(logDEBUG) << "TRAVEL_MODE          "
+        util::SimpleLogger().Write(logDEBUG) << "TRAVEL_MODE          "
                                        << ": " << GetBlockSize(TRAVEL_MODE);
-        SimpleLogger().Write(logDEBUG) << "R_SEARCH_TREE        "
+        util::SimpleLogger().Write(logDEBUG) << "R_SEARCH_TREE        "
                                        << ": " << GetBlockSize(R_SEARCH_TREE);
-        SimpleLogger().Write(logDEBUG) << "GEOMETRIES_INDEX     "
+        util::SimpleLogger().Write(logDEBUG) << "GEOMETRIES_INDEX     "
                                        << ": " << GetBlockSize(GEOMETRIES_INDEX);
-        SimpleLogger().Write(logDEBUG) << "GEOMETRIES_LIST      "
+        util::SimpleLogger().Write(logDEBUG) << "GEOMETRIES_LIST      "
                                        << ": " << GetBlockSize(GEOMETRIES_LIST);
-        SimpleLogger().Write(logDEBUG) << "GEOMETRIES_INDICATORS"
+        util::SimpleLogger().Write(logDEBUG) << "GEOMETRIES_INDICATORS"
                                        << ": " << GetBlockSize(GEOMETRIES_INDICATORS);
-        SimpleLogger().Write(logDEBUG) << "HSGR_CHECKSUM        "
+        util::SimpleLogger().Write(logDEBUG) << "HSGR_CHECKSUM        "
                                        << ": " << GetBlockSize(HSGR_CHECKSUM);
-        SimpleLogger().Write(logDEBUG) << "TIMESTAMP            "
+        util::SimpleLogger().Write(logDEBUG) << "TIMESTAMP            "
                                        << ": " << GetBlockSize(TIMESTAMP);
-        SimpleLogger().Write(logDEBUG) << "FILE_INDEX_PATH      "
+        util::SimpleLogger().Write(logDEBUG) << "FILE_INDEX_PATH      "
                                        << ": " << GetBlockSize(FILE_INDEX_PATH);
-        SimpleLogger().Write(logDEBUG) << "CORE_MARKER          "
+        util::SimpleLogger().Write(logDEBUG) << "CORE_MARKER          "
                                        << ": " << GetBlockSize(CORE_MARKER);
     }
 
@@ -135,11 +142,11 @@ struct SharedDataLayout
             bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
             if (!start_canary_alive)
             {
-                throw osrm::exception("Start canary of block corrupted.");
+                throw util::exception("Start canary of block corrupted.");
             }
             if (!end_canary_alive)
             {
-                throw osrm::exception("End canary of block corrupted.");
+                throw util::exception("End canary of block corrupted.");
             }
         }
 
@@ -164,5 +171,9 @@ struct SharedDataTimestamp
     SharedDataType data;
     unsigned timestamp;
 };
+
+}
+}
+}
 
 #endif /* SHARED_DATA_TYPE_HPP */

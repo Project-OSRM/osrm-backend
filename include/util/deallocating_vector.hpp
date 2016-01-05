@@ -9,6 +9,11 @@
 #include <utility>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 template <typename ElementT> struct ConstDeallocatingVectorIteratorState
 {
     ConstDeallocatingVectorIteratorState()
@@ -302,7 +307,7 @@ class DeallocatingVector
         { // down-size
             const std::size_t number_of_necessary_buckets = 1 + (new_size / ELEMENTS_PER_BLOCK);
             for (const auto bucket_index :
-                 osrm::irange(number_of_necessary_buckets, bucket_list.size()))
+                 irange(number_of_necessary_buckets, bucket_list.size()))
             {
                 if (nullptr != bucket_list[bucket_index])
                 {
@@ -372,6 +377,9 @@ template <typename T, std::size_t S>
 void swap(DeallocatingVector<T, S> &lhs, DeallocatingVector<T, S> &rhs)
 {
     lhs.swap(rhs);
+}
+
+}
 }
 
 #endif /* DEALLOCATING_VECTOR_HPP */

@@ -7,6 +7,11 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+
 struct RouteNames
 {
     std::string shortest_path_name_1;
@@ -134,5 +139,8 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         return route_names;
     }
 };
+
+}
+}
 
 #endif // EXTRACT_ROUTE_NAMES_H

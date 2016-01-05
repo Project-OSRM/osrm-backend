@@ -20,22 +20,27 @@
 #include <iostream>
 #include <string>
 
+namespace osrm
+{
+namespace server
+{
+
 RequestHandler::RequestHandler() : routing_machine(nullptr) {}
 
 void RequestHandler::handle_request(const http::request &current_request,
                                     http::reply &current_reply)
 {
-    osrm::json::Object json_result;
+    util::json::Object json_result;
 
     // parse command
     try
     {
         std::string request_string;
-        URIDecode(current_request.uri, request_string);
+        util::URIDecode(current_request.uri, request_string);
 
         // deactivated as GCC apparently does not implement that, not even in 4.9
         // std::time_t t = std::time(nullptr);
-        // SimpleLogger().Write() << std::put_time(std::localtime(&t), "%m-%d-%Y %H:%M:%S") <<
+        // util::SimpleLogger().Write() << std::put_time(std::localtime(&t), "%m-%d-%Y %H:%M:%S") <<
         //     " " << current_request.endpoint.to_string() << " " <<
         //     current_request.referrer << ( 0 == current_request.referrer.length() ? "- " :" ") <<
         //     current_request.agent << ( 0 == current_request.agent.length() ? "- " :" ") <<
@@ -48,7 +53,7 @@ void RequestHandler::handle_request(const http::request &current_request,
         time_stamp = localtime(&ltime);
 
         // log timestamp
-        SimpleLogger().Write() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday
+        util::SimpleLogger().Write() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday
                                << "-" << (time_stamp->tm_mon + 1 < 10 ? "0" : "")
                                << (time_stamp->tm_mon + 1) << "-" << 1900 + time_stamp->tm_year
                                << " " << (time_stamp->tm_hour < 10 ? "0" : "")
@@ -61,7 +66,7 @@ void RequestHandler::handle_request(const http::request &current_request,
                                << (0 == current_request.agent.length() ? "- " : " ")
                                << request_string;
 
-        RouteParameters route_parameters;
+        engine::RouteParameters route_parameters;
         APIGrammarParser api_parser(&route_parameters);
 
         auto api_iterator = request_string.begin();
@@ -116,7 +121,7 @@ void RequestHandler::handle_request(const http::request &current_request,
                                            std::to_string(current_reply.content.size()));
         if ("gpx" == route_parameters.output_format)
         { // gpx file
-            osrm::json::gpx_render(current_reply.content, json_result.values["route"]);
+            util::json::gpx_render(current_reply.content, json_result.values["route"]);
             current_reply.headers.emplace_back("Content-Type",
                                                "application/gpx+xml; charset=UTF-8");
             current_reply.headers.emplace_back("Content-Disposition",
@@ -124,14 +129,14 @@ void RequestHandler::handle_request(const http::request &current_request,
         }
         else if (route_parameters.jsonp_parameter.empty())
         { // json file
-            osrm::json::render(current_reply.content, json_result);
+            util::json::render(current_reply.content, json_result);
             current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
             current_reply.headers.emplace_back("Content-Disposition",
                                                "inline; filename=\"response.json\"");
         }
         else
         { // jsonp
-            osrm::json::render(current_reply.content, json_result);
+            util::json::render(current_reply.content, json_result);
             current_reply.headers.emplace_back("Content-Type", "text/javascript; charset=UTF-8");
             current_reply.headers.emplace_back("Content-Disposition",
                                                "inline; filename=\"response.js\"");
@@ -145,9 +150,11 @@ void RequestHandler::handle_request(const http::request &current_request,
     {
         current_reply = http::reply::stock_reply(http::reply::internal_server_error);
         ;
-        SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
+        util::SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
                                          << ", uri: " << current_request.uri;
     }
 }
 
 void RequestHandler::RegisterRoutingMachine(OSRM *osrm) { routing_machine = osrm; }
+}
+}

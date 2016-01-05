@@ -11,6 +11,11 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+
 struct ObjectEncoder
 {
     using base64_t = boost::archive::iterators::base64_from_binary<
@@ -58,5 +63,8 @@ struct ObjectEncoder
         }
     }
 };
+
+}
+}
 
 #endif /* OBJECT_ENCODER_HPP */

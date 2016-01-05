@@ -7,21 +7,27 @@
 
 #include <tuple>
 
-namespace http
+namespace osrm
+{
+namespace server
 {
 
+namespace http
+{
 struct request;
+}
+
 
 class RequestParser
 {
   public:
     RequestParser();
 
-    std::tuple<osrm::tribool, compression_type>
-    parse(request &current_request, char *begin, char *end);
+    std::tuple<util::tribool, http::compression_type>
+    parse(http::request &current_request, char *begin, char *end);
 
   private:
-    osrm::tribool consume(request &current_request, const char input);
+    util::tribool consume(http::request &current_request, const char input);
 
     bool is_char(const int character) const;
 
@@ -60,12 +66,13 @@ class RequestParser
         post_request
     } state;
 
-    header current_header;
-    compression_type selected_compression;
+    http::header current_header;
+    http::compression_type selected_compression;
     bool is_post_header;
     int content_length;
 };
 
-} // namespace http
+}
+}
 
 #endif // REQUEST_PARSER_HPP

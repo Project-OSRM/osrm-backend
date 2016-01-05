@@ -13,6 +13,11 @@
 #include <string>
 #include <unordered_map>
 
+namespace osrm
+{
+namespace util
+{
+
 // generate boost::program_options object for the routing part
 bool GenerateDataStoreOptions(const int argc,
                               const char *argv[],
@@ -199,59 +204,62 @@ bool GenerateDataStoreOptions(const int argc,
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .hsgr file must be specified");
+        throw exception("valid .hsgr file must be specified");
     }
 
     path_iterator = paths.find("nodesdata");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .nodes file must be specified");
+        throw exception("valid .nodes file must be specified");
     }
 
     path_iterator = paths.find("edgesdata");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .edges file must be specified");
+        throw exception("valid .edges file must be specified");
     }
 
     path_iterator = paths.find("geometry");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .geometry file must be specified");
+        throw exception("valid .geometry file must be specified");
     }
 
     path_iterator = paths.find("ramindex");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .ramindex file must be specified");
+        throw exception("valid .ramindex file must be specified");
     }
 
     path_iterator = paths.find("fileindex");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .fileindex file must be specified");
+        throw exception("valid .fileindex file must be specified");
     }
 
     path_iterator = paths.find("namesdata");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .names file must be specified");
+        throw exception("valid .names file must be specified");
     }
 
     path_iterator = paths.find("timestamp");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception("valid .timestamp file must be specified");
+        throw exception("valid .timestamp file must be specified");
     }
 
     return true;
+}
+
+}
 }
 
 #endif /* DATASTORE_OPTIONS_HPP */

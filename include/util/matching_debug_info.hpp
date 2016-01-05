@@ -7,10 +7,15 @@
 
 #include "osrm/coordinate.hpp"
 
+namespace osrm
+{
+namespace util
+{
+
 // Provides the debug interface for introspection tools
 struct MatchingDebugInfo
 {
-    MatchingDebugInfo(const osrm::json::Logger *logger) : logger(logger)
+    MatchingDebugInfo(const json::Logger *logger) : logger(logger)
     {
         if (logger)
         {
@@ -26,25 +31,25 @@ struct MatchingDebugInfo
             return;
         }
 
-        osrm::json::Array states;
+        json::Array states;
         for (auto &elem : candidates_list)
         {
-            osrm::json::Array timestamps;
+            json::Array timestamps;
             for (auto &elem_s : elem)
             {
-                osrm::json::Object state;
-                state.values["transitions"] = osrm::json::Array();
+                json::Object state;
+                state.values["transitions"] = json::Array();
                 state.values["coordinate"] =
-                    osrm::json::make_array(elem_s.phantom_node.location.lat / COORDINATE_PRECISION,
+                    json::make_array(elem_s.phantom_node.location.lat / COORDINATE_PRECISION,
                                            elem_s.phantom_node.location.lon / COORDINATE_PRECISION);
                 state.values["viterbi"] =
-                    osrm::json::clamp_float(osrm::matching::IMPOSSIBLE_LOG_PROB);
+                    json::clamp_float(engine::map_matching::IMPOSSIBLE_LOG_PROB);
                 state.values["pruned"] = 0u;
                 timestamps.values.push_back(state);
             }
             states.values.push_back(timestamps);
         }
-        osrm::json::get(*object, "states") = states;
+        json::get(*object, "states") = states;
     }
 
     void add_transition_info(const unsigned prev_t,
@@ -63,14 +68,14 @@ struct MatchingDebugInfo
             return;
         }
 
-        osrm::json::Object transistion;
-        transistion.values["to"] = osrm::json::make_array(current_t, current_state);
-        transistion.values["properties"] = osrm::json::make_array(
-            osrm::json::clamp_float(prev_viterbi), osrm::json::clamp_float(emission_pr),
-            osrm::json::clamp_float(transition_pr), network_distance, haversine_distance);
+        json::Object transistion;
+        transistion.values["to"] = json::make_array(current_t, current_state);
+        transistion.values["properties"] = json::make_array(
+            json::clamp_float(prev_viterbi), json::clamp_float(emission_pr),
+            json::clamp_float(transition_pr), network_distance, haversine_distance);
 
-        osrm::json::get(*object, "states", prev_t, prev_state, "transitions")
-            .get<mapbox::util::recursive_wrapper<osrm::json::Array>>()
+        json::get(*object, "states", prev_t, prev_state, "transitions")
+            .get<mapbox::util::recursive_wrapper<json::Array>>()
             .get()
             .values.push_back(transistion);
     }
@@ -89,11 +94,11 @@ struct MatchingDebugInfo
         {
             for (auto s_prime = 0u; s_prime < viterbi[t].size(); ++s_prime)
             {
-                osrm::json::get(*object, "states", t, s_prime, "viterbi") =
-                    osrm::json::clamp_float(viterbi[t][s_prime]);
-                osrm::json::get(*object, "states", t, s_prime, "pruned") =
+                json::get(*object, "states", t, s_prime, "viterbi") =
+                    json::clamp_float(viterbi[t][s_prime]);
+                json::get(*object, "states", t, s_prime, "pruned") =
                     static_cast<unsigned>(pruned[t][s_prime]);
-                osrm::json::get(*object, "states", t, s_prime, "suspicious") =
+                json::get(*object, "states", t, s_prime, "suspicious") =
                     static_cast<unsigned>(suspicious[t][s_prime]);
             }
         }
@@ -107,7 +112,7 @@ struct MatchingDebugInfo
             return;
         }
 
-        osrm::json::get(*object, "states", t, s, "chosen") = true;
+        json::get(*object, "states", t, s, "chosen") = true;
     }
 
     void add_breakage(const std::vector<bool> &breakage)
@@ -118,11 +123,14 @@ struct MatchingDebugInfo
             return;
         }
 
-        osrm::json::get(*object, "breakage") = osrm::json::make_array(breakage);
+        json::get(*object, "breakage") = json::make_array(breakage);
     }
 
-    const osrm::json::Logger *logger;
-    osrm::json::Value *object;
+    const json::Logger *logger;
+    json::Value *object;
 };
+
+}
+}
 
 #endif // MATCHING_DEBUG_INFO_HPP

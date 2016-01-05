@@ -11,6 +11,11 @@
 #include <iostream>
 #include <limits>
 
+namespace osrm
+{
+namespace util
+{
+
 FixedPointCoordinate::FixedPointCoordinate()
     : lat(std::numeric_limits<int>::min()), lon(std::numeric_limits<int>::min())
 {
@@ -49,4 +54,6 @@ std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordina
 {
     out << "(" << static_cast<double>(coordinate.lat / COORDINATE_PRECISION) << "," << static_cast<double>(coordinate.lon / COORDINATE_PRECISION) << ")";
     return out;
+}
+}
 }

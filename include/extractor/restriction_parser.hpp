@@ -14,6 +14,12 @@ namespace osmium
 class Relation;
 }
 
+
+namespace osrm
+{
+namespace extractor
+{
+
 /**
  * Parses the relations that represents turn restrictions.
  *
@@ -46,5 +52,8 @@ class RestrictionParser
     std::vector<std::string> restriction_exceptions;
     bool use_turn_restrictions;
 };
+
+}
+}
 
 #endif /* RESTRICTION_PARSER_HPP */

@@ -7,6 +7,11 @@
 
 #include <cmath>
 
+namespace osrm
+{
+namespace extractor
+{
+
 RasterSource::RasterSource(RasterGrid _raster_data,
                            std::size_t _width,
                            std::size_t _height,
@@ -87,20 +92,20 @@ int SourceContainer::loadRasterSource(const std::string &path_string,
     const auto itr = LoadedSourcePaths.find(path_string);
     if (itr != LoadedSourcePaths.end())
     {
-        SimpleLogger().Write() << "[source loader] Already loaded source '" << path_string
+        util::SimpleLogger().Write() << "[source loader] Already loaded source '" << path_string
                                << "' at source_id " << itr->second;
         return itr->second;
     }
 
     int source_id = static_cast<int>(LoadedSources.size());
 
-    SimpleLogger().Write() << "[source loader] Loading from " << path_string << "  ... ";
+    util::SimpleLogger().Write() << "[source loader] Loading from " << path_string << "  ... ";
     TIMER_START(loading_source);
 
     boost::filesystem::path filepath(path_string);
     if (!boost::filesystem::exists(filepath))
     {
-        throw osrm::exception("error reading: no such path");
+        throw util::exception("error reading: no such path");
     }
 
     RasterGrid rasterData{filepath, ncols, nrows};
@@ -110,7 +115,7 @@ int SourceContainer::loadRasterSource(const std::string &path_string,
     LoadedSourcePaths.emplace(path_string, source_id);
     LoadedSources.push_back(std::move(source));
 
-    SimpleLogger().Write() << "[source loader] ok, after " << TIMER_SEC(loading_source) << "s";
+    util::SimpleLogger().Write() << "[source loader] ok, after " << TIMER_SEC(loading_source) << "s";
 
     return source_id;
 }
@@ -120,7 +125,7 @@ RasterDatum SourceContainer::getRasterDataFromSource(unsigned int source_id, int
 {
     if (LoadedSources.size() < source_id + 1)
     {
-        throw osrm::exception("error reading: no such loaded source");
+        throw util::exception("error reading: no such loaded source");
     }
 
     BOOST_ASSERT(lat < (90 * COORDINATE_PRECISION));
@@ -138,7 +143,7 @@ SourceContainer::getRasterInterpolateFromSource(unsigned int source_id, int lon,
 {
     if (LoadedSources.size() < source_id + 1)
     {
-        throw osrm::exception("error reading: no such loaded source");
+        throw util::exception("error reading: no such loaded source");
     }
 
     BOOST_ASSERT(lat < (90 * COORDINATE_PRECISION));
@@ -148,4 +153,6 @@ SourceContainer::getRasterInterpolateFromSource(unsigned int source_id, int lon,
 
     const auto &found = LoadedSources[source_id];
     return found.getRasterInterpolate(lon, lat);
+}
+}
 }

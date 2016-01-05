@@ -36,6 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+
 struct RouteParameters
 {
     RouteParameters();
@@ -114,5 +119,11 @@ struct RouteParameters
     std::vector<bool> is_destination;
     std::vector<bool> is_source;
 };
+
+}
+
+using engine::RouteParameters;
+
+}
 
 #endif // ROUTE_PARAMETERS_HPP

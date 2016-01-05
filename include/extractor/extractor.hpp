@@ -5,6 +5,11 @@
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/graph_compressor.hpp"
 
+namespace osrm
+{
+namespace extractor
+{
+
 class extractor
 {
   public:
@@ -18,22 +23,25 @@ class extractor
     BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
-                           DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
+                           util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
     void WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map);
     void FindComponents(unsigned max_edge_id,
-                        const DeallocatingVector<EdgeBasedEdge> &edges,
+                        const util::DeallocatingVector<EdgeBasedEdge> &edges,
                         std::vector<EdgeBasedNode> &nodes) const;
     void BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
                     std::vector<bool> node_is_startpoint,
                     const std::vector<QueryNode> &internal_to_external_node_map);
     std::shared_ptr<RestrictionMap> LoadRestrictionMap();
-    std::shared_ptr<NodeBasedDynamicGraph>
+    std::shared_ptr<util::NodeBasedDynamicGraph>
     LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
                        std::unordered_set<NodeID> &traffic_lights,
                        std::vector<QueryNode> &internal_to_external_node_map);
 
     void WriteEdgeBasedGraph(std::string const &output_file_filename,
                              size_t const max_edge_id,
-                             DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list);
+                             util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list);
 };
+}
+}
+
 #endif /* EXTRACTOR_HPP */

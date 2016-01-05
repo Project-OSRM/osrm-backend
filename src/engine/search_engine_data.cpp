@@ -2,6 +2,11 @@
 
 #include "util/binary_heap.hpp"
 
+namespace osrm
+{
+namespace engine
+{
+
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
 {
     if (forward_heap_1.get())
@@ -63,4 +68,6 @@ void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned n
     {
         reverse_heap_3.reset(new QueryHeap(number_of_nodes));
     }
+}
+}
 }

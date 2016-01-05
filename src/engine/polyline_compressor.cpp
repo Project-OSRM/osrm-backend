@@ -3,6 +3,11 @@
 
 #include "osrm/coordinate.hpp"
 
+namespace osrm
+{
+namespace engine
+{
+
 std::string PolylineCompressor::encode_vector(std::vector<int> &numbers) const
 {
     std::string output;
@@ -47,7 +52,7 @@ PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &po
 
     std::vector<int> delta_numbers;
     delta_numbers.reserve((polyline.size() - 1) * 2);
-    FixedPointCoordinate previous_coordinate = {0, 0};
+    util::FixedPointCoordinate previous_coordinate = {0, 0};
     for (const auto &segment : polyline)
     {
         if (segment.necessary)
@@ -62,10 +67,10 @@ PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &po
     return encode_vector(delta_numbers);
 }
 
-std::vector<FixedPointCoordinate>
+std::vector<util::FixedPointCoordinate>
 PolylineCompressor::decode_string(const std::string &geometry_string) const
 {
-    std::vector<FixedPointCoordinate> new_coordinates;
+    std::vector<util::FixedPointCoordinate> new_coordinates;
     int index = 0, len = geometry_string.size();
     int lat = 0, lng = 0;
 
@@ -92,11 +97,13 @@ PolylineCompressor::decode_string(const std::string &geometry_string) const
         int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
         lng += dlng;
 
-        FixedPointCoordinate p;
+        util::FixedPointCoordinate p;
         p.lat = COORDINATE_PRECISION * (((double)lat / 1E6));
         p.lon = COORDINATE_PRECISION * (((double)lng / 1E6));
         new_coordinates.push_back(p);
     }
 
     return new_coordinates;
+}
+}
 }

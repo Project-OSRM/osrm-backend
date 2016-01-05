@@ -5,7 +5,10 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 
-BOOST_AUTO_TEST_SUITE(bearing)
+BOOST_AUTO_TEST_SUITE(bearing_test)
+
+using namespace osrm;
+using namespace osrm::util;
 
 // Verify that the bearing-bounds checking function behaves as expected
 BOOST_AUTO_TEST_CASE(bearing_range_test)

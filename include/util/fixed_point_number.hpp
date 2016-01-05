@@ -11,6 +11,8 @@
 
 namespace osrm
 {
+namespace util
+{
 
 // implements an binary based fixed point number type
 template <unsigned FractionalBitSize,
@@ -185,5 +187,8 @@ class FixedPointNumber
 };
 
 static_assert(4 == sizeof(FixedPointNumber<1>), "FP19 has wrong size != 4");
+
 }
+}
+
 #endif // FIXED_POINT_NUMBER_HPP

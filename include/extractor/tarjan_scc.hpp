@@ -22,6 +22,11 @@
 #include <stack>
 #include <vector>
 
+namespace osrm
+{
+namespace extractor
+{
+
 template <typename GraphT> class TarjanSCC
 {
     struct TarjanStackFrame
@@ -66,7 +71,7 @@ template <typename GraphT> class TarjanSCC
         unsigned component_index = 0, size_of_current_component = 0;
         unsigned index = 0;
         std::vector<bool> processing_node_before_recursion(max_node_id, true);
-        for (const NodeID node : osrm::irange(0u, max_node_id))
+        for (const NodeID node : util::irange(0u, max_node_id))
         {
             if (SPECIAL_NODEID == components_index[node])
             {
@@ -141,7 +146,7 @@ template <typename GraphT> class TarjanSCC
 
                         if (size_of_current_component > 1000)
                         {
-                            SimpleLogger().Write() << "large component [" << component_index
+                            util::SimpleLogger().Write() << "large component [" << component_index
                                                    << "]=" << size_of_current_component;
                         }
 
@@ -153,7 +158,7 @@ template <typename GraphT> class TarjanSCC
         }
 
         TIMER_STOP(SCC_RUN);
-        SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN) / 1000. << "s";
+        util::SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN) / 1000. << "s";
 
         size_one_counter = std::count_if(component_size_vector.begin(), component_size_vector.end(),
                                          [](unsigned value)
@@ -173,5 +178,8 @@ template <typename GraphT> class TarjanSCC
 
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
 };
+
+}
+}
 
 #endif /* TARJAN_SCC_HPP */

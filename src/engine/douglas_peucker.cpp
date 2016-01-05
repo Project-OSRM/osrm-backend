@@ -9,13 +9,18 @@
 #include <algorithm>
 #include <iterator>
 
+namespace osrm
+{
+namespace engine
+{
+
 namespace
 {
 struct CoordinatePairCalculator
 {
     CoordinatePairCalculator() = delete;
-    CoordinatePairCalculator(const FixedPointCoordinate &coordinate_a,
-                             const FixedPointCoordinate &coordinate_b)
+    CoordinatePairCalculator(const util::FixedPointCoordinate &coordinate_a,
+                             const util::FixedPointCoordinate &coordinate_b)
     {
         // initialize distance calculator with two fixed coordinates a, b
         const float RAD = 0.017453292519943295769236907684886f;
@@ -25,7 +30,7 @@ struct CoordinatePairCalculator
         second_lon = (coordinate_b.lon / COORDINATE_PRECISION) * RAD;
     }
 
-    int operator()(FixedPointCoordinate &other) const
+    int operator()(util::FixedPointCoordinate &other) const
     {
         // set third coordinate c
         const float RAD = 0.017453292519943295769236907684886f;
@@ -134,4 +139,6 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
             }
         }
     }
+}
+}
 }

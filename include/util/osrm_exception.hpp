@@ -7,6 +7,9 @@
 
 namespace osrm
 {
+namespace util
+{
+
 class exception final : public std::exception
 {
   public:
@@ -21,5 +24,8 @@ class exception final : public std::exception
     const char *what() const noexcept override { return message.c_str(); }
     const std::string message;
 };
+
 }
+}
+
 #endif /* OSRM_EXCEPTION_HPP */

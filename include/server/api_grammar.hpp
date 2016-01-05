@@ -5,6 +5,11 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_action.hpp>
 
+namespace osrm
+{
+namespace server
+{
+
 namespace qi = boost::spirit::qi;
 
 template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Iterator>
@@ -97,5 +102,8 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
 
     HandlerT *handler;
 };
+
+}
+}
 
 #endif /* API_GRAMMAR_HPP */

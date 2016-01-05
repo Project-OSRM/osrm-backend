@@ -10,6 +10,9 @@
 
 BOOST_AUTO_TEST_SUITE(static_graph)
 
+using namespace osrm;
+using namespace osrm::util;
+
 struct TestData
 {
     EdgeID id;

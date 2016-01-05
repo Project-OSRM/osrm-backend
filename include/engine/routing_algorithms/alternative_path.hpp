@@ -13,6 +13,13 @@
 
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+namespace routing_algorithms
+{
+
 const double VIAPATH_ALPHA = 0.10;
 const double VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
 const double VIAPATH_GAMMA = 0.75;   // alternative shares at most 75% with the shortest.
@@ -81,7 +88,7 @@ class AlternativeRouting final
 
         if (phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
         {
-            // SimpleLogger().Write(logDEBUG) << "fwd-a insert: " <<
+            // util::SimpleLogger().Write(logDEBUG) << "fwd-a insert: " <<
             // phantom_node_pair.source_phantom.forward_node_id << ", w: " <<
             // -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
             forward_heap1.Insert(phantom_node_pair.source_phantom.forward_node_id,
@@ -90,7 +97,7 @@ class AlternativeRouting final
         }
         if (phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID)
         {
-            //     SimpleLogger().Write(logDEBUG) << "fwd-b insert: " <<
+            //     util::SimpleLogger().Write(logDEBUG) << "fwd-b insert: " <<
             //     phantom_node_pair.source_phantom.reverse_node_id << ", w: " <<
             // -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             forward_heap1.Insert(phantom_node_pair.source_phantom.reverse_node_id,
@@ -100,7 +107,7 @@ class AlternativeRouting final
 
         if (phantom_node_pair.target_phantom.forward_node_id != SPECIAL_NODEID)
         {
-            // SimpleLogger().Write(logDEBUG) << "rev-a insert: " <<
+            // util::SimpleLogger().Write(logDEBUG) << "rev-a insert: " <<
             // phantom_node_pair.target_phantom.forward_node_id << ", w: " <<
             // phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
             reverse_heap1.Insert(phantom_node_pair.target_phantom.forward_node_id,
@@ -109,7 +116,7 @@ class AlternativeRouting final
         }
         if (phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID)
         {
-            // SimpleLogger().Write(logDEBUG) << "rev-b insert: " <<
+            // util::SimpleLogger().Write(logDEBUG) << "rev-b insert: " <<
             // phantom_node_pair.target_phantom.reverse_node_id << ", w: " <<
             // phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
             reverse_heap1.Insert(phantom_node_pair.target_phantom.reverse_node_id,
@@ -141,7 +148,7 @@ class AlternativeRouting final
             return;
         }
 
-        osrm::sort_unique_resize(via_node_candidate_list);
+        util::sort_unique_resize(via_node_candidate_list);
 
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;
@@ -204,10 +211,10 @@ class AlternativeRouting final
             }
         }
 
-        // SimpleLogger().Write(logDEBUG) << "fwd_search_space size: " <<
+        // util::SimpleLogger().Write(logDEBUG) << "fwd_search_space size: " <<
         // forward_search_space.size() << ", marked " << approximated_forward_sharing.size() << "
         // nodes";
-        // SimpleLogger().Write(logDEBUG) << "rev_search_space size: " <<
+        // util::SimpleLogger().Write(logDEBUG) << "rev_search_space size: " <<
         // reverse_search_space.size() << ", marked " << approximated_reverse_sharing.size() << "
         // nodes";
 
@@ -403,7 +410,7 @@ class AlternativeRouting final
         // First partially unpack s-->v until paths deviate, note length of common path.
         const int64_t s_v_min_path_size =
             static_cast<int64_t>(std::min(packed_s_v_path.size(), packed_shortest_path.size())) - 1;
-        for (const int64_t current_node : osrm::irange<int64_t>(0, s_v_min_path_size))
+        for (const int64_t current_node : util::irange<int64_t>(0, s_v_min_path_size))
         {
             if (packed_s_v_path[current_node] == packed_shortest_path[current_node] &&
                 packed_s_v_path[current_node + 1] == packed_shortest_path[current_node + 1])
@@ -519,7 +526,7 @@ class AlternativeRouting final
     //     //compute forward sharing
     //     while( (packed_alternate_path[aindex] == packed_shortest_path[aindex]) &&
     //     (packed_alternate_path[aindex+1] == packed_shortest_path[aindex+1]) ) {
-    //         //            SimpleLogger().Write() << "retrieving edge (" <<
+    //         //            util::SimpleLogger().Write() << "retrieving edge (" <<
     //         packed_alternate_path[aindex] << "," << packed_alternate_path[aindex+1] << ")";
     //         EdgeID edgeID = facade->FindEdgeInEitherDirection(packed_alternate_path[aindex],
     //         packed_alternate_path[aindex+1]);
@@ -557,7 +564,7 @@ class AlternativeRouting final
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         // const NodeID parentnode = forward_heap.GetData(node).parent;
-        // SimpleLogger().Write() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled edge ("
+        // util::SimpleLogger().Write() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled edge ("
         // << parentnode << "," << node << "), dist: " << distance;
 
         const int scaled_distance =
@@ -581,10 +588,10 @@ class AlternativeRouting final
                 {
                     *middle_node = node;
                     *upper_bound_to_shortest_path_distance = new_distance;
-                    //     SimpleLogger().Write() << "accepted middle_node " << *middle_node << " at
+                    //     util::SimpleLogger().Write() << "accepted middle_node " << *middle_node << " at
                     //     distance " << new_distance;
                     // } else {
-                    //     SimpleLogger().Write() << "discarded middle_node " << *middle_node << "
+                    //     util::SimpleLogger().Write() << "discarded middle_node " << *middle_node << "
                     //     at distance " << new_distance;
                 }
             }
@@ -839,5 +846,9 @@ class AlternativeRouting final
         return (upper_bound <= t_test_path_length);
     }
 };
+
+}
+}
+}
 
 #endif /* ALTERNATIVE_PATH_ROUTING_HPP */

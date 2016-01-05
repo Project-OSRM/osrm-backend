@@ -7,10 +7,13 @@
 #include <numeric>
 #include <stxxl/vector>
 
+BOOST_AUTO_TEST_SUITE(range_table)
+
+using namespace osrm;
+using namespace osrm::util;
+
 constexpr unsigned BLOCK_SIZE = 16;
 typedef RangeTable<BLOCK_SIZE, false> TestRangeTable;
-
-BOOST_AUTO_TEST_SUITE(range_table)
 
 void ConstructionTest(stxxl::vector<unsigned> lengths, std::vector<unsigned> offsets)
 {

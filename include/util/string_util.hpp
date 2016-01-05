@@ -7,6 +7,11 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
 // work with negative values to prevent overflowing when taking -value
@@ -121,5 +126,8 @@ inline std::size_t URIDecode(const std::string &input, std::string &output)
 }
 
 inline std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
+
+}
+}
 
 #endif // STRING_UTIL_HPP

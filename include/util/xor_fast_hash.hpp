@@ -4,6 +4,11 @@
 #include <algorithm>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 /*
     This is an implementation of Tabulation hashing, which has suprising properties like
    universality.
@@ -84,5 +89,8 @@ class XORMiniHash
         return table1[byte1] ^ table2[byte2] ^ table3[byte3] ^ table4[byte4];
     }
 };
+
+}
+}
 
 #endif // XOR_FAST_HASH_HPP

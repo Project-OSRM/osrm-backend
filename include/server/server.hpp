@@ -18,6 +18,11 @@
 #include <vector>
 #include <string>
 
+namespace osrm
+{
+namespace server
+{
+
 class Server
 {
   public:
@@ -25,7 +30,7 @@ class Server
     static std::shared_ptr<Server>
     CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
     {
-        SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
+        util::SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
         return std::make_shared<Server>(ip_address, ip_port, real_num_threads);
@@ -33,7 +38,7 @@ class Server
 
     explicit Server(const std::string &address, const int port, const unsigned thread_pool_size)
         : thread_pool_size(thread_pool_size), acceptor(io_service),
-          new_connection(std::make_shared<http::Connection>(io_service, request_handler))
+          new_connection(std::make_shared<Connection>(io_service, request_handler))
     {
         const auto port_string = std::to_string(port);
 
@@ -75,7 +80,7 @@ class Server
         if (!e)
         {
             new_connection->start();
-            new_connection = std::make_shared<http::Connection>(io_service, request_handler);
+            new_connection = std::make_shared<Connection>(io_service, request_handler);
             acceptor.async_accept(
                 new_connection->socket(),
                 boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
@@ -85,8 +90,11 @@ class Server
     unsigned thread_pool_size;
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::acceptor acceptor;
-    std::shared_ptr<http::Connection> new_connection;
+    std::shared_ptr<Connection> new_connection;
     RequestHandler request_handler;
 };
+
+}
+}
 
 #endif // SERVER_HPP

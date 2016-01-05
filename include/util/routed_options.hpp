@@ -12,6 +12,11 @@
 #include <unordered_map>
 #include <fstream>
 #include <string>
+
+namespace osrm
+{
+namespace util
+{
 const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
@@ -53,49 +58,49 @@ populate_base_path(std::unordered_map<std::string, boost::filesystem::path> &ser
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception(".hsgr not found");
+        throw exception(".hsgr not found");
     }
 
     path_iterator = server_paths.find("nodesdata");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception(".nodes not found");
+        throw exception(".nodes not found");
     }
 
     path_iterator = server_paths.find("edgesdata");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception(".edges not found");
+        throw exception(".edges not found");
     }
 
     path_iterator = server_paths.find("geometries");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception(".geometry not found");
+        throw exception(".geometry not found");
     }
 
     path_iterator = server_paths.find("ramindex");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception(".ramIndex not found");
+        throw exception(".ramIndex not found");
     }
 
     path_iterator = server_paths.find("fileindex");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception(".fileIndex not found");
+        throw exception(".fileIndex not found");
     }
 
     path_iterator = server_paths.find("namesdata");
     if (path_iterator == server_paths.end() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw osrm::exception(".namesIndex not found");
+        throw exception(".namesIndex not found");
     }
 
     SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
@@ -226,15 +231,15 @@ GenerateServerProgramOptions(const int argc,
 
     if (1 > requested_num_threads)
     {
-        throw osrm::exception("Number of threads must be a positive number");
+        throw exception("Number of threads must be a positive number");
     }
     if (2 > max_locations_distance_table)
     {
-        throw osrm::exception("Max location for distance table must be at least two");
+        throw exception("Max location for distance table must be at least two");
     }
     if (2 > max_locations_map_matching)
     {
-        throw osrm::exception("Max location for map matching must be at least two");
+        throw exception("Max location for map matching must be at least two");
     }
 
     if (!use_shared_memory && option_variables.count("base"))
@@ -252,6 +257,9 @@ GenerateServerProgramOptions(const int argc,
 
     SimpleLogger().Write() << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
+}
+
+}
 }
 
 #endif // ROUTED_OPTIONS_HPP

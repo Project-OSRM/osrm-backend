@@ -10,6 +10,11 @@
 
 #include <type_traits>
 
+namespace osrm
+{
+namespace engine
+{
+
 template <class DataFacadeT> class SearchEngine
 {
   private:
@@ -17,11 +22,11 @@ template <class DataFacadeT> class SearchEngine
     SearchEngineData engine_working_data;
 
   public:
-    ShortestPathRouting<DataFacadeT> shortest_path;
-    DirectShortestPathRouting<DataFacadeT> direct_shortest_path;
-    AlternativeRouting<DataFacadeT> alternative_path;
-    ManyToManyRouting<DataFacadeT> distance_table;
-    MapMatching<DataFacadeT> map_matching;
+    routing_algorithms::ShortestPathRouting<DataFacadeT> shortest_path;
+    routing_algorithms::DirectShortestPathRouting<DataFacadeT> direct_shortest_path;
+    routing_algorithms::AlternativeRouting<DataFacadeT> alternative_path;
+    routing_algorithms::ManyToManyRouting<DataFacadeT> distance_table;
+    routing_algorithms::MapMatching<DataFacadeT> map_matching;
 
     explicit SearchEngine(DataFacadeT *facade)
         : facade(facade), shortest_path(facade, engine_working_data),
@@ -36,5 +41,8 @@ template <class DataFacadeT> class SearchEngine
 
     ~SearchEngine() {}
 };
+
+}
+}
 
 #endif // SEARCH_ENGINE_HPP

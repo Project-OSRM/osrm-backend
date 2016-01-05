@@ -6,7 +6,12 @@
 
 #ifndef DEBUG_GEOMETRY
 
-inline void DEBUG_GEOMETRY_START(ContractorConfig & /* config */) {}
+namespace osrm
+{
+namespace util
+{
+
+inline void DEBUG_GEOMETRY_START(const contractor::ContractorConfig & /* config */) {}
 inline void DEBUG_GEOMETRY_EDGE(int /* new_segment_weight */,
                                 double /* segment_length */,
                                 OSMNodeID /* previous_osm_node_id */,
@@ -17,24 +22,27 @@ inline void DEBUG_GEOMETRY_STOP() {}
 
 inline void DEBUG_TURNS_START(const std::string & /* debug_turns_filename */) {}
 inline void DEBUG_TURN(const NodeID /* node */,
-                       const std::vector<QueryNode> & /* m_node_info_list */,
+                       const std::vector<extractor::QueryNode> & /* m_node_info_list */,
                        const FixedPointCoordinate & /* first_coordinate */,
                        const int /* turn_angle */,
                        const int /* turn_penalty */)
 {
 }
 inline void DEBUG_UTURN(const NodeID /* node */,
-                        const std::vector<QueryNode> & /* m_node_info_list */,
+                        const std::vector<extractor::QueryNode> & /* m_node_info_list */,
                         const int /* uturn_penalty */)
 {
 }
 inline void DEBUG_SIGNAL(const NodeID /* node */,
-                         const std::vector<QueryNode> & /* m_node_info_list */,
+                         const std::vector<extractor::QueryNode> & /* m_node_info_list */,
                          const int /* signal_penalty */)
 {
 }
 
 inline void DEBUG_TURNS_STOP() {}
+
+}
+}
 
 #else // DEBUG_GEOMETRY
 
@@ -47,6 +55,12 @@ inline void DEBUG_TURNS_STOP() {}
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 
+namespace osrm
+{
+namespace util
+{
+
+
 boost::filesystem::ofstream debug_geometry_file;
 bool dg_output_debug_geometry = false;
 bool dg_first_debug_geometry = true;
@@ -56,7 +70,7 @@ boost::filesystem::ofstream dg_debug_turns_file;
 bool dg_output_turn_debug = false;
 bool dg_first_turn_debug = true;
 
-inline void DEBUG_GEOMETRY_START(const ContractorConfig &config)
+inline void DEBUG_GEOMETRY_START(const contractor::ContractorConfig &config)
 {
     time_t raw_time;
     struct tm *timeinfo;
@@ -118,12 +132,12 @@ inline void DEBUG_TURNS_START(const std::string &debug_turns_path)
 }
 
 inline void DEBUG_SIGNAL(const NodeID node,
-                         const std::vector<QueryNode> &m_node_info_list,
+                         const std::vector<extractor::QueryNode> &m_node_info_list,
                          const int traffic_signal_penalty)
 {
     if (dg_output_turn_debug)
     {
-        const QueryNode &nodeinfo = m_node_info_list[node];
+        const extractor::QueryNode &nodeinfo = m_node_info_list[node];
         if (!dg_first_turn_debug)
             dg_debug_turns_file << "," << std::endl;
         dg_debug_turns_file
@@ -137,12 +151,12 @@ inline void DEBUG_SIGNAL(const NodeID node,
 }
 
 inline void DEBUG_UTURN(const NodeID node,
-                        const std::vector<QueryNode> &m_node_info_list,
+                        const std::vector<extractor::QueryNode> &m_node_info_list,
                         const int traffic_signal_penalty)
 {
     if (dg_output_turn_debug)
     {
-        const QueryNode &nodeinfo = m_node_info_list[node];
+        const extractor::QueryNode &nodeinfo = m_node_info_list[node];
         if (!dg_first_turn_debug)
             dg_debug_turns_file << "," << std::endl;
         dg_debug_turns_file
@@ -156,14 +170,14 @@ inline void DEBUG_UTURN(const NodeID node,
 }
 
 inline void DEBUG_TURN(const NodeID node,
-                       const std::vector<QueryNode> &m_node_info_list,
+                       const std::vector<extractor::QueryNode> &m_node_info_list,
                        const FixedPointCoordinate &first_coordinate,
                        const int turn_angle,
                        const int turn_penalty)
 {
     if (turn_penalty > 0 && dg_output_turn_debug)
     {
-        const QueryNode &v = m_node_info_list[node];
+        const extractor::QueryNode &v = m_node_info_list[node];
 
         const float bearing_uv = coordinate_calculation::bearing(first_coordinate, v);
         float uvw_normal = bearing_uv + turn_angle / 2;
@@ -192,6 +206,9 @@ inline void DEBUG_TURNS_STOP()
         dg_debug_turns_file << std::endl << "]}" << std::endl;
         dg_debug_turns_file.close();
     }
+}
+
+}
 }
 
 #endif // DEBUG_GEOMETRY

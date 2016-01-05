@@ -8,6 +8,11 @@
 
 #include <tbb/task_scheduler_init.h>
 
+namespace osrm
+{
+namespace contractor
+{
+
 return_code
 ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &contractor_config)
 {
@@ -87,13 +92,13 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 
     if (option_variables.count("version"))
     {
-        SimpleLogger().Write() << OSRM_VERSION;
+        util::SimpleLogger().Write() << OSRM_VERSION;
         return return_code::exit;
     }
 
     if (option_variables.count("help"))
     {
-        SimpleLogger().Write() << "\n" << visible_options;
+        util::SimpleLogger().Write() << "\n" << visible_options;
         return return_code::exit;
     }
 
@@ -101,7 +106,7 @@ ContractorOptions::ParseArguments(int argc, char *argv[], ContractorConfig &cont
 
     if (!option_variables.count("input"))
     {
-        SimpleLogger().Write() << "\n" << visible_options;
+        util::SimpleLogger().Write() << "\n" << visible_options;
         return return_code::fail;
     }
 
@@ -118,4 +123,6 @@ void ContractorOptions::GenerateOutputFilesNames(ContractorConfig &contractor_co
         contractor_config.osrm_input_path.string() + ".edge_segment_lookup";
     contractor_config.edge_penalty_path =
         contractor_config.osrm_input_path.string() + ".edge_penalties";
+}
+}
 }

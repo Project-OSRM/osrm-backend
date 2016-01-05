@@ -1,5 +1,10 @@
 #include "extractor/restriction_map.hpp"
 
+namespace osrm
+{
+namespace extractor
+{
+
 RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_list) : m_count(0)
 {
     // decompose restriction consisting of a start, via and end node into a
@@ -151,4 +156,6 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
 bool RestrictionMap::IsSourceNode(const NodeID node) const
 {
     return m_restriction_start_nodes.find(node) != m_restriction_start_nodes.end();
+}
+}
 }

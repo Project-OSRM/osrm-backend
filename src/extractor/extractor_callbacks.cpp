@@ -18,6 +18,11 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace extractor
+{
+
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
     : external_memory(extraction_containers)
 {
@@ -45,7 +50,7 @@ void ExtractorCallbacks::ProcessRestriction(
     if (restriction)
     {
         external_memory.restrictions_list.push_back(restriction.get());
-        // SimpleLogger().Write() << "from: " << restriction.get().restriction.from.node <<
+        // util::SimpleLogger().Write() << "from: " << restriction.get().restriction.from.node <<
         //                           ",via: " << restriction.get().restriction.via.node <<
         //                           ", to: " << restriction.get().restriction.to.node <<
         //                           ", only: " << (restriction.get().restriction.flags.is_only ?
@@ -79,7 +84,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     if (std::numeric_limits<decltype(input_way.id())>::max() == input_way.id())
     {
-        SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << input_way.id()
+        util::SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << input_way.id()
                                        << " of size " << input_way.nodes().size();
         return;
     }
@@ -118,7 +123,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (forward_weight_data.type == InternalExtractorEdge::WeightType::INVALID &&
         backward_weight_data.type == InternalExtractorEdge::WeightType::INVALID)
     {
-        SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << input_way.id();
+        util::SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << input_way.id();
         return;
     }
 
@@ -159,7 +164,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     {
         BOOST_ASSERT(split_edge == false);
         BOOST_ASSERT(parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
-        osrm::for_each_pair(input_way.nodes().crbegin(), input_way.nodes().crend(),
+        util::for_each_pair(input_way.nodes().crbegin(), input_way.nodes().crend(),
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
@@ -179,7 +184,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     {
         const bool forward_only =
             split_edge || TRAVEL_MODE_INACCESSIBLE == parsed_way.backward_travel_mode;
-        osrm::for_each_pair(input_way.nodes().cbegin(), input_way.nodes().cend(),
+        util::for_each_pair(input_way.nodes().cbegin(), input_way.nodes().cend(),
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
                                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
@@ -192,7 +197,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         if (split_edge)
         {
             BOOST_ASSERT(parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
-            osrm::for_each_pair(
+            util::for_each_pair(
                 input_way.nodes().cbegin(), input_way.nodes().cend(),
                 [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                 {
@@ -209,4 +214,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
              OSMNodeID(input_way.nodes()[input_way.nodes().size() - 2].ref()),
              OSMNodeID(input_way.nodes()[1].ref()), OSMNodeID(input_way.nodes()[0].ref())});
     }
+}
+}
 }

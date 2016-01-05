@@ -19,11 +19,16 @@
 #include <algorithm>
 #include <iterator>
 
+namespace osrm
+{
+namespace extractor
+{
+
 namespace {
 int luaErrorCallback(lua_State *lua_state)
 {
     std::string error_msg = lua_tostring(lua_state, -1);
-    throw osrm::exception("ERROR occurred in profile script:\n" + error_msg);
+    throw util::exception("ERROR occurred in profile script:\n" + error_msg);
 }
 }
 
@@ -47,33 +52,33 @@ void RestrictionParser::ReadUseRestrictionsSetting(lua_State *lua_state)
 
     if (use_turn_restrictions)
     {
-        SimpleLogger().Write() << "Using turn restrictions";
+        util::SimpleLogger().Write() << "Using turn restrictions";
     }
     else
     {
-        SimpleLogger().Write() << "Ignoring turn restrictions";
+        util::SimpleLogger().Write() << "Ignoring turn restrictions";
     }
 }
 
 void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
 {
-    if (lua_function_exists(lua_state, "get_exceptions"))
+    if (util::lua_function_exists(lua_state, "get_exceptions"))
     {
         luabind::set_pcall_callback(&luaErrorCallback);
         // get list of turn restriction exceptions
         luabind::call_function<void>(lua_state, "get_exceptions",
                                      boost::ref(restriction_exceptions));
         const unsigned exception_count = restriction_exceptions.size();
-        SimpleLogger().Write() << "Found " << exception_count
+        util::SimpleLogger().Write() << "Found " << exception_count
                                << " exceptions to turn restrictions:";
         for (const std::string &str : restriction_exceptions)
         {
-            SimpleLogger().Write() << "  " << str;
+            util::SimpleLogger().Write() << "  " << str;
         }
     }
     else
     {
-        SimpleLogger().Write() << "Found no exceptions to turn restrictions";
+        util::SimpleLogger().Write() << "Found no exceptions to turn restrictions";
     }
 }
 
@@ -221,4 +226,6 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
                                   std::find(std::begin(restriction_exceptions),
                                             std::end(restriction_exceptions), current_string);
                        });
+}
+}
 }

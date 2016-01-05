@@ -10,19 +10,24 @@
 
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+
 struct PathData
 {
     PathData()
         : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT), segment_duration(INVALID_EDGE_WEIGHT),
-          turn_instruction(TurnInstruction::NoTurn), travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          turn_instruction(extractor::TurnInstruction::NoTurn), travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
     PathData(NodeID node,
              unsigned name_id,
-             TurnInstruction turn_instruction,
+             extractor::TurnInstruction turn_instruction,
              EdgeWeight segment_duration,
-             TravelMode travel_mode)
+             extractor::TravelMode travel_mode)
         : node(node), name_id(name_id), segment_duration(segment_duration),
           turn_instruction(turn_instruction), travel_mode(travel_mode)
     {
@@ -30,8 +35,8 @@ struct PathData
     NodeID node;
     unsigned name_id;
     EdgeWeight segment_duration;
-    TurnInstruction turn_instruction;
-    TravelMode travel_mode : 4;
+    extractor::TurnInstruction turn_instruction;
+    extractor::TravelMode travel_mode : 4;
 };
 
 struct InternalRouteResult
@@ -60,5 +65,8 @@ struct InternalRouteResult
     {
     }
 };
+
+}
+}
 
 #endif // RAW_ROUTE_DATA_H

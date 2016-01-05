@@ -12,6 +12,11 @@
 #include <limits>
 #include <string>
 
+namespace osrm
+{
+namespace extractor
+{
+
 bool simple_duration_is_valid(const std::string &s)
 {
     boost::regex simple_format(
@@ -29,8 +34,8 @@ bool simple_duration_is_valid(const std::string &s)
 
 bool iso_8601_duration_is_valid(const std::string &s)
 {
-    iso_8601_grammar<std::string::const_iterator> iso_parser;
-    const bool result = qi::parse(s.begin(), s.end(), iso_parser);
+    util::iso_8601_grammar<std::string::const_iterator> iso_parser;
+    const bool result = boost::spirit::qi::parse(s.begin(), s.end(), iso_parser);
 
     // check if the was an error with the request
     if (result && (0 != iso_parser.get_duration()))
@@ -81,13 +86,16 @@ unsigned parseDuration(const std::string &s)
     }
     else if (iso_8601_duration_is_valid(s))
     {
-        iso_8601_grammar<std::string::const_iterator> iso_parser;
-        qi::parse(s.begin(), s.end(), iso_parser);
+        util::iso_8601_grammar<std::string::const_iterator> iso_parser;
+        boost::spirit::qi::parse(s.begin(), s.end(), iso_parser);
 
         return iso_parser.get_duration();
     }
 
     return std::numeric_limits<unsigned>::max();
+}
+
+}
 }
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

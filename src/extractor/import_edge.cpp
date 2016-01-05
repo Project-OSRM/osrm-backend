@@ -3,6 +3,11 @@
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
+namespace osrm
+{
+namespace extractor
+{
+
 bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 {
     if (source == other.source)
@@ -83,4 +88,6 @@ EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
     : source(source), target(target), edge_id(edge_id), weight(weight), forward(forward),
       backward(backward)
 {
+}
+}
 }

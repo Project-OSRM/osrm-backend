@@ -26,10 +26,12 @@ template <class T> T *get_pointer(std::shared_ptr<T> &p) { return p.get(); }
 
 #endif
 
-class RequestHandler;
-
-namespace http
+namespace osrm
 {
+namespace server
+{
+
+class RequestHandler;
 
 /// Represents a single connection from a client.
 class Connection : public std::enable_shared_from_this<Connection>
@@ -51,18 +53,19 @@ class Connection : public std::enable_shared_from_this<Connection>
     void handle_write(const boost::system::error_code &e);
 
     std::vector<char> compress_buffers(const std::vector<char> &uncompressed_data,
-                                       const compression_type compression_type);
+                                       const http::compression_type compression_type);
 
     boost::asio::io_service::strand strand;
     boost::asio::ip::tcp::socket TCP_socket;
     RequestHandler &request_handler;
     RequestParser request_parser;
     boost::array<char, 8192> incoming_data_buffer;
-    request current_request;
-    reply current_reply;
+    http::request current_request;
+    http::reply current_reply;
     std::vector<char> compressed_output;
 };
 
-} // namespace http
+}
+}
 
 #endif // CONNECTION_HPP

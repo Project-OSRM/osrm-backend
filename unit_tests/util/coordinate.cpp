@@ -6,6 +6,9 @@
 
 #include <cmath>
 
+using namespace osrm;
+using namespace osrm::util;
+
 // Regression test for bug captured in #1347
 BOOST_AUTO_TEST_CASE(regression_test_1347)
 {

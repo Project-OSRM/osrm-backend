@@ -22,13 +22,18 @@
 #include <ios>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 /**
  * Reads the .restrictions file and loads it to a vector.
  * The since the restrictions reference nodes using their external node id,
  * we need to renumber it to the new internal id.
 */
 unsigned loadRestrictionsFromFile(std::istream &input_stream,
-                                  std::vector<TurnRestriction> &restriction_list)
+                                  std::vector<extractor::TurnRestriction> &restriction_list)
 {
     const FingerPrint fingerprint_valid = FingerPrint::GetValid();
     FingerPrint fingerprint_loaded;
@@ -45,7 +50,7 @@ unsigned loadRestrictionsFromFile(std::istream &input_stream,
     if (number_of_usable_restrictions > 0)
     {
         input_stream.read((char *)restriction_list.data(),
-                          number_of_usable_restrictions * sizeof(TurnRestriction));
+                          number_of_usable_restrictions * sizeof(extractor::TurnRestriction));
     }
 
     return number_of_usable_restrictions;
@@ -60,7 +65,7 @@ unsigned loadRestrictionsFromFile(std::istream &input_stream,
 NodeID loadNodesFromFile(std::istream &input_stream,
                          std::vector<NodeID> &barrier_node_list,
                          std::vector<NodeID> &traffic_light_node_list,
-                         std::vector<QueryNode> &node_array)
+                         std::vector<extractor::QueryNode> &node_array)
 {
     const FingerPrint fingerprint_valid = FingerPrint::GetValid();
     FingerPrint fingerprint_loaded;
@@ -76,10 +81,10 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     input_stream.read(reinterpret_cast<char *>(&n), sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
 
-    ExternalMemoryNode current_node;
+    extractor::ExternalMemoryNode current_node;
     for (NodeID i = 0; i < n; ++i)
     {
-        input_stream.read(reinterpret_cast<char *>(&current_node), sizeof(ExternalMemoryNode));
+        input_stream.read(reinterpret_cast<char *>(&current_node), sizeof(extractor::ExternalMemoryNode));
         node_array.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
         if (current_node.barrier)
         {
@@ -101,21 +106,21 @@ NodeID loadNodesFromFile(std::istream &input_stream,
 /**
  * Reads a .osrm file and produces the edges.
  */
-NodeID loadEdgesFromFile(std::istream &input_stream, std::vector<NodeBasedEdge> &edge_list)
+NodeID loadEdgesFromFile(std::istream &input_stream, std::vector<extractor::NodeBasedEdge> &edge_list)
 {
     EdgeID m;
     input_stream.read(reinterpret_cast<char *>(&m), sizeof(unsigned));
     edge_list.resize(m);
     SimpleLogger().Write() << " and " << m << " edges ";
 
-    input_stream.read((char *)edge_list.data(), m * sizeof(NodeBasedEdge));
+    input_stream.read((char *)edge_list.data(), m * sizeof(extractor::NodeBasedEdge));
 
     BOOST_ASSERT(edge_list.size() > 0);
 
 #ifndef NDEBUG
     SimpleLogger().Write() << "Validating loaded edges...";
     tbb::parallel_sort(edge_list.begin(), edge_list.end(),
-                       [](const NodeBasedEdge &lhs, const NodeBasedEdge &rhs)
+                       [](const extractor::NodeBasedEdge &lhs, const extractor::NodeBasedEdge &rhs)
                        {
                            return (lhs.source < rhs.source) ||
                                   (lhs.source == rhs.source && lhs.target < rhs.target);
@@ -148,11 +153,11 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
 {
     if (!boost::filesystem::exists(hsgr_file))
     {
-        throw osrm::exception("hsgr file does not exist");
+        throw exception("hsgr file does not exist");
     }
     if (0 == boost::filesystem::file_size(hsgr_file))
     {
-        throw osrm::exception("hsgr file is empty");
+        throw exception("hsgr file is empty");
     }
 
     boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);
@@ -190,6 +195,9 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
     hsgr_input_stream.close();
 
     return number_of_nodes;
+}
+
+}
 }
 
 #endif // GRAPH_LOADER_HPP

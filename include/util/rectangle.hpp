@@ -11,6 +11,11 @@
 #include <cstdint>
 #include <limits>
 
+namespace osrm
+{
+namespace util
+{
+
 // TODO: Make template type, add tests
 struct RectangleInt2D
 {
@@ -172,5 +177,8 @@ struct RectangleInt2D
         return lats_contained && lons_contained;
     }
 };
+
+}
+}
 
 #endif

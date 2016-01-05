@@ -12,6 +12,13 @@
 #include <unordered_map>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+namespace routing_algorithms
+{
+
 template <class DataFacadeT>
 class ManyToManyRouting final
     : public BasicRoutingInterface<DataFacadeT, ManyToManyRouting<DataFacadeT>>
@@ -226,4 +233,8 @@ class ManyToManyRouting final
         return false;
     }
 };
+}
+}
+}
+
 #endif

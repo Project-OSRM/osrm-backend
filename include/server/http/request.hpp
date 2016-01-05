@@ -5,6 +5,10 @@
 
 #include <string>
 
+namespace osrm
+{
+namespace server
+{
 namespace http
 {
 
@@ -16,6 +20,8 @@ struct request
     boost::asio::ip::address endpoint;
 };
 
-} // namespace http
+}
+}
+}
 
 #endif // REQUEST_HPP

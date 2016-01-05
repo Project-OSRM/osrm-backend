@@ -9,6 +9,11 @@
 
 #include <iterator>
 
+namespace osrm
+{
+namespace contractor
+{
+
 class IteratorbasedCRC32
 {
   public:
@@ -114,5 +119,8 @@ struct RangebasedCRC32
   private:
     IteratorbasedCRC32 crc32;
 };
+
+}
+}
 
 #endif /* ITERATOR_BASED_CRC32_H */

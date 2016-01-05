@@ -5,25 +5,32 @@
 
 #include "osrm/coordinate.hpp"
 
-osrm::json::String
+namespace osrm
+{
+namespace engine
+{
+
+util::json::String
 PolylineFormatter::printEncodedString(const std::vector<SegmentInformation> &polyline) const
 {
-    return osrm::json::String(PolylineCompressor().get_encoded_string(polyline));
+    return util::json::String(PolylineCompressor().get_encoded_string(polyline));
 }
 
-osrm::json::Array
+util::json::Array
 PolylineFormatter::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
 {
-    osrm::json::Array json_geometry_array;
+    util::json::Array json_geometry_array;
     for (const auto &segment : polyline)
     {
         if (segment.necessary)
         {
-            osrm::json::Array json_coordinate;
+            util::json::Array json_coordinate;
             json_coordinate.values.push_back(segment.location.lat / COORDINATE_PRECISION);
             json_coordinate.values.push_back(segment.location.lon / COORDINATE_PRECISION);
             json_geometry_array.values.push_back(json_coordinate);
         }
     }
     return json_geometry_array;
+}
+}
 }

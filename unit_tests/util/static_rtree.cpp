@@ -25,10 +25,13 @@
 
 BOOST_AUTO_TEST_SUITE(static_rtree)
 
+using namespace osrm;
+using namespace osrm::util;
+
 constexpr uint32_t TEST_BRANCHING_FACTOR = 8;
 constexpr uint32_t TEST_LEAF_NODE_SIZE = 64;
 
-typedef EdgeBasedNode TestData;
+using TestData = extractor::EdgeBasedNode;
 using TestStaticRTree = StaticRTree<TestData,
                                     std::vector<FixedPointCoordinate>,
                                     false,
@@ -108,7 +111,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         {
             int lat = lat_udist(g);
             int lon = lon_udist(g);
-            nodes.emplace_back(QueryNode(lat, lon, OSMNodeID(i)));
+            nodes.emplace_back(extractor::QueryNode(lat, lon, OSMNodeID(i)));
             coords->emplace_back(FixedPointCoordinate(lat, lon));
         }
 
@@ -131,7 +134,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         }
     }
 
-    std::vector<QueryNode> nodes;
+    std::vector<extractor::QueryNode> nodes;
     std::shared_ptr<std::vector<FixedPointCoordinate>> coords;
     std::vector<TestData> edges;
 };
@@ -148,7 +151,7 @@ struct GraphFixture
             FixedPointCoordinate c(input_coords[i].first * COORDINATE_PRECISION,
                                    input_coords[i].second * COORDINATE_PRECISION);
             coords->emplace_back(c);
-            nodes.emplace_back(QueryNode(c.lat, c.lon, OSMNodeID(i)));
+            nodes.emplace_back(extractor::QueryNode(c.lat, c.lon, OSMNodeID(i)));
         }
 
         for (const auto &pair : input_edges)
@@ -166,7 +169,7 @@ struct GraphFixture
         }
     }
 
-    std::vector<QueryNode> nodes;
+    std::vector<extractor::QueryNode> nodes;
     std::shared_ptr<std::vector<FixedPointCoordinate>> coords;
     std::vector<TestData> edges;
 };
@@ -252,7 +255,7 @@ void build_rtree(const std::string &prefix,
     boost::filesystem::ofstream node_stream(coords_path, std::ios::binary);
     const auto num_nodes = static_cast<unsigned>(fixture->nodes.size());
     node_stream.write((char *)&num_nodes, sizeof(unsigned));
-    node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(QueryNode));
+    node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(extractor::QueryNode));
     node_stream.close();
 
     RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->nodes);
@@ -408,7 +411,7 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     std::string nodes_path;
     build_rtree<GraphFixture, MiniStaticRTree>("test_bearing", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
-    GeospatialQuery<MiniStaticRTree> query(rtree, fixture.coords);
+    engine::GeospatialQuery<MiniStaticRTree> query(rtree, fixture.coords);
 
     FixedPointCoordinate input(5.0 * COORDINATE_PRECISION, 5.1 * COORDINATE_PRECISION);
 

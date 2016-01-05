@@ -12,6 +12,11 @@ enum LogLevel
     logDEBUG
 };
 
+namespace osrm
+{
+namespace util
+{
+
 class LogPolicy
 {
   public:
@@ -43,5 +48,8 @@ class SimpleLogger
     std::ostringstream os;
     LogLevel level;
 };
+
+}
+}
 
 #endif /* SIMPLE_LOGGER_HPP */

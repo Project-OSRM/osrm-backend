@@ -7,6 +7,11 @@
 #include <mutex>
 #include <unordered_map>
 
+namespace osrm
+{
+namespace util
+{
+
 struct GlobalTimer
 {
     GlobalTimer() : time(0) {}
@@ -59,5 +64,8 @@ class GlobalTimerFactory
      std::chrono::duration_cast<std::chrono::microseconds>(_X##_stop - _X##_start).count())
 #define TIMER_MIN(_X)                                                                              \
     std::chrono::duration_cast<std::chrono::minutes>(_X##_stop - _X##_start).count()
+
+}
+}
 
 #endif // TIMING_UTIL_HPP

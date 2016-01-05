@@ -1,12 +1,17 @@
 #ifndef POLYLINECOMPRESSOR_H_
 #define POLYLINECOMPRESSOR_H_
 
-struct SegmentInformation;
-
 #include "osrm/coordinate.hpp"
 
 #include <string>
 #include <vector>
+
+namespace osrm
+{
+namespace engine
+{
+
+struct SegmentInformation;
 
 class PolylineCompressor
 {
@@ -18,7 +23,10 @@ class PolylineCompressor
   public:
     std::string get_encoded_string(const std::vector<SegmentInformation> &polyline) const;
 
-    std::vector<FixedPointCoordinate> decode_string(const std::string &geometry_string) const;
+    std::vector<util::FixedPointCoordinate> decode_string(const std::string &geometry_string) const;
 };
+
+}
+}
 
 #endif /* POLYLINECOMPRESSOR_H_ */

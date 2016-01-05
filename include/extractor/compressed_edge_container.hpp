@@ -8,6 +8,11 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace extractor
+{
+
 class CompressedEdgeContainer
 {
   public:
@@ -38,5 +43,8 @@ class CompressedEdgeContainer
     std::vector<unsigned> m_free_list;
     std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
 };
+
+}
+}
 
 #endif // GEOMETRY_COMPRESSOR_HPP_

@@ -4,6 +4,11 @@
 #include <boost/uuid/uuid.hpp>
 #include <type_traits>
 
+namespace osrm
+{
+namespace util
+{
+
 // implements a singleton, i.e. there is one and only one conviguration object
 class FingerPrint
 {
@@ -28,5 +33,8 @@ class FingerPrint
 };
 
 static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
+
+}
+}
 
 #endif /* FingerPrint_H */

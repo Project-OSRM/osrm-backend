@@ -10,6 +10,11 @@
 #include "osrm/coordinate.hpp"
 #include <utility>
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct InternalExtractorEdge
 {
     // specify the type of the weight data
@@ -80,7 +85,7 @@ struct InternalExtractorEdge
     // intermediate edge weight
     WeightData weight_data;
     // coordinate of the source node
-    FixedPointCoordinate source_coordinate;
+    util::FixedPointCoordinate source_coordinate;
 
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_osm_value()
@@ -147,5 +152,8 @@ struct CmpEdgeByOSMTargetID
     value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
     value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
 };
+
+}
+}
 
 #endif // INTERNAL_EXTRACTOR_EDGE_HPP

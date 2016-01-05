@@ -15,13 +15,16 @@
 
 namespace osrm
 {
+namespace engine
+{
 namespace trip
 {
+
 template <typename NodeIDIterator>
 std::vector<NodeID> NearestNeighbourTrip(const NodeIDIterator &start,
                                          const NodeIDIterator &end,
                                          const std::size_t number_of_locations,
-                                         const DistTableWrapper<EdgeWeight> &dist_table)
+                                         const util::DistTableWrapper<EdgeWeight> &dist_table)
 {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START GREEDY NEAREST NEIGHBOUR HERE
@@ -90,6 +93,8 @@ std::vector<NodeID> NearestNeighbourTrip(const NodeIDIterator &start,
     return route;
 }
 
-} // end namespace trip
-} // end namespace osrm
+}
+}
+}
+
 #endif // TRIP_NEAREST_NEIGHBOUR_HPP

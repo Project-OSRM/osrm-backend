@@ -11,6 +11,8 @@
 
 namespace osrm
 {
+namespace util
+{
 namespace json
 {
 
@@ -156,5 +158,7 @@ inline void render(std::vector<char> &out, const Object &object)
 }
 
 } // namespace json
+} // namespace util
 } // namespace osrm
+
 #endif // JSON_RENDERER_HPP

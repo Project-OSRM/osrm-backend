@@ -11,6 +11,13 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+namespace plugins
+{
+
 class BasePlugin
 {
   public:
@@ -26,12 +33,12 @@ class BasePlugin
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BasePlugin() {}
     virtual const std::string GetDescriptor() const = 0;
-    virtual Status HandleRequest(const RouteParameters &, osrm::json::Object &) = 0;
-    virtual bool check_all_coordinates(const std::vector<FixedPointCoordinate> &coordinates,
+    virtual Status HandleRequest(const RouteParameters &, util::json::Object &) = 0;
+    virtual bool check_all_coordinates(const std::vector<util::FixedPointCoordinate> &coordinates,
                                        const unsigned min = 2) const final
     {
         if (min > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
-                                                    [](const FixedPointCoordinate &coordinate)
+                                                    [](const util::FixedPointCoordinate &coordinate)
                                                     {
                                                         return !coordinate.IsValid();
                                                     }))
@@ -105,5 +112,9 @@ class BasePlugin
         return snapped_phantoms;
     }
 };
+
+}
+}
+}
 
 #endif /* BASE_PLUGIN_HPP */

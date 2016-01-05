@@ -8,6 +8,8 @@
 
 namespace osrm
 {
+namespace util
+{
 namespace json
 {
 
@@ -26,16 +28,16 @@ template <typename T> T clamp_float(T d)
     return d;
 }
 
-template <typename... Args> osrm::json::Array make_array(Args... args)
+template <typename... Args> Array make_array(Args... args)
 {
-    osrm::json::Array a;
+    Array a;
     append_to_container(a.values, args...);
     return a;
 }
 
-template <typename T> osrm::json::Array make_array(const std::vector<T> &vector)
+template <typename T> Array make_array(const std::vector<T> &vector)
 {
-    osrm::json::Array a;
+    Array a;
     for (const auto &v : vector)
     {
         a.values.emplace_back(v);
@@ -44,9 +46,9 @@ template <typename T> osrm::json::Array make_array(const std::vector<T> &vector)
 }
 
 // template specialization needed as clang does not play nice
-template <> osrm::json::Array make_array(const std::vector<bool> &vector)
+template <> Array make_array(const std::vector<bool> &vector)
 {
-    osrm::json::Array a;
+    Array a;
     for (const bool v : vector)
     {
         a.values.emplace_back(v);
@@ -55,22 +57,24 @@ template <> osrm::json::Array make_array(const std::vector<bool> &vector)
 }
 
 // Easy acces to object hierachies
-osrm::json::Value &get(osrm::json::Value &value) { return value; }
+Value &get(Value &value) { return value; }
 
 template <typename... Keys>
-osrm::json::Value &get(osrm::json::Value &value, const char *key, Keys... keys)
+Value &get(Value &value, const char *key, Keys... keys)
 {
-    using recursive_object_t = mapbox::util::recursive_wrapper<osrm::json::Object>;
+    using recursive_object_t = mapbox::util::recursive_wrapper<Object>;
     return get(value.get<recursive_object_t>().get().values[key], keys...);
 }
 
 template <typename... Keys>
-osrm::json::Value &get(osrm::json::Value &value, unsigned key, Keys... keys)
+Value &get(Value &value, unsigned key, Keys... keys)
 {
-    using recursive_array_t = mapbox::util::recursive_wrapper<osrm::json::Array>;
+    using recursive_array_t = mapbox::util::recursive_wrapper<Array>;
     return get(value.get<recursive_array_t>().get().values[key], keys...);
 }
 
 } // namespace json
+} // namespace util
 } // namespace osrm
+
 #endif // JSON_UTIL_HPP

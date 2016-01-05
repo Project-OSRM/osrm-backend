@@ -7,6 +7,11 @@
 
 #include <cmath>
 
+namespace osrm
+{
+namespace util
+{
+
 double ComputeAngle::OfThreeFixedPointCoordinates(const FixedPointCoordinate &first,
                                                   const FixedPointCoordinate &second,
                                                   const FixedPointCoordinate &third) noexcept
@@ -24,4 +29,6 @@ double ComputeAngle::OfThreeFixedPointCoordinates(const FixedPointCoordinate &fi
         angle += 360.;
     }
     return angle;
+}
+}
 }

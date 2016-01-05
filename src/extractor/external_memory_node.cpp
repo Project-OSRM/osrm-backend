@@ -3,6 +3,11 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace extractor
+{
+
 ExternalMemoryNode::ExternalMemoryNode(
     int lat, int lon, OSMNodeID node_id, bool barrier, bool traffic_lights)
     : QueryNode(lat, lon, node_id), barrier(barrier), traffic_lights(traffic_lights)
@@ -36,4 +41,6 @@ ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::max_v
 ExternalMemoryNodeSTXXLCompare::value_type ExternalMemoryNodeSTXXLCompare::min_value()
 {
     return ExternalMemoryNode::min_value();
+}
+}
 }

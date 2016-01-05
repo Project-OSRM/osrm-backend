@@ -23,11 +23,21 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+namespace plugins
+{
+
 template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 {
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
-    using ClassifierT = BayesClassifier<LaplaceDistribution, LaplaceDistribution, double>;
+    using SubMatching = routing_algorithms::SubMatching;
+    using SubMatchingList = routing_algorithms::SubMatchingList;
+    using CandidateLists = routing_algorithms::CandidateLists;
+    using ClassifierT = map_matching::BayesClassifier<map_matching::LaplaceDistribution, map_matching::LaplaceDistribution, double>;
     using TraceClassification = ClassifierT::ClassificationT;
 
   public:
@@ -36,8 +46,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
           max_locations_map_matching(max_locations_map_matching),
           // the values where derived from fitting a laplace distribution
           // to the values of manually classified traces
-          classifier(LaplaceDistribution(0.005986, 0.016646),
-                     LaplaceDistribution(0.054385, 0.458432),
+          classifier(map_matching::LaplaceDistribution(0.005986, 0.016646),
+                     map_matching::LaplaceDistribution(0.054385, 0.458432),
                      0.696774) // valid apriori probability
     {
         search_engine_ptr = std::make_shared<SearchEngine<DataFacadeT>>(facade);
@@ -65,28 +75,28 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return label_with_confidence;
     }
 
-    osrm::matching::CandidateLists getCandidates(
-        const std::vector<FixedPointCoordinate> &input_coords,
+    CandidateLists getCandidates(
+        const std::vector<util::FixedPointCoordinate> &input_coords,
         const std::vector<std::pair<const int, const boost::optional<int>>> &input_bearings,
         const double gps_precision,
         std::vector<double> &sub_trace_lengths)
     {
-        osrm::matching::CandidateLists candidates_lists;
+        CandidateLists candidates_lists;
 
         // assuming the gps_precision is the standart-diviation of normal distribution that models
         // GPS noise (in this model) this should give us the correct candidate with >0.95
         double query_radius = 3 * gps_precision;
         double last_distance =
-            coordinate_calculation::haversineDistance(input_coords[0], input_coords[1]);
+            util::coordinate_calculation::haversineDistance(input_coords[0], input_coords[1]);
 
         sub_trace_lengths.resize(input_coords.size());
         sub_trace_lengths[0] = 0;
-        for (const auto current_coordinate : osrm::irange<std::size_t>(0, input_coords.size()))
+        for (const auto current_coordinate : util::irange<std::size_t>(0, input_coords.size()))
         {
             bool allow_uturn = false;
             if (0 < current_coordinate)
             {
-                last_distance = coordinate_calculation::haversineDistance(
+                last_distance = util::coordinate_calculation::haversineDistance(
                     input_coords[current_coordinate - 1], input_coords[current_coordinate]);
 
                 sub_trace_lengths[current_coordinate] +=
@@ -95,7 +105,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             if (input_coords.size() - 1 > current_coordinate && 0 < current_coordinate)
             {
-                double turn_angle = ComputeAngle::OfThreeFixedPointCoordinates(
+                double turn_angle = util::ComputeAngle::OfThreeFixedPointCoordinates(
                     input_coords[current_coordinate - 1], input_coords[current_coordinate],
                     input_coords[current_coordinate + 1]);
 
@@ -146,7 +156,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             if (!allow_uturn)
             {
                 const auto compact_size = candidates.size();
-                for (const auto i : osrm::irange<std::size_t>(0, compact_size))
+                for (const auto i : util::irange<std::size_t>(0, compact_size))
                 {
                     // Split edge if it is bidirectional and append reverse direction to end of list
                     if (candidates[i].phantom_node.forward_node_id != SPECIAL_NODEID &&
@@ -175,24 +185,24 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         return candidates_lists;
     }
 
-    osrm::json::Object submatchingToJSON(const osrm::matching::SubMatching &sub,
+    util::json::Object submatchingToJSON(const SubMatching &sub,
                                          const RouteParameters &route_parameters,
                                          const InternalRouteResult &raw_route)
     {
-        osrm::json::Object subtrace;
+        util::json::Object subtrace;
 
         if (route_parameters.classify)
         {
             subtrace.values["confidence"] = sub.confidence;
         }
 
-        auto response_generator = osrm::engine::MakeApiResponseGenerator(facade);
+        auto response_generator = MakeApiResponseGenerator(facade);
 
         subtrace.values["hint_data"] = response_generator.BuildHintData(raw_route);
 
         if (route_parameters.geometry || route_parameters.print_instructions)
         {
-            using SegmentList =  osrm::engine::guidance::SegmentList<DataFacadeT>;
+            using SegmentList = guidance::SegmentList<DataFacadeT>;
             //Passing false to extract_alternative extracts the route.
             const constexpr bool EXTRACT_ROUTE = false;
             // by passing false to segment_list, we skip the douglas peucker simplification
@@ -210,28 +220,28 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             if (route_parameters.print_instructions)
             {
                 subtrace.values["instructions"] =
-                    osrm::engine::guidance::AnnotateRoute<DataFacadeT>(
+                    guidance::AnnotateRoute<DataFacadeT>(
                         segment_list.Get(), facade);
             }
 
-            osrm::json::Object json_route_summary;
+            util::json::Object json_route_summary;
             json_route_summary.values["total_distance"] = segment_list.GetDistance();
             json_route_summary.values["total_time"] = segment_list.GetDuration();
             subtrace.values["route_summary"] = json_route_summary;
         }
 
-        subtrace.values["indices"] = osrm::json::make_array(sub.indices);
+        subtrace.values["indices"] = util::json::make_array(sub.indices);
 
-        osrm::json::Array points;
+        util::json::Array points;
         for (const auto &node : sub.nodes)
         {
             points.values.emplace_back(
-                osrm::json::make_array(node.location.lat / COORDINATE_PRECISION,
+                util::json::make_array(node.location.lat / COORDINATE_PRECISION,
                                        node.location.lon / COORDINATE_PRECISION));
         }
         subtrace.values["matched_points"] = points;
 
-        osrm::json::Array names;
+        util::json::Array names;
         for (const auto &node : sub.nodes)
         {
             names.values.emplace_back(facade->get_name_for_id(node.name_id));
@@ -242,7 +252,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     }
 
     Status HandleRequest(const RouteParameters &route_parameters,
-                         osrm::json::Object &json_result) final override
+                         util::json::Object &json_result) final override
     {
         // enforce maximum number of locations for performance reasons
         if (max_locations_map_matching > 0 &&
@@ -296,16 +306,16 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         }
 
         // setup logging if enabled
-        if (osrm::json::Logger::get())
-            osrm::json::Logger::get()->initialize("matching");
+        if (util::json::Logger::get())
+            util::json::Logger::get()->initialize("matching");
 
         // call the actual map matching
-        osrm::matching::SubMatchingList sub_matchings;
+        SubMatchingList sub_matchings;
         search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps,
                                         route_parameters.matching_beta,
                                         route_parameters.gps_precision, sub_matchings);
 
-        osrm::json::Array matchings;
+        util::json::Array matchings;
         for (auto &sub : sub_matchings)
         {
             // classify result
@@ -349,8 +359,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             matchings.values.emplace_back(submatchingToJSON(sub, route_parameters, raw_route));
         }
 
-        if (osrm::json::Logger::get())
-            osrm::json::Logger::get()->render("matching", json_result);
+        if (util::json::Logger::get())
+            util::json::Logger::get()->render("matching", json_result);
         json_result.values["matchings"] = matchings;
 
         if (sub_matchings.empty())
@@ -369,5 +379,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     int max_locations_map_matching;
     ClassifierT classifier;
 };
+
+}
+}
+}
 
 #endif // MATCH_HPP

@@ -9,6 +9,11 @@
 
 #include <memory>
 
+namespace osrm
+{
+namespace util
+{
+
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
@@ -25,7 +30,7 @@ struct NodeBasedEdgeData
                       bool reversed,
                       bool roundabout,
                       bool startpoint,
-                      TravelMode travel_mode)
+                      extractor::TravelMode travel_mode)
         : distance(distance), edge_id(edge_id), name_id(name_id),
           access_restricted(access_restricted), reversed(reversed), roundabout(roundabout),
           startpoint(startpoint), travel_mode(travel_mode)
@@ -39,7 +44,7 @@ struct NodeBasedEdgeData
     bool reversed : 1;
     bool roundabout : 1;
     bool startpoint : 1;
-    TravelMode travel_mode : 4;
+    extractor::TravelMode travel_mode : 4;
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
@@ -55,11 +60,11 @@ using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 /// two edges for undirected edges.
 inline std::shared_ptr<NodeBasedDynamicGraph>
 NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
-                               const std::vector<NodeBasedEdge> &input_edge_list)
+                               const std::vector<extractor::NodeBasedEdge> &input_edge_list)
 {
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(
         input_edge_list,
-        [](NodeBasedDynamicGraph::InputEdge &output_edge, const NodeBasedEdge &input_edge)
+        [](NodeBasedDynamicGraph::InputEdge &output_edge, const extractor::NodeBasedEdge &input_edge)
         {
             output_edge.data.distance = static_cast<int>(input_edge.weight);
             BOOST_ASSERT(output_edge.data.distance > 0);
@@ -77,6 +82,9 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
         static_cast<NodeBasedDynamicGraph::NodeIterator>(number_of_nodes), edges_list);
 
     return graph;
+}
+
+}
 }
 
 #endif // NODE_BASED_GRAPH_HPP

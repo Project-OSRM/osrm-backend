@@ -27,13 +27,18 @@
 
 struct lua_State;
 
+namespace osrm
+{
+namespace extractor
+{
+
 class EdgeBasedGraphFactory
 {
   public:
     EdgeBasedGraphFactory() = delete;
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
 
-    explicit EdgeBasedGraphFactory(std::shared_ptr<NodeBasedDynamicGraph> node_based_graph,
+    explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
                                    const CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
@@ -56,7 +61,7 @@ class EdgeBasedGraphFactory
              const bool generate_edge_lookup);
 #endif
 
-    void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
+    void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
 
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
@@ -69,18 +74,18 @@ class EdgeBasedGraphFactory
     int GetTurnPenalty(double angle, lua_State *lua_state) const;
 
   private:
-    using EdgeData = NodeBasedDynamicGraph::EdgeData;
+    using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
     //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the
     //! graph
     std::vector<bool> m_edge_based_node_is_startpoint;
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNode> m_edge_based_node_list;
-    DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
+    util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
     unsigned m_max_edge_id;
 
     const std::vector<QueryNode> &m_node_info_list;
-    std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
+    std::shared_ptr<util::NodeBasedDynamicGraph> m_node_based_graph;
     std::shared_ptr<RestrictionMap const> m_restriction_map;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
@@ -112,5 +117,8 @@ class EdgeBasedGraphFactory
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 };
+
+}
+}
 
 #endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */

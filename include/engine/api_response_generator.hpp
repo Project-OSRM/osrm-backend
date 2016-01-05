@@ -57,7 +57,7 @@ template <typename DataFacadeT> class ApiResponseGenerator
     // The output is tailored to the viaroute plugin.
     void DescribeRoute(const RouteParameters &config,
                        const InternalRouteResult &raw_route,
-                       osrm::json::Object &json_result);
+                       util::json::Object &json_result);
 
     // The following functions allow access to the different parts of the Describe Route
     // functionality.
@@ -65,20 +65,20 @@ template <typename DataFacadeT> class ApiResponseGenerator
     // In the normal situation, Describe Route is the desired usecase.
 
     // generate an overview of a raw route
-    osrm::json::Object SummarizeRoute(const InternalRouteResult &raw_route,
+    util::json::Object SummarizeRoute(const InternalRouteResult &raw_route,
                                       const Segments &segment_list) const;
 
     // create an array containing all via-points/-indices used in the query
-    osrm::json::Array ListViaPoints(const InternalRouteResult &raw_route) const;
-    osrm::json::Array ListViaIndices(const Segments &segment_list) const;
+    util::json::Array ListViaPoints(const InternalRouteResult &raw_route) const;
+    util::json::Array ListViaIndices(const Segments &segment_list) const;
 
-    osrm::json::Value GetGeometry(const bool return_encoded, const Segments &segments) const;
+    util::json::Value GetGeometry(const bool return_encoded, const Segments &segments) const;
 
     // TODO this dedicated creation seems unnecessary? Only used for route names
     std::vector<Segment> BuildRouteSegments(const Segments &segment_list) const;
 
     // adds checksum and locations
-    osrm::json::Object BuildHintData(const InternalRouteResult &raw_route) const;
+    util::json::Object BuildHintData(const InternalRouteResult &raw_route) const;
 
   private:
     // data access to translate ids back into names
@@ -94,7 +94,7 @@ ApiResponseGenerator<DataFacadeT>::ApiResponseGenerator(DataFacadeT *facade_)
 template <typename DataFacadeT>
 void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &config,
                                                       const InternalRouteResult &raw_route,
-                                                      osrm::json::Object &json_result)
+                                                      util::json::Object &json_result)
 {
     if( not raw_route.is_valid() ){
       return;
@@ -129,7 +129,7 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
 
         // Alternative Route Summaries are stored in an array to (down the line) allow multiple
         // alternatives
-        osrm::json::Array json_alternate_route_summary_array;
+        util::json::Array json_alternate_route_summary_array;
         json_alternate_route_summary_array.values.emplace_back(
             SummarizeRoute(raw_route, alternate_segment_list));
         json_result.values["alternative_summaries"] = json_alternate_route_summary_array;
@@ -139,14 +139,14 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
         {
             auto alternate_geometry_string =
                 GetGeometry(config.compression, alternate_segment_list);
-            osrm::json::Array json_alternate_geometries_array;
+            util::json::Array json_alternate_geometries_array;
             json_alternate_geometries_array.values.emplace_back(std::move(alternate_geometry_string));
             json_result.values["alternative_geometries"] = json_alternate_geometries_array;
         }
 
         if (config.print_instructions)
         {
-            osrm::json::Array json_alternate_annotations_array;
+            util::json::Array json_alternate_annotations_array;
             json_alternate_annotations_array.values.emplace_back(
                 guidance::AnnotateRoute(alternate_segment_list.Get(), facade));
             json_result.values["alternative_instructions"] = json_alternate_annotations_array;
@@ -157,24 +157,24 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
         auto alternate_segments = BuildRouteSegments(alternate_segment_list);
         route_names = generate_route_names(path_segments, alternate_segments, facade);
 
-        osrm::json::Array json_alternate_names_array;
-        osrm::json::Array json_alternate_names;
+        util::json::Array json_alternate_names_array;
+        util::json::Array json_alternate_names;
         json_alternate_names.values.push_back(route_names.alternative_path_name_1);
         json_alternate_names.values.push_back(route_names.alternative_path_name_2);
         json_alternate_names_array.values.emplace_back(std::move(json_alternate_names));
         json_result.values["alternative_names"] = json_alternate_names_array;
-        json_result.values["found_alternative"] = osrm::json::True();
+        json_result.values["found_alternative"] = util::json::True();
     }
     else
     {
-        json_result.values["found_alternative"] = osrm::json::False();
+        json_result.values["found_alternative"] = util::json::False();
         // generate names for the main route on its own
         auto path_segments = BuildRouteSegments(segment_list);
         std::vector<detail::Segment> alternate_segments;
         route_names = generate_route_names(path_segments, alternate_segments, facade);
     }
 
-    osrm::json::Array json_route_names;
+    util::json::Array json_route_names;
     json_route_names.values.push_back(route_names.shortest_path_name_1);
     json_route_names.values.push_back(route_names.shortest_path_name_2);
     json_result.values["route_name"] = json_route_names;
@@ -183,11 +183,11 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
 }
 
 template <typename DataFacadeT>
-osrm::json::Object
+util::json::Object
 ApiResponseGenerator<DataFacadeT>::SummarizeRoute(const InternalRouteResult &raw_route,
                                                   const Segments &segment_list) const
 {
-    osrm::json::Object json_route_summary;
+    util::json::Object json_route_summary;
     if (not raw_route.segment_end_coordinates.empty())
     {
         const auto start_name_id = raw_route.segment_end_coordinates.front().source_phantom.name_id;
@@ -201,11 +201,11 @@ ApiResponseGenerator<DataFacadeT>::SummarizeRoute(const InternalRouteResult &raw
 }
 
 template <typename DataFacadeT>
-osrm::json::Array
+util::json::Array
 ApiResponseGenerator<DataFacadeT>::ListViaPoints(const InternalRouteResult &raw_route) const
 {
-    osrm::json::Array json_via_points_array;
-    osrm::json::Array json_first_coordinate;
+    util::json::Array json_via_points_array;
+    util::json::Array json_first_coordinate;
     json_first_coordinate.values.emplace_back(
         raw_route.segment_end_coordinates.front().source_phantom.location.lat /
         COORDINATE_PRECISION);
@@ -216,7 +216,7 @@ ApiResponseGenerator<DataFacadeT>::ListViaPoints(const InternalRouteResult &raw_
     for (const PhantomNodes &nodes : raw_route.segment_end_coordinates)
     {
         std::string tmp;
-        osrm::json::Array json_coordinate;
+        util::json::Array json_coordinate;
         json_coordinate.values.emplace_back(nodes.target_phantom.location.lat / COORDINATE_PRECISION);
         json_coordinate.values.emplace_back(nodes.target_phantom.location.lon / COORDINATE_PRECISION);
         json_via_points_array.values.emplace_back(std::move(json_coordinate));
@@ -225,17 +225,17 @@ ApiResponseGenerator<DataFacadeT>::ListViaPoints(const InternalRouteResult &raw_
 }
 
 template <typename DataFacadeT>
-osrm::json::Array
+util::json::Array
 ApiResponseGenerator<DataFacadeT>::ListViaIndices(const Segments &segment_list) const
 {
-    osrm::json::Array via_indices;
+    util::json::Array via_indices;
     via_indices.values.insert(via_indices.values.end(), segment_list.GetViaIndices().begin(),
                               segment_list.GetViaIndices().end());
     return via_indices;
 }
 
 template <typename DataFacadeT>
-osrm::json::Value ApiResponseGenerator<DataFacadeT>::GetGeometry(const bool return_encoded, const Segments &segments) const
+util::json::Value ApiResponseGenerator<DataFacadeT>::GetGeometry(const bool return_encoded, const Segments &segments) const
 {
     if (return_encoded)
         return PolylineFormatter().printEncodedString(segments.Get());
@@ -251,8 +251,8 @@ ApiResponseGenerator<DataFacadeT>::BuildRouteSegments(const Segments &segment_li
     for (const auto &segment : segment_list.Get())
     {
         const auto current_turn = segment.turn_instruction;
-        if (TurnInstructionsClass::TurnIsNecessary(current_turn) and
-            (TurnInstruction::EnterRoundAbout != current_turn))
+        if (extractor::TurnInstructionsClass::TurnIsNecessary(current_turn) and
+            (extractor::TurnInstruction::EnterRoundAbout != current_turn))
         {
 
             detail::Segment seg = {segment.name_id, static_cast<int32_t>(segment.length),
@@ -264,14 +264,14 @@ ApiResponseGenerator<DataFacadeT>::BuildRouteSegments(const Segments &segment_li
 }
 
 template <typename DataFacadeT>
-osrm::json::Object
+util::json::Object
 ApiResponseGenerator<DataFacadeT>::BuildHintData(const InternalRouteResult &raw_route) const
 {
-    osrm::json::Object json_hint_object;
+    util::json::Object json_hint_object;
     json_hint_object.values["checksum"] = facade->GetCheckSum();
-    osrm::json::Array json_location_hint_array;
+    util::json::Array json_location_hint_array;
     std::string hint;
-    for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
+    for (const auto i : util::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
     {
         ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
         json_location_hint_array.values.push_back(hint);

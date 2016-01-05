@@ -7,6 +7,13 @@
 
 #include <string>
 
+namespace osrm
+{
+namespace engine
+{
+namespace plugins
+{
+
 template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
 {
   public:
@@ -16,7 +23,7 @@ template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
     }
     const std::string GetDescriptor() const override final { return descriptor_string; }
     Status HandleRequest(const RouteParameters &route_parameters,
-                         osrm::json::Object &json_result) override final
+                         util::json::Object &json_result) override final
     {
         (void)route_parameters; // unused
 
@@ -29,5 +36,9 @@ template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
     const DataFacadeT *facade;
     std::string descriptor_string;
 };
+
+}
+}
+}
 
 #endif /* TIMESTAMP_PLUGIN_H */

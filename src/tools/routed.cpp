@@ -39,25 +39,27 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 }
 #endif
 
+using namespace osrm;
+
 int main(int argc, const char *argv[]) try
 {
-    LogPolicy::GetInstance().Unmute();
+    util::LogPolicy::GetInstance().Unmute();
 
     bool trial_run = false;
     std::string ip_address;
     int ip_port, requested_thread_num;
 
     LibOSRMConfig lib_config;
-    const unsigned init_result = GenerateServerProgramOptions(
+    const unsigned init_result = util::GenerateServerProgramOptions(
         argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
         lib_config.use_shared_memory, trial_run, lib_config.max_locations_trip,
         lib_config.max_locations_viaroute, lib_config.max_locations_distance_table,
         lib_config.max_locations_map_matching);
-    if (init_result == INIT_OK_DO_NOT_START_ENGINE)
+    if (init_result == util::INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
     }
-    if (init_result == INIT_FAILED)
+    if (init_result == util::INIT_FAILED)
     {
         return EXIT_FAILURE;
     }
@@ -70,7 +72,7 @@ int main(int argc, const char *argv[]) try
             if (should_lock && -1 == mlockall(MCL_CURRENT | MCL_FUTURE))
             {
                 could_lock = false;
-                SimpleLogger().Write(logWARNING) << "memory could not be locked to RAM";
+                util::SimpleLogger().Write(logWARNING) << "memory could not be locked to RAM";
             }
         }
         ~MemoryLocker()
@@ -81,16 +83,16 @@ int main(int argc, const char *argv[]) try
         bool should_lock = false, could_lock = true;
     } memory_locker(lib_config.use_shared_memory);
 #endif
-    SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
+    util::SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
     if (lib_config.use_shared_memory)
     {
-        SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
+        util::SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
     }
 
-    SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
-    SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
-    SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
+    util::SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
+    util::SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
+    util::SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
 
 #ifndef _WIN32
     int sig = 0;
@@ -101,13 +103,13 @@ int main(int argc, const char *argv[]) try
 #endif
 
     OSRM osrm_lib(lib_config);
-    auto routing_server = Server::CreateServer(ip_address, ip_port, requested_thread_num);
+    auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
 
     routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
     if (trial_run)
     {
-        SimpleLogger().Write() << "trial run, quitting after successful initialization";
+        util::SimpleLogger().Write() << "trial run, quitting after successful initialization";
     }
     else
     {
@@ -127,18 +129,18 @@ int main(int argc, const char *argv[]) try
         sigaddset(&wait_mask, SIGQUIT);
         sigaddset(&wait_mask, SIGTERM);
         pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);
-        SimpleLogger().Write() << "running and waiting for requests";
+        util::SimpleLogger().Write() << "running and waiting for requests";
         sigwait(&wait_mask, &sig);
 #else
         // Set console control handler to allow server to be stopped.
-        console_ctrl_function = std::bind(&Server::Stop, routing_server);
+        console_ctrl_function = std::bind(&server::Server::Stop, routing_server);
         SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
-        SimpleLogger().Write() << "running and waiting for requests";
+        util::SimpleLogger().Write() << "running and waiting for requests";
         routing_server->Run();
 #endif
-        SimpleLogger().Write() << "initiating shutdown";
+        util::SimpleLogger().Write() << "initiating shutdown";
         routing_server->Stop();
-        SimpleLogger().Write() << "stopping threads";
+        util::SimpleLogger().Write() << "stopping threads";
 
         auto status = future.wait_for(std::chrono::seconds(2));
 
@@ -148,24 +150,24 @@ int main(int argc, const char *argv[]) try
         }
         else
         {
-            SimpleLogger().Write(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
+            util::SimpleLogger().Write(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
             server_task.reset(); // just kill it
         }
     }
 
-    SimpleLogger().Write() << "freeing objects";
+    util::SimpleLogger().Write() << "freeing objects";
     routing_server.reset();
-    SimpleLogger().Write() << "shutdown completed";
+    util::SimpleLogger().Write() << "shutdown completed";
 }
 catch (const std::bad_alloc &e)
 {
-    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    SimpleLogger().Write(logWARNING)
+    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    util::SimpleLogger().Write(logWARNING)
         << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }
 catch (const std::exception &e)
 {
-    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     return EXIT_FAILURE;
 }

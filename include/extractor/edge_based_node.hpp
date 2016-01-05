@@ -10,7 +10,12 @@
 
 #include <limits>
 
-/// This is what StaticRTree serialized and stores on disk
+namespace osrm
+{
+namespace extractor
+{
+
+/// This is what util::StaticRTree serialized and stores on disk
 /// It is generated in EdgeBasedGraphFactory.
 struct EdgeBasedNode
 {
@@ -53,10 +58,10 @@ struct EdgeBasedNode
                      (reverse_edge_based_node_id != SPECIAL_NODEID));
     }
 
-    static inline FixedPointCoordinate Centroid(const FixedPointCoordinate &a,
-                                                const FixedPointCoordinate &b)
+    static inline util::FixedPointCoordinate Centroid(const util::FixedPointCoordinate &a,
+                                                const util::FixedPointCoordinate &b)
     {
-        FixedPointCoordinate centroid;
+        util::FixedPointCoordinate centroid;
         // The coordinates of the midpoint are given by:
         centroid.lat = (a.lat + b.lat) / 2;
         centroid.lon = (a.lon + b.lon) / 2;
@@ -84,5 +89,8 @@ struct EdgeBasedNode
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
 };
+
+}
+}
 
 #endif // EDGE_BASED_NODE_HPP

@@ -10,6 +10,11 @@
 
 #include <iostream>
 
+namespace osrm
+{
+namespace extractor
+{
+
 CompressedEdgeContainer::CompressedEdgeContainer()
 {
     m_free_list.reserve(100);
@@ -181,7 +186,7 @@ void CompressedEdgeContainer::PrintStatistics() const
         longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());
     }
 
-    SimpleLogger().Write() << "Geometry successfully removed:"
+    util::SimpleLogger().Write() << "Geometry successfully removed:"
                               "\n  compressed edges: "
                            << compressed_edges
                            << "\n  compressed geometries: " << compressed_geometries
@@ -211,4 +216,6 @@ NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
     const auto &bucket = GetBucketReference(edge_id);
     BOOST_ASSERT(bucket.size() >= 2);
     return bucket[bucket.size() - 2].first;
+}
+}
 }

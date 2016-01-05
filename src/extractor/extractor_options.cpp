@@ -9,6 +9,11 @@
 
 #include <tbb/task_scheduler_init.h>
 
+namespace osrm
+{
+namespace extractor
+{
+
 return_code
 ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extractor_config)
 {
@@ -87,13 +92,13 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
                                       option_variables);
         if (option_variables.count("version"))
         {
-            SimpleLogger().Write() << OSRM_VERSION;
+            util::SimpleLogger().Write() << OSRM_VERSION;
             return return_code::exit;
         }
 
         if (option_variables.count("help"))
         {
-            SimpleLogger().Write() << visible_options;
+            util::SimpleLogger().Write() << visible_options;
             return return_code::exit;
         }
 
@@ -102,10 +107,10 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
         // parse config file
         if (boost::filesystem::is_regular_file(extractor_config.config_file_path))
         {
-            SimpleLogger().Write() << "Reading options from: "
+            util::SimpleLogger().Write() << "Reading options from: "
                                    << extractor_config.config_file_path.string();
             std::string ini_file_contents =
-                read_file_lower_content(extractor_config.config_file_path);
+                util::read_file_lower_content(extractor_config.config_file_path);
             std::stringstream config_stream(ini_file_contents);
             boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                           option_variables);
@@ -114,13 +119,13 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
 
         if (!option_variables.count("input"))
         {
-            SimpleLogger().Write() << visible_options;
+            util::SimpleLogger().Write() << visible_options;
             return return_code::exit;
         }
     }
     catch (std::exception &e)
     {
-        SimpleLogger().Write(logWARNING) << e.what();
+        util::SimpleLogger().Write(logWARNING) << e.what();
         return return_code::fail;
     }
 
@@ -204,4 +209,6 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
         extractor_config.edge_segment_lookup_path.replace(pos, 8, ".osrm.edge_segment_lookup");
         extractor_config.edge_penalty_path.replace(pos, 8, ".osrm.edge_penalties");
     }
+}
+}
 }

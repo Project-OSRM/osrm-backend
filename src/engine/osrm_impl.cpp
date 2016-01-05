@@ -28,43 +28,51 @@
 #include <utility>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+
 OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig &lib_config)
 {
     if (lib_config.use_shared_memory)
     {
-        barrier = osrm::make_unique<SharedBarriers>();
-        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
+        barrier = util::make_unique<datafacade::SharedBarriers>();
+        query_data_facade = new datafacade::SharedDataFacade<contractor::QueryEdge::EdgeData>();
     }
     else
     {
         // populate base path
-        populate_base_path(lib_config.server_paths);
-        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(lib_config.server_paths);
+        util::populate_base_path(lib_config.server_paths);
+        query_data_facade = new datafacade::InternalDataFacade<contractor::QueryEdge::EdgeData>(
+            lib_config.server_paths);
     }
 
+    using DataFacade = datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData>;
+
     // The following plugins handle all requests.
-    RegisterPlugin(new DistanceTablePlugin<BaseDataFacade<QueryEdge::EdgeData>>(
+    RegisterPlugin(new plugins::DistanceTablePlugin<DataFacade>(
         query_data_facade, lib_config.max_locations_distance_table));
-    RegisterPlugin(new HelloWorldPlugin());
-    RegisterPlugin(new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
-    RegisterPlugin(new MapMatchingPlugin<BaseDataFacade<QueryEdge::EdgeData>>(
+    RegisterPlugin(new plugins::HelloWorldPlugin());
+    RegisterPlugin(new plugins::NearestPlugin<DataFacade>(query_data_facade));
+    RegisterPlugin(new plugins::MapMatchingPlugin<DataFacade>(
         query_data_facade, lib_config.max_locations_map_matching));
-    RegisterPlugin(new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
-    RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(
-        query_data_facade, lib_config.max_locations_viaroute));
-    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(
-        query_data_facade, lib_config.max_locations_trip));
+    RegisterPlugin(new plugins::TimestampPlugin<DataFacade>(query_data_facade));
+    RegisterPlugin(new plugins::ViaRoutePlugin<DataFacade>(query_data_facade,
+                                                           lib_config.max_locations_viaroute));
+    RegisterPlugin(
+        new plugins::RoundTripPlugin<DataFacade>(query_data_facade, lib_config.max_locations_trip));
 }
 
-void OSRM::OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
+void OSRM::OSRM_impl::RegisterPlugin(plugins::BasePlugin *raw_plugin_ptr)
 {
-    std::unique_ptr<BasePlugin> plugin_ptr(raw_plugin_ptr);
-    SimpleLogger().Write() << "loaded plugin: " << plugin_ptr->GetDescriptor();
+    std::unique_ptr<plugins::BasePlugin> plugin_ptr(raw_plugin_ptr);
+    util::SimpleLogger().Write() << "loaded plugin: " << plugin_ptr->GetDescriptor();
     plugin_map[plugin_ptr->GetDescriptor()] = std::move(plugin_ptr);
 }
 
 int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters,
-                              osrm::json::Object &json_result)
+                              util::json::Object &json_result)
 {
     const auto &plugin_iterator = plugin_map.find(route_parameters.service);
 
@@ -124,17 +132,20 @@ void OSRM::OSRM_impl::increase_concurrent_query_count()
     // increment query count
     ++(barrier->number_of_queries);
 
-    (static_cast<SharedDataFacade<QueryEdge::EdgeData> *>(query_data_facade))
+    (static_cast<datafacade::SharedDataFacade<contractor::QueryEdge::EdgeData> *>(
+         query_data_facade))
         ->CheckAndReloadFacade();
 }
 
 // proxy code for compilation firewall
-OSRM::OSRM(LibOSRMConfig &lib_config) : OSRM_pimpl_(osrm::make_unique<OSRM_impl>(lib_config)) {}
+OSRM::OSRM(LibOSRMConfig &lib_config) : OSRM_pimpl_(util::make_unique<OSRM_impl>(lib_config)) {}
 
 // needed because unique_ptr needs the size of OSRM_impl for delete
 OSRM::~OSRM() {}
 
-int OSRM::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
+int OSRM::RunQuery(const RouteParameters &route_parameters, util::json::Object &json_result)
 {
     return OSRM_pimpl_->RunQuery(route_parameters, json_result);
+}
+}
 }

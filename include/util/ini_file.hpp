@@ -7,6 +7,11 @@
 #include <algorithm>
 #include <string>
 
+namespace osrm
+{
+namespace util
+{
+
 namespace
 {
 
@@ -21,4 +26,7 @@ std::string read_file_lower_content(const boost::filesystem::path &path)
     return ini_file_content;
 }
 }
+}
+}
+
 #endif // INI_FILE_HPP

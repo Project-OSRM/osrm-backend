@@ -7,6 +7,11 @@
 
 #include <limits>
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct OriginalEdgeData
 {
     explicit OriginalEdgeData(NodeID via_node,
@@ -32,5 +37,8 @@ struct OriginalEdgeData
     bool compressed_geometry;
     TravelMode travel_mode;
 };
+
+}
+}
 
 #endif // ORIGINAL_EDGE_DATA_HPP

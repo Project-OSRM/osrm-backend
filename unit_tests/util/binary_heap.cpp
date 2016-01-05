@@ -12,6 +12,9 @@
 
 BOOST_AUTO_TEST_SUITE(binary_heap)
 
+using namespace osrm;
+using namespace osrm::util;
+
 struct TestData
 {
     unsigned value;

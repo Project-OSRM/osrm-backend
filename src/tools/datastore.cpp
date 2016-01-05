@@ -19,10 +19,6 @@
 
 #include "osrm/coordinate.hpp"
 
-using RTreeLeaf = BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf;
-using RTreeNode = StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode;
-using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
-
 #ifdef __linux__
 #include <sys/mman.h>
 #endif
@@ -35,6 +31,20 @@ using QueryGraph = StaticGraph<QueryEdge::EdgeData>;
 #include <fstream>
 #include <new>
 #include <string>
+
+// FIXME remove after move to datastore
+using namespace osrm::engine::datafacade;
+using namespace osrm::datastore;
+using namespace osrm;
+
+using RTreeLeaf = typename engine::datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData>::RTreeLeaf;
+using RTreeNode = util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, true>::vector, true>::TreeNode;
+using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
+
+namespace osrm
+{
+namespace tools
+{
 
 // delete a shared memory region. report warning if it could not be deleted
 void deleteRegion(const SharedDataType region)
@@ -62,13 +72,16 @@ void deleteRegion(const SharedDataType region)
             }
         }();
 
-        SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
+        util::SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
     }
+}
+
+}
 }
 
 int main(const int argc, const char *argv[]) try
 {
-    LogPolicy::GetInstance().Unmute();
+    util::LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
 
 #ifdef __linux__
@@ -76,7 +89,7 @@ int main(const int argc, const char *argv[]) try
     const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
     if (-1 == mlockall(lock_flags))
     {
-        SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
+        util::SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
     }
 #endif
 
@@ -91,45 +104,45 @@ int main(const int argc, const char *argv[]) try
         barrier.pending_update_mutex.unlock();
     }
 
-    SimpleLogger().Write(logDEBUG) << "Checking input parameters";
+    util::SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
     std::unordered_map<std::string, boost::filesystem::path> server_paths;
-    if (!GenerateDataStoreOptions(argc, argv, server_paths))
+    if (!util::GenerateDataStoreOptions(argc, argv, server_paths))
     {
         return EXIT_SUCCESS;
     }
 
     if (server_paths.find("hsgrdata") == server_paths.end())
     {
-        throw osrm::exception("no hsgr file found");
+        throw util::exception("no hsgr file found");
     }
     if (server_paths.find("ramindex") == server_paths.end())
     {
-        throw osrm::exception("no ram index file found");
+        throw util::exception("no ram index file found");
     }
     if (server_paths.find("fileindex") == server_paths.end())
     {
-        throw osrm::exception("no leaf index file found");
+        throw util::exception("no leaf index file found");
     }
     if (server_paths.find("nodesdata") == server_paths.end())
     {
-        throw osrm::exception("no nodes file found");
+        throw util::exception("no nodes file found");
     }
     if (server_paths.find("edgesdata") == server_paths.end())
     {
-        throw osrm::exception("no edges file found");
+        throw util::exception("no edges file found");
     }
     if (server_paths.find("namesdata") == server_paths.end())
     {
-        throw osrm::exception("no names file found");
+        throw util::exception("no names file found");
     }
     if (server_paths.find("geometry") == server_paths.end())
     {
-        throw osrm::exception("no geometry file found");
+        throw util::exception("no geometry file found");
     }
     if (server_paths.find("core") == server_paths.end())
     {
-        throw osrm::exception("no core file found");
+        throw util::exception("no core file found");
     }
 
     auto paths_iterator = server_paths.find("hsgrdata");
@@ -173,19 +186,19 @@ int main(const int argc, const char *argv[]) try
 
     // determine segment to use
     bool segment2_in_use = SharedMemory::RegionExists(LAYOUT_2);
-    const SharedDataType layout_region = [&]
+    const engine::datafacade::SharedDataType layout_region = [&]
     {
         return segment2_in_use ? LAYOUT_1 : LAYOUT_2;
     }();
-    const SharedDataType data_region = [&]
+    const engine::datafacade::SharedDataType data_region = [&]
     {
         return segment2_in_use ? DATA_1 : DATA_2;
     }();
-    const SharedDataType previous_layout_region = [&]
+    const engine::datafacade::SharedDataType previous_layout_region = [&]
     {
         return segment2_in_use ? LAYOUT_2 : LAYOUT_1;
     }();
-    const SharedDataType previous_data_region = [&]
+    const engine::datafacade::SharedDataType previous_data_region = [&]
     {
         return segment2_in_use ? DATA_2 : DATA_1;
     }();
@@ -198,15 +211,15 @@ int main(const int argc, const char *argv[]) try
                                           file_index_path.length() + 1);
 
     // collect number of elements to store in shared memory object
-    SimpleLogger().Write() << "load names from: " << names_data_path;
+    util::SimpleLogger().Write() << "load names from: " << names_data_path;
     // number of entries in name index
     boost::filesystem::ifstream name_stream(names_data_path, std::ios::binary);
     unsigned name_blocks = 0;
     name_stream.read((char *)&name_blocks, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_OFFSETS, name_blocks);
-    shared_layout_ptr->SetBlockSize<typename RangeTable<16, true>::BlockT>(
+    shared_layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
         SharedDataLayout::NAME_BLOCKS, name_blocks);
-    SimpleLogger().Write() << "name offsets size: " << name_blocks;
+    util::SimpleLogger().Write() << "name offsets size: " << name_blocks;
     BOOST_ASSERT_MSG(0 != name_blocks, "name file broken");
 
     unsigned number_of_chars = 0;
@@ -223,9 +236,9 @@ int main(const int argc, const char *argv[]) try
                                             number_of_original_edges);
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_ID_LIST,
                                               number_of_original_edges);
-    shared_layout_ptr->SetBlockSize<TravelMode>(SharedDataLayout::TRAVEL_MODE,
+    shared_layout_ptr->SetBlockSize<extractor::TravelMode>(SharedDataLayout::TRAVEL_MODE,
                                                 number_of_original_edges);
-    shared_layout_ptr->SetBlockSize<TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
+    shared_layout_ptr->SetBlockSize<extractor::TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
                                                      number_of_original_edges);
     // note: there are 32 geometry indicators in one unsigned block
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDICATORS,
@@ -233,16 +246,16 @@ int main(const int argc, const char *argv[]) try
 
     boost::filesystem::ifstream hsgr_input_stream(hsgr_path, std::ios::binary);
 
-    FingerPrint fingerprint_valid = FingerPrint::GetValid();
-    FingerPrint fingerprint_loaded;
-    hsgr_input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+    util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
+    util::FingerPrint fingerprint_loaded;
+    hsgr_input_stream.read((char *)&fingerprint_loaded, sizeof(util::FingerPrint));
     if (fingerprint_loaded.TestGraphUtil(fingerprint_valid))
     {
-        SimpleLogger().Write(logDEBUG) << "Fingerprint checked out ok";
+        util::SimpleLogger().Write(logDEBUG) << "Fingerprint checked out ok";
     }
     else
     {
-        SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build. "
+        util::SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build. "
                                             "Reprocess to get rid of this warning.";
     }
 
@@ -279,7 +292,7 @@ int main(const int argc, const char *argv[]) try
         boost::filesystem::ifstream timestamp_stream(timestamp_path);
         if (!timestamp_stream)
         {
-            SimpleLogger().Write(logWARNING) << timestamp_path << " not found. setting to default";
+            util::SimpleLogger().Write(logWARNING) << timestamp_path << " not found. setting to default";
         }
         else
         {
@@ -309,7 +322,7 @@ int main(const int argc, const char *argv[]) try
     boost::filesystem::ifstream nodes_input_stream(nodes_data_path, std::ios::binary);
     unsigned coordinate_list_size = 0;
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
-    shared_layout_ptr->SetBlockSize<FixedPointCoordinate>(SharedDataLayout::COORDINATE_LIST,
+    shared_layout_ptr->SetBlockSize<util::FixedPointCoordinate>(SharedDataLayout::COORDINATE_LIST,
                                                           coordinate_list_size);
 
     // load geometries sizes
@@ -326,7 +339,7 @@ int main(const int argc, const char *argv[]) try
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_LIST,
                                               number_of_compressed_geometries);
     // allocate shared memory block
-    SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout()
+    util::SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout()
                            << " bytes";
     SharedMemory *shared_memory =
         SharedMemoryFactory::Get(data_region, shared_layout_ptr->GetSizeOfLayout());
@@ -390,19 +403,19 @@ int main(const int argc, const char *argv[]) try
     unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
         shared_memory_ptr, SharedDataLayout::NAME_ID_LIST);
 
-    TravelMode *travel_mode_ptr = shared_layout_ptr->GetBlockPtr<TravelMode, true>(
+    extractor::TravelMode *travel_mode_ptr = shared_layout_ptr->GetBlockPtr<extractor::TravelMode, true>(
         shared_memory_ptr, SharedDataLayout::TRAVEL_MODE);
 
-    TurnInstruction *turn_instructions_ptr = shared_layout_ptr->GetBlockPtr<TurnInstruction, true>(
+    extractor::TurnInstruction *turn_instructions_ptr = shared_layout_ptr->GetBlockPtr<extractor::TurnInstruction, true>(
         shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
 
     unsigned *geometries_indicator_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
         shared_memory_ptr, SharedDataLayout::GEOMETRIES_INDICATORS);
 
-    OriginalEdgeData current_edge_data;
+    extractor::OriginalEdgeData current_edge_data;
     for (unsigned i = 0; i < number_of_original_edges; ++i)
     {
-        edges_input_stream.read((char *)&(current_edge_data), sizeof(OriginalEdgeData));
+        edges_input_stream.read((char *)&(current_edge_data), sizeof(extractor::OriginalEdgeData));
         via_node_ptr[i] = current_edge_data.via_node;
         name_id_ptr[i] = current_edge_data.name_id;
         travel_mode_ptr[i] = current_edge_data.travel_mode;
@@ -456,15 +469,15 @@ int main(const int argc, const char *argv[]) try
     }
 
     // Loading list of coordinates
-    FixedPointCoordinate *coordinates_ptr =
-        shared_layout_ptr->GetBlockPtr<FixedPointCoordinate, true>(
+    util::FixedPointCoordinate *coordinates_ptr =
+        shared_layout_ptr->GetBlockPtr<util::FixedPointCoordinate, true>(
             shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
 
-    QueryNode current_node;
+    extractor::QueryNode current_node;
     for (unsigned i = 0; i < coordinate_list_size; ++i)
     {
-        nodes_input_stream.read((char *)&current_node, sizeof(QueryNode));
-        coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon);
+        nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
+        coordinates_ptr[i] = util::FixedPointCoordinate(current_node.lat, current_node.lon);
     }
     nodes_input_stream.close();
 
@@ -552,20 +565,21 @@ int main(const int argc, const char *argv[]) try
     data_timestamp_ptr->layout = layout_region;
     data_timestamp_ptr->data = data_region;
     data_timestamp_ptr->timestamp += 1;
-    deleteRegion(previous_data_region);
-    deleteRegion(previous_layout_region);
-    SimpleLogger().Write() << "all data loaded";
+    tools::deleteRegion(previous_data_region);
+    tools::deleteRegion(previous_layout_region);
+    util::SimpleLogger().Write() << "all data loaded";
 
     shared_layout_ptr->PrintInformation();
+    return EXIT_SUCCESS;
 }
 catch (const std::bad_alloc &e)
 {
-    SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    SimpleLogger().Write(logWARNING) << "Please provide more memory or disable locking the virtual "
+    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    util::SimpleLogger().Write(logWARNING) << "Please provide more memory or disable locking the virtual "
                                         "address space (note: this makes OSRM swap, i.e. slow)";
     return EXIT_FAILURE;
 }
 catch (const std::exception &e)
 {
-    SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
+    util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
 }

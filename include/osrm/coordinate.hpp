@@ -32,10 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <type_traits>
 
-namespace
+namespace osrm
 {
+
 constexpr static const double COORDINATE_PRECISION = 1000000.0;
-}
+
+namespace util
+{
 
 struct FixedPointCoordinate
 {
@@ -61,5 +64,10 @@ struct FixedPointCoordinate
 };
 
 std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate);
+}
+
+using util::FixedPointCoordinate;
+
+}
 
 #endif /* COORDINATE_HPP_ */

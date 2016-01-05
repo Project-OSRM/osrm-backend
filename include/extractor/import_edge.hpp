@@ -4,6 +4,11 @@
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct NodeBasedEdge
 {
     bool operator<(const NodeBasedEdge &e) const;
@@ -89,5 +94,8 @@ struct EdgeBasedEdge
     bool forward : 1;
     bool backward : 1;
 };
+
+}
+}
 
 #endif /* IMPORT_EDGE_HPP */

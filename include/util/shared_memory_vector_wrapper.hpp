@@ -8,6 +8,11 @@
 #include <type_traits>
 #include <vector>
 
+namespace osrm
+{
+namespace util
+{
+
 template <typename DataT> class ShMemIterator : public std::iterator<std::input_iterator_tag, DataT>
 {
     DataT *p;
@@ -123,5 +128,8 @@ template <typename DataT, bool UseSharedMemory> struct ShM
                                              SharedMemoryWrapper<DataT>,
                                              std::vector<DataT>>::type;
 };
+
+}
+}
 
 #endif // SHARED_MEMORY_VECTOR_WRAPPER_HPP

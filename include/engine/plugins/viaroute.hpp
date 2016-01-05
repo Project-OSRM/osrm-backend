@@ -20,6 +20,13 @@
 #include <string>
 #include <vector>
 
+namespace osrm
+{
+namespace engine
+{
+namespace plugins
+{
+
 template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 {
   private:
@@ -33,7 +40,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         : descriptor_string("viaroute"), facade(facade),
           max_locations_viaroute(max_locations_viaroute)
     {
-        search_engine_ptr = osrm::make_unique<SearchEngine<DataFacadeT>>(facade);
+        search_engine_ptr = util::make_unique<SearchEngine<DataFacadeT>>(facade);
     }
 
     virtual ~ViaRoutePlugin() {}
@@ -41,7 +48,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     Status HandleRequest(const RouteParameters &route_parameters,
-                         osrm::json::Object &json_result) override final
+                         util::json::Object &json_result) override final
     {
         if (max_locations_viaroute > 0 &&
             (static_cast<int>(route_parameters.coordinates.size()) > max_locations_viaroute))
@@ -70,7 +77,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         std::vector<PhantomNodePair> phantom_node_pair_list(route_parameters.coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == facade->GetCheckSum());
 
-        for (const auto i : osrm::irange<std::size_t>(0, route_parameters.coordinates.size()))
+        for (const auto i : util::irange<std::size_t>(0, route_parameters.coordinates.size()))
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -108,7 +115,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         {
             raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
         };
-        osrm::for_each_pair(snapped_phantoms, build_phantom_pairs);
+        util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
         if (1 == raw_route.segment_end_coordinates.size())
         {
@@ -131,7 +138,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         bool no_route = INVALID_EDGE_WEIGHT == raw_route.shortest_path_length;
 
-        auto generator = osrm::engine::MakeApiResponseGenerator(facade);
+        auto generator = MakeApiResponseGenerator(facade);
         generator.DescribeRoute(route_parameters, raw_route, json_result);
 
         // we can only know this after the fact, different SCC ids still
@@ -159,5 +166,9 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         return Status::Ok;
     }
 };
+
+}
+}
+}
 
 #endif // VIA_ROUTE_HPP

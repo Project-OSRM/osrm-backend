@@ -4,8 +4,13 @@
 #include <string>
 #include <algorithm>
 
+namespace osrm
+{
+namespace server
+{
 namespace http
 {
+
 struct header
 {
     // explicitly use default copy c'tor as adding move c'tor
@@ -22,6 +27,9 @@ struct header
     std::string name;
     std::string value;
 };
+
+}
+}
 }
 
 #endif // HEADER_HPP

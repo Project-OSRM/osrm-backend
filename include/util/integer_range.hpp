@@ -9,6 +9,8 @@
 
 namespace osrm
 {
+namespace util
+{
 
 template <typename Integer> class range
 {
@@ -44,6 +46,8 @@ irange(const Integer first,
        typename std::enable_if<std::is_integral<Integer>::value>::type * = 0) noexcept
 {
     return range<Integer>(first, last);
+}
+
 }
 }
 

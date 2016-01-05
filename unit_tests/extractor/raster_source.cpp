@@ -9,6 +9,9 @@
 
 BOOST_AUTO_TEST_SUITE(raster_source)
 
+using namespace osrm;
+using namespace osrm::extractor;
+
 int normalize(double coord) { return static_cast<int>(coord * COORDINATE_PRECISION); }
 
 #define CHECK_QUERY(source_id, lon, lat, expected)                                                 \
@@ -73,11 +76,11 @@ BOOST_AUTO_TEST_CASE(raster_test)
 
     BOOST_CHECK_EQUAL(source_already_loaded_id, 0);
     BOOST_CHECK_THROW(sources.getRasterDataFromSource(1, normalize(0.02), normalize(0.02)),
-                      osrm::exception);
+                      util::exception);
 
     BOOST_CHECK_THROW(
         sources.loadRasterSource("../unit_tests/fixtures/nonexistent.asc", 0, 0.1, 0, 0.1, 7, 7),
-        osrm::exception);
+        util::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

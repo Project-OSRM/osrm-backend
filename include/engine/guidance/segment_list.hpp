@@ -9,6 +9,7 @@
 #include "engine/segment_information.hpp"
 #include "util/integer_range.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/container.hpp"
 #include "extractor/turn_instructions.hpp"
 
 #include <boost/assert.hpp>
@@ -124,7 +125,7 @@ void SegmentList<DataFacadeT>::InitRoute(const PhantomNode &node, const bool tra
     const auto travel_mode =
         (traversed_in_reverse ? node.backward_travel_mode : node.forward_travel_mode);
 
-    AppendSegment(node.location, PathData(0, node.name_id, TurnInstruction::HeadOn,
+    AppendSegment(node.location, PathData(0, node.name_id, extractor::TurnInstruction::HeadOn,
                                           segment_duration, travel_mode));
 }
 
@@ -142,10 +143,10 @@ void SegmentList<DataFacadeT>::AddLeg(const std::vector<PathData> &leg_data,
 
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight);
-    const TravelMode travel_mode =
+    const extractor::TravelMode travel_mode =
         (traversed_in_reverse ? target_node.backward_travel_mode : target_node.forward_travel_mode);
     segments.emplace_back(target_node.location, target_node.name_id, segment_duration, 0.f,
-                          is_via_leg ? TurnInstruction::ReachViaLocation : TurnInstruction::NoTurn,
+                          is_via_leg ? extractor::TurnInstruction::ReachViaLocation : extractor::TurnInstruction::NoTurn,
                           true, true, travel_mode);
 }
 
@@ -187,12 +188,12 @@ void SegmentList<DataFacadeT>::AppendSegment(const FixedPointCoordinate &coordin
     }
 
     // make sure mode changes are announced, even when there otherwise is no turn
-    const auto getTurn = [](const PathData &path_point, const TravelMode previous_mode)
+    const auto getTurn = [](const PathData &path_point, const extractor::TravelMode previous_mode)
     {
-        if (TurnInstruction::NoTurn == path_point.turn_instruction and
+        if (extractor::TurnInstruction::NoTurn == path_point.turn_instruction and
             previous_mode != path_point.travel_mode and path_point.segment_duration > 0)
         {
-            return TurnInstruction::GoStraight;
+            return extractor::TurnInstruction::GoStraight;
         }
         return path_point.turn_instruction;
     };
@@ -215,11 +216,11 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
         return;
 
     segments[0].length = 0.f;
-    for (const auto i : osrm::irange<std::size_t>(1, segments.size()))
+    for (const auto i : util::irange<std::size_t>(1, segments.size()))
     {
         // move down names by one, q&d hack
         segments[i - 1].name_id = segments[i].name_id;
-        segments[i].length = coordinate_calculation::greatCircleDistance(segments[i - 1].location,
+        segments[i].length = util::coordinate_calculation::greatCircleDistance(segments[i - 1].location,
                                                                          segments[i].location);
     }
 
@@ -229,7 +230,7 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
 
     double path_length = 0;
 
-    for (const auto i : osrm::irange<std::size_t>(1, segments.size()))
+    for (const auto i : util::irange<std::size_t>(1, segments.size()))
     {
         path_length += segments[i].length;
         segment_length += segments[i].length;
@@ -237,7 +238,7 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
         segments[segment_start_index].length = segment_length;
         segments[segment_start_index].duration = segment_duration;
 
-        if (TurnInstruction::NoTurn != segments[i].turn_instruction)
+        if (extractor::TurnInstruction::NoTurn != segments[i].turn_instruction)
         {
             BOOST_ASSERT(segments[i].necessary);
             segment_length = 0;
@@ -257,14 +258,14 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
     {
         segments.pop_back();
         segments.back().necessary = true;
-        segments.back().turn_instruction = TurnInstruction::NoTurn;
+        segments.back().turn_instruction = extractor::TurnInstruction::NoTurn;
     }
 
     if (segments.size() > 2 && std::numeric_limits<float>::epsilon() > segments.front().length &&
         !(segments.begin() + 1)->is_via_location)
     {
         segments.erase(segments.begin());
-        segments.front().turn_instruction = TurnInstruction::HeadOn;
+        segments.front().turn_instruction = extractor::TurnInstruction::HeadOn;
         segments.front().necessary = true;
     }
 
@@ -287,9 +288,9 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
             via_indices.push_back(necessary_segments);
 
         const double post_turn_bearing =
-            coordinate_calculation::bearing(first.location, second.location);
+            util::coordinate_calculation::bearing(first.location, second.location);
         const double pre_turn_bearing =
-            coordinate_calculation::bearing(second.location, first.location);
+            util::coordinate_calculation::bearing(second.location, first.location);
         first.post_turn_bearing = static_cast<short>(post_turn_bearing * 10);
         first.pre_turn_bearing = static_cast<short>(pre_turn_bearing * 10);
 
@@ -297,7 +298,7 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
     };
 
     // calculate which segments are necessary and update segments for bearings
-    osrm::for_each_pair(segments, markNecessarySegments);
+    util::for_each_pair(segments, markNecessarySegments);
     via_indices.push_back(necessary_segments);
 
     BOOST_ASSERT(via_indices.size() >= 2);

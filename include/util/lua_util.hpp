@@ -13,6 +13,11 @@ extern "C" {
 #include <iostream>
 #include <string>
 
+namespace osrm
+{
+namespace util
+{
+
 template <typename T> void LUA_print(T output) { std::cout << "[LUA] " << output << std::endl; }
 
 // Check if the lua function <name> is defined
@@ -33,6 +38,9 @@ inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_
     // TODO: This code is most probably not Windows safe since it uses UNIX'ish path delimiters
     const std::string lua_code = "package.path = \"" + folder + "/?.lua;\" .. package.path";
     luaL_dostring(lua_state, lua_code.c_str());
+}
+
+}
 }
 
 #endif // LUA_UTIL_HPP

@@ -4,6 +4,11 @@
 #include <iostream>
 #include <atomic>
 
+namespace osrm
+{
+namespace util
+{
+
 class Percent
 {
   public:
@@ -70,5 +75,8 @@ class Percent
         }
     }
 };
+
+}
+}
 
 #endif // PERCENT_HPP

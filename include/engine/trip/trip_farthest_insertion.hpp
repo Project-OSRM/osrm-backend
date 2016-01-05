@@ -15,6 +15,8 @@
 
 namespace osrm
 {
+namespace engine
+{
 namespace trip
 {
 
@@ -23,7 +25,7 @@ namespace trip
 using NodeIDIter = std::vector<NodeID>::iterator;
 std::pair<EdgeWeight, NodeIDIter>
 GetShortestRoundTrip(const NodeID new_loc,
-                     const DistTableWrapper<EdgeWeight> &dist_table,
+                     const util::DistTableWrapper<EdgeWeight> &dist_table,
                      const std::size_t number_of_locations,
                      std::vector<NodeID> &route)
 {
@@ -76,7 +78,7 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
                               const std::size_t &component_size,
                               const NodeIDIterator &start,
                               const NodeIDIterator &end,
-                              const DistTableWrapper<EdgeWeight> &dist_table,
+                              const util::DistTableWrapper<EdgeWeight> &dist_table,
                               const NodeID &start1,
                               const NodeID &start2)
 {
@@ -138,7 +140,7 @@ template <typename NodeIDIterator>
 std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
                                           const NodeIDIterator &end,
                                           const std::size_t number_of_locations,
-                                          const DistTableWrapper<EdgeWeight> &dist_table)
+                                          const util::DistTableWrapper<EdgeWeight> &dist_table)
 {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
@@ -189,7 +191,8 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     return FindRoute(number_of_locations, component_size, start, end, dist_table, max_from, max_to);
 }
 
-} // end namespace trip
-} // end namespace osrm
+}
+}
+}
 
 #endif // TRIP_FARTHEST_INSERTION_HPP

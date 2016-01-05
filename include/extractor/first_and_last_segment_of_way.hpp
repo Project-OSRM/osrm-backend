@@ -7,6 +7,11 @@
 #include <limits>
 #include <string>
 
+namespace osrm
+{
+namespace extractor
+{
+
 struct FirstAndLastSegmentOfWay
 {
     OSMWayID way_id;
@@ -48,5 +53,8 @@ struct FirstAndLastSegmentOfWayStxxlCompare
     value_type max_value() { return FirstAndLastSegmentOfWay::max_value(); }
     value_type min_value() { return FirstAndLastSegmentOfWay::min_value(); }
 };
+
+}
+}
 
 #endif /* FIRST_AND_LAST_SEGMENT_OF_WAY_HPP */

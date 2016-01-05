@@ -3,11 +3,16 @@
 
 namespace osrm
 {
+namespace util
+{
+
 enum class tribool : char
 {
     yes,
     no,
     indeterminate
 };
+
+}
 }
 #endif // TRIBOOL_HPP
