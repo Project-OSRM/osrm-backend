@@ -153,9 +153,9 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
                                << segment_speed_filename;
         io::CSVReader<3> csv_in(segment_speed_filename);
         csv_in.set_header("from_node", "to_node", "speed");
-        uint64_t from_node_id;
-        uint64_t to_node_id;
-        unsigned speed;
+        uint64_t from_node_id{};
+        uint64_t to_node_id{};
+        unsigned speed{};
         while (csv_in.read_row(from_node_id, to_node_id, speed))
         {
             segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] = speed;
