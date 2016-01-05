@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM contributors
+Copyright (c) 2016, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
