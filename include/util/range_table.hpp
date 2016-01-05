@@ -53,8 +53,7 @@ template <unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY> class RangeTable
     }
 
     // construct table from length vector
-    template<typename VectorT>
-    explicit RangeTable(const VectorT &lengths)
+    template <typename VectorT> explicit RangeTable(const VectorT &lengths)
     {
         const unsigned number_of_blocks = [&lengths]()
         {

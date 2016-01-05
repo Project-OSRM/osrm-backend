@@ -319,7 +319,7 @@ class StaticRTree
 
     // Override filter and terminator for the desired behaviour.
     std::vector<EdgeDataT> Nearest(const FixedPointCoordinate &input_coordinate,
-                                const std::size_t max_results)
+                                   const std::size_t max_results)
     {
         return Nearest(input_coordinate,
                        [](const EdgeDataT &)
@@ -335,8 +335,8 @@ class StaticRTree
     // Override filter and terminator for the desired behaviour.
     template <typename FilterT, typename TerminationT>
     std::vector<EdgeDataT> Nearest(const FixedPointCoordinate &input_coordinate,
-                                const FilterT filter,
-                                const TerminationT terminate)
+                                   const FilterT filter,
+                                   const TerminationT terminate)
     {
         std::vector<EdgeDataT> results;
         std::pair<double, double> projected_coordinate = {
@@ -345,7 +345,7 @@ class StaticRTree
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
-        traversal_queue.push(QueryCandidate {0.f, m_search_tree[0]});
+        traversal_queue.push(QueryCandidate{0.f, m_search_tree[0]});
 
         while (!traversal_queue.empty())
         {
@@ -376,7 +376,6 @@ class StaticRTree
             {
                 // inspecting an actual road segment
                 const auto &current_segment = current_query_node.node.template get<EdgeDataT>();
-
 
                 auto use_segment = filter(current_segment);
                 if (!use_segment.first && !use_segment.second)
@@ -422,7 +421,8 @@ class StaticRTree
             // distance must be non-negative
             BOOST_ASSERT(0.f <= current_perpendicular_distance);
 
-            traversal_queue.push(QueryCandidate {current_perpendicular_distance, std::move(current_edge)});
+            traversal_queue.push(
+                QueryCandidate{current_perpendicular_distance, std::move(current_edge)});
         }
     }
 
@@ -437,7 +437,7 @@ class StaticRTree
             const auto &child_tree_node = m_search_tree[child_id];
             const auto &child_rectangle = child_tree_node.minimum_bounding_rectangle;
             const float lower_bound_to_element = child_rectangle.GetMinDist(input_coordinate);
-            traversal_queue.push(QueryCandidate {lower_bound_to_element, m_search_tree[child_id]});
+            traversal_queue.push(QueryCandidate{lower_bound_to_element, m_search_tree[child_id]});
         }
     }
 
@@ -449,7 +449,7 @@ class StaticRTree
         }
         if (!leaves_stream.good())
         {
-          throw osrm::exception("Could not read from leaf file.");
+            throw osrm::exception("Could not read from leaf file.");
         }
         const uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
         leaves_stream.seekg(seek_pos);

@@ -7,18 +7,32 @@
 #ifndef DEBUG_GEOMETRY
 
 inline void DEBUG_GEOMETRY_START(ContractorConfig & /* config */) {}
-inline void DEBUG_GEOMETRY_EDGE(int /* new_segment_weight */ , double /* segment_length */,
-        OSMNodeID /* previous_osm_node_id */, OSMNodeID /* this_osm_node_id */) {}
+inline void DEBUG_GEOMETRY_EDGE(int /* new_segment_weight */,
+                                double /* segment_length */,
+                                OSMNodeID /* previous_osm_node_id */,
+                                OSMNodeID /* this_osm_node_id */)
+{
+}
 inline void DEBUG_GEOMETRY_STOP() {}
 
 inline void DEBUG_TURNS_START(const std::string & /* debug_turns_filename */) {}
-inline void DEBUG_TURN( const NodeID /* node */, const std::vector<QueryNode>& /* m_node_info_list */,
-        const FixedPointCoordinate & /* first_coordinate */, const int /* turn_angle */,
-        const int /* turn_penalty */) {}
-inline void DEBUG_UTURN( const NodeID /* node */, const std::vector<QueryNode>& /* m_node_info_list */,
-        const int /* uturn_penalty */ ) {}
-inline void DEBUG_SIGNAL( const NodeID /* node */, const std::vector<QueryNode>& /* m_node_info_list */,
-        const int /* signal_penalty */ ) {}
+inline void DEBUG_TURN(const NodeID /* node */,
+                       const std::vector<QueryNode> & /* m_node_info_list */,
+                       const FixedPointCoordinate & /* first_coordinate */,
+                       const int /* turn_angle */,
+                       const int /* turn_penalty */)
+{
+}
+inline void DEBUG_UTURN(const NodeID /* node */,
+                        const std::vector<QueryNode> & /* m_node_info_list */,
+                        const int /* uturn_penalty */)
+{
+}
+inline void DEBUG_SIGNAL(const NodeID /* node */,
+                         const std::vector<QueryNode> & /* m_node_info_list */,
+                         const int /* signal_penalty */)
+{
+}
 
 inline void DEBUG_TURNS_STOP() {}
 
@@ -59,26 +73,27 @@ inline void DEBUG_GEOMETRY_START(const ContractorConfig &config)
     }
 }
 
-inline void DEBUG_GEOMETRY_EDGE(int new_segment_weight, double segment_length, OSMNodeID previous_osm_node_id, OSMNodeID this_osm_node_id)
+inline void DEBUG_GEOMETRY_EDGE(int new_segment_weight,
+                                double segment_length,
+                                OSMNodeID previous_osm_node_id,
+                                OSMNodeID this_osm_node_id)
 {
     if (dg_output_debug_geometry)
     {
         if (!dg_first_debug_geometry)
             debug_geometry_file << "," << std::endl;
-        debug_geometry_file
-            << "{ \"type\":\"Feature\",\"properties\":{\"original\":false, "
-               "\"weight\":"
-            << new_segment_weight / 10.0 << ",\"speed\":"
-            << static_cast<int>(
-                   std::floor((segment_length / new_segment_weight) * 10. * 3.6))
-            << ",";
+        debug_geometry_file << "{ \"type\":\"Feature\",\"properties\":{\"original\":false, "
+                               "\"weight\":"
+                            << new_segment_weight / 10.0 << ",\"speed\":"
+                            << static_cast<int>(
+                                   std::floor((segment_length / new_segment_weight) * 10. * 3.6))
+                            << ",";
         debug_geometry_file << "\"from_node\": " << previous_osm_node_id
                             << ", \"to_node\": " << this_osm_node_id << ",";
         debug_geometry_file << "\"timestamp\": \"" << dg_time_buffer << "\"},";
-        debug_geometry_file
-            << "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[!!"
-            << previous_osm_node_id << "!!],[!!" << this_osm_node_id << "!!]]}}"
-            << std::endl;
+        debug_geometry_file << "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[!!"
+                            << previous_osm_node_id << "!!],[!!" << this_osm_node_id << "!!]]}}"
+                            << std::endl;
         dg_first_debug_geometry = false;
     }
 }
@@ -92,66 +107,80 @@ inline void DEBUG_GEOMETRY_STOP()
     }
 }
 
-
-inline void DEBUG_TURNS_START(const std::string & debug_turns_path)
-{   
+inline void DEBUG_TURNS_START(const std::string &debug_turns_path)
+{
     dg_output_turn_debug = debug_turns_path != "";
-    if (dg_output_turn_debug) 
+    if (dg_output_turn_debug)
     {
         dg_debug_turns_file.open(debug_turns_path);
         dg_debug_turns_file << "{\"type\":\"FeatureCollection\", \"features\":[" << std::endl;
     }
-} 
+}
 
-inline void DEBUG_SIGNAL(
-        const NodeID node, 
-        const std::vector<QueryNode>& m_node_info_list,
-        const int traffic_signal_penalty)
+inline void DEBUG_SIGNAL(const NodeID node,
+                         const std::vector<QueryNode> &m_node_info_list,
+                         const int traffic_signal_penalty)
 {
     if (dg_output_turn_debug)
     {
         const QueryNode &nodeinfo = m_node_info_list[node];
-        if (!dg_first_turn_debug) dg_debug_turns_file << "," << std::endl;
-        dg_debug_turns_file << "{ \"type\":\"Feature\",\"properties\":{\"type\":\"trafficlights\",\"cost\":" << traffic_signal_penalty/10. << "},";
-        dg_debug_turns_file << " \"geometry\":{\"type\":\"Point\",\"coordinates\":[" << std::setprecision(12) << nodeinfo.lon/COORDINATE_PRECISION << "," << nodeinfo.lat/COORDINATE_PRECISION << "]}}";
+        if (!dg_first_turn_debug)
+            dg_debug_turns_file << "," << std::endl;
+        dg_debug_turns_file
+            << "{ \"type\":\"Feature\",\"properties\":{\"type\":\"trafficlights\",\"cost\":"
+            << traffic_signal_penalty / 10. << "},";
+        dg_debug_turns_file << " \"geometry\":{\"type\":\"Point\",\"coordinates\":["
+                            << std::setprecision(12) << nodeinfo.lon / COORDINATE_PRECISION << ","
+                            << nodeinfo.lat / COORDINATE_PRECISION << "]}}";
         dg_first_turn_debug = false;
     }
 }
 
-inline void DEBUG_UTURN(
-        const NodeID node, 
-        const std::vector<QueryNode>& m_node_info_list,
-        const int traffic_signal_penalty)
+inline void DEBUG_UTURN(const NodeID node,
+                        const std::vector<QueryNode> &m_node_info_list,
+                        const int traffic_signal_penalty)
 {
     if (dg_output_turn_debug)
     {
         const QueryNode &nodeinfo = m_node_info_list[node];
-        if (!dg_first_turn_debug) dg_debug_turns_file << "," << std::endl;
-        dg_debug_turns_file << "{ \"type\":\"Feature\",\"properties\":{\"type\":\"trafficlights\",\"cost\":" << traffic_signal_penalty/10. << "},";
-        dg_debug_turns_file << " \"geometry\":{\"type\":\"Point\",\"coordinates\":[" << std::setprecision(12) << nodeinfo.lon/COORDINATE_PRECISION << "," << nodeinfo.lat/COORDINATE_PRECISION << "]}}";
+        if (!dg_first_turn_debug)
+            dg_debug_turns_file << "," << std::endl;
+        dg_debug_turns_file
+            << "{ \"type\":\"Feature\",\"properties\":{\"type\":\"trafficlights\",\"cost\":"
+            << traffic_signal_penalty / 10. << "},";
+        dg_debug_turns_file << " \"geometry\":{\"type\":\"Point\",\"coordinates\":["
+                            << std::setprecision(12) << nodeinfo.lon / COORDINATE_PRECISION << ","
+                            << nodeinfo.lat / COORDINATE_PRECISION << "]}}";
         dg_first_turn_debug = false;
     }
 }
 
-
-inline void DEBUG_TURN(
-        const NodeID node, 
-        const std::vector<QueryNode>& m_node_info_list,
-        const FixedPointCoordinate & first_coordinate,
-        const int turn_angle,
-        const int turn_penalty)
+inline void DEBUG_TURN(const NodeID node,
+                       const std::vector<QueryNode> &m_node_info_list,
+                       const FixedPointCoordinate &first_coordinate,
+                       const int turn_angle,
+                       const int turn_penalty)
 {
-    if (turn_penalty > 0 && dg_output_turn_debug) 
+    if (turn_penalty > 0 && dg_output_turn_debug)
     {
         const QueryNode &v = m_node_info_list[node];
 
-        const float bearing_uv = coordinate_calculation::bearing(first_coordinate,v);
-        float uvw_normal = bearing_uv + turn_angle/2;
-        while (uvw_normal >= 360.) { uvw_normal -= 360.; }
+        const float bearing_uv = coordinate_calculation::bearing(first_coordinate, v);
+        float uvw_normal = bearing_uv + turn_angle / 2;
+        while (uvw_normal >= 360.)
+        {
+            uvw_normal -= 360.;
+        }
 
-        if (!dg_first_turn_debug) dg_debug_turns_file << "," << std::endl;
-        dg_debug_turns_file << "{ \"type\":\"Feature\",\"properties\":{\"type\":\"turn\",\"cost\":" << turn_penalty/10. << ",\"turn_angle\":" << static_cast<int>(turn_angle) << ",\"normal\":" << static_cast<int>(uvw_normal) << "},";
-        dg_debug_turns_file << " \"geometry\":{\"type\":\"Point\",\"coordinates\":[" << std::setprecision(12) << v.lon/COORDINATE_PRECISION << "," << v.lat/COORDINATE_PRECISION << "]}}";
+        if (!dg_first_turn_debug)
+            dg_debug_turns_file << "," << std::endl;
+        dg_debug_turns_file << "{ \"type\":\"Feature\",\"properties\":{\"type\":\"turn\",\"cost\":"
+                            << turn_penalty / 10.
+                            << ",\"turn_angle\":" << static_cast<int>(turn_angle)
+                            << ",\"normal\":" << static_cast<int>(uvw_normal) << "},";
+        dg_debug_turns_file << " \"geometry\":{\"type\":\"Point\",\"coordinates\":["
+                            << std::setprecision(12) << v.lon / COORDINATE_PRECISION << ","
+                            << v.lat / COORDINATE_PRECISION << "]}}";
         dg_first_turn_debug = false;
     }
 }
@@ -166,6 +195,5 @@ inline void DEBUG_TURNS_STOP()
 }
 
 #endif // DEBUG_GEOMETRY
-
 
 #endif // DEBUG_GEOMETRY_H

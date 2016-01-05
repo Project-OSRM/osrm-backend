@@ -7,20 +7,20 @@
 #include <vector>
 
 /// This function checks if the graph (consisting of directed edges) is undirected
-template<typename GraphT>
-bool isUndirectedGraph(const GraphT& graph)
+template <typename GraphT> bool isUndirectedGraph(const GraphT &graph)
 {
     for (auto source = 0u; source < graph.GetNumberOfNodes(); ++source)
     {
         for (auto edge = graph.BeginEdges(source); edge < graph.EndEdges(source); ++edge)
         {
-            const auto& data = graph.GetEdgeData(edge);
+            const auto &data = graph.GetEdgeData(edge);
 
             auto target = graph.GetTarget(edge);
             BOOST_ASSERT(target != SPECIAL_NODEID);
 
             bool found_reverse = false;
-            for (auto rev_edge = graph.BeginEdges(target); rev_edge < graph.EndEdges(target); ++rev_edge)
+            for (auto rev_edge = graph.BeginEdges(target); rev_edge < graph.EndEdges(target);
+                 ++rev_edge)
             {
                 auto rev_target = graph.GetTarget(rev_edge);
                 BOOST_ASSERT(rev_target != SPECIAL_NODEID);
@@ -44,7 +44,6 @@ bool isUndirectedGraph(const GraphT& graph)
     return true;
 }
 
-
 /// Since DynamicGraph assumes directed edges we have to make sure we transformed
 /// the compressed edge format into single directed edges. We do this to make sure
 /// every node also knows its incoming edges, not only its outgoing edges and use the reversed=true
@@ -60,13 +59,14 @@ bool isUndirectedGraph(const GraphT& graph)
 ///      (a <-- b gets reducted to b --> a)
 ///   2. a --> b will be transformed to a --> b and b <-- a
 ///   3. a <-> b will be transformed to a --> b and b --> a
-template<typename OutputEdgeT, typename InputEdgeT, typename FunctorT>
-std::vector<OutputEdgeT> directedEdgesFromCompressed(const std::vector<InputEdgeT>& input_edge_list, FunctorT copy_data)
+template <typename OutputEdgeT, typename InputEdgeT, typename FunctorT>
+std::vector<OutputEdgeT> directedEdgesFromCompressed(const std::vector<InputEdgeT> &input_edge_list,
+                                                     FunctorT copy_data)
 {
     std::vector<OutputEdgeT> output_edge_list;
 
     OutputEdgeT edge;
-    for (const auto& input_edge : input_edge_list)
+    for (const auto &input_edge : input_edge_list)
     {
         // edges that are not forward get converted by flipping the end points
         BOOST_ASSERT(input_edge.forward);

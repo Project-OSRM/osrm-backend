@@ -84,11 +84,11 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
 }
 
 void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
-                                      const EdgeID edge_id_2,
-                                      const NodeID via_node_id,
-                                      const NodeID target_node_id,
-                                      const EdgeWeight weight1,
-                                      const EdgeWeight weight2)
+                                           const EdgeID edge_id_2,
+                                           const NodeID via_node_id,
+                                           const NodeID target_node_id,
+                                           const EdgeWeight weight1,
+                                           const EdgeWeight weight2)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
@@ -182,7 +182,8 @@ void CompressedEdgeContainer::PrintStatistics() const
     }
 
     SimpleLogger().Write() << "Geometry successfully removed:"
-                              "\n  compressed edges: " << compressed_edges
+                              "\n  compressed edges: "
+                           << compressed_edges
                            << "\n  compressed geometries: " << compressed_geometries
                            << "\n  longest chain length: " << longest_chain_length
                            << "\n  cmpr ratio: " << ((float)compressed_edges /
@@ -192,7 +193,7 @@ void CompressedEdgeContainer::PrintStatistics() const
                                   std::max((uint64_t)1, compressed_edges);
 }
 
-const CompressedEdgeContainer::EdgeBucket&
+const CompressedEdgeContainer::EdgeBucket &
 CompressedEdgeContainer::GetBucketReference(const EdgeID edge_id) const
 {
     const unsigned index = m_edge_id_to_list_index_map.at(edge_id);

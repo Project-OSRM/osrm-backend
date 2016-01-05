@@ -25,10 +25,8 @@ BOOST_AUTO_TEST_CASE(all_necessary_test)
      *  /     \
      * x       x
      */
-    std::vector<SegmentInformation> info = {getTestInfo(5, 5, true),
-                                            getTestInfo(6, 6, true),
-                                            getTestInfo(10, 10, true),
-                                            getTestInfo(5, 15, true)};
+    std::vector<SegmentInformation> info = {getTestInfo(5, 5, true), getTestInfo(6, 6, true),
+                                            getTestInfo(10, 10, true), getTestInfo(5, 15, true)};
     DouglasPeucker dp;
     for (unsigned z = 0; z < DOUGLAS_PEUCKER_THRESHOLDS.size(); z++)
     {

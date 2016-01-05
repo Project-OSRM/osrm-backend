@@ -24,12 +24,10 @@ template <class DataFacadeT> class SearchEngine
     MapMatching<DataFacadeT> map_matching;
 
     explicit SearchEngine(DataFacadeT *facade)
-        : facade(facade),
-          shortest_path(facade, engine_working_data),
+        : facade(facade), shortest_path(facade, engine_working_data),
           direct_shortest_path(facade, engine_working_data),
           alternative_path(facade, engine_working_data),
-          distance_table(facade, engine_working_data),
-          map_matching(facade, engine_working_data)
+          distance_table(facade, engine_working_data), map_matching(facade, engine_working_data)
     {
         static_assert(!std::is_pointer<DataFacadeT>::value, "don't instantiate with ptr type");
         static_assert(std::is_object<DataFacadeT>::value,

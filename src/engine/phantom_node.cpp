@@ -22,9 +22,9 @@ PhantomNode::PhantomNode(NodeID forward_node_id,
     : forward_node_id(forward_node_id), reverse_node_id(reverse_node_id), name_id(name_id),
       forward_weight(forward_weight), reverse_weight(reverse_weight),
       forward_offset(forward_offset), reverse_offset(reverse_offset),
-      packed_geometry_id(packed_geometry_id), component{component_id, is_tiny_component}, location(location),
-      fwd_segment_position(fwd_segment_position), forward_travel_mode(forward_travel_mode),
-      backward_travel_mode(backward_travel_mode)
+      packed_geometry_id(packed_geometry_id), component{component_id, is_tiny_component},
+      location(location), fwd_segment_position(fwd_segment_position),
+      forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
 {
 }
 

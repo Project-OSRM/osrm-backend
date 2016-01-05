@@ -61,7 +61,8 @@ struct PhantomNode
     int forward_offset;
     int reverse_offset;
     unsigned packed_geometry_id;
-    struct ComponentType {
+    struct ComponentType
+    {
         uint32_t id : 31;
         bool is_tiny : 1;
     } component;

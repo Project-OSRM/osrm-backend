@@ -195,26 +195,28 @@ void DescriptionFactory::Run(const unsigned zoom_level)
 
     // fix what needs to be fixed else
     unsigned necessary_segments = 0; // a running index that counts the necessary pieces
-    osrm::for_each_pair(
-        path_description, [&](SegmentInformation &first, const SegmentInformation &second)
-        {
-            if (!first.necessary)
-            {
-                return;
-            }
+    osrm::for_each_pair(path_description,
+                        [&](SegmentInformation &first, const SegmentInformation &second)
+                        {
+                            if (!first.necessary)
+                            {
+                                return;
+                            }
 
-            if (first.is_via_location)
-            { // mark the end of a leg (of several segments)
-                via_indices.push_back(necessary_segments);
-            }
+                            if (first.is_via_location)
+                            { // mark the end of a leg (of several segments)
+                                via_indices.push_back(necessary_segments);
+                            }
 
-            const double post_turn_bearing = coordinate_calculation::bearing(first.location, second.location);
-            const double pre_turn_bearing = coordinate_calculation::bearing(second.location, first.location);
-            first.post_turn_bearing = static_cast<short>(post_turn_bearing * 10);
-            first.pre_turn_bearing = static_cast<short>(pre_turn_bearing * 10);
+                            const double post_turn_bearing =
+                                coordinate_calculation::bearing(first.location, second.location);
+                            const double pre_turn_bearing =
+                                coordinate_calculation::bearing(second.location, first.location);
+                            first.post_turn_bearing = static_cast<short>(post_turn_bearing * 10);
+                            first.pre_turn_bearing = static_cast<short>(pre_turn_bearing * 10);
 
-            ++necessary_segments;
-        });
+                            ++necessary_segments;
+                        });
 
     via_indices.push_back(necessary_segments);
     BOOST_ASSERT(via_indices.size() >= 2);

@@ -232,7 +232,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         m_geospatial_query.reset();
     }
 
-    explicit InternalDataFacade(const std::unordered_map<std::string, boost::filesystem::path> &server_paths)
+    explicit InternalDataFacade(
+        const std::unordered_map<std::string, boost::filesystem::path> &server_paths)
     {
         // cache end iterator to quickly check .find against
         const auto end_it = end(server_paths);
@@ -331,7 +332,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_travel_mode_list.at(id);
     }
 
-
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const FixedPointCoordinate &input_coordinate,
                                const float max_distance,
@@ -344,7 +344,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance, bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance,
+                                                              bearing, bearing_range);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -359,7 +360,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
+                                                       bearing_range);
     }
 
     std::pair<PhantomNode, PhantomNode>
@@ -373,9 +375,9 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(input_coordinate, bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate, bearing, bearing_range);
     }
-
 
     unsigned GetCheckSum() const override final { return m_check_sum; }
 
@@ -408,10 +410,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_via_node_list.at(id);
     }
 
-    virtual std::size_t GetCoreSize() const override final
-    {
-        return m_is_core_node.size();
-    }
+    virtual std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
 
     virtual bool IsCoreNode(const NodeID id) const override final
     {

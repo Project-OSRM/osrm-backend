@@ -13,7 +13,8 @@
 struct InternalExtractorEdge
 {
     // specify the type of the weight data
-    enum class WeightType : char {
+    enum class WeightType : char
+    {
         INVALID,
         SPEED,
         EDGE_DURATION,
@@ -23,9 +24,7 @@ struct InternalExtractorEdge
     struct WeightData
     {
 
-        WeightData() : duration(0.0), type(WeightType::INVALID)
-        {
-        }
+        WeightData() : duration(0.0), type(WeightType::INVALID) {}
 
         union
         {
@@ -36,8 +35,17 @@ struct InternalExtractorEdge
     };
 
     explicit InternalExtractorEdge()
-        : result(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, 0, false, false, false, false, true,
-                TRAVEL_MODE_INACCESSIBLE, false)
+        : result(MIN_OSM_NODEID,
+                 MIN_OSM_NODEID,
+                 0,
+                 0,
+                 false,
+                 false,
+                 false,
+                 false,
+                 true,
+                 TRAVEL_MODE_INACCESSIBLE,
+                 false)
     {
     }
 
@@ -74,17 +82,16 @@ struct InternalExtractorEdge
     // coordinate of the source node
     FixedPointCoordinate source_coordinate;
 
-
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_osm_value()
     {
-        return InternalExtractorEdge(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, WeightData(), false, false, false,
-                                     false, true, TRAVEL_MODE_INACCESSIBLE, false);
+        return InternalExtractorEdge(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, WeightData(), false, false,
+                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false);
     }
     static InternalExtractorEdge max_osm_value()
     {
-        return InternalExtractorEdge(MAX_OSM_NODEID, MAX_OSM_NODEID, 0, WeightData(), false,
-                                     false, false, false, true, TRAVEL_MODE_INACCESSIBLE, false);
+        return InternalExtractorEdge(MAX_OSM_NODEID, MAX_OSM_NODEID, 0, WeightData(), false, false,
+                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false);
     }
 
     static InternalExtractorEdge min_internal_value()
@@ -101,7 +108,6 @@ struct InternalExtractorEdge
         v.result.target = std::numeric_limits<NodeID>::max();
         return v;
     }
-
 };
 
 struct CmpEdgeByInternalStartThenInternalTargetID
@@ -109,9 +115,9 @@ struct CmpEdgeByInternalStartThenInternalTargetID
     using value_type = InternalExtractorEdge;
     bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
     {
-        return (lhs.result.source <  rhs.result.source) ||
-              ((lhs.result.source == rhs.result.source) &&
-               (lhs.result.target <  rhs.result.target));
+        return (lhs.result.source < rhs.result.source) ||
+               ((lhs.result.source == rhs.result.source) &&
+                (lhs.result.target < rhs.result.target));
     }
 
     value_type max_value() { return InternalExtractorEdge::max_internal_value(); }

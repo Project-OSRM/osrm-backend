@@ -26,7 +26,7 @@ class CompressedEdgeContainer
     void PrintStatistics() const;
     void SerializeInternalVector(const std::string &path) const;
     unsigned GetPositionForID(const EdgeID edge_id) const;
-    const EdgeBucket& GetBucketReference(const EdgeID edge_id) const;
+    const EdgeBucket &GetBucketReference(const EdgeID edge_id) const;
     NodeID GetFirstEdgeTargetID(const EdgeID edge_id) const;
     NodeID GetLastEdgeSourceID(const EdgeID edge_id) const;
 

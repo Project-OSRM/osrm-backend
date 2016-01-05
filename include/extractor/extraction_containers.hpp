@@ -29,10 +29,11 @@ class ExtractionContainers
     void PrepareRestrictions();
     void PrepareEdges(lua_State *segment_state);
 
-    void WriteNodes(std::ofstream& file_out_stream) const;
-    void WriteRestrictions(const std::string& restrictions_file_name) const;
-    void WriteEdges(std::ofstream& file_out_stream) const;
-    void WriteNames(const std::string& names_file_name) const;
+    void WriteNodes(std::ofstream &file_out_stream) const;
+    void WriteRestrictions(const std::string &restrictions_file_name) const;
+    void WriteEdges(std::ofstream &file_out_stream) const;
+    void WriteNames(const std::string &names_file_name) const;
+
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
     using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;

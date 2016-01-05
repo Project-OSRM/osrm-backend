@@ -25,10 +25,8 @@ class FingerPrint
 
     // initialize to {6ba7b810-9dad-11d1-80b4-00c04fd430c8}
     boost::uuids::uuid named_uuid;
-
 };
 
 static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
-
 
 #endif /* FingerPrint_H */

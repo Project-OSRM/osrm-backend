@@ -38,14 +38,13 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         int length;
         unsigned position;
     };
+
   private:
     std::vector<Segment> shortest_path_segments, alternative_path_segments;
     ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
 
   public:
-    explicit JSONDescriptor(DataFacadeT *facade) : facade(facade)
-    {
-    }
+    explicit JSONDescriptor(DataFacadeT *facade) : facade(facade) {}
 
     virtual void SetConfig(const DescriptorConfig &c) override final { config = c; }
 
@@ -108,7 +107,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         }
         if (config.instructions)
         {
-            osrm::json::Array json_route_instructions = BuildTextualDescription(description_factory, shortest_path_segments);
+            osrm::json::Array json_route_instructions =
+                BuildTextualDescription(description_factory, shortest_path_segments);
             json_result.values["route_instructions"] = json_route_instructions;
         }
         description_factory.BuildRouteSummary(description_factory.get_entire_length(),
@@ -185,7 +185,8 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
             osrm::json::Array json_current_alt_instructions;
             if (config.instructions)
             {
-                json_current_alt_instructions = BuildTextualDescription(alternate_description_factory, alternative_path_segments);
+                json_current_alt_instructions = BuildTextualDescription(
+                    alternate_description_factory, alternative_path_segments);
                 json_alt_instructions.values.push_back(json_current_alt_instructions);
                 json_result.values["alternative_instructions"] = json_alt_instructions;
             }
@@ -240,7 +241,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_result.values["hint_data"] = BuildHintData(raw_route);
     }
 
-    inline osrm::json::Object BuildHintData(const InternalRouteResult& raw_route) const
+    inline osrm::json::Object BuildHintData(const InternalRouteResult &raw_route) const
     {
         osrm::json::Object json_hint_object;
         json_hint_object.values["checksum"] = facade->GetCheckSum();
@@ -260,8 +261,9 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         return json_hint_object;
     }
 
-    inline osrm::json::Array BuildTextualDescription(const DescriptionFactory &description_factory,
-                                                     std::vector<Segment> &route_segments_list) const
+    inline osrm::json::Array
+    BuildTextualDescription(const DescriptionFactory &description_factory,
+                            std::vector<Segment> &route_segments_list) const
     {
         osrm::json::Array json_instruction_array;
         // Segment information has following format:
@@ -270,7 +272,11 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
 
         struct RoundAbout
         {
-            RoundAbout() : start_index(std::numeric_limits<int>::max()), name_id(INVALID_NAMEID), leave_at_exit(std::numeric_limits<int>::max()) {}
+            RoundAbout()
+                : start_index(std::numeric_limits<int>::max()), name_id(INVALID_NAMEID),
+                  leave_at_exit(std::numeric_limits<int>::max())
+            {
+            }
             int start_index;
             unsigned name_id;
             int leave_at_exit;

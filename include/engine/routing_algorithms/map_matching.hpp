@@ -50,7 +50,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
-    unsigned GetMedianSampleTime(const std::vector<unsigned>& timestamps) const
+    unsigned GetMedianSampleTime(const std::vector<unsigned> &timestamps) const
     {
         BOOST_ASSERT(timestamps.size() > 1);
 
@@ -60,7 +60,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         // don't use first element of sample_times -> will not be a difference.
         auto first_elem = std::next(sample_times.begin());
-        auto median = first_elem + std::distance(first_elem, sample_times.end())/2;
+        auto median = first_elem + std::distance(first_elem, sample_times.end()) / 2;
         std::nth_element(first_elem, median, sample_times.end());
         return *median;
     }
@@ -83,7 +83,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         const bool use_timestamps = trace_timestamps.size() > 1;
 
-        const auto median_sample_time = [&]() {
+        const auto median_sample_time = [&]()
+        {
             if (use_timestamps)
             {
                 return std::max(1u, GetMedianSampleTime(trace_timestamps));
@@ -94,7 +95,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }();
         const auto max_broken_time = median_sample_time * osrm::matching::MAX_BROKEN_STATES;
-        const auto max_distance_delta = [&]() {
+        const auto max_distance_delta = [&]()
+        {
             if (use_timestamps)
             {
                 return median_sample_time * osrm::matching::MAX_SPEED;
@@ -193,7 +195,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
-            const auto haversine_distance = coordinate_calculation::haversine_distance(prev_coordinate, current_coordinate);
+            const auto haversine_distance =
+                coordinate_calculation::haversine_distance(prev_coordinate, current_coordinate);
 
             // compute d_t for this timestamp and the next one
             for (const auto s : osrm::irange<std::size_t>(0u, prev_viterbi.size()))
@@ -244,7 +247,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
-                        current_suspicious[s_prime] = d_t > osrm::matching::SUSPICIOUS_DISTANCE_DELTA;
+                        current_suspicious[s_prime] =
+                            d_t > osrm::matching::SUSPICIOUS_DISTANCE_DELTA;
                         model.breakage[t] = false;
                     }
                 }
@@ -286,8 +290,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             {
                 --parent_timestamp_index;
             }
-            while (sub_matching_begin < sub_matching_end &&
-                   model.breakage[sub_matching_begin])
+            while (sub_matching_begin < sub_matching_end && model.breakage[sub_matching_begin])
             {
                 ++sub_matching_begin;
             }

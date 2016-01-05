@@ -20,14 +20,15 @@ template <typename ElementT> struct ConstDeallocatingVectorIteratorState
     {
     }
     explicit ConstDeallocatingVectorIteratorState(const std::size_t idx,
-                                             const std::vector<ElementT *> *input_list)
+                                                  const std::vector<ElementT *> *input_list)
         : index(idx), bucket_list(input_list)
     {
     }
     std::size_t index;
     const std::vector<ElementT *> *bucket_list;
 
-    ConstDeallocatingVectorIteratorState &operator=(const ConstDeallocatingVectorIteratorState &other)
+    ConstDeallocatingVectorIteratorState &
+    operator=(const ConstDeallocatingVectorIteratorState &other)
     {
         index = other.index;
         bucket_list = other.bucket_list;
@@ -210,11 +211,10 @@ class DeallocatingVectorRemoveIterator
     }
 };
 
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
-class DeallocatingVector;
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class DeallocatingVector;
 
-template<typename T, std::size_t S>
-void swap(DeallocatingVector<T, S>& lhs, DeallocatingVector<T, S>& rhs);
+template <typename T, std::size_t S>
+void swap(DeallocatingVector<T, S> &lhs, DeallocatingVector<T, S> &rhs);
 
 template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK = 8388608 / sizeof(ElementT)>
 class DeallocatingVector
@@ -236,7 +236,8 @@ class DeallocatingVector
 
     ~DeallocatingVector() { clear(); }
 
-    friend void swap<>(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK>& lhs, DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK>& rhs);
+    friend void swap<>(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &lhs,
+                       DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &rhs);
 
     void swap(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &other)
     {
@@ -367,8 +368,8 @@ class DeallocatingVector
     }
 };
 
-template<typename T, std::size_t S>
-void swap(DeallocatingVector<T, S>& lhs, DeallocatingVector<T, S>& rhs)
+template <typename T, std::size_t S>
+void swap(DeallocatingVector<T, S> &lhs, DeallocatingVector<T, S> &rhs)
 {
     lhs.swap(rhs);
 }

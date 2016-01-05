@@ -72,7 +72,7 @@ template <class CandidateLists> struct HiddenMarkovModel
         breakage.resize(candidates_list.size());
         for (const auto i : osrm::irange<std::size_t>(0u, candidates_list.size()))
         {
-            const auto& num_candidates = candidates_list[i].size();
+            const auto &num_candidates = candidates_list[i].size();
             // add empty vectors
             if (num_candidates > 0)
             {

@@ -22,10 +22,7 @@ constexpr static const double earth_radius = 6372797.560856;
 namespace coordinate_calculation
 {
 
-double haversine_distance(const int lat1,
-                                                     const int lon1,
-                                                     const int lat2,
-                                                     const int lon2)
+double haversine_distance(const int lat1, const int lon1, const int lat2, const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
@@ -51,23 +48,20 @@ double haversine_distance(const int lat1,
 }
 
 double haversine_distance(const FixedPointCoordinate &coordinate_1,
-                                                     const FixedPointCoordinate &coordinate_2)
+                          const FixedPointCoordinate &coordinate_2)
 {
     return haversine_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
-                                 coordinate_2.lon);
-}
-
-double great_circle_distance(const FixedPointCoordinate &coordinate_1,
-                                                 const FixedPointCoordinate &coordinate_2)
-{
-    return great_circle_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                               coordinate_2.lon);
 }
 
-double great_circle_distance(const int lat1,
-                                                 const int lon1,
-                                                 const int lat2,
-                                                 const int lon2)
+double great_circle_distance(const FixedPointCoordinate &coordinate_1,
+                             const FixedPointCoordinate &coordinate_2)
+{
+    return great_circle_distance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
+                                 coordinate_2.lon);
+}
+
+double great_circle_distance(const int lat1, const int lon1, const int lat2, const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
@@ -85,8 +79,8 @@ double great_circle_distance(const int lat1,
 }
 
 double perpendicular_distance(const FixedPointCoordinate &source_coordinate,
-                                                     const FixedPointCoordinate &target_coordinate,
-                                                     const FixedPointCoordinate &query_location)
+                              const FixedPointCoordinate &target_coordinate,
+                              const FixedPointCoordinate &query_location)
 {
     double ratio;
     FixedPointCoordinate nearest_location;
@@ -96,10 +90,10 @@ double perpendicular_distance(const FixedPointCoordinate &source_coordinate,
 }
 
 double perpendicular_distance(const FixedPointCoordinate &segment_source,
-                                                     const FixedPointCoordinate &segment_target,
-                                                     const FixedPointCoordinate &query_location,
-                                                     FixedPointCoordinate &nearest_location,
-                                                     double &ratio)
+                              const FixedPointCoordinate &segment_target,
+                              const FixedPointCoordinate &query_location,
+                              FixedPointCoordinate &nearest_location,
+                              double &ratio)
 {
     return perpendicular_distance_from_projected_coordinate(
         segment_source, segment_target, query_location,
@@ -161,8 +155,8 @@ double perpendicular_distance_from_projected_coordinate(
     }
 
     // compute ratio
-    ratio =
-        static_cast<double>((p - nY * a) / c); // These values are actually n/m+n and m/m+n , we need
+    ratio = static_cast<double>((p - nY * a) /
+                                c); // These values are actually n/m+n and m/m+n , we need
     // not calculate the explicit values of m an n as we
     // are just interested in the ratio
     if (std::isnan(ratio))
@@ -196,8 +190,7 @@ double perpendicular_distance_from_projected_coordinate(
     }
     BOOST_ASSERT(nearest_location.is_valid());
 
-    const double approximate_distance =
-        great_circle_distance(query_location, nearest_location);
+    const double approximate_distance = great_circle_distance(query_location, nearest_location);
     BOOST_ASSERT(0.0 <= approximate_distance);
     return approximate_distance;
 }
@@ -209,18 +202,12 @@ void lat_or_lon_to_string(const int value, std::string &output)
     output = printInt<11, 6>(buffer, value);
 }
 
-double deg_to_rad(const double degree)
-{
-    return degree * (static_cast<double>(M_PI) / 180.0);
-}
+double deg_to_rad(const double degree) { return degree * (static_cast<double>(M_PI) / 180.0); }
 
-double rad_to_deg(const double radian)
-{
-    return radian * (180.0 * static_cast<double>(M_1_PI));
-}
+double rad_to_deg(const double radian) { return radian * (180.0 * static_cast<double>(M_1_PI)); }
 
 double bearing(const FixedPointCoordinate &first_coordinate,
-                                      const FixedPointCoordinate &second_coordinate)
+               const FixedPointCoordinate &second_coordinate)
 {
     const double lon_diff =
         second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
@@ -242,5 +229,4 @@ double bearing(const FixedPointCoordinate &first_coordinate,
     }
     return result;
 }
-
 }

@@ -574,7 +574,7 @@ void extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
 
     TIMER_START(construction);
     StaticRTree<EdgeBasedNode> rtree(node_based_edge_list, config.rtree_nodes_output_path,
-                               config.rtree_leafs_output_path, internal_to_external_node_map);
+                                     config.rtree_leafs_output_path, internal_to_external_node_map);
 
     TIMER_STOP(construction);
     SimpleLogger().Write() << "finished r-tree construction in " << TIMER_SEC(construction)

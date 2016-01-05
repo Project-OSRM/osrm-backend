@@ -91,14 +91,17 @@ void RouteParameters::addTimestamp(const unsigned timestamp)
 
 void RouteParameters::addBearing(
     const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
-        boost::spirit::qi::unused_type /* unused */, bool& pass)
+    boost::spirit::qi::unused_type /* unused */,
+    bool &pass)
 {
     pass = false;
     const int bearing = boost::fusion::at_c<0>(received_bearing);
     const boost::optional<int> range = boost::fusion::at_c<1>(received_bearing);
-    if (bearing < 0 || bearing > 359) return;
-    if (range && (*range < 0 || *range > 180)) return;
-    bearings.emplace_back(std::make_pair(bearing,range));
+    if (bearing < 0 || bearing > 359)
+        return;
+    if (range && (*range < 0 || *range > 180))
+        return;
+    bearings.emplace_back(std::make_pair(bearing, range));
     pass = true;
 }
 
@@ -133,8 +136,7 @@ void RouteParameters::addDestination(
     uturns.push_back(uturn_default);
 }
 
-void RouteParameters::addSource(
-    const boost::fusion::vector<double, double> &received_coordinates)
+void RouteParameters::addSource(const boost::fusion::vector<double, double> &received_coordinates)
 {
     coordinates.emplace_back(
         static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
@@ -149,4 +151,3 @@ void RouteParameters::getCoordinatesFromGeometry(const std::string &geometry_str
     PolylineCompressor pc;
     coordinates = pc.decode_string(geometry_string);
 }
-

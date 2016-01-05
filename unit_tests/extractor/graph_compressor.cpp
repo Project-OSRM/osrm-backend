@@ -27,7 +27,8 @@ BOOST_AUTO_TEST_CASE(long_road_test)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout, travel_mode
+        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout,
+        // travel_mode
         {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
@@ -35,8 +36,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
         {2, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {3, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {3, 4, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT}
-    };
+        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT}};
 
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[2].data));
     BOOST_ASSERT(edges[2].data.IsCompatibleTo(edges[4].data));
@@ -69,7 +69,8 @@ BOOST_AUTO_TEST_CASE(loop_test)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, forward, backward, roundabout, travel_mode
+        // source, target, distance, edge_id, name_id, access_restricted, forward, backward,
+        // roundabout, travel_mode
         {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {0, 5, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
@@ -126,7 +127,8 @@ BOOST_AUTO_TEST_CASE(t_intersection)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout, travel_mode
+        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout,
+        // travel_mode
         {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
@@ -164,7 +166,8 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, forward, backward, roundabout, travel_mode
+        // source, target, distance, edge_id, name_id, access_restricted, forward, backward,
+        // roundabout, travel_mode
         {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {1, 2, 1, SPECIAL_EDGEID, 1, false, false, false, true, TRAVEL_MODE_DEFAULT},
@@ -196,9 +199,10 @@ BOOST_AUTO_TEST_CASE(direction_changes)
 
     using InputEdge = NodeBasedDynamicGraph::InputEdge;
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, reverse, roundabout, travel_mode
+        // source, target, distance, edge_id, name_id, access_restricted, reverse, roundabout,
+        // travel_mode
         {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, true,  false, true, TRAVEL_MODE_DEFAULT},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, true, false, true, TRAVEL_MODE_DEFAULT},
         {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
         {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
     };

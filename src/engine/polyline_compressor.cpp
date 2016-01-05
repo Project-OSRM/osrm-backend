@@ -62,16 +62,17 @@ PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &po
     return encode_vector(delta_numbers);
 }
 
-std::vector<FixedPointCoordinate> PolylineCompressor::decode_string(const std::string &geometry_string) const
+std::vector<FixedPointCoordinate>
+PolylineCompressor::decode_string(const std::string &geometry_string) const
 {
     std::vector<FixedPointCoordinate> new_coordinates;
     int index = 0, len = geometry_string.size();
     int lat = 0, lng = 0;
-  
-    while (index < len) 
+
+    while (index < len)
     {
         int b, shift = 0, result = 0;
-        do 
+        do
         {
             b = geometry_string.at(index++) - 63;
             result |= (b & 0x1f) << shift;
@@ -82,7 +83,7 @@ std::vector<FixedPointCoordinate> PolylineCompressor::decode_string(const std::s
 
         shift = 0;
         result = 0;
-        do 
+        do
         {
             b = geometry_string.at(index++) - 63;
             result |= (b & 0x1f) << shift;
@@ -92,8 +93,8 @@ std::vector<FixedPointCoordinate> PolylineCompressor::decode_string(const std::s
         lng += dlng;
 
         FixedPointCoordinate p;
-        p.lat = COORDINATE_PRECISION * (((double) lat / 1E6));
-        p.lon = COORDINATE_PRECISION * (((double) lng / 1E6));
+        p.lat = COORDINATE_PRECISION * (((double)lat / 1E6));
+        p.lon = COORDINATE_PRECISION * (((double)lng / 1E6));
         new_coordinates.push_back(p);
     }
 

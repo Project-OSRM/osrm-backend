@@ -29,7 +29,6 @@ BOOST_AUTO_TEST_CASE(bearing_range_test)
     BOOST_CHECK_EQUAL(false, bearing::CheckInBounds(354, 5, 10));
     BOOST_CHECK_EQUAL(false, bearing::CheckInBounds(16, 5, 10));
 
-
     // Checking other cases of wraparound
     BOOST_CHECK_EQUAL(true, bearing::CheckInBounds(359, -5, 10));
     BOOST_CHECK_EQUAL(false, bearing::CheckInBounds(344, -5, 10));

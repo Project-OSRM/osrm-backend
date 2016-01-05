@@ -40,7 +40,8 @@ class ManyToManyRouting final
     ~ManyToManyRouting() {}
 
     std::shared_ptr<std::vector<EdgeWeight>>
-    operator()(const std::vector<PhantomNode> &phantom_sources_array, const std::vector<PhantomNode> &phantom_targets_array) const
+    operator()(const std::vector<PhantomNode> &phantom_sources_array,
+               const std::vector<PhantomNode> &phantom_targets_array) const
     {
         const auto number_of_sources = phantom_sources_array.size();
         const auto number_of_targets = phantom_targets_array.size();
@@ -63,14 +64,12 @@ class ManyToManyRouting final
 
             if (SPECIAL_NODEID != phantom.forward_node_id)
             {
-                query_heap.Insert(phantom.forward_node_id,
-                                  phantom.GetForwardWeightPlusOffset(),
+                query_heap.Insert(phantom.forward_node_id, phantom.GetForwardWeightPlusOffset(),
                                   phantom.forward_node_id);
             }
             if (SPECIAL_NODEID != phantom.reverse_node_id)
             {
-                query_heap.Insert(phantom.reverse_node_id,
-                                  phantom.GetReverseWeightPlusOffset(),
+                query_heap.Insert(phantom.reverse_node_id, phantom.GetReverseWeightPlusOffset(),
                                   phantom.reverse_node_id);
             }
 
@@ -91,14 +90,12 @@ class ManyToManyRouting final
 
             if (SPECIAL_NODEID != phantom.forward_node_id)
             {
-                query_heap.Insert(phantom.forward_node_id,
-                                 -phantom.GetForwardWeightPlusOffset(),
+                query_heap.Insert(phantom.forward_node_id, -phantom.GetForwardWeightPlusOffset(),
                                   phantom.forward_node_id);
             }
             if (SPECIAL_NODEID != phantom.reverse_node_id)
             {
-                query_heap.Insert(phantom.reverse_node_id,
-                                 -phantom.GetReverseWeightPlusOffset(),
+                query_heap.Insert(phantom.reverse_node_id, -phantom.GetReverseWeightPlusOffset(),
                                   phantom.reverse_node_id);
             }
 

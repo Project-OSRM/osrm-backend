@@ -14,7 +14,9 @@
 #include <unordered_map>
 
 // generate boost::program_options object for the routing part
-bool GenerateDataStoreOptions(const int argc, const char *argv[], std::unordered_map<std::string, boost::filesystem::path> &paths)
+bool GenerateDataStoreOptions(const int argc,
+                              const char *argv[],
+                              std::unordered_map<std::string, boost::filesystem::path> &paths)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");

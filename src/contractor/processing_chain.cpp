@@ -43,9 +43,9 @@ int Prepare::Run()
                   "changing EdgeBasedEdge type has influence on memory consumption!");
 #endif
 
-    if (config.core_factor > 1.0 || config.core_factor < 0) 
+    if (config.core_factor > 1.0 || config.core_factor < 0)
     {
-       throw osrm::exception("Core factor must be between 0.0 to 1.0 (inclusive)");
+        throw osrm::exception("Core factor must be between 0.0 to 1.0 (inclusive)");
     }
 
     TIMER_START(preparing);
@@ -158,7 +158,8 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
         unsigned speed{};
         while (csv_in.read_row(from_node_id, to_node_id, speed))
         {
-            segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] = speed;
+            segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] =
+                speed;
         }
     }
 
@@ -169,7 +170,7 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
     for (; number_of_edges > 0; --number_of_edges)
     {
         EdgeBasedEdge inbuffer;
-        input_stream.read((char *) &inbuffer, sizeof(EdgeBasedEdge));
+        input_stream.read((char *)&inbuffer, sizeof(EdgeBasedEdge));
 
         if (update_edge_weights)
         {
@@ -211,22 +212,16 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
                                         (segment_length * 10.) / (speed_iter->second / 3.6) + .5)));
                     new_weight += new_segment_weight;
 
-                    DEBUG_GEOMETRY_EDGE( 
-                            new_segment_weight, 
-                            segment_length,
-                            previous_osm_node_id,
-                            this_osm_node_id);
+                    DEBUG_GEOMETRY_EDGE(new_segment_weight, segment_length, previous_osm_node_id,
+                                        this_osm_node_id);
                 }
                 else
                 {
                     // If no lookup found, use the original weight value for this segment
                     new_weight += segment_weight;
 
-                    DEBUG_GEOMETRY_EDGE(
-                            segment_weight,
-                            segment_length,
-                            previous_osm_node_id,
-                            this_osm_node_id);
+                    DEBUG_GEOMETRY_EDGE(segment_weight, segment_length, previous_osm_node_id,
+                                        this_osm_node_id);
                 }
 
                 previous_osm_node_id = this_osm_node_id;

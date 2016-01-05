@@ -13,12 +13,11 @@ GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
 {
 }
 
-
-void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
-                               const std::unordered_set<NodeID>& traffic_lights,
-                               RestrictionMap& restriction_map,
-                               NodeBasedDynamicGraph& graph,
-                               CompressedEdgeContainer& geometry_compressor)
+void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
+                               const std::unordered_set<NodeID> &traffic_lights,
+                               RestrictionMap &restriction_map,
+                               NodeBasedDynamicGraph &graph,
+                               CompressedEdgeContainer &geometry_compressor)
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
@@ -64,12 +63,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
         const bool reverse_edge_order = graph.GetEdgeData(graph.BeginEdges(node_v)).reversed;
         const EdgeID forward_e2 = graph.BeginEdges(node_v) + reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != forward_e2);
-        BOOST_ASSERT(forward_e2 >= graph.BeginEdges(node_v) &&
-                     forward_e2 < graph.EndEdges(node_v));
+        BOOST_ASSERT(forward_e2 >= graph.BeginEdges(node_v) && forward_e2 < graph.EndEdges(node_v));
         const EdgeID reverse_e2 = graph.BeginEdges(node_v) + 1 - reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != reverse_e2);
-        BOOST_ASSERT(reverse_e2 >= graph.BeginEdges(node_v) &&
-                     reverse_e2 < graph.EndEdges(node_v));
+        BOOST_ASSERT(reverse_e2 >= graph.BeginEdges(node_v) && reverse_e2 < graph.EndEdges(node_v));
 
         const EdgeData &fwd_edge_data2 = graph.GetEdgeData(forward_e2);
         const EdgeData &rev_edge_data2 = graph.GetEdgeData(reverse_e2);
@@ -103,7 +100,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
             continue;
         }
 
-        if (fwd_edge_data1.IsCompatibleTo(fwd_edge_data2) && rev_edge_data1.IsCompatibleTo(rev_edge_data2))
+        if (fwd_edge_data1.IsCompatibleTo(fwd_edge_data2) &&
+            rev_edge_data1.IsCompatibleTo(rev_edge_data2))
         {
             BOOST_ASSERT(graph.GetEdgeData(forward_e1).name_id ==
                          graph.GetEdgeData(reverse_e1).name_id);
@@ -130,10 +128,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
             graph.GetEdgeData(reverse_e1).distance += rev_edge_data2.distance;
             if (has_node_penalty)
             {
-                graph.GetEdgeData(forward_e1).distance +=
-                    speed_profile.traffic_signal_penalty;
-                graph.GetEdgeData(reverse_e1).distance +=
-                    speed_profile.traffic_signal_penalty;
+                graph.GetEdgeData(forward_e1).distance += speed_profile.traffic_signal_penalty;
+                graph.GetEdgeData(reverse_e1).distance += speed_profile.traffic_signal_penalty;
             }
 
             // extend e1's to targets of e2's
@@ -167,7 +163,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID>& barrier_nodes,
 
 void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,
                                       unsigned original_number_of_edges,
-                                      const NodeBasedDynamicGraph& graph) const
+                                      const NodeBasedDynamicGraph &graph) const
 {
 
     unsigned new_node_count = 0;

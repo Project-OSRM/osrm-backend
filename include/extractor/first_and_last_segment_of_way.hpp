@@ -16,10 +16,8 @@ struct FirstAndLastSegmentOfWay
     OSMNodeID last_segment_target_id;
 
     FirstAndLastSegmentOfWay()
-        : way_id(SPECIAL_OSM_WAYID),
-          first_segment_source_id(SPECIAL_OSM_NODEID),
-          first_segment_target_id(SPECIAL_OSM_NODEID),
-          last_segment_source_id(SPECIAL_OSM_NODEID),
+        : way_id(SPECIAL_OSM_WAYID), first_segment_source_id(SPECIAL_OSM_NODEID),
+          first_segment_target_id(SPECIAL_OSM_NODEID), last_segment_source_id(SPECIAL_OSM_NODEID),
           last_segment_target_id(SPECIAL_OSM_NODEID)
     {
     }
@@ -32,19 +30,11 @@ struct FirstAndLastSegmentOfWay
 
     static FirstAndLastSegmentOfWay min_value()
     {
-        return {MIN_OSM_WAYID,
-                MIN_OSM_NODEID,
-                MIN_OSM_NODEID,
-                MIN_OSM_NODEID,
-                MIN_OSM_NODEID};
+        return {MIN_OSM_WAYID, MIN_OSM_NODEID, MIN_OSM_NODEID, MIN_OSM_NODEID, MIN_OSM_NODEID};
     }
     static FirstAndLastSegmentOfWay max_value()
     {
-        return {MAX_OSM_WAYID,
-                MAX_OSM_NODEID,
-                MAX_OSM_NODEID,
-                MAX_OSM_NODEID,
-                MAX_OSM_NODEID};
+        return {MAX_OSM_WAYID, MAX_OSM_NODEID, MAX_OSM_NODEID, MAX_OSM_NODEID, MAX_OSM_NODEID};
     }
 };
 

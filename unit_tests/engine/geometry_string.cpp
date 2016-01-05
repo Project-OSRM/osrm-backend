@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(geometry_string)
     FixedPointCoordinate coord3(10.02 * COORDINATE_PRECISION, 10.2 * COORDINATE_PRECISION);
     FixedPointCoordinate coord4(10.03 * COORDINATE_PRECISION, 10.3 * COORDINATE_PRECISION);
     FixedPointCoordinate coord5(10.04 * COORDINATE_PRECISION, 10.4 * COORDINATE_PRECISION);
-    
+
     // Put the test coordinates into the vector for comparison
     std::vector<FixedPointCoordinate> cmp_coords;
     cmp_coords.emplace_back(coord1);
@@ -34,14 +34,14 @@ BOOST_AUTO_TEST_CASE(geometry_string)
 
     BOOST_CHECK_EQUAL(cmp_coords.size(), coords.size());
 
-    for(unsigned i = 0; i < cmp_coords.size(); ++i)
+    for (unsigned i = 0; i < cmp_coords.size(); ++i)
     {
-	const double cmp1_lat = coords.at(i).lat;
-	const double cmp2_lat = cmp_coords.at(i).lat;
+        const double cmp1_lat = coords.at(i).lat;
+        const double cmp2_lat = cmp_coords.at(i).lat;
         BOOST_CHECK_CLOSE(cmp1_lat, cmp2_lat, 0.0001);
-	
-	const double cmp1_lon = coords.at(i).lon;
-	const double cmp2_lon = cmp_coords.at(i).lon;
+
+        const double cmp1_lon = coords.at(i).lon;
+        const double cmp2_lon = cmp_coords.at(i).lon;
         BOOST_CHECK_CLOSE(cmp1_lon, cmp2_lon, 0.0001);
     }
 }

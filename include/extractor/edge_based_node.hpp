@@ -19,7 +19,8 @@ struct EdgeBasedNode
           u(SPECIAL_NODEID), v(SPECIAL_NODEID), name_id(0),
           forward_weight(INVALID_EDGE_WEIGHT >> 1), reverse_weight(INVALID_EDGE_WEIGHT >> 1),
           forward_offset(0), reverse_offset(0), packed_geometry_id(SPECIAL_EDGEID),
-          component{INVALID_COMPONENTID, false}, fwd_segment_position(std::numeric_limits<unsigned short>::max()),
+          component{INVALID_COMPONENTID, false},
+          fwd_segment_position(std::numeric_limits<unsigned short>::max()),
           forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
@@ -74,7 +75,8 @@ struct EdgeBasedNode
     int forward_offset;          // prefix sum of the weight up the edge TODO: short must suffice
     int reverse_offset;          // prefix sum of the weight from the edge TODO: short must suffice
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
-    struct {
+    struct
+    {
         unsigned id : 31;
         bool is_tiny : 1;
     } component;

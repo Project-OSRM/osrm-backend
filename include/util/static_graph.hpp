@@ -60,10 +60,10 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         return osrm::irange(BeginEdges(node), EndEdges(node));
     }
 
-    template<typename ContainerT>
-    StaticGraph(const int nodes, const ContainerT &graph)
+    template <typename ContainerT> StaticGraph(const int nodes, const ContainerT &graph)
     {
-        BOOST_ASSERT(std::is_sorted(const_cast<ContainerT&>(graph).begin(), const_cast<ContainerT&>(graph).end()));
+        BOOST_ASSERT(std::is_sorted(const_cast<ContainerT &>(graph).begin(),
+                                    const_cast<ContainerT &>(graph).end()));
 
         number_of_nodes = nodes;
         number_of_edges = static_cast<EdgeIterator>(graph.size());

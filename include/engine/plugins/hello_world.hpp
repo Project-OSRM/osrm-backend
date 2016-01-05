@@ -20,7 +20,7 @@ class HelloWorldPlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     Status HandleRequest(const RouteParameters &routeParameters,
-                      osrm::json::Object &json_result) override final
+                         osrm::json::Object &json_result) override final
     {
         std::string temp_string;
         json_result.values["title"] = "Hello World";

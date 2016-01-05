@@ -15,7 +15,8 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
         m_no_turn_via_node_set.insert(restriction.via.node);
 
         // This explicit downcasting is also OK for the same reason.
-        RestrictionSource restriction_source = {static_cast<NodeID>(restriction.from.node), static_cast<NodeID>(restriction.via.node)};
+        RestrictionSource restriction_source = {static_cast<NodeID>(restriction.from.node),
+                                                static_cast<NodeID>(restriction.via.node)};
 
         std::size_t index;
         auto restriction_iter = m_restriction_map.find(restriction_source);

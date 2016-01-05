@@ -18,7 +18,7 @@ template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
     }
     const std::string GetDescriptor() const override final { return descriptor_string; }
     Status HandleRequest(const RouteParameters &route_parameters,
-                      osrm::json::Object &json_result) override final
+                         osrm::json::Object &json_result) override final
     {
         (void)route_parameters; // unused
 

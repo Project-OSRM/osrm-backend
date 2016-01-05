@@ -86,7 +86,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     }
 }
 
-void ExtractionContainers::WriteNames(const std::string& names_file_name) const
+void ExtractionContainers::WriteNames(const std::string &names_file_name) const
 {
     std::cout << "[extractor] writing street name index ... " << std::flush;
     TIMER_START(write_name_index);
@@ -104,7 +104,6 @@ void ExtractionContainers::WriteNames(const std::string& names_file_name) const
     name_file_stream << name_index_range;
 
     name_file_stream.write((char *)&total_length, sizeof(unsigned));
-
 
     // write all chars consecutively
     char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
@@ -183,12 +182,12 @@ void ExtractionContainers::PrepareNodes()
     }
     if (internal_id > std::numeric_limits<NodeID>::max())
     {
-        throw osrm::exception("There are too many nodes remaining after filtering, OSRM only supports 2^32 unique nodes");
+        throw osrm::exception("There are too many nodes remaining after filtering, OSRM only "
+                              "supports 2^32 unique nodes");
     }
     max_internal_node_id = boost::numeric_cast<NodeID>(internal_id);
     TIMER_STOP(id_map);
     std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
-
 }
 
 void ExtractionContainers::PrepareEdges(lua_State *segment_state)
@@ -213,7 +212,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     {
         if (edge_iterator->result.osm_source_id < node_iterator->node_id)
         {
-            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference " << edge_iterator->result.source;
+            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
+                                                       << edge_iterator->result.source;
             edge_iterator->result.source = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -261,8 +261,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // Sort Edges by target
     std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
     TIMER_START(sort_edges_by_target);
-    stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMTargetID(),
-                stxxl_memory);
+    stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMTargetID(), stxxl_memory);
     TIMER_STOP(sort_edges_by_target);
     std::cout << "ok, after " << TIMER_SEC(sort_edges_by_target) << "s" << std::endl;
 
@@ -285,7 +284,9 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         if (edge_iterator->result.osm_target_id < node_iterator->node_id)
         {
-            SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference " << OSMNodeID_to_uint64_t(edge_iterator->result.osm_target_id);
+            SimpleLogger().Write(LogLevel::logWARNING)
+                << "Found invalid node reference "
+                << OSMNodeID_to_uint64_t(edge_iterator->result.osm_target_id);
             edge_iterator->result.target = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -308,30 +309,28 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         if (lua_function_exists(segment_state, "segment_function"))
         {
             luabind::call_function<void>(
-                segment_state, "segment_function",
-                boost::cref(edge_iterator->source_coordinate),
-                boost::cref(*node_iterator),
-                distance,
-                boost::ref(edge_iterator->weight_data));
+                segment_state, "segment_function", boost::cref(edge_iterator->source_coordinate),
+                boost::cref(*node_iterator), distance, boost::ref(edge_iterator->weight_data));
         }
 
-        const double weight = [distance](const InternalExtractorEdge::WeightData& data) {
+        const double weight = [distance](const InternalExtractorEdge::WeightData &data)
+        {
             switch (data.type)
             {
-                case InternalExtractorEdge::WeightType::EDGE_DURATION:
-                case InternalExtractorEdge::WeightType::WAY_DURATION:
-                    return data.duration * 10.;
-                    break;
-                case InternalExtractorEdge::WeightType::SPEED:
-                    return (distance * 10.) / (data.speed / 3.6);
-                    break;
-                case InternalExtractorEdge::WeightType::INVALID:
-                    osrm::exception("invalid weight type");
+            case InternalExtractorEdge::WeightType::EDGE_DURATION:
+            case InternalExtractorEdge::WeightType::WAY_DURATION:
+                return data.duration * 10.;
+                break;
+            case InternalExtractorEdge::WeightType::SPEED:
+                return (distance * 10.) / (data.speed / 3.6);
+                break;
+            case InternalExtractorEdge::WeightType::INVALID:
+                osrm::exception("invalid weight type");
             }
             return -1.0;
         }(edge_iterator->weight_data);
 
-        auto& edge = edge_iterator->result;
+        auto &edge = edge_iterator->result;
         edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
 
         // assign new node id
@@ -368,7 +367,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by renumbered start ... " << std::flush;
     TIMER_START(sort_edges_by_renumbered_start);
-    stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByInternalStartThenInternalTargetID(), stxxl_memory);
+    stxxl::sort(all_edges_list.begin(), all_edges_list.end(),
+                CmpEdgeByInternalStartThenInternalTargetID(), stxxl_memory);
     TIMER_STOP(sort_edges_by_renumbered_start);
     std::cout << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s" << std::endl;
 
@@ -400,11 +400,13 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         while (all_edges_list[i].result.source == source &&
                all_edges_list[i].result.target == target)
         {
-            if (all_edges_list[i].result.forward && all_edges_list[i].result.weight < min_forward_weight)
+            if (all_edges_list[i].result.forward &&
+                all_edges_list[i].result.weight < min_forward_weight)
             {
                 min_forward_idx = i;
             }
-            if (all_edges_list[i].result.backward && all_edges_list[i].result.weight < min_backward_weight)
+            if (all_edges_list[i].result.backward &&
+                all_edges_list[i].result.weight < min_backward_weight)
             {
                 min_backward_idx = i;
             }
@@ -413,8 +415,10 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
             i++;
         }
 
-        BOOST_ASSERT(min_forward_idx == std::numeric_limits<unsigned>::max() || min_forward_idx < i);
-        BOOST_ASSERT(min_backward_idx == std::numeric_limits<unsigned>::max() || min_backward_idx < i);
+        BOOST_ASSERT(min_forward_idx == std::numeric_limits<unsigned>::max() ||
+                     min_forward_idx < i);
+        BOOST_ASSERT(min_backward_idx == std::numeric_limits<unsigned>::max() ||
+                     min_backward_idx < i);
         BOOST_ASSERT(min_backward_idx != std::numeric_limits<unsigned>::max() ||
                      min_forward_idx != std::numeric_limits<unsigned>::max());
 
@@ -457,7 +461,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     }
 }
 
-void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
+void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
 {
     std::cout << "[extractor] Writing used edges       ... " << std::flush;
     TIMER_START(write_edges);
@@ -468,7 +472,7 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
     auto start_position = file_out_stream.tellp();
     file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(unsigned));
 
-    for (const auto& edge : all_edges_list)
+    for (const auto &edge : all_edges_list)
     {
         if (edge.result.source == SPECIAL_NODEID || edge.result.target == SPECIAL_NODEID)
         {
@@ -478,7 +482,7 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
         // IMPORTANT: here, we're using slicing to only write the data from the base
         // class of NodeBasedEdgeWithOSM
         NodeBasedEdge tmp = edge.result;
-        file_out_stream.write((char*) &tmp, sizeof(NodeBasedEdge));
+        file_out_stream.write((char *)&tmp, sizeof(NodeBasedEdge));
         used_edges_counter++;
     }
 
@@ -500,7 +504,7 @@ void ExtractionContainers::WriteEdges(std::ofstream& file_out_stream) const
     SimpleLogger().Write() << "Processed " << used_edges_counter << " edges";
 }
 
-void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
+void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
 {
     // write dummy value, will be overwritten later
     std::cout << "[extractor] setting number of nodes   ... " << std::flush;
@@ -537,11 +541,10 @@ void ExtractionContainers::WriteNodes(std::ofstream& file_out_stream) const
     TIMER_STOP(write_nodes);
     std::cout << "ok, after " << TIMER_SEC(write_nodes) << "s" << std::endl;
 
-
     SimpleLogger().Write() << "Processed " << max_internal_node_id << " nodes";
 }
 
-void ExtractionContainers::WriteRestrictions(const std::string& path) const
+void ExtractionContainers::WriteRestrictions(const std::string &path) const
 {
     // serialize restrictions
     std::ofstream restrictions_out_stream;
@@ -578,11 +581,11 @@ void ExtractionContainers::PrepareRestrictions()
     TIMER_STOP(sort_ways);
     std::cout << "ok, after " << TIMER_SEC(sort_ways) << "s" << std::endl;
 
-    std::cout << "[extractor] Sorting " << restrictions_list.size()
-              << " restriction. by from... " << std::flush;
+    std::cout << "[extractor] Sorting " << restrictions_list.size() << " restriction. by from... "
+              << std::flush;
     TIMER_START(sort_restrictions);
-    stxxl::sort(restrictions_list.begin(), restrictions_list.end(),
-                CmpRestrictionContainerByFrom(), stxxl_memory);
+    stxxl::sort(restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByFrom(),
+                stxxl_memory);
     TIMER_STOP(sort_restrictions);
     std::cout << "ok, after " << TIMER_SEC(sort_restrictions) << "s" << std::endl;
 
@@ -596,15 +599,18 @@ void ExtractionContainers::PrepareRestrictions()
     while (way_start_and_end_iterator != way_start_end_id_list_end &&
            restrictions_iterator != restrictions_list_end)
     {
-        if (way_start_and_end_iterator->way_id < OSMWayID(restrictions_iterator->restriction.from.way))
+        if (way_start_and_end_iterator->way_id <
+            OSMWayID(restrictions_iterator->restriction.from.way))
         {
             ++way_start_and_end_iterator;
             continue;
         }
 
-        if (way_start_and_end_iterator->way_id > OSMWayID(restrictions_iterator->restriction.from.way))
+        if (way_start_and_end_iterator->way_id >
+            OSMWayID(restrictions_iterator->restriction.from.way))
         {
-            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: " << restrictions_iterator->restriction.from.way;
+            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
+                                                     << restrictions_iterator->restriction.from.way;
             restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
             ++restrictions_iterator;
             continue;
@@ -617,9 +623,10 @@ void ExtractionContainers::PrepareRestrictions()
 
         // check if via is actually valid, if not invalidate
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
-        if(via_id_iter == external_to_internal_node_id_map.end())
+        if (via_id_iter == external_to_internal_node_id_map.end())
         {
-            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid node: " << restrictions_iterator->restriction.via.node;
+            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid node: "
+                                                     << restrictions_iterator->restriction.via.node;
             restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
             ++restrictions_iterator;
             continue;
@@ -629,7 +636,7 @@ void ExtractionContainers::PrepareRestrictions()
         {
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
-                    OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
+                OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
             BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
             restrictions_iterator->restriction.from.node = id_iter->second;
         }
@@ -637,7 +644,7 @@ void ExtractionContainers::PrepareRestrictions()
         {
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
-                    OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
+                OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
             BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
             restrictions_iterator->restriction.from.node = id_iter->second;
         }
@@ -649,8 +656,8 @@ void ExtractionContainers::PrepareRestrictions()
 
     std::cout << "[extractor] Sorting restrictions. by to  ... " << std::flush;
     TIMER_START(sort_restrictions_to);
-    stxxl::sort(restrictions_list.begin(), restrictions_list.end(),
-                CmpRestrictionContainerByTo(), stxxl_memory);
+    stxxl::sort(restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByTo(),
+                stxxl_memory);
     TIMER_STOP(sort_restrictions_to);
     std::cout << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s" << std::endl;
 
@@ -664,7 +671,8 @@ void ExtractionContainers::PrepareRestrictions()
     while (way_start_and_end_iterator != way_start_end_id_list_end_ &&
            restrictions_iterator != restrictions_list_end_)
     {
-        if (way_start_and_end_iterator->way_id < OSMWayID(restrictions_iterator->restriction.to.way))
+        if (way_start_and_end_iterator->way_id <
+            OSMWayID(restrictions_iterator->restriction.to.way))
         {
             ++way_start_and_end_iterator;
             continue;
@@ -675,9 +683,11 @@ void ExtractionContainers::PrepareRestrictions()
             ++restrictions_iterator;
             continue;
         }
-        if (way_start_and_end_iterator->way_id > OSMWayID(restrictions_iterator->restriction.to.way))
+        if (way_start_and_end_iterator->way_id >
+            OSMWayID(restrictions_iterator->restriction.to.way))
         {
-            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: " << restrictions_iterator->restriction.to.way;
+            SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
+                                                     << restrictions_iterator->restriction.to.way;
             restrictions_iterator->restriction.to.way = SPECIAL_NODEID;
             ++restrictions_iterator;
             continue;
@@ -694,14 +704,14 @@ void ExtractionContainers::PrepareRestrictions()
         if (OSMNodeID(way_start_and_end_iterator->first_segment_source_id) == via_node_id)
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
-                    OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
+                OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
             BOOST_ASSERT(to_id_iter != external_to_internal_node_id_map.end());
             restrictions_iterator->restriction.to.node = to_id_iter->second;
         }
         else if (OSMNodeID(way_start_and_end_iterator->last_segment_target_id) == via_node_id)
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
-                    OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
+                OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
             BOOST_ASSERT(to_id_iter != external_to_internal_node_id_map.end());
             restrictions_iterator->restriction.to.node = to_id_iter->second;
         }

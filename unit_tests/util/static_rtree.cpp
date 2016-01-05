@@ -203,7 +203,10 @@ void simple_verify_rtree(RTreeT &rtree,
 }
 
 template <typename RTreeT>
-void sampling_verify_rtree(RTreeT &rtree, LinearSearchNN<TestData> &lsnn, const std::vector<FixedPointCoordinate>& coords, unsigned num_samples)
+void sampling_verify_rtree(RTreeT &rtree,
+                           LinearSearchNN<TestData> &lsnn,
+                           const std::vector<FixedPointCoordinate> &coords,
+                           unsigned num_samples)
 {
     std::mt19937 g(RANDOM_SEED);
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);

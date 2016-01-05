@@ -41,7 +41,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     Status HandleRequest(const RouteParameters &route_parameters,
-                      osrm::json::Object &json_result) override final
+                         osrm::json::Object &json_result) override final
     {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
@@ -132,7 +132,8 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 if (!phantom_node_source_out_iter->first.is_valid(facade->GetNumberOfNodes()))
                 {
                     json_result.values["status_message"] =
-                        std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
+                        std::string("Could not find a matching segment for coordinate ") +
+                        std::to_string(i);
                     return Status::NoSegment;
                 }
 
@@ -154,7 +155,8 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                 if (!phantom_node_target_out_iter->first.is_valid(facade->GetNumberOfNodes()))
                 {
                     json_result.values["status_message"] =
-                        std::string("Could not find a matching segment for coordinate ") + std::to_string(i);
+                        std::string("Could not find a matching segment for coordinate ") +
+                        std::to_string(i);
                     return Status::NoSegment;
                 }
                 phantom_node_target_out_iter++;

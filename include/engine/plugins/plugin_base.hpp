@@ -16,10 +16,10 @@ class BasePlugin
   public:
     enum class Status : int
     {
-      Ok = 200,
-      EmptyResult = 207,
-      NoSegment = 208,
-      Error = 400
+        Ok = 200,
+        EmptyResult = 207,
+        NoSegment = 208,
+        Error = 400
     };
 
     BasePlugin() {}

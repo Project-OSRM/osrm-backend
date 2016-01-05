@@ -295,12 +295,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT(i < id_vector.size());
                 BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
-                unpacked_path.emplace_back(
-                    PathData{id_vector[i],
-                             phantom_node_pair.target_phantom.name_id,
-                             TurnInstruction::NoTurn,
-                             0,
-                             phantom_node_pair.target_phantom.forward_travel_mode});
+                unpacked_path.emplace_back(PathData{
+                    id_vector[i], phantom_node_pair.target_phantom.name_id, TurnInstruction::NoTurn,
+                    0, phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
 
@@ -498,8 +495,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         // TODO check if unordered_set might be faster
         // sort by id and increasing by distance
-        auto entry_point_comparator =
-            [](const std::pair<NodeID, EdgeWeight> &lhs, const std::pair<NodeID, EdgeWeight> &rhs)
+        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
+                                         const std::pair<NodeID, EdgeWeight> &rhs)
         {
             return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
         };

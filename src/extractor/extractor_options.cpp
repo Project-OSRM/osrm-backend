@@ -21,32 +21,37 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
         boost::program_options::value<boost::filesystem::path>(&extractor_config.restrictions_path),
         "Restrictions file in .osrm.restrictions format")(
         */
-        "config,c", boost::program_options::value<boost::filesystem::path>(
-                        &extractor_config.config_file_path)->default_value("extractor.ini"),
+        "config,c",
+        boost::program_options::value<boost::filesystem::path>(&extractor_config.config_file_path)
+            ->default_value("extractor.ini"),
         "Path to a configuration file.");
 
     // declare a group of options that will be allowed both on command line and in config file
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()("profile,p",
-                                 boost::program_options::value<boost::filesystem::path>(
-                                     &extractor_config.profile_path)->default_value("profile.lua"),
-                                 "Path to LUA routing profile")(
+    config_options.add_options()(
+        "profile,p",
+        boost::program_options::value<boost::filesystem::path>(&extractor_config.profile_path)
+            ->default_value("profile.lua"),
+        "Path to LUA routing profile")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
             ->default_value(tbb::task_scheduler_init::default_num_threads()),
         "Number of threads to use")(
-            "generate-edge-lookup",boost::program_options::value<bool>(
-                                                &extractor_config.generate_edge_lookup)->implicit_value(true)->default_value(false),
-                                 "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs")(
+        "generate-edge-lookup",
+        boost::program_options::value<bool>(&extractor_config.generate_edge_lookup)
+            ->implicit_value(true)
+            ->default_value(false),
+        "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs")(
         "small-component-size",
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
             ->default_value(1000),
-        "Number of nodes required before a strongly-connected-componennt is considered big (affects nearest neighbor snapping)");
+        "Number of nodes required before a strongly-connected-componennt is considered big "
+        "(affects nearest neighbor snapping)");
 
 #ifdef DEBUG_GEOMETRY
-        config_options.add_options()("debug-turns",
-            boost::program_options::value<std::string>(&extractor_config.debug_turns_path),
-            "Write out GeoJSON with turn penalty data");
+    config_options.add_options()("debug-turns", boost::program_options::value<std::string>(
+                                                    &extractor_config.debug_turns_path),
+                                 "Write out GeoJSON with turn penalty data");
 #endif // DEBUG_GEOMETRY
 
     // hidden options, will be allowed both on command line and in config file, but will not be
@@ -55,7 +60,6 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
     hidden_options.add_options()("input,i", boost::program_options::value<boost::filesystem::path>(
                                                 &extractor_config.input_path),
                                  "Input file in .osm, .osm.bz2 or .osm.pbf format");
-
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -98,8 +102,8 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
         // parse config file
         if (boost::filesystem::is_regular_file(extractor_config.config_file_path))
         {
-            SimpleLogger().Write()
-                << "Reading options from: " << extractor_config.config_file_path.string();
+            SimpleLogger().Write() << "Reading options from: "
+                                   << extractor_config.config_file_path.string();
             std::string ini_file_contents =
                 read_file_lower_content(extractor_config.config_file_path);
             std::stringstream config_stream(ini_file_contents);
@@ -181,8 +185,8 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.edge_graph_output_path.replace(pos, 5, ".osrm.ebg");
             extractor_config.rtree_nodes_output_path.replace(pos, 5, ".osrm.ramIndex");
             extractor_config.rtree_leafs_output_path.replace(pos, 5, ".osrm.fileIndex");
-            extractor_config.edge_segment_lookup_path.replace(pos,5, ".osrm.edge_segment_lookup");
-            extractor_config.edge_penalty_path.replace(pos,5, ".osrm.edge_penalties");
+            extractor_config.edge_segment_lookup_path.replace(pos, 5, ".osrm.edge_segment_lookup");
+            extractor_config.edge_penalty_path.replace(pos, 5, ".osrm.edge_penalties");
         }
     }
     else
@@ -197,7 +201,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
         extractor_config.edge_graph_output_path.replace(pos, 8, ".osrm.ebg");
         extractor_config.rtree_nodes_output_path.replace(pos, 8, ".osrm.ramIndex");
         extractor_config.rtree_leafs_output_path.replace(pos, 8, ".osrm.fileIndex");
-        extractor_config.edge_segment_lookup_path.replace(pos,8, ".osrm.edge_segment_lookup");
-        extractor_config.edge_penalty_path.replace(pos,8, ".osrm.edge_penalties");
+        extractor_config.edge_segment_lookup_path.replace(pos, 8, ".osrm.edge_segment_lookup");
+        extractor_config.edge_penalty_path.replace(pos, 8, ".osrm.edge_penalties");
     }
 }

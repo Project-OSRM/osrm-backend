@@ -63,27 +63,29 @@ class EdgeBasedGraphFactory
 
     unsigned GetHighestEdgeID();
 
-    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, const double angle) const;
+    TurnInstruction
+    AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, const double angle) const;
 
     int GetTurnPenalty(double angle, lua_State *lua_state) const;
 
   private:
     using EdgeData = NodeBasedDynamicGraph::EdgeData;
 
-    //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the graph
+    //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the
+    //! graph
     std::vector<bool> m_edge_based_node_is_startpoint;
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
     unsigned m_max_edge_id;
 
-    const std::vector<QueryNode>& m_node_info_list;
+    const std::vector<QueryNode> &m_node_info_list;
     std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
     std::shared_ptr<RestrictionMap const> m_restriction_map;
 
-    const std::unordered_set<NodeID>& m_barrier_nodes;
-    const std::unordered_set<NodeID>& m_traffic_lights;
-    const CompressedEdgeContainer& m_compressed_edge_container;
+    const std::unordered_set<NodeID> &m_barrier_nodes;
+    const std::unordered_set<NodeID> &m_traffic_lights;
+    const CompressedEdgeContainer &m_compressed_edge_container;
 
     SpeedProfileProperties speed_profile;
 
@@ -103,13 +105,12 @@ class EdgeBasedGraphFactory
                                    const std::string &edge_segment_lookup_filename,
                                    const std::string &edge_fixed_penalties_filename,
                                    const bool generate_edge_lookup);
-#endif 
+#endif
 
     void InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
-
 };
 
 #endif /* EDGE_BASED_GRAPH_FACTORY_HPP_ */

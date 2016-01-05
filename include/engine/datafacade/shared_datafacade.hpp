@@ -96,7 +96,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             osrm::make_unique<SharedRTree>(
                 tree_ptr, data_layout->num_entries[SharedDataLayout::R_SEARCH_TREE],
                 file_index_path, m_coordinate_list)));
-        m_geospatial_query.reset(new SharedGeospatialQuery(*m_static_rtree->second, m_coordinate_list));
+        m_geospatial_query.reset(
+            new SharedGeospatialQuery(*m_static_rtree->second, m_coordinate_list));
     }
 
     void LoadGraph()
@@ -179,11 +180,10 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             return;
         }
 
-        unsigned *core_marker_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, SharedDataLayout::CORE_MARKER);
+        unsigned *core_marker_ptr =
+            data_layout->GetBlockPtr<unsigned>(shared_memory, SharedDataLayout::CORE_MARKER);
         typename ShM<bool, true>::vector is_core_node(
-            core_marker_ptr,
-            data_layout->num_entries[SharedDataLayout::CORE_MARKER]);
+            core_marker_ptr, data_layout->num_entries[SharedDataLayout::CORE_MARKER]);
         m_is_core_node.swap(is_core_node);
     }
 
@@ -215,7 +215,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     SharedDataFacade()
     {
         data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
-                                 CURRENT_REGIONS, sizeof(SharedDataTimestamp), false, false)->Ptr();
+                                 CURRENT_REGIONS, sizeof(SharedDataTimestamp), false, false)
+                                 ->Ptr();
         CURRENT_LAYOUT = LAYOUT_NONE;
         CURRENT_DATA = DATA_NONE;
         CURRENT_TIMESTAMP = 0;
@@ -369,7 +370,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance, bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance,
+                                                              bearing, bearing_range);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -384,7 +386,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
+                                                       bearing_range);
     }
 
     std::pair<PhantomNode, PhantomNode>
@@ -398,7 +401,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             BOOST_ASSERT(m_geospatial_query.get());
         }
 
-        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(input_coordinate, bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate, bearing, bearing_range);
     }
 
     unsigned GetCheckSum() const override final { return m_check_sum; }
@@ -437,10 +441,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return false;
     }
 
-    virtual std::size_t GetCoreSize() const override final
-    {
-        return m_is_core_node.size();
-    }
+    virtual std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 };

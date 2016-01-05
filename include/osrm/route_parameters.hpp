@@ -72,7 +72,9 @@ struct RouteParameters
 
     void addTimestamp(const unsigned timestamp);
 
-    void addBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing, boost::spirit::qi::unused_type unused, bool& pass);
+    void addBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
+                    boost::spirit::qi::unused_type unused,
+                    bool &pass);
 
     void setLanguage(const std::string &language);
 
@@ -106,7 +108,7 @@ struct RouteParameters
     std::string language;
     std::vector<std::string> hints;
     std::vector<unsigned> timestamps;
-    std::vector<std::pair<const int,const boost::optional<int>>> bearings;
+    std::vector<std::pair<const int, const boost::optional<int>>> bearings;
     std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
     std::vector<bool> is_destination;

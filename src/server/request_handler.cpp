@@ -77,7 +77,8 @@ void RequestHandler::handle_request(const http::request &current_request,
             if (!route_parameters.jsonp_parameter.empty())
             { // prepend response with jsonp parameter
                 const std::string json_p = (route_parameters.jsonp_parameter + "(");
-                current_reply.content.insert(current_reply.content.end(), json_p.begin(), json_p.end());
+                current_reply.content.insert(current_reply.content.end(), json_p.begin(),
+                                             json_p.end());
             }
 
             const int return_code = routing_machine->RunQuery(route_parameters, json_result);
@@ -101,7 +102,8 @@ void RequestHandler::handle_request(const http::request &current_request,
 
             current_reply.status = http::reply::bad_request;
             json_result.values["status"] = http::reply::bad_request;
-            json_result.values["status_message"] = "Query string malformed close to position " + std::to_string(position);
+            json_result.values["status_message"] =
+                "Query string malformed close to position " + std::to_string(position);
         }
 
         current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
@@ -141,7 +143,8 @@ void RequestHandler::handle_request(const http::request &current_request,
     }
     catch (const std::exception &e)
     {
-        current_reply = http::reply::stock_reply(http::reply::internal_server_error);;
+        current_reply = http::reply::stock_reply(http::reply::internal_server_error);
+        ;
         SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
                                          << ", uri: " << current_request.uri;
     }

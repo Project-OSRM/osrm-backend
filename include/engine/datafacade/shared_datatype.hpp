@@ -95,8 +95,7 @@ struct SharedDataLayout
         // special bit encoding
         if (bid == GEOMETRIES_INDICATORS || bid == CORE_MARKER)
         {
-            return (num_entries[bid] / 32 + 1) *
-                   entry_size[bid];
+            return (num_entries[bid] / 32 + 1) * entry_size[bid];
         }
 
         return num_entries[bid] * entry_size[bid];

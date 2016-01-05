@@ -130,15 +130,14 @@ class Contractor
     };
 
   public:
-    template <class ContainerT> Contractor(int nodes, ContainerT &input_edge_list)
-      : Contractor(nodes, input_edge_list, {}, {})
+    template <class ContainerT>
+    Contractor(int nodes, ContainerT &input_edge_list)
+        : Contractor(nodes, input_edge_list, {}, {})
     {
     }
 
     template <class ContainerT>
-    Contractor(int nodes,
-               ContainerT &input_edge_list,
-               std::vector<float> &&node_levels_)
+    Contractor(int nodes, ContainerT &input_edge_list, std::vector<float> &&node_levels_)
         : node_levels(std::move(node_levels_))
     {
         std::vector<ContractorEdge> edges;
@@ -317,8 +316,8 @@ class Contractor
 
             std::cout << "initializing elimination PQ ..." << std::flush;
             tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, PQGrainSize),
-                              [this, &node_priorities, &node_data, &thread_data_list](
-                                  const tbb::blocked_range<int> &range)
+                              [this, &node_priorities, &node_data,
+                               &thread_data_list](const tbb::blocked_range<int> &range)
                               {
                                   ContractorThreadData *data = thread_data_list.getThreadData();
                                   for (int x = range.begin(), end = range.end(); x != end; ++x)
@@ -360,7 +359,7 @@ class Contractor
 
                 for (const auto new_node_id : osrm::irange<std::size_t>(0, remaining_nodes.size()))
                 {
-                    auto& node = remaining_nodes[new_node_id];
+                    auto &node = remaining_nodes[new_node_id];
                     BOOST_ASSERT(node_priorities.size() > node.id);
                     new_node_priority[new_node_id] = node_priorities[node.id];
                 }
@@ -368,7 +367,7 @@ class Contractor
                 // build forward and backward renumbering map and remap ids in remaining_nodes
                 for (const auto new_node_id : osrm::irange<std::size_t>(0, remaining_nodes.size()))
                 {
-                    auto& node = remaining_nodes[new_node_id];
+                    auto &node = remaining_nodes[new_node_id];
                     // create renumbering maps in both directions
                     orig_node_id_from_new_node_id_map[new_node_id] = node.id;
                     new_node_id_from_orig_id_map[node.id] = new_node_id;
@@ -392,8 +391,7 @@ class Contractor
                             // node is not yet contracted.
                             // add (renumbered) outgoing edges to new DynamicGraph.
                             ContractorEdge new_edge = {new_node_id_from_orig_id_map[source],
-                                                       new_node_id_from_orig_id_map[target],
-                                                       data};
+                                                       new_node_id_from_orig_id_map[target], data};
 
                             new_edge.data.is_original_via_node_ID = true;
                             BOOST_ASSERT_MSG(UINT_MAX != new_node_id_from_orig_id_map[source],
@@ -430,39 +428,44 @@ class Contractor
                 thread_data_list.number_of_nodes = contractor_graph->GetNumberOfNodes();
             }
 
-            tbb::parallel_for(tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), IndependentGrainSize),
-                              [this, &node_priorities, &remaining_nodes, &thread_data_list](
-                                  const tbb::blocked_range<std::size_t> &range)
-                              {
-                                  ContractorThreadData *data = thread_data_list.getThreadData();
-                                  // determine independent node set
-                                  for (auto i = range.begin(), end = range.end(); i != end; ++i)
-                                  {
-                                      const NodeID node = remaining_nodes[i].id;
-                                      remaining_nodes[i].is_independent =
-                                          this->IsNodeIndependent(node_priorities, data, node);
-                                  }
-                              });
+            tbb::parallel_for(
+                tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), IndependentGrainSize),
+                [this, &node_priorities, &remaining_nodes,
+                 &thread_data_list](const tbb::blocked_range<std::size_t> &range)
+                {
+                    ContractorThreadData *data = thread_data_list.getThreadData();
+                    // determine independent node set
+                    for (auto i = range.begin(), end = range.end(); i != end; ++i)
+                    {
+                        const NodeID node = remaining_nodes[i].id;
+                        remaining_nodes[i].is_independent =
+                            this->IsNodeIndependent(node_priorities, data, node);
+                    }
+                });
 
             // sort all remaining nodes to the beginning of the sequence
-            const auto begin_independent_nodes = stable_partition(remaining_nodes.begin(), remaining_nodes.end(),
-                                                [](RemainingNodeData node_data)
-                                                {
-                                                    return !node_data.is_independent;
-                                                });
-            auto begin_independent_nodes_idx = std::distance(remaining_nodes.begin(), begin_independent_nodes);
+            const auto begin_independent_nodes = stable_partition(
+                remaining_nodes.begin(), remaining_nodes.end(), [](RemainingNodeData node_data)
+                {
+                    return !node_data.is_independent;
+                });
+            auto begin_independent_nodes_idx =
+                std::distance(remaining_nodes.begin(), begin_independent_nodes);
             auto end_independent_nodes_idx = remaining_nodes.size();
 
             if (!use_cached_node_priorities)
             {
                 // write out contraction level
                 tbb::parallel_for(
-                    tbb::blocked_range<std::size_t>(begin_independent_nodes_idx, end_independent_nodes_idx, ContractGrainSize),
-                    [this, remaining_nodes, flushed_contractor, current_level](const tbb::blocked_range<std::size_t> &range)
+                    tbb::blocked_range<std::size_t>(begin_independent_nodes_idx,
+                                                    end_independent_nodes_idx, ContractGrainSize),
+                    [this, remaining_nodes, flushed_contractor,
+                     current_level](const tbb::blocked_range<std::size_t> &range)
                     {
                         if (flushed_contractor)
                         {
-                            for (int position = range.begin(), end = range.end(); position != end; ++position)
+                            for (int position = range.begin(), end = range.end(); position != end;
+                                 ++position)
                             {
                                 const NodeID x = remaining_nodes[position].id;
                                 node_levels[orig_node_id_from_new_node_id_map[x]] = current_level;
@@ -470,7 +473,8 @@ class Contractor
                         }
                         else
                         {
-                            for (int position = range.begin(), end = range.end(); position != end; ++position)
+                            for (int position = range.begin(), end = range.end(); position != end;
+                                 ++position)
                             {
                                 const NodeID x = remaining_nodes[position].id;
                                 node_levels[x] = current_level;
@@ -480,24 +484,29 @@ class Contractor
             }
 
             // contract independent nodes
-            tbb::parallel_for(
-                tbb::blocked_range<std::size_t>(begin_independent_nodes_idx, end_independent_nodes_idx, ContractGrainSize),
-                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<std::size_t> &range)
-                {
-                    ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(), end = range.end(); position != end; ++position)
-                    {
-                        const NodeID x = remaining_nodes[position].id;
-                        this->ContractNode<false>(data, x);
-                    }
-                });
+            tbb::parallel_for(tbb::blocked_range<std::size_t>(begin_independent_nodes_idx,
+                                                              end_independent_nodes_idx,
+                                                              ContractGrainSize),
+                              [this, &remaining_nodes,
+                               &thread_data_list](const tbb::blocked_range<std::size_t> &range)
+                              {
+                                  ContractorThreadData *data = thread_data_list.getThreadData();
+                                  for (int position = range.begin(), end = range.end();
+                                       position != end; ++position)
+                                  {
+                                      const NodeID x = remaining_nodes[position].id;
+                                      this->ContractNode<false>(data, x);
+                                  }
+                              });
 
             tbb::parallel_for(
-                tbb::blocked_range<int>(begin_independent_nodes_idx, end_independent_nodes_idx, DeleteGrainSize),
+                tbb::blocked_range<int>(begin_independent_nodes_idx, end_independent_nodes_idx,
+                                        DeleteGrainSize),
                 [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
-                    for (int position = range.begin(), end = range.end(); position != end; ++position)
+                    for (int position = range.begin(), end = range.end(); position != end;
+                         ++position)
                     {
                         const NodeID x = remaining_nodes[position].id;
                         this->DeleteIncomingEdges(data, x);
@@ -542,12 +551,14 @@ class Contractor
             if (!use_cached_node_priorities)
             {
                 tbb::parallel_for(
-                    tbb::blocked_range<int>(begin_independent_nodes_idx, end_independent_nodes_idx, NeighboursGrainSize),
-                    [this, &node_priorities, &remaining_nodes, &node_data, &thread_data_list](
-                        const tbb::blocked_range<int> &range)
+                    tbb::blocked_range<int>(begin_independent_nodes_idx, end_independent_nodes_idx,
+                                            NeighboursGrainSize),
+                    [this, &node_priorities, &remaining_nodes, &node_data,
+                     &thread_data_list](const tbb::blocked_range<int> &range)
                     {
                         ContractorThreadData *data = thread_data_list.getThreadData();
-                        for (int position = range.begin(), end = range.end(); position != end; ++position)
+                        for (int position = range.begin(), end = range.end(); position != end;
+                             ++position)
                         {
                             NodeID x = remaining_nodes[position].id;
                             this->UpdateNodeNeighbours(node_priorities, node_data, data, x);
@@ -589,32 +600,31 @@ class Contractor
 
         if (remaining_nodes.size() > 2)
         {
-              if (orig_node_id_from_new_node_id_map.size() > 0)
-              {
-                  tbb::parallel_for(
-                      tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
-                      [this, &remaining_nodes](const tbb::blocked_range<int> &range)
-                      {
-                          for (int x = range.begin(), end = range.end(); x != end; ++x)
-                          {
-                              const auto orig_id = remaining_nodes[x].id;
-                              is_core_node[orig_node_id_from_new_node_id_map[orig_id]] = true;
-                          }
-                      });
-              }
-              else
-              {
-                  tbb::parallel_for(
-                      tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
-                      [this, &remaining_nodes](const tbb::blocked_range<int> &range)
-                      {
-                          for (int x = range.begin(), end = range.end(); x != end; ++x)
-                          {
-                              const auto orig_id = remaining_nodes[x].id;
-                              is_core_node[orig_id] = true;
-                          }
-                      });
-              }
+            if (orig_node_id_from_new_node_id_map.size() > 0)
+            {
+                tbb::parallel_for(tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
+                                  [this, &remaining_nodes](const tbb::blocked_range<int> &range)
+                                  {
+                                      for (int x = range.begin(), end = range.end(); x != end; ++x)
+                                      {
+                                          const auto orig_id = remaining_nodes[x].id;
+                                          is_core_node[orig_node_id_from_new_node_id_map[orig_id]] =
+                                              true;
+                                      }
+                                  });
+            }
+            else
+            {
+                tbb::parallel_for(tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
+                                  [this, &remaining_nodes](const tbb::blocked_range<int> &range)
+                                  {
+                                      for (int x = range.begin(), end = range.end(); x != end; ++x)
+                                      {
+                                          const auto orig_id = remaining_nodes[x].id;
+                                          is_core_node[orig_id] = true;
+                                      }
+                                  });
+            }
         }
         else
         {

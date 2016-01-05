@@ -40,10 +40,11 @@ class DirectShortestPathRouting final
 
         // Get distance to next pair of target nodes.
         BOOST_ASSERT_MSG(1 == phantom_nodes_vector.size(),
-                                         "Direct Shortest Path Query only accepts a single source and target pair. Multiple ones have been specified.");
-        const auto& phantom_node_pair = phantom_nodes_vector.front();
-        const auto& source_phantom = phantom_node_pair.source_phantom;
-        const auto& target_phantom = phantom_node_pair.target_phantom;
+                         "Direct Shortest Path Query only accepts a single source and target pair. "
+                         "Multiple ones have been specified.");
+        const auto &phantom_node_pair = phantom_nodes_vector.front();
+        const auto &source_phantom = phantom_node_pair.source_phantom;
+        const auto &target_phantom = phantom_node_pair.target_phantom;
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -94,7 +95,6 @@ class DirectShortestPathRouting final
             forward_core_heap.Clear();
             reverse_core_heap.Clear();
 
-
             super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
                                   distance, packed_leg);
         }
@@ -120,8 +120,8 @@ class DirectShortestPathRouting final
         raw_route_data.target_traversed_in_reverse.push_back(
             (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
 
-        super::UnpackPath(packed_leg.begin(), packed_leg.end(), phantom_node_pair, raw_route_data.unpacked_path_segments.front());
-
+        super::UnpackPath(packed_leg.begin(), packed_leg.end(), phantom_node_pair,
+                          raw_route_data.unpacked_path_segments.front());
     }
 };
 

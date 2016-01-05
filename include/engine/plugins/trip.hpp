@@ -9,15 +9,15 @@
 #include "engine/trip/trip_farthest_insertion.hpp"
 #include "engine/trip/trip_brute_force.hpp"
 #include "engine/search_engine.hpp"
-#include "util/matrix_graph_wrapper.hpp" // wrapper to use tarjan
-                                                       // scc on dist table
-#include "engine/descriptors/descriptor_base.hpp"          // to make json output
-#include "engine/descriptors/json_descriptor.hpp"          // to make json output
+#include "util/matrix_graph_wrapper.hpp"          // wrapper to use tarjan
+                                                  // scc on dist table
+#include "engine/descriptors/descriptor_base.hpp" // to make json output
+#include "engine/descriptors/json_descriptor.hpp" // to make json output
 #include "util/make_unique.hpp"
-#include "util/timing_util.hpp"        // to time runtime
+#include "util/timing_util.hpp" // to time runtime
 //#include "util/simple_logger.hpp"      // for logging output
 #include "util/dist_table_wrapper.hpp" // to access the dist
-                                          // table more easily
+                                       // table more easily
 
 #include "osrm/json_container.hpp"
 #include <boost/assert.hpp>
@@ -74,7 +74,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             const int range = input_bearings.size() > 0
                                   ? (input_bearings[i].second ? *input_bearings[i].second : 10)
                                   : 180;
-            auto results = facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range);
+            auto results =
+                facade->NearestPhantomNodes(route_parameters.coordinates[i], 1, bearing, range);
             if (results.empty())
             {
                 break;
@@ -222,7 +223,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
     }
 
     Status HandleRequest(const RouteParameters &route_parameters,
-                      osrm::json::Object &json_result) override final
+                         osrm::json::Object &json_result) override final
     {
         if (max_locations_trip > 0 &&
             (static_cast<int>(route_parameters.coordinates.size()) > max_locations_trip))
@@ -356,7 +357,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
             trip.values.push_back(std::move(scc_trip));
         }
-
 
         if (trip.values.empty())
         {

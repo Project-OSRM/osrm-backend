@@ -42,7 +42,7 @@ FixedPointCoordinateListPtr LoadCoordinates(const boost::filesystem::path &nodes
 
 template <typename QueryT>
 void BenchmarkQuery(const std::vector<FixedPointCoordinate> &queries,
-                    const std::string& name,
+                    const std::string &name,
                     QueryT query)
 {
     std::cout << "Running " << name << " with " << queries.size() << " coordinates: " << std::flush;
@@ -91,11 +91,13 @@ void Benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_quer
                    {
                        return geo_query.NearestPhantomNodesInRange(q, 1000);
                    });
-    BenchmarkQuery(queries, "PhantomNode query (1 result)", [&geo_query](const FixedPointCoordinate &q)
+    BenchmarkQuery(queries, "PhantomNode query (1 result)",
+                   [&geo_query](const FixedPointCoordinate &q)
                    {
                        return geo_query.NearestPhantomNodes(q, 1);
                    });
-    BenchmarkQuery(queries, "PhantomNode query (10 result)", [&geo_query](const FixedPointCoordinate &q)
+    BenchmarkQuery(queries, "PhantomNode query (10 result)",
+                   [&geo_query](const FixedPointCoordinate &q)
                    {
                        return geo_query.NearestPhantomNodes(q, 10);
                    });

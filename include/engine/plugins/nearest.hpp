@@ -23,7 +23,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     const std::string GetDescriptor() const override final { return descriptor_string; }
 
     Status HandleRequest(const RouteParameters &route_parameters,
-                      osrm::json::Object &json_result) override final
+                         osrm::json::Object &json_result) override final
     {
         // check number of parameters
         if (route_parameters.coordinates.empty() ||

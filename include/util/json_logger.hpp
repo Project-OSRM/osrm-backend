@@ -20,7 +20,7 @@ class Logger
     using MapT = std::unordered_map<std::string, osrm::json::Value>;
 
   public:
-    static Logger* get()
+    static Logger *get()
     {
         static Logger logger;
 
@@ -40,7 +40,7 @@ class Logger
         return nullptr;
     }
 
-    void initialize(const std::string& name)
+    void initialize(const std::string &name)
     {
         if (!map.get())
         {
@@ -49,15 +49,10 @@ class Logger
         (*map)[name] = Object();
     }
 
-    void render(const std::string& name, Object& obj) const
-    {
-        obj.values["debug"] = map->at(name);
-    }
+    void render(const std::string &name, Object &obj) const { obj.values["debug"] = map->at(name); }
 
     boost::thread_specific_ptr<MapT> map;
 };
-
-
 }
 }
 

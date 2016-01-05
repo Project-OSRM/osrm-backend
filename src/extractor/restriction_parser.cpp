@@ -219,7 +219,7 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
                        [&](const std::string &current_string)
                        {
                            return std::end(restriction_exceptions) !=
-                               std::find(std::begin(restriction_exceptions),
-                                         std::end(restriction_exceptions), current_string);
+                                  std::find(std::begin(restriction_exceptions),
+                                            std::end(restriction_exceptions), current_string);
                        });
 }

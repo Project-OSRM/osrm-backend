@@ -36,7 +36,7 @@ class named_mutex;
 #include <utility>
 #include <vector>
 
-OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig& lib_config)
+OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig &lib_config)
 {
     if (lib_config.use_shared_memory)
     {
@@ -58,10 +58,10 @@ OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig& lib_config)
     RegisterPlugin(new MapMatchingPlugin<BaseDataFacade<QueryEdge::EdgeData>>(
         query_data_facade, lib_config.max_locations_map_matching));
     RegisterPlugin(new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade));
-    RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
-                lib_config.max_locations_viaroute));
-    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(query_data_facade,
-                lib_config.max_locations_trip));
+    RegisterPlugin(new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData>>(
+        query_data_facade, lib_config.max_locations_viaroute));
+    RegisterPlugin(new RoundTripPlugin<BaseDataFacade<QueryEdge::EdgeData>>(
+        query_data_facade, lib_config.max_locations_trip));
 }
 
 void OSRM::OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
@@ -71,7 +71,8 @@ void OSRM::OSRM_impl::RegisterPlugin(BasePlugin *raw_plugin_ptr)
     plugin_map[plugin_ptr->GetDescriptor()] = std::move(plugin_ptr);
 }
 
-int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters, osrm::json::Object &json_result)
+int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters,
+                              osrm::json::Object &json_result)
 {
     const auto &plugin_iterator = plugin_map.find(route_parameters.service);
 

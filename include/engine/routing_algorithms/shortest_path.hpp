@@ -86,17 +86,17 @@ class ShortestPathRouting final
     // |     ^target
     // ------^
     void SearchLoop(QueryHeap &forward_heap,
-                QueryHeap &reverse_heap,
-                const bool search_forward_node,
-                const bool search_reverse_node,
-                const PhantomNode &source_phantom,
-                const PhantomNode &target_phantom,
-                const int total_distance_to_forward,
-                const int total_distance_to_reverse,
-                int &new_total_distance_to_forward,
-                int &new_total_distance_to_reverse,
-                std::vector<NodeID> &leg_packed_path_forward,
-                std::vector<NodeID> &leg_packed_path_reverse) const
+                    QueryHeap &reverse_heap,
+                    const bool search_forward_node,
+                    const bool search_reverse_node,
+                    const PhantomNode &source_phantom,
+                    const PhantomNode &target_phantom,
+                    const int total_distance_to_forward,
+                    const int total_distance_to_reverse,
+                    int &new_total_distance_to_forward,
+                    int &new_total_distance_to_reverse,
+                    std::vector<NodeID> &leg_packed_path_forward,
+                    std::vector<NodeID> &leg_packed_path_reverse) const
     {
         BOOST_ASSERT(source_phantom.forward_node_id == target_phantom.forward_node_id);
         BOOST_ASSERT(source_phantom.reverse_node_id == target_phantom.reverse_node_id);
@@ -110,11 +110,12 @@ class ShortestPathRouting final
 
             for (const auto edge : super::facade->GetAdjacentEdgeRange(node_id))
             {
-                const auto& data = super::facade->GetEdgeData(edge);
+                const auto &data = super::facade->GetEdgeData(edge);
                 if (data.forward)
                 {
                     auto target = super::facade->GetTarget(edge);
-                    auto offset = total_distance_to_forward + data.distance - source_phantom.GetForwardWeightPlusOffset();
+                    auto offset = total_distance_to_forward + data.distance -
+                                  source_phantom.GetForwardWeightPlusOffset();
                     forward_heap.Insert(target, offset, target);
                 }
 
@@ -147,11 +148,12 @@ class ShortestPathRouting final
 
             for (const auto edge : super::facade->GetAdjacentEdgeRange(node_id))
             {
-                const auto& data = super::facade->GetEdgeData(edge);
+                const auto &data = super::facade->GetEdgeData(edge);
                 if (data.forward)
                 {
                     auto target = super::facade->GetTarget(edge);
-                    auto offset = total_distance_to_reverse + data.distance - source_phantom.GetReverseWeightPlusOffset();
+                    auto offset = total_distance_to_reverse + data.distance -
+                                  source_phantom.GetReverseWeightPlusOffset();
                     forward_heap.Insert(target, offset, target);
                 }
 
@@ -174,7 +176,6 @@ class ShortestPathRouting final
             leg_packed_path_reverse.push_back(node_id);
             std::reverse(leg_packed_path_reverse.begin(), leg_packed_path_reverse.end());
         }
-
     }
 
     // searches shortest path between:
@@ -290,8 +291,10 @@ class ShortestPathRouting final
 
         int total_distance_to_forward = 0;
         int total_distance_to_reverse = 0;
-        bool search_from_forward_node = phantom_nodes_vector.front().source_phantom.forward_node_id != SPECIAL_NODEID;
-        bool search_from_reverse_node = phantom_nodes_vector.front().source_phantom.reverse_node_id != SPECIAL_NODEID;
+        bool search_from_forward_node =
+            phantom_nodes_vector.front().source_phantom.forward_node_id != SPECIAL_NODEID;
+        bool search_from_reverse_node =
+            phantom_nodes_vector.front().source_phantom.reverse_node_id != SPECIAL_NODEID;
 
         std::vector<NodeID> prev_packed_leg_to_forward;
         std::vector<NodeID> prev_packed_leg_to_reverse;
@@ -315,30 +318,33 @@ class ShortestPathRouting final
             const auto &source_phantom = phantom_node_pair.source_phantom;
             const auto &target_phantom = phantom_node_pair.target_phantom;
 
-
             BOOST_ASSERT(current_leg + 1 < uturn_indicators.size());
             const bool allow_u_turn_at_via = uturn_indicators[current_leg + 1];
 
             bool search_to_forward_node = target_phantom.forward_node_id != SPECIAL_NODEID;
             bool search_to_reverse_node = target_phantom.reverse_node_id != SPECIAL_NODEID;
 
-            BOOST_ASSERT(!search_from_forward_node || source_phantom.forward_node_id != SPECIAL_NODEID);
-            BOOST_ASSERT(!search_from_reverse_node || source_phantom.reverse_node_id != SPECIAL_NODEID);
+            BOOST_ASSERT(!search_from_forward_node ||
+                         source_phantom.forward_node_id != SPECIAL_NODEID);
+            BOOST_ASSERT(!search_from_reverse_node ||
+                         source_phantom.reverse_node_id != SPECIAL_NODEID);
 
             if (source_phantom.forward_node_id == target_phantom.forward_node_id &&
-                source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
+                source_phantom.GetForwardWeightPlusOffset() >
+                    target_phantom.GetForwardWeightPlusOffset())
             {
                 search_to_forward_node = search_from_reverse_node;
             }
             if (source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
-                source_phantom.GetReverseWeightPlusOffset() > target_phantom.GetReverseWeightPlusOffset())
+                source_phantom.GetReverseWeightPlusOffset() >
+                    target_phantom.GetReverseWeightPlusOffset())
             {
                 search_to_reverse_node = search_from_forward_node;
             }
 
             BOOST_ASSERT(search_from_forward_node || search_from_reverse_node);
 
-            if(search_to_reverse_node || search_to_forward_node)
+            if (search_to_reverse_node || search_to_forward_node)
             {
                 if (allow_u_turn_at_via)
                 {
@@ -347,7 +353,8 @@ class ShortestPathRouting final
                                     search_to_reverse_node, source_phantom, target_phantom,
                                     total_distance_to_forward, total_distance_to_reverse,
                                     new_total_distance_to_forward, packed_leg_to_forward);
-                    // if only the reverse node is valid (e.g. when using the match plugin) we actually need to move
+                    // if only the reverse node is valid (e.g. when using the match plugin) we
+                    // actually need to move
                     if (target_phantom.forward_node_id == SPECIAL_NODEID)
                     {
                         BOOST_ASSERT(target_phantom.reverse_node_id != SPECIAL_NODEID);
@@ -367,7 +374,8 @@ class ShortestPathRouting final
                            search_from_reverse_node, search_to_forward_node, search_to_reverse_node,
                            source_phantom, target_phantom, total_distance_to_forward,
                            total_distance_to_reverse, new_total_distance_to_forward,
-                           new_total_distance_to_reverse, packed_leg_to_forward, packed_leg_to_reverse);
+                           new_total_distance_to_reverse, packed_leg_to_forward,
+                           packed_leg_to_reverse);
                 }
             }
             else
@@ -377,9 +385,10 @@ class ShortestPathRouting final
                 BOOST_ASSERT(search_from_reverse_node == search_to_reverse_node);
                 BOOST_ASSERT(search_from_forward_node == search_to_forward_node);
                 SearchLoop(forward_heap, reverse_heap, search_from_forward_node,
-                       search_from_reverse_node, source_phantom, target_phantom, total_distance_to_forward,
-                       total_distance_to_reverse, new_total_distance_to_forward,
-                       new_total_distance_to_reverse, packed_leg_to_forward, packed_leg_to_reverse);
+                           search_from_reverse_node, source_phantom, target_phantom,
+                           total_distance_to_forward, total_distance_to_reverse,
+                           new_total_distance_to_forward, new_total_distance_to_reverse,
+                           packed_leg_to_forward, packed_leg_to_reverse);
             }
 
             // No path found for both target nodes?

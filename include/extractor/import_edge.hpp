@@ -37,18 +37,30 @@ struct NodeBasedEdge
 struct NodeBasedEdgeWithOSM : NodeBasedEdge
 {
     explicit NodeBasedEdgeWithOSM(OSMNodeID source,
-                           OSMNodeID target,
-                           NodeID name_id,
-                           EdgeWeight weight,
-                           bool forward,
-                           bool backward,
-                           bool roundabout,
-                           bool access_restricted,
-                           bool startpoint,
-                           TravelMode travel_mode,
-                           bool is_split)
-        : NodeBasedEdge(SPECIAL_NODEID, SPECIAL_NODEID, name_id, weight, forward, backward, roundabout, access_restricted, startpoint, travel_mode, is_split),
-        osm_source_id(source), osm_target_id(target) {}
+                                  OSMNodeID target,
+                                  NodeID name_id,
+                                  EdgeWeight weight,
+                                  bool forward,
+                                  bool backward,
+                                  bool roundabout,
+                                  bool access_restricted,
+                                  bool startpoint,
+                                  TravelMode travel_mode,
+                                  bool is_split)
+        : NodeBasedEdge(SPECIAL_NODEID,
+                        SPECIAL_NODEID,
+                        name_id,
+                        weight,
+                        forward,
+                        backward,
+                        roundabout,
+                        access_restricted,
+                        startpoint,
+                        travel_mode,
+                        is_split),
+          osm_source_id(source), osm_target_id(target)
+    {
+    }
 
     OSMNodeID osm_source_id;
     OSMNodeID osm_target_id;

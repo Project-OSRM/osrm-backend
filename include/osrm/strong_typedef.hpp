@@ -36,33 +36,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * etc.  Also clarifies what this random "int" value is
  * being used for.
  */
-#define OSRM_STRONG_TYPEDEF(From, To)                 \
-  class To final {                                      \
-    static_assert(std::is_arithmetic<From>(), "");      \
-    From x;                                             \
-                                                        \
-   public:                                              \
-    To() = default;                                     \
-    explicit To(const From x_) : x(x_) {}                     \
-    explicit operator From&() { return x; }             \
-    explicit operator const From&() const { return x; } \
-    bool operator <(const To &z_) const { return x < static_cast<const From>(z_) ; } \
-    bool operator >(const To &z_) const { return x > static_cast<const From>(z_) ; } \
-    bool operator <=(const To &z_) const { return x <= static_cast<const From>(z_) ; } \
-    bool operator >=(const To &z_) const { return x >= static_cast<const From>(z_) ; } \
-    bool operator ==(const To &z_) const { return x == static_cast<const From>(z_) ; } \
-    bool operator !=(const To &z_) const { return x != static_cast<const From>(z_) ; } \
-  };                                                    \
-  inline From To##_to_##From(To to) { return static_cast<From>(to); } \
-  namespace std { \
-  template <> \
-  struct hash<To> \
-  { \
-    std::size_t operator()(const To& k) const \
-    { \
-      return std::hash<From>()(static_cast<const From>(k)); \
-    } \
-  }; \
-  }
+#define OSRM_STRONG_TYPEDEF(From, To)                                                              \
+    class To final                                                                                 \
+    {                                                                                              \
+        static_assert(std::is_arithmetic<From>(), "");                                             \
+        From x;                                                                                    \
+                                                                                                   \
+      public:                                                                                      \
+        To() = default;                                                                            \
+        explicit To(const From x_) : x(x_) {}                                                      \
+        explicit operator From &() { return x; }                                                   \
+        explicit operator const From &() const { return x; }                                       \
+        bool operator<(const To &z_) const { return x < static_cast<const From>(z_); }             \
+        bool operator>(const To &z_) const { return x > static_cast<const From>(z_); }             \
+        bool operator<=(const To &z_) const { return x <= static_cast<const From>(z_); }           \
+        bool operator>=(const To &z_) const { return x >= static_cast<const From>(z_); }           \
+        bool operator==(const To &z_) const { return x == static_cast<const From>(z_); }           \
+        bool operator!=(const To &z_) const { return x != static_cast<const From>(z_); }           \
+    };                                                                                             \
+    inline From To##_to_##From(To to) { return static_cast<From>(to); }                            \
+    namespace std                                                                                  \
+    {                                                                                              \
+    template <> struct hash<To>                                                                    \
+    {                                                                                              \
+        std::size_t operator()(const To &k) const                                                  \
+        {                                                                                          \
+            return std::hash<From>()(static_cast<const From>(k));                                  \
+        }                                                                                          \
+    };                                                                                             \
+    }
 
 #endif // OSRM_STRONG_TYPEDEF_HPP
