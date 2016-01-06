@@ -36,7 +36,6 @@ option(BUILD_TOOLS "Build OSRM tools" OFF)
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include/)
 
 add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}"
@@ -226,7 +225,14 @@ if(UNIX AND NOT APPLE)
   target_link_libraries(engine-tests rt)
 endif()
 
-#Check Boost
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
+set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
+find_package(Osmium REQUIRED COMPONENTS io)
+include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
+
+target_link_libraries(osrm-extract ${OSMIUM_LIBRARIES})
+target_link_libraries(extractor-tests ${OSMIUM_LIBRARIES})
+
 find_package(Boost 1.49.0 COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 if(NOT Boost_FOUND)
   message(FATAL_ERROR "Fatal error: Boost (version >= 1.49.0) required.\n")

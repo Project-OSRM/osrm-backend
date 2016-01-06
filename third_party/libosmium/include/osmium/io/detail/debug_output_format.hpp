@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <chrono>
 #include <cinttypes>
 #include <cstddef>
 #include <cstdint>
@@ -41,14 +40,10 @@ DEALINGS IN THE SOFTWARE.
 #include <future>
 #include <iterator>
 #include <memory>
-#include <ratio>
 #include <string>
 #include <thread>
 #include <utility>
 
-#include <utf8.h>
-
-#include <osmium/handler.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -87,65 +82,32 @@ namespace osmium {
             constexpr const char* color_white   = "\x1b[37m";
             constexpr const char* color_reset   = "\x1b[0m";
 
+            struct debug_output_options {
+
+                /// Should metadata of objects be added?
+                bool add_metadata;
+
+                /// Output with ANSI colors?
+                bool use_color;
+
+            };
+
             /**
              * Writes out one buffer with OSM data in Debug format.
              */
-            class DebugOutputBlock : public osmium::handler::Handler {
+            class DebugOutputBlock : public OutputBlock {
 
-                static constexpr size_t tmp_buffer_size = 50;
+                debug_output_options m_options;
 
-                std::shared_ptr<osmium::memory::Buffer> m_input_buffer;
-
-                std::shared_ptr<std::string> m_out;
-
-                char m_tmp_buffer[tmp_buffer_size+1];
-
-                bool m_add_metadata;
-                bool m_use_color;
-
-                template <typename... TArgs>
-                void output_formatted(const char* format, TArgs&&... args) {
-#ifndef NDEBUG
-                    int len =
-#endif
-#ifndef _MSC_VER
-                    snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
-#else
-                    _snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
-#endif
-                    assert(len > 0 && static_cast<size_t>(len) < tmp_buffer_size);
-                    *m_out += m_tmp_buffer;
-                }
+                const char* m_utf8_prefix = "";
+                const char* m_utf8_suffix = "";
 
                 void append_encoded_string(const char* data) {
-                    const char* end = data + std::strlen(data);
-
-                    while (data != end) {
-                        const char* last = data;
-                        uint32_t c = utf8::next(data, end);
-
-                        // This is a list of Unicode code points that we let
-                        // through instead of escaping them. It is incomplete
-                        // and can be extended later.
-                        // Generally we don't want to let through any
-                        // non-printing characters.
-                        if ((0x0020 <= c && c <= 0x0021) ||
-                            (0x0023 <= c && c <= 0x003b) ||
-                            (0x003d == c) ||
-                            (0x003f <= c && c <= 0x007e) ||
-                            (0x00a1 <= c && c <= 0x00ac) ||
-                            (0x00ae <= c && c <= 0x05ff)) {
-                            m_out->append(last, data);
-                        } else {
-                            write_color(color_red);
-                            output_formatted("<U+%04X>", c);
-                            write_color(color_blue);
-                        }
-                    }
+                    append_debug_encoded_string(*m_out, data, m_utf8_prefix, m_utf8_suffix);
                 }
 
                 void write_color(const char* color) {
-                    if (m_use_color) {
+                    if (m_options.use_color) {
                         *m_out += color;
                     }
                 }
@@ -177,15 +139,38 @@ namespace osmium {
                     *m_out += ": ";
                 }
 
+                void write_comment_field(const char* name) {
+                    write_color(color_cyan);
+                    *m_out += name;
+                    write_color(color_reset);
+                    *m_out += ": ";
+                }
+
+                void write_counter(int width, int n) {
+                    write_color(color_white);
+                    output_formatted("    %0*d: ", width, n++);
+                    write_color(color_reset);
+                }
+
                 void write_error(const char* msg) {
                     write_color(color_red);
                     *m_out += msg;
                     write_color(color_reset);
                 }
 
+                void write_timestamp(const osmium::Timestamp& timestamp) {
+                    if (timestamp.valid()) {
+                        *m_out += timestamp.to_iso();
+                        output_formatted(" (%d)", timestamp.seconds_since_epoch());
+                    } else {
+                        write_error("NOT SET");
+                    }
+                    *m_out += '\n';
+                }
+
                 void write_meta(const osmium::OSMObject& object) {
                     output_formatted("%" PRId64 "\n", object.id());
-                    if (m_add_metadata) {
+                    if (m_options.add_metadata) {
                         write_fieldname("version");
                         output_formatted("  %d", object.version());
                         if (object.visible()) {
@@ -196,8 +181,7 @@ namespace osmium {
                         write_fieldname("changeset");
                         output_formatted("%d\n", object.changeset());
                         write_fieldname("timestamp");
-                        *m_out += object.timestamp().to_iso();
-                        output_formatted(" (%d)\n", object.timestamp());
+                        write_timestamp(object.timestamp());
                         write_fieldname("user");
                         output_formatted("     %d ", object.uid());
                         write_string(object.user());
@@ -211,14 +195,14 @@ namespace osmium {
                         *m_out += padding;
                         output_formatted("     %d\n", tags.size());
 
-                        osmium::max_op<int> max;
+                        osmium::max_op<size_t> max;
                         for (const auto& tag : tags) {
                             max.update(std::strlen(tag.key()));
                         }
                         for (const auto& tag : tags) {
                             *m_out += "    ";
                             write_string(tag.key());
-                            int spacing = max() - std::strlen(tag.key());
+                            auto spacing = max() - std::strlen(tag.key());
                             while (spacing--) {
                                 *m_out += " ";
                             }
@@ -255,12 +239,11 @@ namespace osmium {
 
             public:
 
-                explicit DebugOutputBlock(osmium::memory::Buffer&& buffer, bool add_metadata, bool use_color) :
-                    m_input_buffer(std::make_shared<osmium::memory::Buffer>(std::move(buffer))),
-                    m_out(std::make_shared<std::string>()),
-                    m_tmp_buffer(),
-                    m_add_metadata(add_metadata),
-                    m_use_color(use_color) {
+                DebugOutputBlock(osmium::memory::Buffer&& buffer, const debug_output_options& options) :
+                    OutputBlock(std::move(buffer)),
+                    m_options(options),
+                    m_utf8_prefix(options.use_color ? color_red  : ""),
+                    m_utf8_suffix(options.use_color ? color_blue : "") {
                 }
 
                 DebugOutputBlock(const DebugOutputBlock&) = default;
@@ -269,13 +252,15 @@ namespace osmium {
                 DebugOutputBlock(DebugOutputBlock&&) = default;
                 DebugOutputBlock& operator=(DebugOutputBlock&&) = default;
 
-                ~DebugOutputBlock() = default;
+                ~DebugOutputBlock() noexcept = default;
 
                 std::string operator()() {
                     osmium::apply(m_input_buffer->cbegin(), m_input_buffer->cend(), *this);
 
                     std::string out;
-                    std::swap(out, *m_out);
+                    using std::swap;
+                    swap(out, *m_out);
+
                     return out;
                 }
 
@@ -313,7 +298,8 @@ namespace osmium {
                     int width = int(log10(way.nodes().size())) + 1;
                     int n = 0;
                     for (const auto& node_ref : way.nodes()) {
-                        output_formatted("    %0*d: %10" PRId64, width, n++, node_ref.ref());
+                        write_counter(width, n++);
+                        output_formatted("%10" PRId64, node_ref.ref());
                         if (node_ref.location().valid()) {
                             output_formatted(" (%.7f,%.7f)", node_ref.location().lon_without_check(), node_ref.location().lat_without_check());
                         }
@@ -335,7 +321,7 @@ namespace osmium {
                     int width = int(log10(relation.members().size())) + 1;
                     int n = 0;
                     for (const auto& member : relation.members()) {
-                        output_formatted("    %0*d: ", width, n++);
+                        write_counter(width, n++);
                         *m_out += short_typename[item_type_to_nwr_index(member.type())];
                         output_formatted(" %10" PRId64 " ", member.ref());
                         write_string(member.role());
@@ -348,24 +334,26 @@ namespace osmium {
                 void changeset(const osmium::Changeset& changeset) {
                     write_object_type("changeset");
                     output_formatted("%d\n", changeset.id());
+
                     write_fieldname("num changes");
                     output_formatted("%d", changeset.num_changes());
                     if (changeset.num_changes() == 0) {
                         write_error(" NO CHANGES!");
                     }
                     *m_out += '\n';
+
                     write_fieldname("created at");
                     *m_out += ' ';
-                    *m_out += changeset.created_at().to_iso();
-                    output_formatted(" (%d)\n", changeset.created_at());
+                    write_timestamp(changeset.created_at());
+
                     write_fieldname("closed at");
                     *m_out += "  ";
                     if (changeset.closed()) {
-                        *m_out += changeset.closed_at().to_iso();
-                        output_formatted(" (%d)\n", changeset.closed_at());
+                        write_timestamp(changeset.closed_at());
                     } else {
                         write_error("OPEN!\n");
                     }
+
                     write_fieldname("user");
                     output_formatted("       %d ", changeset.uid());
                     write_string(changeset.user());
@@ -374,51 +362,73 @@ namespace osmium {
                     write_box(changeset.bounds());
                     write_tags(changeset.tags(), "  ");
 
+                    if (changeset.num_comments() > 0) {
+                        write_fieldname("comments");
+                        output_formatted("   %d\n", changeset.num_comments());
+
+                        int width = int(log10(changeset.num_comments())) + 1;
+                        int n = 0;
+                        for (const auto& comment : changeset.discussion()) {
+                            write_counter(width, n++);
+
+                            write_comment_field("date");
+                            write_timestamp(comment.date());
+                            output_formatted("      %*s", width, "");
+
+                            write_comment_field("user");
+                            output_formatted("%d ", comment.uid());
+                            write_string(comment.user());
+                            output_formatted("\n      %*s", width, "");
+
+                            write_comment_field("text");
+                            write_string(comment.text());
+                            *m_out += '\n';
+                        }
+                    }
+
                     *m_out += '\n';
                 }
 
-            }; // DebugOutputBlock
+            }; // class DebugOutputBlock
 
             class DebugOutputFormat : public osmium::io::detail::OutputFormat {
 
-                bool m_add_metadata;
-                bool m_use_color;
-
-            public:
-
-                DebugOutputFormat(const osmium::io::File& file, data_queue_type& output_queue) :
-                    OutputFormat(file, output_queue),
-                    m_add_metadata(file.get("add_metadata") != "false"),
-                    m_use_color(file.get("color") == "true") {
-                }
-
-                DebugOutputFormat(const DebugOutputFormat&) = delete;
-                DebugOutputFormat& operator=(const DebugOutputFormat&) = delete;
-
-                void write_buffer(osmium::memory::Buffer&& buffer) override final {
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(DebugOutputBlock{std::move(buffer), m_add_metadata, m_use_color}));
-                }
+                debug_output_options m_options;
 
                 void write_fieldname(std::string& out, const char* name) {
                     out += "  ";
-                    if (m_use_color) {
+                    if (m_options.use_color) {
                         out += color_cyan;
                     }
                     out += name;
-                    if (m_use_color) {
+                    if (m_options.use_color) {
                         out += color_reset;
                     }
                     out += ": ";
                 }
 
-                void write_header(const osmium::io::Header& header) override final {
+            public:
+
+                DebugOutputFormat(const osmium::io::File& file, future_string_queue_type& output_queue) :
+                    OutputFormat(output_queue),
+                    m_options() {
+                    m_options.add_metadata = file.is_not_false("add_metadata");
+                    m_options.use_color    = file.is_true("color");
+                }
+
+                DebugOutputFormat(const DebugOutputFormat&) = delete;
+                DebugOutputFormat& operator=(const DebugOutputFormat&) = delete;
+
+                ~DebugOutputFormat() noexcept final = default;
+
+                void write_header(const osmium::io::Header& header) final {
                     std::string out;
 
-                    if (m_use_color) {
+                    if (m_options.use_color) {
                         out += color_bold;
                     }
                     out += "header\n";
-                    if (m_use_color) {
+                    if (m_options.use_color) {
                         out += color_reset;
                     }
 
@@ -445,33 +455,26 @@ namespace osmium {
                     }
                     out += "\n=============================================\n\n";
 
-                    std::promise<std::string> promise;
-                    m_output_queue.push(promise.get_future());
-                    promise.set_value(std::move(out));
+                    send_to_output_queue(std::move(out));
                 }
 
-                void close() override final {
-                    std::string out;
-                    std::promise<std::string> promise;
-                    m_output_queue.push(promise.get_future());
-                    promise.set_value(out);
+                void write_buffer(osmium::memory::Buffer&& buffer) final {
+                    m_output_queue.push(osmium::thread::Pool::instance().submit(DebugOutputBlock{std::move(buffer), m_options}));
                 }
 
             }; // class DebugOutputFormat
 
-            namespace {
+            // we want the register_output_format() function to run, setting
+            // the variable is only a side-effect, it will never be used
+            const bool registered_debug_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::debug,
+                [](const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    return new osmium::io::detail::DebugOutputFormat(file, output_queue);
+            });
 
-// we want the register_output_format() function to run, setting the variable
-// is only a side-effect, it will never be used
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-                const bool registered_debug_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::debug,
-                    [](const osmium::io::File& file, data_queue_type& output_queue) {
-                        return new osmium::io::detail::DebugOutputFormat(file, output_queue);
-                });
-#pragma GCC diagnostic pop
-
-            } // anonymous namespace
+            // dummy function to silence the unused variable warning from above
+            inline bool get_registered_debug_output() noexcept {
+                return registered_debug_output;
+            }
 
         } // namespace detail
 

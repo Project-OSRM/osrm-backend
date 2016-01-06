@@ -41,7 +41,7 @@ namespace osmium {
 
     namespace detail {
 
-        template <class TSubitem, class TIter>
+        template <typename TSubitem, typename TIter>
         inline TSubitem& subitem_of_type(TIter it, TIter end) {
             for (; it != end; ++it) {
                 if (it->type() == TSubitem::itemtype) {

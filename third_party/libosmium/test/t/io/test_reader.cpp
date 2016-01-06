@@ -4,6 +4,7 @@
 #include <osmium/handler.hpp>
 #include <osmium/io/any_compression.hpp>
 #include <osmium/io/xml_input.hpp>
+#include <osmium/io/pbf_input.hpp>
 #include <osmium/visitor.hpp>
 #include <osmium/memory/buffer.hpp>
 
@@ -16,6 +17,27 @@ struct CountHandler : public osmium::handler::Handler {
     }
 
 }; // class CountHandler
+
+struct ZeroPositionNodeCountHandler : public osmium::handler::Handler {
+
+    // number of nodes seen at zero position, or visible with undefined
+    // location.
+    int count = 0;
+    int total_count = 0; // total number of nodes seen
+    const osmium::Location zero = osmium::Location(int32_t(0), int32_t(0));
+
+    void node(osmium::Node &n) {
+        // no nodes in the history file have a zero location, and
+        // no visible nodes should have an undefined location.
+        if ((n.location() == zero) ||
+            (n.visible() && !n.location())) {
+            ++count;
+        }
+        ++total_count;
+    }
+
+}; // class ZeroPositionNodeCountHandler
+
 
 TEST_CASE("Reader") {
 
@@ -34,7 +56,7 @@ TEST_CASE("Reader") {
         osmium::apply(reader, handler);
     }
 
-    SECTION("should return invalid buffer after eof") {
+    SECTION("should throw after eof") {
         osmium::io::File file(with_data_dir("t/io/data.osm"));
         osmium::io::Reader reader(file);
 
@@ -45,9 +67,9 @@ TEST_CASE("Reader") {
 
         REQUIRE(reader.eof());
 
-        // extra read always returns invalid buffer
-        osmium::memory::Buffer buffer = reader.read();
-        REQUIRE(!buffer);
+        REQUIRE_THROWS_AS({
+            reader.read();
+        }, osmium::io_error);
     }
 
     SECTION("should not hang when apply() is called twice on reader") {
@@ -56,7 +78,9 @@ TEST_CASE("Reader") {
         osmium::handler::Handler handler;
 
         osmium::apply(reader, handler);
-        osmium::apply(reader, handler);
+        REQUIRE_THROWS_AS({
+            osmium::apply(reader, handler);
+        }, osmium::io_error);
     }
 
     SECTION("should work with a buffer with uncompressed data") {
@@ -111,6 +135,77 @@ TEST_CASE("Reader") {
         REQUIRE(handler.count == 0);
         osmium::apply(reader, handler);
         REQUIRE(handler.count == 1);
+    }
+
+    SECTION("should decode zero node positions in history (XML)") {
+        osmium::io::Reader reader(with_data_dir("t/io/deleted_nodes.osh"),
+                                  osmium::osm_entity_bits::node);
+        ZeroPositionNodeCountHandler handler;
+
+        REQUIRE(handler.count == 0);
+        REQUIRE(handler.total_count == 0);
+
+        osmium::apply(reader, handler);
+
+        REQUIRE(handler.count == 0);
+        REQUIRE(handler.total_count == 2);
+    }
+
+    SECTION("should decode zero node positions in history (PBF)") {
+        osmium::io::Reader reader(with_data_dir("t/io/deleted_nodes.osh.pbf"),
+                                  osmium::osm_entity_bits::node);
+        ZeroPositionNodeCountHandler handler;
+
+        REQUIRE(handler.count == 0);
+        REQUIRE(handler.total_count == 0);
+
+        osmium::apply(reader, handler);
+
+        REQUIRE(handler.count == 0);
+        REQUIRE(handler.total_count == 2);
+    }
+
+}
+
+TEST_CASE("Reader failure modes") {
+
+    SECTION("should fail with nonexistent file") {
+        REQUIRE_THROWS({
+            osmium::io::Reader reader(with_data_dir("t/io/nonexistent-file.osm"));
+        });
+    }
+
+    SECTION("should fail with nonexistent file (gz)") {
+        REQUIRE_THROWS({
+            osmium::io::Reader reader(with_data_dir("t/io/nonexistent-file.osm.gz"));
+        });
+    }
+
+    SECTION("should fail with nonexistent file (pbf)") {
+        REQUIRE_THROWS({
+            osmium::io::Reader reader(with_data_dir("t/io/nonexistent-file.osm.pbf"));
+        });
+    }
+
+    SECTION("should work when there is an exception in main thread before getting header") {
+        try {
+            osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
+            REQUIRE(!reader.eof());
+            throw std::runtime_error("foo");
+        } catch (...) {
+        }
+
+    }
+
+    SECTION("should work when there is an exception in main thread while reading") {
+        try {
+            osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
+            REQUIRE(!reader.eof());
+            auto header = reader.header();
+            throw std::runtime_error("foo");
+        } catch (...) {
+        }
+
     }
 
 }

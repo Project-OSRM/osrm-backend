@@ -37,6 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #include <type_traits>
 #include <utility>
 
+#include <osmium/util/cast.hpp>
+
 namespace osmium {
 
     namespace util {
@@ -44,25 +46,39 @@ namespace osmium {
         /**
          * Helper class for delta encoding.
          */
-        template <typename T>
+        template <typename TValue, typename TDelta = int64_t>
         class DeltaEncode {
 
-            T m_value;
+            static_assert(std::is_integral<TValue>::value,
+                          "DeltaEncode value type must be some integer");
+
+            static_assert(std::is_integral<TDelta>::value && std::is_signed<TDelta>::value,
+                          "DeltaEncode delta type must be some signed integer");
+
+            TValue m_value;
 
         public:
 
-            DeltaEncode(T value = 0) :
+            using value_type = TValue;
+            using delta_type = TDelta;
+
+            explicit DeltaEncode(TValue value = 0) :
                 m_value(value) {
             }
 
-            void clear() {
+            void clear() noexcept {
                 m_value = 0;
             }
 
-            T update(T new_value) {
+            TValue value() const noexcept {
+                return m_value;
+            }
+
+            TDelta update(TValue new_value) noexcept {
                 using std::swap;
                 swap(m_value, new_value);
-                return m_value - new_value;
+                return static_cast_with_assert<TDelta>(m_value) -
+                       static_cast_with_assert<TDelta>(new_value);
             }
 
         }; // class DeltaEncode
@@ -70,52 +86,63 @@ namespace osmium {
         /**
          * Helper class for delta decoding.
          */
-        template <typename T>
+        template <typename TValue, typename TDelta = int64_t>
         class DeltaDecode {
 
-            T m_value;
+            static_assert(std::is_integral<TValue>::value,
+                          "DeltaDecode value type must be some integer");
+
+            static_assert(std::is_integral<TDelta>::value && std::is_signed<TDelta>::value,
+                          "DeltaDecode delta type must be some signed integer");
+
+            TValue m_value;
 
         public:
+
+            using value_type = TValue;
+            using delta_type = TDelta;
 
             DeltaDecode() :
                 m_value(0) {
             }
 
-            void clear() {
+            void clear() noexcept {
                 m_value = 0;
             }
 
-            T update(T delta) {
-                m_value += delta;
+            TValue update(TDelta delta) noexcept {
+                m_value = static_cast_with_assert<TValue>(
+                              static_cast_with_assert<TDelta>(m_value) + delta);
                 return m_value;
             }
 
         }; // class DeltaDecode
 
-        template <typename TBaseIterator, typename TTransform, typename TValue>
+        template <typename TBaseIterator, typename TTransform, typename TValue, typename TDelta = int64_t>
         class DeltaEncodeIterator : public std::iterator<std::input_iterator_tag, TValue> {
-
-            typedef TValue value_type;
 
             TBaseIterator m_it;
             TBaseIterator m_end;
-            value_type m_delta;
-            DeltaEncode<value_type> m_value;
             TTransform m_trans;
+            DeltaEncode<TValue, TDelta> m_value;
+            TDelta m_delta;
 
         public:
+
+            using value_type = TValue;
+            using delta_type = TDelta;
 
             DeltaEncodeIterator(TBaseIterator first, TBaseIterator last, TTransform& trans) :
                 m_it(first),
                 m_end(last),
-                m_delta(m_trans(m_it)),
-                m_value(m_delta),
-                m_trans(trans) {
+                m_trans(trans),
+                m_value(m_it != m_end ? m_trans(m_it) : 0),
+                m_delta(static_cast_with_assert<TDelta>(m_value.value())) {
             }
 
             DeltaEncodeIterator& operator++() {
-                if (m_it != m_end) {
-                    m_delta = m_value.update(m_trans(++m_it));
+                if (++m_it != m_end) {
+                    m_delta = m_value.update(m_trans(m_it));
                 }
                 return *this;
             }
@@ -126,7 +153,7 @@ namespace osmium {
                 return tmp;
             }
 
-            value_type operator*() {
+            TDelta operator*() {
                 return m_delta;
             }
 

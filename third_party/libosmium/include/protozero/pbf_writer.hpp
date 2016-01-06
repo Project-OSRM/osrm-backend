@@ -16,7 +16,6 @@ documentation.
  * @brief Contains the pbf_writer class.
  */
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -24,16 +23,12 @@ documentation.
 #include <limits>
 #include <string>
 
+#include <protozero/config.hpp>
 #include <protozero/pbf_types.hpp>
 #include <protozero/varint.hpp>
 
-#if __BYTE_ORDER != __LITTLE_ENDIAN
+#if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
 # include <protozero/byteswap.hpp>
-#endif
-
-/// Wrapper for assert() used for testing
-#ifndef protozero_assert
-# define protozero_assert(x) assert(x)
 #endif
 
 namespace protozero {
@@ -71,7 +66,7 @@ class pbf_writer {
     inline void add_fixed(T value) {
         protozero_assert(m_pos == 0 && "you can't add fields to a parent pbf_writer if there is an existing pbf_writer for a submessage");
         protozero_assert(m_data);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if PROTOZERO_BYTE_ORDER == PROTOZERO_LITTLE_ENDIAN
         m_data->append(reinterpret_cast<const char*>(&value), sizeof(T));
 #else
         auto size = m_data->size();
@@ -229,7 +224,9 @@ public:
      */
     inline void add_bool(pbf_tag_type tag, bool value) {
         add_field(tag, pbf_wire_type::varint);
-        add_fixed<char>(value);
+        protozero_assert(m_pos == 0 && "you can't add fields to a parent pbf_writer if there is an existing pbf_writer for a submessage");
+        protozero_assert(m_data);
+        m_data->append(1, value);
     }
 
     /**
@@ -378,7 +375,7 @@ public:
     inline void add_bytes(pbf_tag_type tag, const char* value, size_t size) {
         protozero_assert(m_pos == 0 && "you can't add fields to a parent pbf_writer if there is an existing pbf_writer for a submessage");
         protozero_assert(m_data);
-        assert(size <= std::numeric_limits<pbf_length_type>::max());
+        protozero_assert(size <= std::numeric_limits<pbf_length_type>::max());
         add_length_varint(tag, pbf_length_type(size));
         m_data->append(value, size);
     }

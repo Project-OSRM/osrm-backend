@@ -134,7 +134,7 @@ namespace osmium {
              * Reserve space for an object of class T in buffer and return
              * pointer to it.
              */
-            template <class T>
+            template <typename T>
             T* reserve_space_for() {
                 assert(m_buffer.is_aligned());
                 return reinterpret_cast<T*>(m_buffer.reserve_space(sizeof(T)));
@@ -182,7 +182,7 @@ namespace osmium {
 
         }; // class Builder
 
-        template <class TItem>
+        template <typename TItem>
         class ObjectBuilder : public Builder {
 
             static_assert(std::is_base_of<osmium::memory::Item, TItem>::value, "ObjectBuilder can only build objects derived from osmium::memory::Item");

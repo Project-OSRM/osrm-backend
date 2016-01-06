@@ -84,7 +84,7 @@ namespace osmium {
         /**
          * Sort objects according to the given order functor.
          */
-        template <class TCompare>
+        template <typename TCompare>
         void sort(TCompare&& compare) {
             std::sort(m_objects.begin(), m_objects.end(), std::forward<TCompare>(compare));
         }

@@ -38,14 +38,14 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/handler.hpp>
 
 #define OSMIUM_CHAIN_HANDLER_CALL(_func_, _type_) \
-    template <int N, int SIZE, class THandlers> \
+    template <int N, int SIZE, typename THandlers> \
     struct call_ ## _func_ { \
         void operator()(THandlers& handlers, osmium::_type_& object) { \
             std::get<N>(handlers)._func_(object); \
             call_ ## _func_<N+1, SIZE, THandlers>()(handlers, object); \
         } \
     }; \
-    template <int SIZE, class THandlers> \
+    template <int SIZE, typename THandlers> \
     struct call_ ## _func_<SIZE, SIZE, THandlers> { \
         void operator()(THandlers&, osmium::_type_&) {} \
     };
@@ -64,13 +64,13 @@ namespace osmium {
          * This handler allows chaining of any number of handlers into a single
          * handler.
          */
-        template <class ...THandler>
+        template <typename... THandler>
         class ChainHandler : public osmium::handler::Handler {
 
             typedef std::tuple<THandler&...> handlers_type;
             handlers_type m_handlers;
 
-            template <int N, int SIZE, class THandlers>
+            template <int N, int SIZE, typename THandlers>
             struct call_flush {
                 void operator()(THandlers& handlers) {
                     std::get<N>(handlers).flush();
@@ -78,7 +78,7 @@ namespace osmium {
                 }
             }; // struct call_flush
 
-            template <int SIZE, class THandlers>
+            template <int SIZE, typename THandlers>
             struct call_flush<SIZE, SIZE, THandlers> {
                 void operator()(THandlers&) {}
             }; // struct call_flush

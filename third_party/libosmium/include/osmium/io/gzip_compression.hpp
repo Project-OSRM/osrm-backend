@@ -49,7 +49,9 @@ DEALINGS IN THE SOFTWARE.
 #include <zlib.h>
 
 #include <osmium/io/compression.hpp>
+#include <osmium/io/error.hpp>
 #include <osmium/io/file_compression.hpp>
+#include <osmium/io/writer_options.hpp>
 #include <osmium/util/cast.hpp>
 #include <osmium/util/compatibility.hpp>
 
@@ -59,13 +61,13 @@ namespace osmium {
      * Exception thrown when there are problems compressing or
      * decompressing gzip files.
      */
-    struct gzip_error : public std::runtime_error {
+    struct gzip_error : public io_error {
 
         int gzip_error_code;
         int system_errno;
 
         gzip_error(const std::string& what, int error_code) :
-            std::runtime_error(what),
+            io_error(what),
             gzip_error_code(error_code),
             system_errno(error_code == Z_ERRNO ? errno : 0) {
         }
@@ -93,23 +95,29 @@ namespace osmium {
 
         class GzipCompressor : public Compressor {
 
+            int m_fd;
             gzFile m_gzfile;
 
         public:
 
-            explicit GzipCompressor(int fd) :
-                Compressor(),
+            explicit GzipCompressor(int fd, fsync sync) :
+                Compressor(sync),
+                m_fd(dup(fd)),
                 m_gzfile(::gzdopen(fd, "w")) {
                 if (!m_gzfile) {
                     detail::throw_gzip_error(m_gzfile, "write initialization failed");
                 }
             }
 
-            ~GzipCompressor() override final {
-                close();
+            ~GzipCompressor() noexcept final {
+                try {
+                    close();
+                } catch (...) {
+                    // Ignore any exceptions because destructor must not throw.
+                }
             }
 
-            void write(const std::string& data) override final {
+            void write(const std::string& data) final {
                 if (!data.empty()) {
                     int nwrite = ::gzwrite(m_gzfile, data.data(), static_cast_with_assert<unsigned int>(data.size()));
                     if (nwrite == 0) {
@@ -118,13 +126,17 @@ namespace osmium {
                 }
             }
 
-            void close() override final {
+            void close() final {
                 if (m_gzfile) {
                     int result = ::gzclose(m_gzfile);
                     m_gzfile = nullptr;
                     if (result != Z_OK) {
                         detail::throw_gzip_error(m_gzfile, "write close failed", result);
                     }
+                    if (do_fsync()) {
+                        osmium::io::detail::reliable_fsync(m_fd);
+                    }
+                    osmium::io::detail::reliable_close(m_fd);
                 }
             }
 
@@ -144,11 +156,15 @@ namespace osmium {
                 }
             }
 
-            ~GzipDecompressor() override final {
-                close();
+            ~GzipDecompressor() noexcept final {
+                try {
+                    close();
+                } catch (...) {
+                    // Ignore any exceptions because destructor must not throw.
+                }
             }
 
-            std::string read() override final {
+            std::string read() final {
                 std::string buffer(osmium::io::Decompressor::input_buffer_size, '\0');
                 int nread = ::gzread(m_gzfile, const_cast<char*>(buffer.data()), static_cast_with_assert<unsigned int>(buffer.size()));
                 if (nread < 0) {
@@ -158,7 +174,7 @@ namespace osmium {
                 return buffer;
             }
 
-            void close() override final {
+            void close() final {
                 if (m_gzfile) {
                     int result = ::gzclose(m_gzfile);
                     m_gzfile = nullptr;
@@ -194,11 +210,15 @@ namespace osmium {
                 }
             }
 
-            ~GzipBufferDecompressor() override final {
-                inflateEnd(&m_zstream);
+            ~GzipBufferDecompressor() noexcept final {
+                try {
+                    close();
+                } catch (...) {
+                    // Ignore any exceptions because destructor must not throw.
+                }
             }
 
-            std::string read() override final {
+            std::string read() final {
                 std::string output;
 
                 if (m_buffer) {
@@ -227,22 +247,28 @@ namespace osmium {
                 return output;
             }
 
+            void close() final {
+                inflateEnd(&m_zstream);
+            }
+
         }; // class GzipBufferDecompressor
 
-        namespace {
+        namespace detail {
 
-// we want the register_compression() function to run, setting the variable
-// is only a side-effect, it will never be used
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
+            // we want the register_compression() function to run, setting
+            // the variable is only a side-effect, it will never be used
             const bool registered_gzip_compression = osmium::io::CompressionFactory::instance().register_compression(osmium::io::file_compression::gzip,
-                [](int fd) { return new osmium::io::GzipCompressor(fd); },
+                [](int fd, fsync sync) { return new osmium::io::GzipCompressor(fd, sync); },
                 [](int fd) { return new osmium::io::GzipDecompressor(fd); },
                 [](const char* buffer, size_t size) { return new osmium::io::GzipBufferDecompressor(buffer, size); }
             );
-#pragma GCC diagnostic pop
 
-        } // anonymous namespace
+            // dummy function to silence the unused variable warning from above
+            inline bool get_registered_gzip_compression() noexcept {
+                return registered_gzip_compression;
+            }
+
+        } // namespace detail
 
     } // namespace io
 

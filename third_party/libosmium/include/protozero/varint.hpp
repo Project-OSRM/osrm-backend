@@ -16,10 +16,6 @@ documentation.
  * @brief Contains low-level varint and zigzag encoding and decoding functions.
  */
 
-#if __BYTE_ORDER != __LITTLE_ENDIAN
-# error "This code only works on little endian machines."
-#endif
-
 #include <cstdint>
 
 #include <protozero/exception.hpp>

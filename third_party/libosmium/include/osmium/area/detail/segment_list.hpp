@@ -41,6 +41,8 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/area/problem_reporter.hpp>
 #include <osmium/area/detail/node_ref_segment.hpp>
 #include <osmium/memory/buffer.hpp>
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/way.hpp>
 

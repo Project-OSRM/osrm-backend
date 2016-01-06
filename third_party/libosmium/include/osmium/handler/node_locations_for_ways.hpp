@@ -60,7 +60,7 @@ namespace osmium {
          *                        get(id) methods.
          * @tparam TStorageNegIDs Same but for negative IDs.
          */
-        template <class TStoragePosIDs, class TStorageNegIDs = dummy_type>
+        template <typename TStoragePosIDs, typename TStorageNegIDs = dummy_type>
         class NodeLocationsForWays : public osmium::handler::Handler {
 
             static_assert(std::is_base_of<osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>, TStoragePosIDs>::value, "Index class must be derived from osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>");

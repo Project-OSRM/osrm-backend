@@ -54,7 +54,7 @@ namespace osmium {
                 ProblemReporterStream(m_sstream) {
             }
 
-            virtual ~ProblemReporterException() = default;
+            ~ProblemReporterException() override = default;
 
             void report_duplicate_node(osmium::object_id_type node_id1, osmium::object_id_type node_id2, osmium::Location location) override {
                 m_sstream.str();

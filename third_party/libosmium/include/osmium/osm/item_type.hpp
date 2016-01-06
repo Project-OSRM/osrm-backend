@@ -53,13 +53,18 @@ namespace osmium {
         relation_member_list                   = 0x13,
         relation_member_list_with_full_members = 0x23,
         outer_ring                             = 0x40,
-        inner_ring                             = 0x41
+        inner_ring                             = 0x41,
+        changeset_discussion                   = 0x80
 
     }; // enum class item_type
 
     /**
      * Return item_type for index:
      * 0 -> node, 1 -> way, 2 -> relation
+     *
+     * @param i Index. Must be between 0 and 2.
+     *
+     * @returns Item type.
      */
     inline item_type nwr_index_to_item_type(unsigned int i) noexcept {
         assert(i <= 2);
@@ -69,6 +74,10 @@ namespace osmium {
     /**
      * Return index for item_type:
      * node -> 0, way -> 1, relation -> 2
+     *
+     * @param type Item type. Must be node, way, or relation.
+     *
+     * @returns Index.
      */
     inline unsigned int item_type_to_nwr_index(item_type type) noexcept {
         unsigned int i = static_cast<unsigned int>(type);
@@ -102,6 +111,8 @@ namespace osmium {
                 return item_type::outer_ring;
             case 'I':
                 return item_type::inner_ring;
+            case 'D':
+                return item_type::changeset_discussion;
             default:
                 return item_type::undefined;
         }
@@ -136,6 +147,8 @@ namespace osmium {
                 return 'O';
             case item_type::inner_ring:
                 return 'I';
+            case item_type::changeset_discussion:
+                return 'D';
         }
     }
 
@@ -165,6 +178,8 @@ namespace osmium {
                 return "outer_ring";
             case item_type::inner_ring:
                 return "inner_ring";
+            case item_type::changeset_discussion:
+                return "changeset_discussion";
         }
     }
 #pragma GCC diagnostic pop
