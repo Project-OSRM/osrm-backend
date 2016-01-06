@@ -92,15 +92,15 @@ matrix:
     #  compiler: clang
     #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
-    #- os: osx
-    #  osx_image: xcode7
-    #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Debug'
+    - os: osx
+      osx_image: xcode7
+      compiler: clang
+      env: COMPILER='clang++' BUILD_TYPE='Debug'
 
-    #- os: osx
-    #  osx_image: xcode7
-    #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Release'
+    - os: osx
+      osx_image: xcode7
+      compiler: clang
+      env: COMPILER='clang++' BUILD_TYPE='Release'
 
     #- os: osx
     #  osx_image: xcode7

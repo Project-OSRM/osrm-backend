@@ -93,6 +93,8 @@ Feature: Via points
             | 1,3,2     | ab,bc,cd,cd,de,ef,fa,ab,bc | 1600m +-1 | head,straight,straight,via,right,right,right,right,straight,destination |
             | 3,2,1     | cd,de,ef,fa,ab,bc,bc,cd,de,ef,fa,ab | 2400m +-1 | head,right,right,right,right,straight,via,straight,right,right,right,right,destination |
 
+    # TODO: Remove this ignore when https://github.com/Project-OSRM/osrm-backend/issues/1863 gets fixed
+    @ignore-platform-mac
     Scenario: Via points on ring on the same oneway
     # xa it to avoid only having a single ring, which cna trigger edge cases
         Given the node map
