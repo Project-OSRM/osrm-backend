@@ -8,9 +8,10 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <vector>
-#include <memory>
 #include <algorithm>
+#include <cmath>
+#include <memory>
+#include <vector>
 
 // Implements complex queries on top of an RTree and builds PhantomNodes from it.
 //
