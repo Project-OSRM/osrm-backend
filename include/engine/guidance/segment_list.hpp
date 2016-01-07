@@ -7,11 +7,13 @@
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/segment_information.hpp"
-
+#include "util/integer_range.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "extractor/turn_instructions.hpp"
 
 #include <boost/assert.hpp>
 
+#include <cmath>
 #include <cstdint>
 #include <cstddef>
 #include <limits>
@@ -249,9 +251,6 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
         (extract_alternative ? raw_route.alternative_path_length : raw_route.shortest_path_length) /
         10.));
 
-    auto start_phantom = raw_route.segment_end_coordinates.front().source_phantom;
-    auto target_phantom = raw_route.segment_end_coordinates.back().target_phantom;
-
     // Post-processing to remove empty or nearly empty path segments
     if (segments.size() > 2 && std::numeric_limits<float>::epsilon() > segments.back().length &&
         !(segments.end() - 2)->is_via_location)
@@ -259,9 +258,6 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
         segments.pop_back();
         segments.back().necessary = true;
         segments.back().turn_instruction = TurnInstruction::NoTurn;
-        target_phantom.name_id =
-            (segments.end() - 2)
-                ->name_id; // TODO check whether this -2 is desired after the pop-back
     }
 
     if (segments.size() > 2 && std::numeric_limits<float>::epsilon() > segments.front().length &&
@@ -270,7 +266,6 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
         segments.erase(segments.begin());
         segments.front().turn_instruction = TurnInstruction::HeadOn;
         segments.front().necessary = true;
-        start_phantom.name_id = segments.front().name_id;
     }
 
     if (allow_simplification)
