@@ -93,6 +93,9 @@ class DirectShortestPathRouting final
         int distance = INVALID_EDGE_WEIGHT;
         std::vector<NodeID> packed_leg;
 
+        const bool constexpr DO_NOT_FORCE_LOOPS =
+            false; // prevents forcing of loops, since offsets are set correctly
+
         if (super::facade->GetCoreSize() > 0)
         {
             engine_working_data.InitializeOrClearSecondThreadLocalStorage(
@@ -103,11 +106,12 @@ class DirectShortestPathRouting final
             reverse_core_heap.Clear();
 
             super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
-                                  distance, packed_leg);
+                                  distance, packed_leg, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
         }
         else
         {
-            super::Search(forward_heap, reverse_heap, distance, packed_leg);
+            super::Search(forward_heap, reverse_heap, distance, packed_leg, DO_NOT_FORCE_LOOPS,
+                          DO_NOT_FORCE_LOOPS);
         }
 
         // No path found for both target nodes?

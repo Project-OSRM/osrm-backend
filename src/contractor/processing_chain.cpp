@@ -7,6 +7,7 @@
 
 #include "contractor/crc32_processor.hpp"
 #include "util/graph_loader.hpp"
+#include "util/io.hpp"
 #include "util/integer_range.hpp"
 #include "util/lua_util.hpp"
 #include "util/osrm_exception.hpp"
@@ -22,6 +23,9 @@
 
 #include <tbb/parallel_sort.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <bitset>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -73,7 +77,7 @@ int Prepare::Run()
 
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
-    size_t max_edge_id = LoadEdgeExpandedGraph(
+    std::size_t max_edge_id = LoadEdgeExpandedGraph(
         config.edge_based_graph_path, edge_based_edge_list, config.edge_segment_lookup_path,
         config.edge_penalty_path, config.segment_speed_lookup_path);
 
@@ -86,9 +90,18 @@ int Prepare::Run()
     {
         ReadNodeLevels(node_levels);
     }
+
+    util::SimpleLogger().Write() << "Reading node weights.";
+    std::vector<EdgeWeight> node_weights;
+    std::string node_file_name = config.osrm_input_path.string() + ".enw";
+    if (util::deserializeVector(node_file_name, node_weights))
+        util::SimpleLogger().Write() << "Done reading node weights.";
+    else
+        util::SimpleLogger().Write() << "Failed reading node weights.";
+
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
-    ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, is_core_node,
-                  node_levels);
+    ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, std::move(node_weights),
+                  is_core_node, node_levels);
     TIMER_STOP(contraction);
 
     util::SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
@@ -143,10 +156,12 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
     input_stream.read((char *)&fingerprint_loaded, sizeof(util::FingerPrint));
     fingerprint_loaded.TestPrepare(fingerprint_valid);
 
-    size_t number_of_edges = 0;
-    size_t max_edge_id = SPECIAL_EDGEID;
-    input_stream.read((char *)&number_of_edges, sizeof(size_t));
-    input_stream.read((char *)&max_edge_id, sizeof(size_t));
+    // TODO std::size_t can vary on systems. Our files are not transferable, but we might want to
+    // consider using a fixed size type for I/O
+    std::size_t number_of_edges = 0;
+    std::size_t max_edge_id = SPECIAL_EDGEID;
+    input_stream.read((char *)&number_of_edges, sizeof(std::size_t));
+    input_stream.read((char *)&max_edge_id, sizeof(std::size_t));
 
     edge_based_edge_list.resize(number_of_edges);
     util::SimpleLogger().Write() << "Reading " << number_of_edges
@@ -179,7 +194,6 @@ std::size_t Prepare::LoadEdgeExpandedGraph(
     {
         extractor::EdgeBasedEdge inbuffer;
         input_stream.read((char *)&inbuffer, sizeof(extractor::EdgeBasedEdge));
-
         if (update_edge_weights)
         {
             // Processing-time edge updates
@@ -370,8 +384,11 @@ Prepare::WriteContractedGraph(unsigned max_node_id,
     util::StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
     for (const auto edge : util::irange<std::size_t>(0, contracted_edge_list.size()))
     {
+        // some self-loops are required for oneway handling. Need to assertthat we only keep these
+        // (TODO)
         // no eigen loops
-        BOOST_ASSERT(contracted_edge_list[edge].source != contracted_edge_list[edge].target);
+        // BOOST_ASSERT(contracted_edge_list[edge].source != contracted_edge_list[edge].target ||
+        // node_represents_oneway[contracted_edge_list[edge].source]);
         current_edge.target = contracted_edge_list[edge].target;
         current_edge.data = contracted_edge_list[edge].data;
 
@@ -407,17 +424,22 @@ void Prepare::ContractGraph(
     const unsigned max_edge_id,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
     util::DeallocatingVector<QueryEdge> &contracted_edge_list,
+    std::vector<EdgeWeight> &&node_weights,
     std::vector<bool> &is_core_node,
     std::vector<float> &inout_node_levels) const
 {
     std::vector<float> node_levels;
     node_levels.swap(inout_node_levels);
 
-    Contractor contractor(max_edge_id + 1, edge_based_edge_list, std::move(node_levels));
+    Contractor contractor(max_edge_id + 1, edge_based_edge_list, std::move(node_levels),
+                          std::move(node_weights));
     contractor.Run(config.core_factor);
     contractor.GetEdges(contracted_edge_list);
     contractor.GetCoreMarker(is_core_node);
     contractor.GetNodeLevels(inout_node_levels);
+
+    std::cout << "Levels: " << inout_node_levels.size() << " Core: " << is_core_node.size()
+              << " MEID: " << max_edge_id << std::endl;
 }
 }
 }

@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) try
             << "Profile " << extractor_config.profile_path.string() << " not found!";
         return EXIT_FAILURE;
     }
-    return extractor::extractor(extractor_config).run();
+    return extractor::Extractor(extractor_config).run();
 }
 catch (const std::bad_alloc &e)
 {

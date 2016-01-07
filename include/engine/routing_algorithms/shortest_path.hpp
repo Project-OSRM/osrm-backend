@@ -24,6 +24,9 @@ class ShortestPathRouting final
     using super = BasicRoutingInterface<DataFacadeT, ShortestPathRouting<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
+    const static constexpr bool FORWARD_DIRECTION = true;
+    const static constexpr bool REVERSE_DIRECTION = false;
+    const static constexpr bool DO_NOT_FORCE_LOOP = false;
 
   public:
     ShortestPathRouting(DataFacadeT *facade, SearchEngineData &engine_working_data)
@@ -32,6 +35,19 @@ class ShortestPathRouting final
     }
 
     ~ShortestPathRouting() {}
+
+    inline bool
+    forceLoop(bool forward, const PhantomNode &source_phantom, const PhantomNode &target_phantom) const
+    {
+        if (forward)
+            return source_phantom.forward_node_id == target_phantom.forward_node_id &&
+                   source_phantom.GetForwardWeightPlusOffset() >
+                       target_phantom.GetForwardWeightPlusOffset();
+        else
+            return source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
+                   source_phantom.GetReverseWeightPlusOffset() >
+                       target_phantom.GetReverseWeightPlusOffset();
+    };
 
     // allows a uturn at the target_phantom
     // searches source forward/reverse -> target forward/reverse
@@ -76,113 +92,12 @@ class ShortestPathRouting final
                                 target_phantom.GetReverseWeightPlusOffset(),
                                 target_phantom.reverse_node_id);
         }
+
         BOOST_ASSERT(forward_heap.Size() > 0);
         BOOST_ASSERT(reverse_heap.Size() > 0);
-        super::Search(forward_heap, reverse_heap, new_total_distance, leg_packed_path);
-    }
-
-    // If source and target are reverse on a oneway we need to find a path
-    // that connects the two. This is _not_ the shortest path in our model,
-    // as source and target are on the same edge based node.
-    // We force a detour by inserting "virtaul vias", which means we search a path
-    // from all nodes that are connected by outgoing edges to all nodes that are connected by
-    // incoming edges.
-    // ------^
-    // |     ^source
-    // |     ^
-    // |     ^target
-    // ------^
-    void SearchLoop(QueryHeap &forward_heap,
-                    QueryHeap &reverse_heap,
-                    const bool search_forward_node,
-                    const bool search_reverse_node,
-                    const PhantomNode &source_phantom,
-                    const PhantomNode &target_phantom,
-                    const int total_distance_to_forward,
-                    const int total_distance_to_reverse,
-                    int &new_total_distance_to_forward,
-                    int &new_total_distance_to_reverse,
-                    std::vector<NodeID> &leg_packed_path_forward,
-                    std::vector<NodeID> &leg_packed_path_reverse) const
-    {
-        BOOST_ASSERT(source_phantom.forward_node_id == target_phantom.forward_node_id);
-        BOOST_ASSERT(source_phantom.reverse_node_id == target_phantom.reverse_node_id);
-
-        if (search_forward_node)
-        {
-            forward_heap.Clear();
-            reverse_heap.Clear();
-
-            auto node_id = source_phantom.forward_node_id;
-
-            for (const auto edge : super::facade->GetAdjacentEdgeRange(node_id))
-            {
-                const auto &data = super::facade->GetEdgeData(edge);
-                if (data.forward)
-                {
-                    auto target = super::facade->GetTarget(edge);
-                    auto offset = total_distance_to_forward + data.distance -
-                                  source_phantom.GetForwardWeightPlusOffset();
-                    forward_heap.Insert(target, offset, target);
-                }
-
-                if (data.backward)
-                {
-                    auto target = super::facade->GetTarget(edge);
-                    auto offset = data.distance + target_phantom.GetForwardWeightPlusOffset();
-                    reverse_heap.Insert(target, offset, target);
-                }
-            }
-
-            BOOST_ASSERT(forward_heap.Size() > 0);
-            BOOST_ASSERT(reverse_heap.Size() > 0);
-            super::Search(forward_heap, reverse_heap, new_total_distance_to_forward,
-                          leg_packed_path_forward);
-
-            // insert node to both endpoints to close the leg
-            leg_packed_path_forward.push_back(node_id);
-            std::reverse(leg_packed_path_forward.begin(), leg_packed_path_forward.end());
-            leg_packed_path_forward.push_back(node_id);
-            std::reverse(leg_packed_path_forward.begin(), leg_packed_path_forward.end());
-        }
-
-        if (search_reverse_node)
-        {
-            forward_heap.Clear();
-            reverse_heap.Clear();
-
-            auto node_id = source_phantom.reverse_node_id;
-
-            for (const auto edge : super::facade->GetAdjacentEdgeRange(node_id))
-            {
-                const auto &data = super::facade->GetEdgeData(edge);
-                if (data.forward)
-                {
-                    auto target = super::facade->GetTarget(edge);
-                    auto offset = total_distance_to_reverse + data.distance -
-                                  source_phantom.GetReverseWeightPlusOffset();
-                    forward_heap.Insert(target, offset, target);
-                }
-
-                if (data.backward)
-                {
-                    auto target = super::facade->GetTarget(edge);
-                    auto offset = data.distance + target_phantom.GetReverseWeightPlusOffset();
-                    reverse_heap.Insert(target, offset, target);
-                }
-            }
-
-            BOOST_ASSERT(forward_heap.Size() > 0);
-            BOOST_ASSERT(reverse_heap.Size() > 0);
-            super::Search(forward_heap, reverse_heap, new_total_distance_to_reverse,
-                          leg_packed_path_reverse);
-
-            // insert node to both endpoints to close the leg
-            leg_packed_path_reverse.push_back(node_id);
-            std::reverse(leg_packed_path_reverse.begin(), leg_packed_path_reverse.end());
-            leg_packed_path_reverse.push_back(node_id);
-            std::reverse(leg_packed_path_reverse.begin(), leg_packed_path_reverse.end());
-        }
+        super::Search(forward_heap, reverse_heap, new_total_distance, leg_packed_path,
+                      forceLoop(FORWARD_DIRECTION, source_phantom, target_phantom),
+                      forceLoop(REVERSE_DIRECTION, source_phantom, target_phantom));
     }
 
     // searches shortest path between:
@@ -227,8 +142,9 @@ class ShortestPathRouting final
             }
             BOOST_ASSERT(forward_heap.Size() > 0);
             BOOST_ASSERT(reverse_heap.Size() > 0);
-            super::Search(forward_heap, reverse_heap, new_total_distance_to_forward,
-                          leg_packed_path_forward);
+            super::Search(
+                forward_heap, reverse_heap, new_total_distance_to_forward, leg_packed_path_forward,
+                forceLoop(FORWARD_DIRECTION, source_phantom, target_phantom), DO_NOT_FORCE_LOOP);
         }
 
         if (search_to_reverse_node)
@@ -255,7 +171,8 @@ class ShortestPathRouting final
             BOOST_ASSERT(forward_heap.Size() > 0);
             BOOST_ASSERT(reverse_heap.Size() > 0);
             super::Search(forward_heap, reverse_heap, new_total_distance_to_reverse,
-                          leg_packed_path_reverse);
+                          leg_packed_path_reverse, DO_NOT_FORCE_LOOP,
+                          forceLoop(REVERSE_DIRECTION, source_phantom, target_phantom));
         }
     }
 
@@ -336,19 +253,6 @@ class ShortestPathRouting final
             BOOST_ASSERT(!search_from_reverse_node ||
                          source_phantom.reverse_node_id != SPECIAL_NODEID);
 
-            if (source_phantom.forward_node_id == target_phantom.forward_node_id &&
-                source_phantom.GetForwardWeightPlusOffset() >
-                    target_phantom.GetForwardWeightPlusOffset())
-            {
-                search_to_forward_node = search_from_reverse_node;
-            }
-            if (source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
-                source_phantom.GetReverseWeightPlusOffset() >
-                    target_phantom.GetReverseWeightPlusOffset())
-            {
-                search_to_reverse_node = search_from_forward_node;
-            }
-
             BOOST_ASSERT(search_from_forward_node || search_from_reverse_node);
 
             if (search_to_reverse_node || search_to_forward_node)
@@ -384,18 +288,6 @@ class ShortestPathRouting final
                            new_total_distance_to_reverse, packed_leg_to_forward,
                            packed_leg_to_reverse);
                 }
-            }
-            else
-            {
-                search_to_forward_node = target_phantom.forward_node_id != SPECIAL_NODEID;
-                search_to_reverse_node = target_phantom.reverse_node_id != SPECIAL_NODEID;
-                BOOST_ASSERT(search_from_reverse_node == search_to_reverse_node);
-                BOOST_ASSERT(search_from_forward_node == search_to_forward_node);
-                SearchLoop(forward_heap, reverse_heap, search_from_forward_node,
-                           search_from_reverse_node, source_phantom, target_phantom,
-                           total_distance_to_forward, total_distance_to_reverse,
-                           new_total_distance_to_forward, new_total_distance_to_reverse,
-                           packed_leg_to_forward, packed_leg_to_reverse);
             }
 
             // No path found for both target nodes?

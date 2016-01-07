@@ -9,6 +9,7 @@
 #include "extractor/scripting_environment.hpp"
 
 #include "extractor/raster_source.hpp"
+#include "util/io.hpp"
 #include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
@@ -46,6 +47,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <bitset>
 
 namespace osrm
 {
@@ -71,7 +73,7 @@ namespace extractor
  * graph
  *
  */
-int extractor::run()
+int Extractor::run()
 {
     try
     {
@@ -265,15 +267,24 @@ int extractor::run()
         std::vector<EdgeBasedNode> node_based_edge_list;
         util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
         std::vector<bool> node_is_startpoint;
+        std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
-        auto graph_size =
-            BuildEdgeExpandedGraph(internal_to_external_node_map, node_based_edge_list,
-                                   node_is_startpoint, edge_based_edge_list);
+        auto graph_size = BuildEdgeExpandedGraph(internal_to_external_node_map,
+                                                 node_based_edge_list, node_is_startpoint,
+                                                 edge_based_node_weights, edge_based_edge_list);
 
         auto number_of_node_based_nodes = graph_size.first;
         auto max_edge_id = graph_size.second;
 
         TIMER_STOP(expansion);
+
+        util::SimpleLogger().Write() << "Saving edge-based node weights to file.";
+        TIMER_START(timer_write_node_weights);
+        util::serializeVector(config.edge_based_node_weights_output_path,
+                                  edge_based_node_weights);
+        TIMER_STOP(timer_write_node_weights);
+        util::SimpleLogger().Write() << "Done writing. (" << TIMER_SEC(timer_write_node_weights)
+                                     << ")";
 
         util::SimpleLogger().Write() << "building r-tree ...";
         TIMER_START(rtree);
@@ -309,7 +320,7 @@ int extractor::run()
     \brief Setups scripting environment (lua-scripting)
     Also initializes speed profile.
 */
-void extractor::SetupScriptingEnvironment(lua_State *lua_state,
+void Extractor::SetupScriptingEnvironment(lua_State *lua_state,
                                           SpeedProfileProperties &speed_profile)
 {
     // open utility libraries string library;
@@ -347,7 +358,7 @@ void extractor::SetupScriptingEnvironment(lua_State *lua_state,
     speed_profile.has_turn_penalty_function = util::lua_function_exists(lua_state, "turn_function");
 }
 
-void extractor::FindComponents(unsigned max_edge_id,
+void Extractor::FindComponents(unsigned max_edge_id,
                                const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
                                std::vector<EdgeBasedNode> &input_nodes) const
 {
@@ -425,7 +436,7 @@ void extractor::FindComponents(unsigned max_edge_id,
 /**
   \brief Build load restrictions from .restriction file
   */
-std::shared_ptr<RestrictionMap> extractor::LoadRestrictionMap()
+std::shared_ptr<RestrictionMap> Extractor::LoadRestrictionMap()
 {
     boost::filesystem::ifstream input_stream(config.restriction_file_name,
                                              std::ios::in | std::ios::binary);
@@ -442,7 +453,7 @@ std::shared_ptr<RestrictionMap> extractor::LoadRestrictionMap()
   \brief Load node based graph from .osrm file
   */
 std::shared_ptr<util::NodeBasedDynamicGraph>
-extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
+Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
                               std::unordered_set<NodeID> &traffic_lights,
                               std::vector<QueryNode> &internal_to_external_node_map)
 {
@@ -483,9 +494,10 @@ extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
 std::pair<std::size_t, std::size_t>
-extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
+Extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,
+                                  std::vector<EdgeWeight> &edge_based_node_weights,
                                   util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
 {
     lua_State *lua_state = luaL_newstate();
@@ -526,6 +538,7 @@ extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
+    edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
     auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
 
     const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
@@ -535,7 +548,7 @@ extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
 /**
   \brief Writing info on original (node-based) nodes
  */
-void extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map)
+void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map)
 {
     boost::filesystem::ofstream node_stream(config.node_output_path, std::ios::binary);
     const unsigned size_of_mapping = internal_to_external_node_map.size();
@@ -553,7 +566,7 @@ void extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_exter
 
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
-void extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
+void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
                            std::vector<bool> node_is_startpoint,
                            const std::vector<QueryNode> &internal_to_external_node_map)
 {
@@ -589,7 +602,7 @@ void extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
                                  << " seconds";
 }
 
-void extractor::WriteEdgeBasedGraph(
+void Extractor::WriteEdgeBasedGraph(
     std::string const &output_file_filename,
     size_t const max_edge_id,
     util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
@@ -600,7 +613,8 @@ void extractor::WriteEdgeBasedGraph(
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
 
-    std::cout << "[extractor] Writing edge-based-graph egdes       ... " << std::flush;
+    util::SimpleLogger().Write() << "[extractor] Writing edge-based-graph egdes       ... "
+                                 << std::flush;
     TIMER_START(write_edges);
 
     size_t number_of_used_edges = edge_based_edge_list.size();
@@ -613,7 +627,7 @@ void extractor::WriteEdgeBasedGraph(
     }
 
     TIMER_STOP(write_edges);
-    std::cout << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
+    util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
 
     util::SimpleLogger().Write() << "Processed " << number_of_used_edges << " edges";
     file_out_stream.close();

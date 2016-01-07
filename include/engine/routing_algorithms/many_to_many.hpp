@@ -139,14 +139,21 @@ class ManyToManyRouting final
                 // get target id from bucket entry
                 const unsigned target_id = current_bucket.target_id;
                 const int target_distance = current_bucket.distance;
-                const EdgeWeight current_distance =
-                    (*result_table)[source_id * number_of_targets + target_id];
+                auto &current_distance = (*result_table)[source_id * number_of_targets + target_id];
                 // check if new distance is better
                 const EdgeWeight new_distance = source_distance + target_distance;
-                if (new_distance >= 0 && new_distance < current_distance)
+                if (new_distance < 0)
                 {
-                    (*result_table)[source_id * number_of_targets + target_id] =
-                        (source_distance + target_distance);
+                    const EdgeWeight loop_weight = super::GetLoopWeight(node);
+                    const int new_distance_with_loop = new_distance + loop_weight;
+                    if (loop_weight != INVALID_EDGE_WEIGHT && new_distance_with_loop >= 0)
+                    {
+                        current_distance = std::min(current_distance, new_distance_with_loop);
+                    }
+                }
+                else if (new_distance < current_distance)
+                {
+                    (*result_table)[source_id * number_of_targets + target_id] = new_distance;
                 }
             }
         }

@@ -67,6 +67,12 @@ void EdgeBasedGraphFactory::GetStartPointMarkers(std::vector<bool> &node_is_star
     swap(m_edge_based_node_is_startpoint, node_is_startpoint);
 }
 
+void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights)
+{
+    using std::swap; // Koenig swap
+    swap(m_edge_based_node_weights, output_node_weights);
+}
+
 unsigned EdgeBasedGraphFactory::GetHighestEdgeID() { return m_max_edge_id; }
 
 void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v)
@@ -91,6 +97,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     {
         return;
     }
+
+    if (forward_data.edge_id != SPECIAL_NODEID && reverse_data.edge_id == SPECIAL_NODEID)
+        m_edge_based_node_weights[forward_data.edge_id] = INVALID_EDGE_WEIGHT;
 
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
                  m_compressed_edge_container.HasEntryForID(edge_id_2));
@@ -231,6 +240,7 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
     TIMER_STOP(renumber);
 
     TIMER_START(generate_nodes);
+    m_edge_based_node_weights.reserve(m_max_edge_id + 1);
     GenerateEdgeExpandedNodes();
     TIMER_STOP(generate_nodes);
 
@@ -269,6 +279,11 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
             {
                 continue;
             }
+
+            // oneway streets always require this self-loop. Other streets only if a u-turn plus
+            // traversal
+            // of the street takes longer than the loop
+            m_edge_based_node_weights.push_back(edge_data.distance + speed_profile.u_turn_penalty);
 
             BOOST_ASSERT(numbered_edges_count < m_node_based_graph->GetNumberOfEdges());
             edge_data.edge_id = numbered_edges_count;
@@ -321,6 +336,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     }
 
     BOOST_ASSERT(m_edge_based_node_list.size() == m_edge_based_node_is_startpoint.size());
+    BOOST_ASSERT(m_max_edge_id+1 == m_edge_based_node_weights.size());
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                                  << " nodes in edge-expanded graph";

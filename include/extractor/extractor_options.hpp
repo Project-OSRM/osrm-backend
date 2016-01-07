@@ -35,6 +35,11 @@ struct ExtractorConfig
     std::string rtree_nodes_output_path;
     std::string rtree_leafs_output_path;
 
+    // every edge based node represents a segment in the original graph. During contraciton we need
+    // to know about this segment length, as we might have to add self-loops in cases of shorter
+    // parts than the segment represents itself
+    std::string edge_based_node_weights_output_path;
+
     unsigned requested_num_threads;
     unsigned small_component_size;
 

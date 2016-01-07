@@ -11,6 +11,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <cstddef>
+
 #include <vector>
 
 struct lua_State;
@@ -43,6 +45,7 @@ class Prepare
     void ContractGraph(const unsigned max_edge_id,
                        util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                        util::DeallocatingVector<QueryEdge> &contracted_edge_list,
+                       std::vector<EdgeWeight> &&node_weights,
                        std::vector<bool> &is_core_node,
                        std::vector<float> &node_levels) const;
     void WriteCoreNodeMarker(std::vector<bool> &&is_core_node) const;

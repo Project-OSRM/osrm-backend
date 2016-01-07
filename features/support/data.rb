@@ -263,7 +263,7 @@ def extract_data
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
     begin
-      ["osrm","osrm.names","osrm.restrictions","osrm.ebg","osrm.edges","osrm.fileIndex","osrm.geometry","osrm.nodes","osrm.ramIndex"].each do |file|
+      ["osrm","osrm.names","osrm.restrictions","osrm.ebg","osrm.enw","osrm.edges","osrm.fileIndex","osrm.geometry","osrm.nodes","osrm.ramIndex"].each do |file|
         log "Renaming #{osm_file}.#{file} to #{extracted_file}.#{file}", :preprocess
         File.rename "#{osm_file}.#{file}", "#{extracted_file}.#{file}"
       end

@@ -62,10 +62,11 @@ class EdgeBasedGraphFactory
              const bool generate_edge_lookup);
 #endif
 
+    //The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
-
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
+    void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
 
     unsigned GetHighestEdgeID();
 
@@ -80,6 +81,11 @@ class EdgeBasedGraphFactory
     //! maps index from m_edge_based_node_list to ture/false if the node is an entry point to the
     //! graph
     std::vector<bool> m_edge_based_node_is_startpoint;
+
+    //! node weights that indicate the length of the segment (node based) represented by the
+    //! edge-based node
+    std::vector<EdgeWeight> m_edge_based_node_weights;
+
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;

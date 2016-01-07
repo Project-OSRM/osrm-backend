@@ -142,6 +142,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
     extractor_config.geometry_output_path = input_path.string();
     extractor_config.edge_output_path = input_path.string();
     extractor_config.edge_graph_output_path = input_path.string();
+    extractor_config.edge_based_node_weights_output_path = input_path.string();
     extractor_config.node_output_path = input_path.string();
     extractor_config.rtree_nodes_output_path = input_path.string();
     extractor_config.rtree_leafs_output_path = input_path.string();
@@ -173,6 +174,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.node_output_path.append(".osrm.nodes");
             extractor_config.edge_output_path.append(".osrm.edges");
             extractor_config.edge_graph_output_path.append(".osrm.ebg");
+            extractor_config.edge_based_node_weights_output_path.append(".osrm.enw");
             extractor_config.rtree_nodes_output_path.append(".osrm.ramIndex");
             extractor_config.rtree_leafs_output_path.append(".osrm.fileIndex");
             extractor_config.edge_segment_lookup_path.append(".osrm.edge_segment_lookup");
@@ -188,6 +190,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
             extractor_config.node_output_path.replace(pos, 5, ".osrm.nodes");
             extractor_config.edge_output_path.replace(pos, 5, ".osrm.edges");
             extractor_config.edge_graph_output_path.replace(pos, 5, ".osrm.ebg");
+            extractor_config.edge_based_node_weights_output_path.replace(pos, 5, ".osrm.enw");
             extractor_config.rtree_nodes_output_path.replace(pos, 5, ".osrm.ramIndex");
             extractor_config.rtree_leafs_output_path.replace(pos, 5, ".osrm.fileIndex");
             extractor_config.edge_segment_lookup_path.replace(pos, 5, ".osrm.edge_segment_lookup");
@@ -204,6 +207,7 @@ void ExtractorOptions::GenerateOutputFilesNames(ExtractorConfig &extractor_confi
         extractor_config.node_output_path.replace(pos, 8, ".osrm.nodes");
         extractor_config.edge_output_path.replace(pos, 8, ".osrm.edges");
         extractor_config.edge_graph_output_path.replace(pos, 8, ".osrm.ebg");
+        extractor_config.edge_based_node_weights_output_path.replace(pos, 8, ".osrm.enw");
         extractor_config.rtree_nodes_output_path.replace(pos, 8, ".osrm.ramIndex");
         extractor_config.rtree_leafs_output_path.replace(pos, 8, ".osrm.fileIndex");
         extractor_config.edge_segment_lookup_path.replace(pos, 8, ".osrm.edge_segment_lookup");

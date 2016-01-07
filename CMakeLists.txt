@@ -44,7 +44,7 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests)
+add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests io-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
@@ -61,6 +61,7 @@ file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 file(GLOB ExtractorTestsGlob unit_tests/extractor/*.cpp)
 file(GLOB EngineTestsGlob unit_tests/engine/*.cpp)
 file(GLOB UtilTestsGlob unit_tests/util/*.cpp)
+file(GLOB IOTestsGlob unit_tests/io/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
 add_library(EXTRACTOR OBJECT ${ExtractorGlob})
@@ -85,6 +86,7 @@ target_link_libraries(osrm-routed OSRM)
 add_executable(engine-tests EXCLUDE_FROM_ALL unit_tests/engine_tests.cpp ${EngineTestsGlob} $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
 add_executable(extractor-tests EXCLUDE_FROM_ALL unit_tests/extractor_tests.cpp ${ExtractorTestsGlob} $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTestsGlob} $<TARGET_OBJECTS:PHANTOM> $<TARGET_OBJECTS:UTIL>)
+add_executable(io-tests EXCLUDE_FROM_ALL unit_tests/io_tests.cpp ${IOTestsGlob} $<TARGET_OBJECTS:UTIL>)
 
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:PHANTOM>)
@@ -248,6 +250,7 @@ target_link_libraries(engine-tests ${Boost_LIBRARIES})
 target_link_libraries(extractor-tests ${Boost_LIBRARIES})
 target_link_libraries(util-tests ${Boost_LIBRARIES})
 target_link_libraries(rtree-bench ${Boost_LIBRARIES})
+target_link_libraries(io-tests ${Boost_LIBRARIES})
 
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
