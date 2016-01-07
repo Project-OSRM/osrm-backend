@@ -118,7 +118,7 @@ install:
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
 
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake boost libzip libstxxl libxml2 lua51 luabind tbb GDAL
+      brew install cmake boost libzip libstxxl libxml2 lua51 luabind tbb GDAL md5sha1sum
     fi
 
 before_script:
@@ -135,8 +135,18 @@ script:
   - make --jobs=2
   - make tests --jobs=2
   - make benchmarks
+  - sudo make install
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      sudo ldconfig
+    fi
   - ./extractor-tests
   - ./engine-tests
   - ./util-tests
   - cd ..
   - cucumber -p verify
+  - make -C test/data
+  - mkdir example/build && cd example/build
+  - cmake ..
+  - make
+  - ./osrm-example ../../test/data/berlin-latest.osrm

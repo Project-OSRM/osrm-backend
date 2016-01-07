@@ -96,7 +96,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             {
                 PhantomNode current_phantom_node;
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
-                if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
+                if (current_phantom_node.IsValid(facade->GetNumberOfNodes()))
                 {
                     if (route_parameters.is_source[i])
                     {
@@ -130,7 +130,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                     facade->NearestPhantomNodeWithAlternativeFromBigComponent(
                         route_parameters.coordinates[i], bearing, range);
                 // we didn't found a fitting node, return error
-                if (!phantom_node_source_out_iter->first.is_valid(facade->GetNumberOfNodes()))
+                if (!phantom_node_source_out_iter->first.IsValid(facade->GetNumberOfNodes()))
                 {
                     json_result.values["status_message"] =
                         std::string("Could not find a matching segment for coordinate ") +
@@ -153,7 +153,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
                     facade->NearestPhantomNodeWithAlternativeFromBigComponent(
                         route_parameters.coordinates[i], bearing, range);
                 // we didn't found a fitting node, return error
-                if (!phantom_node_target_out_iter->first.is_valid(facade->GetNumberOfNodes()))
+                if (!phantom_node_target_out_iter->first.IsValid(facade->GetNumberOfNodes()))
                 {
                     json_result.values["status_message"] =
                         std::string("Could not find a matching segment for coordinate ") +

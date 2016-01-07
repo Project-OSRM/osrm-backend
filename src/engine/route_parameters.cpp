@@ -3,7 +3,8 @@
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-#include "osrm/route_parameters.hpp"
+#include "engine/route_parameters.hpp"
+#include "util/coordinate.hpp"
 
 #include "engine/polyline_compressor.hpp"
 

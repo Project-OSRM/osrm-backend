@@ -44,7 +44,7 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests io-tests)
+add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
@@ -56,6 +56,7 @@ configure_file(
 file(GLOB UtilGlob src/util/*.cpp)
 file(GLOB ExtractorGlob src/extractor/*.cpp)
 file(GLOB ContractorGlob src/contractor/*.cpp)
+file(GLOB StorageGlob src/storage/*.cpp)
 file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
 file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 file(GLOB ExtractorTestsGlob unit_tests/extractor/*.cpp)
@@ -66,30 +67,29 @@ file(GLOB IOTestsGlob unit_tests/io/*.cpp)
 add_library(UTIL OBJECT ${UtilGlob})
 add_library(EXTRACTOR OBJECT ${ExtractorGlob})
 add_library(CONTRACTOR OBJECT ${ContractorGlob})
+add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
 add_library(SERVER OBJECT ${ServerGlob})
-add_library(GRAPH OBJECT src/extractor/external_memory_node.cpp)
-add_library(PHANTOM OBJECT src/engine/phantom_node.cpp)
 
 add_dependencies(UTIL FingerPrintConfigure)
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
-add_executable(osrm-extract src/tools/extract.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
-add_executable(osrm-prepare src/tools/contract.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
-add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
-add_executable(osrm-datastore src/tools/datastore.cpp $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
-add_library(OSRM $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
-
-target_link_libraries(osrm-routed OSRM)
+add_executable(osrm-extract src/tools/extract.cpp)
+add_executable(osrm-prepare src/tools/contract.cpp)
+add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
+add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
+add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_extract $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
 # Unit tests
-add_executable(engine-tests EXCLUDE_FROM_ALL unit_tests/engine_tests.cpp ${EngineTestsGlob} $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
+add_executable(engine-tests EXCLUDE_FROM_ALL unit_tests/engine_tests.cpp ${EngineTestsGlob} $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
 add_executable(extractor-tests EXCLUDE_FROM_ALL unit_tests/extractor_tests.cpp ${ExtractorTestsGlob} $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
-add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTestsGlob} $<TARGET_OBJECTS:PHANTOM> $<TARGET_OBJECTS:UTIL>)
-add_executable(io-tests EXCLUDE_FROM_ALL unit_tests/io_tests.cpp ${IOTestsGlob} $<TARGET_OBJECTS:UTIL>)
+add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTestsGlob} $<TARGET_OBJECTS:UTIL>)
 
 # Benchmarks
-add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:PHANTOM>)
+add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL>)
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -221,10 +221,7 @@ if(APPLE)
 endif()
 
 if(UNIX AND NOT APPLE)
-  target_link_libraries(osrm-prepare rt)
-  target_link_libraries(osrm-datastore rt)
-  target_link_libraries(OSRM rt)
-  target_link_libraries(engine-tests rt)
+  set(MAYBE_RT_LIBRARY rt)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
@@ -232,8 +229,6 @@ set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/includ
 find_package(Osmium REQUIRED COMPONENTS io)
 include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
-target_link_libraries(osrm-extract ${OSMIUM_LIBRARIES})
-target_link_libraries(extractor-tests ${OSMIUM_LIBRARIES})
 
 find_package(Boost 1.49.0 COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 if(NOT Boost_FOUND)
@@ -241,72 +236,29 @@ if(NOT Boost_FOUND)
 endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-target_link_libraries(OSRM ${Boost_LIBRARIES})
-target_link_libraries(osrm-extract ${Boost_LIBRARIES})
-target_link_libraries(osrm-prepare ${Boost_LIBRARIES})
-target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
-target_link_libraries(osrm-datastore ${Boost_LIBRARIES})
-target_link_libraries(engine-tests ${Boost_LIBRARIES})
-target_link_libraries(extractor-tests ${Boost_LIBRARIES})
-target_link_libraries(util-tests ${Boost_LIBRARIES})
-target_link_libraries(rtree-bench ${Boost_LIBRARIES})
-target_link_libraries(io-tests ${Boost_LIBRARIES})
-
 find_package(Threads REQUIRED)
-target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(osrm-datastore ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(osrm-prepare ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(OSRM ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(engine-tests ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(extractor-tests ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(util-tests ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(rtree-bench ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(TBB REQUIRED)
+include_directories(SYSTEM ${TBB_INCLUDE_DIR})
 if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
   set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
 endif()
-target_link_libraries(osrm-datastore ${TBB_LIBRARIES})
-target_link_libraries(osrm-extract ${TBB_LIBRARIES})
-target_link_libraries(osrm-prepare ${TBB_LIBRARIES})
-target_link_libraries(osrm-routed ${TBB_LIBRARIES})
-target_link_libraries(engine-tests ${TBB_LIBRARIES})
-target_link_libraries(extractor-tests ${TBB_LIBRARIES})
-target_link_libraries(util-tests ${TBB_LIBRARIES})
-target_link_libraries(rtree-bench ${TBB_LIBRARIES})
-include_directories(SYSTEM ${TBB_INCLUDE_DIR})
 
 find_package( Luabind REQUIRED )
 include(check_luabind)
-
 include_directories(SYSTEM ${LUABIND_INCLUDE_DIR})
-target_link_libraries(osrm-extract ${LUABIND_LIBRARY})
-target_link_libraries(osrm-prepare ${LUABIND_LIBRARY})
-target_link_libraries(extractor-tests ${LUABIND_LIBRARY})
 
+set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
 if(LUAJIT_FOUND)
-  target_link_libraries(osrm-extract ${LUAJIT_LIBRARIES})
-  target_link_libraries(osrm-prepare ${LUAJIT_LIBRARIES})
-  target_link_libraries(extractor-tests ${LUAJIT_LIBRARY})
-else()
-  target_link_libraries(osrm-extract ${LUA_LIBRARY})
-  target_link_libraries(osrm-prepare ${LUA_LIBRARY})
-  target_link_libraries(extractor-tests ${LUA_LIBRARY})
+  set(USED_LUA_LIBRARIES, LUAJIT_LIBRARIES)
 endif()
 include_directories(SYSTEM ${LUA_INCLUDE_DIR})
 
 find_package(EXPAT REQUIRED)
 include_directories(SYSTEM ${EXPAT_INCLUDE_DIRS})
-target_link_libraries(osrm-extract ${EXPAT_LIBRARIES})
-target_link_libraries(extractor-tests ${EXPAT_LIBRARY})
 
 find_package(STXXL REQUIRED)
 include_directories(SYSTEM ${STXXL_INCLUDE_DIR})
-target_link_libraries(OSRM ${STXXL_LIBRARY})
-target_link_libraries(osrm-extract ${STXXL_LIBRARY})
-target_link_libraries(osrm-prepare ${STXXL_LIBRARY})
-target_link_libraries(extractor-tests ${STXXL_LIBRARY})
-target_link_libraries(util-tests ${STXXL_LIBRARY})
 
 set(OpenMP_FIND_QUIETLY ON)
 find_package(OpenMP)
@@ -317,14 +269,9 @@ endif()
 
 find_package(BZip2 REQUIRED)
 include_directories(SYSTEM ${BZIP_INCLUDE_DIRS})
-target_link_libraries(osrm-extract ${BZIP2_LIBRARIES})
-target_link_libraries(extractor-tests ${BZIP2_LIBRARIES})
 
 find_package(ZLIB REQUIRED)
 include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(osrm-extract ${ZLIB_LIBRARY})
-target_link_libraries(osrm-routed ${ZLIB_LIBRARY})
-target_link_libraries(extractor-tests ${ZLIB_LIBRARY})
 
 if (ENABLE_JSON_LOGGING)
   message(STATUS "Enabling json logging")
@@ -336,21 +283,71 @@ if (DEBUG_GEOMETRY)
   add_definitions(-DDEBUG_GEOMETRY)
 endif()
 
+
+# Binaries
+target_link_libraries(osrm-datastore osrm_store ${Boost_LIBRARIES})
+target_link_libraries(osrm-extract osrm_extract ${Boost_LIBRARIES})
+target_link_libraries(osrm-prepare osrm_contract ${Boost_LIBRARIES})
+target_link_libraries(osrm-routed osrm ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
+
+set(EXTRACTOR_LIBRARIES
+    ${BZIP2_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXPAT_LIBRARIES}
+    ${LUABIND_LIBRARY}
+    ${USED_LUA_LIBRARIES}
+    ${OSMIUM_LIBRARIES}
+    ${STXXL_LIBRARY}
+    ${TBB_LIBRARIES}
+    ${ZLIB_LIBRARY})
+set(CONTRACTOR_LIBRARIES
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${LUABIND_LIBRARY}
+    ${USED_LUA_LIBRARIES}
+    ${STXXL_LIBRARY}
+    ${TBB_LIBRARIES}
+    ${MAYBE_RT_LIBRARY})
+set(ENGINE_LIBRARIES
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${STXXL_LIBRARY}
+    ${TBB_LIBRARIES}
+    ${MAYBE_RT_LIBRARY})
+set(STORAGE_LIBRARIES
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${TBB_LIBRARIES}
+    ${MAYBE_RT_LIBRARY})
+set(UTIL_LIBRARIES
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${STXXL_LIBRARY}
+    ${TBB_LIBRARIES})
+# Libraries
+target_link_libraries(osrm ${ENGINE_LIBRARIES})
+target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
+target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
+target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
+# Tests
+target_link_libraries(engine-tests ${ENGINE_LIBRARIES})
+target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES})
+target_link_libraries(rtree-bench ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES})
+target_link_libraries(util-tests ${UTIL_LIBRARIES})
+
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   find_package(GDAL)
   if(GDAL_FOUND)
-    add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:GRAPH> $<TARGET_OBJECTS:UTIL>)
+    add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
     target_link_libraries(osrm-components ${TBB_LIBRARIES})
     include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
     target_link_libraries(osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES})
     install(TARGETS osrm-components DESTINATION bin)
   else()
-    message(FATAL_ERROR "libgdal and/or development headers not found")
+    message(WARNING "libgdal and/or development headers not found")
   endif()
-  add_executable(osrm-cli src/tools/simpleclient.cpp)
-  target_link_libraries(osrm-cli ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM)
-  target_link_libraries(osrm-cli ${TBB_LIBRARIES})
   add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
   target_link_libraries(osrm-io-benchmark ${Boost_LIBRARIES})
   add_executable(osrm-unlock-all src/tools/unlock_all_mutexes.cpp $<TARGET_OBJECTS:UTIL>)
@@ -358,20 +355,16 @@ if(BUILD_TOOLS)
   if(UNIX AND NOT APPLE)
     target_link_libraries(osrm-unlock-all rt)
   endif()
-  add_executable(osrm-check-hsgr src/tools/check-hsgr.cpp $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
+  add_executable(osrm-check-hsgr src/tools/check-hsgr.cpp $<TARGET_OBJECTS:UTIL>)
   target_link_libraries(osrm-check-hsgr ${Boost_LIBRARIES} ${TBB_LIBRARIES})
-  add_executable(osrm-springclean src/tools/springclean.cpp $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:GRAPH>)
+  add_executable(osrm-springclean src/tools/springclean.cpp $<TARGET_OBJECTS:UTIL>)
   target_link_libraries(osrm-springclean ${Boost_LIBRARIES})
 
-  install(TARGETS osrm-cli DESTINATION bin)
   install(TARGETS osrm-io-benchmark DESTINATION bin)
   install(TARGETS osrm-unlock-all DESTINATION bin)
   install(TARGETS osrm-check-hsgr DESTINATION bin)
   install(TARGETS osrm-springclean DESTINATION bin)
 endif()
-
-file(GLOB InstallGlob include/osrm/*.hpp)
-file(GLOB VariantGlob third_party/variant/*.hpp)
 
 # Add RPATH info to executables so that when they are run after being installed
 # (i.e., from /usr/local/bin/) the linker can find library dependencies. For
@@ -381,29 +374,35 @@ set_property(TARGET osrm-prepare PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-install(FILES ${InstallGlob} DESTINATION include/osrm)
+file(GLOB VariantGlob third_party/variant/*.hpp)
+file(GLOB LibraryGlob include/osrm/*.hpp)
+set(EngineHeader include/engine/engine.hpp include/engine/engine_config.hpp include/engine/route_parameters.hpp)
+set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp)
+set(ExtractorHeader include/extractor/extractor.hpp include/extractor/extractor_config.hpp)
+set(ContractorHeader include/contractor/contractor.hpp include/contractor/contractor_config.hpp)
+#set(StorageHeader include/storage/storage.hpp include/storage/storage_config.hpp)
+install(FILES ${EngineHeader} DESTINATION include/osrm/engine)
+install(FILES ${UtilHeader} DESTINATION include/osrm/util)
+install(FILES ${ExtractorHeader} DESTINATION include/osrm/extractor)
+install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
+install(FILES ${LibraryGlob} DESTINATION include/osrm)
 install(FILES ${VariantGlob} DESTINATION include/variant)
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-prepare DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
 install(TARGETS osrm-routed DESTINATION bin)
-install(TARGETS OSRM DESTINATION lib)
+install(TARGETS osrm DESTINATION lib)
+install(TARGETS osrm_extract DESTINATION lib)
+install(TARGETS osrm_contract DESTINATION lib)
+install(TARGETS osrm_store DESTINATION lib)
 
-list(GET Boost_LIBRARIES 1 BOOST_LIBRARY_FIRST)
-get_filename_component(BOOST_LIBRARY_LISTING "${BOOST_LIBRARY_FIRST}" PATH)
-set(BOOST_LIBRARY_LISTING "-L${BOOST_LIBRARY_LISTING}")
-foreach(lib ${Boost_LIBRARIES})
-  get_filename_component(BOOST_LIBRARY_NAME "${lib}" NAME_WE)
-  string(REPLACE "lib" "" BOOST_LIBRARY_NAME ${BOOST_LIBRARY_NAME})
-  set(BOOST_LIBRARY_LISTING "${BOOST_LIBRARY_LISTING} -l${BOOST_LIBRARY_NAME}")
-endforeach()
-list(GET TBB_LIBRARIES 1 TBB_LIBRARY_FIRST)
-get_filename_component(TBB_LIBRARY_LISTING "${TBB_LIBRARY_FIRST}" PATH)
-set(TBB_LIBRARY_LISTING "-L${TBB_LIBRARY_LISTING}")
-foreach(lib ${TBB_LIBRARIES})
-  get_filename_component(TBB_LIBRARY_NAME "${lib}" NAME_WE)
-  string(REPLACE "lib" "" TBB_LIBRARY_NAME ${TBB_LIBRARY_NAME})
-  set(TBB_LIBRARY_LISTING "${TBB_LIBRARY_LISTING} -l${TBB_LIBRARY_NAME}")
+list(GET ENGINE_LIBRARIES 1 ENGINE_LIBRARY_FIRST)
+foreach(lib ${ENGINE_LIBRARIES})
+  get_filename_component(ENGINE_LIBRARY_PATH "${ENGINE_LIBRARY_FIRST}" PATH)
+  get_filename_component(ENGINE_LIBRARY_NAME "${lib}" NAME_WE)
+  string(REPLACE "lib" "" ENGINE_LIBRARY_NAME ${ENGINE_LIBRARY_NAME})
+  string(REPLACE "-l" "" ENGINE_LIBRARY_NAME ${ENGINE_LIBRARY_NAME})
+  set(ENGINE_LIBRARY_LISTING "${ENGINE_LIBRARY_LISTING} -L${ENGINE_LIBRARY_PATH} -l${ENGINE_LIBRARY_NAME}")
 endforeach()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)

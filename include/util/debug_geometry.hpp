@@ -1,7 +1,7 @@
 #ifndef DEBUG_GEOMETRY_H
 #define DEBUG_GEOMETRY_H
 
-#include "contractor/contractor_options.hpp"
+#include "contractor/contractor_config.hpp"
 #include "extractor/query_node.hpp"
 
 #ifndef DEBUG_GEOMETRY

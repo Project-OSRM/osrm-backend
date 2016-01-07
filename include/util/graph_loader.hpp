@@ -39,7 +39,7 @@ unsigned loadRestrictionsFromFile(std::istream &input_stream,
     FingerPrint fingerprint_loaded;
     unsigned number_of_usable_restrictions = 0;
     input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
-    if (!fingerprint_loaded.TestPrepare(fingerprint_valid))
+    if (!fingerprint_loaded.TestContractor(fingerprint_valid))
     {
         SimpleLogger().Write(logWARNING) << ".restrictions was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
@@ -71,7 +71,7 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     FingerPrint fingerprint_loaded;
     input_stream.read(reinterpret_cast<char *>(&fingerprint_loaded), sizeof(FingerPrint));
 
-    if (!fingerprint_loaded.TestPrepare(fingerprint_valid))
+    if (!fingerprint_loaded.TestContractor(fingerprint_valid))
     {
         SimpleLogger().Write(logWARNING) << ".osrm was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";

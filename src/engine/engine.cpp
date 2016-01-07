@@ -1,4 +1,6 @@
-#include "engine/osrm_impl.hpp"
+#include "engine/engine.hpp"
+#include "engine/engine_config.hpp"
+#include "engine/route_parameters.hpp"
 
 #include "engine/plugins/distance_table.hpp"
 #include "engine/plugins/hello_world.hpp"
@@ -7,10 +9,12 @@
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/plugins/match.hpp"
+
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/internal_datafacade.hpp"
-#include "engine/datafacade/shared_barriers.hpp"
 #include "engine/datafacade/shared_datafacade.hpp"
+
+#include "storage/shared_barriers.hpp"
 #include "util/make_unique.hpp"
 #include "util/routed_options.hpp"
 #include "util/simple_logger.hpp"
@@ -18,10 +22,6 @@
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
-
-#include "osrm/libosrm_config.hpp"
-#include "osrm/osrm.hpp"
-#include "osrm/route_parameters.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -33,45 +33,45 @@ namespace osrm
 namespace engine
 {
 
-OSRM::OSRM_impl::OSRM_impl(LibOSRMConfig &lib_config)
+Engine::Engine(EngineConfig &config)
 {
-    if (lib_config.use_shared_memory)
+    if (config.use_shared_memory)
     {
-        barrier = util::make_unique<datafacade::SharedBarriers>();
+        barrier = util::make_unique<storage::SharedBarriers>();
         query_data_facade = new datafacade::SharedDataFacade<contractor::QueryEdge::EdgeData>();
     }
     else
     {
         // populate base path
-        util::populate_base_path(lib_config.server_paths);
+        util::populate_base_path(config.server_paths);
         query_data_facade = new datafacade::InternalDataFacade<contractor::QueryEdge::EdgeData>(
-            lib_config.server_paths);
+            config.server_paths);
     }
 
     using DataFacade = datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData>;
 
     // The following plugins handle all requests.
     RegisterPlugin(new plugins::DistanceTablePlugin<DataFacade>(
-        query_data_facade, lib_config.max_locations_distance_table));
+        query_data_facade, config.max_locations_distance_table));
     RegisterPlugin(new plugins::HelloWorldPlugin());
     RegisterPlugin(new plugins::NearestPlugin<DataFacade>(query_data_facade));
     RegisterPlugin(new plugins::MapMatchingPlugin<DataFacade>(
-        query_data_facade, lib_config.max_locations_map_matching));
+        query_data_facade, config.max_locations_map_matching));
     RegisterPlugin(new plugins::TimestampPlugin<DataFacade>(query_data_facade));
     RegisterPlugin(new plugins::ViaRoutePlugin<DataFacade>(query_data_facade,
-                                                           lib_config.max_locations_viaroute));
+                                                           config.max_locations_viaroute));
     RegisterPlugin(
-        new plugins::RoundTripPlugin<DataFacade>(query_data_facade, lib_config.max_locations_trip));
+        new plugins::RoundTripPlugin<DataFacade>(query_data_facade, config.max_locations_trip));
 }
 
-void OSRM::OSRM_impl::RegisterPlugin(plugins::BasePlugin *raw_plugin_ptr)
+void Engine::RegisterPlugin(plugins::BasePlugin *raw_plugin_ptr)
 {
     std::unique_ptr<plugins::BasePlugin> plugin_ptr(raw_plugin_ptr);
     util::SimpleLogger().Write() << "loaded plugin: " << plugin_ptr->GetDescriptor();
     plugin_map[plugin_ptr->GetDescriptor()] = std::move(plugin_ptr);
 }
 
-int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters,
+int Engine::RunQuery(const RouteParameters &route_parameters,
                               util::json::Object &json_result)
 {
     const auto &plugin_iterator = plugin_map.find(route_parameters.service);
@@ -99,7 +99,7 @@ int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters,
 }
 
 // decrease number of concurrent queries
-void OSRM::OSRM_impl::decrease_concurrent_query_count()
+void Engine::decrease_concurrent_query_count()
 {
     if (!barrier)
     {
@@ -121,7 +121,7 @@ void OSRM::OSRM_impl::decrease_concurrent_query_count()
 }
 
 // increase number of concurrent queries
-void OSRM::OSRM_impl::increase_concurrent_query_count()
+void Engine::increase_concurrent_query_count()
 {
     if (!barrier)
     {
@@ -147,15 +147,5 @@ void OSRM::OSRM_impl::increase_concurrent_query_count()
         ->CheckAndReloadFacade();
 }
 
-// proxy code for compilation firewall
-OSRM::OSRM(LibOSRMConfig &lib_config) : OSRM_pimpl_(util::make_unique<OSRM_impl>(lib_config)) {}
-
-// needed because unique_ptr needs the size of OSRM_impl for delete
-OSRM::~OSRM() {}
-
-int OSRM::RunQuery(const RouteParameters &route_parameters, util::json::Object &json_result)
-{
-    return OSRM_pimpl_->RunQuery(route_parameters, json_result);
-}
 }
 }

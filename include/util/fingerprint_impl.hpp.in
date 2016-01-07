@@ -62,7 +62,7 @@ bool FingerPrint::TestGraphUtil(const FingerPrint &other) const
     return std::equal(md5_graph, md5_graph + 32, other.md5_graph);
 }
 
-bool FingerPrint::TestPrepare(const FingerPrint &other) const
+bool FingerPrint::TestContractor(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {

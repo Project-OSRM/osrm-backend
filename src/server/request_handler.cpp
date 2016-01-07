@@ -10,8 +10,8 @@
 #include "util/xml_renderer.hpp"
 #include "util/typedefs.hpp"
 
-#include "osrm/route_parameters.hpp"
-#include "osrm/json_container.hpp"
+#include "engine/route_parameters.hpp"
+#include "util/json_container.hpp"
 #include "osrm/osrm.hpp"
 
 #include <ctime>

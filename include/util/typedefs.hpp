@@ -1,7 +1,7 @@
 #ifndef TYPEDEFS_H
 #define TYPEDEFS_H
 
-#include "osrm/strong_typedef.hpp"
+#include "util/strong_typedef.hpp"
 
 #include <limits>
 #include <cstddef>

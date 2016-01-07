@@ -10,16 +10,20 @@ namespace osrm
 namespace contractor
 {
 
-enum class return_code : unsigned
-{
-    ok,
-    fail,
-    exit
-};
-
 struct ContractorConfig
 {
     ContractorConfig() : requested_num_threads(0) {}
+
+    // Infer the output names from the path of the .osrm file
+    void UseDefaultOutputNames()
+    {
+        level_output_path = osrm_input_path.string() + ".level";
+        core_output_path = osrm_input_path.string() + ".core";
+        graph_output_path = osrm_input_path.string() + ".hsgr";
+        edge_based_graph_path = osrm_input_path.string() + ".ebg";
+        edge_segment_lookup_path = osrm_input_path.string() + ".edge_segment_lookup";
+        edge_penalty_path = osrm_input_path.string() + ".edge_penalties";
+    }
 
     boost::filesystem::path config_file_path;
     boost::filesystem::path osrm_input_path;
@@ -47,13 +51,6 @@ struct ContractorConfig
 #ifdef DEBUG_GEOMETRY
     std::string debug_geometry_path;
 #endif
-};
-
-struct ContractorOptions
-{
-    static return_code ParseArguments(int argc, char *argv[], ContractorConfig &extractor_config);
-
-    static void GenerateOutputFilesNames(ContractorConfig &extractor_config);
 };
 }
 }

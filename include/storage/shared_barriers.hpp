@@ -6,11 +6,8 @@
 
 namespace osrm
 {
-namespace engine
+namespace storage
 {
-namespace datafacade
-{
-
 struct SharedBarriers
 {
 
@@ -36,7 +33,6 @@ struct SharedBarriers
     // Is there any query?
     int number_of_queries;
 };
-}
 }
 }
 

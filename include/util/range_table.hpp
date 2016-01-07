@@ -2,7 +2,6 @@
 #define RANGE_TABLE_HPP
 
 #include "util/integer_range.hpp"
-#include "datastore/shared_memory_factory.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 
 #include <fstream>

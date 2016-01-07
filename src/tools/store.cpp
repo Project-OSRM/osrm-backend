@@ -1,27 +1,19 @@
-#ifndef DATASTORE_OPTIONS_HPP
-#define DATASTORE_OPTIONS_HPP
-
-#include "util/version.hpp"
-#include "util/ini_file.hpp"
+#include "storage/storage.hpp"
 #include "util/osrm_exception.hpp"
 #include "util/simple_logger.hpp"
+#include "util/typedefs.hpp"
+#include "util/ini_file.hpp"
+#include "util/version.hpp"
 
-#include <boost/any.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
 
-#include <string>
-#include <unordered_map>
-
-namespace osrm
-{
-namespace util
-{
+using namespace osrm;
 
 // generate boost::program_options object for the routing part
-bool GenerateDataStoreOptions(const int argc,
+bool generateDataStoreOptions(const int argc,
                               const char *argv[],
-                              std::unordered_map<std::string, boost::filesystem::path> &paths)
+                              storage::DataPaths &paths)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -76,6 +68,13 @@ bool GenerateDataStoreOptions(const int argc,
         boost::filesystem::basename(argv[0]) + " [<options>] <configuration>");
     visible_options.add(generic_options).add(config_options);
 
+    // print help options if no infile is specified
+    if (argc < 2)
+    {
+        util::SimpleLogger().Write() << visible_options;
+        return false;
+    }
+
     // parse command line options
     boost::program_options::variables_map option_variables;
     boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
@@ -86,13 +85,13 @@ bool GenerateDataStoreOptions(const int argc,
 
     if (option_variables.count("version"))
     {
-        SimpleLogger().Write() << OSRM_VERSION;
+        util::SimpleLogger().Write() << OSRM_VERSION;
         return false;
     }
 
     if (option_variables.count("help"))
     {
-        SimpleLogger().Write() << visible_options;
+        util::SimpleLogger().Write() << visible_options;
         return false;
     }
 
@@ -121,8 +120,8 @@ bool GenerateDataStoreOptions(const int argc,
              boost::filesystem::is_regular_file(paths.find("config")->second)) ||
             option_variables.count("base"))
         {
-            SimpleLogger().Write(logWARNING) << "conflicting parameters";
-            SimpleLogger().Write() << visible_options;
+            util::SimpleLogger().Write(logWARNING) << "conflicting parameters";
+            util::SimpleLogger().Write() << visible_options;
             return false;
         }
     }
@@ -132,8 +131,8 @@ bool GenerateDataStoreOptions(const int argc,
     if (path_iterator != paths.end() && boost::filesystem::is_regular_file(path_iterator->second) &&
         !option_variables.count("base"))
     {
-        SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
-        std::string ini_file_contents = read_file_lower_content(path_iterator->second);
+        util::SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
+        std::string ini_file_contents = util::read_file_lower_content(path_iterator->second);
         std::stringstream config_stream(ini_file_contents);
         boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                       option_variables);
@@ -204,61 +203,84 @@ bool GenerateDataStoreOptions(const int argc,
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .hsgr file must be specified");
+        throw util::exception("valid .hsgr file must be specified");
     }
 
     path_iterator = paths.find("nodesdata");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .nodes file must be specified");
+        throw util::exception("valid .nodes file must be specified");
     }
 
     path_iterator = paths.find("edgesdata");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .edges file must be specified");
+        throw util::exception("valid .edges file must be specified");
     }
 
     path_iterator = paths.find("geometry");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .geometry file must be specified");
+        throw util::exception("valid .geometry file must be specified");
     }
 
     path_iterator = paths.find("ramindex");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .ramindex file must be specified");
+        throw util::exception("valid .ramindex file must be specified");
     }
 
     path_iterator = paths.find("fileindex");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .fileindex file must be specified");
+        throw util::exception("valid .fileindex file must be specified");
     }
 
     path_iterator = paths.find("namesdata");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .names file must be specified");
+        throw util::exception("valid .names file must be specified");
     }
 
     path_iterator = paths.find("timestamp");
     if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
-        throw exception("valid .timestamp file must be specified");
+        throw util::exception("valid .timestamp file must be specified");
     }
 
     return true;
 }
-}
-}
 
-#endif /* DATASTORE_OPTIONS_HPP */
+int main(const int argc, const char *argv[]) try
+{
+    util::LogPolicy::GetInstance().Unmute();
+
+    storage::DataPaths paths;
+    if (!generateDataStoreOptions(argc, argv, paths))
+    {
+        return EXIT_SUCCESS;
+    }
+
+    storage::Storage storage(paths);
+    return storage.Run();
+}
+catch (const std::bad_alloc &e)
+{
+    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    util::SimpleLogger().Write(logWARNING)
+        << "Please provide more memory or disable locking the virtual "
+           "address space (note: this makes OSRM swap, i.e. slow)";
+    return EXIT_FAILURE;
+}
+catch (const std::exception &e)
+{
+    util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
+    return EXIT_FAILURE;
+}

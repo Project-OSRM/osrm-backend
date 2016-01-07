@@ -25,46 +25,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_HPP
-#define OSRM_HPP
+#ifndef ENGINE_CONFIG_HPP
+#define ENGINE_CONFIG_HPP
 
-#include <memory>
+#include <boost/filesystem/path.hpp>
+
+#include <unordered_map>
+#include <string>
 
 namespace osrm
 {
 
-struct LibOSRMConfig;
-
-namespace util
-{
-namespace json
-{
-struct Object;
-}
-}
-
 namespace engine
 {
-class Engine;
-struct EngineConfig;
-struct RouteParameters;
-}
 
-using engine::EngineConfig;
-using engine::RouteParameters;
-namespace json = util::json;
-
-class OSRM
+struct EngineConfig
 {
-  private:
-    std::unique_ptr<engine::Engine> engine_;
-
-  public:
-    OSRM(EngineConfig &lib_config);
-    ~OSRM(); // needed because we need to define it with the implementation of OSRM_impl
-    int RunQuery(const RouteParameters &route_parameters, json::Object &json_result);
+    std::unordered_map<std::string, boost::filesystem::path> server_paths;
+    int max_locations_trip = -1;
+    int max_locations_viaroute = -1;
+    int max_locations_distance_table = -1;
+    int max_locations_map_matching = -1;
+    bool use_shared_memory = true;
 };
 
 }
+}
 
-#endif // OSRM_HPP
+#endif // SERVER_CONFIG_HPP

@@ -1,10 +1,9 @@
-#ifndef OSRM_IMPL_HPP
-#define OSRM_IMPL_HPP
+#ifndef ENGINE_HPP
+#define ENGINE_HPP
 
 #include "contractor/query_edge.hpp"
 
 #include "osrm/json_container.hpp"
-#include "osrm/libosrm_config.hpp"
 #include "osrm/osrm.hpp"
 
 #include <memory>
@@ -13,6 +12,11 @@
 
 namespace osrm
 {
+
+namespace storage
+{
+struct SharedBarriers;
+}
 
 namespace util
 {
@@ -24,33 +28,32 @@ struct Object;
 
 namespace engine
 {
+struct EngineConfig;
 struct RouteParameters;
 namespace plugins
 {
 class BasePlugin;
 }
-
 namespace datafacade
 {
-struct SharedBarriers;
 template <class EdgeDataT> class BaseDataFacade;
 }
 
-class OSRM::OSRM_impl final
+class Engine final
 {
   private:
     using PluginMap = std::unordered_map<std::string, std::unique_ptr<plugins::BasePlugin>>;
 
   public:
-    OSRM_impl(LibOSRMConfig &lib_config);
-    OSRM_impl(const OSRM_impl &) = delete;
+    Engine(EngineConfig &config_);
+    Engine(const Engine &) = delete;
     int RunQuery(const RouteParameters &route_parameters, util::json::Object &json_result);
 
   private:
     void RegisterPlugin(plugins::BasePlugin *plugin);
     PluginMap plugin_map;
     // will only be initialized if shared memory is used
-    std::unique_ptr<datafacade::SharedBarriers> barrier;
+    std::unique_ptr<storage::SharedBarriers> barrier;
     // base class pointer to the objects
     datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData> *query_data_facade;
 

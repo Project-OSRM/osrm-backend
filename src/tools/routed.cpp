@@ -4,7 +4,7 @@
 #include "util/simple_logger.hpp"
 
 #include "osrm/osrm.hpp"
-#include "osrm/libosrm_config.hpp"
+#include "osrm/engine_config.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -49,12 +49,12 @@ int main(int argc, const char *argv[]) try
     std::string ip_address;
     int ip_port, requested_thread_num;
 
-    LibOSRMConfig lib_config;
+    EngineConfig config;
     const unsigned init_result = util::GenerateServerProgramOptions(
-        argc, argv, lib_config.server_paths, ip_address, ip_port, requested_thread_num,
-        lib_config.use_shared_memory, trial_run, lib_config.max_locations_trip,
-        lib_config.max_locations_viaroute, lib_config.max_locations_distance_table,
-        lib_config.max_locations_map_matching);
+        argc, argv, config.server_paths, ip_address, ip_port, requested_thread_num,
+        config.use_shared_memory, trial_run, config.max_locations_trip,
+        config.max_locations_viaroute, config.max_locations_distance_table,
+        config.max_locations_map_matching);
     if (init_result == util::INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -81,11 +81,11 @@ int main(int argc, const char *argv[]) try
                 (void)munlockall();
         }
         bool should_lock = false, could_lock = true;
-    } memory_locker(lib_config.use_shared_memory);
+    } memory_locker(config.use_shared_memory);
 #endif
     util::SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
 
-    if (lib_config.use_shared_memory)
+    if (config.use_shared_memory)
     {
         util::SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
     }
@@ -102,7 +102,7 @@ int main(int argc, const char *argv[]) try
     pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-    OSRM osrm_lib(lib_config);
+    OSRM osrm_lib(config);
     auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
 
     routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);

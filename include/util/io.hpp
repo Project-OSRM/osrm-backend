@@ -33,7 +33,7 @@ inline bool readAndCheckFingerprint(std::istream &stream)
     stream.read(reinterpret_cast<char *>(&fingerprint), sizeof(fingerprint));
     // compare the compilation state stored in the fingerprint
     return static_cast<bool>(stream) && valid.IsMagicNumberOK(fingerprint) &&
-           valid.TestPrepare(fingerprint) && valid.TestGraphUtil(fingerprint) &&
+           valid.TestContractor(fingerprint) && valid.TestGraphUtil(fingerprint) &&
            valid.TestRTree(fingerprint) && valid.TestQueryObjects(fingerprint);
 }
 

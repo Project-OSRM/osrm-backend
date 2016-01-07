@@ -2,16 +2,16 @@
 #include "util/range_table.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/query_node.hpp"
-#include "datastore/shared_memory_factory.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "extractor/travel_mode.hpp"
 #include "extractor/turn_instructions.hpp"
-#include "engine/datafacade/shared_datatype.hpp"
-#include "engine/datafacade/shared_barriers.hpp"
-#include "util/datastore_options.hpp"
+#include "storage/storage.hpp"
+#include "storage/shared_datatype.hpp"
+#include "storage/shared_barriers.hpp"
+#include "storage/shared_memory.hpp"
 #include "util/fingerprint.hpp"
 #include "util/osrm_exception.hpp"
 #include "util/simple_logger.hpp"
@@ -32,10 +32,10 @@
 #include <new>
 #include <string>
 
-// FIXME remove after move to datastore
-using namespace osrm::engine::datafacade;
-using namespace osrm::datastore;
-using namespace osrm;
+namespace osrm
+{
+namespace storage
+{
 
 using RTreeLeaf =
     typename engine::datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData>::RTreeLeaf;
@@ -43,11 +43,6 @@ using RTreeNode = util::StaticRTree<RTreeLeaf,
                                     util::ShM<util::FixedPointCoordinate, true>::vector,
                                     true>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
-
-namespace osrm
-{
-namespace tools
-{
 
 // delete a shared memory region. report warning if it could not be deleted
 void deleteRegion(const SharedDataType region)
@@ -78,10 +73,10 @@ void deleteRegion(const SharedDataType region)
         util::SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
     }
 }
-}
-}
 
-int main(const int argc, const char *argv[]) try
+Storage::Storage(const DataPaths &paths_) : paths(paths_) {}
+
+int Storage::Run()
 {
     util::LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
@@ -91,8 +86,7 @@ int main(const int argc, const char *argv[]) try
     const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
     if (-1 == mlockall(lock_flags))
     {
-        util::SimpleLogger().Write(logWARNING) << "Process " << argv[0]
-                                               << " could not request RAM lock";
+        util::SimpleLogger().Write(logWARNING) << "Could not request RAM lock";
     }
 #endif
 
@@ -107,107 +101,99 @@ int main(const int argc, const char *argv[]) try
         barrier.pending_update_mutex.unlock();
     }
 
-    util::SimpleLogger().Write(logDEBUG) << "Checking input parameters";
-
-    std::unordered_map<std::string, boost::filesystem::path> server_paths;
-    if (!util::GenerateDataStoreOptions(argc, argv, server_paths))
-    {
-        return EXIT_SUCCESS;
-    }
-
-    if (server_paths.find("hsgrdata") == server_paths.end())
+    if (paths.find("hsgrdata") == paths.end())
     {
         throw util::exception("no hsgr file found");
     }
-    if (server_paths.find("ramindex") == server_paths.end())
+    if (paths.find("ramindex") == paths.end())
     {
         throw util::exception("no ram index file found");
     }
-    if (server_paths.find("fileindex") == server_paths.end())
+    if (paths.find("fileindex") == paths.end())
     {
         throw util::exception("no leaf index file found");
     }
-    if (server_paths.find("nodesdata") == server_paths.end())
+    if (paths.find("nodesdata") == paths.end())
     {
         throw util::exception("no nodes file found");
     }
-    if (server_paths.find("edgesdata") == server_paths.end())
+    if (paths.find("edgesdata") == paths.end())
     {
         throw util::exception("no edges file found");
     }
-    if (server_paths.find("namesdata") == server_paths.end())
+    if (paths.find("namesdata") == paths.end())
     {
         throw util::exception("no names file found");
     }
-    if (server_paths.find("geometry") == server_paths.end())
+    if (paths.find("geometry") == paths.end())
     {
         throw util::exception("no geometry file found");
     }
-    if (server_paths.find("core") == server_paths.end())
+    if (paths.find("core") == paths.end())
     {
         throw util::exception("no core file found");
     }
 
-    auto paths_iterator = server_paths.find("hsgrdata");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    auto paths_iterator = paths.find("hsgrdata");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &hsgr_path = paths_iterator->second;
-    paths_iterator = server_paths.find("timestamp");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("timestamp");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &timestamp_path = paths_iterator->second;
-    paths_iterator = server_paths.find("ramindex");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("ramindex");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &ram_index_path = paths_iterator->second;
-    paths_iterator = server_paths.find("fileindex");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("fileindex");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path index_file_path_absolute =
         boost::filesystem::canonical(paths_iterator->second);
     const std::string &file_index_path = index_file_path_absolute.string();
-    paths_iterator = server_paths.find("nodesdata");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("nodesdata");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &nodes_data_path = paths_iterator->second;
-    paths_iterator = server_paths.find("edgesdata");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("edgesdata");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &edges_data_path = paths_iterator->second;
-    paths_iterator = server_paths.find("namesdata");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("namesdata");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &names_data_path = paths_iterator->second;
-    paths_iterator = server_paths.find("geometry");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("geometry");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &geometries_data_path = paths_iterator->second;
-    paths_iterator = server_paths.find("core");
-    BOOST_ASSERT(server_paths.end() != paths_iterator);
+    paths_iterator = paths.find("core");
+    BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &core_marker_path = paths_iterator->second;
 
     // determine segment to use
     bool segment2_in_use = SharedMemory::RegionExists(LAYOUT_2);
-    const engine::datafacade::SharedDataType layout_region = [&]
+    const storage::SharedDataType layout_region = [&]
     {
         return segment2_in_use ? LAYOUT_1 : LAYOUT_2;
     }();
-    const engine::datafacade::SharedDataType data_region = [&]
+    const storage::SharedDataType data_region = [&]
     {
         return segment2_in_use ? DATA_1 : DATA_2;
     }();
-    const engine::datafacade::SharedDataType previous_layout_region = [&]
+    const storage::SharedDataType previous_layout_region = [&]
     {
         return segment2_in_use ? LAYOUT_2 : LAYOUT_1;
     }();
-    const engine::datafacade::SharedDataType previous_data_region = [&]
+    const storage::SharedDataType previous_data_region = [&]
     {
         return segment2_in_use ? DATA_2 : DATA_1;
     }();
 
     // Allocate a memory layout in shared memory, deallocate previous
-    auto *layout_memory = SharedMemoryFactory::Get(layout_region, sizeof(SharedDataLayout));
+    auto *layout_memory = makeSharedMemory(layout_region, sizeof(SharedDataLayout));
     auto shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
 
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::FILE_INDEX_PATH,
@@ -345,8 +331,7 @@ int main(const int argc, const char *argv[]) try
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
                                  << shared_layout_ptr->GetSizeOfLayout() << " bytes";
-    SharedMemory *shared_memory =
-        SharedMemoryFactory::Get(data_region, shared_layout_ptr->GetSizeOfLayout());
+    auto *shared_memory = makeSharedMemory(data_region, shared_layout_ptr->GetSizeOfLayout());
     char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
 
     // read actual data into shared memory object //
@@ -555,7 +540,7 @@ int main(const int argc, const char *argv[]) try
 
     // acquire lock
     SharedMemory *data_type_memory =
-        SharedMemoryFactory::Get(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true, false);
+        makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true, false);
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
@@ -571,22 +556,11 @@ int main(const int argc, const char *argv[]) try
     data_timestamp_ptr->layout = layout_region;
     data_timestamp_ptr->data = data_region;
     data_timestamp_ptr->timestamp += 1;
-    tools::deleteRegion(previous_data_region);
-    tools::deleteRegion(previous_layout_region);
+    deleteRegion(previous_data_region);
+    deleteRegion(previous_layout_region);
     util::SimpleLogger().Write() << "all data loaded";
 
-    shared_layout_ptr->PrintInformation();
     return EXIT_SUCCESS;
 }
-catch (const std::bad_alloc &e)
-{
-    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    util::SimpleLogger().Write(logWARNING)
-        << "Please provide more memory or disable locking the virtual "
-           "address space (note: this makes OSRM swap, i.e. slow)";
-    return EXIT_FAILURE;
 }
-catch (const std::exception &e)
-{
-    util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
 }

@@ -25,46 +25,78 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_HPP
-#define OSRM_HPP
+// based on
+// https://svn.apache.org/repos/asf/mesos/tags/release-0.9.0-incubating-RC0/src/common/json.hpp
 
-#include <memory>
+#ifndef JSON_CONTAINER_HPP
+#define JSON_CONTAINER_HPP
+
+#include <variant/variant.hpp>
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
 
 namespace osrm
 {
 
-struct LibOSRMConfig;
-
 namespace util
 {
+
 namespace json
 {
+
 struct Object;
-}
-}
+struct Array;
 
-namespace engine
+struct String
 {
-class Engine;
-struct EngineConfig;
-struct RouteParameters;
-}
-
-using engine::EngineConfig;
-using engine::RouteParameters;
-namespace json = util::json;
-
-class OSRM
-{
-  private:
-    std::unique_ptr<engine::Engine> engine_;
-
-  public:
-    OSRM(EngineConfig &lib_config);
-    ~OSRM(); // needed because we need to define it with the implementation of OSRM_impl
-    int RunQuery(const RouteParameters &route_parameters, json::Object &json_result);
+    String() {}
+    String(const char *value) : value(value) {}
+    String(std::string value) : value(std::move(value)) {}
+    std::string value;
 };
 
-}
+struct Number
+{
+    Number() {}
+    Number(double value) : value(static_cast<double>(value)) {}
+    double value;
+};
 
-#endif // OSRM_HPP
+struct True
+{
+};
+
+struct False
+{
+};
+
+struct Null
+{
+};
+
+using Value = mapbox::util::variant<String,
+                                    Number,
+                                    mapbox::util::recursive_wrapper<Object>,
+                                    mapbox::util::recursive_wrapper<Array>,
+                                    True,
+                                    False,
+                                    Null>;
+
+struct Object
+{
+    std::unordered_map<std::string, Value> values;
+};
+
+struct Array
+{
+    std::vector<Value> values;
+};
+
+} // namespace JSON
+} // namespace util
+} // namespace osrm
+
+#endif // JSON_CONTAINER_HPP

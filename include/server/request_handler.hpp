@@ -5,9 +5,9 @@
 
 namespace osrm
 {
+class OSRM;
 namespace engine
 {
-class OSRM;
 struct RouteParameters;
 }
 namespace server
@@ -30,10 +30,10 @@ class RequestHandler
     RequestHandler(const RequestHandler &) = delete;
 
     void handle_request(const http::request &current_request, http::reply &current_reply);
-    void RegisterRoutingMachine(engine::OSRM *osrm);
+    void RegisterRoutingMachine(OSRM *osrm);
 
   private:
-    engine::OSRM *routing_machine;
+    OSRM *routing_machine;
 };
 }
 }

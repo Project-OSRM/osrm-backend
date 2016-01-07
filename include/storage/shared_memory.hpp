@@ -1,5 +1,5 @@
-#ifndef SHARED_MEMORY_FACTORY_HPP
-#define SHARED_MEMORY_FACTORY_HPP
+#ifndef SHARED_MEMORY_HPP
+#define SHARED_MEMORY_HPP
 
 #include "util/osrm_exception.hpp"
 #include "util/simple_logger.hpp"
@@ -26,7 +26,7 @@
 
 namespace osrm
 {
-namespace datastore
+namespace storage
 {
 
 struct OSRMLockFile
@@ -322,47 +322,37 @@ class SharedMemory
 };
 #endif
 
-template <class LockFileT = OSRMLockFile> class SharedMemoryFactory_tmpl
+template <typename IdentifierT, typename LockFileT = OSRMLockFile>
+SharedMemory *makeSharedMemory(const IdentifierT &id,
+    const uint64_t size = 0,
+    bool read_write = false,
+    bool remove_prev = true)
 {
-  public:
-    template <typename IdentifierT>
-    static SharedMemory *Get(const IdentifierT &id,
-                             const uint64_t size = 0,
-                             bool read_write = false,
-                             bool remove_prev = true)
+  try
+  {
+    LockFileT lock_file;
+    if (!boost::filesystem::exists(lock_file()))
     {
-        try
-        {
-            LockFileT lock_file;
-            if (!boost::filesystem::exists(lock_file()))
-            {
-                if (0 == size)
-                {
-                    throw util::exception("lock file does not exist, exiting");
-                }
-                else
-                {
-                    boost::filesystem::ofstream ofs(lock_file());
-                    ofs.close();
-                }
-            }
-            return new SharedMemory(lock_file(), id, size, read_write, remove_prev);
-        }
-        catch (const boost::interprocess::interprocess_exception &e)
-        {
-            util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what() << ", code "
-                                                   << e.get_error_code();
-            throw util::exception(e.what());
-        }
+      if (0 == size)
+      {
+        throw util::exception("lock file does not exist, exiting");
+      }
+      else
+      {
+        boost::filesystem::ofstream ofs(lock_file());
+      }
     }
+    return new SharedMemory(lock_file(), id, size, read_write, remove_prev);
+  }
+  catch (const boost::interprocess::interprocess_exception &e)
+  {
+    util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what() << ", code "
+      << e.get_error_code();
+    throw util::exception(e.what());
+  }
+}
 
-    SharedMemoryFactory_tmpl() = delete;
-    SharedMemoryFactory_tmpl(const SharedMemoryFactory_tmpl &) = delete;
-    SharedMemoryFactory_tmpl &operator=(const SharedMemoryFactory_tmpl &) = delete;
-};
-
-using SharedMemoryFactory = SharedMemoryFactory_tmpl<>;
 }
 }
 
-#endif // SHARED_MEMORY_FACTORY_HPP
+#endif // SHARED_MEMORY_HPP

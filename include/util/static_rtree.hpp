@@ -4,7 +4,6 @@
 #include "util/deallocating_vector.hpp"
 #include "util/hilbert_value.hpp"
 #include "util/rectangle.hpp"
-#include "datastore/shared_memory_factory.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 
 #include "util/bearing.hpp"

@@ -25,26 +25,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LIBOSRM_CONFIG_HPP
-#define LIBOSRM_CONFIG_HPP
+#ifndef COORDINATE_HPP_
+#define COORDINATE_HPP_
 
-#include <boost/filesystem/path.hpp>
-
-#include <unordered_map>
+#include <iosfwd> //for std::ostream
 #include <string>
+#include <type_traits>
 
 namespace osrm
 {
 
-struct LibOSRMConfig
+constexpr const double COORDINATE_PRECISION = 1000000.0;
+
+namespace util
 {
-    std::unordered_map<std::string, boost::filesystem::path> server_paths;
-    int max_locations_trip = -1;
-    int max_locations_viaroute = -1;
-    int max_locations_distance_table = -1;
-    int max_locations_map_matching = -1;
-    bool use_shared_memory = true;
+
+struct FixedPointCoordinate
+{
+    int lat;
+    int lon;
+
+    FixedPointCoordinate();
+    FixedPointCoordinate(int lat, int lon);
+
+    template <class T>
+    FixedPointCoordinate(const T &coordinate)
+        : lat(coordinate.lat), lon(coordinate.lon)
+    {
+        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
+                      "coordinate types incompatible");
+        static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value,
+                      "coordinate types incompatible");
+    }
+
+    bool IsValid() const;
+    bool operator==(const FixedPointCoordinate &other) const;
+    friend std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate);
 };
+
+std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate);
 }
 
-#endif // SERVER_CONFIG_HPP
+}
+
+#endif /* COORDINATE_HPP_ */

@@ -85,7 +85,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             {
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i],
                                                 phantom_node_pair_list[i].first);
-                if (phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
+                if (phantom_node_pair_list[i].first.IsValid(facade->GetNumberOfNodes()))
                 {
                     continue;
                 }
@@ -97,15 +97,15 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
             phantom_node_pair_list[i] = facade->NearestPhantomNodeWithAlternativeFromBigComponent(
                 route_parameters.coordinates[i], bearing, range);
             // we didn't found a fitting node, return error
-            if (!phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()))
+            if (!phantom_node_pair_list[i].first.IsValid(facade->GetNumberOfNodes()))
             {
                 json_result.values["status_message"] =
                     std::string("Could not find a matching segment for coordinate ") +
                     std::to_string(i);
                 return Status::NoSegment;
             }
-            BOOST_ASSERT(phantom_node_pair_list[i].first.is_valid(facade->GetNumberOfNodes()));
-            BOOST_ASSERT(phantom_node_pair_list[i].second.is_valid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_pair_list[i].first.IsValid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_pair_list[i].second.IsValid(facade->GetNumberOfNodes()));
         }
 
         auto snapped_phantoms = snapPhantomNodes(phantom_node_pair_list);

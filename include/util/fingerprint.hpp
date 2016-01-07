@@ -17,7 +17,7 @@ class FingerPrint
     const boost::uuids::uuid &GetFingerPrint() const;
     bool IsMagicNumberOK(const FingerPrint &other) const;
     bool TestGraphUtil(const FingerPrint &other) const;
-    bool TestPrepare(const FingerPrint &other) const;
+    bool TestContractor(const FingerPrint &other) const;
     bool TestRTree(const FingerPrint &other) const;
     bool TestQueryObjects(const FingerPrint &other) const;
 

@@ -66,7 +66,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             {
                 PhantomNode current_phantom_node;
                 ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
-                if (current_phantom_node.is_valid(facade->GetNumberOfNodes()))
+                if (current_phantom_node.IsValid(facade->GetNumberOfNodes()))
                 {
                     phantom_node_list.push_back(std::move(current_phantom_node));
                     continue;
@@ -83,7 +83,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 break;
             }
             phantom_node_list.push_back(std::move(results.front().phantom_node));
-            BOOST_ASSERT(phantom_node_list.back().is_valid(facade->GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_list.back().IsValid(facade->GetNumberOfNodes()));
         }
 
         return phantom_node_list;
