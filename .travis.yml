@@ -18,7 +18,7 @@ matrix:
       compiler: clang
       addons: &clang38
         apt:
-          sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
+          sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test', 'boost-latest']
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='clang++-3.8' BUILD_TYPE='Release'
 
@@ -26,7 +26,7 @@ matrix:
       compiler: clang
       addons: &clang38
         apt:
-          sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
+          sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test', 'boost-latest']
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
@@ -41,7 +41,7 @@ matrix:
       compiler: gcc
       addons: &gcc48
         apt:
-          sources: ['ubuntu-toolchain-r-test']
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
           packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-4.8' BUILD_TYPE='Release'
 
@@ -55,7 +55,7 @@ matrix:
       compiler: gcc
       addons: &gcc5
         apt:
-          sources: ['ubuntu-toolchain-r-test']
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-5' BUILD_TYPE='Release'
 
@@ -63,7 +63,7 @@ matrix:
       compiler: gcc
       addons: &gcc5
         apt:
-          sources: ['ubuntu-toolchain-r-test']
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
