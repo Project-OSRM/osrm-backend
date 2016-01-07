@@ -24,8 +24,6 @@
 
 template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 {
-    constexpr static const unsigned max_number_of_candidates = 10;
-
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
     using ClassifierT = BayesClassifier<LaplaceDistribution, LaplaceDistribution, double>;
@@ -74,7 +72,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     {
         osrm::matching::CandidateLists candidates_lists;
 
-        double query_radius = 10 * gps_precision;
+        // assuming the gps_precision is the standart-diviation of normal distribution that models
+        // GPS noise (in this model) this should give us the correct candidate with >0.95
+        double query_radius = 3 * gps_precision;
         double last_distance =
             coordinate_calculation::haversineDistance(input_coords[0], input_coords[1]);
 
