@@ -1,6 +1,5 @@
 language: cpp
-sudo: required
-dist: trusty
+sudo: false
 
 notifications:
   email: false
