@@ -129,7 +129,7 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         route_names.shortest_path_name_1 = facade->get_name_for_id(shortest_segment_1.name_id);
         route_names.shortest_path_name_2 = facade->get_name_for_id(shortest_segment_2.name_id);
 
-        if (not alternative_path_segments.empty())
+        if (!alternative_path_segments.empty())
         {
             route_names.alternative_path_name_1 =
                 facade->get_name_for_id(alternative_segment_1.name_id);
