@@ -15,7 +15,7 @@ namespace util
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
 // work with negative values to prevent overflowing when taking -value
-template <int length, int precision> static inline char *printInt(char *buffer, int value)
+template <int length, int precision> char *printInt(char *buffer, int value)
 {
     static_assert(length > 0, "length must be positive");
     static_assert(precision > 0, "precision must be positive");
