@@ -243,9 +243,9 @@ util::json::Value ApiResponseGenerator<DataFacadeT>::GetGeometry(const bool retu
                                                                  const Segments &segments) const
 {
     if (return_encoded)
-        return PolylineFormatter().printEncodedString(segments.Get());
+        return polylineEncodeAsJSON(segments.Get());
     else
-        return PolylineFormatter().printUnencodedString(segments.Get());
+        return polylineUnencodedAsJSON(segments.Get());
 }
 
 template <typename DataFacadeT>

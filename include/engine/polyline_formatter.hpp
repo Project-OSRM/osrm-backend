@@ -1,6 +1,7 @@
 #ifndef POLYLINE_FORMATTER_HPP
 #define POLYLINE_FORMATTER_HPP
 
+#include "engine/segment_information.hpp"
 #include "osrm/json_container.hpp"
 
 #include <string>
@@ -11,14 +12,12 @@ namespace osrm
 namespace engine
 {
 
-struct SegmentInformation;
+// Encodes geometry into polyline format, returning an encoded JSON object
+// See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+util::json::String polylineEncodeAsJSON(const std::vector<SegmentInformation> &geometry);
 
-struct PolylineFormatter
-{
-    util::json::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
-
-    util::json::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
-};
+// Does not encode the geometry in polyline format, instead returning an unencoded JSON object
+util::json::Array polylineUnencodedAsJSON(const std::vector<SegmentInformation> &geometry);
 }
 }
 

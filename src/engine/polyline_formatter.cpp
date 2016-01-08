@@ -1,25 +1,18 @@
 #include "engine/polyline_formatter.hpp"
-
 #include "engine/polyline_compressor.hpp"
-#include "engine/segment_information.hpp"
-
 #include "osrm/coordinate.hpp"
-
-#include <vector>
 
 namespace osrm
 {
 namespace engine
 {
 
-util::json::String
-PolylineFormatter::printEncodedString(const std::vector<SegmentInformation> &polyline) const
+util::json::String polylineEncodeAsJSON(const std::vector<SegmentInformation> &polyline)
 {
     return util::json::String(polylineEncode(polyline));
 }
 
-util::json::Array
-PolylineFormatter::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
+util::json::Array polylineUnencodedAsJSON(const std::vector<SegmentInformation> &polyline)
 {
     util::json::Array json_geometry_array;
     for (const auto &segment : polyline)
