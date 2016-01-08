@@ -1,13 +1,13 @@
 #include "engine/douglas_peucker.hpp"
 
-#include "engine/segment_information.hpp"
-
 #include <boost/assert.hpp>
 #include "osrm/coordinate.hpp"
 
 #include <cmath>
 #include <algorithm>
 #include <iterator>
+#include <stack>
+#include <utility>
 
 namespace osrm
 {
@@ -59,13 +59,15 @@ struct CoordinatePairCalculator
 };
 }
 
-void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
+void douglasPeucker(std::vector<SegmentInformation>::iterator begin,
+                    std::vector<SegmentInformation>::iterator end,
+                    const unsigned zoom_level)
 {
-    Run(std::begin(input_geometry), std::end(input_geometry), zoom_level);
-}
+    using Iter = decltype(begin);
+    using GeometryRange = std::pair<Iter, Iter>;
 
-void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigned zoom_level)
-{
+    std::stack<GeometryRange> recursion_stack;
+
     const auto size = std::distance(begin, end);
     if (size < 2)
     {
@@ -76,7 +78,8 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
     std::prev(end)->necessary = true;
 
     {
-        BOOST_ASSERT_MSG(zoom_level < DOUGLAS_PEUCKER_THRESHOLDS.size(), "unsupported zoom level");
+        BOOST_ASSERT_MSG(zoom_level < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE,
+                         "unsupported zoom level");
         auto left_border = begin;
         auto right_border = std::next(begin);
         // Sweep over array and identify those ranges that need to be checked
@@ -117,7 +120,8 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
         {
             const int distance = dist_calc(it->location);
             // found new feasible maximum?
-            if (distance > max_int_distance && distance > DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
+            if (distance > max_int_distance &&
+                distance > detail::DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
             {
                 farthest_entry_it = it;
                 max_int_distance = distance;
@@ -125,7 +129,7 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
         }
 
         // check if maximum violates a zoom level dependent threshold
-        if (max_int_distance > DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
+        if (max_int_distance > detail::DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
         {
             //  mark idx as necessary
             farthest_entry_it->necessary = true;
@@ -140,5 +144,5 @@ void DouglasPeucker::Run(RandomAccessIt begin, RandomAccessIt end, const unsigne
         }
     }
 }
-}
-}
+} // ns engine
+} // ns osrm

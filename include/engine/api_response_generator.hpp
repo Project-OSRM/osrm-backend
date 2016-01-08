@@ -4,7 +4,6 @@
 #include "guidance/segment_list.hpp"
 #include "guidance/textual_route_annotation.hpp"
 
-#include "engine/douglas_peucker.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/object_encoder.hpp"
 #include "engine/phantom_node.hpp"
@@ -261,7 +260,8 @@ ApiResponseGenerator<DataFacadeT>::BuildRouteSegments(const Segments &segment_li
             (extractor::TurnInstruction::EnterRoundAbout != current_turn))
         {
 
-            detail::Segment seg = {segment.name_id, static_cast<int32_t>(segment.length),
+            detail::Segment seg = {segment.name_id,
+                                   static_cast<int32_t>(segment.length),
                                    static_cast<std::size_t>(result.size())};
             result.emplace_back(std::move(seg));
         }

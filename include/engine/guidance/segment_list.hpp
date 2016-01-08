@@ -272,14 +272,13 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
 
     if (allow_simplification)
     {
-        DouglasPeucker polyline_generalizer;
-        polyline_generalizer.Run(segments.begin(), segments.end(), zoom_level);
+        douglasPeucker(segments, zoom_level);
     }
 
     std::uint32_t necessary_segments = 0; // a running index that counts the necessary pieces
     via_indices.push_back(0);
-    const auto markNecessarySegments = [this, &necessary_segments](SegmentInformation &first,
-                                                                   const SegmentInformation &second)
+    const auto markNecessarySegments =
+        [this, &necessary_segments](SegmentInformation &first, const SegmentInformation &second)
     {
         if (!first.necessary)
             return;
