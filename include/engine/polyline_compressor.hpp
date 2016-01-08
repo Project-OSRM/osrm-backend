@@ -2,6 +2,7 @@
 #define POLYLINECOMPRESSOR_H_
 
 #include "osrm/coordinate.hpp"
+#include "engine/segment_information.hpp"
 
 #include <string>
 #include <vector>
@@ -10,21 +11,13 @@ namespace osrm
 {
 namespace engine
 {
+// Encodes geometry into polyline format.
+// See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+std::string polylineEncode(const std::vector<SegmentInformation> &geometry);
 
-struct SegmentInformation;
-
-class PolylineCompressor
-{
-  private:
-    std::string encode_vector(std::vector<int> &numbers) const;
-
-    std::string encode_number(const int number_to_encode) const;
-
-  public:
-    std::string get_encoded_string(const std::vector<SegmentInformation> &polyline) const;
-
-    std::vector<util::FixedPointCoordinate> decode_string(const std::string &geometry_string) const;
-};
+// Decodes geometry from polyline format
+// See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+std::vector<util::FixedPointCoordinate> polylineDecode(const std::string &polyline);
 }
 }
 

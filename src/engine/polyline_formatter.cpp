@@ -5,6 +5,8 @@
 
 #include "osrm/coordinate.hpp"
 
+#include <vector>
+
 namespace osrm
 {
 namespace engine
@@ -13,7 +15,7 @@ namespace engine
 util::json::String
 PolylineFormatter::printEncodedString(const std::vector<SegmentInformation> &polyline) const
 {
-    return util::json::String(PolylineCompressor().get_encoded_string(polyline));
+    return util::json::String(polylineEncode(polyline));
 }
 
 util::json::Array

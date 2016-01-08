@@ -7,6 +7,9 @@
 
 #include "engine/polyline_compressor.hpp"
 
+#include <string>
+#include <utility>
+
 namespace osrm
 {
 namespace engine
@@ -153,8 +156,7 @@ void RouteParameters::AddSource(const boost::fusion::vector<double, double> &rec
 
 void RouteParameters::SetCoordinatesFromGeometry(const std::string &geometry_string)
 {
-    PolylineCompressor pc;
-    coordinates = pc.decode_string(geometry_string);
+    coordinates = polylineDecode(geometry_string);
 }
 }
 }

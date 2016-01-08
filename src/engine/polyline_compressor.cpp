@@ -1,33 +1,15 @@
 #include "engine/polyline_compressor.hpp"
-#include "engine/segment_information.hpp"
 
-#include "osrm/coordinate.hpp"
+#include <cstddef>
 
 namespace osrm
 {
 namespace engine
 {
-
-std::string PolylineCompressor::encode_vector(std::vector<int> &numbers) const
+namespace /*detail*/ // anonymous to keep TU local
 {
-    std::string output;
-    const auto end = numbers.size();
-    for (std::size_t i = 0; i < end; ++i)
-    {
-        numbers[i] <<= 1;
-        if (numbers[i] < 0)
-        {
-            numbers[i] = ~(numbers[i]);
-        }
-    }
-    for (const int number : numbers)
-    {
-        output += encode_number(number);
-    }
-    return output;
-}
 
-std::string PolylineCompressor::encode_number(int number_to_encode) const
+std::string encode(int number_to_encode)
 {
     std::string output;
     while (number_to_encode >= 0x20)
@@ -42,8 +24,27 @@ std::string PolylineCompressor::encode_number(int number_to_encode) const
     return output;
 }
 
-std::string
-PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &polyline) const
+std::string encode(std::vector<int> &numbers)
+{
+    std::string output;
+    const auto end = numbers.size();
+    for (std::size_t i = 0; i < end; ++i)
+    {
+        numbers[i] <<= 1;
+        if (numbers[i] < 0)
+        {
+            numbers[i] = ~(numbers[i]);
+        }
+    }
+    for (const int number : numbers)
+    {
+        output += encode(number);
+    }
+    return output;
+}
+} // anonymous ns
+
+std::string polylineEncode(const std::vector<SegmentInformation> &polyline)
 {
     if (polyline.empty())
     {
@@ -64,11 +65,10 @@ PolylineCompressor::get_encoded_string(const std::vector<SegmentInformation> &po
             previous_coordinate = segment.location;
         }
     }
-    return encode_vector(delta_numbers);
+    return encode(delta_numbers);
 }
 
-std::vector<util::FixedPointCoordinate>
-PolylineCompressor::decode_string(const std::string &geometry_string) const
+std::vector<util::FixedPointCoordinate> polylineDecode(const std::string &geometry_string)
 {
     std::vector<util::FixedPointCoordinate> new_coordinates;
     int index = 0, len = geometry_string.size();
