@@ -48,7 +48,6 @@ template <typename DataFacadeT> class ApiResponseGenerator
     using DataFacade = DataFacadeT;
     using Segments = guidance::SegmentList<DataFacade>;
     using Segment = detail::Segment;
-    using RouteNameExtractor = ExtractRouteNames<DataFacade, Segment>;
 
     ApiResponseGenerator(DataFacade *facade);
 
@@ -120,7 +119,6 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
     }
 
     RouteNames route_names;
-    RouteNameExtractor generate_route_names;
 
     if (raw_route.has_alternative())
     {
@@ -156,7 +154,7 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
         // generate names for both the main path and the alternative route
         auto path_segments = BuildRouteSegments(segment_list);
         auto alternate_segments = BuildRouteSegments(alternate_segment_list);
-        route_names = generate_route_names(path_segments, alternate_segments, facade);
+        route_names = extractRouteNames(path_segments, alternate_segments, facade);
 
         util::json::Array json_alternate_names_array;
         util::json::Array json_alternate_names;
@@ -172,7 +170,7 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
         // generate names for the main route on its own
         auto path_segments = BuildRouteSegments(segment_list);
         std::vector<detail::Segment> alternate_segments;
-        route_names = generate_route_names(path_segments, alternate_segments, facade);
+        route_names = extractRouteNames(path_segments, alternate_segments, facade);
     }
 
     util::json::Array json_route_names;
