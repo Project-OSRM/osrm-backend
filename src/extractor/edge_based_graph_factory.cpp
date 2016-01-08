@@ -683,7 +683,7 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
         }
     }
 
-    return TurnInstructionsClass::GetTurnDirectionOfInstruction(angle);
+    return getTurnDirection(angle);
 }
 }
 }

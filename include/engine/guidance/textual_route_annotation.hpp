@@ -47,7 +47,7 @@ inline util::json::Array AnnotateRoute(const std::vector<SegmentInformation> &ro
     {
         util::json::Array json_instruction_row;
         extractor::TurnInstruction current_instruction = segment.turn_instruction;
-        if (extractor::TurnInstructionsClass::TurnIsNecessary(current_instruction))
+        if (extractor::isTurnNecessary(current_instruction))
         {
             if (extractor::TurnInstruction::EnterRoundAbout == current_instruction)
             {
