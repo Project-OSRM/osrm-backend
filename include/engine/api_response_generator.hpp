@@ -96,7 +96,7 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
                                                       const InternalRouteResult &raw_route,
                                                       util::json::Object &json_result)
 {
-    if (not raw_route.is_valid())
+    if (!raw_route.is_valid())
     {
         return;
     }
