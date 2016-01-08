@@ -37,7 +37,6 @@ struct OriginalEdgeData
     bool compressed_geometry;
     TravelMode travel_mode;
 };
-
 }
 }
 

@@ -37,7 +37,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
 {
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &output_edge_list)
+void EdgeBasedGraphFactory::GetEdgeBasedEdges(
+    util::DeallocatingVector<EdgeBasedEdge> &output_edge_list)
 {
     BOOST_ASSERT_MSG(0 == output_edge_list.size(), "Vector is not empty");
     using std::swap; // Koenig swap
@@ -321,7 +322,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     BOOST_ASSERT(m_edge_based_node_list.size() == m_edge_based_node_is_startpoint.size());
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
-                           << " nodes in edge-expanded graph";
+                                 << " nodes in edge-expanded graph";
 }
 
 /// Actually it also generates OriginalEdgeData and serializes them...
@@ -451,7 +452,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 {
                     distance += speed_profile.traffic_signal_penalty;
 
-                    util::DEBUG_SIGNAL(node_v, m_node_info_list, speed_profile.traffic_signal_penalty);
+                    util::DEBUG_SIGNAL(node_v, m_node_info_list,
+                                       speed_profile.traffic_signal_penalty);
                 }
 
                 // unpack last node of first segment if packed
@@ -478,7 +480,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     util::DEBUG_UTURN(node_v, m_node_info_list, speed_profile.u_turn_penalty);
                 }
 
-                util::DEBUG_TURN(node_v, m_node_info_list, first_coordinate, turn_angle, turn_penalty);
+                util::DEBUG_TURN(node_v, m_node_info_list, first_coordinate, turn_angle,
+                                 turn_penalty);
 
                 distance += turn_penalty;
 
@@ -546,8 +549,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             const QueryNode &from = m_node_info_list[previous];
                             const QueryNode &to = m_node_info_list[target_node.first];
                             const double segment_length =
-                                util::coordinate_calculation::greatCircleDistance(from.lat, from.lon,
-                                                                              to.lat, to.lon);
+                                util::coordinate_calculation::greatCircleDistance(
+                                    from.lat, from.lon, to.lat, to.lon);
 
                             edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id),
                                                     sizeof(to.node_id));
@@ -564,8 +567,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         static const unsigned node_count = 2;
                         const QueryNode from = m_node_info_list[node_u];
                         const QueryNode to = m_node_info_list[node_v];
-                        const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                            from.lat, from.lon, to.lat, to.lon);
+                        const double segment_length =
+                            util::coordinate_calculation::greatCircleDistance(from.lat, from.lon,
+                                                                              to.lat, to.lon);
                         edge_segment_file.write(reinterpret_cast<const char *>(&node_count),
                                                 sizeof(node_count));
                         edge_segment_file.write(reinterpret_cast<const char *>(&from.node_id),
@@ -591,15 +595,18 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     edge_data_file.write((char *)&original_edges_counter, sizeof(unsigned));
     edge_data_file.close();
 
-    util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size() << " edge based nodes";
-    util::SimpleLogger().Write() << "Node-based graph contains " << node_based_edge_counter << " edges";
+    util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
+                                 << " edge based nodes";
+    util::SimpleLogger().Write() << "Node-based graph contains " << node_based_edge_counter
+                                 << " edges";
     util::SimpleLogger().Write() << "Edge-expanded graph ...";
     util::SimpleLogger().Write() << "  contains " << m_edge_based_edge_list.size() << " edges";
     util::SimpleLogger().Write() << "  skips " << restricted_turns_counter << " turns, "
-                                                                        "defined by "
-                           << m_restriction_map->size() << " restrictions";
+                                                                              "defined by "
+                                 << m_restriction_map->size() << " restrictions";
     util::SimpleLogger().Write() << "  skips " << skipped_uturns_counter << " U turns";
-    util::SimpleLogger().Write() << "  skips " << skipped_barrier_turns_counter << " turns over barriers";
+    util::SimpleLogger().Write() << "  skips " << skipped_barrier_turns_counter
+                                 << " turns over barriers";
 }
 
 int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const

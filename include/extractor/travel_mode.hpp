@@ -7,11 +7,11 @@ namespace extractor
 {
 
 using TravelMode = unsigned char;
-
 }
 }
 
-namespace {
+namespace
+{
 static const osrm::extractor::TravelMode TRAVEL_MODE_INACCESSIBLE = 0;
 static const osrm::extractor::TravelMode TRAVEL_MODE_DEFAULT = 1;
 }

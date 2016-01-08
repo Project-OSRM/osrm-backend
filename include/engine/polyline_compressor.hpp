@@ -25,7 +25,6 @@ class PolylineCompressor
 
     std::vector<util::FixedPointCoordinate> decode_string(const std::string &geometry_string) const;
 };
-
 }
 }
 

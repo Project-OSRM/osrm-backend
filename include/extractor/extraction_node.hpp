@@ -13,7 +13,6 @@ struct ExtractionNode
     bool traffic_lights;
     bool barrier;
 };
-
 }
 }
 

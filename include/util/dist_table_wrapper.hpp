@@ -62,7 +62,6 @@ template <typename T> class DistTableWrapper
     std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
-
 }
 }
 

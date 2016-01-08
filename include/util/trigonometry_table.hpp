@@ -422,7 +422,6 @@ inline double atan2_lookup(double y, double x)
     }
     return angle;
 }
-
 }
 }
 

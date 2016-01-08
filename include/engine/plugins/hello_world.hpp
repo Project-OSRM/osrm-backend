@@ -80,7 +80,6 @@ class HelloWorldPlugin final : public BasePlugin
   private:
     std::string descriptor_string;
 };
-
 }
 }
 }

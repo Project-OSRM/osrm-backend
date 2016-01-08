@@ -18,7 +18,8 @@ int main(int argc, char *argv[]) try
     util::LogPolicy::GetInstance().Unmute();
     contractor::ContractorConfig contractor_config;
 
-    const contractor::return_code result = contractor::ContractorOptions::ParseArguments(argc, argv, contractor_config);
+    const contractor::return_code result =
+        contractor::ContractorOptions::ParseArguments(argc, argv, contractor_config);
 
     if (contractor::return_code::fail == result)
     {
@@ -42,9 +43,9 @@ int main(int argc, char *argv[]) try
 
     if (recommended_num_threads != contractor_config.requested_num_threads)
     {
-        util::SimpleLogger().Write(logWARNING) << "The recommended number of threads is "
-                                         << recommended_num_threads
-                                         << "! This setting may have performance side-effects.";
+        util::SimpleLogger().Write(logWARNING)
+            << "The recommended number of threads is " << recommended_num_threads
+            << "! This setting may have performance side-effects.";
     }
 
     if (!boost::filesystem::is_regular_file(contractor_config.osrm_input_path))
@@ -56,14 +57,15 @@ int main(int argc, char *argv[]) try
 
     if (!boost::filesystem::is_regular_file(contractor_config.profile_path))
     {
-        util::SimpleLogger().Write(logWARNING) << "Profile " << contractor_config.profile_path.string()
-                                         << " not found!";
+        util::SimpleLogger().Write(logWARNING)
+            << "Profile " << contractor_config.profile_path.string() << " not found!";
         return EXIT_FAILURE;
     }
 
     util::SimpleLogger().Write() << "Input file: "
-                           << contractor_config.osrm_input_path.filename().string();
-    util::SimpleLogger().Write() << "Profile: " << contractor_config.profile_path.filename().string();
+                                 << contractor_config.osrm_input_path.filename().string();
+    util::SimpleLogger().Write() << "Profile: "
+                                 << contractor_config.profile_path.filename().string();
     util::SimpleLogger().Write() << "Threads: " << contractor_config.requested_num_threads;
 
     tbb::task_scheduler_init init(contractor_config.requested_num_threads);

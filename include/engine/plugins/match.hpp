@@ -37,7 +37,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     using SubMatching = routing_algorithms::SubMatching;
     using SubMatchingList = routing_algorithms::SubMatchingList;
     using CandidateLists = routing_algorithms::CandidateLists;
-    using ClassifierT = map_matching::BayesClassifier<map_matching::LaplaceDistribution, map_matching::LaplaceDistribution, double>;
+    using ClassifierT = map_matching::BayesClassifier<map_matching::LaplaceDistribution,
+                                                      map_matching::LaplaceDistribution,
+                                                      double>;
     using TraceClassification = ClassifierT::ClassificationT;
 
   public:
@@ -203,13 +205,13 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (route_parameters.geometry || route_parameters.print_instructions)
         {
             using SegmentList = guidance::SegmentList<DataFacadeT>;
-            //Passing false to extract_alternative extracts the route.
+            // Passing false to extract_alternative extracts the route.
             const constexpr bool EXTRACT_ROUTE = false;
             // by passing false to segment_list, we skip the douglas peucker simplification
             // and mark all segments as necessary within the generation process
             const constexpr bool NO_ROUTE_SIMPLIFICATION = false;
             SegmentList segment_list(raw_route, EXTRACT_ROUTE, route_parameters.zoom_level,
-                                      NO_ROUTE_SIMPLIFICATION, facade);
+                                     NO_ROUTE_SIMPLIFICATION, facade);
 
             if (route_parameters.geometry)
             {
@@ -220,8 +222,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             if (route_parameters.print_instructions)
             {
                 subtrace.values["instructions"] =
-                    guidance::AnnotateRoute<DataFacadeT>(
-                        segment_list.Get(), facade);
+                    guidance::AnnotateRoute<DataFacadeT>(segment_list.Get(), facade);
             }
 
             util::json::Object json_route_summary;
@@ -379,7 +380,6 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     int max_locations_map_matching;
     ClassifierT classifier;
 };
-
 }
 }
 }

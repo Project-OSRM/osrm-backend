@@ -94,7 +94,6 @@ unsigned parseDuration(const std::string &s)
 
     return std::numeric_limits<unsigned>::max();
 }
-
 }
 }
 

@@ -12,7 +12,6 @@ struct mercator
 
     static double lat2y(const double latitude) noexcept;
 };
-
 }
 }
 

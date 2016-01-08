@@ -149,7 +149,6 @@ class SourceContainer
     std::vector<RasterSource> LoadedSources;
     std::unordered_map<std::string, int> LoadedSourcePaths;
 };
-
 }
 }
 

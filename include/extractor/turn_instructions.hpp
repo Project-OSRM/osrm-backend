@@ -79,7 +79,6 @@ struct TurnInstructionsClass
         return true;
     }
 };
-
 }
 }
 

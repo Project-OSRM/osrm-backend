@@ -53,7 +53,6 @@ struct QueryEdge
                 data.id == right.data.id);
     }
 };
-
 }
 }
 

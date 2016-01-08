@@ -43,7 +43,8 @@ struct Object;
 }
 }
 
-namespace engine {
+namespace engine
+{
 struct RouteParameters;
 class OSRM
 {
@@ -59,7 +60,6 @@ class OSRM
 }
 
 using engine::OSRM;
-
 }
 
 #endif // OSRM_HPP

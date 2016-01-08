@@ -43,7 +43,6 @@ class CompressedEdgeContainer
     std::vector<unsigned> m_free_list;
     std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
 };
-
 }
 }
 

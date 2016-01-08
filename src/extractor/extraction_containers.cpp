@@ -218,7 +218,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         if (edge_iterator->result.osm_source_id < node_iterator->node_id)
         {
             util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
-                                                       << edge_iterator->result.source;
+                                                             << edge_iterator->result.source;
             edge_iterator->result.source = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -255,7 +255,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     auto markSourcesInvalid = [](InternalExtractorEdge &edge)
     {
         util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
-                                                   << edge.result.source;
+                                                         << edge.result.source;
         edge.result.source = SPECIAL_NODEID;
         edge.result.osm_source_id = SPECIAL_OSM_NODEID;
     };
@@ -362,7 +362,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     auto markTargetsInvalid = [](InternalExtractorEdge &edge)
     {
         util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
-                                                   << edge.result.target;
+                                                         << edge.result.target;
         edge.result.target = SPECIAL_NODEID;
     };
     std::for_each(edge_iterator, all_edges_list_end_, markTargetsInvalid);
@@ -614,8 +614,9 @@ void ExtractionContainers::PrepareRestrictions()
         if (way_start_and_end_iterator->way_id >
             OSMWayID(restrictions_iterator->restriction.from.way))
         {
-            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
-                                                     << restrictions_iterator->restriction.from.way;
+            util::SimpleLogger().Write(LogLevel::logDEBUG)
+                << "Restriction references invalid way: "
+                << restrictions_iterator->restriction.from.way;
             restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
             ++restrictions_iterator;
             continue;
@@ -630,8 +631,9 @@ void ExtractionContainers::PrepareRestrictions()
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
         if (via_id_iter == external_to_internal_node_id_map.end())
         {
-            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid node: "
-                                                     << restrictions_iterator->restriction.via.node;
+            util::SimpleLogger().Write(LogLevel::logDEBUG)
+                << "Restriction references invalid node: "
+                << restrictions_iterator->restriction.via.node;
             restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
             ++restrictions_iterator;
             continue;
@@ -691,8 +693,9 @@ void ExtractionContainers::PrepareRestrictions()
         if (way_start_and_end_iterator->way_id >
             OSMWayID(restrictions_iterator->restriction.to.way))
         {
-            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Restriction references invalid way: "
-                                                     << restrictions_iterator->restriction.to.way;
+            util::SimpleLogger().Write(LogLevel::logDEBUG)
+                << "Restriction references invalid way: "
+                << restrictions_iterator->restriction.to.way;
             restrictions_iterator->restriction.to.way = SPECIAL_NODEID;
             ++restrictions_iterator;
             continue;

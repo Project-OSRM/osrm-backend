@@ -119,7 +119,6 @@ struct RangebasedCRC32
   private:
     IteratorbasedCRC32 crc32;
 };
-
 }
 }
 

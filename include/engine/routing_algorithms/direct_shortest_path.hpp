@@ -131,7 +131,6 @@ class DirectShortestPathRouting final
                           raw_route_data.unpacked_path_segments.front());
     }
 };
-
 }
 }
 }

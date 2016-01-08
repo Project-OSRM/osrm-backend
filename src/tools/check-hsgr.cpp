@@ -19,7 +19,6 @@ namespace tools
 
 using EdgeData = contractor::QueryEdge::EdgeData;
 using QueryGraph = util::StaticGraph<EdgeData>;
-
 }
 }
 
@@ -44,10 +43,10 @@ int main(int argc, char *argv[])
         unsigned m_number_of_nodes =
             readHSGRFromStream(hsgr_path, node_list, edge_list, &m_check_sum);
         osrm::util::SimpleLogger().Write() << "expecting " << m_number_of_nodes
-                               << " nodes, checksum: " << m_check_sum;
+                                           << " nodes, checksum: " << m_check_sum;
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
-        osrm::util::SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
-                               << " edges";
+        osrm::util::SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and "
+                                           << edge_list.size() << " edges";
         auto m_query_graph = std::make_shared<osrm::tools::QueryGraph>(node_list, edge_list);
 
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
@@ -67,18 +66,18 @@ int main(int argc, char *argv[])
                 const EdgeID edge_id_1 = m_query_graph->FindEdgeInEitherDirection(node_u, data.id);
                 if (SPECIAL_EDGEID == edge_id_1)
                 {
-                    throw osrm::util::exception("cannot find first segment of edge (" +
-                                          std::to_string(node_u) + "," + std::to_string(data.id) +
-                                          "," + std::to_string(node_v) + "), eid: " +
-                                          std::to_string(eid));
+                    throw osrm::util::exception(
+                        "cannot find first segment of edge (" + std::to_string(node_u) + "," +
+                        std::to_string(data.id) + "," + std::to_string(node_v) + "), eid: " +
+                        std::to_string(eid));
                 }
                 const EdgeID edge_id_2 = m_query_graph->FindEdgeInEitherDirection(data.id, node_v);
                 if (SPECIAL_EDGEID == edge_id_2)
                 {
-                    throw osrm::util::exception("cannot find second segment of edge (" +
-                                          std::to_string(node_u) + "," + std::to_string(data.id) +
-                                          "," + std::to_string(node_v) + "), eid: " +
-                                          std::to_string(eid));
+                    throw osrm::util::exception(
+                        "cannot find second segment of edge (" + std::to_string(node_u) + "," +
+                        std::to_string(data.id) + "," + std::to_string(node_v) + "), eid: " +
+                        std::to_string(eid));
                 }
             }
             progress.printStatus(node_u);

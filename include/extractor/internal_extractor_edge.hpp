@@ -152,7 +152,6 @@ struct CmpEdgeByOSMTargetID
     value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
     value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
 };
-
 }
 }
 

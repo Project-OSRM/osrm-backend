@@ -108,7 +108,6 @@ struct CmpRestrictionContainerByTo
     value_type max_value() const { return InputRestrictionContainer::max_value(); }
     value_type min_value() const { return InputRestrictionContainer::min_value(); }
 };
-
 }
 }
 

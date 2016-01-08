@@ -74,8 +74,11 @@ class Contractor
     //    using ContractorHeap = util::BinaryHeap<NodeID, NodeID, int, ContractorHeapData,
     //    ArrayStorage<NodeID, NodeID>
     //    >;
-    using ContractorHeap =
-        util::BinaryHeap<NodeID, NodeID, int, ContractorHeapData, util::XORFastHashStorage<NodeID, NodeID>>;
+    using ContractorHeap = util::BinaryHeap<NodeID,
+                                            NodeID,
+                                            int,
+                                            ContractorHeapData,
+                                            util::XORFastHashStorage<NodeID, NodeID>>;
     using ContractorEdge = ContractorGraph::InputEdge;
 
     struct ContractorThreadData
@@ -258,7 +261,8 @@ class Contractor
         //            }
         //        }
         //
-        //        util::SimpleLogger().Write() << "edges at node with id " << highestNode << " has degree
+        //        util::SimpleLogger().Write() << "edges at node with id " << highestNode << " has
+        //        degree
         //        " << maxdegree;
         //        for(unsigned i = contractor_graph->BeginEdges(highestNode); i <
         //        contractor_graph->EndEdges(highestNode); ++i) {
@@ -345,9 +349,10 @@ class Contractor
             if (!flushed_contractor && (number_of_contracted_nodes >
                                         static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
             {
-                util::DeallocatingVector<ContractorEdge> new_edge_set; // this one is not explicitely
-                                                                 // cleared since it goes out of
-                                                                 // scope anywa
+                util::DeallocatingVector<ContractorEdge>
+                    new_edge_set; // this one is not explicitely
+                                  // cleared since it goes out of
+                                  // scope anywa
                 std::cout << " [flush " << number_of_contracted_nodes << " nodes] " << std::flush;
 
                 // Delete old heap data to free memory that we need for the coming operations
@@ -595,7 +600,8 @@ class Contractor
             //            avgdegree /= std::max((unsigned)1,(unsigned)remaining_nodes.size() );
             //            quaddegree /= std::max((unsigned)1,(unsigned)remaining_nodes.size() );
             //
-            //            util::SimpleLogger().Write() << "rest: " << remaining_nodes.size() << ", max: "
+            //            util::SimpleLogger().Write() << "rest: " << remaining_nodes.size() << ",
+            //            max: "
             //            << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ",
             //            quad: " << quaddegree;
 
@@ -639,7 +645,8 @@ class Contractor
         }
 
         util::SimpleLogger().Write() << "[core] " << remaining_nodes.size() << " nodes "
-                               << contractor_graph->GetNumberOfEdges() << " edges." << std::endl;
+                                     << contractor_graph->GetNumberOfEdges() << " edges."
+                                     << std::endl;
 
         thread_data_list.data.clear();
     }
@@ -1067,7 +1074,6 @@ class Contractor
     std::vector<bool> is_core_node;
     util::XORFastHash fast_hash;
 };
-
 }
 }
 

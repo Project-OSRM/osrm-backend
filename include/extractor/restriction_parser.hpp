@@ -14,7 +14,6 @@ namespace osmium
 class Relation;
 }
 
-
 namespace osrm
 {
 namespace extractor
@@ -52,7 +51,6 @@ class RestrictionParser
     std::vector<std::string> restriction_exceptions;
     bool use_turn_restrictions;
 };
-
 }
 }
 

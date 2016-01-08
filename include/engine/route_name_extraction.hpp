@@ -28,7 +28,7 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
                                     const unsigned blocked_name_id) const
     {
         SegmentT result_segment;
-        result_segment.name_id = blocked_name_id; //make sure we get a valid name
+        result_segment.name_id = blocked_name_id; // make sure we get a valid name
         result_segment.length = 0;
 
         for (const SegmentT &segment : segment_list)
@@ -139,7 +139,6 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         return route_names;
     }
 };
-
 }
 }
 

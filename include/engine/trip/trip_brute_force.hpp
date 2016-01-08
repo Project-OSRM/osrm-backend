@@ -77,7 +77,6 @@ std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
 
     return route;
 }
-
 }
 }
 }

@@ -115,7 +115,8 @@ class SharedMemory
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
 
             remover.SetID(shm.get_shmid());
-            util::SimpleLogger().Write(logDEBUG) << "writeable memory allocated " << size << " bytes";
+            util::SimpleLogger().Write(logDEBUG) << "writeable memory allocated " << size
+                                                 << " bytes";
         }
     }
 
@@ -247,7 +248,8 @@ class SharedMemory
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
 
             remover.SetID(key);
-            util::SimpleLogger().Write(logDEBUG) << "writeable memory allocated " << size << " bytes";
+            util::SimpleLogger().Write(logDEBUG) << "writeable memory allocated " << size
+                                                 << " bytes";
         }
     }
 
@@ -346,7 +348,7 @@ template <class LockFileT = OSRMLockFile> class SharedMemoryFactory_tmpl
         catch (const boost::interprocess::interprocess_exception &e)
         {
             util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what() << ", code "
-                                             << e.get_error_code();
+                                                   << e.get_error_code();
             throw util::exception(e.what());
         }
     }
@@ -356,7 +358,6 @@ template <class LockFileT = OSRMLockFile> class SharedMemoryFactory_tmpl
 };
 
 using SharedMemoryFactory = SharedMemoryFactory_tmpl<>;
-
 }
 }
 

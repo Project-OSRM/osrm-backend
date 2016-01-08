@@ -96,14 +96,15 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
                                                       const InternalRouteResult &raw_route,
                                                       util::json::Object &json_result)
 {
-    if( not raw_route.is_valid() ){
-      return;
+    if (not raw_route.is_valid())
+    {
+        return;
     }
     const constexpr bool ALLOW_SIMPLIFICATION = true;
     const constexpr bool EXTRACT_ROUTE = false;
     const constexpr bool EXTRACT_ALTERNATIVE = true;
     Segments segment_list(raw_route, EXTRACT_ROUTE, config.zoom_level, ALLOW_SIMPLIFICATION,
-                              facade);
+                          facade);
     json_result.values["route_summary"] = SummarizeRoute(raw_route, segment_list);
     json_result.values["via_points"] = ListViaPoints(raw_route);
     json_result.values["via_indices"] = ListViaIndices(segment_list);
@@ -125,7 +126,7 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
     if (raw_route.has_alternative())
     {
         Segments alternate_segment_list(raw_route, EXTRACT_ALTERNATIVE, config.zoom_level,
-                                            ALLOW_SIMPLIFICATION, facade);
+                                        ALLOW_SIMPLIFICATION, facade);
 
         // Alternative Route Summaries are stored in an array to (down the line) allow multiple
         // alternatives
@@ -140,7 +141,8 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
             auto alternate_geometry_string =
                 GetGeometry(config.compression, alternate_segment_list);
             util::json::Array json_alternate_geometries_array;
-            json_alternate_geometries_array.values.emplace_back(std::move(alternate_geometry_string));
+            json_alternate_geometries_array.values.emplace_back(
+                std::move(alternate_geometry_string));
             json_result.values["alternative_geometries"] = json_alternate_geometries_array;
         }
 
@@ -192,7 +194,8 @@ ApiResponseGenerator<DataFacadeT>::SummarizeRoute(const InternalRouteResult &raw
     {
         const auto start_name_id = raw_route.segment_end_coordinates.front().source_phantom.name_id;
         json_route_summary.values["start_point"] = facade->get_name_for_id(start_name_id);
-        const auto destination_name_id = raw_route.segment_end_coordinates.back().target_phantom.name_id;
+        const auto destination_name_id =
+            raw_route.segment_end_coordinates.back().target_phantom.name_id;
         json_route_summary.values["end_point"] = facade->get_name_for_id(destination_name_id);
     }
     json_route_summary.values["total_time"] = segment_list.GetDuration();
@@ -217,8 +220,10 @@ ApiResponseGenerator<DataFacadeT>::ListViaPoints(const InternalRouteResult &raw_
     {
         std::string tmp;
         util::json::Array json_coordinate;
-        json_coordinate.values.emplace_back(nodes.target_phantom.location.lat / COORDINATE_PRECISION);
-        json_coordinate.values.emplace_back(nodes.target_phantom.location.lon / COORDINATE_PRECISION);
+        json_coordinate.values.emplace_back(nodes.target_phantom.location.lat /
+                                            COORDINATE_PRECISION);
+        json_coordinate.values.emplace_back(nodes.target_phantom.location.lon /
+                                            COORDINATE_PRECISION);
         json_via_points_array.values.emplace_back(std::move(json_coordinate));
     }
     return json_via_points_array;
@@ -235,7 +240,8 @@ ApiResponseGenerator<DataFacadeT>::ListViaIndices(const Segments &segment_list) 
 }
 
 template <typename DataFacadeT>
-util::json::Value ApiResponseGenerator<DataFacadeT>::GetGeometry(const bool return_encoded, const Segments &segments) const
+util::json::Value ApiResponseGenerator<DataFacadeT>::GetGeometry(const bool return_encoded,
+                                                                 const Segments &segments) const
 {
     if (return_encoded)
         return PolylineFormatter().printEncodedString(segments.Get());
@@ -284,11 +290,12 @@ ApiResponseGenerator<DataFacadeT>::BuildHintData(const InternalRouteResult &raw_
 }
 
 template <typename DataFacadeT>
-ApiResponseGenerator<DataFacadeT> MakeApiResponseGenerator(DataFacadeT *facade){
-  return ApiResponseGenerator<DataFacadeT>(facade);
+ApiResponseGenerator<DataFacadeT> MakeApiResponseGenerator(DataFacadeT *facade)
+{
+    return ApiResponseGenerator<DataFacadeT>(facade);
 }
 
 } // namespace engine
 } // namespace osrm
 
-#endif //ENGINE_GUIDANCE_API_RESPONSE_GENERATOR_HPP_
+#endif // ENGINE_GUIDANCE_API_RESPONSE_GENERATOR_HPP_

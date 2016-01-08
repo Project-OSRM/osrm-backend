@@ -290,7 +290,6 @@ class BinaryHeap
 #endif
     }
 };
-
 }
 }
 

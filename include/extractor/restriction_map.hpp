@@ -64,7 +64,6 @@ template <> struct hash<osrm::extractor::RestrictionTarget>
 };
 }
 
-
 namespace osrm
 {
 namespace extractor
@@ -157,7 +156,6 @@ class RestrictionMap
     std::unordered_set<NodeID> m_restriction_start_nodes;
     std::unordered_set<NodeID> m_no_turn_via_node_set;
 };
-
 }
 }
 

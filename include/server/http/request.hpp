@@ -19,7 +19,6 @@ struct request
     std::string agent;
     boost::asio::ip::address endpoint;
 };
-
 }
 }
 }

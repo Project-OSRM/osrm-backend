@@ -34,7 +34,8 @@ struct PhantomNode
 
     PhantomNode();
 
-    template <class OtherT> PhantomNode(const OtherT &other, const util::FixedPointCoordinate &foot_point)
+    template <class OtherT>
+    PhantomNode(const OtherT &other, const util::FixedPointCoordinate &foot_point)
     {
         forward_node_id = other.forward_edge_based_node_id;
         reverse_node_id = other.reverse_edge_based_node_id;
@@ -137,7 +138,6 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
         << "loc: " << pn.location;
     return out;
 }
-
 }
 }
 

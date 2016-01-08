@@ -149,8 +149,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         }
 
         // Run TarjanSCC
-        auto wrapper = std::make_shared<util::MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
-                                                                        number_of_locations);
+        auto wrapper = std::make_shared<util::MatrixGraphWrapper<EdgeWeight>>(
+            result_table.GetTable(), number_of_locations);
         auto scc = extractor::TarjanSCC<util::MatrixGraphWrapper<EdgeWeight>>(wrapper);
         scc.run();
 
@@ -301,13 +301,12 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
 
                 if (component_size < BF_MAX_FEASABLE)
                 {
-                    scc_route =
-                        trip::BruteForceTrip(start, end, number_of_locations, result_table);
+                    scc_route = trip::BruteForceTrip(start, end, number_of_locations, result_table);
                 }
                 else
                 {
-                    scc_route = trip::FarthestInsertionTrip(start, end, number_of_locations,
-                                                                  result_table);
+                    scc_route =
+                        trip::FarthestInsertionTrip(start, end, number_of_locations, result_table);
                 }
 
                 // use this output if debugging of route is needed:
@@ -366,7 +365,6 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         return Status::Ok;
     }
 };
-
 }
 }
 }

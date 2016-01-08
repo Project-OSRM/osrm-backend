@@ -12,7 +12,6 @@ enum class tribool : char
     no,
     indeterminate
 };
-
 }
 }
 #endif // TRIBOOL_HPP

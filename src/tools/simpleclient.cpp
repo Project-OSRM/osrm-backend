@@ -61,7 +61,8 @@ int main(int argc, const char *argv[])
     }
     catch (std::exception &current_exception)
     {
-        osrm::util::SimpleLogger().Write(logWARNING) << "caught exception: " << current_exception.what();
+        osrm::util::SimpleLogger().Write(logWARNING) << "caught exception: "
+                                                     << current_exception.what();
         return -1;
     }
     return 0;

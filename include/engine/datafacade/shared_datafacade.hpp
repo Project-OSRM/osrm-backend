@@ -38,7 +38,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     using NameIndexBlock = typename util::RangeTable<16, true>::BlockT;
     using InputEdge = typename QueryGraph::InputEdge;
     using RTreeLeaf = typename super::RTreeLeaf;
-    using SharedRTree = util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, true>::vector, true>;
+    using SharedRTree =
+        util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, true>::vector, true>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree>;
     using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
     using RTreeNode = typename SharedRTree::TreeNode;
@@ -125,19 +126,22 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     void LoadNodeAndEdgeInformation()
     {
 
-        util::FixedPointCoordinate *coordinate_list_ptr = data_layout->GetBlockPtr<util::FixedPointCoordinate>(
-            shared_memory, SharedDataLayout::COORDINATE_LIST);
+        util::FixedPointCoordinate *coordinate_list_ptr =
+            data_layout->GetBlockPtr<util::FixedPointCoordinate>(shared_memory,
+                                                                 SharedDataLayout::COORDINATE_LIST);
         m_coordinate_list = util::make_unique<util::ShM<util::FixedPointCoordinate, true>::vector>(
             coordinate_list_ptr, data_layout->num_entries[SharedDataLayout::COORDINATE_LIST]);
 
         extractor::TravelMode *travel_mode_list_ptr =
-            data_layout->GetBlockPtr<extractor::TravelMode>(shared_memory, SharedDataLayout::TRAVEL_MODE);
+            data_layout->GetBlockPtr<extractor::TravelMode>(shared_memory,
+                                                            SharedDataLayout::TRAVEL_MODE);
         typename util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
             travel_mode_list_ptr, data_layout->num_entries[SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list.swap(travel_mode_list);
 
-        extractor::TurnInstruction *turn_instruction_list_ptr = data_layout->GetBlockPtr<extractor::TurnInstruction>(
-            shared_memory, SharedDataLayout::TURN_INSTRUCTION);
+        extractor::TurnInstruction *turn_instruction_list_ptr =
+            data_layout->GetBlockPtr<extractor::TurnInstruction>(
+                shared_memory, SharedDataLayout::TURN_INSTRUCTION);
         typename util::ShM<extractor::TurnInstruction, true>::vector turn_instruction_list(
             turn_instruction_list_ptr,
             data_layout->num_entries[SharedDataLayout::TURN_INSTRUCTION]);
@@ -258,7 +262,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             file_index_path = boost::filesystem::path(file_index_ptr);
             if (!boost::filesystem::exists(file_index_path))
             {
-                util::SimpleLogger().Write(logDEBUG) << "Leaf file name " << file_index_path.string();
+                util::SimpleLogger().Write(logDEBUG) << "Leaf file name "
+                                                     << file_index_path.string();
                 throw util::exception("Could not load leaf index file. "
                                       "Is any data loaded into shared memory?");
             }
@@ -397,10 +402,10 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
                                                        bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::FixedPointCoordinate &input_coordinate,
-                                                      const int bearing = 0,
-                                                      const int bearing_range = 180) override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate &input_coordinate,
+        const int bearing = 0,
+        const int bearing_range = 180) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -452,7 +457,6 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 };
-
 }
 }
 }

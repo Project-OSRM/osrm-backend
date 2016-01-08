@@ -24,7 +24,8 @@ namespace osrm
 namespace extractor
 {
 
-namespace {
+namespace
+{
 int luaErrorCallback(lua_State *lua_state)
 {
     std::string error_msg = lua_tostring(lua_state, -1);
@@ -70,7 +71,7 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
                                      boost::ref(restriction_exceptions));
         const unsigned exception_count = restriction_exceptions.size();
         util::SimpleLogger().Write() << "Found " << exception_count
-                               << " exceptions to turn restrictions:";
+                                     << " exceptions to turn restrictions:";
         for (const std::string &str : restriction_exceptions)
         {
             util::SimpleLogger().Write() << "  " << str;

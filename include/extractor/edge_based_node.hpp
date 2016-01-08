@@ -59,7 +59,7 @@ struct EdgeBasedNode
     }
 
     static inline util::FixedPointCoordinate Centroid(const util::FixedPointCoordinate &a,
-                                                const util::FixedPointCoordinate &b)
+                                                      const util::FixedPointCoordinate &b)
     {
         util::FixedPointCoordinate centroid;
         // The coordinates of the midpoint are given by:
@@ -89,7 +89,6 @@ struct EdgeBasedNode
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
 };
-
 }
 }
 

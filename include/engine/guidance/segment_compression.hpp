@@ -63,4 +63,4 @@ inline void CombineSimilarSegments(std::vector<SegmentInformation> &segments)
 } // namespace engine
 } // namespace osrm
 
-#endif //ENGINE_GUIDANCE_PROCESSING_SEGMENT_COMPRESSION_HPP_
+#endif // ENGINE_GUIDANCE_PROCESSING_SEGMENT_COMPRESSION_HPP_

@@ -21,13 +21,13 @@ namespace engine
 {
 namespace guidance
 {
-template< typename DataFacadeT >
-inline util::json::Array
-AnnotateRoute(const std::vector<SegmentInformation> &route_segments, DataFacadeT* facade)
+template <typename DataFacadeT>
+inline util::json::Array AnnotateRoute(const std::vector<SegmentInformation> &route_segments,
+                                       DataFacadeT *facade)
 {
     util::json::Array json_instruction_array;
-    if( route_segments.empty() )
-      return json_instruction_array;
+    if (route_segments.empty())
+        return json_instruction_array;
     // Segment information has following format:
     //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]
     std::int32_t necessary_segments_running_index = 0;
@@ -42,7 +42,7 @@ AnnotateRoute(const std::vector<SegmentInformation> &route_segments, DataFacadeT
     round_about = {std::numeric_limits<std::int32_t>::max(), 0, 0};
     std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
 
-    //Generate annotations for every segment
+    // Generate annotations for every segment
     for (const SegmentInformation &segment : route_segments)
     {
         util::json::Array json_instruction_row;
@@ -59,8 +59,8 @@ AnnotateRoute(const std::vector<SegmentInformation> &route_segments, DataFacadeT
                 std::string current_turn_instruction;
                 if (extractor::TurnInstruction::LeaveRoundAbout == current_instruction)
                 {
-                    temp_instruction =
-                        std::to_string(util::cast::enum_to_underlying(extractor::TurnInstruction::EnterRoundAbout));
+                    temp_instruction = std::to_string(util::cast::enum_to_underlying(
+                        extractor::TurnInstruction::EnterRoundAbout));
                     current_turn_instruction += temp_instruction;
                     current_turn_instruction += "-";
                     temp_instruction = std::to_string(round_about.leave_at_exit + 1);
@@ -110,9 +110,9 @@ AnnotateRoute(const std::vector<SegmentInformation> &route_segments, DataFacadeT
     }
 
     util::json::Array json_last_instruction_row;
-    temp_instruction =
-        std::to_string(util::cast::enum_to_underlying(extractor::TurnInstruction::ReachedYourDestination));
-    json_last_instruction_row.values.emplace_back( std::move(temp_instruction));
+    temp_instruction = std::to_string(
+        util::cast::enum_to_underlying(extractor::TurnInstruction::ReachedYourDestination));
+    json_last_instruction_row.values.emplace_back(std::move(temp_instruction));
     json_last_instruction_row.values.push_back("");
     json_last_instruction_row.values.push_back(0);
     json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);

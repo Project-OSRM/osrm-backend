@@ -147,7 +147,7 @@ template <typename GraphT> class TarjanSCC
                         if (size_of_current_component > 1000)
                         {
                             util::SimpleLogger().Write() << "large component [" << component_index
-                                                   << "]=" << size_of_current_component;
+                                                         << "]=" << size_of_current_component;
                         }
 
                         ++component_index;
@@ -178,7 +178,6 @@ template <typename GraphT> class TarjanSCC
 
     unsigned get_component_id(const NodeID node) const { return components_index[node]; }
 };
-
 }
 }
 

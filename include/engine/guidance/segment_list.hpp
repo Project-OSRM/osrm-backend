@@ -146,7 +146,8 @@ void SegmentList<DataFacadeT>::AddLeg(const std::vector<PathData> &leg_data,
     const extractor::TravelMode travel_mode =
         (traversed_in_reverse ? target_node.backward_travel_mode : target_node.forward_travel_mode);
     segments.emplace_back(target_node.location, target_node.name_id, segment_duration, 0.f,
-                          is_via_leg ? extractor::TurnInstruction::ReachViaLocation : extractor::TurnInstruction::NoTurn,
+                          is_via_leg ? extractor::TurnInstruction::ReachViaLocation
+                                     : extractor::TurnInstruction::NoTurn,
                           true, true, travel_mode);
 }
 
@@ -220,8 +221,8 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
     {
         // move down names by one, q&d hack
         segments[i - 1].name_id = segments[i].name_id;
-        segments[i].length = util::coordinate_calculation::greatCircleDistance(segments[i - 1].location,
-                                                                         segments[i].location);
+        segments[i].length = util::coordinate_calculation::greatCircleDistance(
+            segments[i - 1].location, segments[i].location);
     }
 
     float segment_length = 0.;

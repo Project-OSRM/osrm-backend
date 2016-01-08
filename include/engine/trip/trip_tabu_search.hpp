@@ -34,7 +34,6 @@ void TabuSearchTrip(const PhantomNodeArray &phantom_node_vector,
                     std::vector<int> &min_loc_permutation)
 {
 }
-
 }
 }
 }

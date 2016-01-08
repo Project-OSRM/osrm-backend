@@ -258,7 +258,6 @@ GenerateServerProgramOptions(const int argc,
     SimpleLogger().Write() << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
 }
-
 }
 }
 

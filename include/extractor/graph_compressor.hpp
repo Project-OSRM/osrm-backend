@@ -37,7 +37,6 @@ class GraphCompressor
 
     SpeedProfileProperties speed_profile;
 };
-
 }
 }
 

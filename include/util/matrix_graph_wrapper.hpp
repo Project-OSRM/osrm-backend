@@ -12,7 +12,8 @@ namespace osrm
 namespace util
 {
 
-// This Wrapper provides all methods that are needed for extractor::TarjanSCC, when the graph is given in a
+// This Wrapper provides all methods that are needed for extractor::TarjanSCC, when the graph is
+// given in a
 // matrix representation (e.g. as output from a distance table call)
 
 template <typename T> class MatrixGraphWrapper
@@ -44,7 +45,6 @@ template <typename T> class MatrixGraphWrapper
     const std::vector<T> table_;
     const std::size_t number_of_nodes_;
 };
-
 }
 }
 

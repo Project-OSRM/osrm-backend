@@ -119,11 +119,9 @@ struct RouteParameters
     std::vector<bool> is_destination;
     std::vector<bool> is_source;
 };
-
 }
 
 using engine::RouteParameters;
-
 }
 
 #endif // ROUTE_PARAMETERS_HPP

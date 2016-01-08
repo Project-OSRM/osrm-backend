@@ -166,7 +166,6 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
         return Status::Ok;
     }
 };
-
 }
 }
 }

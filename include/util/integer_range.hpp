@@ -47,7 +47,6 @@ irange(const Integer first,
 {
     return range<Integer>(first, last);
 }
-
 }
 }
 

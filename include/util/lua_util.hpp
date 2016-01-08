@@ -39,7 +39,6 @@ inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_
     const std::string lua_code = "package.path = \"" + folder + "/?.lua;\" .. package.path";
     luaL_dostring(lua_state, lua_code.c_str());
 }
-
 }
 }
 

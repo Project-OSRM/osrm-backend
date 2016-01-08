@@ -33,7 +33,6 @@ class FingerPrint
 };
 
 static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
-
 }
 }
 

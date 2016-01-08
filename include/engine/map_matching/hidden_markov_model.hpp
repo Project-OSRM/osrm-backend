@@ -34,8 +34,7 @@ struct EmissionLogProbability
 
     double operator()(const double distance) const
     {
-        return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) -
-               log_sigma_z;
+        return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) - log_sigma_z;
     }
 };
 
@@ -116,8 +115,7 @@ template <class CandidateLists> struct HiddenMarkovModel
                 viterbi[initial_timestamp][s] =
                     emission_log_probability(candidates_list[initial_timestamp][s].distance);
                 parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
-                pruned[initial_timestamp][s] =
-                    viterbi[initial_timestamp][s] < MINIMAL_LOG_PROB;
+                pruned[initial_timestamp][s] = viterbi[initial_timestamp][s] < MINIMAL_LOG_PROB;
                 suspicious[initial_timestamp][s] = false;
 
                 breakage[initial_timestamp] =
@@ -140,7 +138,6 @@ template <class CandidateLists> struct HiddenMarkovModel
         return initial_timestamp;
     }
 };
-
 }
 }
 }

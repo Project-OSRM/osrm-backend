@@ -148,15 +148,15 @@ struct RectangleInt2D
         const FixedPointCoordinate lower_right(min_lat, max_lon);
         const FixedPointCoordinate lower_left(min_lat, min_lon);
 
-        min_max_dist = std::min(
-            min_max_dist,
-            std::max(coordinate_calculation::greatCircleDistance(location, upper_left),
-                     coordinate_calculation::greatCircleDistance(location, upper_right)));
+        min_max_dist =
+            std::min(min_max_dist,
+                     std::max(coordinate_calculation::greatCircleDistance(location, upper_left),
+                              coordinate_calculation::greatCircleDistance(location, upper_right)));
 
-        min_max_dist = std::min(
-            min_max_dist,
-            std::max(coordinate_calculation::greatCircleDistance(location, upper_right),
-                     coordinate_calculation::greatCircleDistance(location, lower_right)));
+        min_max_dist =
+            std::min(min_max_dist,
+                     std::max(coordinate_calculation::greatCircleDistance(location, upper_right),
+                              coordinate_calculation::greatCircleDistance(location, lower_right)));
 
         min_max_dist =
             std::min(min_max_dist,
@@ -177,7 +177,6 @@ struct RectangleInt2D
         return lats_contained && lons_contained;
     }
 };
-
 }
 }
 

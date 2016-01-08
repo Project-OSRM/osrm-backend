@@ -63,8 +63,8 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
                                const std::vector<extractor::NodeBasedEdge> &input_edge_list)
 {
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(
-        input_edge_list,
-        [](NodeBasedDynamicGraph::InputEdge &output_edge, const extractor::NodeBasedEdge &input_edge)
+        input_edge_list, [](NodeBasedDynamicGraph::InputEdge &output_edge,
+                            const extractor::NodeBasedEdge &input_edge)
         {
             output_edge.data.distance = static_cast<int>(input_edge.weight);
             BOOST_ASSERT(output_edge.data.distance > 0);
@@ -83,7 +83,6 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
 
     return graph;
 }
-
 }
 }
 

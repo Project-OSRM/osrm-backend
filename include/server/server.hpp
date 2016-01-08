@@ -30,7 +30,8 @@ class Server
     static std::shared_ptr<Server>
     CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
     {
-        util::SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
+        util::SimpleLogger().Write() << "http 1.1 compression handled by zlib version "
+                                     << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
         return std::make_shared<Server>(ip_address, ip_port, real_num_threads);
@@ -93,7 +94,6 @@ class Server
     std::shared_ptr<Connection> new_connection;
     RequestHandler request_handler;
 };
-
 }
 }
 

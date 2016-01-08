@@ -258,7 +258,6 @@ bool GenerateDataStoreOptions(const int argc,
 
     return true;
 }
-
 }
 }
 

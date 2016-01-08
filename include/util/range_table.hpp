@@ -233,7 +233,6 @@ std::istream &operator>>(std::istream &in, RangeTable<BLOCK_SIZE, USE_SHARED_MEM
     in.read((char *)table.diff_blocks.data(), BLOCK_SIZE * number_of_blocks);
     return in;
 }
-
 }
 }
 

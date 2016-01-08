@@ -44,7 +44,6 @@ void runStatistics(std::vector<double> &timings_vector, Statistics &stats)
                                                timings_vector.begin(), 0.0);
     stats.dev = std::sqrt(primary_sq_sum / timings_vector.size() - (stats.mean * stats.mean));
 }
-
 }
 }
 
@@ -66,7 +65,8 @@ int main(int argc, char *argv[])
     {
         if (1 == argc)
         {
-            osrm::util::SimpleLogger().Write(logWARNING) << "usage: " << argv[0] << " /path/on/device";
+            osrm::util::SimpleLogger().Write(logWARNING) << "usage: " << argv[0]
+                                                         << " /path/on/device";
             return -1;
         }
 
@@ -90,7 +90,8 @@ int main(int argc, char *argv[])
             fcntl(fileno(fd), F_NOCACHE, 1);
             fcntl(fileno(fd), F_RDAHEAD, 0);
             TIMER_START(write_1gb);
-            write(fileno(fd), (char *)random_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
+            write(fileno(fd), (char *)random_array,
+                  osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
             TIMER_STOP(write_1gb);
             fclose(fd);
 #endif
@@ -102,7 +103,8 @@ int main(int argc, char *argv[])
                 throw osrm::util::exception("Could not open random data file");
             }
             TIMER_START(write_1gb);
-            int ret = write(file_desc, random_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
+            int ret =
+                write(file_desc, random_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
             if (0 > ret)
             {
                 throw osrm::util::exception("could not write random data file");
@@ -111,10 +113,11 @@ int main(int argc, char *argv[])
             close(file_desc);
 #endif
             delete[] random_array;
-            osrm::util::SimpleLogger().Write(logDEBUG) << "writing raw 1GB took " << TIMER_SEC(write_1gb)
-                                           << "s";
+            osrm::util::SimpleLogger().Write(logDEBUG) << "writing raw 1GB took "
+                                                       << TIMER_SEC(write_1gb) << "s";
             osrm::util::SimpleLogger().Write() << "raw write performance: " << std::setprecision(5)
-                                   << std::fixed << 1024 * 1024 / TIMER_SEC(write_1gb) << "MB/sec";
+                                               << std::fixed << 1024 * 1024 / TIMER_SEC(write_1gb)
+                                               << "MB/sec";
 
             osrm::util::SimpleLogger().Write(logDEBUG)
                 << "finished creation of random data. Flush disk cache now!";
@@ -146,7 +149,8 @@ int main(int argc, char *argv[])
                 osrm::util::SimpleLogger().Write(logDEBUG) << "opened, error: " << strerror(errno);
                 return -1;
             }
-            char *raw_array = (char *)memalign(512, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
+            char *raw_array =
+                (char *)memalign(512, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
 #endif
             TIMER_START(read_1gb);
 #ifdef __APPLE__
@@ -155,18 +159,21 @@ int main(int argc, char *argv[])
             fd = fopen(test_path.string().c_str(), "r");
 #endif
 #ifdef __linux__
-            int ret = read(file_desc, raw_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
+            int ret =
+                read(file_desc, raw_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
             osrm::util::SimpleLogger().Write(logDEBUG) << "read " << ret
-                                           << " bytes, error: " << strerror(errno);
+                                                       << " bytes, error: " << strerror(errno);
             close(file_desc);
             file_desc = open(test_path.string().c_str(), O_RDONLY | O_DIRECT | O_SYNC);
             osrm::util::SimpleLogger().Write(logDEBUG) << "opened, error: " << strerror(errno);
 #endif
             TIMER_STOP(read_1gb);
 
-            osrm::util::SimpleLogger().Write(logDEBUG) << "reading raw 1GB took " << TIMER_SEC(read_1gb) << "s";
-            osrm::util::SimpleLogger().Write() << "raw read performance: " << std::setprecision(5) << std::fixed
-                                   << 1024 * 1024 / TIMER_SEC(read_1gb) << "MB/sec";
+            osrm::util::SimpleLogger().Write(logDEBUG) << "reading raw 1GB took "
+                                                       << TIMER_SEC(read_1gb) << "s";
+            osrm::util::SimpleLogger().Write() << "raw read performance: " << std::setprecision(5)
+                                               << std::fixed << 1024 * 1024 / TIMER_SEC(read_1gb)
+                                               << "MB/sec";
 
             std::vector<double> timing_results_raw_random;
             osrm::util::SimpleLogger().Write(logDEBUG) << "running 1000 random I/Os of 4KB";
@@ -178,7 +185,8 @@ int main(int argc, char *argv[])
             lseek(file_desc, 0, SEEK_SET);
 #endif
             // make 1000 random access, time each I/O seperately
-            unsigned number_of_blocks = (osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned) - 1) / 4096;
+            unsigned number_of_blocks =
+                (osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned) - 1) / 4096;
             std::random_device rd;
             std::default_random_engine e1(rd());
             std::uniform_int_distribution<unsigned> uniform_dist(0, number_of_blocks - 1);
@@ -205,13 +213,15 @@ int main(int argc, char *argv[])
                 if (((off_t)-1) == ret1)
                 {
                     osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                    osrm::util::SimpleLogger().Write(logWARNING) << "seek error " << strerror(errno);
+                    osrm::util::SimpleLogger().Write(logWARNING) << "seek error "
+                                                                 << strerror(errno);
                     throw osrm::util::exception("seek error");
                 }
                 if (-1 == ret2)
                 {
                     osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                    osrm::util::SimpleLogger().Write(logWARNING) << "read error " << strerror(errno);
+                    osrm::util::SimpleLogger().Write(logWARNING) << "read error "
+                                                                 << strerror(errno);
                     throw osrm::util::exception("read error");
                 }
                 timing_results_raw_random.push_back(TIMER_SEC(random_access));
@@ -227,12 +237,12 @@ int main(int argc, char *argv[])
             random_csv.close();
             osrm::tools::runStatistics(timing_results_raw_random, stats);
 
-            osrm::util::SimpleLogger().Write() << "raw random I/O: " << std::setprecision(5) << std::fixed
-                                   << "min: " << stats.min << "ms, "
-                                   << "mean: " << stats.mean << "ms, "
-                                   << "med: " << stats.med << "ms, "
-                                   << "max: " << stats.max << "ms, "
-                                   << "dev: " << stats.dev << "ms";
+            osrm::util::SimpleLogger().Write() << "raw random I/O: " << std::setprecision(5)
+                                               << std::fixed << "min: " << stats.min << "ms, "
+                                               << "mean: " << stats.mean << "ms, "
+                                               << "med: " << stats.med << "ms, "
+                                               << "max: " << stats.max << "ms, "
+                                               << "dev: " << stats.dev << "ms";
 
             std::vector<double> timing_results_raw_seq;
 #ifdef __APPLE__
@@ -266,13 +276,15 @@ int main(int argc, char *argv[])
                 if (((off_t)-1) == ret1)
                 {
                     osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                    osrm::util::SimpleLogger().Write(logWARNING) << "seek error " << strerror(errno);
+                    osrm::util::SimpleLogger().Write(logWARNING) << "seek error "
+                                                                 << strerror(errno);
                     throw osrm::util::exception("seek error");
                 }
                 if (-1 == ret2)
                 {
                     osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                    osrm::util::SimpleLogger().Write(logWARNING) << "read error " << strerror(errno);
+                    osrm::util::SimpleLogger().Write(logWARNING) << "read error "
+                                                                 << strerror(errno);
                     throw osrm::util::exception("read error");
                 }
                 timing_results_raw_seq.push_back(TIMER_SEC(read_every_100));
@@ -296,12 +308,12 @@ int main(int argc, char *argv[])
             }
             seq_csv.close();
             osrm::tools::runStatistics(timing_results_raw_seq, stats);
-            osrm::util::SimpleLogger().Write() << "raw sequential I/O: " << std::setprecision(5) << std::fixed
-                                   << "min: " << stats.min << "ms, "
-                                   << "mean: " << stats.mean << "ms, "
-                                   << "med: " << stats.med << "ms, "
-                                   << "max: " << stats.max << "ms, "
-                                   << "dev: " << stats.dev << "ms";
+            osrm::util::SimpleLogger().Write() << "raw sequential I/O: " << std::setprecision(5)
+                                               << std::fixed << "min: " << stats.min << "ms, "
+                                               << "mean: " << stats.mean << "ms, "
+                                               << "med: " << stats.med << "ms, "
+                                               << "max: " << stats.max << "ms, "
+                                               << "dev: " << stats.dev << "ms";
 
             if (boost::filesystem::exists(test_path))
             {

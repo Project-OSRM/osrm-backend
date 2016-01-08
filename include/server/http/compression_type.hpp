@@ -14,7 +14,6 @@ enum compression_type
     gzip_rfc1952,
     deflate_rfc1951
 };
-
 }
 }
 }

@@ -45,7 +45,6 @@ struct LibOSRMConfig
     int max_locations_map_matching = -1;
     bool use_shared_memory = true;
 };
-
 }
 
 #endif // SERVER_CONFIG_HPP

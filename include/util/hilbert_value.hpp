@@ -23,7 +23,6 @@ class HilbertCode
     inline uint64_t BitInterleaving(const uint32_t a, const uint32_t b) const;
     inline void TransposeCoordinate(uint32_t *X) const;
 };
-
 }
 }
 

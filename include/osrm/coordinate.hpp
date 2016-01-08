@@ -67,7 +67,6 @@ std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordina
 }
 
 using util::FixedPointCoordinate;
-
 }
 
 #endif /* COORDINATE_HPP_ */

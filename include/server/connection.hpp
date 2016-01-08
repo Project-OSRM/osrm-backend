@@ -64,7 +64,6 @@ class Connection : public std::enable_shared_from_this<Connection>
     http::reply current_reply;
     std::vector<char> compressed_output;
 };
-
 }
 }
 

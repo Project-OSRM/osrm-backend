@@ -53,18 +53,16 @@ void RequestHandler::handle_request(const http::request &current_request,
         time_stamp = localtime(&ltime);
 
         // log timestamp
-        util::SimpleLogger().Write() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday
-                               << "-" << (time_stamp->tm_mon + 1 < 10 ? "0" : "")
-                               << (time_stamp->tm_mon + 1) << "-" << 1900 + time_stamp->tm_year
-                               << " " << (time_stamp->tm_hour < 10 ? "0" : "")
-                               << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
-                               << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
-                               << time_stamp->tm_sec << " " << current_request.endpoint.to_string()
-                               << " " << current_request.referrer
-                               << (0 == current_request.referrer.length() ? "- " : " ")
-                               << current_request.agent
-                               << (0 == current_request.agent.length() ? "- " : " ")
-                               << request_string;
+        util::SimpleLogger().Write()
+            << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
+            << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
+            << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
+            << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
+            << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
+            << time_stamp->tm_sec << " " << current_request.endpoint.to_string() << " "
+            << current_request.referrer << (0 == current_request.referrer.length() ? "- " : " ")
+            << current_request.agent << (0 == current_request.agent.length() ? "- " : " ")
+            << request_string;
 
         engine::RouteParameters route_parameters;
         APIGrammarParser api_parser(&route_parameters);
@@ -151,7 +149,7 @@ void RequestHandler::handle_request(const http::request &current_request,
         current_reply = http::reply::stock_reply(http::reply::internal_server_error);
         ;
         util::SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
-                                         << ", uri: " << current_request.uri;
+                                               << ", uri: " << current_request.uri;
     }
 }
 

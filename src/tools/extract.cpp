@@ -15,7 +15,8 @@ int main(int argc, char *argv[]) try
     util::LogPolicy::GetInstance().Unmute();
     extractor::ExtractorConfig extractor_config;
 
-    const extractor::return_code result = extractor::ExtractorOptions::ParseArguments(argc, argv, extractor_config);
+    const extractor::return_code result =
+        extractor::ExtractorOptions::ParseArguments(argc, argv, extractor_config);
 
     if (extractor::return_code::fail == result)
     {
@@ -37,15 +38,15 @@ int main(int argc, char *argv[]) try
 
     if (!boost::filesystem::is_regular_file(extractor_config.input_path))
     {
-        util::SimpleLogger().Write(logWARNING) << "Input file " << extractor_config.input_path.string()
-                                         << " not found!";
+        util::SimpleLogger().Write(logWARNING)
+            << "Input file " << extractor_config.input_path.string() << " not found!";
         return EXIT_FAILURE;
     }
 
     if (!boost::filesystem::is_regular_file(extractor_config.profile_path))
     {
-        util::SimpleLogger().Write(logWARNING) << "Profile " << extractor_config.profile_path.string()
-                                         << " not found!";
+        util::SimpleLogger().Write(logWARNING)
+            << "Profile " << extractor_config.profile_path.string() << " not found!";
         return EXIT_FAILURE;
     }
     return extractor::extractor(extractor_config).run();

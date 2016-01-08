@@ -108,7 +108,7 @@ ExtractorOptions::ParseArguments(int argc, char *argv[], ExtractorConfig &extrac
         if (boost::filesystem::is_regular_file(extractor_config.config_file_path))
         {
             util::SimpleLogger().Write() << "Reading options from: "
-                                   << extractor_config.config_file_path.string();
+                                         << extractor_config.config_file_path.string();
             std::string ini_file_contents =
                 util::read_file_lower_content(extractor_config.config_file_path);
             std::stringstream config_stream(ini_file_contents);

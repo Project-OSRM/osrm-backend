@@ -15,7 +15,6 @@ struct Cmp
     value_type max_value() { return MAX_OSM_NODEID; }
     value_type min_value() { return MIN_OSM_NODEID; }
 };
-
 }
 }
 

@@ -17,6 +17,5 @@ namespace util
 {
 
 void exception::anchor() const {}
-
 }
 }

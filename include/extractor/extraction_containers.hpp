@@ -65,7 +65,6 @@ class ExtractionContainers
                      const std::string &names_file_name,
                      lua_State *segment_state);
 };
-
 }
 }
 

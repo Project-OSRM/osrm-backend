@@ -16,7 +16,6 @@ struct ComputeAngle
                                                const FixedPointCoordinate &second,
                                                const FixedPointCoordinate &third) noexcept;
 };
-
 }
 }
 

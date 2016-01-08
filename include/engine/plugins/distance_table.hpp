@@ -219,7 +219,6 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     std::string descriptor_string;
     DataFacadeT *facade;
 };
-
 }
 }
 }

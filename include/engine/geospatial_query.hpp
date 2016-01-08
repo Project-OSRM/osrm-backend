@@ -77,10 +77,10 @@ template <typename RTreeT> class GeospatialQuery
 
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::FixedPointCoordinate &input_coordinate,
-                                                      const int bearing = 0,
-                                                      const int bearing_range = 180)
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate &input_coordinate,
+        const int bearing = 0,
+        const int bearing_range = 180)
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -139,9 +139,10 @@ template <typename RTreeT> class GeospatialQuery
     {
         util::FixedPointCoordinate point_on_segment;
         double ratio;
-        const auto current_perpendicular_distance = util::coordinate_calculation::perpendicularDistance(
-            coordinates->at(data.u), coordinates->at(data.v), input_coordinate, point_on_segment,
-            ratio);
+        const auto current_perpendicular_distance =
+            util::coordinate_calculation::perpendicularDistance(
+                coordinates->at(data.u), coordinates->at(data.v), input_coordinate,
+                point_on_segment, ratio);
 
         auto transformed = PhantomNodeWithDistance{PhantomNode{data, point_on_segment},
                                                    current_perpendicular_distance};
@@ -163,8 +164,8 @@ template <typename RTreeT> class GeospatialQuery
                                               const int filter_bearing,
                                               const int filter_bearing_range)
     {
-        const double forward_edge_bearing =
-            util::coordinate_calculation::bearing(coordinates->at(segment.u), coordinates->at(segment.v));
+        const double forward_edge_bearing = util::coordinate_calculation::bearing(
+            coordinates->at(segment.u), coordinates->at(segment.v));
 
         const double backward_edge_bearing = (forward_edge_bearing + 180) > 360
                                                  ? (forward_edge_bearing - 180)
@@ -172,11 +173,11 @@ template <typename RTreeT> class GeospatialQuery
 
         const bool forward_bearing_valid =
             util::bearing::CheckInBounds(std::round(forward_edge_bearing), filter_bearing,
-                                   filter_bearing_range) &&
+                                         filter_bearing_range) &&
             segment.forward_edge_based_node_id != SPECIAL_NODEID;
         const bool backward_bearing_valid =
             util::bearing::CheckInBounds(std::round(backward_edge_bearing), filter_bearing,
-                                   filter_bearing_range) &&
+                                         filter_bearing_range) &&
             segment.reverse_edge_based_node_id != SPECIAL_NODEID;
         return std::make_pair(forward_bearing_valid, backward_bearing_valid);
     }
@@ -184,7 +185,6 @@ template <typename RTreeT> class GeospatialQuery
     RTreeT &rtree;
     const std::shared_ptr<CoordinateList> coordinates;
 };
-
 }
 }
 

@@ -64,7 +64,6 @@ class GlobalTimerFactory
      std::chrono::duration_cast<std::chrono::microseconds>(_X##_stop - _X##_start).count())
 #define TIMER_MIN(_X)                                                                              \
     std::chrono::duration_cast<std::chrono::minutes>(_X##_stop - _X##_start).count()
-
 }
 }
 

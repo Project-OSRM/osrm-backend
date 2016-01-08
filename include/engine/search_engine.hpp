@@ -41,7 +41,6 @@ template <class DataFacadeT> class SearchEngine
 
     ~SearchEngine() {}
 };
-
 }
 }
 

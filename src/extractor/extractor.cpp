@@ -219,12 +219,13 @@ int extractor::run()
             }
         }
         TIMER_STOP(parsing);
-        util::SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
+        util::SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing)
+                                     << " seconds";
 
-        util::SimpleLogger().Write() << "Raw input contains " << number_of_nodes.load() << " nodes, "
-                               << number_of_ways.load() << " ways, and "
-                               << number_of_relations.load() << " relations, and "
-                               << number_of_others.load() << " unknown entities";
+        util::SimpleLogger().Write() << "Raw input contains " << number_of_nodes.load()
+                                     << " nodes, " << number_of_ways.load() << " ways, and "
+                                     << number_of_relations.load() << " relations, and "
+                                     << number_of_others.load() << " unknown entities";
 
         extractor_callbacks.reset();
 
@@ -238,7 +239,8 @@ int extractor::run()
                                           config.names_file_name, segment_state);
 
         TIMER_STOP(extracting);
-        util::SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";
+        util::SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting)
+                                     << "s";
     }
     catch (const std::exception &e)
     {
@@ -287,12 +289,11 @@ int extractor::run()
 
         WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
 
-        util::SimpleLogger().Write() << "Expansion  : "
-                               << (number_of_node_based_nodes / TIMER_SEC(expansion))
-                               << " nodes/sec and " << ((max_edge_id + 1) / TIMER_SEC(expansion))
-                               << " edges/sec";
+        util::SimpleLogger().Write()
+            << "Expansion  : " << (number_of_node_based_nodes / TIMER_SEC(expansion))
+            << " nodes/sec and " << ((max_edge_id + 1) / TIMER_SEC(expansion)) << " edges/sec";
         util::SimpleLogger().Write() << "To prepare the data for routing, run: "
-                               << "./osrm-prepare " << config.output_file_name << std::endl;
+                                     << "./osrm-prepare " << config.output_file_name << std::endl;
     }
     catch (const std::exception &e)
     {
@@ -332,7 +333,7 @@ void extractor::SetupScriptingEnvironment(lua_State *lua_state,
     }
     speed_profile.traffic_signal_penalty = 10 * lua_tointeger(lua_state, -1);
     util::SimpleLogger().Write(logDEBUG) << "traffic_signal_penalty: "
-                                   << speed_profile.traffic_signal_penalty;
+                                         << speed_profile.traffic_signal_penalty;
 
     if (0 != luaL_dostring(lua_state, "return u_turn_penalty\n"))
     {
@@ -455,7 +456,7 @@ extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
         input_stream, barrier_list, traffic_light_list, internal_to_external_node_map);
 
     util::SimpleLogger().Write() << " - " << barrier_list.size() << " bollard nodes, "
-                           << traffic_light_list.size() << " traffic lights";
+                                 << traffic_light_list.size() << " traffic lights";
 
     // insert into unordered sets for fast lookup
     barrier_nodes.insert(barrier_list.begin(), barrier_list.end());
@@ -556,8 +557,8 @@ void extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
                            const std::vector<QueryNode> &internal_to_external_node_map)
 {
     util::SimpleLogger().Write() << "constructing r-tree of " << node_based_edge_list.size()
-                           << " edge elements build on-top of "
-                           << internal_to_external_node_map.size() << " coordinates";
+                                 << " edge elements build on-top of "
+                                 << internal_to_external_node_map.size() << " coordinates";
 
     BOOST_ASSERT(node_is_startpoint.size() == node_based_edge_list.size());
 
@@ -579,16 +580,18 @@ void extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
 
     TIMER_START(construction);
     util::StaticRTree<EdgeBasedNode> rtree(node_based_edge_list, config.rtree_nodes_output_path,
-                                     config.rtree_leafs_output_path, internal_to_external_node_map);
+                                           config.rtree_leafs_output_path,
+                                           internal_to_external_node_map);
 
     TIMER_STOP(construction);
     util::SimpleLogger().Write() << "finished r-tree construction in " << TIMER_SEC(construction)
-                           << " seconds";
+                                 << " seconds";
 }
 
-void extractor::WriteEdgeBasedGraph(std::string const &output_file_filename,
-                                    size_t const max_edge_id,
-                                    util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
+void extractor::WriteEdgeBasedGraph(
+    std::string const &output_file_filename,
+    size_t const max_edge_id,
+    util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
 {
 
     std::ofstream file_out_stream;

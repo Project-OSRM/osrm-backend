@@ -128,7 +128,6 @@ template <typename DataT, bool UseSharedMemory> struct ShM
                                              SharedMemoryWrapper<DataT>,
                                              std::vector<DataT>>::type;
 };
-
 }
 }
 

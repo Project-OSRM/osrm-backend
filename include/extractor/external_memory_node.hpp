@@ -31,7 +31,6 @@ struct ExternalMemoryNodeSTXXLCompare
     value_type max_value();
     value_type min_value();
 };
-
 }
 }
 

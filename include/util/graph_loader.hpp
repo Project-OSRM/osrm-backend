@@ -84,7 +84,8 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     extractor::ExternalMemoryNode current_node;
     for (NodeID i = 0; i < n; ++i)
     {
-        input_stream.read(reinterpret_cast<char *>(&current_node), sizeof(extractor::ExternalMemoryNode));
+        input_stream.read(reinterpret_cast<char *>(&current_node),
+                          sizeof(extractor::ExternalMemoryNode));
         node_array.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
         if (current_node.barrier)
         {
@@ -106,7 +107,8 @@ NodeID loadNodesFromFile(std::istream &input_stream,
 /**
  * Reads a .osrm file and produces the edges.
  */
-NodeID loadEdgesFromFile(std::istream &input_stream, std::vector<extractor::NodeBasedEdge> &edge_list)
+NodeID loadEdgesFromFile(std::istream &input_stream,
+                         std::vector<extractor::NodeBasedEdge> &edge_list)
 {
     EdgeID m;
     input_stream.read(reinterpret_cast<char *>(&m), sizeof(unsigned));
@@ -196,7 +198,6 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
 
     return number_of_nodes;
 }
-
 }
 }
 

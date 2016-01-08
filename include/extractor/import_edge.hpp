@@ -94,7 +94,6 @@ struct EdgeBasedEdge
     bool forward : 1;
     bool backward : 1;
 };
-
 }
 }
 

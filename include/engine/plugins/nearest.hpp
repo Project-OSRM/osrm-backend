@@ -30,8 +30,7 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
                          util::json::Object &json_result) override final
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() ||
-            !route_parameters.coordinates.front().IsValid())
+        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().IsValid())
         {
             return Status::Error;
         }
@@ -101,7 +100,6 @@ template <class DataFacadeT> class NearestPlugin final : public BasePlugin
     DataFacadeT *facade;
     std::string descriptor_string;
 };
-
 }
 }
 }

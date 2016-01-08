@@ -17,7 +17,6 @@ namespace http
 struct request;
 }
 
-
 class RequestParser
 {
   public:
@@ -71,7 +70,6 @@ class RequestParser
     bool is_post_header;
     int content_length;
 };
-
 }
 }
 

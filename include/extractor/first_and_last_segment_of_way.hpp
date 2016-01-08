@@ -53,7 +53,6 @@ struct FirstAndLastSegmentOfWayStxxlCompare
     value_type max_value() { return FirstAndLastSegmentOfWay::max_value(); }
     value_type min_value() { return FirstAndLastSegmentOfWay::min_value(); }
 };
-
 }
 }
 

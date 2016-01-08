@@ -35,7 +35,6 @@ class RequestHandler
   private:
     engine::OSRM *routing_machine;
 };
-
 }
 }
 

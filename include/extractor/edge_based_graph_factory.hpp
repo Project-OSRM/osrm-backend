@@ -117,7 +117,6 @@ class EdgeBasedGraphFactory
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 };
-
 }
 }
 

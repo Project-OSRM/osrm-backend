@@ -19,7 +19,6 @@ struct PolylineFormatter
 
     util::json::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
 };
-
 }
 }
 

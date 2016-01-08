@@ -85,7 +85,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (std::numeric_limits<decltype(input_way.id())>::max() == input_way.id())
     {
         util::SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << input_way.id()
-                                       << " of size " << input_way.nodes().size();
+                                             << " of size " << input_way.nodes().size();
         return;
     }
 
@@ -123,7 +123,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (forward_weight_data.type == InternalExtractorEdge::WeightType::INVALID &&
         backward_weight_data.type == InternalExtractorEdge::WeightType::INVALID)
     {
-        util::SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << input_way.id();
+        util::SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: "
+                                             << input_way.id();
         return;
     }
 

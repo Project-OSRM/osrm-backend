@@ -68,7 +68,6 @@ namespace osrm
         }                                                                                          \
     };                                                                                             \
     }
-
 }
 
 #endif // OSRM_STRONG_TYPEDEF_HPP

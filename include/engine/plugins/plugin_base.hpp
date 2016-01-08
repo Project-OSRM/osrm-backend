@@ -112,7 +112,6 @@ class BasePlugin
         return snapped_phantoms;
     }
 };
-
 }
 }
 }

@@ -40,7 +40,6 @@ inline void DEBUG_SIGNAL(const NodeID /* node */,
 }
 
 inline void DEBUG_TURNS_STOP() {}
-
 }
 }
 
@@ -59,7 +58,6 @@ namespace osrm
 {
 namespace util
 {
-
 
 boost::filesystem::ofstream debug_geometry_file;
 bool dg_output_debug_geometry = false;
@@ -207,7 +205,6 @@ inline void DEBUG_TURNS_STOP()
         dg_debug_turns_file.close();
     }
 }
-
 }
 }
 

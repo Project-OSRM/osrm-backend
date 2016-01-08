@@ -193,7 +193,6 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array;
     typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array;
 };
-
 }
 }
 

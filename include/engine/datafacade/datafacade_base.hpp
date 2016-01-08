@@ -85,10 +85,10 @@ template <class EdgeDataT> class BaseDataFacade
                         const int bearing = 0,
                         const int bearing_range = 180) = 0;
 
-    virtual std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::FixedPointCoordinate &input_coordinate,
-                                                      const int bearing = 0,
-                                                      const int bearing_range = 180) = 0;
+    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate &input_coordinate,
+        const int bearing = 0,
+        const int bearing_range = 180) = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 
@@ -102,7 +102,6 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual std::string GetTimestamp() const = 0;
 };
-
 }
 }
 }

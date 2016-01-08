@@ -36,7 +36,6 @@ template <class DataFacadeT> class TimestampPlugin final : public BasePlugin
     const DataFacadeT *facade;
     std::string descriptor_string;
 };
-
 }
 }
 }

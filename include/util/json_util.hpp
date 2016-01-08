@@ -59,15 +59,13 @@ template <> Array make_array(const std::vector<bool> &vector)
 // Easy acces to object hierachies
 Value &get(Value &value) { return value; }
 
-template <typename... Keys>
-Value &get(Value &value, const char *key, Keys... keys)
+template <typename... Keys> Value &get(Value &value, const char *key, Keys... keys)
 {
     using recursive_object_t = mapbox::util::recursive_wrapper<Object>;
     return get(value.get<recursive_object_t>().get().values[key], keys...);
 }
 
-template <typename... Keys>
-Value &get(Value &value, unsigned key, Keys... keys)
+template <typename... Keys> Value &get(Value &value, unsigned key, Keys... keys)
 {
     using recursive_array_t = mapbox::util::recursive_wrapper<Array>;
     return get(value.get<recursive_array_t>().get().values[key], keys...);

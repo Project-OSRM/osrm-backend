@@ -75,7 +75,6 @@ template <typename NodeID, typename Key> class XORFastHashStorage
     XORFastHash fast_hasher;
     unsigned current_timestamp;
 };
-
 }
 }
 

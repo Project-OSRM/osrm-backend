@@ -23,7 +23,8 @@ constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 
 using RTreeLeaf = extractor::EdgeBasedNode;
 using FixedPointCoordinateListPtr = std::shared_ptr<std::vector<util::FixedPointCoordinate>>;
-using BenchStaticRTree = util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, false>::vector, false>;
+using BenchStaticRTree =
+    util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, false>::vector, false>;
 using BenchQuery = engine::GeospatialQuery<BenchStaticRTree>;
 
 FixedPointCoordinateListPtr loadCoordinates(const boost::filesystem::path &nodes_file)
@@ -56,7 +57,7 @@ void benchmarkQuery(const std::vector<FixedPointCoordinate> &queries,
     for (const auto &q : queries)
     {
         auto result = query(q);
-        (void) result;
+        (void)result;
     }
     TIMER_STOP(query);
 

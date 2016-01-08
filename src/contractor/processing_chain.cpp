@@ -42,7 +42,6 @@ template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 };
 }
 
-
 namespace osrm
 {
 namespace contractor
@@ -105,19 +104,20 @@ int Prepare::Run()
 
     util::SimpleLogger().Write() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
     util::SimpleLogger().Write() << "Contraction: " << ((max_edge_id + 1) / TIMER_SEC(contraction))
-                           << " nodes/sec and " << number_of_used_edges / TIMER_SEC(contraction)
-                           << " edges/sec";
+                                 << " nodes/sec and "
+                                 << number_of_used_edges / TIMER_SEC(contraction) << " edges/sec";
 
     util::SimpleLogger().Write() << "finished preprocessing";
 
     return 0;
 }
 
-std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
-                                           util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                           const std::string &edge_segment_lookup_filename,
-                                           const std::string &edge_penalty_filename,
-                                           const std::string &segment_speed_filename)
+std::size_t Prepare::LoadEdgeExpandedGraph(
+    std::string const &edge_based_graph_filename,
+    util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+    const std::string &edge_segment_lookup_filename,
+    const std::string &edge_penalty_filename,
+    const std::string &segment_speed_filename)
 {
     util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
@@ -149,14 +149,16 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
     input_stream.read((char *)&max_edge_id, sizeof(size_t));
 
     edge_based_edge_list.resize(number_of_edges);
-    util::SimpleLogger().Write() << "Reading " << number_of_edges << " edges from the edge based graph";
+    util::SimpleLogger().Write() << "Reading " << number_of_edges
+                                 << " edges from the edge based graph";
 
     std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, unsigned> segment_speed_lookup;
 
     if (update_edge_weights)
     {
-        util::SimpleLogger().Write() << "Segment speed data supplied, will update edge weights from "
-                               << segment_speed_filename;
+        util::SimpleLogger().Write()
+            << "Segment speed data supplied, will update edge weights from "
+            << segment_speed_filename;
         io::CSVReader<3> csv_in(segment_speed_filename);
         csv_in.set_header("from_node", "to_node", "speed");
         uint64_t from_node_id{};
@@ -218,8 +220,8 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
                                         (segment_length * 10.) / (speed_iter->second / 3.6) + .5)));
                     new_weight += new_segment_weight;
 
-                    util::DEBUG_GEOMETRY_EDGE(new_segment_weight, segment_length, previous_osm_node_id,
-                                        this_osm_node_id);
+                    util::DEBUG_GEOMETRY_EDGE(new_segment_weight, segment_length,
+                                              previous_osm_node_id, this_osm_node_id);
                 }
                 else
                 {
@@ -227,7 +229,7 @@ std::size_t Prepare::LoadEdgeExpandedGraph(std::string const &edge_based_graph_f
                     new_weight += segment_weight;
 
                     util::DEBUG_GEOMETRY_EDGE(segment_weight, segment_length, previous_osm_node_id,
-                                        this_osm_node_id);
+                                              this_osm_node_id);
                 }
 
                 previous_osm_node_id = this_osm_node_id;
@@ -282,14 +284,15 @@ void Prepare::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
                                     sizeof(char) * unpacked_bool_flags.size());
 }
 
-std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
-                                          const util::DeallocatingVector<QueryEdge> &contracted_edge_list)
+std::size_t
+Prepare::WriteContractedGraph(unsigned max_node_id,
+                              const util::DeallocatingVector<QueryEdge> &contracted_edge_list)
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
     const unsigned contracted_edge_count = contracted_edge_list.size();
     util::SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
-                           << " edges";
+                                 << " edges";
 
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
@@ -308,7 +311,8 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
     }();
 
     util::SimpleLogger().Write(logDEBUG) << "input graph has " << (max_node_id + 1) << " nodes";
-    util::SimpleLogger().Write(logDEBUG) << "contracted graph has " << (max_used_node_id + 1) << " nodes";
+    util::SimpleLogger().Write(logDEBUG) << "contracted graph has " << (max_used_node_id + 1)
+                                         << " nodes";
 
     std::vector<util::StaticGraph<EdgeData>::NodeArrayEntry> node_array;
     // make sure we have at least one sentinel
@@ -355,7 +359,8 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
     if (node_array_size > 0)
     {
         hsgr_output_stream.write((char *)&node_array[0],
-                                 sizeof(util::StaticGraph<EdgeData>::NodeArrayEntry) * node_array_size);
+                                 sizeof(util::StaticGraph<EdgeData>::NodeArrayEntry) *
+                                     node_array_size);
     }
 
     // serialize all edges
@@ -375,14 +380,14 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
 #ifndef NDEBUG
         if (current_edge.data.distance <= 0)
         {
-            util::SimpleLogger().Write(logWARNING) << "Edge: " << edge
-                                             << ",source: " << contracted_edge_list[edge].source
-                                             << ", target: " << contracted_edge_list[edge].target
-                                             << ", dist: " << current_edge.data.distance;
+            util::SimpleLogger().Write(logWARNING)
+                << "Edge: " << edge << ",source: " << contracted_edge_list[edge].source
+                << ", target: " << contracted_edge_list[edge].target
+                << ", dist: " << current_edge.data.distance;
 
             util::SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
-                                             << contracted_edge_list[edge].source << "/"
-                                             << node_array.size() - 1;
+                                                   << contracted_edge_list[edge].source << "/"
+                                                   << node_array.size() - 1;
             return 1;
         }
 #endif
@@ -398,11 +403,12 @@ std::size_t Prepare::WriteContractedGraph(unsigned max_node_id,
 /**
  \brief Build contracted graph.
  */
-void Prepare::ContractGraph(const unsigned max_edge_id,
-                            util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                            util::DeallocatingVector<QueryEdge> &contracted_edge_list,
-                            std::vector<bool> &is_core_node,
-                            std::vector<float> &inout_node_levels) const
+void Prepare::ContractGraph(
+    const unsigned max_edge_id,
+    util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+    util::DeallocatingVector<QueryEdge> &contracted_edge_list,
+    std::vector<bool> &is_core_node,
+    std::vector<float> &inout_node_levels) const
 {
     std::vector<float> node_levels;
     node_levels.swap(inout_node_levels);

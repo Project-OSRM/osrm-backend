@@ -89,7 +89,6 @@ class XORMiniHash
         return table1[byte1] ^ table2[byte2] ^ table3[byte3] ^ table4[byte4];
     }
 };
-
 }
 }
 

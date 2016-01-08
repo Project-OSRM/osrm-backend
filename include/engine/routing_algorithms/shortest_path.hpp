@@ -521,7 +521,6 @@ class ShortestPathRouting final
         }
     }
 };
-
 }
 }
 }

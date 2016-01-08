@@ -48,7 +48,6 @@ class SimpleLogger
     std::ostringstream os;
     LogLevel level;
 };
-
 }
 }
 

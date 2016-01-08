@@ -126,7 +126,6 @@ inline std::size_t URIDecode(const std::string &input, std::string &output)
 }
 
 inline std::size_t URIDecodeInPlace(std::string &URI) { return URIDecode(URI, URI); }
-
 }
 }
 

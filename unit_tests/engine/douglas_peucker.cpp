@@ -15,8 +15,8 @@ using namespace osrm::engine;
 
 SegmentInformation getTestInfo(int lat, int lon, bool necessary)
 {
-    return SegmentInformation(util::FixedPointCoordinate(lat, lon), 0, 0, 0, extractor::TurnInstruction::HeadOn,
-                              necessary, false, 0);
+    return SegmentInformation(util::FixedPointCoordinate(lat, lon), 0, 0, 0,
+                              extractor::TurnInstruction::HeadOn, necessary, false, 0);
 }
 
 BOOST_AUTO_TEST_CASE(all_necessary_test)

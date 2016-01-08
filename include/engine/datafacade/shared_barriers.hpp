@@ -36,7 +36,6 @@ struct SharedBarriers
     // Is there any query?
     int number_of_queries;
 };
-
 }
 }
 }

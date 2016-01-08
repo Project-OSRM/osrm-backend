@@ -19,7 +19,6 @@ auto max_element(const Container &c) -> decltype(std::max_element(c.cbegin(), c.
 {
     return std::max_element(c.cbegin(), c.cend());
 }
-
 }
 }
 

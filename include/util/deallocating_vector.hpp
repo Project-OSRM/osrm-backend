@@ -306,8 +306,7 @@ class DeallocatingVector
         else
         { // down-size
             const std::size_t number_of_necessary_buckets = 1 + (new_size / ELEMENTS_PER_BLOCK);
-            for (const auto bucket_index :
-                 irange(number_of_necessary_buckets, bucket_list.size()))
+            for (const auto bucket_index : irange(number_of_necessary_buckets, bucket_list.size()))
             {
                 if (nullptr != bucket_list[bucket_index])
                 {
@@ -378,7 +377,6 @@ void swap(DeallocatingVector<T, S> &lhs, DeallocatingVector<T, S> &rhs)
 {
     lhs.swap(rhs);
 }
-
 }
 }
 

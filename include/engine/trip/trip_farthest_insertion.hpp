@@ -190,7 +190,6 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     BOOST_ASSERT_MSG(static_cast<std::size_t>(max_to) < number_of_locations, "start node");
     return FindRoute(number_of_locations, component_size, start, end, dist_table, max_from, max_to);
 }
-
 }
 }
 }

@@ -55,7 +55,6 @@ struct ContractorOptions
 
     static void GenerateOutputFilesNames(ContractorConfig &extractor_config);
 };
-
 }
 }
 

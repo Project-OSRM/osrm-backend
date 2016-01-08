@@ -17,7 +17,6 @@ struct SpeedProfileProperties
     int u_turn_penalty;
     bool has_turn_penalty_function;
 };
-
 }
 }
 

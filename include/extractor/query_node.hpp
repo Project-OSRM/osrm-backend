@@ -59,7 +59,6 @@ struct QueryNode
         return std::numeric_limits<int>::lowest();
     }
 };
-
 }
 }
 

@@ -187,7 +187,6 @@ class FixedPointNumber
 };
 
 static_assert(4 == sizeof(FixedPointNumber<1>), "FP19 has wrong size != 4");
-
 }
 }
 

@@ -102,7 +102,6 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
 
     HandlerT *handler;
 };
-
 }
 }
 

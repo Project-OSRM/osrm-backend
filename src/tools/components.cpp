@@ -66,7 +66,7 @@ std::size_t loadGraph(const char *path,
     std::vector<NodeID> barrier_node_list;
 
     auto number_of_nodes = util::loadNodesFromFile(input_stream, barrier_node_list,
-                                             traffic_light_node_list, coordinate_list);
+                                                   traffic_light_node_list, coordinate_list);
 
     util::loadEdgesFromFile(input_stream, edge_list);
 
@@ -116,17 +116,20 @@ int main(int argc, char *argv[])
         auto number_of_nodes = osrm::tools::loadGraph(argv[1], coordinate_list, graph_edge_list);
 
         tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
-        const auto graph = std::make_shared<osrm::tools::TarjanGraph>(number_of_nodes, graph_edge_list);
+        const auto graph =
+            std::make_shared<osrm::tools::TarjanGraph>(number_of_nodes, graph_edge_list);
         graph_edge_list.clear();
         graph_edge_list.shrink_to_fit();
 
         osrm::util::SimpleLogger().Write() << "Starting SCC graph traversal";
 
-        auto tarjan = osrm::util::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
+        auto tarjan =
+            osrm::util::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
         tarjan->run();
         osrm::util::SimpleLogger().Write() << "identified: " << tarjan->get_number_of_components()
-                               << " many components";
-        osrm::util::SimpleLogger().Write() << "identified " << tarjan->get_size_one_count() << " size 1 SCCs";
+                                           << " many components";
+        osrm::util::SimpleLogger().Write() << "identified " << tarjan->get_size_one_count()
+                                           << " size 1 SCCs";
 
         // output
         TIMER_START(SCC_RUN_SETUP);
@@ -141,8 +144,7 @@ int main(int argc, char *argv[])
         OGRRegisterAll();
 
         const char *psz_driver_name = "ESRI Shapefile";
-        auto *po_driver =
-            OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(psz_driver_name);
+        auto *po_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(psz_driver_name);
         if (nullptr == po_driver)
         {
             throw osrm::util::exception("ESRI Shapefile driver not available");
@@ -164,8 +166,8 @@ int main(int argc, char *argv[])
             throw osrm::util::exception("Layer creation failed.");
         }
         TIMER_STOP(SCC_RUN_SETUP);
-        osrm::util::SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP) / 1000.
-                               << "s";
+        osrm::util::SimpleLogger().Write() << "shapefile setup took "
+                                           << TIMER_MSEC(SCC_RUN_SETUP) / 1000. << "s";
 
         uint64_t total_network_length = 0;
         percentage.reinit(graph->GetNumberOfNodes());
@@ -196,12 +198,15 @@ int main(int argc, char *argv[])
                     if (size_of_containing_component < 1000)
                     {
                         OGRLineString line_string;
-                        line_string.addPoint(coordinate_list[source].lon / osrm::COORDINATE_PRECISION,
-                                             coordinate_list[source].lat / osrm::COORDINATE_PRECISION);
-                        line_string.addPoint(coordinate_list[target].lon / osrm::COORDINATE_PRECISION,
-                                            coordinate_list[target].lat  / osrm::COORDINATE_PRECISION);
+                        line_string.addPoint(
+                            coordinate_list[source].lon / osrm::COORDINATE_PRECISION,
+                            coordinate_list[source].lat / osrm::COORDINATE_PRECISION);
+                        line_string.addPoint(
+                            coordinate_list[target].lon / osrm::COORDINATE_PRECISION,
+                            coordinate_list[target].lat / osrm::COORDINATE_PRECISION);
 
-                        OGRFeature *po_feature = OGRFeature::CreateFeature(po_layer->GetLayerDefn());
+                        OGRFeature *po_feature =
+                            OGRFeature::CreateFeature(po_layer->GetLayerDefn());
 
                         po_feature->SetGeometry(&line_string);
                         if (OGRERR_NONE != po_layer->CreateFeature(po_feature))
@@ -216,12 +221,12 @@ int main(int argc, char *argv[])
         OGRSpatialReference::DestroySpatialReference(po_srs);
         OGRDataSource::DestroyDataSource(po_datasource);
         TIMER_STOP(SCC_OUTPUT);
-        osrm::util::SimpleLogger().Write() << "generating output took: " << TIMER_MSEC(SCC_OUTPUT) / 1000.
-                               << "s";
+        osrm::util::SimpleLogger().Write()
+            << "generating output took: " << TIMER_MSEC(SCC_OUTPUT) / 1000. << "s";
 
-        osrm::util::SimpleLogger().Write() << "total network distance: "
-                               << static_cast<uint64_t>(total_network_length / 100 / 1000.)
-                               << " km";
+        osrm::util::SimpleLogger().Write()
+            << "total network distance: "
+            << static_cast<uint64_t>(total_network_length / 100 / 1000.) << " km";
 
         osrm::util::SimpleLogger().Write() << "finished component analysis";
     }

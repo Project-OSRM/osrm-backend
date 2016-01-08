@@ -98,8 +98,9 @@ struct Array
 } // namespace JSON
 } // namespace util
 
-namespace json {
-    using namespace osrm::util::json;
+namespace json
+{
+using namespace osrm::util::json;
 }
 
 } // namespace osrm

@@ -52,7 +52,6 @@ struct ExtractorOptions
 
     static void GenerateOutputFilesNames(ExtractorConfig &extractor_config);
 };
-
 }
 }
 

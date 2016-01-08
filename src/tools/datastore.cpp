@@ -37,8 +37,11 @@ using namespace osrm::engine::datafacade;
 using namespace osrm::datastore;
 using namespace osrm;
 
-using RTreeLeaf = typename engine::datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData>::RTreeLeaf;
-using RTreeNode = util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, true>::vector, true>::TreeNode;
+using RTreeLeaf =
+    typename engine::datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData>::RTreeLeaf;
+using RTreeNode = util::StaticRTree<RTreeLeaf,
+                                    util::ShM<util::FixedPointCoordinate, true>::vector,
+                                    true>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 
 namespace osrm
@@ -75,7 +78,6 @@ void deleteRegion(const SharedDataType region)
         util::SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
     }
 }
-
 }
 }
 
@@ -89,7 +91,8 @@ int main(const int argc, const char *argv[]) try
     const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
     if (-1 == mlockall(lock_flags))
     {
-        util::SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
+        util::SimpleLogger().Write(logWARNING) << "Process " << argv[0]
+                                               << " could not request RAM lock";
     }
 #endif
 
@@ -237,9 +240,9 @@ int main(const int argc, const char *argv[]) try
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_ID_LIST,
                                               number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::TravelMode>(SharedDataLayout::TRAVEL_MODE,
-                                                number_of_original_edges);
+                                                           number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
-                                                     number_of_original_edges);
+                                                                number_of_original_edges);
     // note: there are 32 geometry indicators in one unsigned block
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDICATORS,
                                               number_of_original_edges);
@@ -256,7 +259,7 @@ int main(const int argc, const char *argv[]) try
     else
     {
         util::SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build. "
-                                            "Reprocess to get rid of this warning.";
+                                                  "Reprocess to get rid of this warning.";
     }
 
     // load checksum
@@ -292,7 +295,8 @@ int main(const int argc, const char *argv[]) try
         boost::filesystem::ifstream timestamp_stream(timestamp_path);
         if (!timestamp_stream)
         {
-            util::SimpleLogger().Write(logWARNING) << timestamp_path << " not found. setting to default";
+            util::SimpleLogger().Write(logWARNING) << timestamp_path
+                                                   << " not found. setting to default";
         }
         else
         {
@@ -323,7 +327,7 @@ int main(const int argc, const char *argv[]) try
     unsigned coordinate_list_size = 0;
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<util::FixedPointCoordinate>(SharedDataLayout::COORDINATE_LIST,
-                                                          coordinate_list_size);
+                                                                coordinate_list_size);
 
     // load geometries sizes
     std::ifstream geometry_input_stream(geometries_data_path.string().c_str(), std::ios::binary);
@@ -339,8 +343,8 @@ int main(const int argc, const char *argv[]) try
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_LIST,
                                               number_of_compressed_geometries);
     // allocate shared memory block
-    util::SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout()
-                           << " bytes";
+    util::SimpleLogger().Write() << "allocating shared memory of "
+                                 << shared_layout_ptr->GetSizeOfLayout() << " bytes";
     SharedMemory *shared_memory =
         SharedMemoryFactory::Get(data_region, shared_layout_ptr->GetSizeOfLayout());
     char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
@@ -403,11 +407,13 @@ int main(const int argc, const char *argv[]) try
     unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
         shared_memory_ptr, SharedDataLayout::NAME_ID_LIST);
 
-    extractor::TravelMode *travel_mode_ptr = shared_layout_ptr->GetBlockPtr<extractor::TravelMode, true>(
-        shared_memory_ptr, SharedDataLayout::TRAVEL_MODE);
+    extractor::TravelMode *travel_mode_ptr =
+        shared_layout_ptr->GetBlockPtr<extractor::TravelMode, true>(shared_memory_ptr,
+                                                                    SharedDataLayout::TRAVEL_MODE);
 
-    extractor::TurnInstruction *turn_instructions_ptr = shared_layout_ptr->GetBlockPtr<extractor::TurnInstruction, true>(
-        shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
+    extractor::TurnInstruction *turn_instructions_ptr =
+        shared_layout_ptr->GetBlockPtr<extractor::TurnInstruction, true>(
+            shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
 
     unsigned *geometries_indicator_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
         shared_memory_ptr, SharedDataLayout::GEOMETRIES_INDICATORS);
@@ -575,8 +581,9 @@ int main(const int argc, const char *argv[]) try
 catch (const std::bad_alloc &e)
 {
     util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    util::SimpleLogger().Write(logWARNING) << "Please provide more memory or disable locking the virtual "
-                                        "address space (note: this makes OSRM swap, i.e. slow)";
+    util::SimpleLogger().Write(logWARNING)
+        << "Please provide more memory or disable locking the virtual "
+           "address space (note: this makes OSRM swap, i.e. slow)";
     return EXIT_FAILURE;
 }
 catch (const std::exception &e)

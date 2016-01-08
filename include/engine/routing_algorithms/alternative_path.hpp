@@ -564,7 +564,8 @@ class AlternativeRouting final
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         // const NodeID parentnode = forward_heap.GetData(node).parent;
-        // util::SimpleLogger().Write() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled edge ("
+        // util::SimpleLogger().Write() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled
+        // edge ("
         // << parentnode << "," << node << "), dist: " << distance;
 
         const int scaled_distance =
@@ -588,10 +589,12 @@ class AlternativeRouting final
                 {
                     *middle_node = node;
                     *upper_bound_to_shortest_path_distance = new_distance;
-                    //     util::SimpleLogger().Write() << "accepted middle_node " << *middle_node << " at
+                    //     util::SimpleLogger().Write() << "accepted middle_node " << *middle_node
+                    //     << " at
                     //     distance " << new_distance;
                     // } else {
-                    //     util::SimpleLogger().Write() << "discarded middle_node " << *middle_node << "
+                    //     util::SimpleLogger().Write() << "discarded middle_node " << *middle_node
+                    //     << "
                     //     at distance " << new_distance;
                 }
             }
@@ -846,7 +849,6 @@ class AlternativeRouting final
         return (upper_bound <= t_test_path_length);
     }
 };
-
 }
 }
 }

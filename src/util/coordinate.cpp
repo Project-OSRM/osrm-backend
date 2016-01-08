@@ -52,7 +52,8 @@ bool FixedPointCoordinate::operator==(const FixedPointCoordinate &other) const
 
 std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate)
 {
-    out << "(" << static_cast<double>(coordinate.lat / COORDINATE_PRECISION) << "," << static_cast<double>(coordinate.lon / COORDINATE_PRECISION) << ")";
+    out << "(" << static_cast<double>(coordinate.lat / COORDINATE_PRECISION) << ","
+        << static_cast<double>(coordinate.lon / COORDINATE_PRECISION) << ")";
     return out;
 }
 }

@@ -95,7 +95,7 @@ template <typename EdgeDataT> class DynamicGraph
         for (const auto node : irange(0u, number_of_nodes))
         {
             for (const auto i : irange(node_array[node].first_edge,
-                                             node_array[node].first_edge + node_array[node].edges))
+                                       node_array[node].first_edge + node_array[node].edges))
             {
                 edge_list[i].target = graph[edge].target;
                 BOOST_ASSERT(edge_list[i].target < number_of_nodes);
@@ -320,7 +320,6 @@ template <typename EdgeDataT> class DynamicGraph
     std::vector<Node> node_array;
     DeallocatingVector<Edge> edge_list;
 };
-
 }
 }
 

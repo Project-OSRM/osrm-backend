@@ -76,7 +76,6 @@ template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator>
         return temp;
     }
 };
-
 }
 }
 

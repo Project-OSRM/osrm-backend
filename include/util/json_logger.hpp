@@ -55,7 +55,6 @@ class Logger
 
     boost::thread_specific_ptr<MapT> map;
 };
-
 }
 }
 }

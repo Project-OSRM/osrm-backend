@@ -24,7 +24,6 @@ class exception final : public std::exception
     const char *what() const noexcept override { return message.c_str(); }
     const std::string message;
 };
-
 }
 }
 

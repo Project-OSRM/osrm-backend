@@ -90,7 +90,6 @@ inline bool CheckInBounds(const int A, const int B, const int range)
     }
 }
 }
-
 }
 }
 

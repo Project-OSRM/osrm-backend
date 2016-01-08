@@ -147,8 +147,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
             else
             {
-                trace_split = trace_split || (t - prev_unbroken_timestamps.back() >
-                                              MAX_BROKEN_STATES);
+                trace_split =
+                    trace_split || (t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES);
             }
 
             if (trace_split)
@@ -194,8 +194,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
-            const auto haversine_distance =
-                util::coordinate_calculation::haversineDistance(prev_coordinate, current_coordinate);
+            const auto haversine_distance = util::coordinate_calculation::haversineDistance(
+                prev_coordinate, current_coordinate);
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0u, prev_viterbi.size()))
@@ -246,8 +246,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
-                        current_suspicious[s_prime] =
-                            d_t > SUSPICIOUS_DISTANCE_DELTA;
+                        current_suspicious[s_prime] = d_t > SUSPICIOUS_DISTANCE_DELTA;
                         model.breakage[t] = false;
                     }
                 }
@@ -355,7 +354,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         matching_debug.add_breakage(model.breakage);
     }
 };
-
 }
 }
 }

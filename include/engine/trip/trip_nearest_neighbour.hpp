@@ -92,7 +92,6 @@ std::vector<NodeID> NearestNeighbourTrip(const NodeIDIterator &start,
     }
     return route;
 }
-
 }
 }
 }

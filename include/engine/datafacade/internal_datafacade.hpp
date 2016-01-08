@@ -37,7 +37,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     using QueryGraph = util::StaticGraph<typename super::EdgeData>;
     using InputEdge = typename QueryGraph::InputEdge;
     using RTreeLeaf = typename super::RTreeLeaf;
-    using InternalRTree = util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, false>::vector, false>;
+    using InternalRTree =
+        util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, false>::vector, false>;
     using InternalGeospatialQuery = GeospatialQuery<InternalRTree>;
 
     InternalDataFacade() {}
@@ -98,8 +99,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
         // BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
-        util::SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
-                               << " edges";
+        util::SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and "
+                                     << edge_list.size() << " edges";
         m_query_graph = std::unique_ptr<QueryGraph>(new QueryGraph(node_list, edge_list));
 
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
@@ -120,7 +121,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-            m_coordinate_list->at(i) = util::FixedPointCoordinate(current_node.lat, current_node.lon);
+            m_coordinate_list->at(i) =
+                util::FixedPointCoordinate(current_node.lat, current_node.lon);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
         }
@@ -140,7 +142,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         extractor::OriginalEdgeData current_edge_data;
         for (unsigned i = 0; i < number_of_edges; ++i)
         {
-            edges_input_stream.read((char *)&(current_edge_data), sizeof(extractor::OriginalEdgeData));
+            edges_input_stream.read((char *)&(current_edge_data),
+                                    sizeof(extractor::OriginalEdgeData));
             m_via_node_list[i] = current_edge_data.via_node;
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
@@ -371,10 +374,10 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
                                                        bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::FixedPointCoordinate &input_coordinate,
-                                                      const int bearing = 0,
-                                                      const int bearing_range = 180) override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate &input_coordinate,
+        const int bearing = 0,
+        const int bearing_range = 180) override final
     {
         if (!m_static_rtree.get())
         {
@@ -444,7 +447,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 };
-
 }
 }
 }

@@ -94,7 +94,6 @@ class BayesClassifier
     double positive_apriori_probability;
     double negative_apriori_probability;
 };
-
 }
 }
 }
