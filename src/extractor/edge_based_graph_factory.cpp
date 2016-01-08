@@ -468,7 +468,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                           ? m_compressed_edge_container.GetFirstEdgeTargetID(e2)
                                           : node_w)];
 
-                const double turn_angle = util::ComputeAngle::OfThreeFixedPointCoordinates(
+                const double turn_angle = util::ComputeAngle(
                     first_coordinate, m_node_info_list[node_v], third_coordinate);
 
                 const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);

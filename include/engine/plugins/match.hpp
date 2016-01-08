@@ -107,9 +107,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             if (input_coords.size() - 1 > current_coordinate && 0 < current_coordinate)
             {
-                double turn_angle = util::ComputeAngle::OfThreeFixedPointCoordinates(
-                    input_coords[current_coordinate - 1], input_coords[current_coordinate],
-                    input_coords[current_coordinate + 1]);
+                double turn_angle = util::ComputeAngle(input_coords[current_coordinate - 1],
+                                                       input_coords[current_coordinate],
+                                                       input_coords[current_coordinate + 1]);
 
                 // sharp turns indicate a possible uturn
                 if (turn_angle <= 90.0 || turn_angle >= 270.0)
