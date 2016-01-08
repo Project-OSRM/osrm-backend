@@ -257,7 +257,7 @@ ApiResponseGenerator<DataFacadeT>::BuildRouteSegments(const Segments &segment_li
     for (const auto &segment : segment_list.Get())
     {
         const auto current_turn = segment.turn_instruction;
-        if (extractor::TurnInstructionsClass::TurnIsNecessary(current_turn) and
+        if (extractor::TurnInstructionsClass::TurnIsNecessary(current_turn) &&
             (extractor::TurnInstruction::EnterRoundAbout != current_turn))
         {
 

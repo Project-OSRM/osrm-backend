@@ -77,7 +77,7 @@ SegmentList<DataFacadeT>::SegmentList(const InternalRouteResult &raw_route,
                                       const DataFacade *facade)
     : total_distance(0), total_duration(0)
 {
-    if (not raw_route.is_valid())
+    if (!raw_route.is_valid())
     {
         return;
     }
@@ -105,7 +105,7 @@ SegmentList<DataFacadeT>::SegmentList(const InternalRouteResult &raw_route,
         }
     }
 
-    if (not allow_simplification)
+    if (!allow_simplification)
     {
         // to prevent any simplifications, we mark all segments as necessary
         for (auto &segment : segments)
@@ -178,7 +178,7 @@ void SegmentList<DataFacadeT>::AppendSegment(const FixedPointCoordinate &coordin
 {
     // if the start location is on top of a node, the first movement might be zero-length,
     // in which case we dont' add a new description, but instead update the existing one
-    if ((1 == segments.size()) and (segments.front().location == coordinate))
+    if ((1 == segments.size()) && (segments.front().location == coordinate))
     {
         if (path_point.segment_duration > 0)
         {
@@ -191,8 +191,8 @@ void SegmentList<DataFacadeT>::AppendSegment(const FixedPointCoordinate &coordin
     // make sure mode changes are announced, even when there otherwise is no turn
     const auto getTurn = [](const PathData &path_point, const extractor::TravelMode previous_mode)
     {
-        if (extractor::TurnInstruction::NoTurn == path_point.turn_instruction and
-            previous_mode != path_point.travel_mode and path_point.segment_duration > 0)
+        if (extractor::TurnInstruction::NoTurn == path_point.turn_instruction &&
+            previous_mode != path_point.travel_mode && path_point.segment_duration > 0)
         {
             return extractor::TurnInstruction::GoStraight;
         }
