@@ -190,7 +190,7 @@ ApiResponseGenerator<DataFacadeT>::SummarizeRoute(const InternalRouteResult &raw
                                                   const Segments &segment_list) const
 {
     util::json::Object json_route_summary;
-    if (not raw_route.segment_end_coordinates.empty())
+    if (!raw_route.segment_end_coordinates.empty())
     {
         const auto start_name_id = raw_route.segment_end_coordinates.front().source_phantom.name_id;
         json_route_summary.values["start_point"] = facade->get_name_for_id(start_name_id);
