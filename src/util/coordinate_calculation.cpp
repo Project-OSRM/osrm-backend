@@ -102,7 +102,7 @@ double perpendicularDistance(const FixedPointCoordinate &segment_source,
 {
     return perpendicularDistanceFromProjectedCoordinate(
         segment_source, segment_target, query_location,
-        {mercator::lat2y(query_location.lat / COORDINATE_PRECISION),
+        {mercator::latToY(query_location.lat / COORDINATE_PRECISION),
          query_location.lon / COORDINATE_PRECISION},
         nearest_location, ratio);
 }
@@ -134,9 +134,9 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &segment
     // initialize values
     const double x = projected_coordinate.first;
     const double y = projected_coordinate.second;
-    const double a = mercator::lat2y(segment_source.lat / COORDINATE_PRECISION);
+    const double a = mercator::latToY(segment_source.lat / COORDINATE_PRECISION);
     const double b = segment_source.lon / COORDINATE_PRECISION;
-    const double c = mercator::lat2y(segment_target.lat / COORDINATE_PRECISION);
+    const double c = mercator::latToY(segment_target.lat / COORDINATE_PRECISION);
     const double d = segment_target.lon / COORDINATE_PRECISION;
     double p, q /*,mX*/, new_y;
     if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
@@ -190,7 +190,7 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &segment
     else
     {
         // point lies in between
-        nearest_location.lat = static_cast<int>(mercator::y2lat(p) * COORDINATE_PRECISION);
+        nearest_location.lat = static_cast<int>(mercator::yToLat(p) * COORDINATE_PRECISION);
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
     BOOST_ASSERT(nearest_location.IsValid());
