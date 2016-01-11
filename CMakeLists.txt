@@ -67,7 +67,7 @@ add_library(EXTRACTOR OBJECT ${ExtractorGlob})
 add_library(CONTRACTOR OBJECT ${ContractorGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
 add_library(SERVER OBJECT ${ServerGlob})
-add_library(GRAPH OBJECT src/extractor/external_memory_node.cpp src/extractor/import_edge.cpp)
+add_library(GRAPH OBJECT src/extractor/external_memory_node.cpp)
 add_library(PHANTOM OBJECT src/engine/phantom_node.cpp)
 
 add_dependencies(UTIL FingerPrintConfigure)
