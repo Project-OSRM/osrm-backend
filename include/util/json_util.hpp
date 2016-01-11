@@ -2,6 +2,7 @@
 #define JSON_UTIL_HPP
 
 #include "osrm/json_container.hpp"
+#include "util/container.hpp"
 
 #include <cmath>
 #include <limits>
@@ -31,6 +32,7 @@ template <typename T> T clamp_float(T d)
 template <typename... Args> Array make_array(Args... args)
 {
     Array a;
+    // TODO: check why a.values.emplace_back(args...); is not an option here
     append_to_container(a.values, args...);
     return a;
 }

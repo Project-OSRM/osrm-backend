@@ -19,7 +19,7 @@ enum class return_code : unsigned
 
 struct ExtractorConfig
 {
-    ExtractorConfig() noexcept : requested_num_threads(0) {}
+    ExtractorConfig() : requested_num_threads(0) {}
     boost::filesystem::path config_file_path;
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;

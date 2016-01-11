@@ -6,6 +6,7 @@
 #include "engine/api_response_generator.hpp"
 #include "engine/object_encoder.hpp"
 #include "engine/search_engine.hpp"
+#include "util/for_each_pair.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_renderer.hpp"
 #include "util/make_unique.hpp"

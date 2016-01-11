@@ -4,10 +4,11 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
 #include "util/integer_range.hpp"
-#include "util/container.hpp"
 
 #include <boost/assert.hpp>
 
+#include <algorithm>
+#include <iterator>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -148,7 +149,9 @@ class AlternativeRouting final
             return;
         }
 
-        util::sort_unique_resize(via_node_candidate_list);
+        std::sort(begin(via_node_candidate_list), end(via_node_candidate_list));
+        auto unique_end = std::unique(begin(via_node_candidate_list), end(via_node_candidate_list));
+        via_node_candidate_list.resize(unique_end - begin(via_node_candidate_list));
 
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;
@@ -439,10 +442,10 @@ class AlternativeRouting final
                                           partially_unpacked_shortest_path.size())) -
             1;
         for (int64_t current_node = 0; (current_node < packed_path_length) &&
-                                       (partially_unpacked_via_path[current_node] ==
-                                            partially_unpacked_shortest_path[current_node] &&
-                                        partially_unpacked_via_path[current_node + 1] ==
-                                            partially_unpacked_shortest_path[current_node + 1]);
+                                           (partially_unpacked_via_path[current_node] ==
+                                                partially_unpacked_shortest_path[current_node] &&
+                                            partially_unpacked_via_path[current_node + 1] ==
+                                                partially_unpacked_shortest_path[current_node + 1]);
              ++current_node)
         {
             EdgeID selected_edge =

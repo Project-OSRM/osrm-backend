@@ -5,8 +5,8 @@
 
 #include "extractor/external_memory_node.hpp"
 #include "extractor/restriction.hpp"
-#include "util/container.hpp"
 #include "util/simple_logger.hpp"
+#include "util/for_each_pair.hpp"
 
 #include <boost/optional/optional.hpp>
 

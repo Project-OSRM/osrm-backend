@@ -19,7 +19,7 @@ enum class return_code : unsigned
 
 struct ContractorConfig
 {
-    ContractorConfig() noexcept : requested_num_threads(0) {}
+    ContractorConfig() : requested_num_threads(0) {}
 
     boost::filesystem::path config_file_path;
     boost::filesystem::path osrm_input_path;
