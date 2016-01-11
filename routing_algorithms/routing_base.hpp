@@ -58,33 +58,35 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     explicit BasicRoutingInterface(DataFacadeT *facade) : facade(facade) {}
     ~BasicRoutingInterface() {}
 
-    // min_edge_offset is needed in case we use multiple
-    // nodes as start/target nodes with different (even negative) offsets.
-    // In that case the termination criterion is not correct
-    // anymore.
-    //
-    // Example:
-    // forward heap: a(-100), b(0),
-    // reverse heap: c(0), d(100)
-    //
-    // a --- d
-    //   \ /
-    //   / \
-    // b --- c
-    //
-    // This is equivalent to running a bi-directional Dijkstra on the following graph:
-    //
-    //     a --- d
-    //    /  \ /  \
-    //   y    x    z
-    //    \  / \  /
-    //     b --- c
-    //
-    // The graph is constructed by inserting nodes y and z that are connected to the initial nodes
-    // using edges (y, a) with weight -100, (y, b) with weight 0 and,
-    // (d, z) with weight 100, (c, z) with weight 0 corresponding.
-    // Since we are dealing with a graph that contains _negative_ edges,
-    // we need to add an offset to the termination criterion.
+    /*
+     * min_edge_offset is needed in case we use multiple nodes as start/target
+     * nodes with different (even negative) offsets. In that case the
+     * termination criterion is not correct anymore.
+     *
+     * Example:
+     * forward heap: a(-100), b(0),
+     * reverse heap: c(0), d(100)
+     *
+     * a --- d
+     *   \ /
+     *   / \
+     * b --- c
+     *
+     * This is equivalent to running a bi-directional Dijkstra on the following
+     * graph:
+     *
+     *   a --- d
+     *  /  \ /  \
+     * y    x    z
+     *  \  / \  /
+     *   b --- c
+     *
+     * The graph is constructed by inserting nodes y and z that are connected
+     * to the initial nodes using edges (y, a) with weight -100, (y, b) with
+     * weight 0 and, (d, z) with weight 100, (c, z) with weight 0
+     * corresponding. Since we are dealing with a graph that contains
+     * _negative_ edges, we need to add an offset to the termination criterion.
+     */
     void RoutingStep(SearchEngineData::QueryHeap &forward_heap,
                      SearchEngineData::QueryHeap &reverse_heap,
                      NodeID &middle_node_id,
