@@ -133,6 +133,8 @@ u_turn_penalty                  = 20
 traffic_signal_penalty          = 2
 use_turn_restrictions           = true
 
+side_road_speed_multiplier      = 0.8
+
 local turn_penalty              = 10
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
@@ -309,6 +311,14 @@ function way_function (way, result)
 
   if -1 == result.forward_speed and -1 == result.backward_speed then
     return
+  end
+
+  -- reduce speed on special side roads
+  local sideway = way:get_value_by_key("side_road")
+  if "yes" == sideway or
+  "rotary" == sideway then
+    result.forward_speed = result.forward_speed * side_road_speed_multiplier
+    result.backward_speed = result.backward_speed * side_road_speed_multiplier
   end
 
   -- reduce speed on bad surfaces
