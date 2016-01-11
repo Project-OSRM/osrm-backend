@@ -4,6 +4,7 @@
 #include "contractor/contractor.hpp"
 #include "contractor/contractor_options.hpp"
 #include "contractor/query_edge.hpp"
+#include "extractor/edge_based_edge.hpp"
 #include "util/static_graph.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/node_based_graph.hpp"

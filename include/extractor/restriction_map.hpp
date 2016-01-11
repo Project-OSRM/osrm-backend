@@ -1,6 +1,7 @@
 #ifndef RESTRICTION_MAP_HPP
 #define RESTRICTION_MAP_HPP
 
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/restriction.hpp"
 #include "util/std_hash.hpp"
 #include "util/typedefs.hpp"

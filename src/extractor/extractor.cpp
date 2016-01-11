@@ -1,5 +1,6 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"

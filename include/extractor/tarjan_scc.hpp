@@ -3,7 +3,7 @@
 
 #include "util/typedefs.hpp"
 #include "util/deallocating_vector.hpp"
-#include "extractor/import_edge.hpp"
+#include "extractor/node_based_edge.hpp"
 #include "extractor/query_node.hpp"
 #include "util/percent.hpp"
 

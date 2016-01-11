@@ -5,7 +5,7 @@
 #include "util/osrm_exception.hpp"
 #include "util/simple_logger.hpp"
 #include "extractor/external_memory_node.hpp"
-#include "extractor/import_edge.hpp"
+#include "extractor/node_based_edge.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
 #include "util/typedefs.hpp"

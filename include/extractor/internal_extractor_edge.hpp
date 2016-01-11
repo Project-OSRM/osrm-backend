@@ -3,7 +3,7 @@
 
 #include "util/typedefs.hpp"
 #include "extractor/travel_mode.hpp"
-#include "extractor/import_edge.hpp"
+#include "extractor/node_based_edge.hpp"
 
 #include <boost/assert.hpp>
 

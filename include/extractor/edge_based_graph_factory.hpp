@@ -3,6 +3,7 @@
 #ifndef EDGE_BASED_GRAPH_FACTORY_HPP_
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/speed_profile.hpp"
 #include "util/typedefs.hpp"
 #include "extractor/compressed_edge_container.hpp"

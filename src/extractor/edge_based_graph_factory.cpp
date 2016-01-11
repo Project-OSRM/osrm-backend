@@ -1,3 +1,4 @@
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/percent.hpp"

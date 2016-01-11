@@ -1,6 +1,7 @@
 #ifndef EXTRACTOR_HPP
 #define EXTRACTOR_HPP
 
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/extractor_options.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/graph_compressor.hpp"

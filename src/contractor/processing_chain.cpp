@@ -1,7 +1,7 @@
 #include "contractor/processing_chain.hpp"
 #include "contractor/contractor.hpp"
 
-#include "contractor/contractor.hpp"
+#include "extractor/edge_based_edge.hpp"
 
 #include "util/deallocating_vector.hpp"
 

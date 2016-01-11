@@ -2,7 +2,7 @@
 #define NODE_BASED_GRAPH_HPP
 
 #include "util/dynamic_graph.hpp"
-#include "extractor/import_edge.hpp"
+#include "extractor/node_based_edge.hpp"
 #include "util/graph_utils.hpp"
 
 #include <tbb/parallel_sort.h>
