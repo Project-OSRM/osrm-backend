@@ -24,7 +24,7 @@ FIND_PATH(STXXL_INCLUDE_DIR stxxl.h
 )
 
 FIND_LIBRARY(STXXL_LIBRARY
-  NAMES stxxl
+  NAMES stxxl stxxl_debug
   HINTS
   $ENV{STXXL_DIR}
   PATH_SUFFIXES lib64 lib
