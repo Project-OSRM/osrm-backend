@@ -1,4 +1,5 @@
 #include "engine/douglas_peucker.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <boost/assert.hpp>
 #include "osrm/coordinate.hpp"
@@ -23,30 +24,27 @@ struct CoordinatePairCalculator
                              const util::FixedPointCoordinate &coordinate_b)
     {
         // initialize distance calculator with two fixed coordinates a, b
-        const float RAD = 0.017453292519943295769236907684886f;
-        first_lat = (coordinate_a.lat / COORDINATE_PRECISION) * RAD;
-        first_lon = (coordinate_a.lon / COORDINATE_PRECISION) * RAD;
-        second_lat = (coordinate_b.lat / COORDINATE_PRECISION) * RAD;
-        second_lon = (coordinate_b.lon / COORDINATE_PRECISION) * RAD;
+        first_lat = (coordinate_a.lat / COORDINATE_PRECISION) * util::RAD;
+        first_lon = (coordinate_a.lon / COORDINATE_PRECISION) * util::RAD;
+        second_lat = (coordinate_b.lat / COORDINATE_PRECISION) * util::RAD;
+        second_lon = (coordinate_b.lon / COORDINATE_PRECISION) * util::RAD;
     }
 
     int operator()(util::FixedPointCoordinate &other) const
     {
         // set third coordinate c
-        const float RAD = 0.017453292519943295769236907684886f;
-        const float earth_radius = 6372797.560856f;
-        const float float_lat1 = (other.lat / COORDINATE_PRECISION) * RAD;
-        const float float_lon1 = (other.lon / COORDINATE_PRECISION) * RAD;
+        const float float_lat1 = (other.lat / COORDINATE_PRECISION) * util::RAD;
+        const float float_lon1 = (other.lon / COORDINATE_PRECISION) * util::RAD;
 
         // compute distance (a,c)
         const float x_value_1 = (first_lon - float_lon1) * cos((float_lat1 + first_lat) / 2.f);
         const float y_value_1 = first_lat - float_lat1;
-        const float dist1 = std::hypot(x_value_1, y_value_1) * earth_radius;
+        const float dist1 = std::hypot(x_value_1, y_value_1) * util::EARTH_RADIUS;
 
         // compute distance (b,c)
         const float x_value_2 = (second_lon - float_lon1) * cos((float_lat1 + second_lat) / 2.f);
         const float y_value_2 = second_lat - float_lat1;
-        const float dist2 = std::hypot(x_value_2, y_value_2) * earth_radius;
+        const float dist2 = std::hypot(x_value_2, y_value_2) * util::EARTH_RADIUS;
 
         // return the minimum
         return static_cast<int>(std::min(dist1, dist2));

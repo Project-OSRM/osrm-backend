@@ -15,15 +15,6 @@ namespace osrm
 {
 namespace util
 {
-
-namespace
-{
-constexpr static const double RAD = 0.017453292519943295769236907684886;
-// earth radius varies between 6,356.750-6,378.135 km (3,949.901-3,963.189mi)
-// The IUGG value for the equatorial radius is 6378.137 km (3963.19 miles)
-constexpr static const double earth_radius = 6372797.560856;
-}
-
 namespace coordinate_calculation
 {
 
@@ -49,7 +40,7 @@ double haversineDistance(const int lat1, const int lon1, const int lat2, const i
     const double aharv = std::pow(std::sin(dlat / 2.0), 2.0) +
                          std::cos(dlat1) * std::cos(dlat2) * std::pow(std::sin(dlong / 2.), 2);
     const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
-    return earth_radius * charv;
+    return EARTH_RADIUS * charv;
 }
 
 double haversineDistance(const FixedPointCoordinate &coordinate_1,
@@ -80,7 +71,7 @@ double greatCircleDistance(const int lat1, const int lon1, const int lat2, const
 
     const double x_value = (float_lon2 - float_lon1) * std::cos((float_lat1 + float_lat2) / 2.0);
     const double y_value = float_lat2 - float_lat1;
-    return std::hypot(x_value, y_value) * earth_radius;
+    return std::hypot(x_value, y_value) * EARTH_RADIUS;
 }
 
 double perpendicularDistance(const FixedPointCoordinate &source_coordinate,
