@@ -41,7 +41,6 @@ Thumbs.db
 #######################
 /build/
 /cmake/postinst
-/third_party/libosmium/tmp/
 
 # Eclipse related files #
 #########################
