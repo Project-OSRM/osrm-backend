@@ -37,12 +37,6 @@ class FileError < OSRMError
   end
 end
 
-class OsmosisError < OSRMError
-  def initialize code, msg
-    super 'osmosis', code, msg, PREPROCESS_LOG_FILE, 40
-  end
-end
-
 class ExtractError < OSRMError
   def initialize code, msg
     super 'osrm-extract', code, msg, PREPROCESS_LOG_FILE, 3

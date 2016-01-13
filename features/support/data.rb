@@ -229,17 +229,6 @@ def write_osm
   end
 end
 
-def convert_osm_to_pbf
-  unless File.exist?("#{osm_file}.osm.pbf")
-    log_preprocess_info
-    log "== Converting #{osm_file}.osm to protobuffer format...", :preprocess
-    unless system "osmosis --read-xml #{osm_file}.osm --write-pbf #{osm_file}.osm.pbf omitmetadata=true >>#{PREPROCESS_LOG_FILE} 2>&1"
-      raise OsmosisError.new $?, "osmosis exited with code #{$?.exitstatus}"
-    end
-    log '', :preprocess
-  end
-end
-
 def extracted?
   Dir.chdir TEST_FOLDER do
     File.exist?("#{extracted_file}.osrm") &&
@@ -258,15 +247,10 @@ def write_timestamp
   File.open( "#{prepared_file}.osrm.timestamp", 'w') {|f| f.write(OSM_TIMESTAMP) }
 end
 
-def pbf?
-  input_format=='pbf'
-end
-
 def write_input_data
   Dir.chdir TEST_FOLDER do
     write_osm
     write_timestamp
-    convert_osm_to_pbf if pbf?
   end
 end
 
@@ -274,7 +258,7 @@ def extract_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Extracting #{osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm#{'.pbf' if pbf?} #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
