@@ -12,8 +12,6 @@ RUN pip install awscli
 
 # luabind
 RUN curl https://gist.githubusercontent.com/DennisOSRM/f2eb7b948e6fe1ae319e/raw/install-luabind.sh | sudo bash
-# osmosis
-RUN curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
 
 RUN useradd -ms /bin/bash mapbox
 USER mapbox
