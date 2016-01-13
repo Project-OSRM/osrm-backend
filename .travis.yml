@@ -117,12 +117,8 @@ install:
       mkdir cmake && travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
 
-      OSMOSIS_URL="http://bretth.dev.openstreetmap.org/osmosis-build/osmosis-latest.tgz"
-      mkdir osmosis && travis_retry wget --quiet -O - ${OSMOSIS_URL} | tar -xz -C osmosis
-      export PATH=${DEPS_DIR}/osmosis/bin:${PATH}
-
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake boost libzip libstxxl libxml2 lua51 luabind tbb GDAL osmosis
+      brew install cmake boost libzip libstxxl libxml2 lua51 luabind tbb GDAL
     fi
 
 before_script:
