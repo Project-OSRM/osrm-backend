@@ -52,9 +52,6 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
         current_request.endpoint = TCP_socket.remote_endpoint().address();
         request_handler.handle_request(current_request, current_reply);
 
-        // Header compression_header;
-        std::vector<boost::asio::const_buffer> output_buffer;
-
         // compress the result w/ gzip/deflate if requested
         switch (compression_type)
         {
