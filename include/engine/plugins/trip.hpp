@@ -102,25 +102,17 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         //          NodeID 3, 6, 7, 8    are in component 1
         //          => in_component = [0, 1, 2, 4, 5, 3, 6, 7, 8]
         //          => in_range = [0, 5]
-        SCC_Component(std::vector<NodeID> in_component, std::vector<size_t> in_range)
-            : component(std::move(in_component)), range(std::move(in_range))
+        SCC_Component(std::vector<NodeID> in_component_nodes, std::vector<size_t> in_range)
+            : component(std::move(in_component_nodes)), range(std::move(in_range))
         {
-            range.push_back(component.size());
-
-            BOOST_ASSERT_MSG(component.size() >= range.size(),
-                             "scc component and its ranges do not match");
             BOOST_ASSERT_MSG(component.size() > 0, "there's no scc component");
-            BOOST_ASSERT_MSG(*std::max_element(range.begin(), range.end()) <= component.size(),
+            BOOST_ASSERT_MSG(*std::max_element(range.begin(), range.end()) == component.size(),
                              "scc component ranges are out of bound");
-            BOOST_ASSERT_MSG(*std::min_element(range.begin(), range.end()) >= 0,
+            BOOST_ASSERT_MSG(*std::min_element(range.begin(), range.end()) == 0,
                              "invalid scc component range");
             BOOST_ASSERT_MSG(std::is_sorted(std::begin(range), std::end(range)),
                              "invalid component ranges");
         };
-
-        // constructor to use when whole graph is one single scc
-        SCC_Component(std::vector<NodeID> in_component)
-            : component(std::move(in_component)), range({0, component.size()}){};
 
         std::size_t GetNumberOfComponents() const
         {
@@ -145,7 +137,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             // whole graph is one scc
             std::vector<NodeID> location_ids(number_of_locations);
             std::iota(std::begin(location_ids), std::end(location_ids), 0);
-            return SCC_Component(std::move(location_ids));
+            std::vector<size_t> range = {0, location_ids.size()};
+            return SCC_Component(std::move(location_ids), std::move(range));
         }
 
         // Run TarjanSCC
@@ -170,6 +163,8 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
             range.push_back(prefix);
             prefix += scc.get_component_size(j);
         }
+        // senitel
+        range.push_back(components.size());
 
         for (std::size_t i = 0; i < number_of_locations; ++i)
         {
@@ -211,11 +206,13 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
 
         std::vector<bool> uturns(trip.size() + 1);
+        BOOST_ASSERT(route_parameters.uturns.size() > 0);
         std::transform(trip.begin(), trip.end(), uturns.begin(),
                        [&route_parameters](const NodeID idx)
                        {
                            return route_parameters.uturns[idx];
                        });
+        BOOST_ASSERT(uturns.size() > 0);
         uturns.back() = route_parameters.uturns[trip.front()];
 
         search_engine_ptr->shortest_path(min_route.segment_end_coordinates, uturns, min_route);
@@ -291,13 +288,14 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
         {
             const auto component_size = scc.range[k + 1] - scc.range[k];
 
-            BOOST_ASSERT_MSG(component_size >= 0, "invalid component size");
+            BOOST_ASSERT_MSG(component_size > 0, "invalid component size");
+
+            std::vector<NodeID> scc_route;
+            NodeIDIterator start = std::begin(scc.component) + scc.range[k];
+            NodeIDIterator end = std::begin(scc.component) + scc.range[k + 1];
 
             if (component_size > 1)
             {
-                std::vector<NodeID> scc_route;
-                NodeIDIterator start = std::begin(scc.component) + scc.range[k];
-                NodeIDIterator end = std::begin(scc.component) + scc.range[k + 1];
 
                 if (component_size < BF_MAX_FEASABLE)
                 {
@@ -320,13 +318,13 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                 //     return s;
                 // }();
 
-                route_result.push_back(std::move(scc_route));
             }
             else
             {
-                // if component only consists of one node, add it to the result routes
-                route_result.emplace_back(scc.component[scc.range[k]]);
+                scc_route = std::vector<NodeID>(start, end);
             }
+
+            route_result.push_back(std::move(scc_route));
         }
 
         // compute all round trip routes
