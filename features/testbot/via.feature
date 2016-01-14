@@ -117,3 +117,22 @@ Feature: Via points
             | 1,2,3     | ab,ab                      | 200m +-1  | head,via,destination                                             |
             | 1,3,2     | ab,ab,bc,cd,da,ab          | 1100m +-1 | head,via,right,right,right,right,destination                     |
             | 3,2,1     | ab,bc,cd,da,ab,ab,bc,cd,da,ab | 1800m     | head,right,right,right,right,via,right,right,right,right,destination |
+
+
+    # See issue #1896
+    Scenario: Via point at a dead end with oneway
+        Given the node map
+            | a | b | c |
+            |   | d |   |
+            |   | e |   |
+
+        And the ways
+            | nodes | oneway |
+            | abc   |  no    |
+            | bd    |  no    |
+            | de    |  yes   |
+
+        When I route I should get
+            | waypoints | route            |
+            | a,d,c     | abc,bd,bd,bd,abc |
+            | c,d,a     | abc,bd,bd,bd,abc |
