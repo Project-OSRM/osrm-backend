@@ -137,14 +137,15 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                                              route_parameters.uturns, raw_route);
         }
 
-        bool no_route = INVALID_EDGE_WEIGHT == raw_route.shortest_path_length;
-
-        auto generator = MakeApiResponseGenerator(facade);
-        generator.DescribeRoute(route_parameters, raw_route, json_result);
-
         // we can only know this after the fact, different SCC ids still
         // allow for connection in one direction.
-        if (no_route)
+        if (raw_route.is_valid())
+        {
+            auto generator = MakeApiResponseGenerator(facade);
+            generator.DescribeRoute(route_parameters, raw_route, json_result);
+            json_result.values["status_message"] = "Found route between points";
+        }
+        else
         {
             auto first_component_id = snapped_phantoms.front().component.id;
             auto not_in_same_component =
@@ -153,15 +154,17 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                             {
                                 return node.component.id != first_component_id;
                             });
+
             if (not_in_same_component)
             {
                 json_result.values["status_message"] = "Impossible route between points";
                 return Status::EmptyResult;
             }
-        }
-        else
-        {
-            json_result.values["status_message"] = "Found route between points";
+            else
+            {
+                json_result.values["status_message"] = "No route found between points";
+                return Status::Error;
+            }
         }
 
         return Status::Ok;
