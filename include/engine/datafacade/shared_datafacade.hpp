@@ -225,6 +225,10 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     SharedDataFacade()
     {
+        if (!datastore::SharedMemory::RegionExists(CURRENT_REGIONS))
+        {
+            throw util::exception("No shared memory blocks found, have you forgotten to run osrm-datastore?");
+        }
         data_timestamp_ptr = (SharedDataTimestamp *)datastore::SharedMemoryFactory::Get(
                                  CURRENT_REGIONS, sizeof(SharedDataTimestamp), false, false)
                                  ->Ptr();
@@ -239,8 +243,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     void CheckAndReloadFacade()
     {
         if (CURRENT_LAYOUT != data_timestamp_ptr->layout ||
-            CURRENT_DATA != data_timestamp_ptr->data ||
-            CURRENT_TIMESTAMP != data_timestamp_ptr->timestamp)
+            CURRENT_DATA != data_timestamp_ptr->data)
         {
             // release the previous shared memory segments
             datastore::SharedMemory::Remove(CURRENT_LAYOUT);
@@ -248,8 +251,12 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
             CURRENT_LAYOUT = data_timestamp_ptr->layout;
             CURRENT_DATA = data_timestamp_ptr->data;
-            CURRENT_TIMESTAMP = data_timestamp_ptr->timestamp;
+            CURRENT_TIMESTAMP = 0;  // Force trigger a reload
+        }
 
+        if (CURRENT_TIMESTAMP != data_timestamp_ptr->timestamp)
+        {
+            CURRENT_TIMESTAMP = data_timestamp_ptr->timestamp;
             m_layout_memory.reset(datastore::SharedMemoryFactory::Get(CURRENT_LAYOUT));
 
             data_layout = (SharedDataLayout *)(m_layout_memory->Ptr());
