@@ -82,8 +82,18 @@ int OSRM::OSRM_impl::RunQuery(const RouteParameters &route_parameters,
         return 400;
     }
 
+    osrm::engine::plugins::BasePlugin::Status return_code;
     increase_concurrent_query_count();
-    auto return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
+    if (barrier) {
+        // Get a shared data lock so that other threads won't update
+        // things while the query is running
+        boost::shared_lock<boost::shared_mutex> data_lock{
+                    (static_cast<datafacade::SharedDataFacade<contractor::QueryEdge::EdgeData> *>(
+                            query_data_facade))->data_mutex};
+        return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
+    } else {
+        return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
+    }
     decrease_concurrent_query_count();
     return static_cast<int>(return_code);
 }
