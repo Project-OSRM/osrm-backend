@@ -43,7 +43,7 @@ Feature: U-turns at via points
 
         When I route I should get
             | waypoints | route       |
-            | a,e,c     | ab,be,be,bc |
+            | a,e,c     | ab,be,be,be,bc |
 
     @todo
     Scenario: Instructions at via points at u-turns
@@ -89,5 +89,5 @@ Feature: U-turns at via points
 
         When I route I should get
             | waypoints | route                      |
-            | 1,2,3,4,5 | ab,be,be,bc,bc,cd,dg,dg,cd |
+            | 1,2,3,4,5 | ab,be,be,be,bc,bc,cd,dg,dg,dg,cd |
 
