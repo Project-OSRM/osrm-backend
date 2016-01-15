@@ -102,6 +102,23 @@ SegmentList<DataFacadeT>::SegmentList(const InternalRouteResult &raw_route,
                    raw_route.segment_end_coordinates[raw_index].target_phantom,
                    raw_route.target_traversed_in_reverse[raw_index],
                    raw_route.is_via_leg(raw_index), facade);
+            if (raw_route.is_via_leg(raw_index))
+            {
+                const auto &source_phantom =
+                    raw_route.segment_end_coordinates[raw_index].target_phantom;
+                if (raw_route.target_traversed_in_reverse[raw_index] != raw_route.source_traversed_in_reverse[raw_index+1])
+                {
+                    bool traversed_in_reverse = raw_route.target_traversed_in_reverse[raw_index];
+                    const extractor::TravelMode travel_mode =
+                        (traversed_in_reverse ? source_phantom.backward_travel_mode
+                                              : source_phantom.forward_travel_mode);
+                    const bool constexpr IS_NECESSARY = true;
+                    const bool constexpr IS_VIA_LOCATION = true;
+                    segments.emplace_back(source_phantom.location, source_phantom.name_id, 0, 0.f,
+                                          extractor::TurnInstruction::UTurn, IS_NECESSARY,
+                                          IS_VIA_LOCATION, travel_mode);
+                }
+            }
         }
     }
 
@@ -145,10 +162,12 @@ void SegmentList<DataFacadeT>::AddLeg(const std::vector<PathData> &leg_data,
         (traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight);
     const extractor::TravelMode travel_mode =
         (traversed_in_reverse ? target_node.backward_travel_mode : target_node.forward_travel_mode);
+    const bool constexpr IS_NECESSARY = true;
+    const bool constexpr IS_VIA_LOCATION = true;
     segments.emplace_back(target_node.location, target_node.name_id, segment_duration, 0.f,
                           is_via_leg ? extractor::TurnInstruction::ReachViaLocation
                                      : extractor::TurnInstruction::NoTurn,
-                          true, true, travel_mode);
+                          IS_NECESSARY, IS_VIA_LOCATION, travel_mode);
 }
 
 template <typename DataFacadeT> std::uint32_t SegmentList<DataFacadeT>::GetDistance() const
@@ -277,8 +296,8 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
 
     std::uint32_t necessary_segments = 0; // a running index that counts the necessary pieces
     via_indices.push_back(0);
-    const auto markNecessarySegments =
-        [this, &necessary_segments](SegmentInformation &first, const SegmentInformation &second)
+    const auto markNecessarySegments = [this, &necessary_segments](SegmentInformation &first,
+                                                                   const SegmentInformation &second)
     {
         if (!first.necessary)
             return;
