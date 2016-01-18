@@ -19,7 +19,8 @@ struct QueryNode
     using key_type = OSMNodeID; // type of NodeID
     using value_type = int;     // type of lat,lons
 
-    explicit QueryNode(int lat, int lon, OSMNodeID node_id) : lat(lat), lon(lon), node_id(node_id)
+    explicit QueryNode(int lat, int lon, OSMNodeID node_id)
+        : lat(lat), lon(lon), node_id(std::move(node_id))
     {
     }
     QueryNode()

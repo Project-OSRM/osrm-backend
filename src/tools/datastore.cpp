@@ -208,7 +208,7 @@ int main(const int argc, const char *argv[]) try
 
     // Allocate a memory layout in shared memory, deallocate previous
     auto *layout_memory = SharedMemoryFactory::Get(layout_region, sizeof(SharedDataLayout));
-    auto *shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
+    auto shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
 
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::FILE_INDEX_PATH,
                                           file_index_path.length() + 1);

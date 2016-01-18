@@ -28,7 +28,7 @@ template <typename RTreeT> class GeospatialQuery
 
   public:
     GeospatialQuery(RTreeT &rtree_, std::shared_ptr<CoordinateList> coordinates_)
-        : rtree(rtree_), coordinates(coordinates_)
+        : rtree(rtree_), coordinates(std::move(coordinates_))
     {
     }
 

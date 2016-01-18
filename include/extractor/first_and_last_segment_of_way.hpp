@@ -28,8 +28,9 @@ struct FirstAndLastSegmentOfWay
     }
 
     FirstAndLastSegmentOfWay(OSMWayID w, OSMNodeID fs, OSMNodeID ft, OSMNodeID ls, OSMNodeID lt)
-        : way_id(w), first_segment_source_id(fs), first_segment_target_id(ft),
-          last_segment_source_id(ls), last_segment_target_id(lt)
+        : way_id(std::move(w)), first_segment_source_id(std::move(fs)),
+          first_segment_target_id(std::move(ft)), last_segment_source_id(std::move(ls)),
+          last_segment_target_id(std::move(lt))
     {
     }
 

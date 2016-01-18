@@ -123,7 +123,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     startpoint,
                     travel_mode,
                     is_split),
-      osm_source_id(source), osm_target_id(target)
+      osm_source_id(std::move(source)), osm_target_id(std::move(target))
 {
 }
 
