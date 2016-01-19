@@ -41,6 +41,7 @@ inline util::json::Array AnnotateRoute(const std::vector<SegmentInformation> &ro
 
     round_about = {std::numeric_limits<std::int32_t>::max(), 0, 0};
     std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
+    extractor::TravelMode last_travel_mode = TRAVEL_MODE_DEFAULT;
 
     // Generate annotations for every segment
     for (const SegmentInformation &segment : route_segments)
@@ -89,6 +90,7 @@ inline util::json::Array AnnotateRoute(const std::vector<SegmentInformation> &ro
                     static_cast<std::uint32_t>(std::round(post_turn_bearing_value)));
 
                 json_instruction_row.values.push_back(segment.travel_mode);
+                last_travel_mode = segment.travel_mode;
 
                 // pre turn bearing
                 const double pre_turn_bearing_value = (segment.pre_turn_bearing / 10.);
@@ -120,6 +122,7 @@ inline util::json::Array AnnotateRoute(const std::vector<SegmentInformation> &ro
     json_last_instruction_row.values.push_back("0m");
     json_last_instruction_row.values.push_back(util::bearing::get(0.0));
     json_last_instruction_row.values.push_back(0.);
+    json_last_instruction_row.values.push_back(last_travel_mode);
     json_last_instruction_row.values.push_back(util::bearing::get(0.0));
     json_last_instruction_row.values.push_back(0.);
     json_instruction_array.values.emplace_back(std::move(json_last_instruction_row));
