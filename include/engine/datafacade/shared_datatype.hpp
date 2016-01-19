@@ -15,11 +15,8 @@ namespace engine
 namespace datafacade
 {
 
-namespace
-{
 // Added at the start and end of each block as sanity check
-static const char CANARY[] = "OSRM";
-}
+const constexpr char CANARY[] = "OSRM";
 
 struct SharedDataLayout
 {

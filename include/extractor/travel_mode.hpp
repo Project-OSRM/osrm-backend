@@ -10,9 +10,6 @@ using TravelMode = unsigned char;
 }
 }
 
-namespace
-{
-static const osrm::extractor::TravelMode TRAVEL_MODE_INACCESSIBLE = 0;
-static const osrm::extractor::TravelMode TRAVEL_MODE_DEFAULT = 1;
-}
+const constexpr osrm::extractor::TravelMode TRAVEL_MODE_INACCESSIBLE = 0;
+const constexpr osrm::extractor::TravelMode TRAVEL_MODE_DEFAULT = 1;
 #endif /* TRAVEL_MODE_HPP */
