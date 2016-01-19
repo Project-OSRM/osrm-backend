@@ -12,11 +12,8 @@ namespace osrm
 namespace util
 {
 
-namespace
-{
-
 // support old capitalized option names by down-casing them with a regex replace
-std::string read_file_lower_content(const boost::filesystem::path &path)
+inline std::string read_file_lower_content(const boost::filesystem::path &path)
 {
     boost::filesystem::fstream config_stream(path);
     std::string ini_file_content((std::istreambuf_iterator<char>(config_stream)),
@@ -24,7 +21,6 @@ std::string read_file_lower_content(const boost::filesystem::path &path)
     std::transform(std::begin(ini_file_content), std::end(ini_file_content),
                    std::begin(ini_file_content), ::tolower);
     return ini_file_content;
-}
 }
 }
 }
