@@ -88,14 +88,36 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
     BOOST_ASSERT(node_v != SPECIAL_NODEID);
 
+    auto getBestEdge = [this](const NodeID from, const NodeID to)
+    {
+        EdgeWeight best_distance = INVALID_EDGE_WEIGHT;
+        bool reversed = true;
+        EdgeID best_id = SPECIAL_EDGEID;
+        for (EdgeID eid : m_node_based_graph->GetAdjacentEdgeRange(from))
+        {
+            if (m_node_based_graph->GetTarget(eid) == to)
+            {
+                const auto &edge_data = m_node_based_graph->GetEdgeData(eid);
+                if ((!edge_data.reversed && (reversed || best_distance > edge_data.distance)) ||
+                    (edge_data.reversed && reversed && best_distance > edge_data.distance))
+                {
+                    best_id = eid;
+                    reversed = edge_data.reversed;
+                    best_distance = edge_data.distance;
+                }
+            }
+        }
+        return best_id;
+    };
+
     // find forward edge id and
-    const EdgeID edge_id_1 = m_node_based_graph->FindEdge(node_u, node_v);
+    const EdgeID edge_id_1 = getBestEdge(node_u,node_v); //m_node_based_graph->FindEdge(node_u, node_v);
     BOOST_ASSERT(edge_id_1 != SPECIAL_EDGEID);
 
     const EdgeData &forward_data = m_node_based_graph->GetEdgeData(edge_id_1);
 
     // find reverse edge id and
-    const EdgeID edge_id_2 = m_node_based_graph->FindEdge(node_v, node_u);
+    const EdgeID edge_id_2 = getBestEdge(node_v,node_u); //m_node_based_graph->FindEdge(node_v, node_u);
     BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
 
     const EdgeData &reverse_data = m_node_based_graph->GetEdgeData(edge_id_2);
@@ -145,7 +167,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         m_edge_based_node_list.emplace_back(
             edge_id_to_segment_id(forward_data.edge_id),
             edge_id_to_segment_id(reverse_data.edge_id), current_edge_source_coordinate_id,
-            current_edge_target_coordinate_id, forward_data.name_id,
+            current_edge_target_coordinate_id, forward_data.name_id, reverse_data.name_id,
             m_compressed_edge_container.GetPositionForID(edge_id_1),
             m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID, i,
             forward_data.travel_mode, reverse_data.travel_mode);
