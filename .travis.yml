@@ -5,29 +5,19 @@ dist: trusty
 notifications:
   email: false
 
-branches:
-  only:
-    - master
-    - develop
-
 matrix:
   include:
     - os: linux
       compiler: gcc
-      env: BUILD_TYPE='Release'
 
 install:
-  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
   - bash <(curl -sS https://nixos.org/nix/install)
   - source $HOME/.nix-profile/etc/profile.d/nix.sh
 
 before_script:
   - cd ${TRAVIS_BUILD_DIR}
-  - nix-shell --pure
   - mkdir build && cd build
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
 
 script:
-  - cmake --build .
-  - cmake --build . --target tests
+  - nix-shell --pure --run 'cmake ..'
+  - nix-shell --pure --run 'cmake --build .'
