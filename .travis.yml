@@ -16,8 +16,8 @@ install:
 
 before_script:
   - cd ${TRAVIS_BUILD_DIR}
-  - mkdir build && cd build
+  - mkdir build
 
 script:
-  - nix-shell --pure --run 'cmake ..'
-  - nix-shell --pure --run 'cmake --build .'
+  - nix-shell --pure --run 'cd build && cmake ..'
+  - nix-shell --pure --run 'cd build && cmake --build .'
