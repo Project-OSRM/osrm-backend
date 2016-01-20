@@ -306,6 +306,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         round_about.leave_at_exit = 0;
         round_about.name_id = 0;
         std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
+        TravelMode last_travel_mode = TRAVEL_MODE_DEFAULT;
 
         // Fetch data from Factory and generate a string from it.
         for (const SegmentInformation &segment : description_factory.path_description)
@@ -354,6 +355,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
                         static_cast<unsigned>(round(post_turn_bearing_value)));
 
                     json_instruction_row.values.push_back(segment.travel_mode);
+                    last_travel_mode = segment.travel_mode;
 
                     // pre turn bearing
                     const double pre_turn_bearing_value = (segment.pre_turn_bearing / 10.);
@@ -389,6 +391,7 @@ template <class DataFacadeT> class JSONDescriptor final : public BaseDescriptor<
         json_last_instruction_row.values.push_back("0m");
         json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
+        json_last_instruction_row.values.push_back(last_travel_mode);
         json_last_instruction_row.values.push_back(bearing::get(0.0));
         json_last_instruction_row.values.push_back(0.);
         json_instruction_array.values.push_back(json_last_instruction_row);

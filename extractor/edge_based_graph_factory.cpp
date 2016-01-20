@@ -445,10 +445,23 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
                 else
                 {
-                    if ((node_u == node_w) && (m_node_based_graph->GetOutDegree(node_v) > 1))
+                    if (node_u == node_w && m_node_based_graph->GetOutDegree(node_v) > 1)
                     {
-                        ++skipped_uturns_counter;
-                        continue;
+                        auto number_of_emmiting_bidirectional_edges = 0;
+                        for (auto edge : m_node_based_graph->GetAdjacentEdgeRange(node_v))
+                        {
+                            auto target = m_node_based_graph->GetTarget(edge);
+                            auto reverse_edge = m_node_based_graph->FindEdge(target, node_v);
+                            if (!m_node_based_graph->GetEdgeData(reverse_edge).reversed)
+                            {
+                                ++number_of_emmiting_bidirectional_edges;
+                            }
+                        }
+                        if (number_of_emmiting_bidirectional_edges > 1)
+                        {
+                            ++skipped_uturns_counter;
+                            continue;
+                        }
                     }
                 }
 

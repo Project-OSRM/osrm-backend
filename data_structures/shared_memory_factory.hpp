@@ -99,6 +99,7 @@ class SharedMemory
 
     SharedMemory() = delete;
     SharedMemory(const SharedMemory &) = delete;
+    SharedMemory &operator=(const SharedMemory &) = delete;
 
     template <typename IdentifierT>
     SharedMemory(const boost::filesystem::path &lock_file,
@@ -208,11 +209,13 @@ class SharedMemory
 class SharedMemory
 {
     SharedMemory(const SharedMemory &) = delete;
+    SharedMemory &operator=(const SharedMemory &) = delete;
     // Remove shared memory on destruction
     class shm_remove
     {
       private:
         shm_remove(const shm_remove &) = delete;
+        shm_remove &operator=(const shm_remove &) = delete;
         char *m_shmid;
         bool m_initialized;
 
@@ -375,6 +378,7 @@ template <class LockFileT = OSRMLockFile> class SharedMemoryFactory_tmpl
 
     SharedMemoryFactory_tmpl() = delete;
     SharedMemoryFactory_tmpl(const SharedMemoryFactory_tmpl &) = delete;
+    SharedMemoryFactory_tmpl &operator=(const SharedMemoryFactory_tmpl &) = delete;
 };
 
 using SharedMemoryFactory = SharedMemoryFactory_tmpl<>;
