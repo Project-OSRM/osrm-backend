@@ -32,6 +32,7 @@ endif()
 option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
 option(DEBUG_GEOMETRY "Enables an option to dump GeoJSON of the final routing graph" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
+option(ENABLE_ASSERTIONS OFF)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -97,6 +98,7 @@ if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   message(STATUS "Configuring OSRM in debug mode")
+  set(ENABLE_ASSERTIONS ON)
   if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -fno-omit-frame-pointer")
@@ -364,6 +366,11 @@ if(BUILD_TOOLS)
   install(TARGETS osrm-unlock-all DESTINATION bin)
   install(TARGETS osrm-check-hsgr DESTINATION bin)
   install(TARGETS osrm-springclean DESTINATION bin)
+endif()
+
+if (ENABLE_ASSERTIONS)
+  message(STATUS "Enabling assertions")
+  add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
 endif()
 
 # Add RPATH info to executables so that when they are run after being installed
