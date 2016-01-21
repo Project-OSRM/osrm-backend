@@ -123,6 +123,7 @@ install:
 
 before_script:
   - cd ${TRAVIS_BUILD_DIR}
+  - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
   - rvm use 1.9.3
   - gem install bundler
   - bundle install
@@ -132,7 +133,6 @@ before_script:
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1
 
 script:
-  - ./scripts/check_taginfo.py taginfo.json profiles/car.lua
   - make --jobs=2
   - make tests --jobs=2
   - make benchmarks
