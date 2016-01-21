@@ -2,7 +2,6 @@
 #include "extractor/edge_based_graph_factory.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/percent.hpp"
-#include "util/compute_angle.hpp"
 #include "util/integer_range.hpp"
 #include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
@@ -336,7 +335,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     }
 
     BOOST_ASSERT(m_edge_based_node_list.size() == m_edge_based_node_is_startpoint.size());
-    BOOST_ASSERT(m_max_edge_id+1 == m_edge_based_node_weights.size());
+    BOOST_ASSERT(m_max_edge_id + 1 == m_edge_based_node_weights.size());
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                                  << " nodes in edge-expanded graph";
@@ -498,7 +497,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                           ? m_compressed_edge_container.GetFirstEdgeTargetID(e2)
                                           : node_w)];
 
-                const double turn_angle = util::ComputeAngle(
+                const double turn_angle = util::coordinate_calculation::computeAngle(
                     first_coordinate, m_node_info_list[node_v], third_coordinate);
 
                 const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);

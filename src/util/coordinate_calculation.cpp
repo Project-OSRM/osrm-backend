@@ -2,6 +2,7 @@
 
 #include "util/mercator.hpp"
 #include "util/string_util.hpp"
+#include "util/trigonometry_table.hpp"
 
 #include <boost/assert.hpp>
 
@@ -217,6 +218,27 @@ double bearing(const FixedPointCoordinate &first_coordinate,
         result -= 360.0;
     }
     return result;
+}
+
+double computeAngle(const FixedPointCoordinate &first,
+                    const FixedPointCoordinate &second,
+                    const FixedPointCoordinate &third)
+{
+    const double v1x = (first.lon - second.lon) / COORDINATE_PRECISION;
+    const double v1y = mercator::latToY(first.lat / COORDINATE_PRECISION) -
+                       mercator::latToY(second.lat / COORDINATE_PRECISION);
+    const double v2x = (third.lon - second.lon) / COORDINATE_PRECISION;
+    const double v2y = mercator::latToY(third.lat / COORDINATE_PRECISION) -
+                       mercator::latToY(second.lat / COORDINATE_PRECISION);
+
+    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / M_PI;
+
+    while (angle < 0.)
+    {
+        angle += 360.;
+    }
+
+    return angle;
 }
 }
 }

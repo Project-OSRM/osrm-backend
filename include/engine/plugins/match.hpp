@@ -10,7 +10,7 @@
 #include "engine/guidance/segment_list.hpp"
 #include "engine/api_response_generator.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
-#include "util/compute_angle.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_logger.hpp"
 #include "util/json_util.hpp"
@@ -108,9 +108,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 
             if (input_coords.size() - 1 > current_coordinate && 0 < current_coordinate)
             {
-                double turn_angle = util::ComputeAngle(input_coords[current_coordinate - 1],
-                                                       input_coords[current_coordinate],
-                                                       input_coords[current_coordinate + 1]);
+                double turn_angle = util::coordinate_calculation::computeAngle(
+                    input_coords[current_coordinate - 1], input_coords[current_coordinate],
+                    input_coords[current_coordinate + 1]);
 
                 // sharp turns indicate a possible uturn
                 if (turn_angle <= 90.0 || turn_angle >= 270.0)

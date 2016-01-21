@@ -57,6 +57,11 @@ double radToDeg(const double radian);
 
 double bearing(const FixedPointCoordinate &first_coordinate,
                const FixedPointCoordinate &second_coordinate);
+
+// Get angle of line segment (A,C)->(C,B)
+double computeAngle(const FixedPointCoordinate &first,
+                    const FixedPointCoordinate &second,
+                    const FixedPointCoordinate &third);
 }
 }
 }
