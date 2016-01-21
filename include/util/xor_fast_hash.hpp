@@ -1,7 +1,13 @@
 #ifndef XOR_FAST_HASH_HPP
 #define XOR_FAST_HASH_HPP
 
+#include <boost/assert.hpp>
+
+#include <array>
 #include <algorithm>
+#include <iterator>
+#include <numeric>
+#include <random>
 #include <vector>
 
 namespace osrm
@@ -29,27 +35,29 @@ namespace util
 */
 class XORFastHash
 { // 65k entries
-    std::vector<unsigned short> table1;
-    std::vector<unsigned short> table2;
+    std::array<unsigned short, (2 << 16)> table1;
+    std::array<unsigned short, (2 << 16)> table2;
 
   public:
     XORFastHash()
     {
-        table1.resize(2 << 16);
-        table2.resize(2 << 16);
-        for (unsigned i = 0; i < (2 << 16); ++i)
-        {
-            table1[i] = static_cast<unsigned short>(i);
-            table2[i] = static_cast<unsigned short>(i);
-        }
-        std::random_shuffle(table1.begin(), table1.end());
-        std::random_shuffle(table2.begin(), table2.end());
+        std::mt19937 generator; // impl. defined but deterministic default seed
+
+        std::iota(begin(table1), end(table1), 0u);
+        std::shuffle(begin(table1), end(table1), generator);
+
+        std::iota(begin(table2), end(table2), 0u);
+        std::shuffle(begin(table2), end(table2), generator);
     }
 
     inline unsigned short operator()(const unsigned originalValue) const
     {
         unsigned short lsb = ((originalValue)&0xffff);
         unsigned short msb = (((originalValue) >> 16) & 0xffff);
+
+        BOOST_ASSERT(lsb < table1.size());
+        BOOST_ASSERT(msb < table2.size());
+
         return table1[lsb] ^ table2[msb];
     }
 };
