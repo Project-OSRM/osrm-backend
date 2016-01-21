@@ -93,9 +93,13 @@ int Contractor::Run()
     std::vector<EdgeWeight> node_weights;
     std::string node_file_name = config.osrm_input_path.string() + ".enw";
     if (util::deserializeVector(node_file_name, node_weights))
+    {
         util::SimpleLogger().Write() << "Done reading node weights.";
+    }
     else
-        util::SimpleLogger().Write() << "Failed reading node weights.";
+    {
+        throw util::exception("Failed reading node weights.");
+    }
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
     ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, std::move(node_weights),
