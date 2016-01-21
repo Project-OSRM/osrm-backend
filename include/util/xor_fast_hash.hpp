@@ -37,8 +37,8 @@ namespace util
 */
 class XORFastHash
 { // 65k entries
-    std::array<std::uint16_t, (2u << 16u)> table1;
-    std::array<std::uint16_t, (2u << 16u)> table2;
+    std::array<std::uint16_t, (1u << 16u)> table1;
+    std::array<std::uint16_t, (1u << 16u)> table2;
 
   public:
     XORFastHash()

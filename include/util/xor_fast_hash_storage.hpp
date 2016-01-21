@@ -34,29 +34,35 @@ template <typename NodeID, typename Key> class XORFastHashStorage
 
     XORFastHashStorage() = delete;
 
-    explicit XORFastHashStorage(size_t) : positions(2 << 16), current_timestamp(0) {}
+    explicit XORFastHashStorage(size_t) : positions(1u << 16u), current_timestamp(0) {}
 
     HashCell &operator[](const NodeID node)
     {
-        unsigned short position = fast_hasher(node);
+        std::uint16_t position = fast_hasher(node);
         while ((positions[position].time == current_timestamp) && (positions[position].id != node))
         {
-            ++position %= (2 << 16);
+            ++position %= (1u << 16u);
         }
 
         positions[position].time = current_timestamp;
         positions[position].id = node;
+
+        BOOST_ASSERT(position < positions.size());
+
         return positions[position];
     }
 
     // peek into table, get key for node, think of it as a read-only operator[]
     Key peek_index(const NodeID node) const
     {
-        unsigned short position = fast_hasher(node);
+        std::uint16_t position = fast_hasher(node);
         while ((positions[position].time == current_timestamp) && (positions[position].id != node))
         {
-            ++position %= (2 << 16);
+            ++position %= (1u << 16u);
         }
+
+        BOOST_ASSERT(position < positions.size());
+
         return positions[position].key;
     }
 
@@ -66,7 +72,7 @@ template <typename NodeID, typename Key> class XORFastHashStorage
         if (std::numeric_limits<unsigned>::max() == current_timestamp)
         {
             positions.clear();
-            positions.resize(2 << 16);
+            positions.resize(1u << 16u);
         }
     }
 
