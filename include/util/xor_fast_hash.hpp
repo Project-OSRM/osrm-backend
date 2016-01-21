@@ -37,8 +37,8 @@ namespace util
 */
 class XORFastHash
 { // 65k entries
-    std::array<std::uint16_t, (2 << 16)> table1;
-    std::array<std::uint16_t, (2 << 16)> table2;
+    std::array<std::uint16_t, (2u << 16u)> table1;
+    std::array<std::uint16_t, (2u << 16u)> table2;
 
   public:
     XORFastHash()
@@ -54,8 +54,8 @@ class XORFastHash
 
     inline std::uint16_t operator()(const std::uint32_t originalValue) const
     {
-        std::uint16_t lsb = ((originalValue)&0xffff);
-        std::uint16_t msb = (((originalValue) >> 16) & 0xffff);
+        std::uint16_t lsb = originalValue & 0xffffu;
+        std::uint16_t msb = originalValue >> 16u;
 
         BOOST_ASSERT(lsb < table1.size());
         BOOST_ASSERT(msb < table2.size());
