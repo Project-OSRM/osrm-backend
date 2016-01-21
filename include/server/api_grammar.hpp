@@ -64,7 +64,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         bearing = (-qi::lit('&')) >> qi::lit("b") >> '=' >>
                   (qi::int_ >>
                    -(qi::lit(',') >> qi::int_ |
-                     qi::attr(10)))[boost::bind(&HandlerT::AddBearing, handler, ::_1, ::_2, ::_3)];
+                     qi::attr(10)))[boost::bind(&HandlerT::AddBearing, handler, ::_1, ::_3)];
         u = (-qi::lit('&')) >> qi::lit("u") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::SetUTurn, handler, ::_1)];
         uturns = (-qi::lit('&')) >> qi::lit("uturns") >> '=' >>

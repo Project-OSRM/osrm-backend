@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "osrm/coordinate.hpp"
 
 #include <boost/fusion/container/vector/vector_fwd.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <string>
 #include <vector>
@@ -78,7 +78,6 @@ struct RouteParameters
     void AddTimestamp(const unsigned timestamp);
 
     void AddBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
-                    boost::spirit::qi::unused_type unused,
                     bool &pass);
 
     void SetLanguage(const std::string &language);

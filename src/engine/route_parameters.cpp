@@ -100,7 +100,6 @@ void RouteParameters::AddTimestamp(const unsigned timestamp)
 
 void RouteParameters::AddBearing(
     const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
-    boost::spirit::qi::unused_type /* unused */,
     bool &pass)
 {
     pass = false;
