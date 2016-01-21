@@ -2,7 +2,6 @@
 #include "extractor/extraction_way.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "extractor/node_id.hpp"
 #include "util/range_table.hpp"
 
 #include "util/osrm_exception.hpp"
@@ -23,6 +22,19 @@
 
 #include <chrono>
 #include <limits>
+
+namespace
+{
+// Needed for STXXL comparison - STXXL requires max_value(), min_value(), so we can not use
+// std::less<OSMNodeId>{}. Anonymous namespace to keep translation unit local.
+struct OSMNodeIDSTXXLLess
+{
+    using value_type = OSMNodeID;
+    bool operator()(const value_type left, const value_type right) const { return left < right; }
+    value_type max_value() { return MAX_OSM_NODEID; }
+    value_type min_value() { return MIN_OSM_NODEID; }
+};
+}
 
 namespace osrm
 {
@@ -136,7 +148,8 @@ void ExtractionContainers::PrepareNodes()
 {
     std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
     TIMER_START(sorting_used_nodes);
-    stxxl::sort(used_node_id_list.begin(), used_node_id_list.end(), Cmp(), stxxl_memory);
+    stxxl::sort(used_node_id_list.begin(), used_node_id_list.end(), OSMNodeIDSTXXLLess(),
+                stxxl_memory);
     TIMER_STOP(sorting_used_nodes);
     std::cout << "ok, after " << TIMER_SEC(sorting_used_nodes) << "s" << std::endl;
 
