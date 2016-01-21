@@ -10,6 +10,8 @@
 #include <random>
 #include <vector>
 
+#include <cstdint>
+
 namespace osrm
 {
 namespace util
@@ -35,8 +37,8 @@ namespace util
 */
 class XORFastHash
 { // 65k entries
-    std::array<unsigned short, (2 << 16)> table1;
-    std::array<unsigned short, (2 << 16)> table2;
+    std::array<std::uint16_t, (2 << 16)> table1;
+    std::array<std::uint16_t, (2 << 16)> table2;
 
   public:
     XORFastHash()
@@ -50,10 +52,10 @@ class XORFastHash
         std::shuffle(begin(table2), end(table2), generator);
     }
 
-    inline unsigned short operator()(const unsigned originalValue) const
+    inline std::uint16_t operator()(const std::uint32_t originalValue) const
     {
-        unsigned short lsb = ((originalValue)&0xffff);
-        unsigned short msb = (((originalValue) >> 16) & 0xffff);
+        std::uint16_t lsb = ((originalValue)&0xffff);
+        std::uint16_t msb = (((originalValue) >> 16) & 0xffff);
 
         BOOST_ASSERT(lsb < table1.size());
         BOOST_ASSERT(msb < table2.size());
