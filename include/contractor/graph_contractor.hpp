@@ -1096,7 +1096,7 @@ class GraphContractor
     // self-loops are added.
     std::vector<EdgeWeight> node_weights;
     std::vector<bool> is_core_node;
-    util::XORFastHash fast_hash;
+    util::XORFastHash<> fast_hash;
 };
 }
 }

@@ -78,7 +78,7 @@ template <typename NodeID, typename Key> class XORFastHashStorage
 
   private:
     std::vector<HashCell> positions;
-    XORFastHash fast_hasher;
+    XORFastHash<> fast_hasher;
     unsigned current_timestamp;
 };
 }

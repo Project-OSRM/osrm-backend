@@ -35,10 +35,12 @@ namespace util
     10: ret
 
 */
-class XORFastHash
-{ // 65k entries
-    std::array<std::uint16_t, (1u << 16u)> table1;
-    std::array<std::uint16_t, (1u << 16u)> table2;
+template <std::size_t MaxNumElements = (1u << 16u)> class XORFastHash
+{
+    static_assert(MaxNumElements <= (1u << 16u), "only 65536 elements indexable with uint16_t");
+
+    std::array<std::uint16_t, MaxNumElements> table1;
+    std::array<std::uint16_t, MaxNumElements> table2;
 
   public:
     XORFastHash()
