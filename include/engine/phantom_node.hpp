@@ -27,7 +27,7 @@ struct PhantomNode
                 unsigned packed_geometry_id,
                 bool is_tiny_component,
                 unsigned component_id,
-                util::FixedPointCoordinate &location,
+                util::FixedPointCoordinate location,
                 unsigned short fwd_segment_position,
                 extractor::TravelMode forward_travel_mode,
                 extractor::TravelMode backward_travel_mode)
@@ -35,7 +35,7 @@ struct PhantomNode
           forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
           packed_geometry_id(packed_geometry_id), component{component_id, is_tiny_component},
-          location(location), fwd_segment_position(fwd_segment_position),
+          location(std::move(location)), fwd_segment_position(fwd_segment_position),
           forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
     {
     }
@@ -89,7 +89,7 @@ struct PhantomNode
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
     template <class OtherT>
-    PhantomNode(const OtherT &other, const util::FixedPointCoordinate &foot_point)
+    PhantomNode(const OtherT &other, const util::FixedPointCoordinate foot_point)
     {
         forward_node_id = other.forward_edge_based_node_id;
         reverse_node_id = other.reverse_edge_based_node_id;

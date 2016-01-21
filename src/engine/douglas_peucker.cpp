@@ -20,8 +20,8 @@ namespace
 struct CoordinatePairCalculator
 {
     CoordinatePairCalculator() = delete;
-    CoordinatePairCalculator(const util::FixedPointCoordinate &coordinate_a,
-                             const util::FixedPointCoordinate &coordinate_b)
+    CoordinatePairCalculator(const util::FixedPointCoordinate coordinate_a,
+                             const util::FixedPointCoordinate coordinate_b)
     {
         // initialize distance calculator with two fixed coordinates a, b
         first_lat = (coordinate_a.lat / COORDINATE_PRECISION) * util::RAD;
@@ -30,7 +30,7 @@ struct CoordinatePairCalculator
         second_lon = (coordinate_b.lon / COORDINATE_PRECISION) * util::RAD;
     }
 
-    int operator()(util::FixedPointCoordinate &other) const
+    int operator()(const util::FixedPointCoordinate other) const
     {
         // set third coordinate c
         const float float_lat1 = (other.lat / COORDINATE_PRECISION) * util::RAD;

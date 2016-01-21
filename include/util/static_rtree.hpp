@@ -124,8 +124,8 @@ class StaticRTree
         // generate auxiliary vector of hilbert-values
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, m_element_count),
-            [&input_data_vector, &input_wrapper_vector, &get_hilbert_number,
-             &coordinate_list](const tbb::blocked_range<uint64_t> &range)
+            [&input_data_vector, &input_wrapper_vector, &get_hilbert_number, &coordinate_list](
+                const tbb::blocked_range<uint64_t> &range)
             {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end; ++element_counter)
@@ -322,7 +322,7 @@ class StaticRTree
     }
 
     // Override filter and terminator for the desired behaviour.
-    std::vector<EdgeDataT> Nearest(const FixedPointCoordinate &input_coordinate,
+    std::vector<EdgeDataT> Nearest(const FixedPointCoordinate input_coordinate,
                                    const std::size_t max_results)
     {
         return Nearest(input_coordinate,
@@ -338,7 +338,7 @@ class StaticRTree
 
     // Override filter and terminator for the desired behaviour.
     template <typename FilterT, typename TerminationT>
-    std::vector<EdgeDataT> Nearest(const FixedPointCoordinate &input_coordinate,
+    std::vector<EdgeDataT> Nearest(const FixedPointCoordinate input_coordinate,
                                    const FilterT filter,
                                    const TerminationT terminate)
     {
@@ -407,7 +407,7 @@ class StaticRTree
   private:
     template <typename QueueT>
     void ExploreLeafNode(const std::uint32_t leaf_id,
-                         const FixedPointCoordinate &input_coordinate,
+                         const FixedPointCoordinate input_coordinate,
                          const std::pair<double, double> &projected_coordinate,
                          QueueT &traversal_queue)
     {
@@ -432,7 +432,7 @@ class StaticRTree
 
     template <class QueueT>
     void ExploreTreeNode(const TreeNode &parent,
-                         const FixedPointCoordinate &input_coordinate,
+                         const FixedPointCoordinate input_coordinate,
                          QueueT &traversal_queue)
     {
         for (uint32_t i = 0; i < parent.child_count; ++i)

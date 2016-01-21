@@ -79,8 +79,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     void LoadChecksum()
     {
-        m_check_sum =
-            *data_layout->GetBlockPtr<unsigned>(shared_memory, storage::SharedDataLayout::HSGR_CHECKSUM);
+        m_check_sum = *data_layout->GetBlockPtr<unsigned>(shared_memory,
+                                                          storage::SharedDataLayout::HSGR_CHECKSUM);
         util::SimpleLogger().Write() << "set checksum: " << m_check_sum;
     }
 
@@ -98,8 +98,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     {
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
-        RTreeNode *tree_ptr =
-            data_layout->GetBlockPtr<RTreeNode>(shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
+        RTreeNode *tree_ptr = data_layout->GetBlockPtr<RTreeNode>(
+            shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
         m_static_rtree.reset(new TimeStampedRTreePair(
             CURRENT_TIMESTAMP,
             util::make_unique<SharedRTree>(
@@ -111,11 +111,11 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     void LoadGraph()
     {
-        GraphNode *graph_nodes_ptr =
-            data_layout->GetBlockPtr<GraphNode>(shared_memory, storage::SharedDataLayout::GRAPH_NODE_LIST);
+        GraphNode *graph_nodes_ptr = data_layout->GetBlockPtr<GraphNode>(
+            shared_memory, storage::SharedDataLayout::GRAPH_NODE_LIST);
 
-        GraphEdge *graph_edges_ptr =
-            data_layout->GetBlockPtr<GraphEdge>(shared_memory, storage::SharedDataLayout::GRAPH_EDGE_LIST);
+        GraphEdge *graph_edges_ptr = data_layout->GetBlockPtr<GraphEdge>(
+            shared_memory, storage::SharedDataLayout::GRAPH_EDGE_LIST);
 
         typename util::ShM<GraphNode, true>::vector node_list(
             graph_nodes_ptr, data_layout->num_entries[storage::SharedDataLayout::GRAPH_NODE_LIST]);
@@ -128,10 +128,11 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     {
 
         util::FixedPointCoordinate *coordinate_list_ptr =
-            data_layout->GetBlockPtr<util::FixedPointCoordinate>(shared_memory,
-                                                                 storage::SharedDataLayout::COORDINATE_LIST);
+            data_layout->GetBlockPtr<util::FixedPointCoordinate>(
+                shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
         m_coordinate_list = util::make_unique<util::ShM<util::FixedPointCoordinate, true>::vector>(
-            coordinate_list_ptr, data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
+            coordinate_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
         extractor::TravelMode *travel_mode_list_ptr =
             data_layout->GetBlockPtr<extractor::TravelMode>(shared_memory,
@@ -148,8 +149,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list.swap(turn_instruction_list);
 
-        unsigned *name_id_list_ptr =
-            data_layout->GetBlockPtr<unsigned>(shared_memory, storage::SharedDataLayout::NAME_ID_LIST);
+        unsigned *name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, storage::SharedDataLayout::NAME_ID_LIST);
         typename util::ShM<unsigned, true>::vector name_id_list(
             name_id_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_ID_LIST]);
         m_name_ID_list.swap(name_id_list);
@@ -157,8 +158,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     void LoadViaNodeList()
     {
-        NodeID *via_node_list_ptr =
-            data_layout->GetBlockPtr<NodeID>(shared_memory, storage::SharedDataLayout::VIA_NODE_LIST);
+        NodeID *via_node_list_ptr = data_layout->GetBlockPtr<NodeID>(
+            shared_memory, storage::SharedDataLayout::VIA_NODE_LIST);
         typename util::ShM<NodeID, true>::vector via_node_list(
             via_node_list_ptr, data_layout->num_entries[storage::SharedDataLayout::VIA_NODE_LIST]);
         m_via_node_list.swap(via_node_list);
@@ -166,17 +167,17 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     void LoadNames()
     {
-        unsigned *offsets_ptr =
-            data_layout->GetBlockPtr<unsigned>(shared_memory, storage::SharedDataLayout::NAME_OFFSETS);
-        NameIndexBlock *blocks_ptr =
-            data_layout->GetBlockPtr<NameIndexBlock>(shared_memory, storage::SharedDataLayout::NAME_BLOCKS);
+        unsigned *offsets_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, storage::SharedDataLayout::NAME_OFFSETS);
+        NameIndexBlock *blocks_ptr = data_layout->GetBlockPtr<NameIndexBlock>(
+            shared_memory, storage::SharedDataLayout::NAME_BLOCKS);
         typename util::ShM<unsigned, true>::vector name_offsets(
             offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_OFFSETS]);
         typename util::ShM<NameIndexBlock, true>::vector name_blocks(
             blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_BLOCKS]);
 
-        char *names_list_ptr =
-            data_layout->GetBlockPtr<char>(shared_memory, storage::SharedDataLayout::NAME_CHAR_LIST);
+        char *names_list_ptr = data_layout->GetBlockPtr<char>(
+            shared_memory, storage::SharedDataLayout::NAME_CHAR_LIST);
         typename util::ShM<char, true>::vector names_char_list(
             names_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_CHAR_LIST]);
         m_name_table = util::make_unique<util::RangeTable<16, true>>(
@@ -192,8 +193,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             return;
         }
 
-        unsigned *core_marker_ptr =
-            data_layout->GetBlockPtr<unsigned>(shared_memory, storage::SharedDataLayout::CORE_MARKER);
+        unsigned *core_marker_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, storage::SharedDataLayout::CORE_MARKER);
         typename util::ShM<bool, true>::vector is_core_node(
             core_marker_ptr, data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER]);
         m_is_core_node.swap(is_core_node);
@@ -208,16 +209,18 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDICATORS]);
         m_edge_is_compressed.swap(edge_is_compressed);
 
-        unsigned *geometries_index_ptr =
-            data_layout->GetBlockPtr<unsigned>(shared_memory, storage::SharedDataLayout::GEOMETRIES_INDEX);
+        unsigned *geometries_index_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, storage::SharedDataLayout::GEOMETRIES_INDEX);
         typename util::ShM<unsigned, true>::vector geometry_begin_indices(
-            geometries_index_ptr, data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
+            geometries_index_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
         m_geometry_indices.swap(geometry_begin_indices);
 
-        unsigned *geometries_list_ptr =
-            data_layout->GetBlockPtr<unsigned>(shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
+        unsigned *geometries_list_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
         typename util::ShM<unsigned, true>::vector geometry_list(
-            geometries_list_ptr, data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
+            geometries_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
         m_geometry_list.swap(geometry_list);
     }
 
@@ -230,12 +233,12 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     {
         if (!storage::SharedMemory::RegionExists(storage::CURRENT_REGIONS))
         {
-            throw util::exception("No shared memory blocks found, have you forgotten to run osrm-datastore?");
+            throw util::exception(
+                "No shared memory blocks found, have you forgotten to run osrm-datastore?");
         }
         data_timestamp_ptr = static_cast<storage::SharedDataTimestamp *>(
             storage::makeSharedMemory(storage::CURRENT_REGIONS,
-                                      sizeof(storage::SharedDataTimestamp), false, false)
-                ->Ptr());
+                                      sizeof(storage::SharedDataTimestamp), false, false)->Ptr());
         CURRENT_LAYOUT = storage::LAYOUT_NONE;
         CURRENT_DATA = storage::DATA_NONE;
         CURRENT_TIMESTAMP = 0;
@@ -263,14 +266,15 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
                 CURRENT_LAYOUT = data_timestamp_ptr->layout;
                 CURRENT_DATA = data_timestamp_ptr->data;
-                CURRENT_TIMESTAMP = 0;  // Force trigger a reload
+                CURRENT_TIMESTAMP = 0; // Force trigger a reload
 
-                util::SimpleLogger().Write(logDEBUG) << "Current layout was different to new layout, swapping";
+                util::SimpleLogger().Write(logDEBUG)
+                    << "Current layout was different to new layout, swapping";
             }
             else
             {
-                util::SimpleLogger().Write(logDEBUG) << "Current layout was same to new layout, not swapping";
-
+                util::SimpleLogger().Write(logDEBUG)
+                    << "Current layout was same to new layout, not swapping";
             }
 
             if (CURRENT_TIMESTAMP != data_timestamp_ptr->timestamp)
@@ -280,19 +284,20 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
                 util::SimpleLogger().Write(logDEBUG) << "Performing data reload";
                 m_layout_memory.reset(storage::makeSharedMemory(CURRENT_LAYOUT));
 
-                data_layout = (storage::SharedDataLayout *) (m_layout_memory->Ptr());
+                data_layout = (storage::SharedDataLayout *)(m_layout_memory->Ptr());
 
                 m_large_memory.reset(storage::makeSharedMemory(CURRENT_DATA));
-                shared_memory = (char *) (m_large_memory->Ptr());
+                shared_memory = (char *)(m_large_memory->Ptr());
 
-                const char *file_index_ptr =
-                        data_layout->GetBlockPtr<char>(shared_memory, storage::SharedDataLayout::FILE_INDEX_PATH);
+                const char *file_index_ptr = data_layout->GetBlockPtr<char>(
+                    shared_memory, storage::SharedDataLayout::FILE_INDEX_PATH);
                 file_index_path = boost::filesystem::path(file_index_ptr);
-                if (!boost::filesystem::exists(file_index_path)) {
+                if (!boost::filesystem::exists(file_index_path))
+                {
                     util::SimpleLogger().Write(logDEBUG) << "Leaf file name "
-                    << file_index_path.string();
+                                                         << file_index_path.string();
                     throw util::exception("Could not load leaf index file. "
-                                                  "Is any data loaded into shared memory?");
+                                          "Is any data loaded into shared memory?");
                 }
 
                 LoadGraph();
@@ -304,7 +309,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
                 LoadNames();
                 LoadCoreInformation();
 
-                util::SimpleLogger().Write() << "number of geometries: " << m_coordinate_list->size();
+                util::SimpleLogger().Write()
+                    << "number of geometries: " << m_coordinate_list->size();
                 for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
                 {
                     if (!GetCoordinateOfNode(i).IsValid())
@@ -398,7 +404,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
                                const int bearing_range = 180) override final
@@ -414,7 +420,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,
                         const int bearing_range = 180) override final
@@ -430,7 +436,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate &input_coordinate,
+        const util::FixedPointCoordinate input_coordinate,
         const int bearing = 0,
         const int bearing_range = 180) override final
     {

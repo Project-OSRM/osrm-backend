@@ -343,7 +343,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
                                const int bearing_range = 180) override final
@@ -359,7 +359,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,
                         const int bearing_range = 180) override final
@@ -375,7 +375,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate &input_coordinate,
+        const util::FixedPointCoordinate input_coordinate,
         const int bearing = 0,
         const int bearing_range = 180) override final
     {

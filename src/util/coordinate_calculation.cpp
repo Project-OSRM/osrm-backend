@@ -6,8 +6,6 @@
 
 #include <boost/assert.hpp>
 
-#include "osrm/coordinate.hpp"
-
 #include <cmath>
 
 #include <limits>
@@ -44,15 +42,15 @@ double haversineDistance(const int lat1, const int lon1, const int lat2, const i
     return EARTH_RADIUS * charv;
 }
 
-double haversineDistance(const FixedPointCoordinate &coordinate_1,
-                         const FixedPointCoordinate &coordinate_2)
+double haversineDistance(const FixedPointCoordinate coordinate_1,
+                         const FixedPointCoordinate coordinate_2)
 {
     return haversineDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                              coordinate_2.lon);
 }
 
-double greatCircleDistance(const FixedPointCoordinate &coordinate_1,
-                           const FixedPointCoordinate &coordinate_2)
+double greatCircleDistance(const FixedPointCoordinate coordinate_1,
+                           const FixedPointCoordinate coordinate_2)
 {
     return greatCircleDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
                                coordinate_2.lon);
@@ -75,9 +73,9 @@ double greatCircleDistance(const int lat1, const int lon1, const int lat2, const
     return std::hypot(x_value, y_value) * EARTH_RADIUS;
 }
 
-double perpendicularDistance(const FixedPointCoordinate &source_coordinate,
-                             const FixedPointCoordinate &target_coordinate,
-                             const FixedPointCoordinate &query_location)
+double perpendicularDistance(const FixedPointCoordinate source_coordinate,
+                             const FixedPointCoordinate target_coordinate,
+                             const FixedPointCoordinate query_location)
 {
     double ratio;
     FixedPointCoordinate nearest_location;
@@ -86,9 +84,9 @@ double perpendicularDistance(const FixedPointCoordinate &source_coordinate,
                                  nearest_location, ratio);
 }
 
-double perpendicularDistance(const FixedPointCoordinate &segment_source,
-                             const FixedPointCoordinate &segment_target,
-                             const FixedPointCoordinate &query_location,
+double perpendicularDistance(const FixedPointCoordinate segment_source,
+                             const FixedPointCoordinate segment_target,
+                             const FixedPointCoordinate query_location,
                              FixedPointCoordinate &nearest_location,
                              double &ratio)
 {
@@ -100,10 +98,10 @@ double perpendicularDistance(const FixedPointCoordinate &segment_source,
 }
 
 double
-perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &source_coordinate,
-                                             const FixedPointCoordinate &target_coordinate,
-                                             const FixedPointCoordinate &query_location,
-                                             const std::pair<double, double> &projected_coordinate)
+perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate source_coordinate,
+                                             const FixedPointCoordinate target_coordinate,
+                                             const FixedPointCoordinate query_location,
+                                             const std::pair<double, double> projected_coordinate)
 {
     double ratio;
     FixedPointCoordinate nearest_location;
@@ -114,10 +112,10 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &source_
 }
 
 double
-perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate &segment_source,
-                                             const FixedPointCoordinate &segment_target,
-                                             const FixedPointCoordinate &query_location,
-                                             const std::pair<double, double> &projected_coordinate,
+perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate segment_source,
+                                             const FixedPointCoordinate segment_target,
+                                             const FixedPointCoordinate query_location,
+                                             const std::pair<double, double> projected_coordinate,
                                              FixedPointCoordinate &nearest_location,
                                              double &ratio)
 {
@@ -196,8 +194,8 @@ double degToRad(const double degree) { return degree * (static_cast<double>(M_PI
 
 double radToDeg(const double radian) { return radian * (180.0 * static_cast<double>(M_1_PI)); }
 
-double bearing(const FixedPointCoordinate &first_coordinate,
-               const FixedPointCoordinate &second_coordinate)
+double bearing(const FixedPointCoordinate first_coordinate,
+               const FixedPointCoordinate second_coordinate)
 {
     const double lon_diff =
         second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
@@ -220,9 +218,9 @@ double bearing(const FixedPointCoordinate &first_coordinate,
     return result;
 }
 
-double computeAngle(const FixedPointCoordinate &first,
-                    const FixedPointCoordinate &second,
-                    const FixedPointCoordinate &third)
+double computeAngle(const FixedPointCoordinate first,
+                    const FixedPointCoordinate second,
+                    const FixedPointCoordinate third)
 {
     const double v1x = (first.lon - second.lon) / COORDINATE_PRECISION;
     const double v1y = mercator::latToY(first.lat / COORDINATE_PRECISION) -

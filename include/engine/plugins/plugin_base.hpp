@@ -38,7 +38,7 @@ class BasePlugin
                                        const unsigned min = 2) const final
     {
         if (min > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
-                                                    [](const util::FixedPointCoordinate &coordinate)
+                                                    [](const util::FixedPointCoordinate coordinate)
                                                     {
                                                         return !coordinate.IsValid();
                                                     }))

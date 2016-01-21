@@ -74,19 +74,19 @@ template <class EdgeDataT> class BaseDataFacade
     virtual extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
                                const float max_distance,
                                const int bearing = 0,
                                const int bearing_range = 180) = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate &input_coordinate,
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing = 0,
                         const int bearing_range = 180) = 0;
 
     virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate &input_coordinate,
+        const util::FixedPointCoordinate input_coordinate,
         const int bearing = 0,
         const int bearing_range = 180) = 0;
 

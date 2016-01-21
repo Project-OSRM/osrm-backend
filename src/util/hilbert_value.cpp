@@ -1,13 +1,11 @@
 #include "util/hilbert_value.hpp"
 
-#include "osrm/coordinate.hpp"
-
 namespace osrm
 {
 namespace util
 {
 
-uint64_t HilbertCode::operator()(const FixedPointCoordinate &current_coordinate) const
+std::uint64_t HilbertCode::operator()(const FixedPointCoordinate current_coordinate) const
 {
     unsigned location[2];
     location[0] = current_coordinate.lat + static_cast<int>(90 * COORDINATE_PRECISION);
@@ -17,10 +15,11 @@ uint64_t HilbertCode::operator()(const FixedPointCoordinate &current_coordinate)
     return BitInterleaving(location[0], location[1]);
 }
 
-uint64_t HilbertCode::BitInterleaving(const uint32_t latitude, const uint32_t longitude) const
+std::uint64_t HilbertCode::BitInterleaving(const std::uint32_t latitude,
+                                           const std::uint32_t longitude) const
 {
-    uint64_t result = 0;
-    for (int8_t index = 31; index >= 0; --index)
+    std::uint64_t result = 0;
+    for (std::int8_t index = 31; index >= 0; --index)
     {
         result |= (latitude >> index) & 1;
         result <<= 1;
@@ -33,9 +32,9 @@ uint64_t HilbertCode::BitInterleaving(const uint32_t latitude, const uint32_t lo
     return result;
 }
 
-void HilbertCode::TransposeCoordinate(uint32_t *X) const
+void HilbertCode::TransposeCoordinate(std::uint32_t *x) const
 {
-    uint32_t M = 1u << (32 - 1), P, Q, t;
+    std::uint32_t M = 1u << (32 - 1), P, Q, t;
     int i;
     // Inverse undo
     for (Q = M; Q > 1; Q >>= 1)
@@ -44,28 +43,28 @@ void HilbertCode::TransposeCoordinate(uint32_t *X) const
         for (i = 0; i < 2; ++i)
         {
 
-            const bool condition = (X[i] & Q);
+            const bool condition = (x[i] & Q);
             if (condition)
             {
-                X[0] ^= P; // invert
+                x[0] ^= P; // invert
             }
             else
             {
-                t = (X[0] ^ X[i]) & P;
-                X[0] ^= t;
-                X[i] ^= t;
+                t = (x[0] ^ x[i]) & P;
+                x[0] ^= t;
+                x[i] ^= t;
             }
         } // exchange
     }
     // Gray encode
     for (i = 1; i < 2; ++i)
     {
-        X[i] ^= X[i - 1];
+        x[i] ^= x[i - 1];
     }
     t = 0;
     for (Q = M; Q > 1; Q >>= 1)
     {
-        const bool condition = (X[2 - 1] & Q);
+        const bool condition = (x[2 - 1] & Q);
         if (condition)
         {
             t ^= Q - 1;
@@ -73,7 +72,7 @@ void HilbertCode::TransposeCoordinate(uint32_t *X) const
     } // check if this for loop is wrong
     for (i = 0; i < 2; ++i)
     {
-        X[i] ^= t;
+        x[i] ^= t;
     }
 }
 }

@@ -3,6 +3,7 @@
 
 #include "contractor/contractor_config.hpp"
 #include "extractor/query_node.hpp"
+#include "osrm/coordinate.hpp"
 
 #ifndef DEBUG_GEOMETRY
 
@@ -23,7 +24,7 @@ inline void DEBUG_GEOMETRY_STOP() {}
 inline void DEBUG_TURNS_START(const std::string & /* debug_turns_filename */) {}
 inline void DEBUG_TURN(const NodeID /* node */,
                        const std::vector<extractor::QueryNode> & /* m_node_info_list */,
-                       const FixedPointCoordinate & /* first_coordinate */,
+                       const FixedPointCoordinate /* first_coordinate */,
                        const int /* turn_angle */,
                        const int /* turn_penalty */)
 {
@@ -95,11 +96,9 @@ inline void DEBUG_GEOMETRY_EDGE(int new_segment_weight,
         if (!dg_first_debug_geometry)
             debug_geometry_file << "," << std::endl;
         debug_geometry_file << "{ \"type\":\"Feature\",\"properties\":{\"original\":false, "
-                               "\"weight\":"
-                            << new_segment_weight / 10.0 << ",\"speed\":"
-                            << static_cast<int>(
-                                   std::floor((segment_length / new_segment_weight) * 10. * 3.6))
-                            << ",";
+                               "\"weight\":" << new_segment_weight / 10.0 << ",\"speed\":"
+                            << static_cast<int>(std::floor((segment_length / new_segment_weight) *
+                                                           10. * 3.6)) << ",";
         debug_geometry_file << "\"from_node\": " << previous_osm_node_id
                             << ", \"to_node\": " << this_osm_node_id << ",";
         debug_geometry_file << "\"timestamp\": \"" << dg_time_buffer << "\"},";
@@ -114,7 +113,8 @@ inline void DEBUG_GEOMETRY_STOP()
 {
     if (dg_output_debug_geometry)
     {
-        debug_geometry_file << std::endl << "]}" << std::endl;
+        debug_geometry_file << std::endl
+                            << "]}" << std::endl;
         debug_geometry_file.close();
     }
 }
@@ -169,7 +169,7 @@ inline void DEBUG_UTURN(const NodeID node,
 
 inline void DEBUG_TURN(const NodeID node,
                        const std::vector<extractor::QueryNode> &m_node_info_list,
-                       const FixedPointCoordinate &first_coordinate,
+                       const FixedPointCoordinate first_coordinate,
                        const int turn_angle,
                        const int turn_penalty)
 {
@@ -201,7 +201,8 @@ inline void DEBUG_TURNS_STOP()
 {
     if (dg_output_turn_debug)
     {
-        dg_debug_turns_file << std::endl << "]}" << std::endl;
+        dg_debug_turns_file << std::endl
+                            << "]}" << std::endl;
         dg_debug_turns_file.close();
     }
 }

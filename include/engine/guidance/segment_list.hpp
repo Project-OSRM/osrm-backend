@@ -51,7 +51,7 @@ template <typename DataFacadeT> class SegmentList
                 const bool is_via_leg,
                 const DataFacade *facade);
 
-    void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &path_point);
+    void AppendSegment(const FixedPointCoordinate coordinate, const PathData &path_point);
     void Finalize(const bool extract_alternative,
                   const InternalRouteResult &raw_route,
                   const unsigned zoom_level,
@@ -192,7 +192,7 @@ std::vector<SegmentInformation> const &SegmentList<DataFacadeT>::Get() const
 }
 
 template <typename DataFacadeT>
-void SegmentList<DataFacadeT>::AppendSegment(const FixedPointCoordinate &coordinate,
+void SegmentList<DataFacadeT>::AppendSegment(const FixedPointCoordinate coordinate,
                                              const PathData &path_point)
 {
     // if the start location is on top of a node, the first movement might be zero-length,
