@@ -1,5 +1,7 @@
 ## About
 
+[![Join the chat at https://gitter.im/Project-OSRM/osrm-backend](https://badges.gitter.im/Project-OSRM/osrm-backend.svg)](https://gitter.im/Project-OSRM/osrm-backend?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 The Open Source Routing Machine is a high performance routing engine written in C++11 designed to run on OpenStreetMap data.
 
 ## Current build status
