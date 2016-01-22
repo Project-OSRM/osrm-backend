@@ -652,7 +652,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         // run two-target Dijkstra routing step on core with termination criterion
         const constexpr bool STALLING_DISABLED = false;
-        while (0 < (forward_core_heap.Size() + reverse_core_heap.Size()) &&
+        while (0 < forward_core_heap.Size() && 0 < reverse_core_heap.Size() &&
                distance > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
         {
             if (!forward_core_heap.Empty())
@@ -722,14 +722,16 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     // Requires the heaps for be empty
     // If heaps should be adjusted to be initialized outside of this function,
     // the addition of force_loop parameters might be required
+    // set prune_distance to INVALID_EDGE_WEIGHT to run an unpruned search
     double get_network_distance(SearchEngineData::QueryHeap &forward_heap,
                                 SearchEngineData::QueryHeap &reverse_heap,
                                 const PhantomNode &source_phantom,
-                                const PhantomNode &target_phantom) const
+                                const PhantomNode &target_phantom,
+                                EdgeWeight prune_distance) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
-        EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
+        EdgeWeight upper_bound = prune_distance;
         NodeID middle_node = SPECIAL_NODEID;
         EdgeWeight edge_offset = std::min(0, -source_phantom.GetForwardWeightPlusOffset());
         edge_offset = std::min(edge_offset, -source_phantom.GetReverseWeightPlusOffset());
@@ -778,7 +780,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
 
         double distance = std::numeric_limits<double>::max();
-        if (upper_bound != INVALID_EDGE_WEIGHT)
+        if (upper_bound < prune_distance)
         {
             std::vector<NodeID> packed_leg;
             if (upper_bound != forward_heap.GetKey(middle_node) + reverse_heap.GetKey(middle_node))
@@ -812,8 +814,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             }
             distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
                                                                         target_phantom.location);
+            return distance;
         }
-        return distance;
+        else
+        {
+            return INVALID_EDGE_WEIGHT;
+        }
     }
 };
 }

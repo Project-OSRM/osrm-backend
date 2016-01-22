@@ -220,10 +220,12 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     forward_heap.Clear();
                     reverse_heap.Clear();
 
+                    const auto time_at_ultra_low_speed = 400 * haversine_distance; //25cm/s = walking speed
+
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto network_distance = super::get_network_distance(
                         forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].phantom_node,
-                        current_timestamps_list[s_prime].phantom_node);
+                        current_timestamps_list[s_prime].phantom_node, time_at_ultra_low_speed );
 
                     const auto d_t = std::abs(network_distance - haversine_distance);
 
