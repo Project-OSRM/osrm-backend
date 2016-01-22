@@ -11,7 +11,8 @@ namespace osrm
 namespace util
 {
 
-template <typename NodeID, typename Key> class XORFastHashStorage
+template <typename NodeID, typename Key, std::size_t MaxNumElements = (1u << 16u)>
+class XORFastHashStorage
 {
   public:
     struct HashCell
@@ -26,22 +27,18 @@ template <typename NodeID, typename Key> class XORFastHashStorage
         }
 
         HashCell(const HashCell &other) : time(other.key), id(other.id), key(other.time) {}
-
         operator Key() const { return key; }
-
         void operator=(const Key key_to_insert) { key = key_to_insert; }
     };
 
-    XORFastHashStorage() = delete;
-
-    explicit XORFastHashStorage(size_t) : positions(1u << 16u), current_timestamp(0) {}
+    explicit XORFastHashStorage(size_t) : positions(MaxNumElements), current_timestamp{0u} {}
 
     HashCell &operator[](const NodeID node)
     {
         std::uint16_t position = fast_hasher(node);
         while ((positions[position].time == current_timestamp) && (positions[position].id != node))
         {
-            ++position %= (1u << 16u);
+            ++position %= MaxNumElements;
         }
 
         positions[position].time = current_timestamp;
@@ -58,7 +55,7 @@ template <typename NodeID, typename Key> class XORFastHashStorage
         std::uint16_t position = fast_hasher(node);
         while ((positions[position].time == current_timestamp) && (positions[position].id != node))
         {
-            ++position %= (1u << 16u);
+            ++position %= MaxNumElements;
         }
 
         BOOST_ASSERT(position < positions.size());
@@ -72,13 +69,13 @@ template <typename NodeID, typename Key> class XORFastHashStorage
         if (std::numeric_limits<unsigned>::max() == current_timestamp)
         {
             positions.clear();
-            positions.resize(1u << 16u);
+            positions.resize(MaxNumElements);
         }
     }
 
   private:
     std::vector<HashCell> positions;
-    XORFastHash<> fast_hasher;
+    XORFastHash<MaxNumElements> fast_hasher;
     unsigned current_timestamp;
 };
 }
