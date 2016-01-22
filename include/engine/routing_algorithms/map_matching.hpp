@@ -75,7 +75,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const std::vector<unsigned> &trace_timestamps,
                     const double matching_beta,
                     const double gps_precision,
-                    SubMatchingList &sub_matchings) const
+                    SubMatchingList &sub_matchings,
+                    const double prune_factor) const
     {
         BOOST_ASSERT(candidates_list.size() == trace_coordinates.size());
         BOOST_ASSERT(candidates_list.size() > 1);
@@ -197,6 +198,12 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
 
+            const auto time_at_ultra_low_speed =
+                    [&]{
+                        if (prune_factor == 0) return INVALID_EDGE_WEIGHT;
+                        return static_cast<EdgeWeight>(prune_factor * haversine_distance);  // 400 ~= 25cm/sec
+                    } ();
+
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0u, prev_viterbi.size()))
             {
@@ -220,7 +227,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     forward_heap.Clear();
                     reverse_heap.Clear();
 
-                    const auto time_at_ultra_low_speed = 400 * haversine_distance; //25cm/s = walking speed
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto network_distance = super::get_network_distance(

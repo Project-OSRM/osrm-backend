@@ -14,7 +14,7 @@ namespace engine
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
       compression(true), deprecatedAPI(false), uturn_default(false), classify(false),
-      matching_beta(5), gps_precision(5), check_sum(-1), num_results(1)
+      matching_beta(5), gps_precision(5), matching_prune_factor(0), check_sum(-1), num_results(1)
 {
 }
 
@@ -67,6 +67,8 @@ void RouteParameters::SetClassify(const bool flag) { classify = flag; }
 void RouteParameters::SetMatchingBeta(const double beta) { matching_beta = beta; }
 
 void RouteParameters::SetGPSPrecision(const double precision) { gps_precision = precision; }
+
+void RouteParameters::SetMatchingPruneFactor(const double factor) { matching_prune_factor = factor; }
 
 void RouteParameters::SetOutputFormat(const std::string &format) { output_format = format; }
 
