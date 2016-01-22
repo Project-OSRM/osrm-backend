@@ -1,6 +1,7 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <cstddef>
+#include <cmath>
 
 namespace osrm
 {
@@ -27,13 +28,22 @@ std::string encode(int number_to_encode)
 std::string encode(std::vector<int> &numbers)
 {
     std::string output;
-    const auto end = numbers.size();
-    for (std::size_t i = 0; i < end; ++i)
+    for (auto &number : numbers)
     {
-        numbers[i] <<= 1;
-        if (numbers[i] < 0)
+        bool isNegative = number < 0;
+
+        if (isNegative)
         {
-            numbers[i] = ~(numbers[i]);
+            const unsigned binary = std::llabs(number);
+            const unsigned twos = (~binary) + 1u;
+            number = twos;
+        }
+
+        number <<= 1u;
+
+        if (isNegative)
+        {
+            number = ~number;
         }
     }
     for (const int number : numbers)
