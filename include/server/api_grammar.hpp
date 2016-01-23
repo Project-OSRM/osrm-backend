@@ -106,7 +106,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                         qi::float_[boost::bind(&HandlerT::SetMatchingBeta, handler, ::_1)];
         gps_precision = (-qi::lit('&')) >> qi::lit("gps_precision") >> '=' >>
                         qi::float_[boost::bind(&HandlerT::SetGPSPrecision, handler, ::_1)];
-        gps_precision = (-qi::lit('&')) >> qi::lit("matching_prune_factor") >> '=' >>
+        matching_prune_factor = (-qi::lit('&')) >> qi::lit("matching_prune_factor") >> '=' >>
                         qi::float_[boost::bind(&HandlerT::SetMatchingPruneFactor, handler, ::_1)];
         classify = (-qi::lit('&')) >> qi::lit("classify") >> '=' >>
                    qi::bool_[boost::bind(&HandlerT::SetClassify, handler, ::_1)];
