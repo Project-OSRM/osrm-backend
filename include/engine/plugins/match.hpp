@@ -85,8 +85,9 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
     {
         CandidateLists candidates_lists;
 
-        // assuming the gps_precision is the standart-diviation of normal distribution that models
-        // GPS noise (in this model) this should give us the correct candidate with >0.95
+        // assuming gps_precision is the standard deviation of a normal distribution that
+        // models GPS noise (in this model), this should give us the correct search radius
+        // with > 99% confidence
         double query_radius = 3 * gps_precision;
         double last_distance =
             util::coordinate_calculation::haversineDistance(input_coords[0], input_coords[1]);
