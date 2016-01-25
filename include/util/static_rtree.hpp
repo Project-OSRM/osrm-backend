@@ -119,12 +119,10 @@ class StaticRTree
     {
         std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
-        HilbertCode get_hilbert_number;
-
         // generate auxiliary vector of hilbert-values
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, m_element_count),
-            [&input_data_vector, &input_wrapper_vector, &get_hilbert_number, &coordinate_list](
+            [&input_data_vector, &input_wrapper_vector, &coordinate_list](
                 const tbb::blocked_range<uint64_t> &range)
             {
                 for (uint64_t element_counter = range.begin(), end = range.end();
@@ -145,7 +143,7 @@ class StaticRTree
                         COORDINATE_PRECISION *
                         mercator::latToY(current_centroid.lat / COORDINATE_PRECISION);
 
-                    current_wrapper.m_hilbert_value = get_hilbert_number(current_centroid);
+                    current_wrapper.m_hilbert_value = hilbertCode(current_centroid);
                 }
             });
 

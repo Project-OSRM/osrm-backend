@@ -5,18 +5,10 @@ namespace osrm
 namespace util
 {
 
-std::uint64_t HilbertCode::operator()(const FixedPointCoordinate current_coordinate) const
+namespace
 {
-    unsigned location[2];
-    location[0] = current_coordinate.lat + static_cast<int>(90 * COORDINATE_PRECISION);
-    location[1] = current_coordinate.lon + static_cast<int>(180 * COORDINATE_PRECISION);
 
-    TransposeCoordinate(location);
-    return BitInterleaving(location[0], location[1]);
-}
-
-std::uint64_t HilbertCode::BitInterleaving(const std::uint32_t latitude,
-                                           const std::uint32_t longitude) const
+std::uint64_t bitInterleaving(const std::uint32_t latitude, const std::uint32_t longitude)
 {
     std::uint64_t result = 0;
     for (std::int8_t index = 31; index >= 0; --index)
@@ -32,7 +24,7 @@ std::uint64_t HilbertCode::BitInterleaving(const std::uint32_t latitude,
     return result;
 }
 
-void HilbertCode::TransposeCoordinate(std::uint32_t *x) const
+void transposeCoordinate(std::uint32_t *x)
 {
     std::uint32_t M = 1u << (32 - 1), P, Q, t;
     int i;
@@ -74,6 +66,17 @@ void HilbertCode::TransposeCoordinate(std::uint32_t *x) const
     {
         x[i] ^= t;
     }
+}
+} // anonymous ns
+
+std::uint64_t hilbertCode(const FixedPointCoordinate coordinate)
+{
+    unsigned location[2];
+    location[0] = coordinate.lat + static_cast<int>(90 * COORDINATE_PRECISION);
+    location[1] = coordinate.lon + static_cast<int>(180 * COORDINATE_PRECISION);
+
+    transposeCoordinate(location);
+    return bitInterleaving(location[0], location[1]);
 }
 }
 }
