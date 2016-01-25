@@ -237,7 +237,7 @@ GenerateServerProgramOptions(const int argc,
     {
         throw exception("Max location for distance table must be at least two");
     }
-    if (2 > max_locations_map_matching)
+    if (max_locations_map_matching > 0 && 2 > max_locations_map_matching)
     {
         throw exception("Max location for map matching must be at least two");
     }
