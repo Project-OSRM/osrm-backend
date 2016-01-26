@@ -263,13 +263,13 @@ int Extractor::run()
 
         TIMER_START(expansion);
 
-        std::vector<EdgeBasedNode> node_based_edge_list;
+        std::vector<EdgeBasedNode> edge_based_node_list;
         util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
         auto graph_size = BuildEdgeExpandedGraph(internal_to_external_node_map,
-                                                 node_based_edge_list, node_is_startpoint,
+                                                 edge_based_node_list, node_is_startpoint,
                                                  edge_based_node_weights, edge_based_edge_list);
 
         auto number_of_node_based_nodes = graph_size.first;
@@ -288,9 +288,9 @@ int Extractor::run()
         util::SimpleLogger().Write() << "building r-tree ...";
         TIMER_START(rtree);
 
-        FindComponents(max_edge_id, edge_based_edge_list, node_based_edge_list);
+        FindComponents(max_edge_id, edge_based_edge_list, edge_based_node_list);
 
-        BuildRTree(std::move(node_based_edge_list), std::move(node_is_startpoint),
+        BuildRTree(std::move(edge_based_node_list), std::move(node_is_startpoint),
                    internal_to_external_node_map);
 
         TIMER_STOP(rtree);
