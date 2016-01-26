@@ -113,8 +113,7 @@ inline void DEBUG_GEOMETRY_STOP()
 {
     if (dg_output_debug_geometry)
     {
-        debug_geometry_file << std::endl
-                            << "]}" << std::endl;
+        debug_geometry_file << "\n]}" << std::endl;
         debug_geometry_file.close();
     }
 }
@@ -201,8 +200,7 @@ inline void DEBUG_TURNS_STOP()
 {
     if (dg_output_turn_debug)
     {
-        dg_debug_turns_file << std::endl
-                            << "]}" << std::endl;
+        dg_debug_turns_file << "\n]}" << std::endl;
         dg_debug_turns_file.close();
     }
 }

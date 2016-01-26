@@ -285,7 +285,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
                 util::SimpleLogger().Write(logDEBUG) << "Performing data reload";
                 m_layout_memory.reset(storage::makeSharedMemory(CURRENT_LAYOUT));
 
-                data_layout = (storage::SharedDataLayout *)(m_layout_memory->Ptr());
+                data_layout = static_cast<storage::SharedDataLayout*>(m_layout_memory->Ptr());
 
                 m_large_memory.reset(storage::makeSharedMemory(CURRENT_DATA));
                 shared_memory = (char *)(m_large_memory->Ptr());
