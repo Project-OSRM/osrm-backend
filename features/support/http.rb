@@ -9,7 +9,11 @@ end
 
 def send_request base_uri, parameters
   Timeout.timeout(OSRM_TIMEOUT) do
-    uri_string = base_uri + "?" + params_to_string(parameters)
+    uri_string = base_uri
+    params = params_to_string(parameters)
+    if not params.eql? ""
+      uri_string = uri_string + "?" + params
+    end
     uri = URI.parse(uri_string)
     @query = uri.to_s
     if @http_method.eql? "POST"
