@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "osrm/coordinate.hpp"
 
-#include <boost/fusion/container/vector/vector_fwd.hpp>
 #include <boost/optional/optional.hpp>
 
 #include <string>
@@ -77,8 +76,7 @@ struct RouteParameters
 
     void AddTimestamp(const unsigned timestamp);
 
-    void AddBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
-                    bool &pass);
+    bool AddBearing(int bearing, boost::optional<int> range);
 
     void SetLanguage(const std::string &language);
 
@@ -86,11 +84,11 @@ struct RouteParameters
 
     void SetCompressionFlag(const bool flag);
 
-    void AddCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
+    void AddCoordinate(const double latitude, const double longitude);
 
-    void AddDestination(const boost::fusion::vector<double, double> &received_coordinates);
+    void AddDestination(const double latitude, const double longitude);
 
-    void AddSource(const boost::fusion::vector<double, double> &received_coordinates);
+    void AddSource(const double latitude, const double longitude);
 
     void SetCoordinatesFromGeometry(const std::string &geometry_string);
 

@@ -16,6 +16,32 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
 {
     explicit APIGrammar(HandlerT *h) : APIGrammar::base_type(api_call), handler(h)
     {
+        const auto add_bearing_wrapper = [this](
+            const boost::fusion::vector<int, boost::optional<int>> &received_bearing, bool &pass)
+        {
+            const int bearing = boost::fusion::at_c<0>(received_bearing);
+            const boost::optional<int> range = boost::fusion::at_c<1>(received_bearing);
+            pass = handler->AddBearing(bearing, range);
+        };
+        const auto add_coordinate_wrapper =
+            [this](const boost::fusion::vector<double, double> &received_coordinate)
+        {
+            handler->AddCoordinate(boost::fusion::at_c<0>(received_coordinate),
+                                   boost::fusion::at_c<1>(received_coordinate));
+        };
+        const auto add_source_wrapper =
+            [this](const boost::fusion::vector<double, double> &received_coordinate)
+        {
+            handler->AddSource(boost::fusion::at_c<0>(received_coordinate),
+                               boost::fusion::at_c<1>(received_coordinate));
+        };
+        const auto add_destination_wrapper =
+            [this](const boost::fusion::vector<double, double> &received_coordinate)
+        {
+            handler->AddDestination(boost::fusion::at_c<0>(received_coordinate),
+                                    boost::fusion::at_c<1>(received_coordinate));
+        };
+
         api_call =
             qi::lit('/') >> string[boost::bind(&HandlerT::SetService, handler, ::_1)] >> -query;
         query = ('?') >> +(zoom | output | jsonp | checksum | uturns | location_with_options |
@@ -50,21 +76,20 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
               qi::bool_[boost::bind(&HandlerT::SetCompressionFlag, handler, ::_1)];
         location = (-qi::lit('&')) >> qi::lit("loc") >> '=' >>
                    (qi::double_ >> qi::lit(',') >>
-                    qi::double_)[boost::bind(&HandlerT::AddCoordinate, handler, ::_1)];
+                    qi::double_)[boost::bind<void>(add_coordinate_wrapper, ::_1)];
         destination = (-qi::lit('&')) >> qi::lit("dst") >> '=' >>
                       (qi::double_ >> qi::lit(',') >>
-                       qi::double_)[boost::bind(&HandlerT::AddDestination, handler, ::_1)];
+                       qi::double_)[boost::bind<void>(add_destination_wrapper, ::_1)];
         source = (-qi::lit('&')) >> qi::lit("src") >> '=' >>
                  (qi::double_ >> qi::lit(',') >>
-                  qi::double_)[boost::bind(&HandlerT::AddSource, handler, ::_1)];
+                  qi::double_)[boost::bind<void>(add_source_wrapper, ::_1)];
         hint = (-qi::lit('&')) >> qi::lit("hint") >> '=' >>
                stringwithDot[boost::bind(&HandlerT::AddHint, handler, ::_1)];
         timestamp = (-qi::lit('&')) >> qi::lit("t") >> '=' >>
                     qi::uint_[boost::bind(&HandlerT::AddTimestamp, handler, ::_1)];
         bearing = (-qi::lit('&')) >> qi::lit("b") >> '=' >>
-                  (qi::int_ >>
-                   -(qi::lit(',') >> qi::int_ |
-                     qi::attr(10)))[boost::bind(&HandlerT::AddBearing, handler, ::_1, ::_3)];
+                  (qi::int_ >> -(qi::lit(',') >> qi::int_ |
+                                 qi::attr(10)))[boost::bind<void>(add_bearing_wrapper, ::_1, ::_3)];
         u = (-qi::lit('&')) >> qi::lit("u") >> '=' >>
             qi::bool_[boost::bind(&HandlerT::SetUTurn, handler, ::_1)];
         uturns = (-qi::lit('&')) >> qi::lit("uturns") >> '=' >>

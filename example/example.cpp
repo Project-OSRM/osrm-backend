@@ -35,11 +35,9 @@ int main(int argc, const char *argv[]) try
 
     osrm::RouteParameters route_parameters;
     // route is in Berlin
-    auto start = std::make_pair(52.519930, 13.438640);
-    auto target = std::make_pair(52.513191, 13.415852);
     route_parameters.service = "viaroute";
-    route_parameters.AddCoordinate({start.first, start.second});
-    route_parameters.AddCoordinate({target.first, target.second});
+    route_parameters.AddCoordinate(52.519930, 13.438640);
+    route_parameters.AddCoordinate(52.513191, 13.415852);
 
     osrm::json::Object json_result;
     const int result_code = routing_machine.RunQuery(route_parameters, json_result);

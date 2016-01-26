@@ -1,8 +1,3 @@
-#include <boost/fusion/container/vector.hpp>
-#include <boost/fusion/sequence/intrinsic.hpp>
-#include <boost/fusion/include/at_c.hpp>
-#include <boost/spirit/include/qi.hpp>
-
 #include "engine/route_parameters.hpp"
 #include "util/coordinate.hpp"
 
@@ -98,19 +93,14 @@ void RouteParameters::AddTimestamp(const unsigned timestamp)
     }
 }
 
-void RouteParameters::AddBearing(
-    const boost::fusion::vector<int, boost::optional<int>> &received_bearing,
-    bool &pass)
+bool RouteParameters::AddBearing(int bearing, boost::optional<int> range)
 {
-    pass = false;
-    const int bearing = boost::fusion::at_c<0>(received_bearing);
-    const boost::optional<int> range = boost::fusion::at_c<1>(received_bearing);
     if (bearing < 0 || bearing > 359)
-        return;
+        return false;
     if (range && (*range < 0 || *range > 180))
-        return;
+        return false;
     bearings.emplace_back(std::make_pair(bearing, range));
-    pass = true;
+    return true;
 }
 
 void RouteParameters::SetLanguage(const std::string &language_string)
@@ -122,33 +112,31 @@ void RouteParameters::SetGeometryFlag(const bool flag) { geometry = flag; }
 
 void RouteParameters::SetCompressionFlag(const bool flag) { compression = flag; }
 
-void RouteParameters::AddCoordinate(
-    const boost::fusion::vector<double, double> &received_coordinates)
+void RouteParameters::AddCoordinate(const double latitude, const double longitude)
 {
     coordinates.emplace_back(
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
+        static_cast<int>(COORDINATE_PRECISION * latitude),
+        static_cast<int>(COORDINATE_PRECISION * longitude));
     is_source.push_back(true);
     is_destination.push_back(true);
     uturns.push_back(uturn_default);
 }
 
-void RouteParameters::AddDestination(
-    const boost::fusion::vector<double, double> &received_coordinates)
+void RouteParameters::AddDestination(const double latitude, const double longitude)
 {
     coordinates.emplace_back(
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
+        static_cast<int>(COORDINATE_PRECISION * latitude),
+        static_cast<int>(COORDINATE_PRECISION * longitude));
     is_source.push_back(false);
     is_destination.push_back(true);
     uturns.push_back(uturn_default);
 }
 
-void RouteParameters::AddSource(const boost::fusion::vector<double, double> &received_coordinates)
+void RouteParameters::AddSource(const double latitude, const double longitude)
 {
     coordinates.emplace_back(
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<0>(received_coordinates)),
-        static_cast<int>(COORDINATE_PRECISION * boost::fusion::at_c<1>(received_coordinates)));
+        static_cast<int>(COORDINATE_PRECISION * latitude),
+        static_cast<int>(COORDINATE_PRECISION * longitude));
     is_source.push_back(true);
     is_destination.push_back(false);
     uturns.push_back(uturn_default);
