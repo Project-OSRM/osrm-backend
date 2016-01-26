@@ -6,7 +6,7 @@ Feature: Alternative route
 
         And the node map
             |   | b | c | d |   |   |
-            | a |   |   |   |   | z |
+            | a |   | k |   |   | z |
             |   | g | h | i | j |   |
 
         And the ways
@@ -20,6 +20,8 @@ Feature: Alternative route
             | hi    |
             | ij    |
             | jz    |
+            | ck    |
+            | kh    |
 
     Scenario: Enabled alternative
         Given the query options
