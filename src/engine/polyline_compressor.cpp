@@ -1,6 +1,7 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <cstddef>
+#include <cstdlib>
 #include <cmath>
 
 namespace osrm
