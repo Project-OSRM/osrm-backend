@@ -38,9 +38,10 @@ class ExtractorCallbacks
     ExtractionContainers &external_memory;
 
   public:
-    ExtractorCallbacks() = delete;
-    ExtractorCallbacks(const ExtractorCallbacks &) = delete;
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers);
+
+    ExtractorCallbacks(const ExtractorCallbacks &) = delete;
+    ExtractorCallbacks &operator=(const ExtractorCallbacks &) = delete;
 
     // warning: caller needs to take care of synchronization!
     void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);

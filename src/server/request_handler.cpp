@@ -147,7 +147,6 @@ void RequestHandler::handle_request(const http::request &current_request,
     catch (const std::exception &e)
     {
         current_reply = http::reply::stock_reply(http::reply::internal_server_error);
-        ;
         util::SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
                                                << ", uri: " << current_request.uri;
     }

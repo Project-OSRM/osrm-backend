@@ -28,6 +28,7 @@ class RequestHandler
 
     RequestHandler();
     RequestHandler(const RequestHandler &) = delete;
+    RequestHandler &operator=(const RequestHandler &) = delete;
 
     void handle_request(const http::request &current_request, http::reply &current_reply);
     void RegisterRoutingMachine(OSRM *osrm);

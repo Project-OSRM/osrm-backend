@@ -106,8 +106,8 @@ class StaticRTree
     boost::filesystem::ifstream leaves_stream;
 
   public:
-    StaticRTree() = delete;
     StaticRTree(const StaticRTree &) = delete;
+    StaticRTree &operator=(const StaticRTree &) = delete;
 
     template <typename CoordinateT>
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]

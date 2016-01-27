@@ -58,7 +58,10 @@ class SharedMemory
         }
 
         shm_remove() : m_shmid(INT_MIN), m_initialized(false) {}
+
         shm_remove(const shm_remove &) = delete;
+        shm_remove &operator=(const shm_remove &) = delete;
+
         ~shm_remove()
         {
             if (m_initialized)
@@ -75,7 +78,6 @@ class SharedMemory
   public:
     void *Ptr() const { return region.get_address(); }
 
-    SharedMemory() = delete;
     SharedMemory(const SharedMemory &) = delete;
     SharedMemory &operator=(const SharedMemory &) = delete;
 
@@ -193,8 +195,6 @@ class SharedMemory
     class shm_remove
     {
       private:
-        shm_remove(const shm_remove &) = delete;
-        shm_remove &operator=(const shm_remove &) = delete;
         char *m_shmid;
         bool m_initialized;
 
@@ -206,6 +206,9 @@ class SharedMemory
         }
 
         shm_remove() : m_shmid("undefined"), m_initialized(false) {}
+
+        shm_remove(const shm_remove &) = delete;
+        shm_remove &operator=(const shm_remove &) = delete;
 
         ~shm_remove()
         {
@@ -324,34 +327,33 @@ class SharedMemory
 
 template <typename IdentifierT, typename LockFileT = OSRMLockFile>
 SharedMemory *makeSharedMemory(const IdentifierT &id,
-    const uint64_t size = 0,
-    bool read_write = false,
-    bool remove_prev = true)
+                               const uint64_t size = 0,
+                               bool read_write = false,
+                               bool remove_prev = true)
 {
-  try
-  {
-    LockFileT lock_file;
-    if (!boost::filesystem::exists(lock_file()))
+    try
     {
-      if (0 == size)
-      {
-        throw util::exception("lock file does not exist, exiting");
-      }
-      else
-      {
-        boost::filesystem::ofstream ofs(lock_file());
-      }
+        LockFileT lock_file;
+        if (!boost::filesystem::exists(lock_file()))
+        {
+            if (0 == size)
+            {
+                throw util::exception("lock file does not exist, exiting");
+            }
+            else
+            {
+                boost::filesystem::ofstream ofs(lock_file());
+            }
+        }
+        return new SharedMemory(lock_file(), id, size, read_write, remove_prev);
     }
-    return new SharedMemory(lock_file(), id, size, read_write, remove_prev);
-  }
-  catch (const boost::interprocess::interprocess_exception &e)
-  {
-    util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what() << ", code "
-      << e.get_error_code();
-    throw util::exception(e.what());
-  }
+    catch (const boost::interprocess::interprocess_exception &e)
+    {
+        util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what() << ", code "
+                                               << e.get_error_code();
+        throw util::exception(e.what());
+    }
 }
-
 }
 }
 

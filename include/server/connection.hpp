@@ -39,7 +39,7 @@ class Connection : public std::enable_shared_from_this<Connection>
   public:
     explicit Connection(boost::asio::io_service &io_service, RequestHandler &handler);
     Connection(const Connection &) = delete;
-    Connection() = delete;
+    Connection &operator=(const Connection &) = delete;
 
     boost::asio::ip::tcp::socket &socket();
 

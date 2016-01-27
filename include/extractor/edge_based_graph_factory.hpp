@@ -36,8 +36,8 @@ namespace extractor
 class EdgeBasedGraphFactory
 {
   public:
-    EdgeBasedGraphFactory() = delete;
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
+    EdgeBasedGraphFactory &operator=(const EdgeBasedGraphFactory &) = delete;
 
     explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
                                    const CompressedEdgeContainer &compressed_edge_container,
@@ -62,7 +62,7 @@ class EdgeBasedGraphFactory
              const bool generate_edge_lookup);
 #endif
 
-    //The following get access functions destroy the content in the factory
+    // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);

@@ -46,7 +46,10 @@ class Engine final
 
   public:
     Engine(EngineConfig &config_);
+
     Engine(const Engine &) = delete;
+    Engine &operator=(const Engine &) = delete;
+
     int RunQuery(const RouteParameters &route_parameters, util::json::Object &json_result);
 
   private:

@@ -29,6 +29,7 @@ class LogPolicy
     static LogPolicy &GetInstance();
 
     LogPolicy(const LogPolicy &) = delete;
+    LogPolicy &operator=(const LogPolicy &) = delete;
 
   private:
     LogPolicy() : m_is_mute(true) {}

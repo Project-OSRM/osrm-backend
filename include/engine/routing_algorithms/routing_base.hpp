@@ -42,10 +42,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     DataFacadeT *facade;
 
   public:
-    BasicRoutingInterface() = delete;
-    BasicRoutingInterface(const BasicRoutingInterface &) = delete;
     explicit BasicRoutingInterface(DataFacadeT *facade) : facade(facade) {}
     ~BasicRoutingInterface() {}
+
+    BasicRoutingInterface(const BasicRoutingInterface &) = delete;
+    BasicRoutingInterface &operator=(const BasicRoutingInterface &) = delete;
 
     /*
     min_edge_offset is needed in case we use multiple
@@ -98,7 +99,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     (!force_loop_forward ||
                      forward_heap.GetData(node).parent !=
                          node) // if loops are forced, they are so at the source
-                    && (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
+                    &&
+                    (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
                 {
                     middle_node_id = node;
                     upper_bound = new_distance;
@@ -362,8 +364,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(i < id_vector.size());
                 BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
                 unpacked_path.emplace_back(
-                    PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                             extractor::TurnInstruction::NoTurn, 0,
+                    PathData{id_vector[i],
+                             phantom_node_pair.target_phantom.name_id,
+                             extractor::TurnInstruction::NoTurn,
+                             0,
                              phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
@@ -601,8 +605,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         // TODO check if unordered_set might be faster
         // sort by id and increasing by distance
-        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
-                                         const std::pair<NodeID, EdgeWeight> &rhs)
+        auto entry_point_comparator =
+            [](const std::pair<NodeID, EdgeWeight> &lhs, const std::pair<NodeID, EdgeWeight> &rhs)
         {
             return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
         };

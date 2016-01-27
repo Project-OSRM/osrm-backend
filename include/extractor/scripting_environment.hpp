@@ -23,8 +23,10 @@ namespace extractor
 class ScriptingEnvironment
 {
   public:
-    ScriptingEnvironment() = delete;
     explicit ScriptingEnvironment(const std::string &file_name);
+
+    ScriptingEnvironment(const ScriptingEnvironment &) = delete;
+    ScriptingEnvironment &operator=(const ScriptingEnvironment &) = delete;
 
     lua_State *GetLuaState();
 

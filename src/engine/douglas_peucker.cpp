@@ -19,7 +19,6 @@ namespace
 {
 struct CoordinatePairCalculator
 {
-    CoordinatePairCalculator() = delete;
     CoordinatePairCalculator(const util::FixedPointCoordinate coordinate_a,
                              const util::FixedPointCoordinate coordinate_b)
     {
