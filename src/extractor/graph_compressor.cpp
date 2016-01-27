@@ -113,6 +113,16 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             BOOST_ASSERT(graph.GetEdgeData(forward_e2).name_id ==
                          graph.GetEdgeData(reverse_e2).name_id);
 
+            // Do not compress edge if it crosses a traffic signal.
+            // This can't be done in IsCompatibleTo, becase we only store the
+            // traffic signals in the `traffic_lights` list, which EdgeData
+            // doesn't have access to.
+            const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
+            if (has_node_penalty)
+            {
+                continue;
+            }
+
             // Get distances before graph is modified
             const int forward_weight1 = graph.GetEdgeData(forward_e1).distance;
             const int forward_weight2 = graph.GetEdgeData(forward_e2).distance;
@@ -126,16 +136,9 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             BOOST_ASSERT(0 != reverse_weight1);
             BOOST_ASSERT(0 != reverse_weight2);
 
-            const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
-
             // add weight of e2's to e1
             graph.GetEdgeData(forward_e1).distance += fwd_edge_data2.distance;
             graph.GetEdgeData(reverse_e1).distance += rev_edge_data2.distance;
-            if (has_node_penalty)
-            {
-                graph.GetEdgeData(forward_e1).distance += speed_profile.traffic_signal_penalty;
-                graph.GetEdgeData(reverse_e1).distance += speed_profile.traffic_signal_penalty;
-            }
 
             // extend e1's to targets of e2's
             graph.SetTarget(forward_e1, node_w);
@@ -155,11 +158,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             // store compressed geometry in container
             geometry_compressor.CompressEdge(
                 forward_e1, forward_e2, node_v, node_w,
-                forward_weight1 + (has_node_penalty ? speed_profile.traffic_signal_penalty : 0),
-                forward_weight2);
+                forward_weight1, forward_weight2);
             geometry_compressor.CompressEdge(
-                reverse_e1, reverse_e2, node_v, node_u, reverse_weight1,
-                reverse_weight2 + (has_node_penalty ? speed_profile.traffic_signal_penalty : 0));
+                reverse_e1, reverse_e2, node_v, node_u,
+                reverse_weight1, reverse_weight2);
         }
     }
 
