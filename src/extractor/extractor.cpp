@@ -24,7 +24,6 @@
 #include "extractor/restriction_map.hpp"
 
 #include "extractor/tarjan_scc.hpp"
-#include "contractor/crc32_processor.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
