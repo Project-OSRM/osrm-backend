@@ -36,8 +36,9 @@ class ShortestPathRouting final
 
     ~ShortestPathRouting() {}
 
-    inline bool
-    forceLoop(bool forward, const PhantomNode &source_phantom, const PhantomNode &target_phantom) const
+    inline bool forceLoop(bool forward,
+                          const PhantomNode &source_phantom,
+                          const PhantomNode &target_phantom) const
     {
         if (forward)
             return source_phantom.forward_node_id == target_phantom.forward_node_id &&
@@ -191,8 +192,9 @@ class ShortestPathRouting final
             auto leg_begin = total_packed_path.begin() + packed_leg_begin[current_leg];
             auto leg_end = total_packed_path.begin() + packed_leg_begin[current_leg + 1];
             const auto &unpack_phantom_node_pair = phantom_nodes_vector[current_leg];
-            super::UnpackPath(leg_begin, leg_end, unpack_phantom_node_pair,
-                              raw_route_data.unpacked_path_segments[current_leg]);
+            raw_route_data.shortest_path_length -=
+                super::UnpackPath(leg_begin, leg_end, unpack_phantom_node_pair,
+                                  raw_route_data.unpacked_path_segments[current_leg]);
 
             raw_route_data.source_traversed_in_reverse.push_back(
                 (*leg_begin != phantom_nodes_vector[current_leg].source_phantom.forward_node_id));

@@ -52,6 +52,17 @@ function node_function (node, result)
     result.traffic_lights = true
     -- TODO: a way to set the penalty value
   end
+  local barrier = node:get_value_by_key("barrier")
+  if barrier and "" ~= barrier then
+  --  make an exception for rising bollard barriers
+     local bollard = node:get_value_by_key("bollard")
+     local rising_bollard = bollard and "rising" == bollard
+
+     if not rising_bollard then
+         result.barrier = true
+         result.access_restricted = false --allow access, but only at a penalty
+     end
+  end
 end
 
 function way_function (way, result)

@@ -45,9 +45,9 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <utility>
 #include <unordered_map>
 #include <vector>
-#include <bitset>
 
 namespace osrm
 {
@@ -305,7 +305,7 @@ int Extractor::run()
             << "Expansion  : " << (number_of_node_based_nodes / TIMER_SEC(expansion))
             << " nodes/sec and " << ((max_edge_id + 1) / TIMER_SEC(expansion)) << " edges/sec";
         util::SimpleLogger().Write() << "To prepare the data for routing, run: "
-                                     << "./osrm-prepare " << config.output_file_name << std::endl;
+                                     << "./osrm-prepare " << config.output_file_name;
     }
     catch (const std::exception &e)
     {
@@ -453,7 +453,7 @@ std::shared_ptr<RestrictionMap> Extractor::LoadRestrictionMap()
   \brief Load node based graph from .osrm file
   */
 std::shared_ptr<util::NodeBasedDynamicGraph>
-Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
+Extractor::LoadNodeBasedGraph(std::unordered_map<NodeID,bool> &barrier_nodes,
                               std::unordered_set<NodeID> &traffic_lights,
                               std::vector<QueryNode> &internal_to_external_node_map)
 {
@@ -462,7 +462,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
     boost::filesystem::ifstream input_stream(config.output_file_name,
                                              std::ios::in | std::ios::binary);
 
-    std::vector<NodeID> barrier_list;
+    std::vector<std::pair<NodeID,bool>> barrier_list;
     std::vector<NodeID> traffic_light_list;
     NodeID number_of_node_based_nodes = util::loadNodesFromFile(
         input_stream, barrier_list, traffic_light_list, internal_to_external_node_map);
@@ -471,7 +471,8 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
                                  << traffic_light_list.size() << " traffic lights";
 
     // insert into unordered sets for fast lookup
-    barrier_nodes.insert(barrier_list.begin(), barrier_list.end());
+    for( const auto barrier : barrier_list )
+      barrier_nodes[barrier.first] = barrier.second;
     traffic_lights.insert(traffic_light_list.begin(), traffic_light_list.end());
 
     barrier_list.clear();
@@ -506,7 +507,7 @@ Extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
     SpeedProfileProperties speed_profile;
     SetupScriptingEnvironment(lua_state, speed_profile);
 
-    std::unordered_set<NodeID> barrier_nodes;
+    std::unordered_map<NodeID,bool> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
 
     auto restriction_map = LoadRestrictionMap();
@@ -613,8 +614,7 @@ void Extractor::WriteEdgeBasedGraph(
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
 
-    util::SimpleLogger().Write() << "[extractor] Writing edge-based-graph egdes       ... "
-                                 << std::flush;
+    util::SimpleLogger().Write() << "[extractor] Writing edge-based-graph egdes ... ";
     TIMER_START(write_edges);
 
     size_t number_of_used_edges = edge_based_edge_list.size();
@@ -627,7 +627,7 @@ void Extractor::WriteEdgeBasedGraph(
     }
 
     TIMER_STOP(write_edges);
-    util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
+    util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s";
 
     util::SimpleLogger().Write() << "Processed " << number_of_used_edges << " edges";
     file_out_stream.close();

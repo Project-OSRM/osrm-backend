@@ -18,7 +18,7 @@ GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
 {
 }
 
-void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
+void GraphCompressor::Compress(const std::unordered_map<NodeID, bool> &barrier_nodes,
                                const std::unordered_set<NodeID> &traffic_lights,
                                RestrictionMap &restriction_map,
                                util::NodeBasedDynamicGraph &graph,
@@ -50,6 +50,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
         {
             continue;
         }
+
 
         //    reverse_e2   forward_e2
         // u <---------- v -----------> w

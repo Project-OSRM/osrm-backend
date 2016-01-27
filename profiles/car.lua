@@ -3,10 +3,10 @@
 local find_access_tag = require("lib/access").find_access_tag
 
 -- Begin of globals
-barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
-access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
-access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
+barrier_whitelist = { ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["no"] = true, ["entrance"] = true }
+access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true }
+access_tag_blacklist = { ["no"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
+access_tag_restricted = { ["destination"] = true, ["delivery"] = true, ["private"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
@@ -190,17 +190,20 @@ function node_function (node, result)
   if access and access ~= "" then
     if access_tag_blacklist[access] then
       result.barrier = true
+      result.access_restricted = true
+    end
+    if not access_tag_whitelist[access] then
+        local barrier = node:get_value_by_key("barrier")
+        if barrier and "" ~= barrier and not barrier_whitelist[barrier] then
+            result.barrier = true
+            result.access_restricted = access_tag_restricted[access] --allow access, but only at a penalty
+      end
     end
   else
     local barrier = node:get_value_by_key("barrier")
-    if barrier and "" ~= barrier then
-      --  make an exception for rising bollard barriers
-      local bollard = node:get_value_by_key("bollard")
-      local rising_bollard = bollard and "rising" == bollard
-
-      if not barrier_whitelist[barrier] and not rising_bollard then
-        result.barrier = true
-      end
+    if barrier and "" ~= barrier and not barrier_whitelist[barrier] then
+      result.barrier = true
+      result.access_restricted = false --allow access, but only at a penalty
     end
   end
 

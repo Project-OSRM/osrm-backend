@@ -7,6 +7,7 @@
 #include "util/node_based_graph.hpp"
 
 #include <memory>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace osrm
@@ -24,7 +25,7 @@ class GraphCompressor
   public:
     GraphCompressor(SpeedProfileProperties speed_profile);
 
-    void Compress(const std::unordered_set<NodeID> &barrier_nodes,
+    void Compress(const std::unordered_map<NodeID,bool> &barrier_nodes,
                   const std::unordered_set<NodeID> &traffic_lights,
                   RestrictionMap &restriction_map,
                   util::NodeBasedDynamicGraph &graph,

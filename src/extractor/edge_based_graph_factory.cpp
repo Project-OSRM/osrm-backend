@@ -24,7 +24,7 @@ namespace extractor
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
     const CompressedEdgeContainer &compressed_edge_container,
-    const std::unordered_set<NodeID> &barrier_nodes,
+    const std::unordered_map<NodeID, bool> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
     const std::vector<QueryNode> &node_info_list,
@@ -409,6 +409,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             const NodeID only_restriction_to_node =
                 m_restriction_map->CheckForEmanatingIsOnlyTurn(node_u, node_v);
             const bool is_barrier_node = m_barrier_nodes.find(node_v) != m_barrier_nodes.end();
+            const bool barrier_restricted =
+                is_barrier_node ? m_barrier_nodes.find(node_v)->second : false;
 
             for (const EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(node_v))
             {
@@ -426,38 +428,27 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     continue;
                 }
 
-                if (is_barrier_node)
+                // only add an edge if turn is not a U-turn except when it is
+                // at the end of a dead-end street
+                if (node_u == node_w && m_node_based_graph->GetOutDegree(node_v) > 1)
                 {
-                    if (node_u != node_w)
+                    auto number_of_emmiting_bidirectional_edges = 0;
+                    for (auto edge : m_node_based_graph->GetAdjacentEdgeRange(node_v))
                     {
-                        ++skipped_barrier_turns_counter;
+                        auto target = m_node_based_graph->GetTarget(edge);
+                        auto reverse_edge = m_node_based_graph->FindEdge(target, node_v);
+                        if (!m_node_based_graph->GetEdgeData(reverse_edge).reversed)
+                        {
+                            ++number_of_emmiting_bidirectional_edges;
+                        }
+                    }
+                    if (number_of_emmiting_bidirectional_edges > 1)
+                    {
+                        ++skipped_uturns_counter;
                         continue;
                     }
                 }
-                else
-                {
-                    if (node_u == node_w && m_node_based_graph->GetOutDegree(node_v) > 1)
-                    {
-                        auto number_of_emmiting_bidirectional_edges = 0;
-                        for (auto edge : m_node_based_graph->GetAdjacentEdgeRange(node_v))
-                        {
-                            auto target = m_node_based_graph->GetTarget(edge);
-                            auto reverse_edge = m_node_based_graph->FindEdge(target, node_v);
-                            if (!m_node_based_graph->GetEdgeData(reverse_edge).reversed)
-                            {
-                                ++number_of_emmiting_bidirectional_edges;
-                            }
-                        }
-                        if (number_of_emmiting_bidirectional_edges > 1)
-                        {
-                            ++skipped_uturns_counter;
-                            continue;
-                        }
-                    }
-                }
 
-                // only add an edge if turn is not a U-turn except when it is
-                // at the end of a dead-end street
                 if (m_restriction_map->CheckIfTurnIsRestricted(node_u, node_v, node_w) &&
                     (only_restriction_to_node == SPECIAL_NODEID) &&
                     (node_w != only_restriction_to_node))
@@ -507,6 +498,18 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += speed_profile.u_turn_penalty;
 
                     util::DEBUG_UTURN(node_v, m_node_info_list, speed_profile.u_turn_penalty);
+                }
+                else if (is_barrier_node)
+                {
+                    if (barrier_restricted)
+                    {
+                        distance += ACCESS_RESTRICTED_PENALTY;
+                        turn_instruction = TurnInstruction::AccessRestrictionPenalty;
+                    }
+                    else
+                    {
+                        distance += speed_profile.u_turn_penalty;
+                    }
                 }
 
                 util::DEBUG_TURN(node_v, m_node_info_list, first_coordinate, turn_angle,

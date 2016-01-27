@@ -41,7 +41,7 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     external_memory.all_nodes_list.push_back(
         {static_cast<int>(input_node.location().lat() * COORDINATE_PRECISION),
          static_cast<int>(input_node.location().lon() * COORDINATE_PRECISION),
-         OSMNodeID(input_node.id()), result_node.barrier, result_node.traffic_lights});
+         OSMNodeID(input_node.id()), result_node.barrier, result_node.access_restricted, result_node.traffic_lights});
 }
 
 void ExtractorCallbacks::ProcessRestriction(

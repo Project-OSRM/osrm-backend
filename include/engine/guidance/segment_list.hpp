@@ -242,6 +242,10 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
         segments[i - 1].name_id = segments[i].name_id;
         segments[i].length = util::coordinate_calculation::greatCircleDistance(
             segments[i - 1].location, segments[i].location);
+        if( segments[i].turn_instruction == extractor::TurnInstruction::AccessRestrictionPenalty ){
+          segments[i].duration -= ACCESS_RESTRICTED_PENALTY;
+          segments[i].necessary = true;
+        }
     }
 
     float segment_length = 0.;
