@@ -6,6 +6,8 @@ namespace osrm
 namespace extractor
 {
 
+// This is a char instead of a typed enum, so that we can
+// pack it into e.g. a "TravelMode mode : 4" packed bitfield
 using TravelMode = unsigned char;
 }
 }
