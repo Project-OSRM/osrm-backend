@@ -50,7 +50,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
     if (result == RequestParser::RequestStatus::valid)
     {
         current_request.endpoint = TCP_socket.remote_endpoint().address();
-        request_handler.handle_request(current_request, current_reply);
+        request_handler.HandleRequest(current_request, current_reply);
 
         // compress the result w/ gzip/deflate if requested
         switch (compression_type)
