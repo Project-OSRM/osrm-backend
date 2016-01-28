@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(decode)
 {
     // Polyline string for the 5 coordinates
     const std::string polyline = "_gjaR_gjaR_pR_ibE_pR_ibE_pR_ibE_pR_ibE";
-    const auto coords = polylineDecode(polyline);
+    const auto coords = decodePolyline(polyline);
 
     // Test coordinates; these would be the coordinates we give the loc parameter,
     // e.g. loc=10.00,10.0&loc=10.01,10.1...
