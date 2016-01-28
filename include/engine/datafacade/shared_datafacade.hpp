@@ -36,12 +36,11 @@ namespace engine
 namespace datafacade
 {
 
-template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<EdgeDataT>
+class SharedDataFacade final : public BaseDataFacade
 {
 
   private:
-    using EdgeData = EdgeDataT;
-    using super = BaseDataFacade<EdgeData>;
+    using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<EdgeData, true>;
     using GraphNode = typename QueryGraph::NodeArrayEntry;
     using GraphEdge = typename QueryGraph::EdgeArrayEntry;
@@ -341,7 +340,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
 
-    EdgeDataT &GetEdgeData(const EdgeID e) const override final
+    EdgeData &GetEdgeData(const EdgeID e) const override final
     {
         return m_query_graph->GetEdgeData(e);
     }
@@ -468,9 +467,51 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate) override final
+    {
+        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate);
+    }
+
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate, const double max_distance) override final
+    {
+        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate, max_distance);
+    }
+
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::FixedPointCoordinate input_coordinate,
-        const int bearing = 0,
-        const int bearing_range = 180) override final
+        const double max_distance,
+        const int bearing,
+        const int bearing_range) override final
+    {
+        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate, max_distance, bearing, bearing_range);
+    }
+
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate,
+        const int bearing,
+        const int bearing_range) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -481,6 +522,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, bearing, bearing_range);
     }
+
 
     unsigned GetCheckSum() const override final { return m_check_sum; }
 
