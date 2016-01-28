@@ -75,10 +75,16 @@ struct EdgeBasedNode
     NodeID u;                          // indices into the coordinates array
     NodeID v;                          // indices into the coordinates array
     unsigned name_id;                  // id of the edge name
-    int forward_weight;                // weight of the edge
-    int reverse_weight;                // weight in the other direction (may be different)
-    int forward_offset;          // prefix sum of the weight up the edge TODO: short must suffice
-    int reverse_offset;          // prefix sum of the weight from the edge TODO: short must suffice
+    // given the following geometry: x->y->u->v->w->z
+    // that is compressed to an edge x->z we need the distance
+    // x->u (forward_offset) and v<-z (reverse_offset) to initialite
+    // the heap with the correct offset to the end points.
+    // We keep the weight of the segment in forward and reverse direction around to
+    // support start points in the middle of a segment (PhantomNode).
+    int forward_weight; // u->v
+    int reverse_weight; // u<-v
+    int forward_offset; // distance x->y->u in the above example
+    int reverse_offset; // distance v<-w<-z in the above example
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
     struct
     {

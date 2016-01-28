@@ -5,6 +5,7 @@
 
 #include "extractor/edge_based_node.hpp"
 #include "extractor/external_memory_node.hpp"
+#include "contractor/query_edge.hpp"
 #include "engine/phantom_node.hpp"
 #include "extractor/turn_instructions.hpp"
 #include "util/integer_range.hpp"
@@ -29,11 +30,11 @@ namespace datafacade
 
 using EdgeRange = util::range<EdgeID>;
 
-template <class EdgeDataT> class BaseDataFacade
+class BaseDataFacade
 {
   public:
+    using EdgeData = contractor::QueryEdge::EdgeData;
     using RTreeLeaf = extractor::EdgeBasedNode;
-    using EdgeData = EdgeDataT;
     BaseDataFacade() {}
     virtual ~BaseDataFacade() {}
 
@@ -46,7 +47,7 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual NodeID GetTarget(const EdgeID e) const = 0;
 
-    virtual const EdgeDataT &GetEdgeData(const EdgeID e) const = 0;
+    virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
 
     virtual EdgeID BeginEdges(const NodeID n) const = 0;
 
@@ -89,9 +90,21 @@ template <class EdgeDataT> class BaseDataFacade
                         const int bearing_range = 180) = 0;
 
     virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate) = 0;
+
+    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate, const double max_distance) = 0;
+
+    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::FixedPointCoordinate input_coordinate,
-        const int bearing = 0,
-        const int bearing_range = 180) = 0;
+        const double max_distance,
+        const int bearing,
+        const int bearing_range) = 0;
+
+    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate,
+        const int bearing,
+        const int bearing_range) = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 

@@ -40,11 +40,8 @@ class DirectShortestPathRouting final
     ~DirectShortestPathRouting() {}
 
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
-                    const std::vector<bool> &uturn_indicators,
                     InternalRouteResult &raw_route_data) const
     {
-        (void)uturn_indicators; // unused
-
         // Get distance to next pair of target nodes.
         BOOST_ASSERT_MSG(1 == phantom_nodes_vector.size(),
                          "Direct Shortest Path Query only accepts a single source and target pair. "

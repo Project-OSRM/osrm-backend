@@ -89,7 +89,7 @@ struct PhantomNode
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
     template <class OtherT>
-    PhantomNode(const OtherT &other, const util::FixedPointCoordinate foot_point)
+    explicit PhantomNode(const OtherT &other, const util::FixedPointCoordinate foot_point)
     {
         forward_node_id = other.forward_edge_based_node_id;
         reverse_node_id = other.reverse_edge_based_node_id;
