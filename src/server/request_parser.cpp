@@ -4,8 +4,6 @@
 #include "server/http/header.hpp"
 #include "server/http/request.hpp"
 
-#include "util/tribool.hpp"
-
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <string>
@@ -21,177 +19,177 @@ RequestParser::RequestParser()
 {
 }
 
-std::tuple<util::tribool, http::compression_type>
+std::tuple<RequestStatus, http::compression_type>
 RequestParser::parse(http::request &current_request, char *begin, char *end)
 {
     while (begin != end)
     {
-        util::tribool result = consume(current_request, *begin++);
-        if (result != util::tribool::indeterminate)
+        RequestStatus result = consume(current_request, *begin++);
+        if (result != RequestStatus::indeterminate)
         {
             return std::make_tuple(result, selected_compression);
         }
     }
-    util::tribool result = util::tribool::indeterminate;
+    RequestStatus result = RequestStatus::indeterminate;
 
     if (state == internal_state::post_request && content_length <= 0)
     {
-        result = util::tribool::yes;
+        result = RequestStatus::valid;
     }
     return std::make_tuple(result, selected_compression);
 }
 
-util::tribool RequestParser::consume(http::request &current_request, const char input)
+RequestStatus RequestParser::consume(http::request &current_request, const char input)
 {
     switch (state)
     {
     case internal_state::method_start:
         if (!is_char(input) || is_CTL(input) || is_special(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
         if (input == 'P')
         {
             state = internal_state::post_O;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         state = internal_state::method;
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::post_O:
         if (input == 'O')
         {
             state = internal_state::post_S;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::post_S:
         if (input == 'S')
         {
             state = internal_state::post_T;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::post_T:
         if (input == 'T')
         {
             is_post_header = true;
             state = internal_state::method;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::post_request:
         current_request.uri.push_back(input);
         --content_length;
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::method:
         if (input == ' ')
         {
             state = internal_state::uri;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (!is_char(input) || is_CTL(input) || is_special(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::uri_start:
         if (is_CTL(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
         state = internal_state::uri;
         current_request.uri.push_back(input);
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::uri:
         if (input == ' ')
         {
             state = internal_state::http_version_h;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (is_CTL(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
         current_request.uri.push_back(input);
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::http_version_h:
         if (input == 'H')
         {
             state = internal_state::http_version_t_1;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_t_1:
         if (input == 'T')
         {
             state = internal_state::http_version_t_2;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_t_2:
         if (input == 'T')
         {
             state = internal_state::http_version_p;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_p:
         if (input == 'P')
         {
             state = internal_state::http_version_slash;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_slash:
         if (input == '/')
         {
             state = internal_state::http_version_major_start;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_major_start:
         if (is_digit(input))
         {
             state = internal_state::http_version_major;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_major:
         if (input == '.')
         {
             state = internal_state::http_version_minor_start;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (is_digit(input))
         {
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_minor_start:
         if (is_digit(input))
         {
             state = internal_state::http_version_minor;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::http_version_minor:
         if (input == '\r')
         {
             state = internal_state::expecting_newline_1;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (is_digit(input))
         {
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::expecting_newline_1:
         if (input == '\n')
         {
             state = internal_state::header_line_start;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::header_line_start:
         if (boost::iequals(current_header.name, "Accept-Encoding"))
         {
@@ -230,77 +228,77 @@ util::tribool RequestParser::consume(http::request &current_request, const char 
         {
             if (!boost::icontains(current_header.value, "application/x-www-form-urlencoded"))
             {
-                return util::tribool::no;
+                return RequestStatus::invalid;
             }
         }
 
         if (input == '\r')
         {
             state = internal_state::expecting_newline_3;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (!is_char(input) || is_CTL(input) || is_special(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
         state = internal_state::header_name;
         current_header.clear();
         current_header.name.push_back(input);
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::header_lws:
         if (input == '\r')
         {
             state = internal_state::expecting_newline_2;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (input == ' ' || input == '\t')
         {
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (is_CTL(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
         state = internal_state::header_value;
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::header_name:
         if (input == ':')
         {
             state = internal_state::space_before_header_value;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (!is_char(input) || is_CTL(input) || is_special(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
         current_header.name.push_back(input);
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::space_before_header_value:
         if (input == ' ')
         {
             state = internal_state::header_value;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::header_value:
         if (input == '\r')
         {
             state = internal_state::expecting_newline_2;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
         if (is_CTL(input))
         {
-            return util::tribool::no;
+            return RequestStatus::invalid;
         }
         current_header.value.push_back(input);
-        return util::tribool::indeterminate;
+        return RequestStatus::indeterminate;
     case internal_state::expecting_newline_2:
         if (input == '\n')
         {
             state = internal_state::header_line_start;
-            return util::tribool::indeterminate;
+            return RequestStatus::indeterminate;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     case internal_state::expecting_newline_3:
         if (input == '\n')
         {
@@ -311,13 +309,13 @@ util::tribool RequestParser::consume(http::request &current_request, const char 
                     current_request.uri.push_back('?');
                 }
                 state = internal_state::post_request;
-                return util::tribool::indeterminate;
+                return RequestStatus::indeterminate;
             }
-            return util::tribool::yes;
+            return RequestStatus::valid;
         }
-        return util::tribool::no;
+        return RequestStatus::invalid;
     default: // should never be reached
-        return input == '\n' ? util::tribool::yes : util::tribool::no;
+        return input == '\n' ? RequestStatus::valid : RequestStatus::invalid;
     }
 }
 

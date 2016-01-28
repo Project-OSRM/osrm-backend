@@ -3,7 +3,6 @@
 
 #include "server/http/compression_type.hpp"
 #include "server/http/header.hpp"
-#include "util/tribool.hpp"
 
 #include <tuple>
 
@@ -22,11 +21,18 @@ class RequestParser
   public:
     RequestParser();
 
-    std::tuple<util::tribool, http::compression_type>
+    std::tuple<RequestStatus, http::compression_type>
     parse(http::request &current_request, char *begin, char *end);
 
+    enum class RequestStatus : char
+    {
+        valid,
+        invalid,
+        indeterminate
+    };
+
   private:
-    util::tribool consume(http::request &current_request, const char input);
+    RequestStatus consume(http::request &current_request, const char input);
 
     bool is_char(const int character) const;
 
