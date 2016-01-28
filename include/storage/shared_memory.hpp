@@ -1,7 +1,7 @@
 #ifndef SHARED_MEMORY_HPP
 #define SHARED_MEMORY_HPP
 
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>

@@ -4,7 +4,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/range_table.hpp"
 
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 #include "util/fingerprint.hpp"

@@ -1,5 +1,5 @@
-#ifndef OSRM_EXCEPTION_HPP
-#define OSRM_EXCEPTION_HPP
+#ifndef EXCEPTION_HPP
+#define EXCEPTION_HPP
 
 #include <exception>
 #include <string>
@@ -27,4 +27,4 @@ class exception final : public std::exception
 }
 }
 
-#endif /* OSRM_EXCEPTION_HPP */
+#endif /* EXCEPTION_HPP */

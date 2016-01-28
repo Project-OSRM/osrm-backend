@@ -3,7 +3,7 @@
 
 #include "util/ini_file.hpp"
 #include "util/version.hpp"
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/any.hpp>

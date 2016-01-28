@@ -1,7 +1,7 @@
 #ifndef RASTER_SOURCE_HPP
 #define RASTER_SOURCE_HPP
 
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

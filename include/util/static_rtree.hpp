@@ -8,7 +8,7 @@
 
 #include "util/bearing.hpp"
 #include "util/integer_range.hpp"
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"

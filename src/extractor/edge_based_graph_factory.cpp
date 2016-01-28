@@ -6,7 +6,7 @@
 #include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 
 #include "util/debug_geometry.hpp"
 

@@ -1,4 +1,4 @@
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 
 #include <boost/uuid/name_generator.hpp>
 #include <boost/uuid/uuid_generators.hpp>

@@ -6,7 +6,7 @@
 #include "util/fingerprint.hpp"
 #include "util/graph_loader.hpp"
 #include "util/make_unique.hpp"
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>

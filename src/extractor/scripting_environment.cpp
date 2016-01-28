@@ -7,7 +7,7 @@
 #include "extractor/external_memory_node.hpp"
 #include "extractor/raster_source.hpp"
 #include "util/lua_util.hpp"
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 

@@ -1,4 +1,4 @@
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 
 // This function exists to 'anchor' the class, and stop the compiler from
 // copying vtable and RTTI info into every object file that includes

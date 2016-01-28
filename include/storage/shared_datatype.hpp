@@ -1,7 +1,7 @@
 #ifndef SHARED_DATA_TYPE_HPP
 #define SHARED_DATA_TYPE_HPP
 
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
 #include <cstdint>

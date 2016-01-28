@@ -8,7 +8,7 @@
 #include "engine/phantom_node.hpp"
 #include "extractor/turn_instructions.hpp"
 #include "util/integer_range.hpp"
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 #include "util/string_util.hpp"
 #include "util/typedefs.hpp"
 

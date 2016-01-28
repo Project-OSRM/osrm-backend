@@ -1,6 +1,6 @@
 #include "extractor/raster_source.hpp"
 #include "util/typedefs.hpp"
-#include "util/osrm_exception.hpp"
+#include "util/exception.hpp"
 
 #include <osrm/coordinate.hpp>
 
