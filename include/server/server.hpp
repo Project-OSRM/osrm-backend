@@ -3,6 +3,7 @@
 
 #include "server/connection.hpp"
 #include "server/request_handler.hpp"
+#include "server/service_handler.hpp"
 
 #include "util/integer_range.hpp"
 #include "util/simple_logger.hpp"
@@ -73,7 +74,10 @@ class Server
 
     void Stop() { io_service.stop(); }
 
-    RequestHandler &GetRequestHandlerPtr() { return request_handler; }
+    void RegisterServiceHandler(std::unique_ptr<ServiceHandler> service_handler_)
+    {
+        request_handler.RegisterServiceHandler(std::move(service_handler_));
+    }
 
   private:
     void HandleAccept(const boost::system::error_code &e)

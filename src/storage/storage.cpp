@@ -38,7 +38,7 @@ namespace storage
 {
 
 using RTreeLeaf =
-    typename engine::datafacade::BaseDataFacade<contractor::QueryEdge::EdgeData>::RTreeLeaf;
+    typename engine::datafacade::BaseDataFacade::RTreeLeaf;
 using RTreeNode = util::StaticRTree<RTreeLeaf,
                                     util::ShM<util::FixedPointCoordinate, true>::vector,
                                     true>::TreeNode;

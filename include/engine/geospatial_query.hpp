@@ -84,16 +84,86 @@ template <typename RTreeT> class GeospatialQuery
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
-        const int bearing = 0,
-        const int bearing_range = 180)
+        const util::FixedPointCoordinate input_coordinate, const double max_distance)
     {
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, bearing, bearing_range, &has_big_component, &has_small_component](
-                const EdgeData &data)
+            [&has_big_component, &has_small_component](const EdgeData &data)
+            {
+                auto use_segment =
+                    (!has_small_component || (!has_big_component && !data.component.is_tiny));
+                auto use_directions = std::make_pair(use_segment, use_segment);
+
+                has_big_component = has_big_component || !data.component.is_tiny;
+                has_small_component = has_small_component || data.component.is_tiny;
+
+                return use_directions;
+            },
+            [&has_big_component, max_distance](const std::size_t num_results, const double min_dist)
+            {
+                return (num_results > 0 && has_big_component) || min_dist > max_distance;
+            });
+
+        if (results.size() == 0)
+        {
+            return std::make_pair(PhantomNode{}, PhantomNode{});
+        }
+
+        BOOST_ASSERT(results.size() == 1 || results.size() == 2);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
+    }
+
+    // Returns the nearest phantom node. If this phantom node is not from a big component
+    // a second phantom node is return that is the nearest coordinate in a big component.
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate)
+    {
+        bool has_small_component = false;
+        bool has_big_component = false;
+        auto results =
+            rtree.Nearest(input_coordinate,
+                          [&has_big_component, &has_small_component](const EdgeData &data)
+                          {
+                              auto use_segment = (!has_small_component ||
+                                                  (!has_big_component && !data.component.is_tiny));
+                              auto use_directions = std::make_pair(use_segment, use_segment);
+
+                              has_big_component = has_big_component || !data.component.is_tiny;
+                              has_small_component = has_small_component || data.component.is_tiny;
+
+                              return use_directions;
+                          },
+                          [&has_big_component](const std::size_t num_results, const double)
+                          {
+                              return num_results > 0 && has_big_component;
+                          });
+
+        if (results.size() == 0)
+        {
+            return std::make_pair(PhantomNode{}, PhantomNode{});
+        }
+
+        BOOST_ASSERT(results.size() == 1 || results.size() == 2);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
+    }
+
+    // Returns the nearest phantom node. If this phantom node is not from a big component
+    // a second phantom node is return that is the nearest coordinate in a big component.
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate,
+        const int bearing,
+        const int bearing_range)
+    {
+        bool has_small_component = false;
+        bool has_big_component = false;
+        auto results = rtree.Nearest(
+            input_coordinate,
+            [this, bearing, bearing_range, &has_big_component,
+             &has_small_component](const EdgeData &data)
             {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !data.component.is_tiny));
@@ -114,6 +184,52 @@ template <typename RTreeT> class GeospatialQuery
             [&has_big_component](const std::size_t num_results, const double)
             {
                 return num_results > 0 && has_big_component;
+            });
+
+        if (results.size() == 0)
+        {
+            return std::make_pair(PhantomNode{}, PhantomNode{});
+        }
+
+        BOOST_ASSERT(results.size() > 0);
+        return std::make_pair(MakePhantomNode(input_coordinate, results.front()).phantom_node,
+                              MakePhantomNode(input_coordinate, results.back()).phantom_node);
+    }
+
+    // Returns the nearest phantom node. If this phantom node is not from a big component
+    // a second phantom node is return that is the nearest coordinate in a big component.
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::FixedPointCoordinate input_coordinate,
+        const double max_distance,
+        const int bearing,
+        const int bearing_range)
+    {
+        bool has_small_component = false;
+        bool has_big_component = false;
+        auto results = rtree.Nearest(
+            input_coordinate,
+            [this, bearing, bearing_range, &has_big_component,
+             &has_small_component](const EdgeData &data)
+            {
+                auto use_segment =
+                    (!has_small_component || (!has_big_component && !data.component.is_tiny));
+                auto use_directions = std::make_pair(use_segment, use_segment);
+
+                if (use_segment)
+                {
+                    use_directions = checkSegmentBearing(data, bearing, bearing_range);
+                    if (use_directions.first || use_directions.second)
+                    {
+                        has_big_component = has_big_component || !data.component.is_tiny;
+                        has_small_component = has_small_component || data.component.is_tiny;
+                    }
+                }
+
+                return use_directions;
+            },
+            [&has_big_component, max_distance](const std::size_t num_results, const double min_dist)
+            {
+                return (num_results > 0 && has_big_component) || min_dist > max_distance;
             });
 
         if (results.size() == 0)

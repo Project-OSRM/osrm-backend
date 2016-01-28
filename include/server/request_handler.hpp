@@ -1,18 +1,14 @@
 #ifndef REQUEST_HANDLER_HPP
 #define REQUEST_HANDLER_HPP
 
+#include "server/service_handler.hpp"
+
 #include <string>
 
 namespace osrm
 {
-class OSRM;
-namespace engine
-{
-struct RouteParameters;
-}
 namespace server
 {
-template <typename Iterator, class HandlerT> struct APIGrammar;
 
 namespace http
 {
@@ -24,17 +20,16 @@ class RequestHandler
 {
 
   public:
-    using APIGrammarParser = APIGrammar<std::string::iterator, engine::RouteParameters>;
-
     RequestHandler();
     RequestHandler(const RequestHandler &) = delete;
     RequestHandler &operator=(const RequestHandler &) = delete;
 
-    void handle_request(const http::request &current_request, http::reply &current_reply);
-    void RegisterRoutingMachine(OSRM *osrm);
+    void RegisterServiceHandler(std::unique_ptr<ServiceHandler> service_handler);
+
+    void HandleRequest(const http::request &current_request, http::reply &current_reply);
 
   private:
-    OSRM *routing_machine;
+    std::unique_ptr<ServiceHandler> service_handler;
 };
 }
 }
