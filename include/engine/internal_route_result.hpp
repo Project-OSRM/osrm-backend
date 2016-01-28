@@ -17,26 +17,15 @@ namespace engine
 
 struct PathData
 {
-    PathData()
-        : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT), segment_duration(INVALID_EDGE_WEIGHT),
-          turn_instruction(extractor::TurnInstruction::NoTurn),
-          travel_mode(TRAVEL_MODE_INACCESSIBLE)
-    {
-    }
-
-    PathData(NodeID node,
-             unsigned name_id,
-             extractor::TurnInstruction turn_instruction,
-             EdgeWeight segment_duration,
-             extractor::TravelMode travel_mode)
-        : node(node), name_id(name_id), segment_duration(segment_duration),
-          turn_instruction(turn_instruction), travel_mode(travel_mode)
-    {
-    }
-    NodeID node;
+    // id of via node of the turn
+    NodeID turn_via_node;
+    // name of the street that leads to the turn
     unsigned name_id;
-    EdgeWeight segment_duration;
+    // duration that is traveled on the segment until the turn is reached
+    EdgeWeight duration_until_turn;
+    // instruction to execute at the turn
     extractor::TurnInstruction turn_instruction;
+    // travel mode of the street that leads to the turn
     extractor::TravelMode travel_mode : 4;
 };
 
