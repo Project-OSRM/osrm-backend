@@ -156,8 +156,10 @@ class AlternativeRouting final
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;
 
-        if (upper_bound_to_shortest_path_distance !=
-            forward_heap1.GetKey(middle_node) + reverse_heap1.GetKey(middle_node))
+        const bool path_is_a_loop =
+            upper_bound_to_shortest_path_distance !=
+            forward_heap1.GetKey(middle_node) + reverse_heap1.GetKey(middle_node);
+        if (path_is_a_loop)
         {
             // Self Loop
             BOOST_ASSERT(forward_heap1.GetData(middle_node).parent == middle_node &&
@@ -239,6 +241,8 @@ class AlternativeRouting final
         std::vector<NodeID> preselected_node_list;
         for (const NodeID node : via_node_candidate_list)
         {
+            if (node == middle_node)
+                continue;
             const auto fwd_iterator = approximated_forward_sharing.find(node);
             const int fwd_sharing =
                 (fwd_iterator != approximated_forward_sharing.end()) ? fwd_iterator->second : 0;
@@ -265,10 +269,13 @@ class AlternativeRouting final
         }
 
         std::vector<NodeID> &packed_shortest_path = packed_forward_path;
-        std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
-        packed_shortest_path.emplace_back(middle_node);
-        packed_shortest_path.insert(packed_shortest_path.end(), packed_reverse_path.begin(),
-                                    packed_reverse_path.end());
+        if (!path_is_a_loop)
+        {
+            std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
+            packed_shortest_path.emplace_back(middle_node);
+            packed_shortest_path.insert(packed_shortest_path.end(), packed_reverse_path.begin(),
+                                        packed_reverse_path.end());
+        }
         std::vector<RankedCandidateNode> ranked_candidates_list;
 
         // prioritizing via nodes for deep inspection
