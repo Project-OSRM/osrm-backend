@@ -24,13 +24,6 @@ namespace osrm
 namespace engine
 {
 
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_1;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_1;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
-
 namespace routing_algorithms
 {
 
@@ -327,13 +320,13 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(start_index < end_index);
                 for (std::size_t i = start_index; i < end_index; ++i)
                 {
-                    unpacked_path.emplace_back(id_vector[i], name_index,
-                                               extractor::TurnInstruction::NoTurn, weight_vector[i],
-                                               travel_mode);
+                    unpacked_path.push_back(PathData{id_vector[i], name_index, weight_vector[i],
+                                                     extractor::TurnInstruction::NoTurn,
+                                                     travel_mode});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
-                unpacked_path.back().segment_duration += (ed.distance - total_weight);
+                unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
             }
         }
         std::vector<unsigned> id_vector;
@@ -373,7 +366,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
             unpacked_path.emplace_back(
                 PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                         extractor::TurnInstruction::NoTurn, 0,
+                         0, extractor::TurnInstruction::NoTurn,
                          target_traversed_in_reverse
                              ? phantom_node_pair.target_phantom.backward_travel_mode
                              : phantom_node_pair.target_phantom.forward_travel_mode});
@@ -392,7 +385,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             // looks like a trivially true check but tests for underflow
             BOOST_ASSERT(last_index > second_to_last_index);
 
-            if (unpacked_path[last_index].node == unpacked_path[second_to_last_index].node)
+            if (unpacked_path[last_index].turn_via_node == unpacked_path[second_to_last_index].turn_via_node)
             {
                 unpacked_path.pop_back();
             }
@@ -755,7 +748,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         double distance = 0;
         for (const auto &p : unpacked_path)
         {
-            current_coordinate = facade->GetCoordinateOfNode(p.node);
+            current_coordinate = facade->GetCoordinateOfNode(p.turn_via_node);
             distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
                                                                         current_coordinate);
             previous_coordinate = current_coordinate;
