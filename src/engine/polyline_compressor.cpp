@@ -1,8 +1,10 @@
 #include "engine/polyline_compressor.hpp"
 
+#include <boost/assert.hpp>
 #include <cstddef>
 #include <cstdlib>
 #include <cmath>
+#include <algorithm>
 
 namespace osrm
 {
@@ -55,31 +57,30 @@ std::string encode(std::vector<int> &numbers)
 }
 } // anonymous ns
 
-std::string polylineEncode(const std::vector<SegmentInformation> &polyline)
+
+std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter end)
 {
-    if (polyline.empty())
+    auto size = std::distance(begin, end);
+    if (size == 0)
     {
         return {};
     }
 
     std::vector<int> delta_numbers;
-    delta_numbers.reserve((polyline.size() - 1) * 2);
+    BOOST_ASSERT(size > 0);
+    delta_numbers.reserve((size - 1) * 2);
     util::FixedPointCoordinate previous_coordinate = {0, 0};
-    for (const auto &segment : polyline)
+    std::for_each(begin, end, [&delta_numbers, &previous_coordinate](const FixedPointCoordinate loc)
     {
-        if (segment.necessary)
-        {
-            const int lat_diff = segment.location.lat - previous_coordinate.lat;
-            const int lon_diff = segment.location.lon - previous_coordinate.lon;
+            const int lat_diff = (loc.lat - previous_coordinate.lat) * detail::COORDINATE_TO_POLYLINE;
+            const int lon_diff = (loc.lon - previous_coordinate.lon) * detail::COORDINATE_TO_POLYLINE;
             delta_numbers.emplace_back(lat_diff);
             delta_numbers.emplace_back(lon_diff);
-            previous_coordinate = segment.location;
-        }
-    }
+            previous_coordinate = loc;
+    });
     return encode(delta_numbers);
 }
-
-std::vector<util::FixedPointCoordinate> polylineDecode(const std::string &geometry_string)
+std::vector<util::FixedPointCoordinate> decodePolyline(const std::string &geometry_string)
 {
     std::vector<util::FixedPointCoordinate> new_coordinates;
     int index = 0, len = geometry_string.size();
@@ -109,8 +110,8 @@ std::vector<util::FixedPointCoordinate> polylineDecode(const std::string &geomet
         lng += dlng;
 
         util::FixedPointCoordinate p;
-        p.lat = COORDINATE_PRECISION * (((double)lat / 1E6));
-        p.lon = COORDINATE_PRECISION * (((double)lng / 1E6));
+        p.lat = lat * detail::POLYLINE_TO_COORDINATE;
+        p.lon = lng * detail::POLYLINE_TO_COORDINATE;
         new_coordinates.push_back(p);
     }
 
