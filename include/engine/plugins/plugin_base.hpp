@@ -1,11 +1,14 @@
 #ifndef BASE_PLUGIN_HPP
 #define BASE_PLUGIN_HPP
 
+#include "engine/datafacade/datafacade_base.hpp"
+#include "engine/api/base_parameters.hpp"
 #include "engine/phantom_node.hpp"
+#include "engine/status.hpp"
 
-#include "osrm/coordinate.hpp"
-#include "osrm/json_container.hpp"
-#include "osrm/route_parameters.hpp"
+#include "util/coordinate.hpp"
+#include "util/json_container.hpp"
+#include "util/integer_range.hpp"
 
 #include <algorithm>
 #include <string>
@@ -20,38 +23,32 @@ namespace plugins
 
 class BasePlugin
 {
-  public:
-    enum class Status : int
-    {
-        Ok = 200,
-        EmptyResult = 207,
-        NoSegment = 208,
-        Error = 400
-    };
+  protected:
+    datafacade::BaseDataFacade &facade;
+    BasePlugin(datafacade::BaseDataFacade &facade_) : facade(facade_) {}
 
-    BasePlugin() {}
-    // Maybe someone can explain the pure virtual destructor thing to me (dennis)
-    virtual ~BasePlugin() {}
-    virtual const std::string GetDescriptor() const = 0;
-    virtual Status HandleRequest(const RouteParameters &, util::json::Object &) = 0;
-    virtual bool check_all_coordinates(const std::vector<util::FixedPointCoordinate> &coordinates,
-                                       const unsigned min = 2) const final
+    bool CheckAllCoordinates(const std::vector<util::FixedPointCoordinate> &coordinates)
     {
-        if (min > coordinates.size() || std::any_of(std::begin(coordinates), std::end(coordinates),
-                                                    [](const util::FixedPointCoordinate coordinate)
-                                                    {
-                                                        return !coordinate.IsValid();
-                                                    }))
-        {
-            return false;
-        }
-        return true;
+        return !std::any_of(std::begin(coordinates), std::end(coordinates),
+                           [](const util::FixedPointCoordinate &coordinate)
+                           {
+                               return !coordinate.IsValid();
+                           });
+    }
+
+    Status Error(const std::string &code,
+                 const std::string &message,
+                 util::json::Object &json_result) const
+    {
+        json_result.values["code"] = code;
+        json_result.values["message"] = message;
+        return Status::Error;
     }
 
     // Decides whether to use the phantom node from a big or small component if both are found.
     // Returns true if all phantom nodes are in the same component after snapping.
-    std::vector<PhantomNode> snapPhantomNodes(
-        const std::vector<std::pair<PhantomNode, PhantomNode>> &phantom_node_pair_list) const
+    std::vector<PhantomNode>
+    SnapPhantomNodes(const std::vector<PhantomNodePair> &phantom_node_pair_list) const
     {
         const auto check_component_id_is_tiny =
             [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
@@ -110,6 +107,69 @@ class BasePlugin
         }
 
         return snapped_phantoms;
+    }
+
+    std::vector<PhantomNodePair> GetPhantomNodes(const api::BaseParameters &parameters)
+    {
+        std::vector<PhantomNodePair> phantom_node_pairs(parameters.coordinates.size());
+
+        const bool use_hints = !parameters.hints.empty();
+        const bool use_bearings = !parameters.bearings.empty();
+        const bool use_radiuses = !parameters.radiuses.empty();
+
+        BOOST_ASSERT(parameters.IsValid());
+        for (const auto i : util::irange<std::size_t>(0, parameters.coordinates.size()))
+        {
+            if (use_hints && parameters.hints[i] &&
+                parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
+            {
+                phantom_node_pairs[i].first = parameters.hints[i]->phantom;
+                // we don't set the second one - it will be marked as invalid
+                continue;
+            }
+
+            if (use_bearings && parameters.bearings[i])
+            {
+                if (use_radiuses && parameters.radiuses[i])
+                {
+                    phantom_node_pairs[i] =
+                        facade.NearestPhantomNodeWithAlternativeFromBigComponent(
+                            parameters.coordinates[i], *parameters.radiuses[i],
+                            parameters.bearings[i]->bearing, parameters.bearings[i]->range);
+                }
+                else
+                    phantom_node_pairs[i] =
+                        facade.NearestPhantomNodeWithAlternativeFromBigComponent(
+                            parameters.coordinates[i], parameters.bearings[i]->bearing,
+                            parameters.bearings[i]->range);
+                {
+                }
+            }
+            else
+            {
+                if (use_radiuses && parameters.radiuses[i])
+                {
+                    phantom_node_pairs[i] =
+                        facade.NearestPhantomNodeWithAlternativeFromBigComponent(
+                            parameters.coordinates[i], *parameters.radiuses[i]);
+                }
+                else
+                    phantom_node_pairs[i] =
+                        facade.NearestPhantomNodeWithAlternativeFromBigComponent(
+                            parameters.coordinates[i]);
+                {
+                }
+            }
+
+            // we didn't found a fitting node, return error
+            if (!phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()))
+            {
+                break;
+            }
+            BOOST_ASSERT(phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_pairs[i].second.IsValid(facade.GetNumberOfNodes()));
+        }
+        return phantom_node_pairs;
     }
 };
 }

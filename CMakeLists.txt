@@ -44,7 +44,7 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests)
+add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests server-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
@@ -62,6 +62,7 @@ file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 file(GLOB ExtractorTestsGlob unit_tests/extractor/*.cpp)
 file(GLOB EngineTestsGlob unit_tests/engine/*.cpp)
 file(GLOB UtilTestsGlob unit_tests/util/*.cpp)
+file(GLOB ServerTestsGlob unit_tests/server/*.cpp)
 file(GLOB IOTestsGlob unit_tests/io/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
@@ -87,6 +88,7 @@ add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 add_executable(engine-tests EXCLUDE_FROM_ALL unit_tests/engine_tests.cpp ${EngineTestsGlob} $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
 add_executable(extractor-tests EXCLUDE_FROM_ALL unit_tests/extractor_tests.cpp ${ExtractorTestsGlob} $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTestsGlob} $<TARGET_OBJECTS:UTIL>)
+add_executable(server-tests EXCLUDE_FROM_ALL unit_tests/server_tests.cpp ${ServerTestsGlob} $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
 
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL>)
@@ -326,6 +328,7 @@ target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 # Tests
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES})
+target_link_libraries(server-tests osrm ${Boost_LIBRARIES})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES})
 target_link_libraries(rtree-bench ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES})
 target_link_libraries(util-tests ${UTIL_LIBRARIES})

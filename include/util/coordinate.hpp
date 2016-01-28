@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm
 {
 
-constexpr const double COORDINATE_PRECISION = 1000000.0;
+constexpr const double COORDINATE_PRECISION = 1e6;
 
 namespace util
 {
@@ -52,6 +52,7 @@ struct FixedPointCoordinate
     FixedPointCoordinate(const T &coordinate)
         : lat(coordinate.lat), lon(coordinate.lon)
     {
+        static_assert(!std::is_same<T, FixedPointCoordinate>::value, "This constructor should not be used for FixedPointCoordinates");
         static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
                       "coordinate types incompatible");
         static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value,
@@ -59,11 +60,13 @@ struct FixedPointCoordinate
     }
 
     bool IsValid() const;
-    bool operator==(const FixedPointCoordinate &other) const;
-    friend std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate);
+    friend bool operator==(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs);
+    friend bool operator!=(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs);
+    friend std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate coordinate);
 };
 
-std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate);
+bool operator==(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs);
+std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate coordinate);
 }
 
 }
