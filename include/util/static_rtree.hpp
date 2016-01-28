@@ -8,7 +8,6 @@
 
 #include "util/bearing.hpp"
 #include "util/integer_range.hpp"
-#include "util/mercator.hpp"
 #include "util/osrm_exception.hpp"
 #include "util/typedefs.hpp"
 
@@ -140,8 +139,8 @@ class StaticRTree
                         FixedPointCoordinate(coordinate_list.at(current_element.v).lat,
                                              coordinate_list.at(current_element.v).lon));
                     current_centroid.lat =
-                        COORDINATE_PRECISION *
-                        mercator::latToY(current_centroid.lat / COORDINATE_PRECISION);
+                        COORDINATE_PRECISION * coordinate_calculation::mercator::latToY(
+                                                   current_centroid.lat / COORDINATE_PRECISION);
 
                     current_wrapper.m_hilbert_value = hilbertCode(current_centroid);
                 }
@@ -342,7 +341,7 @@ class StaticRTree
     {
         std::vector<EdgeDataT> results;
         std::pair<double, double> projected_coordinate = {
-            mercator::latToY(input_coordinate.lat / COORDINATE_PRECISION),
+            coordinate_calculation::mercator::latToY(input_coordinate.lat / COORDINATE_PRECISION),
             input_coordinate.lon / COORDINATE_PRECISION};
 
         // initialize queue with root element

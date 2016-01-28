@@ -62,8 +62,14 @@ double bearing(const FixedPointCoordinate first_coordinate,
 double computeAngle(const FixedPointCoordinate first,
                     const FixedPointCoordinate second,
                     const FixedPointCoordinate third);
-}
-}
-}
+
+namespace mercator
+{
+double yToLat(const double value);
+double latToY(const double latitude);
+} // ns mercator
+} // ns coordinate_calculation
+} // ns util
+} // ns osrm
 
 #endif // COORDINATE_CALCULATION

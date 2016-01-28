@@ -1,6 +1,5 @@
 #include "util/coordinate_calculation.hpp"
 
-#include "util/mercator.hpp"
 #include "util/string_util.hpp"
 #include "util/trigonometry_table.hpp"
 
@@ -90,6 +89,8 @@ double perpendicularDistance(const FixedPointCoordinate segment_source,
                              FixedPointCoordinate &nearest_location,
                              double &ratio)
 {
+    using namespace coordinate_calculation;
+
     return perpendicularDistanceFromProjectedCoordinate(
         segment_source, segment_target, query_location,
         {mercator::latToY(query_location.lat / COORDINATE_PRECISION),
@@ -119,6 +120,8 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate segment_
                                              FixedPointCoordinate &nearest_location,
                                              double &ratio)
 {
+    using namespace coordinate_calculation;
+
     BOOST_ASSERT(query_location.IsValid());
 
     // initialize values
@@ -222,6 +225,8 @@ double computeAngle(const FixedPointCoordinate first,
                     const FixedPointCoordinate second,
                     const FixedPointCoordinate third)
 {
+    using namespace coordinate_calculation;
+
     const double v1x = (first.lon - second.lon) / COORDINATE_PRECISION;
     const double v1y = mercator::latToY(first.lat / COORDINATE_PRECISION) -
                        mercator::latToY(second.lat / COORDINATE_PRECISION);
@@ -238,6 +243,19 @@ double computeAngle(const FixedPointCoordinate first,
 
     return angle;
 }
+
+namespace mercator
+{
+double yToLat(const double value)
+{
+    return 180. * M_1_PI * (2. * std::atan(std::exp(value * M_PI / 180.)) - M_PI_2);
 }
+
+double latToY(const double latitude)
+{
+    return 180. * M_1_PI * std::log(std::tan(M_PI_4 + latitude * (M_PI / 180.) / 2.));
 }
-}
+} // ns mercato // ns mercatorr
+} // ns coordinate_calculation
+} // ns util
+} // ns osrm
