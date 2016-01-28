@@ -1,5 +1,6 @@
 #include "server/server.hpp"
 #include "util/routed_options.hpp"
+#include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 
 #include "osrm/osrm.hpp"
@@ -101,10 +102,10 @@ int main(int argc, const char *argv[]) try
     pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-    OSRM osrm_lib(config);
     auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
+    auto service_handler = util::make_unique<server::ServiceHandler>(config);
 
-    routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
+    routing_server->RegisterServiceHandler(std::move(service_handler));
 
     if (trial_run)
     {

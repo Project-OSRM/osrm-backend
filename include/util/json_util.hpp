@@ -59,7 +59,7 @@ template <> Array make_array(const std::vector<bool> &vector)
 }
 
 // Easy acces to object hierachies
-Value &get(Value &value) { return value; }
+inline Value &get(Value &value) { return value; }
 
 template <typename... Keys> Value &get(Value &value, const char *key, Keys... keys)
 {

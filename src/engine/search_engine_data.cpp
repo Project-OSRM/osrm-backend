@@ -7,6 +7,13 @@ namespace osrm
 namespace engine
 {
 
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_1;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_1;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
+
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
 {
     if (forward_heap_1.get())
