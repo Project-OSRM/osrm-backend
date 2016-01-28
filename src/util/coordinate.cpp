@@ -45,12 +45,17 @@ bool FixedPointCoordinate::IsValid() const
              lon > 180 * COORDINATE_PRECISION || lon < -180 * COORDINATE_PRECISION);
 }
 
-bool FixedPointCoordinate::operator==(const FixedPointCoordinate &other) const
+bool operator==(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs)
 {
-    return lat == other.lat && lon == other.lon;
+    return lhs.lat == rhs.lat && lhs.lon == rhs.lon;
 }
 
-std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate &coordinate)
+bool operator!=(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs)
+{
+    return !(lhs == rhs);
+}
+
+std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate coordinate)
 {
     out << "(" << static_cast<double>(coordinate.lat / COORDINATE_PRECISION) << ","
         << static_cast<double>(coordinate.lon / COORDINATE_PRECISION) << ")";

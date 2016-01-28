@@ -28,13 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_HPP
 #define OSRM_HPP
 
+#include "osrm/status.hpp"
+
 #include <memory>
 
 namespace osrm
 {
-
-struct LibOSRMConfig;
-
 namespace util
 {
 namespace json
@@ -47,11 +46,14 @@ namespace engine
 {
 class Engine;
 struct EngineConfig;
+namespace api
+{
 struct RouteParameters;
+}
 }
 
 using engine::EngineConfig;
-using engine::RouteParameters;
+using engine::api::RouteParameters;
 namespace json = util::json;
 
 class OSRM
@@ -61,8 +63,8 @@ class OSRM
 
   public:
     OSRM(EngineConfig &lib_config);
-    ~OSRM(); // needed because we need to define it with the implementation of OSRM_impl
-    int RunQuery(const RouteParameters &route_parameters, json::Object &json_result);
+    ~OSRM(); // needed for unique_ptr + impl abstraction
+    Status Route(const RouteParameters &route_parameters, json::Object &json_result);
 };
 
 }
