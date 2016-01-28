@@ -163,7 +163,6 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   # using GCC
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=1 -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC")
   if(WIN32) # using mingw
-    add_definitions(-D_USE_MATH_DEFINES) # define M_PI, M_1_PI etc.
     add_definitions(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
   endif()
@@ -175,7 +174,6 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} date_time chrono zlib)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
-  add_definitions(-D_USE_MATH_DEFINES) # define M_PI
   add_definitions(-D_WIN32_WINNT=0x0501)
   add_definitions(-DXML_STATIC)
   find_library(ws2_32_LIBRARY_PATH ws2_32)

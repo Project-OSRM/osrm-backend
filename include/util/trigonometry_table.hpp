@@ -6,6 +6,8 @@
 
 #include <limits>
 
+#include <boost/math/constants/constants.hpp>
+
 namespace osrm
 {
 namespace util
@@ -356,19 +358,22 @@ constexpr unsigned short atan_table[4096] = {
     0xffe0, 0xffea, 0xfff4, 0xffff};
 
 // max value is pi/4
-constexpr double SCALING_FACTOR = 4. / M_PI * 0xFFFF;
+const constexpr double SCALING_FACTOR = 4. / boost::math::constants::pi<double>() * 0xFFFF;
 
 inline double atan2_lookup(double y, double x)
 {
+
+    using namespace boost::math::constants;
+
     if (std::abs(x) < std::numeric_limits<double>::epsilon())
     {
         if (y >= 0.)
         {
-            return M_PI / 2.;
+            return half_pi<double>();
         }
         else
         {
-            return -M_PI / 2.;
+            return -half_pi<double>();
         }
     }
 
@@ -399,25 +404,25 @@ inline double atan2_lookup(double y, double x)
     case 0:
         break;
     case 1:
-        angle = M_PI - angle;
+        angle = pi<double>() - angle;
         break;
     case 2:
         angle = -angle;
         break;
     case 3:
-        angle = -M_PI + angle;
+        angle = -pi<double>() + angle;
         break;
     case 4:
-        angle = M_PI / 2.0 - angle;
+        angle = half_pi<double>() - angle;
         break;
     case 5:
-        angle = M_PI / 2.0 + angle;
+        angle = half_pi<double>() + angle;
         break;
     case 6:
-        angle = -M_PI / 2.0 + angle;
+        angle = -half_pi<double>() + angle;
         break;
     case 7:
-        angle = -M_PI / 2.0 - angle;
+        angle = -half_pi<double>() - angle;
         break;
     }
     return angle;

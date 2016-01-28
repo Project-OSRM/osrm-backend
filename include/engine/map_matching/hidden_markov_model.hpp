@@ -4,6 +4,7 @@
 #include "util/integer_range.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/math/constants/constants.hpp>
 
 #include <cmath>
 
@@ -17,7 +18,7 @@ namespace engine
 namespace map_matching
 {
 
-static const double log_2_pi = std::log(2. * M_PI);
+static const double log_2_pi = std::log(2. * boost::math::constants::pi<double>());
 static const double IMPOSSIBLE_LOG_PROB = -std::numeric_limits<double>::infinity();
 static const double MINIMAL_LOG_PROB = std::numeric_limits<double>::lowest();
 static const std::size_t INVALID_STATE = std::numeric_limits<std::size_t>::max();

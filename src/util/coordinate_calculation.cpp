@@ -4,6 +4,7 @@
 #include "util/trigonometry_table.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/math/constants/constants.hpp>
 
 #include <cmath>
 
@@ -193,9 +194,17 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate segment_
     return approximate_distance;
 }
 
-double degToRad(const double degree) { return degree * (static_cast<double>(M_PI) / 180.0); }
+double degToRad(const double degree)
+{
+    using namespace boost::math::constants;
+    return degree * (pi<double>() / 180.0);
+}
 
-double radToDeg(const double radian) { return radian * (180.0 * static_cast<double>(M_1_PI)); }
+double radToDeg(const double radian)
+{
+    using namespace boost::math::constants;
+    return radian * (180.0 * (1. / pi<double>()));
+}
 
 double bearing(const FixedPointCoordinate first_coordinate,
                const FixedPointCoordinate second_coordinate)
@@ -225,6 +234,7 @@ double computeAngle(const FixedPointCoordinate first,
                     const FixedPointCoordinate second,
                     const FixedPointCoordinate third)
 {
+    using namespace boost::math::constants;
     using namespace coordinate_calculation;
 
     const double v1x = (first.lon - second.lon) / COORDINATE_PRECISION;
@@ -234,7 +244,7 @@ double computeAngle(const FixedPointCoordinate first,
     const double v2y = mercator::latToY(third.lat / COORDINATE_PRECISION) -
                        mercator::latToY(second.lat / COORDINATE_PRECISION);
 
-    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / M_PI;
+    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / pi<double>();
 
     while (angle < 0.)
     {
@@ -248,12 +258,18 @@ namespace mercator
 {
 double yToLat(const double value)
 {
-    return 180. * M_1_PI * (2. * std::atan(std::exp(value * M_PI / 180.)) - M_PI_2);
+    using namespace boost::math::constants;
+
+    return 180. * (1. / pi<long double>()) *
+           (2. * std::atan(std::exp(value * pi<double>() / 180.)) - half_pi<double>());
 }
 
 double latToY(const double latitude)
 {
-    return 180. * M_1_PI * std::log(std::tan(M_PI_4 + latitude * (M_PI / 180.) / 2.));
+    using namespace boost::math::constants;
+
+    return 180. * (1. / pi<double>()) *
+           std::log(std::tan((pi<double>() / 4.) + latitude * (pi<double>() / 180.) / 2.));
 }
 } // ns mercato // ns mercatorr
 } // ns coordinate_calculation

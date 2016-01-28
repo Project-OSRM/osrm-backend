@@ -6,14 +6,6 @@
 #include <limits>
 #include <cstddef>
 
-// Necessary workaround for Windows as VS doesn't implement C99
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-#endif
-
 // OpenStreetMap node ids are higher than 2^32
 OSRM_STRONG_TYPEDEF(uint64_t, OSMNodeID)
 OSRM_STRONG_TYPEDEF(uint32_t, OSMWayID)
