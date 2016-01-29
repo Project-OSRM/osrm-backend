@@ -41,13 +41,13 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
 
     // no error detected, let's parse the request
     http::compression_type compression_type(http::no_compression);
-    RequestStatus result;
+    RequestParser::RequestStatus result;
     std::tie(result, compression_type) =
         request_parser.parse(current_request, incoming_data_buffer.data(),
                              incoming_data_buffer.data() + bytes_transferred);
 
     // the request has been parsed
-    if (result == RequestStatus::yes)
+    if (result == RequestParser::RequestStatus::valid)
     {
         current_request.endpoint = TCP_socket.remote_endpoint().address();
         request_handler.handle_request(current_request, current_reply);
@@ -85,7 +85,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
             strand.wrap(boost::bind(&Connection::handle_write, this->shared_from_this(),
                                     boost::asio::placeholders::error)));
     }
-    else if (result == RequestStatus::no)
+    else if (result == RequestParser::RequestStatus::invalid)
     { // request is not parseable
         current_reply = http::reply::stock_reply(http::reply::bad_request);
 

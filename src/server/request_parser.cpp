@@ -19,7 +19,7 @@ RequestParser::RequestParser()
 {
 }
 
-std::tuple<RequestStatus, http::compression_type>
+std::tuple<RequestParser::RequestStatus, http::compression_type>
 RequestParser::parse(http::request &current_request, char *begin, char *end)
 {
     while (begin != end)
@@ -39,7 +39,7 @@ RequestParser::parse(http::request &current_request, char *begin, char *end)
     return std::make_tuple(result, selected_compression);
 }
 
-RequestStatus RequestParser::consume(http::request &current_request, const char input)
+RequestParser::RequestStatus RequestParser::consume(http::request &current_request, const char input)
 {
     switch (state)
     {

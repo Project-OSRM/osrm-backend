@@ -21,15 +21,15 @@ class RequestParser
   public:
     RequestParser();
 
-    std::tuple<RequestStatus, http::compression_type>
-    parse(http::request &current_request, char *begin, char *end);
-
     enum class RequestStatus : char
     {
         valid,
         invalid,
         indeterminate
     };
+
+    std::tuple<RequestStatus, http::compression_type>
+    parse(http::request &current_request, char *begin, char *end);
 
   private:
     RequestStatus consume(http::request &current_request, const char input);
