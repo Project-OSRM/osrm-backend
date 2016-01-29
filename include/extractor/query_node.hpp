@@ -17,7 +17,7 @@ struct QueryNode
     using key_type = OSMNodeID; // type of NodeID
     using value_type = int;     // type of lat,lons
 
-    explicit QueryNode(int lat, int lon, OSMNodeID node_id)
+    explicit QueryNode(int lat, int lon, key_type node_id)
         : lat(lat), lon(lon), node_id(std::move(node_id))
     {
     }
@@ -29,7 +29,7 @@ struct QueryNode
 
     int lat;
     int lon;
-    OSMNodeID node_id;
+    key_type node_id;
 
     static QueryNode min_value()
     {

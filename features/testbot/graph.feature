@@ -36,5 +36,5 @@ Feature: Basic Routing
             | fy     | last  |
 
         When I route I should get
-            | from | to | route            | turns                       |
-            | x    | y  | first,compr,last | head,right,left,destination |
+            | from | to | route            | turns                              |
+            | x    | y  | first,compr,last | head,straight,straight,destination |

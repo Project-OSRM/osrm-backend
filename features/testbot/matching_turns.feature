@@ -17,21 +17,13 @@ Feature: Turn directions/codes
         And the ways
             | nodes |
             | xa    |
-            | xb    |
             | xc    |
-            | xd    |
             | xe    |
-            | xf    |
             | xg    |
-            | xh    |
             | xi    |
-            | xj    |
             | xk    |
-            | xl    |
             | xm    |
-            | xn    |
             | xo    |
-            | xp    |
 
         When I match I should get
             | trace | route | turns                         | matchings |
@@ -40,7 +32,7 @@ Feature: Turn directions/codes
             | ia    | xi,xa | head,straight,destination     | ia        |
             | ic    | xi,xc | head,slight_right,destination | ic        |
             | ie    | xi,xe | head,right,destination        | ie        |
-            
+
             | ko    | xk,xo | head,left,destination         | ko        |
             | ka    | xk,xa | head,slight_left,destination  | ka        |
             | kc    | xk,xc | head,straight,destination     | kc        |
@@ -96,21 +88,13 @@ Feature: Turn directions/codes
         And the ways
             | nodes |
             | xa    |
-            | xb    |
             | xc    |
-            | xd    |
             | xe    |
-            | xf    |
             | xg    |
-            | xh    |
             | xi    |
-            | xj    |
             | xk    |
-            | xl    |
             | xm    |
-            | xn    |
             | xo    |
-            | xp    |
 
         When I match I should get
             | trace | route | turns                         | matchings | duration |

@@ -8,7 +8,6 @@
 #include "engine/search_engine.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/integer_range.hpp"
-#include "util/json_renderer.hpp"
 #include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
@@ -166,7 +165,6 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
                 return Status::Error;
             }
         }
-
         return Status::Ok;
     }
 };

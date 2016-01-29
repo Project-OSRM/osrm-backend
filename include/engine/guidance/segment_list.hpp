@@ -106,7 +106,8 @@ SegmentList<DataFacadeT>::SegmentList(const InternalRouteResult &raw_route,
             {
                 const auto &source_phantom =
                     raw_route.segment_end_coordinates[raw_index].target_phantom;
-                if (raw_route.target_traversed_in_reverse[raw_index] != raw_route.source_traversed_in_reverse[raw_index+1])
+                if (raw_route.target_traversed_in_reverse[raw_index] !=
+                    raw_route.source_traversed_in_reverse[raw_index + 1])
                 {
                     bool traversed_in_reverse = raw_route.target_traversed_in_reverse[raw_index];
                     const extractor::TravelMode travel_mode =
@@ -264,6 +265,12 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
             segment_length = 0;
             segment_duration = 0;
             segment_start_index = i;
+
+            if (segments[i].turn_instruction == extractor::TurnInstruction::NameChanges)
+            {
+                segments[i].turn_instruction =
+                    extractor::TurnInstruction::GoStraight; // to not break the api
+            }
         }
     }
 

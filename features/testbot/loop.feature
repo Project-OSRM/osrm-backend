@@ -92,6 +92,6 @@ Feature: Avoid weird loops caused by rounding errors
             | cf    | primary     |
 
         When I route I should get
-            | waypoints | route             | turns                                      |
-            | a,2,d     | ab,be,ef,ef,cf,cd | head,left,right,via,right,left,destination |
-            | a,1,d     | ab,be,ef,ef,cf,cd | head,left,right,via,right,left,destination |
+            | waypoints | route             | turns                                            |
+            | a,2,d     | ab,be,ef,ef,cf,cd | head,left,straight,via,straight,left,destination |
+            | a,1,d     | ab,be,ef,ef,cf,cd | head,left,straight,via,straight,left,destination |

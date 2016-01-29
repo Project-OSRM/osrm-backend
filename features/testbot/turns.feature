@@ -14,22 +14,14 @@ Feature: Turn directions/codes
 
         And the ways
             | nodes |
-            | xa    |
-            | xb    |
-            | xc    |
-            | xd    |
-            | xe    |
-            | xf    |
-            | xg    |
-            | xh    |
             | xi    |
-            | xj    |
             | xk    |
-            | xl    |
             | xm    |
-            | xn    |
             | xo    |
-            | xp    |
+            | xa    |
+            | xc    |
+            | xe    |
+            | xg    |
 
         When I route I should get
             | from | to | route | turns                         |
@@ -116,8 +108,8 @@ Feature: Turn directions/codes
             | yz    |
 
         When I route I should get
-            | from | to | route | turns                  |
-            | a    | c  | ab,bc | head,left,destination  |
-            | c    | a  | bc,ab | head,right,destination |
-            | x    | z  | xy,yz | head,right,destination |
-            | z    | x  | yz,xy | head,left,destination  |
+            | from | to | route | turns                     |
+            | a    | c  | ab,bc | head,straight,destination |
+            | c    | a  | bc,ab | head,straight,destination |
+            | x    | z  | xy,yz | head,straight,destination |
+            | z    | x  | yz,xy | head,straight,destination |

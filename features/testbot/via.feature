@@ -86,12 +86,12 @@ Feature: Via points
             | fa    | yes    |
 
         When I route I should get
-            | waypoints | route                      | distance  | turns                                                               |
-            | 1,3       | ab,bc,cd                   |  400m +-1 | head,straight,straight,destination                                  |
-            | 3,1       | cd,de,ef,fa,ab             | 1000m +-1 | head,right,right,right,right,destination                            |
-            | 1,2,3     | ab,bc,bc,cd                |  400m +-1 | head,straight,via,straight,destination                              |
-            | 1,3,2     | ab,bc,cd,cd,de,ef,fa,ab,bc | 1600m +-1 | head,straight,straight,via,right,right,right,right,straight,destination |
-            | 3,2,1     | cd,de,ef,fa,ab,bc,bc,cd,de,ef,fa,ab | 2400m +-1 | head,right,right,right,right,straight,via,straight,right,right,right,right,destination |
+            | waypoints | route                               | distance  | turns                                                                                                    |
+            | 1,3       | ab,bc,cd                            |  400m +-1 | head,straight,straight,destination                                                                       |
+            | 3,1       | cd,de,ef,fa,ab                      | 1000m +-1 | head,straight,straight,straight,right,destination                                                        |
+            | 1,2,3     | ab,bc,bc,cd                         |  400m +-1 | head,straight,via,straight,destination                                                                   |
+            | 1,3,2     | ab,bc,cd,cd,de,ef,fa,ab,bc          | 1600m +-1 | head,straight,straight,via,straight,straight,straight,right,straight,destination                         |
+            | 3,2,1     | cd,de,ef,fa,ab,bc,bc,cd,de,ef,fa,ab | 2400m +-1 | head,straight,straight,straight,right,straight,via,straight,straight,straight,straight,right,destination |
 
     Scenario: Via points on ring on the same oneway
     # xa it to avoid only having a single ring, which cna trigger edge cases
@@ -109,12 +109,12 @@ Feature: Via points
             | da    | yes    |
 
         When I route I should get
-            | waypoints | route                      | distance  | turns                                                            |
-            | 1,3       | ab                         | 200m +-1  | head,destination                                                 |
-            | 3,1       | ab,bc,cd,da,ab             | 800m +-1  | head,right,right,right,right,destination                         |
-            | 1,2,3     | ab,ab                      | 200m +-1  | head,via,destination                                             |
-            | 1,3,2     | ab,ab,bc,cd,da,ab          | 1100m +-1 | head,via,right,right,right,right,destination                     |
-            | 3,2,1     | ab,bc,cd,da,ab,ab,bc,cd,da,ab | 1800m     | head,right,right,right,right,via,right,right,right,right,destination |
+            | waypoints | route                         | distance  | turns                                                                                  |
+            | 1,3       | ab                            | 200m +-1  | head,destination                                                                       |
+            | 3,1       | ab,bc,cd,da,ab                | 800m +-1  | head,straight,straight,straight,right,destination                                      |
+            | 1,2,3     | ab,ab                         | 200m +-1  | head,via,destination                                                                   |
+            | 1,3,2     | ab,ab,bc,cd,da,ab             | 1100m +-1 | head,via,straight,straight,straight,right,destination                                  |
+            | 3,2,1     | ab,bc,cd,da,ab,ab,bc,cd,da,ab | 1800m     | head,straight,straight,straight,right,via,straight,straight,straight,right,destination |
 
     # See issue #1896
     Scenario: Via point at a dead end with oneway
@@ -175,11 +175,11 @@ Feature: Via points
             | da    | yes    |
 
         When I route I should get
-            | waypoints | route                      | distance  | turns                                                            |
-            | 2,1       | ab,bc,cd,da,ab             | 1100m +-1  | head,right,right,right,right,destination                         |
-            | 4,3       | bc,cd,da,ab,bc             | 1100m +-1  | head,right,right,right,right,destination                         |
-            | 6,5       | cd,da,ab,bc,cd             | 1100m +-1  | head,right,right,right,right,destination                         |
-            | 8,7       | da,ab,bc,cd,da             | 1100m +-1  | head,right,right,right,right,destination                         |
+            | waypoints | route                      | distance   | turns                                                                        |
+            | 2,1       | ab,bc,cd,da,ab             | 1100m +-1  | head,straight,straight,straight,straight,destination                         |
+            | 4,3       | bc,cd,da,ab,bc             | 1100m +-1  | head,straight,straight,straight,straight,destination                         |
+            | 6,5       | cd,da,ab,bc,cd             | 1100m +-1  | head,straight,straight,straight,straight,destination                         |
+            | 8,7       | da,ab,bc,cd,da             | 1100m +-1  | head,straight,straight,straight,straight,destination                         |
 
     Scenario: Multiple Via points on ring on the same oneway, forces one of the vertices to be top node
         Given the node map
@@ -197,7 +197,7 @@ Feature: Via points
             | da    | yes    |
 
         When I route I should get
-            | waypoints | route                      | distance  | turns                                                            |
-            | 3,2,1     | ab,bc,cd,da,ab,ab,bc,cd,da,ab | 3000m +-1    | head,right,right,right,right,via,right,right,right,right,destination |
-            | 6,5,4     | bc,cd,da,ab,bc,bc,cd,da,ab,bc | 3000m +-1    | head,right,right,right,right,via,right,right,right,right,destination |
-            | 9,8,7     | cd,da,ab,bc,cd,cd,da,ab,bc,cd | 3000m +-1    | head,right,right,right,right,via,right,right,right,right,destination |
+            | waypoints | route                         | distance     | turns                                                                                        |
+            | 3,2,1     | ab,bc,cd,da,ab,ab,bc,cd,da,ab | 3000m +-1    | head,straight,straight,straight,straight,via,straight,straight,straight,straight,destination |
+            | 6,5,4     | bc,cd,da,ab,bc,bc,cd,da,ab,bc | 3000m +-1    | head,straight,straight,straight,straight,via,straight,straight,straight,straight,destination |
+            | 9,8,7     | cd,da,ab,bc,cd,cd,da,ab,bc,cd | 3000m +-1    | head,straight,straight,straight,straight,via,straight,straight,straight,straight,destination |

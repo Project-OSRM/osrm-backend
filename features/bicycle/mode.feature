@@ -62,13 +62,13 @@ Feature: Bike - Mode flag
      	 | cd    | primary |        |
 
      	When I route I should get
-     	 | from | to | route    | turns                       | modes |
-     	 | a    | d  | ab,bc,cd | head,right,left,destination | 1,1,1 |
-     	 | d    | a  | cd,bc,ab | head,right,left,destination | 1,2,1 |
-     	 | c    | a  | bc,ab    | head,left,destination       | 2,1   |
-     	 | d    | b  | cd,bc    | head,right,destination      | 1,2   |
-     	 | a    | c  | ab,bc    | head,right,destination      | 1,1   |
-     	 | b    | d  | bc,cd    | head,left,destination       | 1,1   |
+     	 | from | to | route    | turns                                      | modes |
+     	 | a    | d  | ab,bc,cd | head,straight,straight,destination         | 1,1,1 |
+     	 | d    | a  | cd,bc,ab | head,right,left,destination                | 1,2,1 |
+     	 | c    | a  | bc,ab    | head,left,destination                      | 2,1   |
+     	 | d    | b  | cd,bc    | head,right,destination                     | 1,2   |
+     	 | a    | c  | ab,bc    | head,straight,destination                  | 1,1   |
+     	 | b    | d  | bc,cd    | head,straight,destination                  | 1,1   |
 
      Scenario: Bike - Mode when pushing on pedestrain streets
      	Given the node map
