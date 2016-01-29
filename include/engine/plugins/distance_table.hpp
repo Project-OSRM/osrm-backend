@@ -192,7 +192,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
             matrix_json_array.values.push_back(json_row);
         }
-        json_result.values["distance_table"] = matrix_json_array;
+        json_result.values["distance_table"] = std::move(matrix_json_array);
 
         util::json::Array target_coord_json_array;
         for (const auto &phantom : snapped_target_phantoms)
@@ -202,7 +202,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
             target_coord_json_array.values.push_back(json_coord);
         }
-        json_result.values["destination_coordinates"] = target_coord_json_array;
+        json_result.values["destination_coordinates"] = std::move(target_coord_json_array);
         util::json::Array source_coord_json_array;
         for (const auto &phantom : snapped_source_phantoms)
         {
@@ -211,7 +211,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
             source_coord_json_array.values.push_back(json_coord);
         }
-        json_result.values["source_coordinates"] = source_coord_json_array;
+        json_result.values["source_coordinates"] = std::move(source_coord_json_array);
         return Status::Ok;
     }
 
