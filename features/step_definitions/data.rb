@@ -10,6 +10,10 @@ Given /^the extract extra arguments "(.*?)"$/ do |args|
     set_extract_args args
 end
 
+Given /^the prepare extra arguments "(.*?)"$/ do |args|
+    set_prepare_args args
+end
+
 Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
@@ -143,6 +147,12 @@ end
 Given /^the raster source$/ do |data|
   Dir.chdir TEST_FOLDER do
     File.open("rastersource.asc", "w") {|f| f.write(data)}
+  end
+end
+
+Given /^the speed file$/ do |data|
+  Dir.chdir TEST_FOLDER do
+    File.open("speeds.csv", "w") {|f| f.write(data)}
   end
 end
 

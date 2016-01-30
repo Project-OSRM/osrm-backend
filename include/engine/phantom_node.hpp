@@ -24,7 +24,8 @@ struct PhantomNode
                 int reverse_weight,
                 int forward_offset,
                 int reverse_offset,
-                unsigned packed_geometry_id,
+                unsigned forward_packed_geometry_id_,
+                unsigned reverse_packed_geometry_id_,
                 bool is_tiny_component,
                 unsigned component_id,
                 util::FixedPointCoordinate location,
@@ -34,7 +35,9 @@ struct PhantomNode
         : forward_node_id(forward_node_id), reverse_node_id(reverse_node_id), name_id(name_id),
           forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
-          packed_geometry_id(packed_geometry_id), component{component_id, is_tiny_component},
+          forward_packed_geometry_id(forward_packed_geometry_id_),
+          reverse_packed_geometry_id(reverse_packed_geometry_id_),
+          component{component_id, is_tiny_component},
           location(std::move(location)), fwd_segment_position(fwd_segment_position),
           forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
     {
@@ -44,7 +47,9 @@ struct PhantomNode
         : forward_node_id(SPECIAL_NODEID), reverse_node_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), forward_weight(INVALID_EDGE_WEIGHT),
           reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0), reverse_offset(0),
-          packed_geometry_id(SPECIAL_EDGEID), component{INVALID_COMPONENTID, false},
+          forward_packed_geometry_id(SPECIAL_EDGEID),
+          reverse_packed_geometry_id(SPECIAL_EDGEID),
+          component{INVALID_COMPONENTID, false},
           fwd_segment_position(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
@@ -89,19 +94,20 @@ struct PhantomNode
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
     template <class OtherT>
-    PhantomNode(const OtherT &other, const util::FixedPointCoordinate foot_point)
+    PhantomNode(const OtherT &other, int forward_weight_, int forward_offset_, int reverse_weight_, int reverse_offset_, const util::FixedPointCoordinate foot_point)
     {
         forward_node_id = other.forward_edge_based_node_id;
         reverse_node_id = other.reverse_edge_based_node_id;
         name_id = other.name_id;
 
-        forward_weight = other.forward_weight;
-        reverse_weight = other.reverse_weight;
+        forward_weight = forward_weight_;
+        reverse_weight = reverse_weight_;
 
-        forward_offset = other.forward_offset;
-        reverse_offset = other.reverse_offset;
+        forward_offset = forward_offset_;
+        reverse_offset = reverse_offset_;
 
-        packed_geometry_id = other.packed_geometry_id;
+        forward_packed_geometry_id = other.forward_packed_geometry_id;
+        reverse_packed_geometry_id = other.reverse_packed_geometry_id;
 
         component.id = other.component.id;
         component.is_tiny = other.component.is_tiny;
@@ -120,7 +126,8 @@ struct PhantomNode
     int reverse_weight;
     int forward_offset;
     int reverse_offset;
-    unsigned packed_geometry_id;
+    unsigned forward_packed_geometry_id;
+    unsigned reverse_packed_geometry_id;
     struct ComponentType
     {
         uint32_t id : 31;
@@ -139,7 +146,7 @@ struct PhantomNode
 };
 
 #ifndef _MSC_VER
-static_assert(sizeof(PhantomNode) == 48, "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 52, "PhantomNode has more padding then expected");
 #endif
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
@@ -172,7 +179,8 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
         << "rev-w: " << pn.reverse_weight << ", "
         << "fwd-o: " << pn.forward_offset << ", "
         << "rev-o: " << pn.reverse_offset << ", "
-        << "geom: " << pn.packed_geometry_id << ", "
+        << "fwd_geom: " << pn.forward_packed_geometry_id << ", "
+        << "rev_geom: " << pn.reverse_packed_geometry_id << ", "
         << "comp: " << pn.component.is_tiny << " / " << pn.component.id << ", "
         << "pos: " << pn.fwd_segment_position << ", "
         << "loc: " << pn.location;

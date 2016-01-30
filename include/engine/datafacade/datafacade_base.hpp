@@ -69,8 +69,13 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const = 0;
 
-    virtual void GetUncompressedGeometry(const unsigned id,
-                                         std::vector<unsigned> &result_nodes) const = 0;
+    virtual void GetUncompressedGeometry(const EdgeID id,
+                                         std::vector<NodeID> &result_nodes) const = 0;
+
+    // Gets the weight values for each segment in an uncompressed geometry.
+    // Should always be 1 shorter than GetUncompressedGeometry
+    virtual void GetUncompressedWeights(const EdgeID id,
+                                         std::vector<EdgeWeight> &result_weights) const = 0;
 
     virtual extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
 

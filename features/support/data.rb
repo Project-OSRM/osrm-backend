@@ -258,6 +258,7 @@ def extract_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Extracting #{osm_file}.osm...", :preprocess
+    log "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-extract #{osm_file}.osm #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
     unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-extract #{osm_file}.osm #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
@@ -270,6 +271,16 @@ def extract_data
     rescue Exception => e
       raise FileError.new nil, "failed to rename data file after extracting."
     end
+    begin
+      ["osrm.edge_segment_lookup","osrm.edge_penalties"].each do |file|
+        if File.exists?("#{osm_file}.#{file}")
+          log "Renaming #{osm_file}.#{file} to #{extracted_file}.#{file}", :preprocess
+          File.rename "#{osm_file}.#{file}", "#{extracted_file}.#{file}"
+        end
+      end
+    rescue Exception => e
+      raise FileError.new nil, "failed to rename data file after extracting."
+    end
   end
 end
 
@@ -277,7 +288,8 @@ def prepare_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Preparing #{extracted_file}.osm...", :preprocess
-    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{extracted_file}.osrm  >>#{PREPROCESS_LOG_FILE} 2>&1"
+    log "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{@prepare_args} #{extracted_file}.osrm >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{@prepare_args} #{extracted_file}.osrm >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise PrepareError.new $?.exitstatus, "osrm-contract exited with code #{$?.exitstatus}."
     end

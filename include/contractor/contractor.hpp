@@ -7,6 +7,7 @@
 #include "contractor/contractor_config.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/edge_based_node.hpp"
 #include "util/static_graph.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/node_based_graph.hpp"
@@ -22,7 +23,6 @@ namespace osrm
 namespace extractor
 {
 struct SpeedProfileProperties;
-struct EdgeBasedNode;
 struct EdgeBasedEdge;
 }
 namespace contractor
@@ -66,7 +66,10 @@ class Contractor
                           util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                           const std::string &edge_segment_lookup_path,
                           const std::string &edge_penalty_path,
-                          const std::string &segment_speed_path);
+                          const std::string &segment_speed_path,
+                          const std::string &nodes_filename,
+                          const std::string &geometry_filename,
+                          const std::string &rtree_leaf_filename);
 };
 }
 }

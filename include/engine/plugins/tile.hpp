@@ -244,12 +244,34 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                     // Get coordinates for start/end nodes of segmet (NodeIDs u and v)
                     const auto a = facade->GetCoordinateOfNode(edge.u);
                     const auto b = facade->GetCoordinateOfNode(edge.v);
-                    // Calculate the length in meters
-                    const double length = osrm::util::coordinate_calculation::haversineDistance(
-                        a.lon, a.lat, b.lon, b.lat);
+                    // Calculate the length in meters, using the same calculation used to set the
+                    // weight, so we can back-calculate the speed value that was set.
+                    const double length = osrm::util::coordinate_calculation::greatCircleDistance(
+                        a.lat, a.lon, b.lat, b.lon);
+
+                    int forward_weight = 0;
+                    int reverse_weight = 0;
+
+                    if (edge.forward_packed_geometry_id != SPECIAL_EDGEID) {
+                        std::vector<EdgeWeight> forward_weight_vector;
+                        facade->GetUncompressedWeights(edge.forward_packed_geometry_id,
+                                                          forward_weight_vector);
+                        forward_weight = forward_weight_vector[edge.fwd_segment_position];
+                    }
+
+                    if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID) {
+                        std::vector<EdgeWeight> reverse_weight_vector;
+                        facade->GetUncompressedWeights(edge.reverse_packed_geometry_id,
+                                                          reverse_weight_vector);
+
+                        BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
+
+                        reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
+                                                               edge.fwd_segment_position - 1];
+                    }
 
                     // If this is a valid forward edge, go ahead and add it to the tile
-                    if (edge.forward_weight != 0 &&
+                    if (forward_weight != 0 &&
                         edge.forward_edge_based_node_id != SPECIAL_NODEID)
                     {
                         std::int32_t start_x = 0;
@@ -263,7 +285,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
 
                         // Calculate the speed for this line
                         std::uint32_t speed = static_cast<std::uint32_t>(
-                            round(length / edge.forward_weight * 10 * 3.6));
+                            round(length / forward_weight * 10 * 3.6));
 
                         line_type tile_line;
                         for (auto const &pt : geo_line)
@@ -315,7 +337,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
 
                     // Repeat the above for the coordinates reversed and using the `reverse`
                     // properties
-                    if (edge.reverse_weight != 0 &&
+                    if (reverse_weight != 0 &&
                         edge.reverse_edge_based_node_id != SPECIAL_NODEID)
                     {
                         std::int32_t start_x = 0;
@@ -328,7 +350,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                                               a.lat / COORDINATE_PRECISION);
 
                         const auto speed = static_cast<const std::uint32_t>(
-                            round(length / edge.forward_weight * 10 * 3.6));
+                            round(length / reverse_weight * 10 * 3.6));
 
                         line_type tile_line;
                         for (auto const &pt : geo_line)

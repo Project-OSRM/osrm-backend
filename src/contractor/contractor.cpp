@@ -2,6 +2,9 @@
 #include "contractor/graph_contractor.hpp"
 
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/compressed_edge_container.hpp"
+
+#include "util/static_rtree.hpp"
 
 #include "util/deallocating_vector.hpp"
 
@@ -31,6 +34,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <iterator>
 
 namespace std
 {
@@ -74,8 +78,10 @@ int Contractor::Run()
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
     std::size_t max_edge_id = LoadEdgeExpandedGraph(
-        config.edge_based_graph_path, edge_based_edge_list, config.edge_segment_lookup_path,
-        config.edge_penalty_path, config.segment_speed_lookup_path);
+        config.edge_based_graph_path, edge_based_edge_list, 
+        config.edge_segment_lookup_path, config.edge_penalty_path, 
+        config.segment_speed_lookup_path, config.node_based_graph_path,
+        config.geometry_path, config.rtree_leaf_path);
 
     // Contracting the edge-expanded graph
 
@@ -130,7 +136,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_penalty_filename,
-    const std::string &segment_speed_filename)
+    const std::string &segment_speed_filename,
+    const std::string &nodes_filename,
+    const std::string &geometry_filename,
+    const std::string &rtree_leaf_filename)
 {
     util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
@@ -184,6 +193,170 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] =
                 speed;
         }
+
+        std::vector<extractor::QueryNode> internal_to_external_node_map;
+
+        // Here, we have to update the compressed geometry weights
+        // First, we need the external-to-internal node lookup table
+        {
+            boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
+
+            if (!nodes_input_stream)
+            {
+                throw util::exception("Failed to open "+nodes_filename);
+            }
+
+            unsigned number_of_nodes = 0;
+            nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
+            internal_to_external_node_map.resize(number_of_nodes);
+
+            // Load all the query nodes into a vector
+            nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])), number_of_nodes * sizeof(extractor::QueryNode));
+            nodes_input_stream.close();
+        }
+
+        std::vector<unsigned> m_geometry_indices;
+        std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
+
+        {
+            std::ifstream geometry_stream(geometry_filename, std::ios::binary);
+            if (!geometry_stream)
+            {
+                throw util::exception("Failed to open "+geometry_filename);
+            }
+            unsigned number_of_indices = 0;
+            unsigned number_of_compressed_geometries = 0;
+
+            geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
+
+            m_geometry_indices.resize(number_of_indices);
+            if (number_of_indices > 0)
+            {
+                geometry_stream.read((char *)&(m_geometry_indices[0]),
+                                    number_of_indices * sizeof(unsigned));
+            }
+
+            geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
+
+            BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
+            m_geometry_list.resize(number_of_compressed_geometries);
+    
+            if (number_of_compressed_geometries > 0)
+            {
+                geometry_stream.read((char *)&(m_geometry_list[0]),
+                                    number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+            }
+            geometry_stream.close();
+        }
+
+        // Now, we iterate over all the segments stored in the StaticRTree, updating
+        // the packed geometry weights in the `.geometries` file (note: we do not
+        // update the RTree itself, we just use the leaf nodes to iterate over all segments)
+        {
+
+            using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
+
+            // Open file for reading *and* writing
+            std::ifstream leaf_node_file(rtree_leaf_filename, std::ios::binary | std::ios::in);
+            if (!leaf_node_file)
+            {
+                throw util::exception("Failed to open "+rtree_leaf_filename);
+            }
+            uint64_t m_element_count;
+            leaf_node_file.read((char *)&m_element_count, sizeof(uint64_t));
+
+            LeafNode current_node;
+            while (m_element_count > 0)
+            {
+                leaf_node_file.read(reinterpret_cast<char *>(&current_node), sizeof(current_node));
+
+                for (size_t i=0; i< current_node.object_count; i++)
+                {
+                    auto & leaf_object = current_node.objects[i];
+                    extractor::QueryNode *u;
+                    extractor::QueryNode *v;
+
+                    if (leaf_object.forward_packed_geometry_id != SPECIAL_EDGEID)
+                    {
+                        const unsigned forward_begin = m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
+
+                        if (leaf_object.fwd_segment_position == 0)
+                        {
+                            u = &(internal_to_external_node_map[leaf_object.u]);
+                            v = &(internal_to_external_node_map[m_geometry_list[forward_begin].node_id]);
+                        }
+                        else
+                        {
+                            u = &(internal_to_external_node_map[m_geometry_list[forward_begin + leaf_object.fwd_segment_position - 1].node_id]);
+                            v = &(internal_to_external_node_map[m_geometry_list[forward_begin + leaf_object.fwd_segment_position].node_id]);
+                        }
+                        const double segment_length =
+                                util::coordinate_calculation::greatCircleDistance(
+                                        u->lat, u->lon, v->lat, v->lon);
+
+                        auto forward_speed_iter = segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
+                        if (forward_speed_iter != segment_speed_lookup.end())
+                        {
+                            int new_segment_weight =
+                                std::max(1, static_cast<int>(std::floor(
+                                            (segment_length * 10.) / (forward_speed_iter->second / 3.6) + .5)));
+                            m_geometry_list[forward_begin + leaf_object.fwd_segment_position].weight = new_segment_weight;
+                        }
+                    }
+                    if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
+                    {
+                        const unsigned reverse_begin = m_geometry_indices.at(leaf_object.reverse_packed_geometry_id);
+                        const unsigned reverse_end = m_geometry_indices.at(leaf_object.reverse_packed_geometry_id + 1);
+
+                        int rev_segment_position = (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
+                        if (rev_segment_position == 0)
+                        {
+                            u = &(internal_to_external_node_map[leaf_object.v]);
+                            v = &(internal_to_external_node_map[m_geometry_list[reverse_begin].node_id]);
+                        }
+                        else
+                        {
+                            u = &(internal_to_external_node_map[m_geometry_list[reverse_begin + rev_segment_position - 1].node_id]);
+                            v = &(internal_to_external_node_map[m_geometry_list[reverse_begin + rev_segment_position].node_id]);
+                        }
+                        const double segment_length =
+                                util::coordinate_calculation::greatCircleDistance(
+                                        u->lat, u->lon, v->lat, v->lon);
+
+                        auto reverse_speed_iter = segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
+                        if (reverse_speed_iter != segment_speed_lookup.end())
+                        {
+                            int new_segment_weight =
+                                std::max(1, static_cast<int>(std::floor(
+                                            (segment_length * 10.) / (reverse_speed_iter->second / 3.6) + .5)));
+                            m_geometry_list[reverse_begin + rev_segment_position].weight = new_segment_weight;
+                        }
+                    }
+                }
+                m_element_count -= current_node.object_count;
+
+            }
+            leaf_node_file.close();
+
+        }
+        
+        // Now save out the updated compressed geometries
+        {
+            std::ofstream geometry_stream(geometry_filename, std::ios::binary);
+            if (!geometry_stream)
+            {
+                throw util::exception("Failed to open "+geometry_filename+" for writing");
+            }
+            const unsigned number_of_indices = m_geometry_indices.size();
+            const unsigned number_of_compressed_geometries = m_geometry_list.size();
+            geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices), sizeof(unsigned));
+            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_indices[0])), number_of_indices * sizeof(unsigned));
+            geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries), sizeof(unsigned));
+            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])), number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+            geometry_stream.close();
+        }
+
+
     }
 
     // TODO: can we read this in bulk?  util::DeallocatingVector isn't necessarily

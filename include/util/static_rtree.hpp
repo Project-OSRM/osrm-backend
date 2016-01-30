@@ -59,6 +59,13 @@ class StaticRTree
         std::uint32_t children[BRANCHING_FACTOR];
     };
 
+    struct LeafNode
+    {
+        LeafNode() : object_count(0), objects() {}
+        uint32_t object_count;
+        std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
+    };
+
   private:
     struct WrappedInputElement
     {
@@ -77,13 +84,6 @@ class StaticRTree
         {
             return m_hilbert_value < other.m_hilbert_value;
         }
-    };
-
-    struct LeafNode
-    {
-        LeafNode() : object_count(0), objects() {}
-        std::uint32_t object_count;
-        std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
     };
 
     using QueryNodeType = mapbox::util::variant<TreeNode, EdgeDataT>;

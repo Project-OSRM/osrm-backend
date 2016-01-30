@@ -45,7 +45,7 @@ const double constexpr DESIRED_SEGMENT_LENGTH = 10.;
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-    const CompressedEdgeContainer &compressed_edge_container,
+    CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
@@ -138,8 +138,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
         // reconstruct bidirectional edge with individual weights and put each into the NN index
 
-        std::vector<int> forward_dist_prefix_sum(forward_geometry.size(), 0);
-        std::vector<int> reverse_dist_prefix_sum(reverse_geometry.size(), 0);
+        std::vector<int> forward_offsets(forward_geometry.size(), 0);
+        std::vector<int> reverse_offsets(reverse_geometry.size(), 0);
 
         // quick'n'dirty prefix sum as std::partial_sum needs addtional casts
         // TODO: move to lambda function with C++11
@@ -147,8 +147,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
         for (const auto i : util::irange(0u, geometry_size))
         {
-            forward_dist_prefix_sum[i] = temp_sum;
-            temp_sum += forward_geometry[i].second;
+            forward_offsets[i] = temp_sum;
+            temp_sum += forward_geometry[i].weight;
 
             BOOST_ASSERT(forward_data.distance >= temp_sum);
         }
@@ -156,8 +156,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         temp_sum = 0;
         for (const auto i : util::irange(0u, geometry_size))
         {
-            temp_sum += reverse_geometry[reverse_geometry.size() - 1 - i].second;
-            reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
+            temp_sum += reverse_geometry[reverse_geometry.size() - 1 - i].weight;
+            reverse_offsets[i] = reverse_data.distance - temp_sum;
             // BOOST_ASSERT(reverse_data.distance >= temp_sum);
         }
 
@@ -167,23 +167,21 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         for (const auto i : util::irange(0u, geometry_size))
         {
             BOOST_ASSERT(current_edge_source_coordinate_id ==
-                         reverse_geometry[geometry_size - 1 - i].first);
-            const NodeID current_edge_target_coordinate_id = forward_geometry[i].first;
+                         reverse_geometry[geometry_size - 1 - i].node_id);
+            const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
             BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
             // build edges
             m_edge_based_node_list.emplace_back(
                 forward_data.edge_id, reverse_data.edge_id, current_edge_source_coordinate_id,
-                current_edge_target_coordinate_id, forward_data.name_id, forward_geometry[i].second,
-                reverse_geometry[geometry_size - 1 - i].second, forward_dist_prefix_sum[i],
-                reverse_dist_prefix_sum[i], m_compressed_edge_container.GetPositionForID(edge_id_1),
+                current_edge_target_coordinate_id, forward_data.name_id, 
+                m_compressed_edge_container.GetPositionForID(edge_id_1),
+                m_compressed_edge_container.GetPositionForID(edge_id_2),
                 false, INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
 
             m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
                                                       reverse_data.startpoint);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
-
-            BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
 
             BOOST_ASSERT(node_u != m_edge_based_node_list.back().u ||
                          node_v != m_edge_based_node_list.back().v);
@@ -193,7 +191,6 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         }
 
         BOOST_ASSERT(current_edge_source_coordinate_id == node_v);
-        BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
     }
     else
     {
@@ -220,13 +217,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID ||
                      reverse_data.edge_id != SPECIAL_NODEID);
 
+        m_compressed_edge_container.AddUncompressedEdge(edge_id_1, node_v, forward_data.distance);
+        m_compressed_edge_container.AddUncompressedEdge(edge_id_2, node_u, reverse_data.distance);
+
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v, forward_data.name_id,
-            forward_data.distance, reverse_data.distance, 0, 0, SPECIAL_EDGEID, false,
-            INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
+            m_compressed_edge_container.GetPositionForID(edge_id_1),
+            m_compressed_edge_container.GetPositionForID(edge_id_2),
+            false, INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
         m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
                                                   reverse_data.startpoint);
-        BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
 
@@ -500,7 +500,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         for (auto target_node : node_based_edges)
                         {
                             const QueryNode &from = m_node_info_list[previous];
-                            const QueryNode &to = m_node_info_list[target_node.first];
+                            const QueryNode &to = m_node_info_list[target_node.node_id];
                             const double segment_length =
                                 util::coordinate_calculation::greatCircleDistance(
                                     from.lat, from.lon, to.lat, to.lon);
@@ -510,9 +510,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             edge_segment_file.write(reinterpret_cast<const char *>(&segment_length),
                                                     sizeof(segment_length));
                             edge_segment_file.write(
-                                reinterpret_cast<const char *>(&target_node.second),
-                                sizeof(target_node.second));
-                            previous = target_node.first;
+                                reinterpret_cast<const char *>(&target_node.weight),
+                                sizeof(target_node.weight));
+                            previous = target_node.node_id;
                         }
                     }
                     else
@@ -1131,17 +1131,17 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
             for (auto itr = geometry.rbegin(), end = geometry.rend(); itr != end; ++itr)
             {
                 const auto compressed_node = *itr;
-                cur = util::FixedPointCoordinate(m_node_info_list[compressed_node.first].lat,
-                                                 m_node_info_list[compressed_node.first].lon);
+                cur = util::FixedPointCoordinate(m_node_info_list[compressed_node.node_id].lat,
+                                                 m_node_info_list[compressed_node.node_id].lon);
                 this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
                 if (dist + this_dist > DESIRED_SEGMENT_LENGTH)
                 {
-                    return selectBestCandidate(compressed_node.first, dist + this_dist, prev_id,
+                    return selectBestCandidate(compressed_node.node_id, dist + this_dist, prev_id,
                                                dist);
                 }
                 dist += this_dist;
                 prev = cur;
-                prev_id = compressed_node.first;
+                prev_id = compressed_node.node_id;
             }
             cur = util::FixedPointCoordinate(m_node_info_list[src].lat, m_node_info_list[src].lon);
             this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
@@ -1152,17 +1152,17 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
             for (auto itr = geometry.begin(), end = geometry.end(); itr != end; ++itr)
             {
                 const auto compressed_node = *itr;
-                cur = util::FixedPointCoordinate(m_node_info_list[compressed_node.first].lat,
-                                                 m_node_info_list[compressed_node.first].lon);
+                cur = util::FixedPointCoordinate(m_node_info_list[compressed_node.node_id].lat,
+                                                 m_node_info_list[compressed_node.node_id].lon);
                 this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
                 if (dist + this_dist > DESIRED_SEGMENT_LENGTH)
                 {
-                    return selectBestCandidate(compressed_node.first, dist + this_dist, prev_id,
+                    return selectBestCandidate(compressed_node.node_id, dist + this_dist, prev_id,
                                                dist);
                 }
                 dist += this_dist;
                 prev = cur;
-                prev_id = compressed_node.first;
+                prev_id = compressed_node.node_id;
             }
             cur = util::FixedPointCoordinate(m_node_info_list[tgt].lat, m_node_info_list[tgt].lon);
             this_dist = util::coordinate_calculation::haversineDistance(prev, cur);

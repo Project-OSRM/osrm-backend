@@ -59,7 +59,7 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
     {
         geometry_out_stream.write((char *)&prefix_sum_of_list_indices, sizeof(unsigned));
 
-        const std::vector<CompressedNode> &current_vector = elem;
+        const std::vector<CompressedEdge> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != unpacked_size);
         prefix_sum_of_list_indices += unpacked_size;
@@ -74,13 +74,13 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
     // write compressed geometries
     for (auto &elem : m_compressed_geometries)
     {
-        const std::vector<CompressedNode> &current_vector = elem;
+        const std::vector<CompressedEdge> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
         control_sum += unpacked_size;
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != unpacked_size);
-        for (const CompressedNode current_node : current_vector)
+        for (const auto & current_node : current_vector)
         {
-            geometry_out_stream.write((char *)&(current_node.first), sizeof(NodeID));
+            geometry_out_stream.write((char *)&(current_node), sizeof(CompressedEdge));
         }
     }
     BOOST_ASSERT(control_sum == prefix_sum_of_list_indices);
@@ -88,6 +88,14 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
     geometry_out_stream.close();
 }
 
+// Adds info for a compressed edge to the container.   edge_id_2
+// has been removed from the graph, so we have to save These edges/nodes
+// have already been trimmed from the graph, this function just stores
+// the original data for unpacking later.
+//
+//     edge_id_1               edge_id_2
+//   ----------> via_node_id -----------> target_node_id
+//     weight_1                weight_2
 void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
                                            const EdgeID edge_id_2,
                                            const NodeID via_node_id,
@@ -131,13 +139,13 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     BOOST_ASSERT(edge_bucket_id1 == GetPositionForID(edge_id_1));
     BOOST_ASSERT(edge_bucket_id1 < m_compressed_geometries.size());
 
-    std::vector<CompressedNode> &edge_bucket_list1 = m_compressed_geometries[edge_bucket_id1];
+    std::vector<CompressedEdge> &edge_bucket_list1 = m_compressed_geometries[edge_bucket_id1];
 
     // note we don't save the start coordinate: it is implicitly given by edge 1
     // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
-        edge_bucket_list1.emplace_back(via_node_id, weight1);
+        edge_bucket_list1.emplace_back(CompressedEdge { via_node_id, weight1 });
     }
 
     BOOST_ASSERT(0 < edge_bucket_list1.size());
@@ -149,7 +157,7 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
         const unsigned list_to_remove_index = GetPositionForID(edge_id_2);
         BOOST_ASSERT(list_to_remove_index < m_compressed_geometries.size());
 
-        std::vector<CompressedNode> &edge_bucket_list2 =
+        std::vector<CompressedEdge> &edge_bucket_list2 =
             m_compressed_geometries[list_to_remove_index];
 
         // found an existing list, append it to the list of edge_id_1
@@ -168,9 +176,56 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     else
     {
         // we are certain that the second edge is atomic.
-        edge_bucket_list1.emplace_back(target_node_id, weight2);
+        edge_bucket_list1.emplace_back( CompressedEdge { target_node_id, weight2 });
     }
 }
+
+void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id, 
+                                                  const NodeID target_node_id,
+                                                  const EdgeWeight weight)
+{
+    // remove super-trivial geometries
+    BOOST_ASSERT(SPECIAL_EDGEID != edge_id);
+    BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight);
+
+    // There should be no entry for uncompressed edges
+    BOOST_ASSERT(!HasEntryForID(edge_id));
+
+    // Add via node id. List is created if it does not exist
+    if (!HasEntryForID(edge_id))
+    {
+        // create a new entry in the map
+        if (0 == m_free_list.size())
+        {
+            // make sure there is a place to put the entries
+            IncreaseFreeList();
+        }
+        BOOST_ASSERT(!m_free_list.empty());
+        m_edge_id_to_list_index_map[edge_id] = m_free_list.back();
+        m_free_list.pop_back();
+    }
+
+    // find bucket index
+    const auto iter = m_edge_id_to_list_index_map.find(edge_id);
+    BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
+    const unsigned edge_bucket_id = iter->second;
+    BOOST_ASSERT(edge_bucket_id == GetPositionForID(edge_id));
+    BOOST_ASSERT(edge_bucket_id < m_compressed_geometries.size());
+
+    std::vector<CompressedEdge> &edge_bucket_list = m_compressed_geometries[edge_bucket_id];
+
+    // We're adding uncompressed edges, there should be no entry
+    BOOST_ASSERT(edge_bucket_list.empty());
+    // note we don't save the start coordinate: it is implicitly given by edge_id
+    // weight is the distance to the (currently) last coordinate in the bucket
+    if (edge_bucket_list.empty())
+    {
+        edge_bucket_list.emplace_back(CompressedEdge { target_node_id, weight });
+    }
+}
+
+
 
 void CompressedEdgeContainer::PrintStatistics() const
 {
@@ -180,7 +235,7 @@ void CompressedEdgeContainer::PrintStatistics() const
 
     uint64_t compressed_geometries = 0;
     uint64_t longest_chain_length = 0;
-    for (const std::vector<CompressedNode> &current_vector : m_compressed_geometries)
+    for (const std::vector<CompressedEdge> &current_vector : m_compressed_geometries)
     {
         compressed_geometries += current_vector.size();
         longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());
@@ -207,13 +262,13 @@ NodeID CompressedEdgeContainer::GetFirstEdgeTargetID(const EdgeID edge_id) const
 {
     const auto &bucket = GetBucketReference(edge_id);
     BOOST_ASSERT(bucket.size() >= 2);
-    return bucket.front().first;
+    return bucket.front().node_id;
 }
 NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
 {
     const auto &bucket = GetBucketReference(edge_id);
     BOOST_ASSERT(bucket.size() >= 2);
-    return bucket[bucket.size() - 2].first;
+    return bucket[bucket.size() - 2].node_id;
 }
 }
 }
