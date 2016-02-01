@@ -131,8 +131,9 @@ class DirectShortestPathRouting final
         raw_route_data.target_traversed_in_reverse.push_back(
             (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
 
-        super::UnpackPath(packed_leg.begin(), packed_leg.end(), phantom_node_pair,
-                          raw_route_data.unpacked_path_segments.front());
+        raw_route_data.shortest_path_length -=
+            super::UnpackPath(packed_leg.begin(), packed_leg.end(), phantom_node_pair,
+                              raw_route_data.unpacked_path_segments.front());
     }
 };
 }

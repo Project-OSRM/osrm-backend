@@ -12,25 +12,32 @@ namespace extractor
 
 struct ExternalMemoryNode : QueryNode
 {
-    ExternalMemoryNode(int lat, int lon, OSMNodeID node_id, bool barrier, bool traffic_lights)
-        : QueryNode(lat, lon, node_id), barrier(barrier), traffic_lights(traffic_lights)
+    ExternalMemoryNode(int lat,
+                       int lon,
+                       OSMNodeID node_id,
+                       bool barrier,
+                       bool access_restricted,
+                       bool traffic_lights)
+        : QueryNode(lat, lon, node_id), barrier(barrier), access_restricted(access_restricted),
+          traffic_lights(traffic_lights)
     {
     }
 
-    ExternalMemoryNode() : barrier(false), traffic_lights(false) {}
+    ExternalMemoryNode() : barrier(false), access_restricted(false), traffic_lights(false) {}
 
     static ExternalMemoryNode min_value()
     {
-        return ExternalMemoryNode(0, 0, MIN_OSM_NODEID, false, false);
+        return ExternalMemoryNode(0, 0, MIN_OSM_NODEID, false, false, false);
     }
 
     static ExternalMemoryNode max_value()
     {
         return ExternalMemoryNode(std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
-                                  MAX_OSM_NODEID, false, false);
+                                  MAX_OSM_NODEID, false, false, false);
     }
 
     bool barrier;
+    bool access_restricted;
     bool traffic_lights;
 };
 

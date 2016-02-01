@@ -24,6 +24,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace osrm
@@ -63,7 +64,7 @@ std::size_t loadGraph(const char *path,
     // load graph data
     std::vector<extractor::NodeBasedEdge> edge_list;
     std::vector<NodeID> traffic_light_node_list;
-    std::vector<NodeID> barrier_node_list;
+    std::vector<std::pair<NodeID,bool>> barrier_node_list;
 
     auto number_of_nodes = util::loadNodesFromFile(input_stream, barrier_node_list,
                                                    traffic_light_node_list, coordinate_list);

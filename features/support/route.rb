@@ -156,7 +156,8 @@ def turn_list instructions
       14 => :start_end_of_street,
       15 => :destination,
       16 => :enter_contraflow,
-      17 => :leave_contraflow
+      17 => :leave_contraflow,
+      129 => :barrier
     }
     # replace instructions codes with strings
     # "11-3" (enter roundabout and leave a 3rd exit) gets converted to "enter_roundabout-3"

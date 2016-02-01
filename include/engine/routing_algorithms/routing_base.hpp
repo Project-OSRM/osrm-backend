@@ -214,11 +214,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     }
 
     template <typename RandomIter>
-    void UnpackPath(RandomIter packed_path_begin,
+    EdgeWeight UnpackPath(RandomIter packed_path_begin,
                     RandomIter packed_path_end,
                     const PhantomNodes &phantom_node_pair,
                     std::vector<PathData> &unpacked_path) const
     {
+        EdgeWeight applied_path_penalties = 0;
         const bool start_traversed_in_reverse =
             (*packed_path_begin != phantom_node_pair.source_phantom.forward_node_id);
         const bool target_traversed_in_reverse =
@@ -288,9 +289,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const extractor::TurnInstruction turn_instruction =
+                const auto turn_instruction =
                     facade->GetTurnInstructionForEdgeID(ed.id);
-                const extractor::TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
+                const auto travel_mode = facade->GetTravelModeForEdgeID(ed.id);
+
+                if( turn_instruction == extractor::TurnInstruction::AccessRestrictionPenalty )
+                  applied_path_penalties += ACCESS_RESTRICTED_PENALTY;
 
                 if (!facade->EdgeIsCompressed(ed.id))
                 {
@@ -371,7 +375,6 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                              phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
-
         // there is no equivalent to a node-based node in an edge-expanded graph.
         // two equivalent routes may start (or end) at different node-based edges
         // as they are added with the offset how much "distance" on the edge
@@ -391,6 +394,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             }
             BOOST_ASSERT(!unpacked_path.empty());
         }
+        return applied_path_penalties;
     }
 
     void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const

@@ -39,4 +39,6 @@ static const unsigned INVALID_NAMEID = std::numeric_limits<unsigned>::max();
 static const unsigned INVALID_COMPONENTID = 0;
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
 
+static const EdgeWeight ACCESS_RESTRICTED_PENALTY = 10000000;
+
 #endif /* TYPEDEFS_H */

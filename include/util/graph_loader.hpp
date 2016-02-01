@@ -20,6 +20,7 @@
 
 #include <fstream>
 #include <ios>
+#include <utility>
 #include <vector>
 
 namespace osrm
@@ -63,7 +64,7 @@ unsigned loadRestrictionsFromFile(std::istream &input_stream,
  *  - nodes indexed by their internal (non-osm) id
  */
 NodeID loadNodesFromFile(std::istream &input_stream,
-                         std::vector<NodeID> &barrier_node_list,
+                         std::vector<std::pair<NodeID,bool>> &barrier_node_list,
                          std::vector<NodeID> &traffic_light_node_list,
                          std::vector<extractor::QueryNode> &node_array)
 {
@@ -89,7 +90,7 @@ NodeID loadNodesFromFile(std::istream &input_stream,
         node_array.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
         if (current_node.barrier)
         {
-            barrier_node_list.emplace_back(i);
+            barrier_node_list.emplace_back(std::make_pair(i,current_node.access_restricted));
         }
         if (current_node.traffic_lights)
         {
