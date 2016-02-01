@@ -1,6 +1,7 @@
 #ifndef STRONG_TYPEDEF_HPP
 #define STRONG_TYPEDEF_HPP
 
+#include <iostream>
 #include <type_traits>
 #include <functional>
 
@@ -17,6 +18,7 @@ namespace osrm
     {                                                                                              \
         static_assert(std::is_arithmetic<From>(), "");                                             \
         From x;                                                                                    \
+        friend std::ostream& operator<<(std::ostream& stream, const To& inst);                     \
                                                                                                    \
       public:                                                                                      \
         To() = default;                                                                            \
@@ -40,6 +42,9 @@ namespace osrm
             return std::hash<From>()(static_cast<const From>(k));                                  \
         }                                                                                          \
     };                                                                                             \
+    }                                                                                              \
+    inline std::ostream& operator<<(std::ostream& stream, const To& inst) {                        \
+        return stream << #To << '(' << inst.x << ')';                                              \
     }
 }
 
