@@ -38,7 +38,7 @@ matrix:
         apt:
           sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='clang++-3.8' BUILD_TYPE='Debug'
+      env: COMPILER='clang++-3.8' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
 
     - os: osx
       osx_image: xcode7
@@ -139,7 +139,7 @@ before_script:
   - rvm use 1.9.3
   - gem install bundler
   - bundle install
-  - mkdir build && cd build
+  - mkdir build && pushd build
   - export CXX=${COMPILER}
   - export OSRM_PORT=5000 OSRM_TIMEOUT=60
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1
@@ -156,10 +156,15 @@ script:
   - ./extractor-tests
   - ./engine-tests
   - ./util-tests
-  - cd ..
+  - popd
   - cucumber -p verify
   - make -C test/data
-  - mkdir example/build && cd example/build
+  - mkdir example/build && pushd example/build
   - cmake ..
   - make
   - ./osrm-example ../../test/data/berlin-latest.osrm
+  - popd
+  - |
+    if [ -n "$RUN_CLANG_FORMAT" ]; then
+      ./scripts/format.sh
+    fi
