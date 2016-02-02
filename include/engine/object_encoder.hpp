@@ -39,7 +39,9 @@ using BinaryFromBase64 = boost::archive::iterators::transform_width<
 
 template <typename T> std::string encodeBase64(const T &x)
 {
-    // static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
+#if not defined __GNUC__ or __GNUC__ > 4
+    static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
+#endif
 
     std::vector<unsigned char> bytes{reinterpret_cast<const char *>(&x),
                                      reinterpret_cast<const char *>(&x) + sizeof(T)};
@@ -65,7 +67,9 @@ template <typename T> std::string encodeBase64(const T &x)
 
 template <typename T> T decodeBase64(std::string encoded)
 {
-    // static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
+#if not defined __GNUC__ or __GNUC__ > 4
+    static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
+#endif
 
     std::replace(begin(encoded), end(encoded), '-', '+');
     std::replace(begin(encoded), end(encoded), '_', '/');
