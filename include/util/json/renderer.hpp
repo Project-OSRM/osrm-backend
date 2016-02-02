@@ -9,6 +9,11 @@
 
 #include "osrm/json_container.hpp"
 
+#include <ostream>
+#include <vector>
+#include <iterator>
+#include <string>
+
 namespace osrm
 {
 namespace util
@@ -123,23 +128,11 @@ struct ArrayRenderer
         out.push_back(']');
     }
 
-    void operator()(const True &) const
-    {
-        const std::string temp("true");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
+    void operator()(const True &) const { out.insert(end(out), {'t', 'r', 'u', 'e'}); }
 
-    void operator()(const False &) const
-    {
-        const std::string temp("false");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
+    void operator()(const False &) const { out.insert(end(out), {'f', 'a', 'l', 's', 'e'}); }
 
-    void operator()(const Null &) const
-    {
-        const std::string temp("null");
-        out.insert(out.end(), temp.begin(), temp.end());
-    }
+    void operator()(const Null &) const { out.insert(end(out), {'n', 'u', 'l', 'l'}); }
 
   private:
     std::vector<char> &out;

@@ -4,14 +4,13 @@
 #include "server/http/reply.hpp"
 #include "server/http/request.hpp"
 
-#include "util/json_renderer.hpp"
+#include "util/json/container.hpp"
+#include "util/json/renderer.hpp"
 #include "util/simple_logger.hpp"
 #include "util/string_util.hpp"
 #include "util/xml_renderer.hpp"
 #include "util/typedefs.hpp"
-
 #include "engine/route_parameters.hpp"
-#include "util/json_container.hpp"
 #include "osrm/osrm.hpp"
 
 #include <ctime>

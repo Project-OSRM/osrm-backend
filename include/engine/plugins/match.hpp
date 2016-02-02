@@ -12,8 +12,8 @@
 #include "engine/routing_algorithms/map_matching.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
-#include "util/json_logger.hpp"
-#include "util/json_util.hpp"
+#include "util/json/logger.hpp"
+#include "util/json/util.hpp"
 #include "util/string_util.hpp"
 
 #include <cstdlib>
