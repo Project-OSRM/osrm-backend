@@ -94,8 +94,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
             {
-                PhantomNode current_phantom_node;
-                ObjectEncoder::DecodeFromBase64(route_parameters.hints[i], current_phantom_node);
+                auto current_phantom_node = decodeBase64<PhantomNode>(route_parameters.hints[i]);
                 if (current_phantom_node.IsValid(facade->GetNumberOfNodes()))
                 {
                     if (route_parameters.is_source[i])

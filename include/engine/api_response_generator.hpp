@@ -277,10 +277,10 @@ ApiResponseGenerator<DataFacadeT>::BuildHintData(const InternalRouteResult &raw_
     std::string hint;
     for (const auto i : util::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
     {
-        ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
-        json_location_hint_array.values.push_back(hint);
+        hint = encodeBase64(raw_route.segment_end_coordinates[i].source_phantom);
+        json_location_hint_array.values.push_back(std::move(hint));
     }
-    ObjectEncoder::EncodeToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
+    hint = encodeBase64(raw_route.segment_end_coordinates.back().target_phantom);
     json_location_hint_array.values.emplace_back(std::move(hint));
     json_hint_object.values["locations"] = json_location_hint_array;
 
