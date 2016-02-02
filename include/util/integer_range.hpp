@@ -12,6 +12,11 @@ namespace osrm
 namespace util
 {
 
+// Warning: do not try to replace this with Boost's irange, as it is broken on Boost 1.55:
+//     auto r = boost::irange<unsigned int>(0, 15);
+//     std::cout << r.size() << std::endl;
+// results in -4294967281. Latest Boost versions fix this, but we still support older ones.
+
 template <typename Integer> class range
 {
   private:
