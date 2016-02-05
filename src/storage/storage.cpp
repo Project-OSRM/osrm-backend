@@ -425,7 +425,7 @@ int Storage::Run()
         }();
         if (current_edge_data.compressed_geometry)
         {
-            geometries_indicator_ptr[bucket] = (value | (1 << offset));
+            geometries_indicator_ptr[bucket] = (value | (1u << offset));
         }
     }
     edges_input_stream.close();
@@ -513,7 +513,7 @@ int Storage::Run()
                 return return_value;
             }();
 
-            core_marker_ptr[bucket] = (value | (1 << offset));
+            core_marker_ptr[bucket] = (value | (1u << offset));
         }
     }
 
