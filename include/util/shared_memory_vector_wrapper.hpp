@@ -3,10 +3,13 @@
 
 #include <boost/assert.hpp>
 
+#include <cstddef>
+
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
 #include <vector>
+#include <utility>
 
 namespace osrm
 {
