@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <array>
+#include <utility>
 
 namespace osrm
 {
@@ -52,8 +53,9 @@ template <unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY> class RangeTable
                         const unsigned sum_lengths)
         : sum_lengths(sum_lengths)
     {
-        block_offsets.swap(external_offsets);
-        diff_blocks.swap(external_blocks);
+        using std::swap;
+        swap(block_offsets, external_offsets);
+        swap(diff_blocks, external_blocks);
     }
 
     // construct table from length vector

@@ -134,7 +134,6 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     void LoadNodeAndEdgeInformation()
     {
-
         auto coordinate_list_ptr = data_layout->GetBlockPtr<util::FixedPointCoordinate>(
             shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
         m_coordinate_list = util::make_unique<util::ShM<util::FixedPointCoordinate, true>::vector>(
@@ -145,20 +144,20 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
         typename util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
-        m_travel_mode_list.swap(travel_mode_list);
+        m_travel_mode_list = std::move(travel_mode_list);
 
         auto turn_instruction_list_ptr = data_layout->GetBlockPtr<extractor::TurnInstruction>(
             shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
         typename util::ShM<extractor::TurnInstruction, true>::vector turn_instruction_list(
             turn_instruction_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
-        m_turn_instruction_list.swap(turn_instruction_list);
+        m_turn_instruction_list = std::move(turn_instruction_list);
 
         auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::NAME_ID_LIST);
         typename util::ShM<unsigned, true>::vector name_id_list(
             name_id_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_ID_LIST]);
-        m_name_ID_list.swap(name_id_list);
+        m_name_ID_list = std::move(name_id_list);
     }
 
     void LoadViaNodeList()
@@ -167,7 +166,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             shared_memory, storage::SharedDataLayout::VIA_NODE_LIST);
         typename util::ShM<NodeID, true>::vector via_node_list(
             via_node_list_ptr, data_layout->num_entries[storage::SharedDataLayout::VIA_NODE_LIST]);
-        m_via_node_list.swap(via_node_list);
+        m_via_node_list = std::move(via_node_list);
     }
 
     void LoadNames()
@@ -188,7 +187,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         m_name_table = util::make_unique<util::RangeTable<16, true>>(
             name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
 
-        m_names_char_list.swap(names_char_list);
+        m_names_char_list = std::move(names_char_list);
     }
 
     void LoadCoreInformation()
@@ -202,7 +201,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
             shared_memory, storage::SharedDataLayout::CORE_MARKER);
         typename util::ShM<bool, true>::vector is_core_node(
             core_marker_ptr, data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER]);
-        m_is_core_node.swap(is_core_node);
+        m_is_core_node = std::move(is_core_node);
     }
 
     void LoadGeometries()
@@ -212,21 +211,21 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         typename util::ShM<bool, true>::vector edge_is_compressed(
             geometries_compressed_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDICATORS]);
-        m_edge_is_compressed.swap(edge_is_compressed);
+        m_edge_is_compressed = std::move(edge_is_compressed);
 
         auto geometries_index_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::GEOMETRIES_INDEX);
         typename util::ShM<unsigned, true>::vector geometry_begin_indices(
             geometries_index_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
-        m_geometry_indices.swap(geometry_begin_indices);
+        m_geometry_indices = std::move(geometry_begin_indices);
 
         auto geometries_list_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
         typename util::ShM<unsigned, true>::vector geometry_list(
             geometries_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
-        m_geometry_list.swap(geometry_list);
+        m_geometry_list = std::move(geometry_list);
     }
 
   public:

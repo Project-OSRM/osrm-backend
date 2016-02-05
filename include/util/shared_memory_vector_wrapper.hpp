@@ -55,13 +55,6 @@ template <typename DataT> class SharedMemoryWrapper
 
     SharedMemoryWrapper(DataT *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
 
-    void swap(SharedMemoryWrapper<DataT> &other)
-    {
-        // BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
-        std::swap(m_size, other.m_size);
-        std::swap(m_ptr, other.m_ptr);
-    }
-
     DataT &at(const std::size_t index) { return m_ptr[index]; }
 
     const DataT &at(const std::size_t index) const { return m_ptr[index]; }
@@ -85,6 +78,9 @@ template <typename DataT> class SharedMemoryWrapper
         BOOST_ASSERT_MSG(index < m_size, "invalid size");
         return m_ptr[index];
     }
+
+    template <typename T>
+    friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;
 };
 
 template <> class SharedMemoryWrapper<bool>
@@ -97,13 +93,6 @@ template <> class SharedMemoryWrapper<bool>
     SharedMemoryWrapper() : m_ptr(nullptr), m_size(0) {}
 
     SharedMemoryWrapper(unsigned *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
-
-    void swap(SharedMemoryWrapper<bool> &other)
-    {
-        // BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
-        std::swap(m_size, other.m_size);
-        std::swap(m_ptr, other.m_ptr);
-    }
 
     bool at(const std::size_t index) const
     {
@@ -123,7 +112,18 @@ template <> class SharedMemoryWrapper<bool>
         const unsigned offset = index % 32;
         return m_ptr[bucket] & (1 << offset);
     }
+
+    template <typename T>
+    friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;
 };
+
+// Both SharedMemoryWrapper<T> and the SharedMemoryWrapper<bool> specializations share this impl.
+template <typename DataT>
+void swap(SharedMemoryWrapper<DataT> &lhs, SharedMemoryWrapper<DataT> &rhs) noexcept
+{
+    std::swap(lhs.m_ptr, rhs.m_ptr);
+    std::swap(lhs.m_size, rhs.m_size);
+}
 
 template <typename DataT, bool UseSharedMemory> struct ShM
 {

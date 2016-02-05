@@ -105,8 +105,9 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         number_of_nodes = static_cast<decltype(number_of_nodes)>(nodes.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(edges.size());
 
-        node_array.swap(nodes);
-        edge_array.swap(edges);
+        using std::swap;
+        swap(node_array, nodes);
+        swap(edge_array, edges);
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
