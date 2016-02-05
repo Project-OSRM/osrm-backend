@@ -98,7 +98,7 @@ template <> class SharedMemoryWrapper<bool>
     {
         const std::size_t bucket = index / 32;
         const unsigned offset = static_cast<unsigned>(index % 32);
-        return m_ptr[bucket] & (1 << offset);
+        return m_ptr[bucket] & (1u << offset);
     }
 
     std::size_t size() const { return m_size; }
@@ -110,7 +110,7 @@ template <> class SharedMemoryWrapper<bool>
         BOOST_ASSERT_MSG(index < m_size, "invalid size");
         const unsigned bucket = index / 32;
         const unsigned offset = index % 32;
-        return m_ptr[bucket] & (1 << offset);
+        return m_ptr[bucket] & (1u << offset);
     }
 
     template <typename T>
