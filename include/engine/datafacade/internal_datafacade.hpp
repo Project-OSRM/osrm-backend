@@ -18,9 +18,24 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <boost/thread.hpp>
+#include <cstddef>
+#include <cstdlib>
 
+#include <algorithm>
+#include <fstream>
+#include <ios>
 #include <limits>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <boost/assert.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/thread/tss.hpp>
 
 namespace osrm
 {

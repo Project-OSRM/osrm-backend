@@ -14,8 +14,11 @@
 
 #include "osrm/coordinate.hpp"
 
+#include <cstddef>
+
+#include <vector>
+#include <utility>
 #include <string>
-#include <boost/optional.hpp>
 
 namespace osrm
 {

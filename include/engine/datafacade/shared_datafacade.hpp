@@ -14,11 +14,19 @@
 #include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 
-#include <boost/thread.hpp>
+#include <cstddef>
 
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <boost/assert.hpp>
+#include <boost/thread/tss.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/synchronized_value.hpp>
 
 namespace osrm
 {
@@ -111,7 +119,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     void LoadGraph()
     {
-         auto graph_nodes_ptr = data_layout->GetBlockPtr<GraphNode>(
+        auto graph_nodes_ptr = data_layout->GetBlockPtr<GraphNode>(
             shared_memory, storage::SharedDataLayout::GRAPH_NODE_LIST);
 
         auto graph_edges_ptr = data_layout->GetBlockPtr<GraphEdge>(
@@ -127,23 +135,20 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     void LoadNodeAndEdgeInformation()
     {
 
-        auto coordinate_list_ptr =
-            data_layout->GetBlockPtr<util::FixedPointCoordinate>(
-                shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
+        auto coordinate_list_ptr = data_layout->GetBlockPtr<util::FixedPointCoordinate>(
+            shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
         m_coordinate_list = util::make_unique<util::ShM<util::FixedPointCoordinate, true>::vector>(
             coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
-        auto travel_mode_list_ptr =
-            data_layout->GetBlockPtr<extractor::TravelMode>(shared_memory,
-                                                            storage::SharedDataLayout::TRAVEL_MODE);
+        auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
+            shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
         typename util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list.swap(travel_mode_list);
 
-        auto turn_instruction_list_ptr =
-            data_layout->GetBlockPtr<extractor::TurnInstruction>(
-                shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
+        auto turn_instruction_list_ptr = data_layout->GetBlockPtr<extractor::TurnInstruction>(
+            shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
         typename util::ShM<extractor::TurnInstruction, true>::vector turn_instruction_list(
             turn_instruction_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
@@ -238,8 +243,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         }
         data_timestamp_ptr = static_cast<storage::SharedDataTimestamp *>(
             storage::makeSharedMemory(storage::CURRENT_REGIONS,
-                                      sizeof(storage::SharedDataTimestamp), false, false)
-                ->Ptr());
+                                      sizeof(storage::SharedDataTimestamp), false, false)->Ptr());
         CURRENT_LAYOUT = storage::LAYOUT_NONE;
         CURRENT_DATA = storage::DATA_NONE;
         CURRENT_TIMESTAMP = 0;
@@ -285,7 +289,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
                 util::SimpleLogger().Write(logDEBUG) << "Performing data reload";
                 m_layout_memory.reset(storage::makeSharedMemory(CURRENT_LAYOUT));
 
-                data_layout = static_cast<storage::SharedDataLayout*>(m_layout_memory->Ptr());
+                data_layout = static_cast<storage::SharedDataLayout *>(m_layout_memory->Ptr());
 
                 m_large_memory.reset(storage::makeSharedMemory(CURRENT_DATA));
                 shared_memory = (char *)(m_large_memory->Ptr());
@@ -310,8 +314,8 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
                 LoadNames();
                 LoadCoreInformation();
 
-                util::SimpleLogger().Write() << "number of geometries: "
-                                             << m_coordinate_list->size();
+                util::SimpleLogger().Write()
+                    << "number of geometries: " << m_coordinate_list->size();
                 for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
                 {
                     if (!GetCoordinateOfNode(i).IsValid())
