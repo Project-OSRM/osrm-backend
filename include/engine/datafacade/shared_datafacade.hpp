@@ -26,7 +26,7 @@
 #include <boost/assert.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/synchronized_value.hpp>
+#include <boost/thread/lock_guard.hpp>
 
 namespace osrm
 {
@@ -260,7 +260,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
         {
             // Get exclusive lock
             util::SimpleLogger().Write(logDEBUG) << "Updates available, getting exclusive lock";
-            boost::unique_lock<boost::shared_mutex> lock(data_mutex);
+            const boost::lock_guard<boost::shared_mutex> lock(data_mutex);
 
             if (CURRENT_LAYOUT != data_timestamp_ptr->layout ||
                 CURRENT_DATA != data_timestamp_ptr->data)
