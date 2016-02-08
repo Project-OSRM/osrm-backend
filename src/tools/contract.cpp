@@ -32,10 +32,6 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
     // declare a group of options that will be allowed on command line
     boost::program_options::options_description config_options("Configuration");
     config_options.add_options()(
-        "profile,p",
-        boost::program_options::value<boost::filesystem::path>(&contractor_config.profile_path)
-            ->default_value("profile.lua"),
-        "Path to LUA routing profile")(
         "threads,t",
         boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
             ->default_value(tbb::task_scheduler_init::default_num_threads()),
@@ -147,17 +143,8 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    if (!boost::filesystem::is_regular_file(contractor_config.profile_path))
-    {
-        util::SimpleLogger().Write(logWARNING)
-            << "Profile " << contractor_config.profile_path.string() << " not found!";
-        return EXIT_FAILURE;
-    }
-
     util::SimpleLogger().Write() << "Input file: "
                                  << contractor_config.osrm_input_path.filename().string();
-    util::SimpleLogger().Write() << "Profile: "
-                                 << contractor_config.profile_path.filename().string();
     util::SimpleLogger().Write() << "Threads: " << contractor_config.requested_num_threads;
 
     tbb::task_scheduler_init init(contractor_config.requested_num_threads);
