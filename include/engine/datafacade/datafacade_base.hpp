@@ -6,7 +6,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "engine/phantom_node.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "util/integer_range.hpp"
 #include "util/exception.hpp"
 #include "util/string_util.hpp"
@@ -72,7 +72,7 @@ template <class EdgeDataT> class BaseDataFacade
     virtual void GetUncompressedGeometry(const unsigned id,
                                          std::vector<unsigned> &result_nodes) const = 0;
 
-    virtual extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
+    virtual guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
 
     virtual extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 

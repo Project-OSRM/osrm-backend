@@ -4,7 +4,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -287,7 +287,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const extractor::TurnInstruction turn_instruction =
+                const guidance::TurnInstruction turn_instruction =
                     facade->GetTurnInstructionForEdgeID(ed.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
@@ -320,7 +320,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
                         unpacked_path.emplace_back(id_vector[i], name_index,
-                                                   extractor::TurnInstruction::NoTurn, 0,
+                                                   guidance::TurnInstruction(guidance::TurnType::NoTurn,guidance::DirectionModifier::Straight), 0,
                                                    travel_mode);
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
@@ -366,11 +366,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(i < id_vector.size());
                 BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
                 unpacked_path.emplace_back(
-                    PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                             extractor::TurnInstruction::NoTurn, 0,
-                             target_traversed_in_reverse
-                                 ? phantom_node_pair.target_phantom.backward_travel_mode
-                                 : phantom_node_pair.target_phantom.forward_travel_mode});
+                    PathData{id_vector[i],
+                             phantom_node_pair.target_phantom.name_id,
+                             guidance::TurnInstruction::NO_TURN(),
+                             0,
+                             phantom_node_pair.target_phantom.forward_travel_mode});
             }
         }
 

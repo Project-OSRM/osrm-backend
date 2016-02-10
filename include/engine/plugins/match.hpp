@@ -6,8 +6,8 @@
 #include "engine/map_matching/bayes_classifier.hpp"
 #include "engine/object_encoder.hpp"
 #include "engine/search_engine.hpp"
-#include "engine/guidance/textual_route_annotation.hpp"
-#include "engine/guidance/segment_list.hpp"
+#include "guidance/textual_route_annotation.hpp"
+#include "guidance/segment_list.hpp"
 #include "engine/api_response_generator.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -212,7 +212,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
             // and mark all segments as necessary within the generation process
             const constexpr bool NO_ROUTE_SIMPLIFICATION = false;
             SegmentList segment_list(raw_route, EXTRACT_ROUTE, route_parameters.zoom_level,
-                                     NO_ROUTE_SIMPLIFICATION, facade);
+                                     NO_ROUTE_SIMPLIFICATION, facade, route_parameters.coordinates);
 
             if (route_parameters.geometry)
             {

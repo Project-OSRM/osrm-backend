@@ -7,8 +7,6 @@
 
 namespace osrm
 {
-namespace engine
-{
 namespace guidance
 {
 
@@ -60,7 +58,6 @@ inline void CombineSimilarSegments(std::vector<SegmentInformation> &segments)
     //
 }
 } // namespace guidance
-} // namespace engine
 } // namespace osrm
 
 #endif // ENGINE_GUIDANCE_PROCESSING_SEGMENT_COMPRESSION_HPP_

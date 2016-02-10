@@ -3,6 +3,7 @@
 
 #include "guidance/segment_list.hpp"
 #include "guidance/textual_route_annotation.hpp"
+#include "guidance/turn_instruction.hpp"
 
 #include "engine/internal_route_result.hpp"
 #include "engine/object_encoder.hpp"
@@ -10,7 +11,6 @@
 #include "engine/polyline_formatter.hpp"
 #include "engine/route_name_extraction.hpp"
 #include "engine/segment_information.hpp"
-#include "extractor/turn_instructions.hpp"
 #include "osrm/coordinate.hpp"
 #include "osrm/json_container.hpp"
 #include "osrm/route_parameters.hpp"
@@ -46,7 +46,7 @@ template <typename DataFacadeT> class ApiResponseGenerator
 {
   public:
     using DataFacade = DataFacadeT;
-    using Segments = guidance::SegmentList<DataFacade>;
+    using Segments = osrm::guidance::SegmentList<DataFacade>;
     using Segment = detail::Segment;
 
     ApiResponseGenerator(DataFacade *facade);
@@ -102,7 +102,7 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
     const constexpr bool EXTRACT_ROUTE = false;
     const constexpr bool EXTRACT_ALTERNATIVE = true;
     Segments segment_list(raw_route, EXTRACT_ROUTE, config.zoom_level, ALLOW_SIMPLIFICATION,
-                          facade);
+                          facade, config.coordinates);
     json_result.values["route_summary"] = SummarizeRoute(raw_route, segment_list);
     json_result.values["via_points"] = ListViaPoints(raw_route);
     json_result.values["via_indices"] = ListViaIndices(segment_list);
@@ -123,7 +123,7 @@ void ApiResponseGenerator<DataFacadeT>::DescribeRoute(const RouteParameters &con
     if (raw_route.has_alternative())
     {
         Segments alternate_segment_list(raw_route, EXTRACT_ALTERNATIVE, config.zoom_level,
-                                        ALLOW_SIMPLIFICATION, facade);
+                                        ALLOW_SIMPLIFICATION, facade, config.coordinates);
 
         // Alternative Route Summaries are stored in an array to (down the line) allow multiple
         // alternatives
@@ -254,8 +254,8 @@ ApiResponseGenerator<DataFacadeT>::BuildRouteSegments(const Segments &segment_li
     for (const auto &segment : segment_list.Get())
     {
         const auto current_turn = segment.turn_instruction;
-        if (extractor::isTurnNecessary(current_turn) &&
-            (extractor::TurnInstruction::EnterRoundAbout != current_turn))
+        if (guidance::isTurnNecessary(current_turn) &&
+            (!guidance::entersRoundabout(current_turn)))
         {
 
             detail::Segment seg = {segment.name_id,
