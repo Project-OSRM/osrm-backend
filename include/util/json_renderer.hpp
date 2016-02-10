@@ -16,7 +16,7 @@ namespace util
 namespace json
 {
 
-struct Renderer : mapbox::util::static_visitor<>
+struct Renderer
 {
     explicit Renderer(std::ostream &_out) : out(_out) {}
 
@@ -72,7 +72,7 @@ struct Renderer : mapbox::util::static_visitor<>
     std::ostream &out;
 };
 
-struct ArrayRenderer : mapbox::util::static_visitor<>
+struct ArrayRenderer
 {
     explicit ArrayRenderer(std::vector<char> &_out) : out(_out) {}
 
