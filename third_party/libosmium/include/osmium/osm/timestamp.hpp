@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <ctime>
 #include <iosfwd>
@@ -177,8 +178,9 @@ namespace osmium {
         }
 
         /**
-         * Return UTC Unix time as string in ISO date/time
-         * ("yyyy-mm-ddThh:mm:ssZ") format.
+         * Return the timestamp as string in ISO date/time
+         * ("yyyy-mm-ddThh:mm:ssZ") format. If the timestamp is invalid, an
+         * empty string will be returned.
          */
         std::string to_iso() const {
             std::string s;
@@ -186,10 +188,15 @@ namespace osmium {
             if (m_timestamp != 0) {
                 struct tm tm;
                 time_t sse = seconds_since_epoch();
+#ifndef NDEBUG
+                auto result =
+#endif
 #ifndef _MSC_VER
-                gmtime_r(&sse, &tm);
+                              gmtime_r(&sse, &tm);
+                assert(result != nullptr);
 #else
-                gmtime_s(&tm, &sse);
+                              gmtime_s(&tm, &sse);
+                assert(result == 0);
 #endif
 
                 s.resize(timestamp_length);

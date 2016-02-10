@@ -24,8 +24,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Cover
 project(libosmium)
 
 set(LIBOSMIUM_VERSION_MAJOR 2)
-set(LIBOSMIUM_VERSION_MINOR 5)
-set(LIBOSMIUM_VERSION_PATCH 4)
+set(LIBOSMIUM_VERSION_MINOR 6)
+set(LIBOSMIUM_VERSION_PATCH 0)
 
 set(LIBOSMIUM_VERSION
     "${LIBOSMIUM_VERSION_MAJOR}.${LIBOSMIUM_VERSION_MINOR}.${LIBOSMIUM_VERSION_PATCH}")
@@ -459,7 +459,7 @@ endif()
 install(DIRECTORY include/osmium DESTINATION include)
 
 if(INSTALL_GDALCPP)
-    install(include/gdalcpp.hpp DESTINATION include)
+    install(FILES include/gdalcpp.hpp DESTINATION include)
 endif()
 
 if(INSTALL_PROTOZERO)
@@ -467,7 +467,7 @@ if(INSTALL_PROTOZERO)
 endif()
 
 if(INSTALL_UTFCPP)
-    install(include/utf8.hpp DESTINATION include)
+    install(FILES include/utf8.h DESTINATION include)
     install(DIRECTORY include/utf8 DESTINATION include)
 endif()
 

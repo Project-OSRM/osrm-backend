@@ -13,6 +13,32 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 
+## [2.6.0] - 2016-02-04
+
+### Added
+
+- The new handler osmium::handler::CheckOrder can be used to check that a
+  file is properly ordered.
+- Add new method to build OSM nodes, ways, relations, changesets, and areas
+  in buffers that wraps the older Builder classes. The new code is much easier
+  to use and very flexible. There is no documentation yet, but the tests in
+  `test/t/builder/test_attr.cpp` can give you an idea how it works.
+- Add util class to get memory usage of current process on Linux.
+
+### Changed
+
+- New Buffer memory management speeds up Buffer use, because it doesn't clear
+  the memory unnecessarily.
+
+### Fixed
+
+- osmium::Box::extend() function now ignores invalid locations.
+- Install of external library headers.
+- Check way has at least one node before calling `is_closed()` in area
+  assembler.
+- Declaration/definition of some friend functions was in the wrong namespace.
+
+
 ## [2.5.4] - 2015-12-03
 
 ### Changed
@@ -234,7 +260,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.5.4...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/osmcode/libosmium/compare/v2.5.4...v2.6.0
 [2.5.4]: https://github.com/osmcode/libosmium/compare/v2.5.3...v2.5.4
 [2.5.3]: https://github.com/osmcode/libosmium/compare/v2.5.2...v2.5.3
 [2.5.2]: https://github.com/osmcode/libosmium/compare/v2.5.1...v2.5.2
