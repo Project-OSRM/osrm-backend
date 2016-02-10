@@ -76,6 +76,10 @@ def verify_existance_of_binaries
     unless File.exists? "#{BIN_PATH}/#{bin}#{EXE}"
       raise "*** #{BIN_PATH}/#{bin}#{EXE} is missing. Build failed?"
     end
+    unless system "#{BIN_PATH}/#{bin}#{EXE} --help"
+      log "*** Exited with code #{$?.exitstatus}.", :preprocess
+      raise "*** #{BIN_PATH}/#{bin}#{EXE} --help exited with code #{$?.exitstatus}."
+    end
   end
 end
 
