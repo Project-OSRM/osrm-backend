@@ -4,6 +4,7 @@
 #include "contractor/contractor_config.hpp"
 #include "extractor/query_node.hpp"
 #include "osrm/coordinate.hpp"
+#include <boost/filesystem/fstream.hpp>
 
 #ifndef DEBUG_GEOMETRY
 
@@ -69,6 +70,8 @@ boost::filesystem::ofstream dg_debug_turns_file;
 bool dg_output_turn_debug = false;
 bool dg_first_turn_debug = true;
 
+std::unordered_map<OSMNodeID, util::FixedPointCoordinate> node_lookup_map;
+
 inline void DEBUG_GEOMETRY_START(const contractor::ContractorConfig &config)
 {
     time_t raw_time;
@@ -77,12 +80,28 @@ inline void DEBUG_GEOMETRY_START(const contractor::ContractorConfig &config)
     timeinfo = localtime(&raw_time);
     strftime(dg_time_buffer, 80, "%Y-%m-%d %H:%M %Z", timeinfo);
 
+    boost::filesystem::ifstream nodes_input_stream{config.node_based_graph_path,
+                                                   std::ios_base::in | std::ios_base::binary};
+
+    extractor::QueryNode current_node;
+    unsigned number_of_coordinates = 0;
+    nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
+
+    for (unsigned i = 0; i < number_of_coordinates; ++i)
+    {
+        nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
+        node_lookup_map[current_node.node_id] =
+            util::FixedPointCoordinate(current_node.lat, current_node.lon);
+    }
+    nodes_input_stream.close();
+
     dg_output_debug_geometry = config.debug_geometry_path != "";
 
     if (dg_output_debug_geometry)
     {
         debug_geometry_file.open(config.debug_geometry_path, std::ios::binary);
         debug_geometry_file << "{\"type\":\"FeatureCollection\", \"features\":[" << std::endl;
+        debug_geometry_file << std::setprecision(10);
     }
 }
 
@@ -96,15 +115,21 @@ inline void DEBUG_GEOMETRY_EDGE(int new_segment_weight,
         if (!dg_first_debug_geometry)
             debug_geometry_file << "," << std::endl;
         debug_geometry_file << "{ \"type\":\"Feature\",\"properties\":{\"original\":false, "
-                               "\"weight\":" << new_segment_weight / 10.0 << ",\"speed\":"
-                            << static_cast<int>(std::floor((segment_length / new_segment_weight) *
-                                                           10. * 3.6)) << ",";
+                               "\"weight\":"
+                            << new_segment_weight / 10.0 << ",\"speed\":"
+                            << static_cast<int>(
+                                   std::floor((segment_length / new_segment_weight) * 10. * 3.6))
+                            << ",";
         debug_geometry_file << "\"from_node\": " << previous_osm_node_id
                             << ", \"to_node\": " << this_osm_node_id << ",";
         debug_geometry_file << "\"timestamp\": \"" << dg_time_buffer << "\"},";
-        debug_geometry_file << "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[!!"
-                            << previous_osm_node_id << "!!],[!!" << this_osm_node_id << "!!]]}}"
-                            << std::endl;
+        debug_geometry_file
+            << "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[["
+            << node_lookup_map[previous_osm_node_id].lon / osrm::COORDINATE_PRECISION << ","
+            << node_lookup_map[previous_osm_node_id].lat / osrm::COORDINATE_PRECISION << "],["
+            << node_lookup_map[this_osm_node_id].lon / osrm::COORDINATE_PRECISION << ","
+            << node_lookup_map[this_osm_node_id].lat / osrm::COORDINATE_PRECISION << "]]}}"
+            << std::endl;
         dg_first_debug_geometry = false;
     }
 }
