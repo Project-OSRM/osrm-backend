@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -100,15 +100,15 @@ namespace osmium {
 
         /**
          * Extend this bounding box by the specified location. If the
-         * location is undefined, the bounding box is unchanged. If
-         * the box is undefined it will only contain the location after
+         * location is invalid, the bounding box is unchanged. If the
+         * box is undefined it will only contain the new location after
          * this call.
          *
          * @param location The location we want to extend the box by.
          * @returns A reference to this box.
          */
         Box& extend(const Location& location) noexcept {
-            if (location) {
+            if (location.valid()) {
                 if (m_bottom_left) {
                     if (location.x() < m_bottom_left.x()) {
                         m_bottom_left.set_x(location.x());
@@ -147,7 +147,7 @@ namespace osmium {
          * Box is defined, ie. contains defined locations.
          */
         explicit constexpr operator bool() const noexcept {
-            return static_cast<bool>(m_bottom_left);
+            return bool(m_bottom_left) && bool(m_top_right);
         }
 
         /**
@@ -202,6 +202,9 @@ namespace osmium {
 
         /**
          * Calculate size of the box in square degrees.
+         *
+         * Note that this measure isn't very useful if you want to know the
+         * real-world size of the bounding box!
          *
          * @throws osmium::invalid_location unless all coordinates are valid.
          */
