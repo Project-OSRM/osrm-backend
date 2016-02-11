@@ -258,7 +258,7 @@ def extract_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Extracting #{osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-extract #{osm_file}.osm #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-extract #{osm_file}.osm #{@extract_args} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
@@ -277,7 +277,7 @@ def prepare_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Preparing #{extracted_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-prepare #{extracted_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-prepare #{extracted_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
     end

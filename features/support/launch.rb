@@ -92,7 +92,7 @@ class OSRMLoader
 
     def osrm_up
       return if @@pid
-      @@pid = Process.spawn("#{BIN_PATH}/osrm-routed #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+      @@pid = Process.spawn("#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-routed #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
       Process.detach(@@pid)    # avoid zombie processes
     end
 
@@ -118,7 +118,7 @@ class OSRMLoader
 
     def osrm_up
       return if osrm_up?
-      @@pid = Process.spawn("#{BIN_PATH}/osrm-routed --shared-memory=1 --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+      @@pid = Process.spawn("#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-routed --shared-memory=1 --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
       Process.detach(@@pid)    # avoid zombie processes
     end
   end

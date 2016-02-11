@@ -23,6 +23,15 @@ SHUTDOWN_TIMEOUT = 10
 DEFAULT_LOAD_METHOD = 'datastore'
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
+# OS X shim to ensure shared libraries from custom locations can be loaded
+# This is needed in OS X >= 10.11 because DYLD_LIBRARY_PATH is blocked
+# https://forums.developer.apple.com/thread/9233
+if ENV['OSRM_SHARED_LIBRARY_PATH']
+  LOAD_LIBRARIES="DYLD_LIBRARY_PATH=#{ENV['OSRM_SHARED_LIBRARY_PATH']} "
+else
+  LOAD_LIBRARIES=""
+end
+
 if ENV['OS']=~/Windows.*/ then
   TERMSIGNAL=9
 else
@@ -76,9 +85,9 @@ def verify_existance_of_binaries
     unless File.exists? "#{BIN_PATH}/#{bin}#{EXE}"
       raise "*** #{BIN_PATH}/#{bin}#{EXE} is missing. Build failed?"
     end
-    unless system "#{BIN_PATH}/#{bin}#{EXE} --help"
+    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/#{bin}#{EXE} --help > /dev/null 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
-      raise "*** #{BIN_PATH}/#{bin}#{EXE} --help exited with code #{$?.exitstatus}."
+      raise "*** #{LOAD_LIBRARIES}#{BIN_PATH}/#{bin}#{EXE} --help exited with code #{$?.exitstatus}."
     end
   end
 end
