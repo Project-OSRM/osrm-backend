@@ -5,7 +5,7 @@
 
 #include "util/coordinate_calculation.hpp"
 #include "engine/map_matching/hidden_markov_model.hpp"
-#include "util/json/logger.hpp"
+#include "util/json_logger.hpp"
 #include "util/matching_debug_info.hpp"
 
 #include <cstddef>

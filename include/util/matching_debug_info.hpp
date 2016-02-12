@@ -1,8 +1,8 @@
 #ifndef MATCHING_DEBUG_INFO_HPP
 #define MATCHING_DEBUG_INFO_HPP
 
-#include "util/json/logger.hpp"
-#include "util/json/util.hpp"
+#include "util/json_logger.hpp"
+#include "util/json_util.hpp"
 #include "engine/map_matching/hidden_markov_model.hpp"
 
 #include "osrm/coordinate.hpp"

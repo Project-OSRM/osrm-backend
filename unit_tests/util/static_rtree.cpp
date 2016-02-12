@@ -3,6 +3,7 @@
 #include "util/static_rtree.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/edge_based_node.hpp"
+#include "util/floating_point.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
