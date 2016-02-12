@@ -49,24 +49,30 @@ struct EngineConfig;
 namespace api
 {
 struct RouteParameters;
+struct TableParameters;
 }
 }
 
 using engine::EngineConfig;
 using engine::api::RouteParameters;
+using engine::api::TableParameters;
 namespace json = util::json;
 
 class OSRM
 {
+  public:
+    explicit OSRM(EngineConfig &config);
+    ~OSRM();
+
+    OSRM(OSRM &&) noexcept;
+    OSRM &operator=(OSRM &&) noexcept;
+
+    Status Route(const RouteParameters &parameters, json::Object &result);
+    Status Table(const TableParameters &parameters, json::Object &result);
+
   private:
     std::unique_ptr<engine::Engine> engine_;
-
-  public:
-    OSRM(EngineConfig &lib_config);
-    ~OSRM(); // needed for unique_ptr + impl abstraction
-    Status Route(const RouteParameters &route_parameters, json::Object &json_result);
 };
-
 }
 
 #endif // OSRM_HPP
