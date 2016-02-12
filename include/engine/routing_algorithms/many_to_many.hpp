@@ -44,8 +44,6 @@ class ManyToManyRouting final
     {
     }
 
-    ~ManyToManyRouting() {}
-
     std::shared_ptr<std::vector<EdgeWeight>>
     operator()(const std::vector<PhantomNode> &phantom_sources_array,
                const std::vector<PhantomNode> &phantom_targets_array) const
