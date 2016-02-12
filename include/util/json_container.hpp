@@ -33,9 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <variant/variant.hpp>
 
-#include <iostream>
 #include <vector>
 #include <string>
+#include <utility>
 #include <unordered_map>
 
 namespace osrm
@@ -52,16 +52,16 @@ struct Array;
 
 struct String
 {
-    String() {}
-    String(const char *value) : value(value) {}
-    String(std::string value) : value(std::move(value)) {}
+    String() = default;
+    String(const char *value_) : value{value_} {}
+    String(std::string value_) : value{std::move(value_)} {}
     std::string value;
 };
 
 struct Number
 {
-    Number() {}
-    Number(double value) : value(static_cast<double>(value)) {}
+    Number() = default;
+    Number(double value_) : value{value_} {}
     double value;
 };
 
