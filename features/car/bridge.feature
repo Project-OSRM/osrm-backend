@@ -4,7 +4,7 @@ Feature: Car - Handle movable bridge
     Background:
         Given the profile "car"
 
-    Scenario: Car - Use a ferry route
+    Scenario: Car - Use a movable bridge
         Given the node map
             | a | b | c |   |   |
             |   |   | d |   |   |
@@ -18,30 +18,29 @@ Feature: Car - Handle movable bridge
 
         When I route I should get
             | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,3,1 |
-            | b    | f  | abc,cde,efg | 1,3,1 |
-            | e    | c  | cde         | 3     |
-            | e    | b  | cde,abc     | 3,1   |
-            | e    | a  | cde,abc     | 3,1   |
-            | c    | e  | cde         | 3     |
-            | c    | f  | cde,efg     | 3,1   |
-            | c    | g  | cde,efg     | 3,1   |
+            | a    | g  | abc,cde,efg | 2,7,2 |
+            | b    | f  | abc,cde,efg | 2,7,2 |
+            | e    | c  | cde         | 7     |
+            | e    | b  | cde,abc     | 7,2   |
+            | e    | a  | cde,abc     | 7,2   |
+            | c    | e  | cde         | 7     |
+            | c    | f  | cde,efg     | 7,2   |
+            | c    | g  | cde,efg     | 7,2   |
 
-    Scenario: Car - Properly handle durations
+    Scenario: Car - Duration on movable bridges
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            | a | b |
+            | c | d |
+            | e | f |
 
         And the ways
-            | nodes | highway | bridge  | duration |
-            | abc   | primary |         |          |
-            | cde   |         | movable | 00:05:00 |
-            | efg   | primary |         |          |
+            | nodes | bridge  | duration   |
+            | ab    | movable | PT1H01M1S  |
+            | cd    | movable | 01:01:01   | 
+            | ef    | movable | PT01:01:01 |
 
         When I route I should get
-            | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,3,1 | 7 km/h |
-            | b    | f  | abc,cde,efg | 1,3,1 | 5 km/h |
-            | c    | e  | cde         | 3     | 2 km/h |
-            | e    | c  | cde         | 3     | 2 km/h |
+            | from | to | route | time  |
+            | a    | b  | ab    | 3661s |
+            | c    | d  | cd    | 3661s |
+            | e    | f  | ef    | 3661s |

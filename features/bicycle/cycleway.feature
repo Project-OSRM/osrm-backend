@@ -7,75 +7,75 @@ Feature: Bike - Cycle tracks/lanes
 
     Scenario: Bike - Cycle tracks/lanes should enable biking
         Then routability should be
-            | highway     | cycleway     | forw | backw |
-            | motorway    |              |      |       |
-            | motorway    | track        | x    |       |
-            | motorway    | lane         | x    |       |
-            | motorway    | shared       | x    |       |
-            | motorway    | share_busway | x    |       |
-            | motorway    | sharrow      | x    |       |
-            | some_tag    | track        | x    | x     |
-            | some_tag    | lane         | x    | x     |
-            | some_tag    | shared       | x    | x     |
-            | some_tag    | share_busway | x    | x     |
-            | some_tag    | sharrow      | x    | x     |
-            | residential | track        | x    | x     |
-            | residential | lane         | x    | x     |
-            | residential | shared       | x    | x     |
-            | residential | share_busway | x    | x     |
-            | residential | sharrow      | x    | x     |
+            | highway     | foot | cycleway     | forw | backw |
+            | motorway    | no   |              |      |       |
+            | motorway    | no   | track        | x    |       |
+            | motorway    | no   | lane         | x    |       |
+            | motorway    | no   | shared       | x    |       |
+            | motorway    | no   | share_busway | x    |       |
+            | motorway    | no   | sharrow      | x    |       |
+            | some_tag    | no   | track        | x    | x     |
+            | some_tag    | no   | lane         | x    | x     |
+            | some_tag    | no   | shared       | x    | x     |
+            | some_tag    | no   | share_busway | x    | x     |
+            | some_tag    | no   | sharrow      | x    | x     |
+            | residential | no   | track        | x    | x     |
+            | residential | no   | lane         | x    | x     |
+            | residential | no   | shared       | x    | x     |
+            | residential | no   | share_busway | x    | x     |
+            | residential | no   | sharrow      | x    | x     |
 
     Scenario: Bike - Left/right side cycleways on implied bidirectionals
         Then routability should be
-            | highway | cycleway | cycleway:left | cycleway:right | forw | backw |
-            | primary |          |               |                | x    | x     |
-            | primary | track    |               |                | x    | x     |
-            | primary | opposite |               |                | x    | x     |
-            | primary |          | track         |                | x    | x     |
-            | primary |          | opposite      |                | x    | x     |
-            | primary |          |               | track          | x    | x     |
-            | primary |          |               | opposite       | x    | x     |
-            | primary |          | track         | track          | x    | x     |
-            | primary |          | opposite      | opposite       | x    | x     |
-            | primary |          | track         | opposite       | x    | x     |
-            | primary |          | opposite      | track          | x    | x     |
+            | highway | foot | cycleway | cycleway:left | cycleway:right | forw | backw |
+            | primary | no   |          |               |                | x    | x     |
+            | primary | no   | track    |               |                | x    | x     |
+            | primary | no   | opposite |               |                | x    | x     |
+            | primary | no   |          | track         |                | x    | x     |
+            | primary | no   |          | opposite      |                | x    | x     |
+            | primary | no   |          |               | track          | x    | x     |
+            | primary | no   |          |               | opposite       | x    | x     |
+            | primary | no   |          | track         | track          | x    | x     |
+            | primary | no   |          | opposite      | opposite       | x    | x     |
+            | primary | no   |          | track         | opposite       | x    | x     |
+            | primary | no   |          | opposite      | track          | x    | x     |
 
     Scenario: Bike - Left/right side cycleways on implied oneways
         Then routability should be
-            | highway  | cycleway | cycleway:left | cycleway:right | forw | backw |
-            | primary  |          |               |                | x    | x     |
-            | motorway |          |               |                |      |       |
-            | motorway | track    |               |                | x    |       |
-            | motorway | opposite |               |                |      | x     |
-            | motorway |          | track         |                |      | x     |
-            | motorway |          | opposite      |                |      | x     |
-            | motorway |          |               | track          | x    |       |
-            | motorway |          |               | opposite       | x    |       |
-            | motorway |          | track         | track          | x    | x     |
-            | motorway |          | opposite      | opposite       | x    | x     |
-            | motorway |          | track         | opposite       | x    | x     |
-            | motorway |          | opposite      | track          | x    | x     |
+            | highway  | foot |cycleway | cycleway:left | cycleway:right | forw | backw |
+            | primary  | no   |         |               |                | x    | x     |
+            | motorway | no   |         |               |                |      |       |
+            | motorway | no   |track    |               |                | x    |       |
+            | motorway | no   |opposite |               |                |      | x     |
+            | motorway | no   |         | track         |                |      | x     |
+            | motorway | no   |         | opposite      |                |      | x     |
+            | motorway | no   |         |               | track          | x    |       |
+            | motorway | no   |         |               | opposite       | x    |       |
+            | motorway | no   |         | track         | track          | x    | x     |
+            | motorway | no   |         | opposite      | opposite       | x    | x     |
+            | motorway | no   |         | track         | opposite       | x    | x     |
+            | motorway | no   |         | opposite      | track          | x    | x     |
 
     Scenario: Bike - Invalid cycleway tags
         Then routability should be
-            | highway  | cycleway   | bothw |
-            | primary  |            | x     |
-            | primary  | yes        | x     |
-            | primary  | no         | x     |
-            | primary  | some_track | x     |
-            | motorway |            |       |
-            | motorway | yes        |       |
-            | motorway | no         |       |
-            | motorway | some_track |       |
+            | highway  | foot | cycleway   | bothw |
+            | primary  | no   |            | x     |
+            | primary  | no   | yes        | x     |
+            | primary  | no   | no         | x     |
+            | primary  | no   | some_track | x     |
+            | motorway | no   |            |       |
+            | motorway | no   | yes        |       |
+            | motorway | no   | no         |       |
+            | motorway | no   | some_track |       |
 
     Scenario: Bike - Access tags should overwrite cycleway access
         Then routability should be
-            | highway     | cycleway | access | forw | backw |
-            | motorway    | track    | no     |      |       |
-            | residential | track    | no     |      |       |
-            | footway     | track    | no     |      |       |
-            | cycleway    | track    | no     |      |       |
-            | motorway    | lane     | yes    | x    |       |
-            | residential | lane     | yes    | x    | x     |
-            | footway     | lane     | yes    | x    | x     |
-            | cycleway    | lane     | yes    | x    | x     |
+            | highway     | foot | cycleway | access | forw | backw |
+            | motorway    | no   | track    | no     |      |       |
+            | residential | no   | track    | no     |      |       |
+            | footway     | no   | track    | no     |      |       |
+            | cycleway    | no   | track    | no     |      |       |
+            | motorway    | no   | lane     | yes    | x    |       |
+            | residential | no   | lane     | yes    | x    | x     |
+            | footway     | no   | lane     | yes    | x    | x     |
+            | cycleway    | no   | lane     | yes    | x    | x     |

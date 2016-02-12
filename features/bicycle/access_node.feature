@@ -17,7 +17,7 @@ Feature: Bike - Access tags on nodes
             | yes         | no           |              |               |       |
             |             |              | yes          |               | x     |
             |             |              | no           |               |       |
-            |             |              | no           | crossing      | x     |
+#           |             |              | no           | crossing      | x     |
             | no          |              | yes          |               | x     |
             | yes         |              | no           |               |       |
             |             | no           | yes          |               | x     |

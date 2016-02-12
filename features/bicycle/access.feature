@@ -7,167 +7,167 @@ Feature: Bike - Access tags on ways
 
     Scenario: Bike - Access tag hierachy on ways
         Then routability should be
-            | highway | access | vehicle | bicycle | bothw |
-            |         |        |         |         | x     |
-            |         | yes    |         |         | x     |
-            |         | no     |         |         |       |
-            |         |        | yes     |         | x     |
-            |         |        | no      |         |       |
-            |         | no     | yes     |         | x     |
-            |         | yes    | no      |         |       |
-            |         |        |         | yes     | x     |
-            |         |        |         | no      |       |
-            |         | no     |         | yes     | x     |
-            |         | yes    |         | no      |       |
-            |         |        | no      | yes     | x     |
-            |         |        | yes     | no      |       |
-            | runway  |        |         |         |       |
-            | runway  | yes    |         |         | x     |
-            | runway  | no     |         |         |       |
-            | runway  |        | yes     |         | x     |
-            | runway  |        | no      |         |       |
-            | runway  | no     | yes     |         | x     |
-            | runway  | yes    | no      |         |       |
-            | runway  |        |         | yes     | x     |
-            | runway  |        |         | no      |       |
-            | runway  | no     |         | yes     | x     |
-            | runway  | yes    |         | no      |       |
-            | runway  |        | no      | yes     | x     |
-            | runway  |        | yes     | no      |       |
+            | highway | foot | access | vehicle | bicycle | bothw |
+            |         | no   |        |         |         | x     |
+            |         | no   | yes    |         |         | x     |
+            |         | no   | no     |         |         |       |
+            |         | no   |        | yes     |         | x     |
+            |         | no   |        | no      |         |       |
+            |         | no   | no     | yes     |         | x     |
+            |         | no   | yes    | no      |         |       |
+            |         | no   |        |         | yes     | x     |
+            |         | no   |        |         | no      |       |
+            |         | no   | no     |         | yes     | x     |
+            |         | no   | yes    |         | no      |       |
+            |         | no   |        | no      | yes     | x     |
+            |         | no   |        | yes     | no      |       |
+            | runway  | no   |        |         |         |       |
+            | runway  | no   | yes    |         |         | x     |
+            | runway  | no   | no     |         |         |       |
+            | runway  | no   |        | yes     |         | x     |
+            | runway  | no   |        | no      |         |       |
+            | runway  | no   | no     | yes     |         | x     |
+            | runway  | no   | yes    | no      |         |       |
+            | runway  | no   |        |         | yes     | x     |
+            | runway  | no   |        |         | no      |       |
+            | runway  | no   | no     |         | yes     | x     |
+            | runway  | no   | yes    |         | no      |       |
+            | runway  | no   |        | no      | yes     | x     |
+            | runway  | no   |        | yes     | no      |       |
 
     @todo
     Scenario: Bike - Access tag in forward direction
         Then routability should be
-            | highway | access:forward | vehicle:forward | bicycle:forward | forw | backw |
-            |         |                |                 |                 | x    |       |
-            |         | yes            |                 |                 | x    |       |
-            |         | no             |                 |                 |      |       |
-            |         |                | yes             |                 | x    |       |
-            |         |                | no              |                 |      |       |
-            |         | no             | yes             |                 | x    |       |
-            |         | yes            | no              |                 |      |       |
-            |         |                |                 | yes             | x    |       |
-            |         |                |                 | no              |      |       |
-            |         | no             |                 | yes             | x    |       |
-            |         | yes            |                 | no              |      |       |
-            |         |                | no              | yes             | x    |       |
-            |         |                | yes             | no              |      |       |
-            | runway  |                |                 |                 | x    |       |
-            | runway  | yes            |                 |                 | x    |       |
-            | runway  | no             |                 |                 |      |       |
-            | runway  |                | yes             |                 | x    |       |
-            | runway  |                | no              |                 |      |       |
-            | runway  | no             | yes             |                 | x    |       |
-            | runway  | yes            | no              |                 |      |       |
-            | runway  |                |                 | yes             | x    |       |
-            | runway  |                |                 | no              |      |       |
-            | runway  | no             |                 | yes             | x    |       |
-            | runway  | yes            |                 | no              |      |       |
-            | runway  |                | no              | yes             | x    |       |
-            | runway  |                | yes             | no              |      |       |
+            | highway | foot | access:forward | vehicle:forward | bicycle:forward | forw | backw |
+            |         | no   |                |                 |                 | x    |       |
+            |         | no   | yes            |                 |                 | x    |       |
+            |         | no   | no             |                 |                 |      |       |
+            |         | no   |                | yes             |                 | x    |       |
+            |         | no   |                | no              |                 |      |       |
+            |         | no   | no             | yes             |                 | x    |       |
+            |         | no   | yes            | no              |                 |      |       |
+            |         | no   |                |                 | yes             | x    |       |
+            |         | no   |                |                 | no              |      |       |
+            |         | no   | no             |                 | yes             | x    |       |
+            |         | no   | yes            |                 | no              |      |       |
+            |         | no   |                | no              | yes             | x    |       |
+            |         | no   |                | yes             | no              |      |       |
+            | runway  | no   |                |                 |                 | x    |       |
+            | runway  | no   | yes            |                 |                 | x    |       |
+            | runway  | no   | no             |                 |                 |      |       |
+            | runway  | no   |                | yes             |                 | x    |       |
+            | runway  | no   |                | no              |                 |      |       |
+            | runway  | no   | no             | yes             |                 | x    |       |
+            | runway  | no   | yes            | no              |                 |      |       |
+            | runway  | no   |                |                 | yes             | x    |       |
+            | runway  | no   |                |                 | no              |      |       |
+            | runway  | no   | no             |                 | yes             | x    |       |
+            | runway  | no   | yes            |                 | no              |      |       |
+            | runway  | no   |                | no              | yes             | x    |       |
+            | runway  | no   |                | yes             | no              |      |       |
 
     @todo
     Scenario: Bike - Access tag in backward direction
         Then routability should be
-            | highway | access:forward | vehicle:forward | bicycle:forward | forw | backw |
-            |         |                |                 |                 |      | x     |
-            |         | yes            |                 |                 |      | x     |
-            |         | no             |                 |                 |      |       |
-            |         |                | yes             |                 |      | x     |
-            |         |                | no              |                 |      |       |
-            |         | no             | yes             |                 |      | x     |
-            |         | yes            | no              |                 |      |       |
-            |         |                |                 | yes             |      | x     |
-            |         |                |                 | no              |      |       |
-            |         | no             |                 | yes             |      | x     |
-            |         | yes            |                 | no              |      |       |
-            |         |                | no              | yes             |      | x     |
-            |         |                | yes             | no              |      |       |
-            | runway  |                |                 |                 |      | x     |
-            | runway  | yes            |                 |                 |      | x     |
-            | runway  | no             |                 |                 |      |       |
-            | runway  |                | yes             |                 |      | x     |
-            | runway  |                | no              |                 |      |       |
-            | runway  | no             | yes             |                 |      | x     |
-            | runway  | yes            | no              |                 |      |       |
-            | runway  |                |                 | yes             |      | x     |
-            | runway  |                |                 | no              |      |       |
-            | runway  | no             |                 | yes             |      | x     |
-            | runway  | yes            |                 | no              |      |       |
-            | runway  |                | no              | yes             |      | x     |
-            | runway  |                | yes             | no              |      |       |
+            | highway | foot  | access:forward | vehicle:forward | bicycle:forward | forw | backw |
+            |         | no    |                |                 |                 |      | x     |
+            |         | no    | yes            |                 |                 |      | x     |
+            |         | no    | no             |                 |                 |      |       |
+            |         | no    |                | yes             |                 |      | x     |
+            |         | no    |                | no              |                 |      |       |
+            |         | no    | no             | yes             |                 |      | x     |
+            |         | no    | yes            | no              |                 |      |       |
+            |         | no    |                |                 | yes             |      | x     |
+            |         | no    |                |                 | no              |      |       |
+            |         | no    | no             |                 | yes             |      | x     |
+            |         | no    | yes            |                 | no              |      |       |
+            |         | no    |                | no              | yes             |      | x     |
+            |         | no    |                | yes             | no              |      |       |
+            | runway  | no    |                |                 |                 |      | x     |
+            | runway  | no    | yes            |                 |                 |      | x     |
+            | runway  | no    | no             |                 |                 |      |       |
+            | runway  | no    |                | yes             |                 |      | x     |
+            | runway  | no    |                | no              |                 |      |       |
+            | runway  | no    | no             | yes             |                 |      | x     |
+            | runway  | no    | yes            | no              |                 |      |       |
+            | runway  | no    |                |                 | yes             |      | x     |
+            | runway  | no    |                |                 | no              |      |       |
+            | runway  | no    | no             |                 | yes             |      | x     |
+            | runway  | no    | yes            |                 | no              |      |       |
+            | runway  | no    |                | no              | yes             |      | x     |
+            | runway  | no    |                | yes             | no              |      |       |
 
     Scenario: Bike - Overwriting implied acccess on ways
         Then routability should be
-            | highway  | access | vehicle | bicycle | bothw |
-            | cycleway |        |         |         | x     |
-            | runway   |        |         |         |       |
-            | cycleway | no     |         |         |       |
-            | cycleway |        | no      |         |       |
-            | cycleway |        |         | no      |       |
-            | runway   | yes    |         |         | x     |
-            | runway   |        | yes     |         | x     |
-            | runway   |        |         | yes     | x     |
+            | highway  | foot | access | vehicle | bicycle | bothw |
+            | cycleway | no   |        |         |         | x     |
+            | runway   | no   |        |         |         |       |
+            | cycleway | no   | no     |         |         |       |
+            | cycleway | no   |        | no      |         |       |
+            | cycleway | no   |        |         | no      |       |
+            | runway   | no   | yes    |         |         | x     |
+            | runway   | no   |        | yes     |         | x     |
+            | runway   | no   |        |         | yes     | x     |
 
     Scenario: Bike - Access tags on ways
         Then routability should be
-            | access       | vehicle      | bicycle      | bothw |
-            |              |              |              | x     |
-            | yes          |              |              | x     |
-            | permissive   |              |              | x     |
-            | designated   |              |              | x     |
-            | some_tag     |              |              | x     |
-            | no           |              |              |       |
-            | private      |              |              |       |
-            | agricultural |              |              |       |
-            | forestry     |              |              |       |
-            |              | yes          |              | x     |
-            |              | permissive   |              | x     |
-            |              | designated   |              | x     |
-            |              | some_tag     |              | x     |
-            |              | no           |              |       |
-            |              | private      |              |       |
-            |              | agricultural |              |       |
-            |              | forestry     |              |       |
-            |              |              | yes          | x     |
-            |              |              | permissive   | x     |
-            |              |              | designated   | x     |
-            |              |              | some_tag     | x     |
-            |              |              | no           |       |
-            |              |              | private      |       |
-            |              |              | agricultural |       |
-            |              |              | forestry     |       |
+            | foot | access       | vehicle      | bicycle      | bothw |
+            | no   |              |              |              | x     |
+            | no   | yes          |              |              | x     |
+            | no   | permissive   |              |              | x     |
+            | no   | designated   |              |              | x     |
+            | no   | some_tag     |              |              | x     |
+            | no   | no           |              |              |       |
+            | no   | private      |              |              |       |
+            | no   | agricultural |              |              |       |
+            | no   | forestry     |              |              |       |
+            | no   |              | yes          |              | x     |
+            | no   |              | permissive   |              | x     |
+            | no   |              | designated   |              | x     |
+            | no   |              | some_tag     |              | x     |
+            | no   |              | no           |              |       |
+            | no   |              | private      |              |       |
+            | no   |              | agricultural |              |       |
+            | no   |              | forestry     |              |       |
+            | no   |              |              | yes          | x     |
+            | no   |              |              | permissive   | x     |
+            | no   |              |              | designated   | x     |
+            | no   |              |              | some_tag     | x     |
+            | no   |              |              | no           |       |
+            | no   |              |              | private      |       |
+            | no   |              |              | agricultural |       |
+            | no   |              |              | forestry     |       |
 
     Scenario: Bike - Access tags on both node and way
         Then routability should be
-            | access   | node/access | bothw |
-            | yes      | yes         | x     |
-            | yes      | no          |       |
-            | yes      | some_tag    | x     |
-            | no       | yes         |       |
-            | no       | no          |       |
-            | no       | some_tag    |       |
-            | some_tag | yes         | x     |
-            | some_tag | no          |       |
-            | some_tag | some_tag    | x     |
+            | foot | access   | node/access | bothw |
+            | no   | yes      | yes         | x     |
+            | no   | yes      | no          |       |
+            | no   | yes      | some_tag    | x     |
+            | no   | no       | yes         |       |
+            | no   | no       | no          |       |
+            | no   | no       | some_tag    |       |
+            | no   | some_tag | yes         | x     |
+            | no   | some_tag | no          |       |
+            | no   | some_tag | some_tag    | x     |
 
     Scenario: Bike - Access combinations
         Then routability should be
-            | highway     | access     | vehicle    | bicycle    | forw | backw |
-            | runway      | private    |            | yes        | x    | x     |
-            | footway     |            | no         | permissive | x    | x     |
-            | motorway    |            |            | yes        | x    |       |
-            | track       | forestry   |            | permissive | x    | x     |
-            | cycleway    | yes        | designated | no         |      |       |
-            | primary     |            | yes        | private    |      |       |
-            | residential | permissive |            | no         |      |       |
+            | highway     | foot | access     | vehicle    | bicycle    | forw | backw |
+            | runway      | no   | private    |            | yes        | x    | x     |
+            | footway     | no   |            | no         | permissive | x    | x     |
+            | motorway    | no   |            |            | yes        | x    |       |
+            | track       | no   | forestry   |            | permissive | x    | x     |
+            | cycleway    | no   | yes        | designated | no         |      |       |
+            | primary     | no   |            | yes        | private    |      |       |
+            | residential | no   | permissive |            | no         |      |       |
 
     Scenario: Bike - Ignore access tags for other modes
         Then routability should be
-            | highway  | boat | motor_vehicle | moped | bothw |
-            | river    | yes  |               |       |       |
-            | cycleway | no   |               |       | x     |
-            | runway   |      | yes           |       |       |
-            | cycleway |      | no            |       | x     |
-            | runway   |      |               | yes   |       |
-            | cycleway |      |               | no    | x     |
+            | highway  | foot | boat | motor_vehicle | moped | bothw |
+            | river    | no   | yes  |               |       |       |
+            | cycleway | no   | no   |               |       | x     |
+            | runway   | no   |      | yes           |       |       |
+            | cycleway | no   |      | no            |       | x     |
+            | runway   | no   |      |               | yes   |       |
+            | cycleway | no   |      |               | no    | x     |

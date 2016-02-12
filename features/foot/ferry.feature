@@ -18,14 +18,14 @@ Feature: Foot - Handle ferry routes
 
         When I route I should get
             | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,2,1 |
-            | b    | f  | abc,cde,efg | 1,2,1 |
-            | e    | c  | cde         | 2     |
-            | e    | b  | cde,abc     | 2,1   |
-            | e    | a  | cde,abc     | 2,1   |
-            | c    | e  | cde         | 2     |
-            | c    | f  | cde,efg     | 2,1   |
-            | c    | g  | cde,efg     | 2,1   |
+            | a    | g  | abc,cde,efg | 4,5,4 |
+            | b    | f  | abc,cde,efg | 4,5,4 |
+            | e    | c  | cde         | 5     |
+            | e    | b  | cde,abc     | 5,4   |
+            | e    | a  | cde,abc     | 5,4   |
+            | c    | e  | cde         | 5     |
+            | c    | f  | cde,efg     | 5,4   |
+            | c    | g  | cde,efg     | 5,4   |
 
     Scenario: Foot - Ferry duration, single node
         Given the node map

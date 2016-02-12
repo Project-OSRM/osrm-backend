@@ -14,7 +14,7 @@ Feature: Foot - Way ref
 
         When I route I should get
             | from | to | route             |
-            | a    | b  | Utopia Drive / E7 |
+            | a    | b  | Utopia Drive (E7) |
 
     Scenario: Foot - Way with only ref
         Given the node map

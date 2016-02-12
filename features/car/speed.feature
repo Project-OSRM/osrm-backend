@@ -8,17 +8,17 @@ Feature: Car - speeds
     Scenario: Car - speed of various way types
         Then routability should be
             | highway        | oneway | bothw        |
-            | motorway       | no     | 82 km/h      |
-            | motorway_link  | no     | 47 km/h      |
-            | trunk          | no     | 79 km/h +- 1 |
-            | trunk_link     | no     | 43 km/h +- 1 |
+            | motorway       | no     | 90 km/h +- 1 |
+            | motorway_link  | no     | 45 km/h +- 1 |
+            | trunk          | no     | 85 km/h +- 1 |
+            | trunk_link     | no     | 40 km/h +- 1 |
             | primary        | no     | 63 km/h +- 1 |
-            | primary_link   | no     | 34 km/h      |
+            | primary_link   | no     | 30 km/h +- 1 |
             | secondary      | no     | 54 km/h +- 1 |
-            | secondary_link | no     | 31 km/h      |
-            | tertiary       | no     | 43 km/h      |
-            | tertiary_link  | no     | 26 km/h      |
-            | unclassified   | no     | 31 km/h      |
-            | residential    | no     | 31 km/h      |
-            | living_street  | no     | 18 km/h      |
-            | service        | no     | 23 km/h      |
+            | secondary_link | no     | 25 km/h +- 1 |
+            | tertiary       | no     | 40 km/h +- 1 |
+            | tertiary_link  | no     | 20 km/h +- 1 |
+            | unclassified   | no     | 25 km/h +- 1 |
+            | residential    | no     | 25 km/h +- 1 |
+            | service        | no     | 15 km/h +- 1 |
+            | living_street  | no     | 10 km/h +- 1 |
