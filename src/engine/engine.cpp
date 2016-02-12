@@ -3,7 +3,7 @@
 #include "engine/api/route_parameters.hpp"
 #include "engine/status.hpp"
 
-//#include "engine/plugins/distance_table.hpp"
+#include "engine/plugins/distance_table.hpp"
 //#include "engine/plugins/hello_world.hpp"
 //#include "engine/plugins/nearest.hpp"
 //#include "engine/plugins/timestamp.hpp"
@@ -34,59 +34,15 @@ namespace osrm
 {
 namespace engine
 {
-
-// Abstracted away the query locking into a template function
-// Works the same for every plugin.
-template<typename ParameterT, typename PluginT>
-Status RunQuery(const std::unique_ptr<Engine::EngineLock> &lock,
-                datafacade::BaseDataFacade &facade,
-                const ParameterT &parameters,
-                PluginT &plugin,
-                util::json::Object &json_result)
+struct Engine::EngineLock
 {
-    if (!lock)
-    {
-        return plugin.HandleRequest(parameters, json_result);
-    }
-
-    BOOST_ASSERT(lock);
-    lock->IncreaseQueryCount();
-
-    auto& shared_facade = static_cast<datafacade::SharedDataFacade &>(facade);
-    shared_facade.CheckAndReloadFacade();
-    // Get a shared data lock so that other threads won't update
-    // things while the query is running
-    boost::shared_lock<boost::shared_mutex> data_lock{shared_facade.data_mutex};
-
-    Status status = plugin.HandleRequest(parameters, json_result);
-
-    lock->DecreaseQueryCount();
-    return status;
-}
-
-
-Engine::Engine(EngineConfig &config)
-{
-    if (config.use_shared_memory)
-    {
-        lock = util::make_unique<EngineLock>();
-        query_data_facade = util::make_unique<datafacade::SharedDataFacade>();
-    }
-    else
-    {
-        // populate base path
-        util::populate_base_path(config.server_paths);
-        query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.server_paths);
-    }
-
-    route_plugin = util::make_unique<plugins::ViaRoutePlugin>(*query_data_facade, config.max_locations_viaroute);
-}
-
-Status Engine::Route(const api::RouteParameters &route_parameters,
-                   util::json::Object &result)
-{
-    return RunQuery(lock, *query_data_facade, route_parameters, *route_plugin, result);
-}
+    // will only be initialized if shared memory is used
+    storage::SharedBarriers barrier;
+    // decrease number of concurrent queries
+    void DecreaseQueryCount();
+    // increase number of concurrent queries
+    void IncreaseQueryCount();
+};
 
 // decrease number of concurrent queries
 void Engine::EngineLock::DecreaseQueryCount()
@@ -123,6 +79,65 @@ void Engine::EngineLock::IncreaseQueryCount()
     // increment query count
     ++(barrier.number_of_queries);
 }
+} // ns engine
+} // ns osrm
 
+namespace
+{
+// Abstracted away the query locking into a template function
+// Works the same for every plugin.
+template <typename ParameterT, typename PluginT>
+osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::EngineLock> &lock,
+                              osrm::engine::datafacade::BaseDataFacade &facade,
+                              const ParameterT &parameters,
+                              PluginT &plugin,
+                              osrm::util::json::Object &json_result)
+{
+    if (!lock)
+    {
+        return plugin.HandleRequest(parameters, json_result);
+    }
+
+    BOOST_ASSERT(lock);
+    lock->IncreaseQueryCount();
+
+    auto &shared_facade = static_cast<osrm::engine::datafacade::SharedDataFacade &>(facade);
+    shared_facade.CheckAndReloadFacade();
+    // Get a shared data lock so that other threads won't update
+    // things while the query is running
+    boost::shared_lock<boost::shared_mutex> data_lock{shared_facade.data_mutex};
+
+    osrm::engine::Status status = plugin.HandleRequest(parameters, json_result);
+
+    lock->DecreaseQueryCount();
+    return status;
 }
+} // anon. ns
+
+namespace osrm
+{
+namespace engine
+{
+Engine::Engine(EngineConfig &config)
+{
+    if (config.use_shared_memory)
+    {
+        lock = util::make_unique<EngineLock>();
+        query_data_facade = util::make_unique<datafacade::SharedDataFacade>();
+    }
+    else
+    {
+        util::populate_base_path(config.server_paths);
+        query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.server_paths);
+    }
+
+    route_plugin = util::make_unique<plugins::ViaRoutePlugin>(*query_data_facade,
+                                                              config.max_locations_viaroute);
 }
+
+Status Engine::Route(const api::RouteParameters &route_parameters, util::json::Object &result)
+{
+    return RunQuery(lock, *query_data_facade, route_parameters, *route_plugin, result);
+}
+} // engine ns
+} // osrm ns
