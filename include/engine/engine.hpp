@@ -26,10 +26,12 @@ struct EngineConfig;
 namespace api
 {
 struct RouteParameters;
+struct TableParameters;
 }
 namespace plugins
 {
 class ViaRoutePlugin;
+class DistanceTablePlugin;
 }
 namespace datafacade
 {
@@ -39,26 +41,20 @@ class BaseDataFacade;
 class Engine final
 {
   public:
-    struct EngineLock
-    {
-        // will only be initialized if shared memory is used
-        storage::SharedBarriers barrier;
-        // decrease number of concurrent queries
-        void DecreaseQueryCount();
-        // increase number of concurrent queries
-        void IncreaseQueryCount();
-    };
-
-    Engine(EngineConfig &config_);
-
+    Engine(EngineConfig &config);
     Engine(const Engine &) = delete;
     Engine &operator=(const Engine &) = delete;
 
-    Status Route(const api::RouteParameters &route_parameters, util::json::Object &json_result);
+    Status Route(const api::RouteParameters &parameters, util::json::Object &result);
+    Status Table(const api::TableParameters &parameters, util::json::Object &result);
 
   private:
+    struct EngineLock;
     std::unique_ptr<EngineLock> lock;
+
     std::unique_ptr<plugins::ViaRoutePlugin> route_plugin;
+    std::unique_ptr<plugins::DistanceTablePlugin> table_plugin;
+
     std::unique_ptr<datafacade::BaseDataFacade> query_data_facade;
 };
 }
