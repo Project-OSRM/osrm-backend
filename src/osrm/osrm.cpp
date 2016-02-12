@@ -1,23 +1,31 @@
 #include "osrm/osrm.hpp"
+#include "engine/api/route_parameters.hpp"
+#include "engine/api/table_parameters.hpp"
 #include "engine/engine.hpp"
 #include "engine/status.hpp"
 #include "engine/engine_config.hpp"
-#include "engine/plugins/viaroute.hpp"
-#include "storage/shared_barriers.hpp"
 #include "util/make_unique.hpp"
 
 namespace osrm
 {
 
-// proxy code for compilation firewall
-OSRM::OSRM(engine::EngineConfig &config_) : engine_(util::make_unique<engine::Engine>(config_)) {}
+// Pimpl idiom
 
-// needed because unique_ptr needs the size of OSRM_impl for delete
-OSRM::~OSRM() {}
+OSRM::OSRM(engine::EngineConfig &config) : engine_(util::make_unique<engine::Engine>(config)) {}
+OSRM::~OSRM() = default;
+OSRM::OSRM(OSRM &&) noexcept = default;
+OSRM &OSRM::operator=(OSRM &&) noexcept = default;
 
-engine::Status OSRM::Route(const RouteParameters &route_parameters, util::json::Object &json_result)
+// Forward to implementation
+
+engine::Status OSRM::Route(const engine::api::RouteParameters &params, util::json::Object &result)
 {
-    return engine_->Route(route_parameters, json_result);
+    return engine_->Route(params, result);
 }
 
+engine::Status OSRM::Table(const engine::api::TableParameters &params, json::Object &result)
+{
+    return engine_->Table(params, result);
 }
+
+} // ns osrm
