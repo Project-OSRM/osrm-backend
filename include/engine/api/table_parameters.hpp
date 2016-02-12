@@ -36,7 +36,7 @@ struct TableParameters : public BaseParameters
             return false;
 
         // 3/ 0 <= index < len(locations)
-        const auto is_not_in_range = [](const std::size_t x)
+        const auto not_in_range = [this](const std::size_t x)
         {
             return x >= coordinates.size();
         };
