@@ -31,7 +31,7 @@ struct TableParameters;
 namespace plugins
 {
 class ViaRoutePlugin;
-class DistanceTablePlugin;
+class TablePlugin;
 }
 namespace datafacade
 {
@@ -41,19 +41,23 @@ class BaseDataFacade;
 class Engine final
 {
   public:
-    Engine(EngineConfig &config);
+    // Needs to be public
+    struct EngineLock;
+
+    explicit Engine(EngineConfig &config);
     Engine(const Engine &) = delete;
     Engine &operator=(const Engine &) = delete;
+    // Needed because we have unique_ptr of incomplete types
+    ~Engine();
 
     Status Route(const api::RouteParameters &parameters, util::json::Object &result);
     Status Table(const api::TableParameters &parameters, util::json::Object &result);
 
   private:
-    struct EngineLock;
     std::unique_ptr<EngineLock> lock;
 
     std::unique_ptr<plugins::ViaRoutePlugin> route_plugin;
-    std::unique_ptr<plugins::DistanceTablePlugin> table_plugin;
+    std::unique_ptr<plugins::TablePlugin> table_plugin;
 
     std::unique_ptr<datafacade::BaseDataFacade> query_data_facade;
 };
