@@ -28,8 +28,7 @@ struct Hint
 
     std::string ToBase64() const
     {
-        std::string encoded;
-        ObjectEncoder::EncodeToBase64(*this, encoded);
+        std::string encoded = encodeBase64(*this);
         return encoded;
     }
 
@@ -37,8 +36,7 @@ struct Hint
     {
         BOOST_ASSERT_MSG(base64Hint.size() == static_cast<std::size_t>(std::ceil(sizeof(Hint)/3.)*4), "Hint has invalid size");
 
-        Hint decoded;
-        ObjectEncoder::DecodeFromBase64(base64Hint, decoded);
+        Hint decoded = decodeBase64<Hint>(base64Hint);
         return decoded;
     }
 };
