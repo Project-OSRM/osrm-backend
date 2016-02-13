@@ -1,13 +1,15 @@
 #ifndef ROUTED_OPTIONS_HPP
 #define ROUTED_OPTIONS_HPP
 
-#include "util/ini_file.hpp"
 #include "util/version.hpp"
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/any.hpp>
 #include <boost/program_options.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/convenience.hpp>
 
 #include <unordered_map>
 #include <fstream>
@@ -139,8 +141,7 @@ GenerateServerProgramOptions(const int argc,
          "Path to a configuration file") //
         ("trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
 
-    // declare a group of options that will be allowed both on command line
-    // as well as in a config file
+    // declare a group of options that will be allowed on command line
     boost::program_options::options_description config_options("Configuration");
     config_options.add_options()                                                             //
         ("hsgrdata", value<boost::filesystem::path>(&paths["hsgrdata"]), ".hsgr file")       //
@@ -172,8 +173,7 @@ GenerateServerProgramOptions(const int argc,
         ("max-matching-size", value<int>(&max_locations_map_matching)->default_value(100),
          "Max. locations supported in map matching query");
 
-    // hidden options, will be allowed both on command line and in config
-    // file, but will not be shown to the user
+    // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()("base,b", value<boost::filesystem::path>(&paths["base"]),
                                  "base path to .osrm file");
@@ -185,9 +185,6 @@ GenerateServerProgramOptions(const int argc,
     // combine above options for parsing
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
-
-    boost::program_options::options_description config_file_options;
-    config_file_options.add(config_options).add(hidden_options);
 
     boost::program_options::options_description visible_options(
         boost::filesystem::basename(argv[0]) + " <base.osrm> [<options>]");
@@ -214,20 +211,6 @@ GenerateServerProgramOptions(const int argc,
     }
 
     boost::program_options::notify(option_variables);
-
-    // parse config file
-    auto path_iterator = paths.find("config");
-    if (path_iterator != paths.end() && boost::filesystem::is_regular_file(path_iterator->second) &&
-        !option_variables.count("base"))
-    {
-        SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
-        std::string ini_file_contents = read_file_lower_content(path_iterator->second);
-        std::stringstream config_stream(ini_file_contents);
-        boost::program_options::store(parse_config_file(config_stream, config_file_options),
-                                      option_variables);
-        boost::program_options::notify(option_variables);
-        return INIT_OK_START_ENGINE;
-    }
 
     if (1 > requested_num_threads)
     {

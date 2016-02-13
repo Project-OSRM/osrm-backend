@@ -2,10 +2,9 @@
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
-#include "util/ini_file.hpp"
 #include "util/version.hpp"
 
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 using namespace osrm;
@@ -18,10 +17,7 @@ bool generateDataStoreOptions(const int argc,
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "springclean,s", "Remove all regions in shared memory")(
-        "config,c", boost::program_options::value<boost::filesystem::path>(&paths["config"])
-                        ->default_value("server.ini"),
-        "Path to a configuration file");
+        "springclean,s", "Remove all regions in shared memory");
 
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
@@ -46,8 +42,7 @@ bool generateDataStoreOptions(const int argc,
                        boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
                        ".timestamp file");
 
-    // hidden options, will be allowed both on command line and in config
-    // file, but will not be shown to the user
+    // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "base,b", boost::program_options::value<boost::filesystem::path>(&paths["base"]),
@@ -60,9 +55,6 @@ bool generateDataStoreOptions(const int argc,
     // combine above options for parsing
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
-
-    boost::program_options::options_description config_file_options;
-    config_file_options.add(config_options).add(hidden_options);
 
     boost::program_options::options_description visible_options(
         boost::filesystem::basename(argv[0]) + " [<options>] <configuration>");
@@ -97,106 +89,62 @@ bool generateDataStoreOptions(const int argc,
 
     boost::program_options::notify(option_variables);
 
-    const bool parameter_present =
-        (paths.find("hsgrdata") != paths.end() &&
-         !paths.find("hsgrdata")->second.string().empty()) ||
-        (paths.find("nodesdata") != paths.end() &&
-         !paths.find("nodesdata")->second.string().empty()) ||
-        (paths.find("edgesdata") != paths.end() &&
-         !paths.find("edgesdata")->second.string().empty()) ||
-        (paths.find("geometry") != paths.end() &&
-         !paths.find("geometry")->second.string().empty()) ||
-        (paths.find("ramindex") != paths.end() &&
-         !paths.find("ramindex")->second.string().empty()) ||
-        (paths.find("fileindex") != paths.end() &&
-         !paths.find("fileindex")->second.string().empty()) ||
-        (paths.find("core") != paths.end() && !paths.find("core")->second.string().empty()) ||
-        (paths.find("timestamp") != paths.end() &&
-         !paths.find("timestamp")->second.string().empty());
+    auto path_iterator = paths.find("base");
+    BOOST_ASSERT(paths.end() != path_iterator);
+    std::string base_string = path_iterator->second.string();
 
-    if (parameter_present)
+    path_iterator = paths.find("hsgrdata");
+    if (path_iterator != paths.end())
     {
-        if ((paths.find("config") != paths.end() &&
-             boost::filesystem::is_regular_file(paths.find("config")->second)) ||
-            option_variables.count("base"))
-        {
-            util::SimpleLogger().Write(logWARNING) << "conflicting parameters";
-            util::SimpleLogger().Write() << visible_options;
-            return false;
-        }
+        path_iterator->second = base_string + ".hsgr";
     }
 
-    // parse config file
-    auto path_iterator = paths.find("config");
-    if (path_iterator != paths.end() && boost::filesystem::is_regular_file(path_iterator->second) &&
-        !option_variables.count("base"))
+    path_iterator = paths.find("nodesdata");
+    if (path_iterator != paths.end())
     {
-        util::SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
-        std::string ini_file_contents = util::read_file_lower_content(path_iterator->second);
-        std::stringstream config_stream(ini_file_contents);
-        boost::program_options::store(parse_config_file(config_stream, config_file_options),
-                                      option_variables);
-        boost::program_options::notify(option_variables);
+        path_iterator->second = base_string + ".nodes";
     }
-    else if (option_variables.count("base"))
+
+    path_iterator = paths.find("edgesdata");
+    if (path_iterator != paths.end())
     {
-        path_iterator = paths.find("base");
-        BOOST_ASSERT(paths.end() != path_iterator);
-        std::string base_string = path_iterator->second.string();
+        path_iterator->second = base_string + ".edges";
+    }
 
-        path_iterator = paths.find("hsgrdata");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".hsgr";
-        }
+    path_iterator = paths.find("geometry");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".geometry";
+    }
 
-        path_iterator = paths.find("nodesdata");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".nodes";
-        }
+    path_iterator = paths.find("ramindex");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".ramIndex";
+    }
 
-        path_iterator = paths.find("edgesdata");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".edges";
-        }
+    path_iterator = paths.find("fileindex");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".fileIndex";
+    }
 
-        path_iterator = paths.find("geometry");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".geometry";
-        }
+    path_iterator = paths.find("core");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".core";
+    }
 
-        path_iterator = paths.find("ramindex");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".ramIndex";
-        }
+    path_iterator = paths.find("namesdata");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".names";
+    }
 
-        path_iterator = paths.find("fileindex");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".fileIndex";
-        }
-
-        path_iterator = paths.find("core");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".core";
-        }
-
-        path_iterator = paths.find("namesdata");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".names";
-        }
-
-        path_iterator = paths.find("timestamp");
-        if (path_iterator != paths.end())
-        {
-            path_iterator->second = base_string + ".timestamp";
-        }
+    path_iterator = paths.find("timestamp");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".timestamp";
     }
 
     path_iterator = paths.find("hsgrdata");

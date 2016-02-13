@@ -1,7 +1,6 @@
 #include "extractor/extractor.hpp"
 #include "extractor/extractor_config.hpp"
 #include "util/simple_logger.hpp"
-#include "util/ini_file.hpp"
 #include "util/version.hpp"
 
 #include <tbb/task_scheduler_init.h>
@@ -27,13 +26,9 @@ parseArguments(int argc, char *argv[], extractor::ExtractorConfig &extractor_con
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "config,c",
-        boost::program_options::value<boost::filesystem::path>(&extractor_config.config_file_path)
-            ->default_value("extractor.ini"),
-        "Path to a configuration file.");
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message");
 
-    // declare a group of options that will be allowed both on command line and in config file
+    // declare a group of options that will be allowed both on command line
     boost::program_options::options_description config_options("Configuration");
     config_options.add_options()(
         "profile,p",
@@ -61,7 +56,7 @@ parseArguments(int argc, char *argv[], extractor::ExtractorConfig &extractor_con
                                  "Write out GeoJSON with turn penalty data");
 #endif // DEBUG_GEOMETRY
 
-    // hidden options, will be allowed both on command line and in config file, but will not be
+    // hidden options, will be allowed on command line, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()("input,i", boost::program_options::value<boost::filesystem::path>(
@@ -75,9 +70,6 @@ parseArguments(int argc, char *argv[], extractor::ExtractorConfig &extractor_con
     // combine above options for parsing
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
-
-    boost::program_options::options_description config_file_options;
-    config_file_options.add(config_options).add(hidden_options);
 
     boost::program_options::options_description visible_options(
         boost::filesystem::basename(argv[0]) + " <input.osm/.osm.bz2/.osm.pbf> [options]");
@@ -105,19 +97,6 @@ parseArguments(int argc, char *argv[], extractor::ExtractorConfig &extractor_con
         }
 
         boost::program_options::notify(option_variables);
-
-        // parse config file
-        if (boost::filesystem::is_regular_file(extractor_config.config_file_path))
-        {
-            util::SimpleLogger().Write() << "Reading options from: "
-                                   << extractor_config.config_file_path.string();
-            std::string ini_file_contents =
-                util::read_file_lower_content(extractor_config.config_file_path);
-            std::stringstream config_stream(ini_file_contents);
-            boost::program_options::store(parse_config_file(config_stream, config_file_options),
-                                          option_variables);
-            boost::program_options::notify(option_variables);
-        }
 
         if (!option_variables.count("input"))
         {
