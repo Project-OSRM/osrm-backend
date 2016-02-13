@@ -47,13 +47,15 @@ template <typename T> std::string encodeBase64(const T &x)
                                      reinterpret_cast<const char *>(&x) + sizeof(T)};
     BOOST_ASSERT(!bytes.empty());
 
-    const auto next_divisible_by_three = ((bytes.size() / 3u) + 1u) * 3u;
-    BOOST_ASSERT(next_divisible_by_three >= bytes.size());
+    std::size_t bytes_to_pad{0};
 
-    const auto bytes_to_pad = next_divisible_by_three - bytes.size();
+    while (bytes.size() % 3 != 0)
+    {
+        bytes_to_pad += 1;
+        bytes.push_back(0);
+    }
+
     BOOST_ASSERT(bytes_to_pad == 0 || bytes_to_pad == 1 || bytes_to_pad == 2);
-
-    bytes.insert(end(bytes), bytes_to_pad, 0x00);
     BOOST_ASSERT_MSG(0 == bytes.size() % 3, "base64 input data size is not a multiple of 3");
 
     std::string encoded{detail::Base64FromBinary{bytes.data()},
