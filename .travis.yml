@@ -55,14 +55,6 @@ matrix:
       env: COMPILER='g++-5' BUILD_TYPE='Release'
 
     - os: linux
-      compiler: gcc
-      addons: &gcc48
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-4.8' BUILD_TYPE='Release'
-
-    - os: linux
       compiler: clang
       addons: &clang38
         apt:
@@ -92,30 +84,10 @@ matrix:
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
-
-    # Disabled until tests all pass on OSX:
-    #
-    # 3/ OSX Clang Builds
-    #- os: osx
-    #  osx_image: xcode6.4
-    #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Debug'
-
-    #- os: osx
-    #  osx_image: xcode6.4
-    #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Release'
-
-    #- os: osx
-    #  osx_image: xcode6.4
-    #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
-
-    #- os: osx
-    #  osx_image: xcode7
-    #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
-
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+      env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
