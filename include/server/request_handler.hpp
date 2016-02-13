@@ -20,7 +20,7 @@ class RequestHandler
 {
 
   public:
-    RequestHandler();
+    RequestHandler() = default;
     RequestHandler(const RequestHandler &) = delete;
     RequestHandler &operator=(const RequestHandler &) = delete;
 
