@@ -3,7 +3,7 @@
 #include "engine/api/route_parameters.hpp"
 #include "engine/status.hpp"
 
-#include "engine/plugins/distance_table.hpp"
+#include "engine/plugins/table.hpp"
 //#include "engine/plugins/hello_world.hpp"
 //#include "engine/plugins/nearest.hpp"
 //#include "engine/plugins/timestamp.hpp"
@@ -118,6 +118,7 @@ namespace osrm
 {
 namespace engine
 {
+
 Engine::Engine(EngineConfig &config)
 {
     if (config.use_shared_memory)
@@ -133,11 +134,23 @@ Engine::Engine(EngineConfig &config)
 
     route_plugin = util::make_unique<plugins::ViaRoutePlugin>(*query_data_facade,
                                                               config.max_locations_viaroute);
+    table_plugin = util::make_unique<plugins::TablePlugin>(*query_data_facade,
+                                                              config.max_locations_distance_table);
+}
+
+// make sure we deallocate the unique ptr at a position where we know the size of the plugins
+Engine::~Engine()
+{
 }
 
 Status Engine::Route(const api::RouteParameters &route_parameters, util::json::Object &result)
 {
     return RunQuery(lock, *query_data_facade, route_parameters, *route_plugin, result);
+}
+
+Status Engine::Table(const api::TableParameters &table_parameters, util::json::Object &result)
+{
+    return RunQuery(lock, *query_data_facade, table_parameters, *table_plugin, result);
 }
 } // engine ns
 } // osrm ns
