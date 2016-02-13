@@ -44,15 +44,14 @@ class ManyToManyRouting final
     {
     }
 
-    std::shared_ptr<std::vector<EdgeWeight>>
-    operator()(const std::vector<PhantomNode> &phantom_sources_array,
-               const std::vector<PhantomNode> &phantom_targets_array) const
+    // semmetric version
+    std::vector<EdgeWeight> operator()(const std::vector<PhantomNode> &phantom_nodes) const
     {
-        const auto number_of_sources = phantom_sources_array.size();
-        const auto number_of_targets = phantom_targets_array.size();
-        std::shared_ptr<std::vector<EdgeWeight>> result_table =
-            std::make_shared<std::vector<EdgeWeight>>(number_of_targets * number_of_sources,
-                                                      std::numeric_limits<EdgeWeight>::max());
+        const auto number_of_sources = phantom_nodes.size();
+        const auto number_of_targets = phantom_nodes.size();
+        const auto number_of_entries = number_of_sources * number_of_targets;
+        std::vector<EdgeWeight> result_table(number_of_entries,
+                                             std::numeric_limits<EdgeWeight>::max());
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -61,8 +60,8 @@ class ManyToManyRouting final
 
         SearchSpaceWithBuckets search_space_with_buckets;
 
-        unsigned target_id = 0;
-        for (const auto &phantom : phantom_targets_array)
+        unsigned column_idx = 0;
+        for (const auto &phantom : phantom_nodes)
         {
             query_heap.Clear();
             // insert target(s) at distance 0
@@ -81,14 +80,14 @@ class ManyToManyRouting final
             // explore search space
             while (!query_heap.Empty())
             {
-                BackwardRoutingStep(target_id, query_heap, search_space_with_buckets);
+                BackwardRoutingStep(column_idx, query_heap, search_space_with_buckets);
             }
-            ++target_id;
+            ++column_idx;
         }
 
         // for each source do forward search
-        unsigned source_id = 0;
-        for (const auto &phantom : phantom_sources_array)
+        unsigned row_idx = 0;
+        for (const auto &phantom : phantom_nodes)
         {
             query_heap.Clear();
             // insert target(s) at distance 0
@@ -107,21 +106,95 @@ class ManyToManyRouting final
             // explore search space
             while (!query_heap.Empty())
             {
-                ForwardRoutingStep(source_id, number_of_targets, query_heap,
+                ForwardRoutingStep(row_idx, number_of_targets, query_heap,
                                    search_space_with_buckets, result_table);
             }
-
-            ++source_id;
+            ++row_idx;
         }
-        // BOOST_ASSERT(source_id == target_id);
+
         return result_table;
     }
 
-    void ForwardRoutingStep(const unsigned source_id,
+    // asymmetric version
+    std::vector<EdgeWeight> operator()(const std::vector<PhantomNode> &phantom_nodes,
+                                       const std::vector<std::size_t> &source_indices,
+                                       const std::vector<std::size_t> &target_indices) const
+    {
+        const auto number_of_sources = source_indices.size();
+        const auto number_of_targets = target_indices.size();
+        const auto number_of_entries = number_of_sources * number_of_targets;
+        std::vector<EdgeWeight> result_table(number_of_entries,
+                                             std::numeric_limits<EdgeWeight>::max());
+
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
+            super::facade->GetNumberOfNodes());
+
+        QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
+
+        SearchSpaceWithBuckets search_space_with_buckets;
+
+        unsigned column_idx = 0;
+        for (const auto index : target_indices)
+        {
+            const auto &phantom = phantom_nodes[index];
+            query_heap.Clear();
+            // insert target(s) at distance 0
+
+            if (SPECIAL_NODEID != phantom.forward_node_id)
+            {
+                query_heap.Insert(phantom.forward_node_id, phantom.GetForwardWeightPlusOffset(),
+                                  phantom.forward_node_id);
+            }
+            if (SPECIAL_NODEID != phantom.reverse_node_id)
+            {
+                query_heap.Insert(phantom.reverse_node_id, phantom.GetReverseWeightPlusOffset(),
+                                  phantom.reverse_node_id);
+            }
+
+            // explore search space
+            while (!query_heap.Empty())
+            {
+                BackwardRoutingStep(column_idx, query_heap, search_space_with_buckets);
+            }
+            ++column_idx;
+        }
+
+        // for each source do forward search
+        unsigned row_idx = 0;
+        for (const auto index : source_indices)
+        {
+            const auto &phantom = phantom_nodes[index];
+            query_heap.Clear();
+            // insert target(s) at distance 0
+
+            if (SPECIAL_NODEID != phantom.forward_node_id)
+            {
+                query_heap.Insert(phantom.forward_node_id, -phantom.GetForwardWeightPlusOffset(),
+                                  phantom.forward_node_id);
+            }
+            if (SPECIAL_NODEID != phantom.reverse_node_id)
+            {
+                query_heap.Insert(phantom.reverse_node_id, -phantom.GetReverseWeightPlusOffset(),
+                                  phantom.reverse_node_id);
+            }
+
+            // explore search space
+            while (!query_heap.Empty())
+            {
+                ForwardRoutingStep(row_idx, number_of_targets, query_heap,
+                                   search_space_with_buckets, result_table);
+            }
+            ++row_idx;
+        }
+
+        return result_table;
+    }
+
+    void ForwardRoutingStep(const unsigned row_idx,
                             const unsigned number_of_targets,
                             QueryHeap &query_heap,
                             const SearchSpaceWithBuckets &search_space_with_buckets,
-                            std::shared_ptr<std::vector<EdgeWeight>> result_table) const
+                            std::vector<EdgeWeight> &result_table) const
     {
         const NodeID node = query_heap.DeleteMin();
         const int source_distance = query_heap.GetKey(node);
@@ -135,9 +208,9 @@ class ManyToManyRouting final
             for (const NodeBucket &current_bucket : bucket_list)
             {
                 // get target id from bucket entry
-                const unsigned target_id = current_bucket.target_id;
+                const unsigned column_idx = current_bucket.target_id;
                 const int target_distance = current_bucket.distance;
-                auto &current_distance = (*result_table)[source_id * number_of_targets + target_id];
+                auto &current_distance = result_table[row_idx * number_of_targets + column_idx];
                 // check if new distance is better
                 const EdgeWeight new_distance = source_distance + target_distance;
                 if (new_distance < 0)
@@ -151,7 +224,7 @@ class ManyToManyRouting final
                 }
                 else if (new_distance < current_distance)
                 {
-                    (*result_table)[source_id * number_of_targets + target_id] = new_distance;
+                    result_table[row_idx * number_of_targets + column_idx] = new_distance;
                 }
             }
         }
@@ -162,7 +235,7 @@ class ManyToManyRouting final
         RelaxOutgoingEdges<true>(node, source_distance, query_heap);
     }
 
-    void BackwardRoutingStep(const unsigned target_id,
+    void BackwardRoutingStep(const unsigned column_idx,
                              QueryHeap &query_heap,
                              SearchSpaceWithBuckets &search_space_with_buckets) const
     {
@@ -170,7 +243,7 @@ class ManyToManyRouting final
         const int target_distance = query_heap.GetKey(node);
 
         // store settled nodes in search space bucket
-        search_space_with_buckets[node].emplace_back(target_id, target_distance);
+        search_space_with_buckets[node].emplace_back(column_idx, target_distance);
 
         if (StallAtNode<false>(node, target_distance, query_heap))
         {
