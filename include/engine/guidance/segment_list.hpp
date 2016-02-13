@@ -154,7 +154,7 @@ void SegmentList<DataFacadeT>::AddLeg(const std::vector<PathData> &leg_data,
                                       const bool is_via_leg,
                                       const DataFacade *facade)
 {
-    for (const PathData &path_data : leg_data)
+    for (const auto &path_data : leg_data)
     {
         AppendSegment(facade->GetCoordinateOfNode(path_data.node), path_data);
     }
@@ -196,32 +196,7 @@ template <typename DataFacadeT>
 void SegmentList<DataFacadeT>::AppendSegment(const FixedPointCoordinate coordinate,
                                              const PathData &path_point)
 {
-    // if the start location is on top of a node, the first movement might be zero-length,
-    // in which case we dont' add a new description, but instead update the existing one
-    if ((1 == segments.size()) && (segments.front().location == coordinate))
-    {
-        if (path_point.segment_duration > 0)
-        {
-            segments.front().name_id = path_point.name_id;
-            segments.front().travel_mode = path_point.travel_mode;
-        }
-        return;
-    }
-
-    // make sure mode changes are announced, even when there otherwise is no turn
-    const auto getTurn = [](const PathData &path_point, const extractor::TravelMode previous_mode)
-    {
-        if (extractor::TurnInstruction::NoTurn == path_point.turn_instruction &&
-            previous_mode != path_point.travel_mode && path_point.segment_duration > 0)
-        {
-            return extractor::TurnInstruction::GoStraight;
-        }
-        return path_point.turn_instruction;
-    };
-
-    // TODO check why we require .front() here
-    const auto turn = segments.size() ? getTurn(path_point, segments.front().travel_mode)
-                                      : path_point.turn_instruction;
+    const auto turn = path_point.turn_instruction;
 
     segments.emplace_back(coordinate, path_point.name_id, path_point.segment_duration, 0.f, turn,
                           path_point.travel_mode);
@@ -235,6 +210,30 @@ void SegmentList<DataFacadeT>::Finalize(const bool extract_alternative,
 {
     if (segments.empty())
         return;
+
+    // check if first two segments can be merged
+    BOOST_ASSERT(segments.size() >= 2);
+    if (segments[0].location == segments[1].location &&
+        segments[1].turn_instruction == extractor::TurnInstruction::NoTurn)
+    {
+        segments[0].travel_mode = segments[1].travel_mode;
+        segments[0].name_id = segments[1].name_id;
+        // Other data??
+        segments.erase(segments.begin() + 1);
+    }
+
+    // announce mode changes
+    for (std::size_t i = 0; i + 1 < segments.size(); ++i)
+    {
+        auto &segment = segments[i];
+        const auto next_mode = segments[i + 1].travel_mode;
+        if (segment.travel_mode != next_mode &&
+            segment.turn_instruction == extractor::TurnInstruction::NoTurn)
+        {
+            segment.turn_instruction = extractor::TurnInstruction::GoStraight;
+            segment.necessary = true;
+        }
+    }
 
     segments[0].length = 0.f;
     for (const auto i : util::irange<std::size_t>(1, segments.size()))

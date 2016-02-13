@@ -25,6 +25,22 @@ Feature: Testbot - Travel mode
         When I route I should get
             | from | to | route        | modes |
             | a    | d  | foo,foo,foo  | 1,3,1 |
+            | b    | d  | foo,foo      | 3,1   |
+
+    Scenario: Testbot - Compressed Modes
+        Given the node map
+            | a | b | c | d | e | f | g |
+
+        And the ways
+            | nodes | highway     | name   |
+            | abc   | residential | road   |
+            | cde   | river       | liquid |
+            | efg   | residential | solid  |
+
+        When I route I should get
+            | from | to | route              | modes | turns                              |
+            | a    | g  | road,liquid,solid  | 1,3,1 | head,straight,straight,destination |
+            | c    | g  | liquid,solid       | 3,1   | head,straight,destination          |
 
     Scenario: Testbot - Modes in each direction, different forward/backward speeds
         Given the node map

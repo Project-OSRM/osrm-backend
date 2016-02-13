@@ -44,8 +44,9 @@ inline util::json::Array AnnotateRoute(const std::vector<SegmentInformation> &ro
     extractor::TravelMode last_travel_mode = TRAVEL_MODE_DEFAULT;
 
     // Generate annotations for every segment
-    for (const SegmentInformation &segment : route_segments)
+    for (std::size_t i = 0; i < route_segments.size(); ++i)
     {
+        const auto &segment = route_segments[i];
         util::json::Array json_instruction_row;
         extractor::TurnInstruction current_instruction = segment.turn_instruction;
         if (extractor::isTurnNecessary(current_instruction))
@@ -89,8 +90,17 @@ inline util::json::Array AnnotateRoute(const std::vector<SegmentInformation> &ro
                 json_instruction_row.values.push_back(
                     static_cast<std::uint32_t>(std::round(post_turn_bearing_value)));
 
-                json_instruction_row.values.push_back(segment.travel_mode);
-                last_travel_mode = segment.travel_mode;
+                if (i + 1 < route_segments.size())
+                {
+                    // anounce next travel mode with turn
+                    json_instruction_row.values.push_back(route_segments[i + 1].travel_mode);
+                    last_travel_mode = segment.travel_mode;
+                }
+                else
+                {
+                    json_instruction_row.values.push_back(segment.travel_mode);
+                    last_travel_mode = segment.travel_mode;
+                }
 
                 // pre turn bearing
                 const double pre_turn_bearing_value = (segment.pre_turn_bearing / 10.);
