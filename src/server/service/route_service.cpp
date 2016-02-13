@@ -1,7 +1,7 @@
 #include "server/service/route_service.hpp"
 
 #include "engine/api/route_parameters.hpp"
-#include "server/api/route_parameters_parser.hpp"
+#include "server/api/parameters_parser.hpp"
 
 #include "util/json_container.hpp"
 
@@ -55,7 +55,7 @@ engine::Status RouteService::RunQuery(std::vector<util::FixedPointCoordinate> co
 {
 
     auto options_iterator = options.begin();
-    auto parameters = api::parseRouteParameters(options_iterator, options.end());
+    auto parameters = api::parseParameters<engine::api::RouteParameters>(options_iterator, options.end());
     if (!parameters || options_iterator != options.end())
     {
         const auto position = std::distance(options.begin(), options_iterator);
