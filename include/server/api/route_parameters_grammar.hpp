@@ -29,40 +29,40 @@ struct RouteParametersGrammar : public BaseParametersGrammar
     using UturnsT = std::vector<boost::optional<bool>>;
 
     RouteParametersGrammar()
-        : BaseParametersGrammar(root_rule, route_parameters)
+        : BaseParametersGrammar(root_rule, parameters)
     {
         const auto set_geojson_type = [this]()
         {
-            route_parameters.geometries = engine::api::RouteParameters::GeometriesType::GeoJSON;
+            parameters.geometries = engine::api::RouteParameters::GeometriesType::GeoJSON;
         };
         const auto set_polyline_type = [this]()
         {
-            route_parameters.geometries = engine::api::RouteParameters::GeometriesType::Polyline;
+            parameters.geometries = engine::api::RouteParameters::GeometriesType::Polyline;
         };
 
         const auto set_simplified_type = [this]()
         {
-            route_parameters.overview = engine::api::RouteParameters::OverviewType::Simplified;
+            parameters.overview = engine::api::RouteParameters::OverviewType::Simplified;
         };
         const auto set_full_type = [this]()
         {
-            route_parameters.overview = engine::api::RouteParameters::OverviewType::Full;
+            parameters.overview = engine::api::RouteParameters::OverviewType::Full;
         };
         const auto set_false_type = [this]()
         {
-            route_parameters.overview = engine::api::RouteParameters::OverviewType::False;
+            parameters.overview = engine::api::RouteParameters::OverviewType::False;
         };
         const auto set_steps = [this](const StepsT steps)
         {
-            route_parameters.steps = steps;
+            parameters.steps = steps;
         };
         const auto set_alternative = [this](const AlternativeT alternative)
         {
-            route_parameters.alternative = alternative;
+            parameters.alternative = alternative;
         };
         const auto set_uturns = [this](UturnsT &uturns)
         {
-            route_parameters.uturns = std::move(uturns);
+            parameters.uturns = std::move(uturns);
         };
 
         alternative_rule = qi::lit("alternative=") >> qi::bool_;
@@ -78,7 +78,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         root_rule = -((base_rule | route_rule) % '&');
     }
 
-    engine::api::RouteParameters route_parameters;
+    engine::api::RouteParameters parameters;
   private:
     qi::rule<Iterator> root_rule, route_rule, geometries_rule, overview_rule;
     qi::rule<Iterator, UturnsT()> uturns_rule;
