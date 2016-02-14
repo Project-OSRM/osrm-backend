@@ -10,8 +10,8 @@ When(/^I run "osrm\-extract\s?(.*?)"$/) do |options|
   run_bin 'osrm-extract', options
 end
 
-When(/^I run "osrm\-prepare\s?(.*?)"$/) do |options|
-  run_bin 'osrm-prepare', options
+When(/^I run "osrm\-contract\s?(.*?)"$/) do |options|
+  run_bin 'osrm-contract', options
 end
 
 When(/^I run "osrm\-datastore\s?(.*?)"$/) do |options|

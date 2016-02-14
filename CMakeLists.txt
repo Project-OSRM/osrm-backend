@@ -76,7 +76,7 @@ add_dependencies(UTIL FingerPrintConfigure)
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(osrm-extract src/tools/extract.cpp)
-add_executable(osrm-prepare src/tools/contract.cpp)
+add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
 add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
@@ -287,7 +287,7 @@ endif()
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_LIBRARIES})
 target_link_libraries(osrm-extract osrm_extract ${Boost_LIBRARIES})
-target_link_libraries(osrm-prepare osrm_contract ${Boost_LIBRARIES})
+target_link_libraries(osrm-contract osrm_contract ${Boost_LIBRARIES})
 target_link_libraries(osrm-routed osrm ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 set(EXTRACTOR_LIBRARIES
@@ -372,7 +372,7 @@ endif()
 # (i.e., from /usr/local/bin/) the linker can find library dependencies. For
 # more info see http://www.cmake.org/Wiki/CMake_RPATH_handling
 set_property(TARGET osrm-extract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-set_property(TARGET osrm-prepare PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET osrm-contract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -390,7 +390,7 @@ install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
 install(FILES ${LibraryGlob} DESTINATION include/osrm)
 install(FILES ${VariantGlob} DESTINATION include/variant)
 install(TARGETS osrm-extract DESTINATION bin)
-install(TARGETS osrm-prepare DESTINATION bin)
+install(TARGETS osrm-contract DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
 install(TARGETS osrm-routed DESTINATION bin)
 install(TARGETS osrm DESTINATION lib)

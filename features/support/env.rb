@@ -81,7 +81,7 @@ def verify_osrm_is_not_running
 end
 
 def verify_existance_of_binaries
-  ["osrm-extract", "osrm-prepare", "osrm-routed"].each do |bin|
+  ["osrm-extract", "osrm-contract", "osrm-routed"].each do |bin|
     unless File.exists? "#{BIN_PATH}/#{bin}#{EXE}"
       raise "*** #{BIN_PATH}/#{bin}#{EXE} is missing. Build failed?"
     end

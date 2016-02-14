@@ -37,7 +37,7 @@ def bin_extract_hash
 end
 
 def bin_prepare_hash
-  @bin_prepare_hash ||= hash_of_files "#{BIN_PATH}/osrm-prepare#{EXE}"
+  @bin_prepare_hash ||= hash_of_files "#{BIN_PATH}/osrm-contract#{EXE}"
 end
 
 def bin_routed_hash

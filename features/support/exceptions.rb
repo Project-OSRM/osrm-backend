@@ -45,7 +45,7 @@ end
 
 class PrepareError < OSRMError
   def initialize code, msg
-    super 'osrm-prepare', code, msg, PREPROCESS_LOG_FILE, 3
+    super 'osrm-contract', code, msg, PREPROCESS_LOG_FILE, 3
   end
 end
 

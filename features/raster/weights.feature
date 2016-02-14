@@ -32,7 +32,7 @@ Feature: Raster - weights
     Scenario: Weighting not based on raster sources
         Given the profile "testbot"
         When I run "osrm-extract {osm_base}.osm -p {profile}"
-        And I run "osrm-prepare {osm_base}.osm"
+        And I run "osrm-contract {osm_base}.osm"
         And I route I should get
             | from | to | route | speed   |
             | a    | b  | ab    | 36 km/h |
@@ -45,7 +45,7 @@ Feature: Raster - weights
         Given the profile "rasterbot"
         When I run "osrm-extract {osm_base}.osm -p {profile}"
         Then stdout should contain "evaluating segment"
-        And I run "osrm-prepare {osm_base}.osm"
+        And I run "osrm-contract {osm_base}.osm"
         And I route I should get
             | from | to | route | speed   |
             | a    | b  | ab    | 8 km/h  |
@@ -63,7 +63,7 @@ Feature: Raster - weights
         Given the profile "rasterbot-interp"
         When I run "osrm-extract {osm_base}.osm -p {profile}"
         Then stdout should contain "evaluating segment"
-        And I run "osrm-prepare {osm_base}.osm"
+        And I run "osrm-contract {osm_base}.osm"
         And I route I should get
             | from | to | route | speed   |
             | a    | b  | ab    | 8 km/h  |

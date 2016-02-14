@@ -277,9 +277,9 @@ def prepare_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Preparing #{extracted_file}.osm...", :preprocess
-    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-prepare #{extracted_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{extracted_file}.osrm  >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
-      raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
+      raise PrepareError.new $?.exitstatus, "osrm-contract exited with code #{$?.exitstatus}."
     end
     begin
       ["osrm.hsgr","osrm.fileIndex","osrm.geometry","osrm.nodes","osrm.ramIndex","osrm.core","osrm.edges"].each do |file|
