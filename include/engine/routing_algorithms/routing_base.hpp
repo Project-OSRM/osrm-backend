@@ -675,11 +675,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         BOOST_ASSERT_MSG((SPECIAL_NODEID != middle && INVALID_EDGE_WEIGHT != distance),
                          "no path found");
 
-        if (distance != forward_heap.GetKey(middle) + reverse_heap.GetKey(middle))
+        if (distance != forward_core_heap.GetKey(middle) + reverse_core_heap.GetKey(middle))
         {
             // self loop
-            BOOST_ASSERT(forward_heap.GetData(middle).parent == middle &&
-                         reverse_heap.GetData(middle).parent == middle);
+            BOOST_ASSERT(forward_core_heap.GetData(middle).parent == middle &&
+                         reverse_core_heap.GetData(middle).parent == middle);
             packed_leg.push_back(middle);
             packed_leg.push_back(middle);
         }
