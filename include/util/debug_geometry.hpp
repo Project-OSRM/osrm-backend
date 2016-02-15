@@ -120,8 +120,8 @@ inline void DEBUG_GEOMETRY_EDGE(int new_segment_weight,
                             << static_cast<int>(
                                    std::floor((segment_length / new_segment_weight) * 10. * 3.6))
                             << ",";
-        debug_geometry_file << "\"from_node\": " << previous_osm_node_id
-                            << ", \"to_node\": " << this_osm_node_id << ",";
+        debug_geometry_file << "\"from_node\": " << OSMNodeID_to_uint64_t(previous_osm_node_id)
+                            << ", \"to_node\": " << OSMNodeID_to_uint64_t(this_osm_node_id) << ",";
         debug_geometry_file << "\"timestamp\": \"" << dg_time_buffer << "\"},";
         debug_geometry_file
             << "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[["
