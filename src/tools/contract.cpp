@@ -23,8 +23,7 @@ enum class return_code : unsigned
     exit
 };
 
-return_code
-parseArguments(int argc, char *argv[], contractor::ContractorConfig &contractor_config)
+return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig &contractor_config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");

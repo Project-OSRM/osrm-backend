@@ -21,8 +21,7 @@ enum class return_code : unsigned
     exit
 };
 
-return_code
-parseArguments(int argc, char *argv[], extractor::ExtractorConfig &extractor_config)
+return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &extractor_config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -112,7 +111,6 @@ parseArguments(int argc, char *argv[], extractor::ExtractorConfig &extractor_con
 
     return return_code::ok;
 }
-
 
 int main(int argc, char *argv[]) try
 {

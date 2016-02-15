@@ -10,9 +10,7 @@
 using namespace osrm;
 
 // generate boost::program_options object for the routing part
-bool generateDataStoreOptions(const int argc,
-                              const char *argv[],
-                              storage::DataPaths &paths)
+bool generateDataStoreOptions(const int argc, const char *argv[], storage::DataPaths &paths)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
