@@ -11,10 +11,11 @@ branches:
     - develop
 
 matrix:
+  fast_finish: true
+
   include:
 
     # 1/ Linux Clang Builds
-
     - os: linux
       compiler: clang
       addons: &clang38
