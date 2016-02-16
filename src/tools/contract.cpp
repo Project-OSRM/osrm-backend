@@ -91,7 +91,7 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
 
     if (option_variables.count("help"))
     {
-        util::SimpleLogger().Write() << "\n" << visible_options;
+        util::SimpleLogger().Write() << visible_options;
         return return_code::exit;
     }
 
@@ -99,7 +99,7 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
 
     if (!option_variables.count("input"))
     {
-        util::SimpleLogger().Write() << "\n" << visible_options;
+        util::SimpleLogger().Write() << visible_options;
         return return_code::fail;
     }
 

@@ -11,13 +11,12 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Options:"
         And stdout should contain "--version"
         And stdout should contain "--help"
-        And stdout should contain "--config"
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
         And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
-        And stdout should contain 20 lines
+        And stdout should contain 18 lines
         And it should exit with code 0
 
     Scenario: osrm-extract - Help, short
@@ -27,13 +26,12 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Options:"
         And stdout should contain "--version"
         And stdout should contain "--help"
-        And stdout should contain "--config"
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
         And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
-        And stdout should contain 20 lines
+        And stdout should contain 18 lines
         And it should exit with code 0
 
     Scenario: osrm-extract - Help, long
@@ -43,11 +41,10 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Options:"
         And stdout should contain "--version"
         And stdout should contain "--help"
-        And stdout should contain "--config"
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
         And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
-        And stdout should contain 20 lines
+        And stdout should contain 18 lines
         And it should exit with code 0
