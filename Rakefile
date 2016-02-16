@@ -98,7 +98,7 @@ task :crop do
 end
 
 desc "Reprocess OSM data."
-task :process => [:extract,:prepare] do
+task :process => [:extract,:contract] do
 end
 
 desc "Extract OSM data."
@@ -108,10 +108,10 @@ task :extract do
   end
 end
 
-desc "Prepare OSM data."
-task :prepare do
+desc "Contract OSM data."
+task :contract do
   Dir.chdir DATA_FOLDER do
-    raise "Error while preparing data." unless system "../#{BUILD_FOLDER}/osrm-prepare #{osm_data_area_name}.osrm --profile ../profiles/#{PROFILE}.lua"
+    raise "Error while contracting data." unless system "../#{BUILD_FOLDER}/osrm-contract #{osm_data_area_name}.osrm"
   end
 end
 
@@ -161,17 +161,17 @@ task :down do
   end 
 end
 
-desc "Kill all osrm-extract, osrm-prepare and osrm-routed processes."
+desc "Kill all osrm-extract, osrm-contract and osrm-routed processes."
 task :kill do
   each_process('osrm-routed') { |pid,state| Process.kill 'KILL', pid }
-  each_process('osrm-prepare') { |pid,state| Process.kill 'KILL', pid }
+  each_process('osrm-contract') { |pid,state| Process.kill 'KILL', pid }
   each_process('osrm-extract') { |pid,state| Process.kill 'KILL', pid }
   wait_for_shutdown 'osrm-routed'
-  wait_for_shutdown 'osrm-prepare'
+  wait_for_shutdown 'osrm-contract'
   wait_for_shutdown 'osrm-extract'  
 end
 
-desc "Get PIDs of all osrm-extract, osrm-prepare and osrm-routed processes."
+desc "Get PIDs of all osrm-extract, osrm-contract and osrm-routed processes."
 task :pid do
   each_process 'osrm-routed' do |pid,state|
     puts "#{pid}\t#{state}"
