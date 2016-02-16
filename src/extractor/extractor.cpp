@@ -67,8 +67,8 @@ namespace extractor
  *
  * The result of this process are the following files:
  *  .names : Names of all streets, stored as long consecutive string with prefix sum based index
- *  .osrm  : Nodes and edges in a intermediate format that easy to digest for osrm-prepare
- *  .restrictions : Turn restrictions that are used my osrm-prepare to construct the edge-expanded
+ *  .osrm  : Nodes and edges in a intermediate format that easy to digest for osrm-contract
+ *  .restrictions : Turn restrictions that are used by osrm-contract to construct the edge-expanded
  * graph
  *
  */
@@ -304,7 +304,7 @@ int Extractor::run()
             << "Expansion  : " << (number_of_node_based_nodes / TIMER_SEC(expansion))
             << " nodes/sec and " << ((max_edge_id + 1) / TIMER_SEC(expansion)) << " edges/sec";
         util::SimpleLogger().Write() << "To prepare the data for routing, run: "
-                                     << "./osrm-prepare " << config.output_file_name << std::endl;
+                                     << "./osrm-contract " << config.output_file_name << std::endl;
     }
     catch (const std::exception &e)
     {
