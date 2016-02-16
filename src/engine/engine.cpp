@@ -9,6 +9,7 @@
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/plugins/match.hpp"
+#include "engine/plugins/tile.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/internal_datafacade.hpp"
@@ -63,6 +64,7 @@ Engine::Engine(EngineConfig &config)
                                                            config.max_locations_viaroute));
     RegisterPlugin(
         new plugins::RoundTripPlugin<DataFacade>(query_data_facade, config.max_locations_trip));
+    RegisterPlugin(new plugins::TilePlugin<DataFacade>(query_data_facade));
 }
 
 void Engine::RegisterPlugin(plugins::BasePlugin *raw_plugin_ptr)

@@ -1,4 +1,5 @@
 #include "util/coordinate_calculation.hpp"
+#include "util/rectangle.hpp"
 
 #include "util/string_util.hpp"
 #include "util/trigonometry_table.hpp"

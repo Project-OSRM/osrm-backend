@@ -13,6 +13,10 @@
 #include "util/json_container.hpp"
 #include "osrm/osrm.hpp"
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include <ctime>
 
 #include <algorithm>
@@ -113,10 +117,32 @@ void RequestHandler::handle_request(const http::request &current_request,
         current_reply.headers.emplace_back("Access-Control-Allow-Headers",
                                            "X-Requested-With, Content-Type");
 
-        // set headers
-        current_reply.headers.emplace_back("Content-Length",
-                                           std::to_string(current_reply.content.size()));
-        if (route_parameters.jsonp_parameter.empty())
+        if (route_parameters.service == "tile") {
+
+            /*
+            std::istringstream is(json_result.values["pbf"].get<osrm::util::json::String>().value);
+            boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+            //in.push(boost::iostreams::gzip_compressor());
+            in.push(boost::iostreams::zlib_compressor());
+            in.push(is);
+
+            std::ostringstream os;
+
+            boost::iostreams::copy(in,os);
+
+            auto s = os.str();
+
+            std::copy(s.cbegin(),s.cend(), std::back_inserter(current_reply.content));
+            */
+            std::copy(json_result.values["pbf"].get<osrm::util::json::String>().value.cbegin(),
+                      json_result.values["pbf"].get<osrm::util::json::String>().value.cend(),
+                      std::back_inserter(current_reply.content));
+
+            //current_reply.content.append(json_result.values["pbf"].get<osrm::util::json::String>().value
+            current_reply.headers.emplace_back("Content-Type",
+                                               "application/x-protobuf");
+        }
+        else if (route_parameters.jsonp_parameter.empty())
         { // json file
             util::json::render(current_reply.content, json_result);
             current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
@@ -130,6 +156,8 @@ void RequestHandler::handle_request(const http::request &current_request,
             current_reply.headers.emplace_back("Content-Disposition",
                                                "inline; filename=\"response.js\"");
         }
+        current_reply.headers.emplace_back("Content-Length",
+                                           std::to_string(current_reply.content.size()));
         if (!route_parameters.jsonp_parameter.empty())
         { // append brace to jsonp response
             current_reply.content.push_back(')');

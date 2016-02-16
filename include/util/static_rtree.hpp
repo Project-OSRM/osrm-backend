@@ -321,6 +321,62 @@ class StaticRTree
         leaves_stream.read((char *)&m_element_count, sizeof(uint64_t));
     }
 
+    /* Returns all features inside the bounding box */
+    std::vector<EdgeDataT> SearchInBox(const Rectangle & search_rectangle)
+    {
+
+        std::vector<EdgeDataT> results;
+
+        std::queue<TreeNode> traversal_queue;
+
+        traversal_queue.push(m_search_tree[0]);
+
+        while (!traversal_queue.empty())
+        {
+            auto const current_tree_node = traversal_queue.front();
+            traversal_queue.pop();
+
+            if (current_tree_node.child_is_on_disk)
+            {
+                LeafNode current_leaf_node;
+                LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
+
+                for (const auto i : irange(0u, current_leaf_node.object_count))
+                {
+                    const auto &current_edge = current_leaf_node.objects[i];
+
+                    Rectangle bbox =
+                      {std::min((*m_coordinate_list)[current_edge.u].lon, (*m_coordinate_list)[current_edge.v].lon),
+                       std::max((*m_coordinate_list)[current_edge.u].lon, (*m_coordinate_list)[current_edge.v].lon),
+                       std::min((*m_coordinate_list)[current_edge.u].lat, (*m_coordinate_list)[current_edge.v].lat),
+                       std::max((*m_coordinate_list)[current_edge.u].lat, (*m_coordinate_list)[current_edge.v].lat)};
+
+                    if (bbox.Intersects(search_rectangle))
+                    {
+                        results.push_back(current_edge);
+                    }
+                }
+            }
+            else
+            {
+                // If it's a tree node, look at all children and add them
+                // to the search queue if their bounding boxes intersect
+                for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
+                {
+                    const int32_t child_id = current_tree_node.children[i];
+                    const auto &child_tree_node = m_search_tree[child_id];
+                    const auto &child_rectangle = child_tree_node.minimum_bounding_rectangle;
+
+                    if (child_rectangle.Intersects(search_rectangle))
+                    {
+                        traversal_queue.push(m_search_tree[child_id]);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
     // Override filter and terminator for the desired behaviour.
     std::vector<EdgeDataT> Nearest(const FixedPointCoordinate input_coordinate,
                                    const std::size_t max_results)

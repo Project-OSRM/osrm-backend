@@ -4,6 +4,8 @@
 #include "extractor/query_node.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "util/typedefs.hpp"
+#include "util/rectangle.hpp"
+#include "util/exception.hpp"
 
 #include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>
@@ -455,4 +457,42 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     }
 }
 
+BOOST_AUTO_TEST_CASE(bbox_search_tests)
+{
+    using Coord = std::pair<double, double>;
+    using Edge = std::pair<unsigned, unsigned>;
+
+    GraphFixture fixture(
+            {
+            Coord(0.0,0.0),
+            Coord(1.0,1.0),
+            Coord(2.0,2.0),
+            Coord(3.0,3.0),
+            Coord(4.0,4.0),
+            },
+            {Edge(0,1), Edge(1,2), Edge(2,3), Edge(3,4)});
+
+    std::string leaves_path;
+    std::string nodes_path;
+    build_rtree<GraphFixture, MiniStaticRTree>("test_bbox", &fixture, leaves_path, nodes_path);
+    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+    engine::GeospatialQuery<MiniStaticRTree> query(rtree, fixture.coords);
+
+    {
+        RectangleInt2D bbox = {static_cast<uint32_t>(0.5 * COORDINATE_PRECISION), static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(0.5 * COORDINATE_PRECISION), static_cast<uint32_t>(1.5 * COORDINATE_PRECISION)};
+        auto results = query.Search(bbox);
+        BOOST_CHECK_EQUAL(results.size(), 2);
+    }
+
+    {
+        RectangleInt2D bbox = {static_cast<uint32_t>(1.5 * COORDINATE_PRECISION), static_cast<uint32_t>(3.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION), static_cast<uint32_t>(3.5 * COORDINATE_PRECISION)};
+        auto results = query.Search(bbox);
+        BOOST_CHECK_EQUAL(results.size(), 3);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
+
