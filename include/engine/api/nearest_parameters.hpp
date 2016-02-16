@@ -14,10 +14,10 @@ struct NearestParameters : public BaseParameters
 {
     unsigned number_of_results;
 
-    bool IsValid() const;
+    bool IsValid() const { return BaseParameters::IsValid() && number_of_results >= 1; }
 };
 }
 }
 }
 
-#endif // ROUTE_PARAMETERS_HPP
+#endif // ENGINE_API_NEAREST_PARAMETERS_HPP
