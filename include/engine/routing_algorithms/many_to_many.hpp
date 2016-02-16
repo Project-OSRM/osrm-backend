@@ -36,6 +36,8 @@ class ManyToManyRouting final
         {
         }
     };
+
+    // FIXME This should be replaced by an std::unordered_multimap, though this needs benchmarking
     using SearchSpaceWithBuckets = std::unordered_map<NodeID, std::vector<NodeBucket>>;
 
   public:
