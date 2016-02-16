@@ -2,7 +2,7 @@ BERLIN_URL:=https://s3.amazonaws.com/mapbox/node-osrm/testing/berlin-latest.osm.
 TOOL_ROOT:=../../build
 PROFILE_ROOT:=../../profiles
 OSRM_EXTRACT:=$(TOOL_ROOT)/osrm-extract
-OSRM_PREPARE:=$(TOOL_ROOT)/osrm-contract
+OSRM_CONTRACT:=$(TOOL_ROOT)/osrm-contract
 PROFILE:=$(PROFILE_ROOT)/car.lua
 
 all: berlin-latest.osrm.hsgr
@@ -19,9 +19,9 @@ berlin-latest.osrm: berlin-latest.osm.pbf $(PROFILE) $(OSRM_EXTRACT)
 	@echo "Running osrm-extract..."
 	$(OSRM_EXTRACT) berlin-latest.osm.pbf -p $(PROFILE)
 
-berlin-latest.osrm.hsgr: berlin-latest.osrm $(PROFILE) $(OSRM_PREPARE)
-	@echo "Running osrm-prepare..."
-	$(OSRM_CONTRACT) berlin-latest.osrm -p $(PROFILE)
+berlin-latest.osrm.hsgr: berlin-latest.osrm $(PROFILE) $(OSRM_CONTRACT)
+	@echo "Running osrm-contract..."
+	$(OSRM_CONTRACT) berlin-latest.osrm
 
 checksum:
 	md5sum berlin-latest.osm.pbf > data.md5sum
