@@ -1,6 +1,7 @@
 #include "engine/plugins/table.hpp"
 
 #include "engine/api/table_parameters.hpp"
+#include "engine/api/table_api.hpp"
 #include "engine/object_encoder.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/search_engine_data.hpp"
@@ -75,66 +76,9 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
         return Error("no-table", "No table found", result);
     }
 
-    util::json::Array matrix_json_array;
-    for (const auto row : util::irange<std::size_t>(0, params.sources.size()))
-    {
-        util::json::Array json_row;
-        auto row_begin_iterator = result_table.begin() + (row * params.destinations.size());
-        auto row_end_iterator = result_table.begin() + ((row + 1) * params.destinations.size());
-        json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
-        matrix_json_array.values.push_back(std::move(json_row));
-    }
-    result.values["distance_table"] = matrix_json_array;
+    api::TableAPI table_api {facade, params};
+    table_api.MakeResponse(result_table, snapped_phantoms, result);
 
-    // symmetric case
-    if (params.sources.empty())
-    {
-        BOOST_ASSERT(params.destinations.empty());
-        util::json::Array target_coord_json_array;
-        for (const auto &phantom : snapped_phantoms)
-        {
-            util::json::Array json_coord;
-            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
-            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
-            target_coord_json_array.values.push_back(std::move(json_coord));
-        }
-        result.values["destination_coordinates"] = std::move(target_coord_json_array);
-        util::json::Array source_coord_json_array;
-        for (const auto &phantom : snapped_phantoms)
-        {
-            util::json::Array json_coord;
-            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
-            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
-            source_coord_json_array.values.push_back(std::move(json_coord));
-        }
-        result.values["source_coordinates"] = std::move(source_coord_json_array);
-    }
-    // asymmetric case
-    else
-    {
-        BOOST_ASSERT(!params.destinations.empty());
-
-        util::json::Array target_coord_json_array;
-        for (const auto index : params.sources)
-        {
-            const auto &phantom = snapped_phantoms[index];
-            util::json::Array json_coord;
-            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
-            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
-            target_coord_json_array.values.push_back(std::move(json_coord));
-        }
-        result.values["destination_coordinates"] = std::move(target_coord_json_array);
-        util::json::Array source_coord_json_array;
-        for (const auto index : params.sources)
-        {
-            const auto &phantom = snapped_phantoms[index];
-            util::json::Array json_coord;
-            json_coord.values.push_back(phantom.location.lat / COORDINATE_PRECISION);
-            json_coord.values.push_back(phantom.location.lon / COORDINATE_PRECISION);
-            source_coord_json_array.values.push_back(std::move(json_coord));
-        }
-        result.values["source_coordinates"] = std::move(source_coord_json_array);
-    }
     return Status::Ok;
 }
 }
