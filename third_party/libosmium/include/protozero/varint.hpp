@@ -31,7 +31,7 @@ const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
 /**
  * Decode a 64bit varint.
  *
- * String exception guarantee: if there is an exception the data pointer will
+ * Strong exception guarantee: if there is an exception the data pointer will
  * not be changed.
  *
  * @param[in,out] data Pointer to pointer to the input data. After the function

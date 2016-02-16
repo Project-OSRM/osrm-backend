@@ -40,7 +40,9 @@ documentation.
 // in this case.
 #if PROTOZERO_BYTE_ORDER == PROTOZERO_LITTLE_ENDIAN
 # if !defined(__arm__) && !defined(_M_ARM)
-#  define PROTOZERO_USE_BARE_POINTER_FOR_PACKED_FIXED
+#  ifndef PROTOZERO_DO_NOT_USE_BARE_POINTER
+#   define PROTOZERO_USE_BARE_POINTER_FOR_PACKED_FIXED
+#  endif
 # endif
 #endif
 

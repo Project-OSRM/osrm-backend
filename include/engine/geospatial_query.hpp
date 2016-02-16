@@ -5,6 +5,7 @@
 #include "util/typedefs.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/bearing.hpp"
+#include "util/rectangle.hpp"
 
 #include "osrm/coordinate.hpp"
 
@@ -31,6 +32,14 @@ template <typename RTreeT> class GeospatialQuery
         : rtree(rtree_), coordinates(std::move(coordinates_))
     {
     }
+
+    std::vector<EdgeData>
+    Search(const util::RectangleInt2D & bbox)
+    {
+        return rtree.SearchInBox(bbox);
+
+    }
+
 
     // Returns nearest PhantomNodes in the given bearing range within max_distance.
     // Does not filter by small/big component!

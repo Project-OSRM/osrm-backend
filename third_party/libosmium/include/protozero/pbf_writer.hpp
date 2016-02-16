@@ -33,6 +33,14 @@ documentation.
 
 namespace protozero {
 
+namespace detail {
+
+    template <typename T> class packed_field_varint;
+    template <typename T> class packed_field_svarint;
+    template <typename T> class packed_field_fixed;
+
+} // end namespace detail
+
 /**
  * The pbf_writer is used to write PBF formatted messages into a buffer.
  *
@@ -41,9 +49,24 @@ namespace protozero {
  */
 class pbf_writer {
 
+    // A pointer to a string buffer holding the data already written to the
+    // PBF message. For default constructed writers or writers that have been
+    // rolled back, this is a nullptr.
     std::string* m_data;
+
+    // A pointer to a parent writer object if this is a submessage. If this
+    // is a top-level writer, it is a nullptr.
     pbf_writer* m_parent_writer;
-    size_t m_pos = 0;
+
+    // This is usually 0. If there is an open submessage, this is set in the
+    // parent to the rollback position, ie. the last position before the
+    // submessage was started. This is the position where the header of the
+    // submessage starts.
+    std::size_t m_rollback_pos = 0;
+
+    // This is usually 0. If there is an open submessage, this is set in the
+    // parent to the position where the data of the submessage is written to.
+    std::size_t m_pos = 0;
 
     inline void add_varint(uint64_t value) {
         protozero_assert(m_pos == 0 && "you can't add fields to a parent pbf_writer if there is an existing pbf_writer for a submessage");
@@ -94,7 +117,9 @@ class pbf_writer {
             return;
         }
 
-        add_length_varint(tag, sizeof(T) * pbf_length_type(std::distance(first, last)));
+        auto length = std::distance(first, last);
+        add_length_varint(tag, sizeof(T) * pbf_length_type(length));
+        reserve(sizeof(T) * std::size_t(length));
 
         while (first != last) {
             add_fixed<T>(*first++);
@@ -132,16 +157,37 @@ class pbf_writer {
     // and a varint needs 8 bit for every 7 bit.
     static const int reserve_bytes = sizeof(pbf_length_type) * 8 / 7 + 1;
 
-    inline void open_submessage(pbf_tag_type tag) {
+    // If m_rollpack_pos is set to this special value, it means that when
+    // the submessage is closed, nothing needs to be done, because the length
+    // of the submessage has already been written correctly.
+    static const std::size_t size_is_known = std::numeric_limits<std::size_t>::max();
+
+    inline void open_submessage(pbf_tag_type tag, std::size_t size) {
         protozero_assert(m_pos == 0);
         protozero_assert(m_data);
-        add_field(tag, pbf_wire_type::length_delimited);
-        m_data->append(size_t(reserve_bytes), '\0');
+        if (size == 0) {
+            m_rollback_pos = m_data->size();
+            add_field(tag, pbf_wire_type::length_delimited);
+            m_data->append(std::size_t(reserve_bytes), '\0');
+        } else {
+            m_rollback_pos = size_is_known;
+            add_length_varint(tag, pbf_length_type(size));
+            reserve(size);
+        }
         m_pos = m_data->size();
     }
 
-    inline void close_submessage() {
+    inline void rollback_submessage() {
         protozero_assert(m_pos != 0);
+        protozero_assert(m_rollback_pos != size_is_known);
+        protozero_assert(m_data);
+        m_data->resize(m_rollback_pos);
+        m_pos = 0;
+    }
+
+    inline void commit_submessage() {
+        protozero_assert(m_pos != 0);
+        protozero_assert(m_rollback_pos != size_is_known);
         protozero_assert(m_data);
         auto length = pbf_length_type(m_data->size() - m_pos);
 
@@ -150,6 +196,18 @@ class pbf_writer {
 
         m_data->erase(m_data->begin() + long(m_pos) - reserve_bytes + n, m_data->begin() + long(m_pos));
         m_pos = 0;
+    }
+
+    inline void close_submessage() {
+        protozero_assert(m_data);
+        if (m_pos == 0 || m_rollback_pos == size_is_known) {
+            return;
+        }
+        if (m_data->size() - m_pos == 0) {
+            rollback_submessage();
+        } else {
+            commit_submessage();
+        }
     }
 
     inline void add_length_varint(pbf_tag_type tag, pbf_length_type length) {
@@ -161,7 +219,8 @@ public:
 
     /**
      * Create a writer using the given string as a data store. The pbf_writer
-     * stores a reference to that string and adds all data to it.
+     * stores a reference to that string and adds all data to it. The string
+     * doesn't have to be empty. The pbf_writer will just append data.
      */
     inline explicit pbf_writer(std::string& data) noexcept :
         m_data(&data),
@@ -185,12 +244,15 @@ public:
      *
      * @param parent_writer The pbf_writer
      * @param tag Tag (field number) of the field that will be written
+     * @param size Optional size of the submessage in bytes (use 0 for unknown).
+     *        Setting this allows some optimizations but is only possible in
+     *        a few very specific cases.
      */
-    inline pbf_writer(pbf_writer& parent_writer, pbf_tag_type tag) :
+    inline pbf_writer(pbf_writer& parent_writer, pbf_tag_type tag, std::size_t size=0) :
         m_data(parent_writer.m_data),
         m_parent_writer(&parent_writer),
         m_pos(0) {
-        m_parent_writer->open_submessage(tag);
+        m_parent_writer->open_submessage(tag, size);
     }
 
     /// A pbf_writer object can be copied
@@ -209,6 +271,26 @@ public:
         if (m_parent_writer) {
             m_parent_writer->close_submessage();
         }
+    }
+
+    /**
+     * Reserve size bytes in the underlying message store in addition to
+     * whatever the message store already holds. So unlike
+     * the `std::string::reserve()` method this is not an absolute size,
+     * but additional memory that should be reserved.
+     *
+     * @param size Number of bytes to reserve in underlying message store.
+     */
+    void reserve(std::size_t size) {
+        protozero_assert(m_data);
+        m_data->reserve(m_data->size() + size);
+    }
+
+    inline void rollback() {
+        protozero_assert(m_parent_writer && "you can't call rollback() on a pbf_writer without a parent");
+        protozero_assert(m_pos == 0 && "you can't call rollback() on a pbf_writer that has an open nested submessage");
+        m_parent_writer->rollback_submessage();
+        m_data = nullptr;
     }
 
     ///@{
@@ -372,7 +454,7 @@ public:
      * @param value Pointer to value to be written
      * @param size Number of bytes to be written
      */
-    inline void add_bytes(pbf_tag_type tag, const char* value, size_t size) {
+    inline void add_bytes(pbf_tag_type tag, const char* value, std::size_t size) {
         protozero_assert(m_pos == 0 && "you can't add fields to a parent pbf_writer if there is an existing pbf_writer for a submessage");
         protozero_assert(m_data);
         protozero_assert(size <= std::numeric_limits<pbf_length_type>::max());
@@ -397,7 +479,7 @@ public:
      * @param value Pointer to value to be written
      * @param size Number of bytes to be written
      */
-    inline void add_string(pbf_tag_type tag, const char* value, size_t size) {
+    inline void add_string(pbf_tag_type tag, const char* value, std::size_t size) {
         add_bytes(tag, value, size);
     }
 
@@ -429,7 +511,7 @@ public:
      * @param value Pointer to message to be written
      * @param size Length of the message
      */
-    inline void add_message(pbf_tag_type tag, const char* value, size_t size) {
+    inline void add_message(pbf_tag_type tag, const char* value, std::size_t size) {
         add_bytes(tag, value, size);
     }
 
@@ -654,7 +736,101 @@ public:
 
     ///@}
 
+    template <typename T> friend class detail::packed_field_varint;
+    template <typename T> friend class detail::packed_field_svarint;
+    template <typename T> friend class detail::packed_field_fixed;
+
 }; // class pbf_writer
+
+namespace detail {
+
+    class packed_field {
+
+    protected:
+
+        pbf_writer m_writer;
+
+    public:
+
+        packed_field(pbf_writer& parent_writer, pbf_tag_type tag) :
+            m_writer(parent_writer, tag) {
+        }
+
+        packed_field(pbf_writer& parent_writer, pbf_tag_type tag, std::size_t size) :
+            m_writer(parent_writer, tag, size) {
+        }
+
+        void rollback() {
+            m_writer.rollback();
+        }
+
+    }; // class packed_field
+
+    template <typename T>
+    class packed_field_fixed : public packed_field {
+
+    public:
+
+        packed_field_fixed(pbf_writer& parent_writer, pbf_tag_type tag) :
+            packed_field(parent_writer, tag) {
+        }
+
+        packed_field_fixed(pbf_writer& parent_writer, pbf_tag_type tag, std::size_t size) :
+            packed_field(parent_writer, tag, size * sizeof(T)) {
+        }
+
+        void add_element(T value) {
+            m_writer.add_fixed<T>(value);
+        }
+
+    }; // class packed_field_fixed
+
+    template <typename T>
+    class packed_field_varint : public packed_field {
+
+    public:
+
+        packed_field_varint(pbf_writer& parent_writer, pbf_tag_type tag) :
+            packed_field(parent_writer, tag) {
+        }
+
+        void add_element(T value) {
+            m_writer.add_varint(uint64_t(value));
+        }
+
+    }; // class packed_field_varint
+
+    template <typename T>
+    class packed_field_svarint : public packed_field {
+
+    public:
+
+        packed_field_svarint(pbf_writer& parent_writer, pbf_tag_type tag) :
+            packed_field(parent_writer, tag) {
+        }
+
+        void add_element(T value) {
+            m_writer.add_varint(encode_zigzag64(value));
+        }
+
+    }; // class packed_field_svarint
+
+} // end namespace detail
+
+using packed_field_bool     = detail::packed_field_varint<bool>;
+using packed_field_enum     = detail::packed_field_varint<int32_t>;
+using packed_field_int32    = detail::packed_field_varint<int32_t>;
+using packed_field_sint32   = detail::packed_field_svarint<int32_t>;
+using packed_field_uint32   = detail::packed_field_varint<uint32_t>;
+using packed_field_int64    = detail::packed_field_varint<int64_t>;
+using packed_field_sint64   = detail::packed_field_svarint<int64_t>;
+using packed_field_uint64   = detail::packed_field_varint<uint64_t>;
+using packed_field_fixed32  = detail::packed_field_fixed<uint32_t>;
+using packed_field_sfixed32 = detail::packed_field_fixed<int32_t>;
+using packed_field_fixed64  = detail::packed_field_fixed<uint64_t>;
+using packed_field_sfixed64 = detail::packed_field_fixed<int64_t>;
+using packed_field_float    = detail::packed_field_fixed<float>;
+using packed_field_double   = detail::packed_field_fixed<double>;
 
 } // end namespace protozero
 

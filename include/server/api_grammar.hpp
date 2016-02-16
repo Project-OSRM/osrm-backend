@@ -47,7 +47,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         query = ('?') >> +(zoom | output | jsonp | checksum | uturns | location_with_options |
                            destination_with_options | source_with_options | cmp | language |
                            instruction | geometry | alt_route | old_API | num_results |
-                           matching_beta | gps_precision | classify | locs);
+                           matching_beta | gps_precision | classify | locs | x | y | z);
         // all combinations of timestamp, uturn, hint and bearing without duplicates
         t_u = (u >> -timestamp) | (timestamp >> -u);
         t_h = (hint >> -timestamp) | (timestamp >> -hint);
@@ -111,6 +111,11 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         locs = (-qi::lit('&')) >> qi::lit("locs") >> '=' >>
                stringforPolyline[boost::bind(&HandlerT::SetCoordinatesFromGeometry, handler, ::_1)];
 
+
+        z = (-qi::lit('&')) >> qi::lit("tz") >> '=' >> qi::int_[boost::bind<void>(&HandlerT::SetZ, handler, ::_1)];
+        x = (-qi::lit('&')) >> qi::lit("tx") >> '=' >> qi::int_[boost::bind<void>(&HandlerT::SetX, handler, ::_1)];
+        y = (-qi::lit('&')) >> qi::lit("ty") >> '=' >> qi::int_[boost::bind<void>(&HandlerT::SetY, handler, ::_1)];
+
         string = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));
         stringwithPercent = +(qi::char_("a-zA-Z0-9_.-") | qi::char_('[') | qi::char_(']') |
@@ -123,7 +128,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
         destination, source, hint, timestamp, bearing, stringwithDot, stringwithPercent, language,
         geometry, cmp, alt_route, u, uturns, old_API, num_results, matching_beta, gps_precision,
-        classify, locs, instruction, stringforPolyline;
+        classify, locs, instruction, stringforPolyline, x, y, z;
 
     HandlerT *handler;
 };

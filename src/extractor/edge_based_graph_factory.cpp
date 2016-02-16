@@ -1059,7 +1059,7 @@ EdgeBasedGraphFactory::getTurnCandidates(NodeID from_node, EdgeID via_eid)
         }
     }
     return turn_candidates;
-};
+}
 
 int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const
 {
