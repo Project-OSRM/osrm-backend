@@ -37,12 +37,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
                           engine::api::BaseParameters &parameters_)
         : BaseParametersGrammar::base_type(child_rule), base_parameters(parameters_)
     {
-        const auto add_bearing = [this](const boost::optional<boost::fusion::vector<short, short>> &bearing_range) {
-            boost::optional<engine::api::BaseParameters::Bearing> bearing;
-            if (bearing_range)
-            {
-                bearing = engine::api::BaseParameters::Bearing {boost::fusion::at_c<0>(*bearing_range), boost::fusion::at_c<1>(*bearing_range)};
-            }
+        const auto add_bearing = [this](const boost::fusion::vector<short, short> &bearing_range) {
+            engine::api::BaseParameters::Bearing bearing{boost::fusion::at_c<0>(bearing_range), boost::fusion::at_c<1>(bearing_range)};
             base_parameters.bearings.push_back(std::move(bearing));
         };
         const auto set_radiuses = [this](RadiusesT& radiuses) {
