@@ -37,8 +37,12 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
                           engine::api::BaseParameters &parameters_)
         : BaseParametersGrammar::base_type(child_rule), base_parameters(parameters_)
     {
-        const auto add_bearing = [this](const boost::fusion::vector<short, short> &bearing_range) {
-            engine::api::BaseParameters::Bearing bearing{boost::fusion::at_c<0>(bearing_range), boost::fusion::at_c<1>(bearing_range)};
+        const auto add_bearing = [this](const boost::optional<boost::fusion::vector<short, short>> &bearing_range) {
+            boost::optional<engine::api::BaseParameters::Bearing> bearing;
+            if (bearing_range)
+            {
+                bearing = engine::api::BaseParameters::Bearing {boost::fusion::at_c<0>(*bearing_range), boost::fusion::at_c<1>(*bearing_range)};
+            }
             base_parameters.bearings.push_back(std::move(bearing));
         };
         const auto set_radiuses = [this](RadiusesT& radiuses) {
@@ -57,7 +61,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         radiuses_rule = qi::lit("radiuses=") >> -qi::double_ % ";";
         hints_rule = qi::lit("hints=") >> qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
         bearings_rule =
-            qi::lit("bearings=") >> -((qi::short_ >> ',' >> qi::short_))[add_bearing] % ";";
+            qi::lit("bearings=") >> (-(qi::short_ >> ',' >> qi::short_))[add_bearing] % ";";
         base_rule = bearings_rule | radiuses_rule[set_radiuses] | hints_rule;
     }
 
