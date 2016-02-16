@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         "0vMAAEAAQGLSzmR;_4ghA4JuzAD_"
         "IAAAo28BAOYAAAAzAAAAAgAAAEwAAAAAAAAAdIwAAJ4AAAAXiSEDfm7MAAEAAQGLSzmR;03AhA0vnzAA_SAAA_____"
         "3wEAAAYAAAAQAAAAB4AAABAAAAAoUYBAJ4AAADlcCEDSefMAAMAAQGLSzmR");
-    BOOST_CHECK(result_3);
+    BOOST_CHECK(result_4);
     BOOST_CHECK_EQUAL(reference_4.steps, result_4->steps);
     BOOST_CHECK_EQUAL(reference_4.alternative, result_4->alternative);
     BOOST_CHECK_EQUAL(reference_4.geometries, result_4->geometries);
@@ -174,6 +174,33 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_4.bearings, result_4->bearings);
     CHECK_EQUAL_RANGE(reference_4.radiuses, result_4->radiuses);
     CHECK_EQUAL_RANGE(reference_4.coordinates, result_4->coordinates);
+
+    std::vector<boost::optional<engine::api::BaseParameters::Bearing>> bearings_4 = {
+        boost::none,
+        engine::api::BaseParameters::Bearing {200, 10},
+        engine::api::BaseParameters::Bearing {100, 5},
+    };
+    engine::api::RouteParameters reference_5{
+        false,
+        true,
+        engine::api::RouteParameters::GeometriesType::Polyline,
+        engine::api::RouteParameters::OverviewType::Simplified,
+        std::vector<boost::optional<bool>>{},
+        std::vector<util::FixedPointCoordinate>{},
+        std::vector<boost::optional<engine::Hint>> {},
+        std::vector<boost::optional<double>>{},
+        bearings_4};
+    auto result_5 = api::parseParameters<engine::api::RouteParameters>(
+        "steps=false&bearings=;200,10;100,5");
+    BOOST_CHECK(result_5);
+    BOOST_CHECK_EQUAL(reference_5.steps, result_5->steps);
+    BOOST_CHECK_EQUAL(reference_5.alternative, result_5->alternative);
+    BOOST_CHECK_EQUAL(reference_5.geometries, result_5->geometries);
+    BOOST_CHECK_EQUAL(reference_5.overview, result_5->overview);
+    CHECK_EQUAL_RANGE(reference_5.uturns, result_5->uturns);
+    CHECK_EQUAL_RANGE(reference_5.bearings, result_5->bearings);
+    CHECK_EQUAL_RANGE(reference_5.radiuses, result_5->radiuses);
+    CHECK_EQUAL_RANGE(reference_5.coordinates, result_5->coordinates);
 }
 
 BOOST_AUTO_TEST_CASE(valid_table_urls)
