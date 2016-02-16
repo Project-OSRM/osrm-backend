@@ -1,6 +1,7 @@
 #include "server/service_handler.hpp"
 
 #include "server/service/route_service.hpp"
+#include "server/service/table_service.hpp"
 
 #include "server/api/parsed_url.hpp"
 #include "util/json_util.hpp"
@@ -13,6 +14,7 @@ namespace server
     ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(config)
     {
         service_map["route"] = util::make_unique<service::RouteService>(routing_machine);
+        service_map["table"] = util::make_unique<service::TableService>(routing_machine);
     }
 
     engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url, util::json::Object &json_result)
