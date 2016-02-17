@@ -19,6 +19,7 @@ namespace api
 {
 
 namespace qi = boost::spirit::qi;
+
 struct RouteParametersGrammar : public BaseParametersGrammar
 {
     using Iterator = std::string::iterator;
@@ -28,8 +29,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
     using OverviewT = engine::api::RouteParameters::OverviewType;
     using UturnsT = std::vector<boost::optional<bool>>;
 
-    RouteParametersGrammar()
-        : BaseParametersGrammar(root_rule, parameters)
+    RouteParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
     {
         const auto set_geojson_type = [this]()
         {
@@ -79,6 +79,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
     }
 
     engine::api::RouteParameters parameters;
+
   private:
     qi::rule<Iterator> root_rule, route_rule, geometries_rule, overview_rule;
     qi::rule<Iterator, UturnsT()> uturns_rule;
