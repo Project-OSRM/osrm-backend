@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace osrm
 {
+
+// Fwd decls
 namespace util
 {
 namespace json
@@ -50,12 +52,19 @@ namespace api
 {
 struct RouteParameters;
 struct TableParameters;
+struct NearestParameters;
+// struct TripParameters;
+// struct MatchParameters;
 }
 }
+// End fwd decls
 
 using engine::EngineConfig;
 using engine::api::RouteParameters;
 using engine::api::TableParameters;
+using engine::api::NearestParameters;
+// using engine::api::TripParameters;
+// using engine::api::MatchParameters;
 namespace json = util::json;
 
 class OSRM
@@ -69,6 +78,9 @@ class OSRM
 
     Status Route(const RouteParameters &parameters, json::Object &result);
     Status Table(const TableParameters &parameters, json::Object &result);
+    Status Nearest(const NearestParameters &parameters, json::Object &result);
+    // Status Trip(const TripParameters &parameters, json::Object &result);
+    // Status Match(const MatchParameters &parameters, json::Object &result);
 
   private:
     std::unique_ptr<engine::Engine> engine_;
