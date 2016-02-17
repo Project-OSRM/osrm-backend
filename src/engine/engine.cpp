@@ -22,6 +22,7 @@
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/thread/lock_types.hpp>
 
 #include <algorithm>
 #include <fstream>
