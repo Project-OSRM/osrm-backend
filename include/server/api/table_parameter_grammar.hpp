@@ -19,7 +19,8 @@ namespace api
 {
 
 namespace qi = boost::spirit::qi;
-struct TableParametersGrammar : public BaseParametersGrammar
+
+struct TableParametersGrammar final : public BaseParametersGrammar
 {
     using Iterator = std::string::iterator;
     using SourcesT = std::vector<std::size_t>;
