@@ -113,7 +113,7 @@ int main(int argc, const char *argv[]) try
     }
     else
     {
-        std::packaged_task<int()> server_task([&]() -> int
+        std::packaged_task<int()> server_task([&]
                                               {
                                                   routing_server->Run();
                                                   return 0;
