@@ -5,7 +5,7 @@
 
 #include "engine/plugins/table.hpp"
 //#include "engine/plugins/hello_world.hpp"
-//#include "engine/plugins/nearest.hpp"
+#include "engine/plugins/nearest.hpp"
 //#include "engine/plugins/timestamp.hpp"
 //#include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
@@ -136,13 +136,13 @@ Engine::Engine(EngineConfig &config)
     route_plugin = util::make_unique<plugins::ViaRoutePlugin>(*query_data_facade,
                                                               config.max_locations_viaroute);
     table_plugin = util::make_unique<plugins::TablePlugin>(*query_data_facade,
-                                                              config.max_locations_distance_table);
+                                                           config.max_locations_distance_table);
 }
 
 // make sure we deallocate the unique ptr at a position where we know the size of the plugins
-Engine::~Engine()
-{
-}
+Engine::~Engine() = default;
+Engine::Engine(Engine &&) noexcept = default;
+Engine &Engine::operator=(Engine &&) noexcept = default;
 
 Status Engine::Route(const api::RouteParameters &route_parameters, util::json::Object &result)
 {
