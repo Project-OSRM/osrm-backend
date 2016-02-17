@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/assert.hpp>
+
 namespace osrm
 {
 namespace engine
@@ -58,7 +60,7 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
 
     auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(params));
 
-    const auto result_table = [&]()
+    const auto result_table = [&]
     {
         if (params.sources.empty())
         {
@@ -76,7 +78,7 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
         return Error("no-table", "No table found", result);
     }
 
-    api::TableAPI table_api {facade, params};
+    api::TableAPI table_api{facade, params};
     table_api.MakeResponse(result_table, snapped_phantoms, result);
 
     return Status::Ok;
