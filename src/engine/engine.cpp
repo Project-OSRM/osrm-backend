@@ -144,14 +144,30 @@ Engine::~Engine() = default;
 Engine::Engine(Engine &&) noexcept = default;
 Engine &Engine::operator=(Engine &&) noexcept = default;
 
-Status Engine::Route(const api::RouteParameters &route_parameters, util::json::Object &result)
+Status Engine::Route(const api::RouteParameters &params, util::json::Object &result)
 {
-    return RunQuery(lock, *query_data_facade, route_parameters, *route_plugin, result);
+    return RunQuery(lock, *query_data_facade, params, *route_plugin, result);
 }
 
-Status Engine::Table(const api::TableParameters &table_parameters, util::json::Object &result)
+Status Engine::Table(const api::TableParameters &params, util::json::Object &result)
 {
-    return RunQuery(lock, *query_data_facade, table_parameters, *table_plugin, result);
+    return RunQuery(lock, *query_data_facade, params, *table_plugin, result);
 }
+
+Status Engine::Nearest(const api::NearestParameters &params, util::json::Object &result)
+{
+    return RunQuery(lock, *query_data_facade, params, *nearest_plugin, result);
+}
+
+//Status Engine::Trip(const api::TripParameters &params, util::json::Object &result)
+//{
+//    return RunQuery(lock, *query_data_facade, params, *trip_plugin, result);
+//}
+//
+//Status Engine::Match(const api::MatchParameters &params, util::json::Object &result)
+//{
+//    return RunQuery(lock, *query_data_facade, params, *match_plugin, result);
+//}
+
 } // engine ns
 } // osrm ns
