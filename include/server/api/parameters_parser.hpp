@@ -21,7 +21,6 @@ namespace api
 namespace detail
 {
 template <typename T> using is_parameter_t = std::is_base_of<engine::api::BaseParameters, T>;
-template <typename T> using is_grammar_t = std::is_base_of<BaseParametersGrammar, T>;
 } // ns detail
 
 // Starts parsing and iter and modifies it until iter == end or parsing failed

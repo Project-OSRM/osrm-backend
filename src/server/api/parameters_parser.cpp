@@ -3,10 +3,8 @@
 #include "server/api/route_parameters_grammar.hpp"
 #include "server/api/table_parameter_grammar.hpp"
 #include "server/api/nearest_parameter_grammar.hpp"
-//#include "server/api/trip_parameter_grammar.hpp"
-//#include "server/api/match_parameter_grammar.hpp"
-
-#include <type_traits>
+#include "server/api/trip_parameter_grammar.hpp"
+#include "server/api/match_parameter_grammar.hpp"
 
 namespace osrm
 {
@@ -17,11 +15,12 @@ namespace api
 
 namespace detail
 {
+template <typename T> using is_grammar_t = std::is_base_of<BaseParametersGrammar, T>;
 
 template <typename ParameterT,
           typename GrammarT,
           typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0,
-          typename std::enable_if<detail::is_grammar_t<ParameterT>::value, int>::type = 0>
+          typename std::enable_if<detail::is_grammar_t<GrammarT>::value, int>::type = 0>
 boost::optional<ParameterT> parseParameters(std::string::iterator &iter, std::string::iterator end)
 {
     GrammarT grammar;
@@ -57,20 +56,19 @@ boost::optional<engine::api::NearestParameters> parseParameters(std::string::ite
                                                                                              end);
 }
 
-// template <>
-// boost::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
-//                                                             std::string::iterator end)
-//{
-//    return detail::parseParameters<engine::api::TripParameters, TripParametersGrammar>(iter, end);
-//}
-//
-// template <>
-// boost::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,
-//                                                              std::string::iterator end)
-//{
-//    return detail::parseParameters<engine::api::MatchParameters, MatchParametersGrammar>(iter,
-//    end);
-//}
+template <>
+boost::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
+                                                             std::string::iterator end)
+{
+    return detail::parseParameters<engine::api::TripParameters, TripParametersGrammar>(iter, end);
+}
+
+template <>
+boost::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,
+                                                              std::string::iterator end)
+{
+    return detail::parseParameters<engine::api::MatchParameters, MatchParametersGrammar>(iter, end);
+}
 
 } // ns api
 } // ns server
