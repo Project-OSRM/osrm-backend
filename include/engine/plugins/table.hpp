@@ -17,16 +17,16 @@ namespace plugins
 
 class TablePlugin final : public BasePlugin
 {
-  private:
-    SearchEngineData heaps;
-    routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> distance_table;
-    int max_locations_distance_table;
-
   public:
     explicit TablePlugin(datafacade::BaseDataFacade &facade,
                          const int max_locations_distance_table);
 
     Status HandleRequest(const api::TableParameters &params, util::json::Object &result);
+
+  private:
+    SearchEngineData heaps;
+    routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> distance_table;
+    int max_locations_distance_table;
 };
 }
 }
