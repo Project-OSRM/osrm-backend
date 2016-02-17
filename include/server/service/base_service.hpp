@@ -24,6 +24,7 @@ class BaseService
     virtual engine::Status RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
                                     std::string &options,
                                     util::json::Object &json_result) = 0;
+
     virtual unsigned GetVersion() = 0;
 
   protected:
