@@ -18,7 +18,10 @@ namespace api
 namespace detail
 {
 
-template <typename ParameterT, typename GrammarT>
+template <typename ParameterT,
+          typename GrammarT,
+          typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0,
+          typename std::enable_if<detail::is_grammar_t<ParameterT>::value, int>::type = 0>
 boost::optional<ParameterT> parseParameters(std::string::iterator &iter, std::string::iterator end)
 {
     GrammarT grammar;
@@ -54,18 +57,19 @@ boost::optional<engine::api::NearestParameters> parseParameters(std::string::ite
                                                                                              end);
 }
 
-//template <>
-//boost::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
+// template <>
+// boost::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
 //                                                             std::string::iterator end)
 //{
 //    return detail::parseParameters<engine::api::TripParameters, TripParametersGrammar>(iter, end);
 //}
 //
-//template <>
-//boost::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,
+// template <>
+// boost::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,
 //                                                              std::string::iterator end)
 //{
-//    return detail::parseParameters<engine::api::MatchParameters, MatchParametersGrammar>(iter, end);
+//    return detail::parseParameters<engine::api::MatchParameters, MatchParametersGrammar>(iter,
+//    end);
 //}
 
 } // ns api
