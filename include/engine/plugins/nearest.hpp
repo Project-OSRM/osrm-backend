@@ -19,7 +19,7 @@ namespace plugins
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
 
-template <class DataFacadeT> class NearestPlugin final : public BasePlugin
+class NearestPlugin final : public BasePlugin
 {
   public:
     explicit NearestPlugin(DataFacadeT *facade) : facade(facade), descriptor_string("nearest") {}
