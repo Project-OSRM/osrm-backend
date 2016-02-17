@@ -83,7 +83,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         const bool use_timestamps = trace_timestamps.size() > 1;
 
-        const auto median_sample_time = [&]()
+        const auto median_sample_time = [&]
         {
             if (use_timestamps)
             {
@@ -95,7 +95,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }();
         const auto max_broken_time = median_sample_time * MAX_BROKEN_STATES;
-        const auto max_distance_delta = [&]()
+        const auto max_distance_delta = [&]
         {
             if (use_timestamps)
             {
