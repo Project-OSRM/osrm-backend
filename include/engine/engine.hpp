@@ -55,8 +55,8 @@ class Engine final
 
     explicit Engine(EngineConfig &config);
 
-    Engine(const Engine &) = delete;
-    Engine &operator=(const Engine &) = delete;
+    Engine(Engine &&) noexcept;
+    Engine &operator=(Engine &&) noexcept;
 
     // Impl. in cpp since for unique_ptr of incomplete types
     ~Engine();
