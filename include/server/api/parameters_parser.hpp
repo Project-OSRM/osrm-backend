@@ -15,6 +15,9 @@ namespace server
 namespace api
 {
 
+// Note: this file provides only the interface for the generic parseParameters function.
+// The actual implementations for each concrete parameter type live in the cpp file.
+
 namespace detail
 {
 template <typename T> using is_parameter_t = std::is_base_of<engine::api::BaseParameters, T>;
