@@ -24,15 +24,11 @@ namespace engine
 namespace api
 {
 
-namespace detail
+class RouteAPI final : public BaseAPI
 {
-template <typename ChildT> class RouteAPI_ : public BaseAPI_<RouteAPI_<ChildT>>
-{
-    using BaseT = BaseAPI_<RouteAPI_<ChildT>>;
-
   public:
-    RouteAPI_(const datafacade::BaseDataFacade &facade_, const RouteParameters &parameters_)
-        : BaseT(facade_, parameters_), parameters(parameters_)
+    RouteAPI(const datafacade::BaseDataFacade &facade_, const RouteParameters &parameters_)
+        : BaseAPI(facade_, parameters_), parameters(parameters_)
     {
     }
 
@@ -53,7 +49,7 @@ template <typename ChildT> class RouteAPI_ : public BaseAPI_<RouteAPI_<ChildT>>
                                          raw_route.alt_source_traversed_in_reverse,
                                          raw_route.alt_target_traversed_in_reverse);
         }
-        response.values["waypoints"] = BaseT::MakeWaypoints(raw_route.segment_end_coordinates);
+        response.values["waypoints"] = BaseAPI::MakeWaypoints(raw_route.segment_end_coordinates);
         response.values["routes"] = std::move(routes);
         response.values["code"] = "ok";
     }
@@ -90,15 +86,16 @@ template <typename ChildT> class RouteAPI_ : public BaseAPI_<RouteAPI_<ChildT>>
             const bool reversed_target = target_traversed_in_reverse[idx];
 
             auto leg_geometry = guidance::assembleGeometry(
-                BaseT::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
-            auto leg = guidance::assembleLeg(BaseT::facade, path_data, leg_geometry, phantoms.source_phantom,
-                                      phantoms.target_phantom, reversed_source, reversed_target);
+                BaseAPI::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
+            auto leg = guidance::assembleLeg(BaseAPI::facade, path_data, leg_geometry,
+                                             phantoms.source_phantom, phantoms.target_phantom,
+                                             reversed_source, reversed_target);
 
             if (parameters.steps)
             {
-                leg.steps = guidance::assembleSteps(BaseT::facade,
-                    path_data, leg_geometry, phantoms.source_phantom, phantoms.target_phantom,
-                    reversed_source, reversed_target);
+                leg.steps = guidance::assembleSteps(
+                    BaseAPI::facade, path_data, leg_geometry, phantoms.source_phantom,
+                    phantoms.target_phantom, reversed_source, reversed_target);
             }
 
             leg_geometries.push_back(std::move(leg_geometry));
@@ -123,13 +120,9 @@ template <typename ChildT> class RouteAPI_ : public BaseAPI_<RouteAPI_<ChildT>>
 
     const RouteParameters &parameters;
 };
-}
 
-// Expose non-templated version
-using RouteAPI = detail::RouteAPI_<std::true_type>;
-
-}
-}
-}
+} // ns api
+} // ns engine
+} // ns osrm
 
 #endif
