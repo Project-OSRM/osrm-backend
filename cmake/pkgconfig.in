@@ -1,5 +1,5 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-includedir=${prefix}/include
+includedir=${prefix}/include ${prefix}/include/osrm
 libdir=${prefix}/lib
 
 Name: libOSRM
