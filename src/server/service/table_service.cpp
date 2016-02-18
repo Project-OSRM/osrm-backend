@@ -14,12 +14,18 @@ namespace server
 namespace service
 {
 
-namespace {
+namespace
+{
 
-const constexpr char PARAMETER_SIZE_MISMATCH_MSG[] = "Number of elements in %1% size %2% does not match coordinate size %3%";
+const constexpr char PARAMETER_SIZE_MISMATCH_MSG[] =
+    "Number of elements in %1% size %2% does not match coordinate size %3%";
 
-template<typename ParamT>
-bool constrainParamSize(const char* msg_template, const char* name, const ParamT& param, const std::size_t target_size, std::string& help)
+template <typename ParamT>
+bool constrainParamSize(const char *msg_template,
+                        const char *name,
+                        const ParamT &param,
+                        const std::size_t target_size,
+                        std::string &help)
 {
     if (param.size() > 0 && param.size() != target_size)
     {
@@ -29,15 +35,18 @@ bool constrainParamSize(const char* msg_template, const char* name, const ParamT
     return false;
 }
 
-std::string getWrongOptionHelp(const engine::api::TableParameters& parameters)
+std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 {
     std::string help;
 
     const auto coord_size = parameters.coordinates.size();
 
-    const bool param_size_mismatch = constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, coord_size, help)
-     || constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help)
-     || constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help);
+    const bool param_size_mismatch = constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "hints",
+                                                        parameters.hints, coord_size, help) ||
+                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "bearings",
+                                                        parameters.bearings, coord_size, help) ||
+                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "radiuses",
+                                                        parameters.radiuses, coord_size, help);
 
     if (!param_size_mismatch && parameters.coordinates.size() < 2)
     {
@@ -50,16 +59,17 @@ std::string getWrongOptionHelp(const engine::api::TableParameters& parameters)
 
 engine::Status TableService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
                                       std::string &options,
-                                      util::json::Object &json_result)
+                                      util::json::Object &result)
 {
 
     auto options_iterator = options.begin();
-    auto parameters = api::parseParameters<engine::api::TableParameters>(options_iterator, options.end());
+    auto parameters =
+        api::parseParameters<engine::api::TableParameters>(options_iterator, options.end());
     if (!parameters || options_iterator != options.end())
     {
         const auto position = std::distance(options.begin(), options_iterator);
-        json_result.values["code"] = "invalid-options";
-        json_result.values["message"] =
+        result.values["code"] = "invalid-options";
+        result.values["message"] =
             "Options string malformed close to position " + std::to_string(position);
         return engine::Status::Error;
     }
@@ -69,13 +79,13 @@ engine::Status TableService::RunQuery(std::vector<util::FixedPointCoordinate> co
 
     if (!parameters->IsValid())
     {
-        json_result.values["code"] = "invalid-options";
-        json_result.values["message"] = getWrongOptionHelp(*parameters);
+        result.values["code"] = "invalid-options";
+        result.values["message"] = getWrongOptionHelp(*parameters);
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters->IsValid());
 
-    return BaseService::routing_machine.Table(*parameters, json_result);
+    return BaseService::routing_machine.Table(*parameters, result);
 }
 }
 }
