@@ -18,12 +18,10 @@ namespace engine
 namespace api
 {
 
-namespace detail
-{
-template <typename ChildT> class BaseAPI_
+class BaseAPI
 {
   public:
-    BaseAPI_(const datafacade::BaseDataFacade &facade_, const BaseParameters &parameters_)
+    BaseAPI(const datafacade::BaseDataFacade &facade_, const BaseParameters &parameters_)
         : facade(facade_), parameters(parameters_)
     {
     }
@@ -59,12 +57,9 @@ template <typename ChildT> class BaseAPI_
     const datafacade::BaseDataFacade &facade;
     const BaseParameters &parameters;
 };
-}
 
-// Only expose non-templated version
-using BaseAPI = detail::BaseAPI_<std::true_type>;
-}
-}
-}
+} // ns api
+} // ns engine
+} // ns osrm
 
 #endif
