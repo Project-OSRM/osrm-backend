@@ -5,7 +5,11 @@
 #include "engine/phantom_node.hpp"
 
 #include <boost/assert.hpp>
+
+#include <cstdint>
 #include <cmath>
+
+#include <string>
 
 namespace osrm
 {
@@ -28,11 +32,7 @@ struct Hint
                facade.GetCheckSum() == data_checksum;
     }
 
-    std::string ToBase64() const
-    {
-        std::string encoded = encodeBase64(*this);
-        return encoded;
-    }
+    std::string ToBase64() const { return encodeBase64(*this); }
 
     static Hint FromBase64(const std::string &base64Hint)
     {
