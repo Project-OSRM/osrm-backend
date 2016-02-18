@@ -112,6 +112,13 @@ osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::Engine
     lock->DecreaseQueryCount();
     return status;
 }
+
+template <typename Plugin, typename Facade, typename... Args>
+std::unique_ptr<Plugin> create(Facade &facade, Args... args)
+{
+    return osrm::util::make_unique<Plugin>(facade, std::forward<Args>(args)...);
+}
+
 } // anon. ns
 
 namespace osrm
@@ -132,10 +139,14 @@ Engine::Engine(EngineConfig &config)
         query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.server_paths);
     }
 
-    route_plugin = util::make_unique<plugins::ViaRoutePlugin>(*query_data_facade,
-                                                              config.max_locations_viaroute);
-    table_plugin = util::make_unique<plugins::TablePlugin>(*query_data_facade,
-                                                           config.max_locations_distance_table);
+    // Register plugins
+    using namespace plugins;
+
+    route_plugin = create<ViaRoutePlugin>(*query_data_facade, config.max_locations_viaroute);
+    table_plugin = create<TablePlugin>(*query_data_facade, config.max_locations_distance_table);
+    nearest_plugin = create<NearestPlugin>(*query_data_facade);
+    // trip_plugin = ceate<TripPlugin>(*query_data_facade, config.max_locations_trip);
+    // match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
 }
 
 // make sure we deallocate the unique ptr at a position where we know the size of the plugins
@@ -158,15 +169,17 @@ Status Engine::Nearest(const api::NearestParameters &params, util::json::Object 
     return RunQuery(lock, *query_data_facade, params, *nearest_plugin, result);
 }
 
-//Status Engine::Trip(const api::TripParameters &params, util::json::Object &result)
-//{
-//    return RunQuery(lock, *query_data_facade, params, *trip_plugin, result);
-//}
-//
-//Status Engine::Match(const api::MatchParameters &params, util::json::Object &result)
-//{
-//    return RunQuery(lock, *query_data_facade, params, *match_plugin, result);
-//}
+Status Engine::Trip(const api::TripParameters &params, util::json::Object &result)
+{
+    // return RunQuery(lock, *query_data_facade, params, *trip_plugin, result);
+    return Status::Error;
+}
+
+Status Engine::Match(const api::MatchParameters &params, util::json::Object &result)
+{
+    // return RunQuery(lock, *query_data_facade, params, *match_plugin, result);
+    return Status::Error;
+}
 
 } // engine ns
 } // osrm ns
