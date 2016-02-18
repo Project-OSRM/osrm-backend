@@ -14,8 +14,11 @@ namespace api
 
 struct MatchParameters : public RouteParameters
 {
-    std::vector<unsigned> timestamps;
-    bool IsValid() const;
+    std::vector<boost::optional<unsigned>> timestamps;
+    bool IsValid() const
+    {
+        return timestamps.empty() || timestamps.size() == coordinates.size();
+    }
 };
 
 }
