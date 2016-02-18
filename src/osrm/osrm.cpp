@@ -2,8 +2,8 @@
 #include "engine/api/route_parameters.hpp"
 #include "engine/api/table_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
-//#include "engine/api/trip_parameters.hpp"
-//#include "engine/api/match_parameters.hpp"
+#include "engine/api/trip_parameters.hpp"
+#include "engine/api/match_parameters.hpp"
 #include "engine/engine.hpp"
 #include "engine/status.hpp"
 #include "engine/engine_config.hpp"
@@ -36,14 +36,14 @@ engine::Status OSRM::Nearest(const engine::api::NearestParameters &params, json:
     return engine_->Nearest(params, result);
 }
 
-//engine::Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &result)
-//{
-//    return engine_->Trip(params, result);
-//}
-//
-//engine::Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &result)
-//{
-//    return engine_->Match(params, result);
-//}
+engine::Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &result)
+{
+    return engine_->Trip(params, result);
+}
+
+engine::Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &result)
+{
+    return engine_->Match(params, result);
+}
 
 } // ns osrm

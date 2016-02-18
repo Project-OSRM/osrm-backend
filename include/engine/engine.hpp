@@ -29,16 +29,16 @@ namespace api
 struct RouteParameters;
 struct TableParameters;
 struct NearestParameters;
-// struct TripParameters;
-// struct MatchParameters;
+struct TripParameters;
+struct MatchParameters;
 }
 namespace plugins
 {
 class ViaRoutePlugin;
 class TablePlugin;
 class NearestPlugin;
-// class TripPlugin;
-// class MatchPlugin;
+class TripPlugin;
+class MatchPlugin;
 }
 // End fwd decls
 
@@ -64,8 +64,8 @@ class Engine final
     Status Route(const api::RouteParameters &parameters, util::json::Object &result);
     Status Table(const api::TableParameters &parameters, util::json::Object &result);
     Status Nearest(const api::NearestParameters &parameters, util::json::Object &result);
-    // Status Trip(const api::TripParameters &parameters, util::json::Object &result);
-    // Status Match(const api::MatchParameters &parameters, util::json::Object &result);
+    Status Trip(const api::TripParameters &parameters, util::json::Object &result);
+    Status Match(const api::MatchParameters &parameters, util::json::Object &result);
 
   private:
     std::unique_ptr<EngineLock> lock;
