@@ -40,6 +40,7 @@ Thumbs.db
 # build related files #
 #######################
 /build/
+/example/build/
 /cmake/postinst
 
 # Eclipse related files #
