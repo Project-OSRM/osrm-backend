@@ -133,11 +133,14 @@ class StaticRTree
                     EdgeDataT const &current_element = input_data_vector[element_counter];
 
                     // Get Hilbert-Value for centroid in mercartor projection
+                    BOOST_ASSERT(current_element.u < coordinate_list.size());
+                    BOOST_ASSERT(current_element.v < coordinate_list.size());
+
                     FixedPointCoordinate current_centroid = EdgeDataT::Centroid(
-                        FixedPointCoordinate(coordinate_list.at(current_element.u).lat,
-                                             coordinate_list.at(current_element.u).lon),
-                        FixedPointCoordinate(coordinate_list.at(current_element.v).lat,
-                                             coordinate_list.at(current_element.v).lon));
+                        FixedPointCoordinate(coordinate_list[current_element.u].lat,
+                                             coordinate_list[current_element.u].lon),
+                        FixedPointCoordinate(coordinate_list[current_element.v].lat,
+                                             coordinate_list[current_element.v].lon));
                     current_centroid.lat =
                         COORDINATE_PRECISION * coordinate_calculation::mercator::latToY(
                                                    current_centroid.lat / COORDINATE_PRECISION);
@@ -467,19 +470,22 @@ class StaticRTree
     {
         for (uint32_t i = 0; i < element_count; ++i)
         {
+            BOOST_ASSERT(objects[i].u < coordinate_list.size());
+            BOOST_ASSERT(objects[i].v < coordinate_list.size());
+
             rectangle.min_lon =
-                std::min(rectangle.min_lon, std::min(coordinate_list.at(objects[i].u).lon,
-                                                     coordinate_list.at(objects[i].v).lon));
+                std::min(rectangle.min_lon, std::min(coordinate_list[objects[i].u].lon,
+                                                     coordinate_list[objects[i].v].lon));
             rectangle.max_lon =
-                std::max(rectangle.max_lon, std::max(coordinate_list.at(objects[i].u).lon,
-                                                     coordinate_list.at(objects[i].v).lon));
+                std::max(rectangle.max_lon, std::max(coordinate_list[objects[i].u].lon,
+                                                     coordinate_list[objects[i].v].lon));
 
             rectangle.min_lat =
-                std::min(rectangle.min_lat, std::min(coordinate_list.at(objects[i].u).lat,
-                                                     coordinate_list.at(objects[i].v).lat));
+                std::min(rectangle.min_lat, std::min(coordinate_list[objects[i].u].lat,
+                                                     coordinate_list[objects[i].v].lat));
             rectangle.max_lat =
-                std::max(rectangle.max_lat, std::max(coordinate_list.at(objects[i].u).lat,
-                                                     coordinate_list.at(objects[i].v).lat));
+                std::max(rectangle.max_lat, std::max(coordinate_list[objects[i].u].lat,
+                                                     coordinate_list[objects[i].v].lat));
         }
         BOOST_ASSERT(rectangle.min_lat != std::numeric_limits<int>::min());
         BOOST_ASSERT(rectangle.min_lon != std::numeric_limits<int>::min());
