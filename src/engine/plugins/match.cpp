@@ -1,5 +1,4 @@
-#ifndef MATCH_HPP
-#define MATCH_HPP
+/* TODO(daniel-j-h): fix for new server api, uncomment when this compiles
 
 #include "engine/plugins/plugin_base.hpp"
 
@@ -385,4 +384,4 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
 }
 }
 
-#endif // MATCH_HPP
+*/
