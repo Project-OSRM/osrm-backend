@@ -14,9 +14,9 @@ namespace server
 namespace service
 {
 
-engine::Status RouteService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+engine::Status MatchService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
                                       std::string &options,
-                                      util::json::Object &json_result)
+                                      util::json::Object &result)
 {
     // TODO(daniel-j-h)
     return Status::Error;
