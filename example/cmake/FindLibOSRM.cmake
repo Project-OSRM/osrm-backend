@@ -19,7 +19,7 @@ find_path(LibOSRM_INCLUDE_DIR osrm/osrm.hpp
   /opt/local
   /opt)
 
-set(LibOSRM_INCLUDE_DIRS ${LibOSRM_INCLUDE_DIR})
+set(LibOSRM_INCLUDE_DIRS ${LibOSRM_INCLUDE_DIR} ${LibOSRM_INCLUDE_DIR}/osrm)
 
 find_library(TEST_LibOSRM_STATIC_LIBRARY Names osrm.lib libosrm.a
   PATH_SUFFIXES osrm lib/osrm lib
