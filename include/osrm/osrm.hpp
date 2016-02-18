@@ -28,49 +28,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_HPP
 #define OSRM_HPP
 
+#include "osrm/osrm_fwd.hpp"
 #include "osrm/status.hpp"
 
 #include <memory>
 
 namespace osrm
 {
-
-// Fwd decls
-namespace util
-{
-namespace json
-{
-struct Object;
-}
-}
-
-namespace engine
-{
-class Engine;
-
-struct EngineConfig;
-namespace api
-{
-struct RouteParameters;
-struct TableParameters;
-struct NearestParameters;
-struct TripParameters;
-struct MatchParameters;
-}
-}
-
-// End fwd decls
-
+namespace json = util::json;
 using engine::EngineConfig;
 using engine::api::RouteParameters;
 using engine::api::TableParameters;
 using engine::api::NearestParameters;
 using engine::api::TripParameters;
 using engine::api::MatchParameters;
-
-namespace json = util::json;
-
-// OSRM API
 
 class OSRM final
 {
