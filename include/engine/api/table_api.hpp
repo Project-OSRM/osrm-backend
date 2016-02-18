@@ -24,15 +24,11 @@ namespace engine
 namespace api
 {
 
-namespace detail
+class TableAPI final : public BaseAPI
 {
-template <typename ChildT> class TableAPI_ : public BaseAPI_<TableAPI_<ChildT>>
-{
-    using BaseT = BaseAPI_<TableAPI_<ChildT>>;
-
   public:
-    TableAPI_(const datafacade::BaseDataFacade &facade_, const TableParameters &parameters_)
-        : BaseT(facade_, parameters_), parameters(parameters_)
+    TableAPI(const datafacade::BaseDataFacade &facade_, const TableParameters &parameters_)
+        : BaseAPI(facade_, parameters_), parameters(parameters_)
     {
     }
 
@@ -69,7 +65,7 @@ template <typename ChildT> class TableAPI_ : public BaseAPI_<TableAPI_<ChildT>>
         for (; phantom_iter != phantoms.end() && coordinate_iter != parameters.coordinates.end();
              ++phantom_iter, ++coordinate_iter)
         {
-            json_waypoints.values.push_back(BaseT::MakeWaypoint(*coordinate_iter, *phantom_iter));
+            json_waypoints.values.push_back(BaseAPI::MakeWaypoint(*coordinate_iter, *phantom_iter));
         }
         return json_waypoints;
     }
@@ -83,7 +79,7 @@ template <typename ChildT> class TableAPI_ : public BaseAPI_<TableAPI_<ChildT>>
         {
             BOOST_ASSERT(idx < phantoms.size() && idx < parameters.coordinates.size());
             json_waypoints.values.push_back(
-                BaseT::MakeWaypoint(parameters.coordinates[idx], phantoms[idx]));
+                BaseAPI::MakeWaypoint(parameters.coordinates[idx], phantoms[idx]));
         }
         return json_waypoints;
     }
@@ -106,12 +102,9 @@ template <typename ChildT> class TableAPI_ : public BaseAPI_<TableAPI_<ChildT>>
 
     const TableParameters &parameters;
 };
-}
 
-// Expose non-templated version
-using TableAPI = detail::TableAPI_<std::true_type>;
-}
-}
-}
+} // ns api
+} // ns engine
+} // ns osrm
 
 #endif
