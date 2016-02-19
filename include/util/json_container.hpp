@@ -50,6 +50,15 @@ namespace json
 struct Object;
 struct Array;
 
+// For encoding raw binary data in a JSON response
+struct Buffer
+{
+    Buffer() {}
+    Buffer(const char *value) : value(value) {}
+    Buffer(std::string value) : value(std::move(value)) {}
+    std::string value;
+};
+
 struct String
 {
     String() = default;
@@ -78,6 +87,7 @@ struct Null
 };
 
 using Value = mapbox::util::variant<String,
+                                    Buffer,
                                     Number,
                                     mapbox::util::recursive_wrapper<Object>,
                                     mapbox::util::recursive_wrapper<Array>,
