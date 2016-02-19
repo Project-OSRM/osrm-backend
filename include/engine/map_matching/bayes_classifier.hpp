@@ -22,7 +22,7 @@ struct NormalDistribution
     {
     }
 
-    // FIXME implement log-probability version since its faster
+    // FIXME implement log-probability version since it's faster
     double density_function(const double val) const
     {
         using namespace boost::math::constants;
@@ -43,7 +43,7 @@ struct LaplaceDistribution
     {
     }
 
-    // FIXME implement log-probability version since its faster
+    // FIXME implement log-probability version since it's faster
     double density_function(const double val) const
     {
         const double x = std::abs(val - location);
