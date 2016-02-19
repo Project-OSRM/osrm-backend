@@ -25,14 +25,6 @@ matrix:
       env: COMPILER='g++-5' BUILD_TYPE='Debug'
 
     - os: linux
-      compiler: gcc
-      addons: &gcc48
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-4.8' BUILD_TYPE='Debug'
-
-    - os: linux
       compiler: clang
       addons: &clang38
         apt:
