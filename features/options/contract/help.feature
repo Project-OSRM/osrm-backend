@@ -13,7 +13,7 @@ Feature: osrm-contract command line options: help
         And stdout should contain "--core"
         And stdout should contain "--level-cache"
         And stdout should contain "--segment-speed-file"
-        And stdout should contain 17 lines
+        And stdout should contain 15 lines
         And it should exit with code 1
 
     Scenario: osrm-contract - Help, short
@@ -28,7 +28,7 @@ Feature: osrm-contract command line options: help
         And stdout should contain "--core"
         And stdout should contain "--level-cache"
         And stdout should contain "--segment-speed-file"
-        And stdout should contain 17 lines
+        And stdout should contain 15 lines
         And it should exit with code 0
 
     Scenario: osrm-contract - Help, long
@@ -43,5 +43,5 @@ Feature: osrm-contract command line options: help
         And stdout should contain "--core"
         And stdout should contain "--level-cache"
         And stdout should contain "--segment-speed-file"
-        And stdout should contain 17 lines
+        And stdout should contain 15 lines
         And it should exit with code 0
