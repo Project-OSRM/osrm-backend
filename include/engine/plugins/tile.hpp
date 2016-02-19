@@ -333,7 +333,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
             }
         }
 
-        json_result.values["pbf"] = buffer;
+        json_result.values["pbf"] = osrm::util::json::Buffer(buffer);
 
         return Status::Ok;
     }
