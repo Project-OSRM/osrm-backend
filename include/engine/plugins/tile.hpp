@@ -246,19 +246,6 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
             // for normal vector tiles.
             layer_writer.add_uint32(5,4096); // extent
 
-            // To save tile size, we support speed values from 0 to 127.  Here, we
-            // pre-seed the attribute arrays with all possible values.  We use
-            // 127 so that all speeds will fit into a single byte during varint
-            // encoding
-            std::vector<uint32_t> speeds;
-            for (uint32_t i=0; i< 128; i++) speeds.push_back(i);
-
-            // Same for bools, there are only two possibilities
-            std::vector<bool> is_smalls;
-            is_smalls.push_back(true);
-            is_smalls.push_back(false);
-
-
             // Begin the layer features block
             {
                 // Each feature gets a unique id, starting at 1
@@ -312,7 +299,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                             protozero::packed_field_uint32 field(feature_writer, 2);
 
                             field.add_element(0); // "speed" tag key offset
-                            field.add_element(std::min(speed, 127u));  // save the speed value, or 
+                            field.add_element(std::min(speed, 127u));  // save the speed value, capped at 127
                             field.add_element(1); // "is_small" tag key offset
                             field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
                         }
@@ -351,7 +338,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                         {
                             protozero::packed_field_uint32 field(feature_writer, 2);
                             field.add_element(0); // "speed" tag key offset
-                            field.add_element(std::min(speed, 127u));  // save the speed value, or 
+                            field.add_element(std::min(speed, 127u));  // save the speed value, capped at 127
                             field.add_element(1); // "is_small" tag key offset
                             field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
                         }
@@ -373,12 +360,12 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
             // Now, we write out the possible speed value arrays and possible is_tiny
             // values.  Field type 4 is the "values" field.  It's a variable type field,
             // so requires a two-step write (create the field, then write its value)
-            for (size_t i=0; i<speeds.size(); i++) {
+            for (size_t i=0; i<128; i++) {
                 {
                     // Writing field type 4 == variant type
                     protozero::pbf_writer values_writer(layer_writer,4);
                     // Attribute value 5 == uin64 type
-                    values_writer.add_uint64(5, speeds[i]);
+                    values_writer.add_uint64(5, i);
                 }
             }
             {
