@@ -3,7 +3,6 @@
 
 #include "engine/plugins/plugin_base.hpp"
 #include "osrm/json_container.hpp"
-#include "util/tile_bbox.hpp"
 
 #include <protozero/varint.hpp>
 #include <protozero/pbf_writer.hpp>
@@ -48,6 +47,8 @@ namespace detail_pbf {
     }
 }
 
+// Converts a regular WSG84 lon/lat pair into
+// a mercator coordinate
 inline void lonlat2merc(double & x, double & y)
 {
     if (x > 180) x = 180;
@@ -59,8 +60,10 @@ inline void lonlat2merc(double & x, double & y)
     y = y * MAXEXTENTby180;
 }
 
+// This is the global default tile size for all Mapbox Vector Tiles
 const static double tile_size_ = 256.0;
 
+// 
 void from_pixels(double shift, double & x, double & y)
 {
     double b = shift/2.0;
@@ -69,13 +72,14 @@ void from_pixels(double shift, double & x, double & y)
     y = R2D * (2.0 * std::atan(std::exp(g)) - M_PI_by2);
 }
 
-void xyz(int x,
-         int y,
-         int z,
-         double & minx,
-         double & miny,
-         double & maxx,
-         double & maxy)
+// Converts a WMS tile coordinate (z,x,y) into a mercator bounding box
+void xyz2mercator(int x,
+                  int y,
+                  int z,
+                  double & minx,
+                  double & miny,
+                  double & maxx,
+                  double & maxy)
 {
     minx = x * tile_size_;
     miny = (y + 1.0) * tile_size_;
@@ -88,6 +92,7 @@ void xyz(int x,
     lonlat2merc(maxx,maxy);
 }
 
+// Converts a WMS tile coordinate (z,x,y) into a wsg84 bounding box
 void xyz2wsg84(int x,
          int y,
          int z,
@@ -105,11 +110,8 @@ void xyz2wsg84(int x,
     from_pixels(shift,maxx,maxy);
 }
 
-
-
-
-
-// emulates mapbox::box2d
+// emulates mapbox::box2d, just a simple container for
+// a box
 class bbox {
  public:
     double minx;
@@ -131,7 +133,7 @@ class bbox {
     }
 };
 
-// should start using core geometry class across mapnik, osrm, mapbox-gl-native
+// Simple container class for WSG84 coordinates
 class point_type_d {
  public:
     double x;
@@ -143,6 +145,7 @@ class point_type_d {
     }
 };
 
+// Simple container for integer coordinates (i.e. pixel coords)
 class point_type_i {
  public:
     std::int64_t x;
@@ -158,6 +161,7 @@ using line_type = std::vector<point_type_i>;
 using line_typed = std::vector<point_type_d>;
 
 // from mapnik-vector-tile
+// Encodes a linestring using protobuf zigzag encoding
 inline bool encode_linestring(line_type line,
                        protozero::packed_field_uint32 & geometry,
                        int32_t & start_x,
@@ -205,38 +209,68 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                          util::json::Object &json_result) override final
     {
 
+        // Vector tiles are 4096 virtual pixels on each side
         const double tile_extent = 4096.0;
         double min_lon, min_lat, max_lon, max_lat;
 
+        // Convert the z,x,y mercator tile coordinates into WSG84 lon/lat values
         xyz2wsg84(route_parameters.x, route_parameters.y, route_parameters.z, min_lon, min_lat, max_lon, max_lat);
 
         FixedPointCoordinate southwest = { static_cast<int32_t>(min_lat * COORDINATE_PRECISION), static_cast<int32_t>(min_lon * COORDINATE_PRECISION) };
         FixedPointCoordinate northeast = { static_cast<int32_t>(max_lat * COORDINATE_PRECISION), static_cast<int32_t>(max_lon * COORDINATE_PRECISION) };
 
+        // Fetch all the segments that are in our bounding box.
+        // This hits the OSRM StaticRTree
         auto edges = facade->GetEdgesInBox(southwest, northeast);
 
-        xyz(route_parameters.x, route_parameters.y, route_parameters.z, min_lon, min_lat, max_lon, max_lat);
+        // TODO: extract speed values for compressed and uncompressed geometries
 
+        // Convert tile coordinates into mercator coordinates
+        xyz2mercator(route_parameters.x, route_parameters.y, route_parameters.z, min_lon, min_lat, max_lon, max_lat);
         bbox tile_bbox(min_lon, min_lat, max_lon, max_lat);
 
+        // Protobuf serialized blocks when objects go out of scope, hence
+        // the extra scoping below.
         std::string buffer;
         protozero::pbf_writer tile_writer(buffer);
         {
+            // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec (2.1)
             protozero::pbf_writer layer_writer(tile_writer,3);
             // TODO: don't write a layer if there are no features
+            // Field 15 is the "version field, and it's a uint32
             layer_writer.add_uint32(15,2); // version
+            // Field 1 is the "layer name" field, it's a string
             layer_writer.add_string(1,"speeds"); // name
+            // Field 5 is the tile extent.  It's a uint32 and should be set to 4096
+            // for normal vector tiles.
             layer_writer.add_uint32(5,4096); // extent
 
+            // To save tile size, we support speed values from 0 to 127.  Here, we
+            // pre-seed the attribute arrays with all possible values.  We use
+            // 127 so that all speeds will fit into a single byte during varint
+            // encoding
             std::vector<uint32_t> speeds;
+            for (uint32_t i=0; i< 128; i++) speeds.push_back(i);
+
+            // Same for bools, there are only two possibilities
             std::vector<bool> is_smalls;
+            is_smalls.push_back(true);
+            is_smalls.push_back(false);
+
+
+            // Begin the layer features block
             {
+                // Each feature gets a unique id, starting at 1
                 unsigned id = 1;
                 for (const auto & edge : edges)
                 {
+                    // Get coordinates for start/end nodes of segmet (NodeIDs u and v)
                     const auto a = facade->GetCoordinateOfNode(edge.u);
                     const auto b = facade->GetCoordinateOfNode(edge.v);
+                    // Calculate the length in meters
                     double length = osrm::util::coordinate_calculation::haversineDistance( a.lon, a.lat, b.lon, b.lat );
+
+                    // If this is a valid forward edge, go ahead and add it to the tile
                     if (edge.forward_weight != 0 && edge.forward_edge_based_node_id != SPECIAL_NODEID) {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
@@ -245,37 +279,48 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                         geo_line.emplace_back(a.lon / COORDINATE_PRECISION, a.lat / COORDINATE_PRECISION);
                         geo_line.emplace_back(b.lon / COORDINATE_PRECISION, b.lat / COORDINATE_PRECISION);
 
+                        // Calculate the speed for this line
                         uint32_t speed = static_cast<uint32_t>(round(length / edge.forward_weight * 10 *3.6));
-
-                        speeds.push_back(speed);
-                        is_smalls.push_back(edge.component.is_tiny);
 
                         line_type tile_line;
                         for (auto const & pt : geo_line) {
                             double px_merc = pt.x;
                             double py_merc = pt.y;
                             lonlat2merc(px_merc,py_merc);
-                            // convert to integer tile coordinat
+                            // convert lon/lat to tile coordinates
                             const auto px = std::round(((px_merc - tile_bbox.minx) * tile_extent/16.0 / tile_bbox.width())*tile_extent/256.0);
                             const auto py = std::round(((tile_bbox.maxy - py_merc) * tile_extent/16.0 / tile_bbox.height())*tile_extent/256.0);
                             tile_line.emplace_back(px,py);
                         }
 
+                        // Here, we save the two attributes for our feature: the speed and the is_small
+                        // boolean.  We onl serve up speeds from 0-139, so all we do is save the first
                         protozero::pbf_writer feature_writer(layer_writer,2);
+                        // Field 3 is the "geometry type" field.  Value 2 is "line"
                         feature_writer.add_enum(3,2); // geometry type
+                        // Field 1 for the feature is the "id" field.
                         feature_writer.add_uint64(1,id++); // id
                         {
+                            // When adding attributes to a feature, we have to write
+                            // pairs of numbers.  The first value is the index in the
+                            // keys array (written later), and the second value is the
+                            // index into the "values" array (also written later).
                             protozero::packed_field_uint32 field(feature_writer, 2);
+
                             field.add_element(0); // "speed" tag key offset
-                            field.add_element((speeds.size()-1)*2); // "speed" tag value offset
+                            field.add_element(std::min(speed, 127));  // save the speed value, or 
+
                             field.add_element(1); // "is_small" tag key offset
-                            field.add_element((is_smalls.size()-1)*2+1); // "is_small" tag value offset
+                            field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
                         }
                         {
+                            // Encode the geometry for the feature
                             protozero::packed_field_uint32 geometry(feature_writer,4);
                             encode_linestring(tile_line,geometry,start_x,start_y);
                         }
                     }
+
+                    // Repeat the above for the coordinates reversed and using the `reverse` properties
                     if (edge.reverse_weight != 0 && edge.reverse_edge_based_node_id != SPECIAL_NODEID) {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
@@ -286,9 +331,6 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
 
                         uint32_t speed = static_cast<uint32_t>(round(length / edge.forward_weight * 10 *3.6));
 
-                        speeds.push_back(speed);
-                        is_smalls.push_back(edge.component.is_tiny);
-
                         line_type tile_line;
                         for (auto const & pt : geo_line) {
                             double px_merc = pt.x;
@@ -306,9 +348,9 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                         {
                             protozero::packed_field_uint32 field(feature_writer, 2);
                             field.add_element(0); // "speed" tag key offset
-                            field.add_element((speeds.size()-1)*2); // "speed" tag value offset
+                            field.add_element(speed < 140 ? speed : 139);
                             field.add_element(1); // "is_small" tag key offset
-                            field.add_element((is_smalls.size()-1)*2+1); // "is_small" tag value offset
+                            field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
                         }
                         {
                             protozero::packed_field_uint32 geometry(feature_writer,4);
@@ -318,9 +360,14 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
 
                 }
             }
+
+            // Now, we add two "key" fields, these are referred to with 0 and 1 (their array indexes)
+            // earlier
             layer_writer.add_string(3,"speed");
             layer_writer.add_string(3,"is_small");
 
+            // Now, we write out the possible speed value arrays and possible is_tiny
+            // values.
             for (size_t i=0; i<speeds.size(); i++) {
                 {
                     protozero::pbf_writer values_writer(layer_writer,4);
@@ -333,6 +380,9 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
             }
         }
 
+        // Encode the PBF result as a special Buffer object on the response.
+        // This will allow downstream consumers to handle this type differently
+        // to the String type.
         json_result.values["pbf"] = osrm::util::json::Buffer(buffer);
 
         return Status::Ok;
