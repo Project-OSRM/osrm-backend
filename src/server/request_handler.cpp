@@ -134,8 +134,8 @@ void RequestHandler::handle_request(const http::request &current_request,
 
             std::copy(s.cbegin(),s.cend(), std::back_inserter(current_reply.content));
             */
-            std::copy(json_result.values["pbf"].get<osrm::util::json::String>().value.cbegin(),
-                      json_result.values["pbf"].get<osrm::util::json::String>().value.cend(),
+            std::copy(json_result.values["pbf"].get<osrm::util::json::Buffer>().value.cbegin(),
+                      json_result.values["pbf"].get<osrm::util::json::Buffer>().value.cend(),
                       std::back_inserter(current_reply.content));
 
             //current_reply.content.append(json_result.values["pbf"].get<osrm::util::json::String>().value
