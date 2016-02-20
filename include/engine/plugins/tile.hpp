@@ -31,12 +31,12 @@ static const double EARTH_RADIUS = 6378137.0;
 static const double EARTH_DIAMETER = EARTH_RADIUS * 2.0;
 static const double EARTH_CIRCUMFERENCE = EARTH_DIAMETER * M_PI;
 static const double MAXEXTENT = EARTH_CIRCUMFERENCE / 2.0;
-static const double M_PI_by2 = M_PI / 2;
-static const double D2R = M_PI / 180;
-static const double R2D = 180 / M_PI;
-static const double M_PIby360 = M_PI / 360;
-static const double MAXEXTENTby180 = MAXEXTENT / 180;
-static const double MAX_LATITUDE = R2D * (2 * std::atan(std::exp(180 * D2R)) - M_PI_by2);
+static const double M_PI_by2 = M_PI / 2.0;
+static const double D2R = M_PI / 180.0;
+static const double R2D = 180.0 / M_PI;
+static const double M_PIby360 = M_PI / 360.0;
+static const double MAXEXTENTby180 = MAXEXTENT / 180.0;
+static const double MAX_LATITUDE = R2D * (2.0 * std::atan(std::exp(180.0 * D2R)) - M_PI_by2);
 
 
 // from mapnik-vector-tile
@@ -59,7 +59,7 @@ inline void lonlat2merc(double & x, double & y)
     y = y * MAXEXTENTby180;
 }
 
-const static int tile_size_ = 256;
+const static double tile_size_ = 256.0;
 
 void from_pixels(double shift, double & x, double & y)
 {
@@ -205,7 +205,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                          util::json::Object &json_result) override final
     {
 
-        const unsigned tile_extent = 4096;
+        const double tile_extent = 4096.0;
         double min_lon, min_lat, max_lon, max_lat;
 
         xyz2wsg84(route_parameters.x, route_parameters.y, route_parameters.z, min_lon, min_lat, max_lon, max_lat);
@@ -256,9 +256,9 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                             double py_merc = pt.y;
                             lonlat2merc(px_merc,py_merc);
                             // convert to integer tile coordinat
-                            std::int64_t px = std::round((px_merc - tile_bbox.minx) * tile_extent/16 / tile_bbox.width());
-                            std::int64_t py = std::round((tile_bbox.maxy - py_merc) * tile_extent/16 / tile_bbox.height());
-                            tile_line.emplace_back(px*tile_extent/256,py*tile_extent/256);
+                            const auto px = std::round(((px_merc - tile_bbox.minx) * tile_extent/16.0 / static_cast<double>(tile_bbox.width()))*tile_extent/256.0);
+                            const auto py = std::round(((tile_bbox.maxy - py_merc) * tile_extent/16.0 / static_cast<double>(tile_bbox.height()))*tile_extent/256.0);
+                            tile_line.emplace_back(px,py);
                         }
 
                         protozero::pbf_writer feature_writer(layer_writer,2);
@@ -295,9 +295,9 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                             double py_merc = pt.y;
                             lonlat2merc(px_merc,py_merc);
                             // convert to integer tile coordinat
-                            std::int64_t px = std::round((px_merc - tile_bbox.minx) * tile_extent/16 / tile_bbox.width());
-                            std::int64_t py = std::round((tile_bbox.maxy - py_merc) * tile_extent/16 / tile_bbox.height());
-                            tile_line.emplace_back(px*tile_extent/256,py*tile_extent/256);
+                            const auto px = std::round(((px_merc - tile_bbox.minx) * tile_extent/16.0 / static_cast<double>(tile_bbox.width()))*tile_extent/256.0);
+                            const auto py = std::round(((tile_bbox.maxy - py_merc) * tile_extent/16.0 / static_cast<double>(tile_bbox.height()))*tile_extent/256.0);
+                            tile_line.emplace_back(px,py);
                         }
 
                         protozero::pbf_writer feature_writer(layer_writer,2);
