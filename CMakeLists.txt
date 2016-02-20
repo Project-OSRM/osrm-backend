@@ -30,7 +30,6 @@ if(WIN32 AND MSVC_VERSION LESS 1800)
 endif()
 
 option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
-option(DEBUG_GEOMETRY "Enables an option to dump GeoJSON of the final routing graph" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(ENABLE_ASSERTIONS OFF)
 
@@ -277,12 +276,6 @@ if (ENABLE_JSON_LOGGING)
   message(STATUS "Enabling json logging")
   add_definitions(-DENABLE_JSON_LOGGING)
 endif()
-
-if (DEBUG_GEOMETRY)
-  message(STATUS "Enabling final edge weight GeoJSON output option")
-  add_definitions(-DDEBUG_GEOMETRY)
-endif()
-
 
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_LIBRARIES})

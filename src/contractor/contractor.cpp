@@ -32,8 +32,6 @@
 #include <thread>
 #include <vector>
 
-#include "util/debug_geometry.hpp"
-
 namespace std
 {
 
@@ -188,8 +186,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         }
     }
 
-    util::DEBUG_GEOMETRY_START(config);
-
     // TODO: can we read this in bulk?  util::DeallocatingVector isn't necessarily
     // all stored contiguously
     for (; number_of_edges > 0; --number_of_edges)
@@ -235,17 +231,11 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                         std::max(1, static_cast<int>(std::floor(
                                         (segment_length * 10.) / (speed_iter->second / 3.6) + .5)));
                     new_weight += new_segment_weight;
-
-                    util::DEBUG_GEOMETRY_EDGE(new_segment_weight, segment_length,
-                                              previous_osm_node_id, this_osm_node_id);
                 }
                 else
                 {
                     // If no lookup found, use the original weight value for this segment
                     new_weight += segment_weight;
-
-                    util::DEBUG_GEOMETRY_EDGE(segment_weight, segment_length, previous_osm_node_id,
-                                              this_osm_node_id);
                 }
 
                 previous_osm_node_id = this_osm_node_id;
@@ -257,7 +247,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
 
-    util::DEBUG_GEOMETRY_STOP();
     util::SimpleLogger().Write() << "Done reading edges";
     return max_edge_id;
 }
