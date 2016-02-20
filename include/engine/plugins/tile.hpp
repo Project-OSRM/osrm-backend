@@ -228,7 +228,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
             layer_writer.add_string(1,"speeds"); // name
             layer_writer.add_uint32(5,4096); // extent
 
-            std::vector<double> speeds;
+            std::vector<uint32_t> speeds;
             std::vector<bool> is_smalls;
             {
                 unsigned id = 1;
@@ -245,7 +245,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                         geo_line.emplace_back(a.lon / COORDINATE_PRECISION, a.lat / COORDINATE_PRECISION);
                         geo_line.emplace_back(b.lon / COORDINATE_PRECISION, b.lat / COORDINATE_PRECISION);
 
-                        double speed = round(length / edge.forward_weight * 10 )  * 3.6;
+                        uint32_t speed = static_cast<uint32_t>(round(length / edge.forward_weight * 10 *3.6));
 
                         speeds.push_back(speed);
                         is_smalls.push_back(edge.component.is_tiny);
@@ -284,7 +284,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                         geo_line.emplace_back(b.lon / COORDINATE_PRECISION, b.lat / COORDINATE_PRECISION);
                         geo_line.emplace_back(a.lon / COORDINATE_PRECISION, a.lat / COORDINATE_PRECISION);
 
-                        double speed = round(length / edge.reverse_weight * 10 ) * 3.6;
+                        uint32_t speed = static_cast<uint32_t>(round(length / edge.forward_weight * 10 *3.6));
 
                         speeds.push_back(speed);
                         is_smalls.push_back(edge.component.is_tiny);
@@ -324,7 +324,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
             for (size_t i=0; i<speeds.size(); i++) {
                 {
                     protozero::pbf_writer values_writer(layer_writer,4);
-                    values_writer.add_double(3, speeds[i]);
+                    values_writer.add_uint64(5, speeds[i]);
                 }
                 {
                     protozero::pbf_writer values_writer(layer_writer,4);
