@@ -7,6 +7,8 @@
 
 #include "osrm/coordinate.hpp"
 
+#include <boost/variant.hpp>
+
 namespace osrm
 {
 namespace util
@@ -74,8 +76,8 @@ struct MatchingDebugInfo
             json::clamp_float(prev_viterbi), json::clamp_float(emission_pr),
             json::clamp_float(transition_pr), network_distance, haversine_distance);
 
-        json::get(*object, "states", prev_t, prev_state, "transitions")
-            .get<mapbox::util::recursive_wrapper<json::Array>>()
+        boost::get<boost::recursive_wrapper<json::Array>>(
+            json::get(*object, "states", prev_t, prev_state, "transitions"))
             .get()
             .values.push_back(transistion);
     }
