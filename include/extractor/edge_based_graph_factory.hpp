@@ -50,20 +50,11 @@ class EdgeBasedGraphFactory
                                    const std::vector<QueryNode> &node_info_list,
                                    SpeedProfileProperties speed_profile);
 
-#ifdef DEBUG_GEOMETRY
-    void Run(const std::string &original_edge_data_filename,
-             lua_State *lua_state,
-             const std::string &edge_segment_lookup_filename,
-             const std::string &edge_penalty_filename,
-             const bool generate_edge_lookup,
-             const std::string &debug_turns_path);
-#else
     void Run(const std::string &original_edge_data_filename,
              lua_State *lua_state,
              const std::string &edge_segment_lookup_filename,
              const std::string &edge_penalty_filename,
              const bool generate_edge_lookup);
-#endif
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);

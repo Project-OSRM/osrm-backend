@@ -49,12 +49,6 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
         "Number of nodes required before a strongly-connected-componennt is considered big "
         "(affects nearest neighbor snapping)");
 
-#ifdef DEBUG_GEOMETRY
-    config_options.add_options()("debug-turns", boost::program_options::value<std::string>(
-                                                    &extractor_config.debug_turns_path),
-                                 "Write out GeoJSON with turn penalty data");
-#endif // DEBUG_GEOMETRY
-
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
