@@ -256,8 +256,8 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                             double py_merc = pt.y;
                             lonlat2merc(px_merc,py_merc);
                             // convert to integer tile coordinat
-                            const auto px = std::round(((px_merc - tile_bbox.minx) * tile_extent/16.0 / static_cast<double>(tile_bbox.width()))*tile_extent/256.0);
-                            const auto py = std::round(((tile_bbox.maxy - py_merc) * tile_extent/16.0 / static_cast<double>(tile_bbox.height()))*tile_extent/256.0);
+                            const auto px = std::round(((px_merc - tile_bbox.minx) * tile_extent/16.0 / tile_bbox.width())*tile_extent/256.0);
+                            const auto py = std::round(((tile_bbox.maxy - py_merc) * tile_extent/16.0 / tile_bbox.height())*tile_extent/256.0);
                             tile_line.emplace_back(px,py);
                         }
 
@@ -295,8 +295,8 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                             double py_merc = pt.y;
                             lonlat2merc(px_merc,py_merc);
                             // convert to integer tile coordinat
-                            const auto px = std::round(((px_merc - tile_bbox.minx) * tile_extent/16.0 / static_cast<double>(tile_bbox.width()))*tile_extent/256.0);
-                            const auto py = std::round(((tile_bbox.maxy - py_merc) * tile_extent/16.0 / static_cast<double>(tile_bbox.height()))*tile_extent/256.0);
+                            const auto px = std::round(((px_merc - tile_bbox.minx) * tile_extent/16.0 / tile_bbox.width())*tile_extent/256.0);
+                            const auto py = std::round(((tile_bbox.maxy - py_merc) * tile_extent/16.0 / tile_bbox.height())*tile_extent/256.0);
                             tile_line.emplace_back(px,py);
                         }
 
