@@ -9,6 +9,7 @@
 
 #include <string>
 #include <cmath>
+#include <algorithm>
 
 /*
  * This plugin generates Mapbox Vector tiles that show the internal
@@ -304,12 +305,14 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                             // When adding attributes to a feature, we have to write
                             // pairs of numbers.  The first value is the index in the
                             // keys array (written later), and the second value is the
-                            // index into the "values" array (also written later).
+                            // index into the "values" array (also written later).  We're
+                            // not writing the actual speed or bool value here, we're saving
+                            // an index into the "values" array.  This means many features
+                            // can share the same value data, leading to smaller tiles.
                             protozero::packed_field_uint32 field(feature_writer, 2);
 
                             field.add_element(0); // "speed" tag key offset
-                            field.add_element(std::min(speed, 127));  // save the speed value, or 
-
+                            field.add_element(std::min(speed, 127u));  // save the speed value, or 
                             field.add_element(1); // "is_small" tag key offset
                             field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
                         }
@@ -348,7 +351,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                         {
                             protozero::packed_field_uint32 field(feature_writer, 2);
                             field.add_element(0); // "speed" tag key offset
-                            field.add_element(speed < 140 ? speed : 139);
+                            field.add_element(std::min(speed, 127u));  // save the speed value, or 
                             field.add_element(1); // "is_small" tag key offset
                             field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
                         }
@@ -361,22 +364,32 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                 }
             }
 
-            // Now, we add two "key" fields, these are referred to with 0 and 1 (their array indexes)
+            // Field id 3 is the "keys" attribute
+            // We need two "key" fields, these are referred to with 0 and 1 (their array indexes)
             // earlier
             layer_writer.add_string(3,"speed");
             layer_writer.add_string(3,"is_small");
 
             // Now, we write out the possible speed value arrays and possible is_tiny
-            // values.
+            // values.  Field type 4 is the "values" field.  It's a variable type field,
+            // so requires a two-step write (create the field, then write its value)
             for (size_t i=0; i<speeds.size(); i++) {
                 {
+                    // Writing field type 4 == variant type
                     protozero::pbf_writer values_writer(layer_writer,4);
+                    // Attribute value 5 == uin64 type
                     values_writer.add_uint64(5, speeds[i]);
                 }
-                {
-                    protozero::pbf_writer values_writer(layer_writer,4);
-                    values_writer.add_bool(7, is_smalls[i]);
-                }
+            }
+            {
+                protozero::pbf_writer values_writer(layer_writer,4);
+                // Attribute value 7 == bool type
+                values_writer.add_bool(7, true);
+            }
+            {
+                protozero::pbf_writer values_writer(layer_writer,4);
+                // Attribute value 7 == bool type
+                values_writer.add_bool(7, false);
             }
         }
 
