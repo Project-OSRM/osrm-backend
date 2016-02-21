@@ -74,7 +74,7 @@ class Engine final
     std::unique_ptr<plugins::TablePlugin> table_plugin;
     std::unique_ptr<plugins::NearestPlugin> nearest_plugin;
     // std::unique_ptr<plugins::TripPlugin> trip_plugin;
-    // std::unique_ptr<plugins::MatchPlugin> match_plugin;
+    std::unique_ptr<plugins::MatchPlugin> match_plugin;
 
     std::unique_ptr<datafacade::BaseDataFacade> query_data_facade;
 };
