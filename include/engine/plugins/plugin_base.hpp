@@ -7,6 +7,7 @@
 #include "engine/status.hpp"
 
 #include "util/coordinate.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/json_container.hpp"
 #include "util/integer_range.hpp"
 
@@ -30,10 +31,10 @@ class BasePlugin
     bool CheckAllCoordinates(const std::vector<util::FixedPointCoordinate> &coordinates)
     {
         return !std::any_of(std::begin(coordinates), std::end(coordinates),
-                           [](const util::FixedPointCoordinate &coordinate)
-                           {
-                               return !coordinate.IsValid();
-                           });
+                            [](const util::FixedPointCoordinate &coordinate)
+                            {
+                                return !coordinate.IsValid();
+                            });
     }
 
     Status Error(const std::string &code,
@@ -109,6 +110,46 @@ class BasePlugin
         return snapped_phantoms;
     }
 
+    // Falls back to default_radius for non-set radii
+    std::vector<std::vector<PhantomNodeWithDistance>>
+    GetPhantomNodesInRange(const api::BaseParameters &parameters,
+                           const std::vector<double> radiuses) const
+    {
+        std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
+            parameters.coordinates.size());
+        BOOST_ASSERT(parameters.radiuses.size() == parameters.coordinates.size());
+
+        const bool use_hints = !parameters.hints.empty();
+        const bool use_bearings = !parameters.bearings.empty();
+
+        for (const auto i : util::irange<std::size_t>(0, parameters.coordinates.size()))
+        {
+            if (use_hints && parameters.hints[i] &&
+                parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
+            {
+                phantom_nodes[i].push_back(PhantomNodeWithDistance{
+                    parameters.hints[i]->phantom,
+                    util::coordinate_calculation::haversineDistance(
+                        parameters.coordinates[i], parameters.hints[i]->phantom.location),
+                });
+                continue;
+            }
+            if (use_bearings && parameters.bearings[i])
+            {
+                phantom_nodes[i] = facade.NearestPhantomNodesInRange(
+                    parameters.coordinates[i], radiuses[i], parameters.bearings[i]->bearing,
+                    parameters.bearings[i]->range);
+            }
+            else
+            {
+                phantom_nodes[i] =
+                    facade.NearestPhantomNodesInRange(parameters.coordinates[i], radiuses[i]);
+            }
+        }
+
+        return phantom_nodes;
+    }
+
     std::vector<PhantomNodePair> GetPhantomNodes(const api::BaseParameters &parameters)
     {
         std::vector<PhantomNodePair> phantom_node_pairs(parameters.coordinates.size());
@@ -138,11 +179,11 @@ class BasePlugin
                             parameters.bearings[i]->bearing, parameters.bearings[i]->range);
                 }
                 else
+                {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
                             parameters.coordinates[i], parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range);
-                {
                 }
             }
             else
@@ -154,10 +195,10 @@ class BasePlugin
                             parameters.coordinates[i], *parameters.radiuses[i]);
                 }
                 else
+                {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
                             parameters.coordinates[i]);
-                {
                 }
             }
 

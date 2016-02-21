@@ -88,8 +88,12 @@ class BaseDataFacade
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
                                const float max_distance,
-                               const int bearing = 0,
-                               const int bearing_range = 180) = 0;
+                               const int bearing,
+                               const int bearing_range) = 0;
+
+    virtual std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+                               const float max_distance) = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
