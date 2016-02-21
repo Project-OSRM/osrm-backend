@@ -3,9 +3,13 @@
 
 #include "engine/routing_algorithms/routing_base.hpp"
 
-#include "util/coordinate_calculation.hpp"
 #include "engine/map_matching/hidden_markov_model.hpp"
+#include "engine/map_matching/sub_matching.hpp"
+#include "engine/map_matching/matching_confidence.hpp"
+
+#include "util/coordinate_calculation.hpp"
 #include "util/json_logger.hpp"
+#include "util/for_each_pair.hpp"
 #include "util/matching_debug_info.hpp"
 
 #include <cstddef>
@@ -24,22 +28,14 @@ namespace engine
 namespace routing_algorithms
 {
 
-struct SubMatching
-{
-    std::vector<PhantomNode> nodes;
-    std::vector<unsigned> indices;
-    double length;
-    double confidence;
-};
-
 using CandidateList = std::vector<PhantomNodeWithDistance>;
 using CandidateLists = std::vector<CandidateList>;
 using HMM = map_matching::HiddenMarkovModel<CandidateLists>;
-using SubMatchingList = std::vector<SubMatching>;
+using SubMatchingList = std::vector<map_matching::SubMatching>;
 
 constexpr static const unsigned MAX_BROKEN_STATES = 10;
 constexpr static const double MAX_SPEED = 180 / 3.6; // 180km -> m/s
-constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
+static const constexpr double MATCHING_BETA = 10;
 constexpr static const double MAX_DISTANCE_DELTA = 2000.;
 
 // implements a hidden markov model map matching algorithm
@@ -49,6 +45,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     using super = BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
+    map_matching::EmissionLogProbability default_emission_log_probability;
+    map_matching::TransitionLogProbability transition_log_probability;
+    map_matching::MatchingConfidence confidence;
 
     unsigned GetMedianSampleTime(const std::vector<unsigned> &timestamps) const
     {
@@ -66,18 +65,23 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     }
 
   public:
-    MapMatching(DataFacadeT *facade, SearchEngineData &engine_working_data)
-        : super(facade), engine_working_data(engine_working_data)
+    MapMatching(DataFacadeT *facade,
+                SearchEngineData &engine_working_data,
+                const double default_gps_precision)
+        : super(facade), engine_working_data(engine_working_data),
+          default_emission_log_probability(default_gps_precision),
+          transition_log_probability(MATCHING_BETA)
     {
     }
 
-    void operator()(const CandidateLists &candidates_list,
-                    const std::vector<util::FixedPointCoordinate> &trace_coordinates,
-                    const std::vector<unsigned> &trace_timestamps,
-                    const double matching_beta,
-                    const double gps_precision,
-                    SubMatchingList &sub_matchings) const
+    SubMatchingList
+    operator()(const CandidateLists &candidates_list,
+               const std::vector<util::FixedPointCoordinate> &trace_coordinates,
+               const std::vector<unsigned> &trace_timestamps,
+               const std::vector<boost::optional<double>> &trace_gps_precision) const
     {
+        SubMatchingList sub_matchings;
+
         BOOST_ASSERT(candidates_list.size() == trace_coordinates.size());
         BOOST_ASSERT(candidates_list.size() > 1);
 
@@ -107,16 +111,55 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }();
 
-        // TODO replace default values with table lookup based on sampling frequency
-        map_matching::EmissionLogProbability emission_log_probability(gps_precision);
-        map_matching::TransitionLogProbability transition_log_probability(matching_beta);
+        std::vector<std::vector<double>> emission_log_probabilities(trace_coordinates.size());
+        if (trace_gps_precision.empty())
+        {
+            for (auto t = 0UL; t < candidates_list.size(); ++t)
+            {
+                emission_log_probabilities[t].resize(candidates_list.size());
+                std::transform(candidates_list[t].begin(), candidates_list[t].end(),
+                               emission_log_probabilities[t].begin(),
+                               [this](const PhantomNodeWithDistance &candidate)
+                               {
+                                   return default_emission_log_probability(candidate.distance);
+                               });
+            }
+        }
+        else
+        {
+            for (auto t = 0UL; t < candidates_list.size(); ++t)
+            {
+                emission_log_probabilities[t].resize(candidates_list.size());
+                if (trace_gps_precision[t])
+                {
+                    map_matching::EmissionLogProbability emission_log_probability(
+                        *trace_gps_precision[t]);
+                    std::transform(
+                        candidates_list[t].begin(), candidates_list[t].end(),
+                        emission_log_probabilities[t].begin(),
+                        [&emission_log_probability](const PhantomNodeWithDistance &candidate)
+                        {
+                            return emission_log_probability(candidate.distance);
+                        });
+                }
+                else
+                {
+                    std::transform(candidates_list[t].begin(), candidates_list[t].end(),
+                                   emission_log_probabilities[t].begin(),
+                                   [this](const PhantomNodeWithDistance &candidate)
+                                   {
+                                       return default_emission_log_probability(candidate.distance);
+                                   });
+                }
+            }
+        }
 
-        HMM model(candidates_list, emission_log_probability);
+        HMM model(candidates_list, emission_log_probabilities);
 
         std::size_t initial_timestamp = model.initialize(0);
         if (initial_timestamp == map_matching::INVALID_STATE)
         {
-            return;
+            return sub_matchings;
         }
 
         util::MatchingDebugInfo matching_debug(util::json::Logger::get());
@@ -193,9 +236,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
             auto &current_viterbi = model.viterbi[t];
             auto &current_pruned = model.pruned[t];
-            auto &current_suspicious = model.suspicious[t];
             auto &current_parents = model.parents[t];
-            auto &current_lengths = model.path_lengths[t];
+            auto &current_lengths = model.path_distances[t];
             const auto &current_timestamps_list = candidates_list[t];
             const auto &current_coordinate = trace_coordinates[t];
 
@@ -214,10 +256,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                 for (const auto s_prime : util::irange<std::size_t>(0u, current_viterbi.size()))
                 {
-                    // how likely is candidate s_prime at time t to be emitted?
-                    // FIXME this can be pre-computed
-                    const double emission_pr =
-                        emission_log_probability(candidates_list[t][s_prime].distance);
+                    const double emission_pr = emission_log_probabilities[t][s_prime];
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
                     {
@@ -268,7 +307,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
                         current_lengths[s_prime] = network_distance;
                         current_pruned[s_prime] = false;
-                        current_suspicious[s_prime] = d_t > SUSPICIOUS_DISTANCE_DELTA;
                         model.breakage[t] = false;
                     }
                 }
@@ -292,7 +330,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }
 
-        matching_debug.set_viterbi(model.viterbi, model.pruned, model.suspicious);
+        matching_debug.set_viterbi(model.viterbi, model.pruned);
 
         if (!prev_unbroken_timestamps.empty())
         {
@@ -302,7 +340,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         std::size_t sub_matching_begin = initial_timestamp;
         for (const auto sub_matching_end : split_points)
         {
-            SubMatching matching;
+            map_matching::SubMatching matching;
 
             std::size_t parent_timestamp_index = sub_matching_end - 1;
             while (parent_timestamp_index >= sub_matching_begin &&
@@ -355,25 +393,39 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 continue;
             }
 
-            matching.length = 0.0;
-            matching.nodes.resize(reconstructed_indices.size());
-            matching.indices.resize(reconstructed_indices.size());
-            for (const auto i : util::irange<std::size_t>(0u, reconstructed_indices.size()))
+            auto matching_distance = 0.0;
+            auto trace_distance = 0.0;
+            matching.nodes.reserve(reconstructed_indices.size());
+            matching.indices.reserve(reconstructed_indices.size());
+            for (const auto idx : reconstructed_indices)
             {
-                const auto timestamp_index = reconstructed_indices[i].first;
-                const auto location_index = reconstructed_indices[i].second;
+                const auto timestamp_index = idx.first;
+                const auto location_index = idx.second;
 
-                matching.indices[i] = timestamp_index;
-                matching.nodes[i] = candidates_list[timestamp_index][location_index].phantom_node;
-                matching.length += model.path_lengths[timestamp_index][location_index];
+                matching.indices.push_back(timestamp_index);
+                matching.nodes.push_back(
+                    candidates_list[timestamp_index][location_index].phantom_node);
+                matching_distance += model.path_distances[timestamp_index][location_index];
 
                 matching_debug.add_chosen(timestamp_index, location_index);
             }
+            util::for_each_pair(
+                reconstructed_indices, [&trace_distance, &trace_coordinates](
+                                           const std::pair<std::size_t, std::size_t> &prev,
+                                           const std::pair<std::size_t, std::size_t> &curr)
+                {
+                    trace_distance += util::coordinate_calculation::haversineDistance(
+                        trace_coordinates[prev.first], trace_coordinates[curr.first]);
+                });
+
+            matching.confidence = confidence(trace_distance, matching_distance);
 
             sub_matchings.push_back(matching);
             sub_matching_begin = sub_matching_end;
         }
         matching_debug.add_breakage(model.breakage);
+
+        return sub_matchings;
     }
 };
 }
