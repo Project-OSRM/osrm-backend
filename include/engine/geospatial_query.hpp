@@ -36,9 +36,26 @@ template <typename RTreeT> class GeospatialQuery
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+                               const double max_distance)
+    {
+        auto results =
+            rtree.Nearest(input_coordinate,
+                          [] (const EdgeData &) { return std::make_pair(true, true); },
+                          [max_distance](const std::size_t, const double min_dist)
+                          {
+                              return min_dist > max_distance;
+                          });
+
+        return MakePhantomNodes(input_coordinate, results);
+    }
+
+    // Returns nearest PhantomNodes in the given bearing range within max_distance.
+    // Does not filter by small/big component!
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
                                const double max_distance,
-                               const int bearing = 0,
-                               const int bearing_range = 180)
+                               const int bearing,
+                               const int bearing_range)
     {
         auto results =
             rtree.Nearest(input_coordinate,

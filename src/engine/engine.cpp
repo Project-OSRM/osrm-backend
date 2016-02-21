@@ -9,7 +9,7 @@
 //#include "engine/plugins/timestamp.hpp"
 //#include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
-//#include "engine/plugins/match.hpp"
+#include "engine/plugins/match.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/internal_datafacade.hpp"
@@ -146,7 +146,7 @@ Engine::Engine(EngineConfig &config)
     table_plugin = create<TablePlugin>(*query_data_facade, config.max_locations_distance_table);
     nearest_plugin = create<NearestPlugin>(*query_data_facade);
     // trip_plugin = ceate<TripPlugin>(*query_data_facade, config.max_locations_trip);
-    // match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
+    match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
 }
 
 // make sure we deallocate the unique ptr at a position where we know the size of the plugins
@@ -177,8 +177,7 @@ Status Engine::Trip(const api::TripParameters &params, util::json::Object &resul
 
 Status Engine::Match(const api::MatchParameters &params, util::json::Object &result)
 {
-    // return RunQuery(lock, *query_data_facade, params, *match_plugin, result);
-    return Status::Error;
+    return RunQuery(lock, *query_data_facade, params, *match_plugin, result);
 }
 
 } // engine ns

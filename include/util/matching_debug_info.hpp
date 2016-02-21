@@ -81,8 +81,7 @@ struct MatchingDebugInfo
     }
 
     void set_viterbi(const std::vector<std::vector<double>> &viterbi,
-                     const std::vector<std::vector<bool>> &pruned,
-                     const std::vector<std::vector<bool>> &suspicious)
+                     const std::vector<std::vector<bool>> &pruned)
     {
         // json logger not enabled
         if (!logger)
@@ -98,8 +97,6 @@ struct MatchingDebugInfo
                     json::clamp_float(viterbi[t][s_prime]);
                 json::get(*object, "states", t, s_prime, "pruned") =
                     static_cast<unsigned>(pruned[t][s_prime]);
-                json::get(*object, "states", t, s_prime, "suspicious") =
-                    static_cast<unsigned>(suspicious[t][s_prime]);
             }
         }
     }

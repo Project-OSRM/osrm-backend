@@ -359,9 +359,22 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+                               const float max_distance) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance);
+    }
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
                                const float max_distance,
-                               const int bearing = 0,
-                               const int bearing_range = 180) override final
+                               const int bearing,
+                               const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {

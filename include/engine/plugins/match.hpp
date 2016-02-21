@@ -6,6 +6,7 @@
 
 #include "engine/map_matching/bayes_classifier.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
+#include "engine/routing_algorithms/shortest_path.hpp"
 #include "util/json_util.hpp"
 
 #include <vector>
@@ -17,33 +18,28 @@ namespace engine
 namespace plugins
 {
 
-class MatchingPlugin : public BasePlugin
+class MatchPlugin : public BasePlugin
 {
-    using SubMatching = routing_algorithms::SubMatching;
+  public:
+    using SubMatching = map_matching::SubMatching;
     using SubMatchingList = routing_algorithms::SubMatchingList;
     using CandidateLists = routing_algorithms::CandidateLists;
-    using ClassifierT = map_matching::BayesClassifier<map_matching::LaplaceDistribution,
-                                                      map_matching::LaplaceDistribution,
-                                                      double>;
-    using TraceClassification = ClassifierT::ClassificationT;
+    static const constexpr double DEFAULT_GPS_PRECISION = 5;
+    static const constexpr double RADIUS_MULTIPLIER = 3;
 
-  public:
-    MatchingPlugin(datafacade::BaseDataFacade &facade_, const int max_locations_map_matching)
-        : BasePlugin(facade_),
-          max_locations_map_matching(max_locations_map_matching),
-          // the values were derived from fitting a laplace distribution
-          // to the values of manually classified traces
-          classifier(map_matching::LaplaceDistribution(0.005986, 0.016646),
-                     map_matching::LaplaceDistribution(0.054385, 0.458432),
-                     0.696774) // valid apriori probability
+    MatchPlugin(datafacade::BaseDataFacade &facade_, const int max_locations_map_matching)
+        : BasePlugin(facade_), map_matching(&facade_, heaps, DEFAULT_GPS_PRECISION),
+          shortest_path(&facade_, heaps), max_locations_map_matching(max_locations_map_matching)
     {
     }
 
-    Status HandleRequest(const MatchParameters &parameters, util::json::Object &json_result);
+    Status HandleRequest(const api::MatchParameters &parameters, util::json::Object &json_result);
 
   private:
+    SearchEngineData heaps;
+    routing_algorithms::MapMatching<datafacade::BaseDataFacade> map_matching;
+    routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
     int max_locations_map_matching;
-    ClassifierT classifier;
 };
 }
 }
