@@ -13,7 +13,6 @@ namespace util
 {
 namespace json
 {
-
 // Make sure we don't have inf and NaN values
 template <typename T> T clamp_float(T d)
 {
@@ -47,16 +46,17 @@ template <typename T> Array make_array(const std::vector<T> &vector)
     return a;
 }
 
-// template specialization needed as clang does not play nice
-template <> Array make_array(const std::vector<bool> &vector)
-{
-    Array a;
-    for (const bool v : vector)
-    {
-        a.values.emplace_back(v);
-    }
-    return a;
-}
+//// template specialization needed as clang does not play nice
+//// FIXME this now causes compile errors on g++ -_-
+//template <> Array make_array(const std::vector<bool> &vector)
+//{
+//    Array a;
+//    for (const bool v : vector)
+//    {
+//        a.values.emplace_back(v);
+//    }
+//    return a;
+//}
 
 // Easy acces to object hierachies
 inline Value &get(Value &value) { return value; }
