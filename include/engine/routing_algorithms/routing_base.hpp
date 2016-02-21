@@ -679,18 +679,18 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         BOOST_ASSERT_MSG((SPECIAL_NODEID != middle && INVALID_EDGE_WEIGHT != distance),
                          "no path found");
 
-        if (distance != forward_core_heap.GetKey(middle) + reverse_core_heap.GetKey(middle))
+        // we need to unpack sub path from core heaps
+        if (facade->IsCoreNode(middle))
         {
-            // self loop
-            BOOST_ASSERT(forward_core_heap.GetData(middle).parent == middle &&
-                         reverse_core_heap.GetData(middle).parent == middle);
-            packed_leg.push_back(middle);
-            packed_leg.push_back(middle);
-        }
-        else
-        {
-            // we need to unpack sub path from core heaps
-            if (facade->IsCoreNode(middle))
+            if (distance != forward_core_heap.GetKey(middle) + reverse_core_heap.GetKey(middle))
+            {
+                // self loop
+                BOOST_ASSERT(forward_core_heap.GetData(middle).parent == middle &&
+                             reverse_core_heap.GetData(middle).parent == middle);
+                packed_leg.push_back(middle);
+                packed_leg.push_back(middle);
+            }
+            else
             {
                 std::vector<NodeID> packed_core_leg;
                 RetrievePackedPathFromHeap(forward_core_heap, reverse_core_heap, middle,
@@ -700,6 +700,17 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 std::reverse(packed_leg.begin(), packed_leg.end());
                 packed_leg.insert(packed_leg.end(), packed_core_leg.begin(), packed_core_leg.end());
                 RetrievePackedPathFromSingleHeap(reverse_heap, packed_core_leg.back(), packed_leg);
+            }
+        }
+        else
+        {
+            if (distance != forward_heap.GetKey(middle) + reverse_heap.GetKey(middle))
+            {
+                // self loop
+                BOOST_ASSERT(forward_heap.GetData(middle).parent == middle &&
+                             reverse_heap.GetData(middle).parent == middle);
+                packed_leg.push_back(middle);
+                packed_leg.push_back(middle);
             }
             else
             {
