@@ -26,7 +26,7 @@ class BaseAPI
     {
     }
 
-    virtual util::json::Array
+    util::json::Array
     MakeWaypoints(const std::vector<PhantomNodes> &segment_end_coordinates) const
     {
         BOOST_ASSERT(parameters.coordinates.size() > 0);
@@ -47,7 +47,7 @@ class BaseAPI
     }
 
   protected:
-    virtual util::json::Object MakeWaypoint(const util::FixedPointCoordinate input_coordinate,
+    util::json::Object MakeWaypoint(const util::FixedPointCoordinate input_coordinate,
                                             const PhantomNode &phantom) const
     {
         return json::makeWaypoint(phantom.location, facade.get_name_for_id(phantom.name_id),
