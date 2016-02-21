@@ -24,7 +24,7 @@ namespace engine
 namespace api
 {
 
-class RouteAPI final : public BaseAPI
+class RouteAPI : public BaseAPI
 {
   public:
     RouteAPI(const datafacade::BaseDataFacade &facade_, const RouteParameters &parameters_)
@@ -32,8 +32,7 @@ class RouteAPI final : public BaseAPI
     {
     }
 
-    virtual void MakeResponse(const InternalRouteResult &raw_route,
-                              util::json::Object &response) const
+    void MakeResponse(const InternalRouteResult &raw_route, util::json::Object &response) const
     {
         auto number_of_routes = raw_route.has_alternative() ? 2UL : 1UL;
         util::json::Array routes;
@@ -67,11 +66,10 @@ class RouteAPI final : public BaseAPI
         return json::makeGeoJSONLineString(begin, end);
     }
 
-    virtual util::json::Object
-    MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
-              const std::vector<std::vector<PathData>> &unpacked_path_segments,
-              const std::vector<bool> &source_traversed_in_reverse,
-              const std::vector<bool> &target_traversed_in_reverse) const
+    util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
+                                 const std::vector<std::vector<PathData>> &unpacked_path_segments,
+                                 const std::vector<bool> &source_traversed_in_reverse,
+                                 const std::vector<bool> &target_traversed_in_reverse) const
     {
         std::vector<guidance::RouteLeg> legs;
         std::vector<guidance::LegGeometry> leg_geometries;
