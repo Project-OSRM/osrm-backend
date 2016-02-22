@@ -35,12 +35,12 @@ inline StepManeuver stepManeuverFromGeometry(const extractor::TurnInstruction in
     const auto turn_coordinate = leg_geometry.locations[turn_index];
     const auto post_turn_coordinate = leg_geometry.locations[turn_index + 1];
 
-    const double pre_turn_heading =
+    const double pre_turn_bearing =
         util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate);
-    const double post_turn_heading =
+    const double post_turn_bearing =
         util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
 
-    return StepManeuver{turn_coordinate, pre_turn_heading, post_turn_heading, instruction};
+    return StepManeuver{turn_coordinate, pre_turn_bearing, post_turn_bearing, instruction};
 }
 }
 
