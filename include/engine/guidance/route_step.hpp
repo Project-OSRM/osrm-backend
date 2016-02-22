@@ -22,7 +22,7 @@ namespace guidance
 struct RouteStep
 {
     unsigned name_id;
-    std::string way_name;
+    std::string name;
     double duration;
     double distance;
     extractor::TravelMode mode;
