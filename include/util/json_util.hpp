@@ -36,28 +36,6 @@ template <typename... Args> Array make_array(Args... args)
     return a;
 }
 
-template <typename T> Array make_array(const std::vector<T> &vector)
-{
-    Array a;
-    for (const auto &v : vector)
-    {
-        a.values.emplace_back(v);
-    }
-    return a;
-}
-
-//// template specialization needed as clang does not play nice
-//// FIXME this now causes compile errors on g++ -_-
-//template <> Array make_array(const std::vector<bool> &vector)
-//{
-//    Array a;
-//    for (const bool v : vector)
-//    {
-//        a.values.emplace_back(v);
-//    }
-//    return a;
-//}
-
 // Easy acces to object hierachies
 inline Value &get(Value &value) { return value; }
 
