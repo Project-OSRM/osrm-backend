@@ -14,7 +14,7 @@ namespace api
 
 struct TripParameters : public RouteParameters
 {
-    bool IsValid() const;
+    //bool IsValid() const; Falls back to base class
 };
 
 }
