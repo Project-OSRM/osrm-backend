@@ -12,7 +12,7 @@ namespace api
 
 struct NearestParameters : public BaseParameters
 {
-    unsigned number_of_results;
+    unsigned number_of_results = 1;
 
     bool IsValid() const { return BaseParameters::IsValid() && number_of_results >= 1; }
 };
