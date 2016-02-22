@@ -1,7 +1,7 @@
 #ifndef TRIP_BRUTE_FORCE_HPP
 #define TRIP_BRUTE_FORCE_HPP
 
-#include "engine/search_engine.hpp"
+#include "util/typedefs.hpp"
 #include "util/dist_table_wrapper.hpp"
 #include "util/simple_logger.hpp"
 
