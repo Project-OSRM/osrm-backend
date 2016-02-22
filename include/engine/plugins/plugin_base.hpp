@@ -150,6 +150,70 @@ class BasePlugin
         return phantom_nodes;
     }
 
+    std::vector<std::vector<PhantomNodeWithDistance>> GetPhantomNodes(const api::BaseParameters &parameters, unsigned number_of_results)
+    {
+        std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(parameters.coordinates.size());
+
+        const bool use_hints = !parameters.hints.empty();
+        const bool use_bearings = !parameters.bearings.empty();
+        const bool use_radiuses = !parameters.radiuses.empty();
+
+        BOOST_ASSERT(parameters.IsValid());
+        for (const auto i : util::irange<std::size_t>(0, parameters.coordinates.size()))
+        {
+            if (use_hints && parameters.hints[i] &&
+                parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
+            {
+                phantom_nodes[i].push_back(PhantomNodeWithDistance{
+                    parameters.hints[i]->phantom,
+                    util::coordinate_calculation::haversineDistance(
+                        parameters.coordinates[i], parameters.hints[i]->phantom.location),
+                });
+                continue;
+            }
+
+            if (use_bearings && parameters.bearings[i])
+            {
+                if (use_radiuses && parameters.radiuses[i])
+                {
+                    phantom_nodes[i] =
+                        facade.NearestPhantomNodes(
+                            parameters.coordinates[i], number_of_results, *parameters.radiuses[i],
+                            parameters.bearings[i]->bearing, parameters.bearings[i]->range);
+                }
+                else
+                {
+                    phantom_nodes[i] =
+                        facade.NearestPhantomNodes(
+                            parameters.coordinates[i], number_of_results, parameters.bearings[i]->bearing,
+                            parameters.bearings[i]->range);
+                }
+            }
+            else
+            {
+                if (use_radiuses && parameters.radiuses[i])
+                {
+                    phantom_nodes[i] =
+                        facade.NearestPhantomNodes(
+                            parameters.coordinates[i], number_of_results, *parameters.radiuses[i]);
+                }
+                else
+                {
+                    phantom_nodes[i] =
+                        facade.NearestPhantomNodes(
+                            parameters.coordinates[i], number_of_results);
+                }
+            }
+
+            // we didn't found a fitting node, return error
+            if (phantom_nodes[i].empty())
+            {
+                break;
+            }
+        }
+        return phantom_nodes;
+    }
+
     std::vector<PhantomNodePair> GetPhantomNodes(const api::BaseParameters &parameters)
     {
         std::vector<PhantomNodePair> phantom_node_pairs(parameters.coordinates.size());

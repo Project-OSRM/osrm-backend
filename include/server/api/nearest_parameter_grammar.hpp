@@ -26,7 +26,12 @@ struct NearestParametersGrammar final : public BaseParametersGrammar
 
     NearestParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
     {
-        root_rule = "TODO(daniel-j-h)";
+        const auto set_number = [this](const unsigned number)
+        {
+            parameters.number_of_results = number;
+        };
+        nearest_rule = (qi::lit("number=") >> qi::uint_)[set_number];
+        root_rule = *(base_rule | nearest_rule);
     }
 
     engine::api::NearestParameters parameters;
