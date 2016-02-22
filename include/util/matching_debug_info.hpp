@@ -120,7 +120,15 @@ struct MatchingDebugInfo
             return;
         }
 
-        json::get(*object, "breakage") = json::make_array(breakage);
+        // convert std::vector<bool> to osrm::json::Array
+        json::Array a;
+        for (const bool v : breakage)
+        {
+            if (v) a.values.emplace_back(json::True());
+            else a.values.emplace_back(json::False());
+        }
+
+        json::get(*object, "breakage") = std::move(a);
     }
 
     const json::Logger *logger;
