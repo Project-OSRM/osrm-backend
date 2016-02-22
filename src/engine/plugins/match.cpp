@@ -163,7 +163,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     std::vector<InternalRouteResult> sub_routes(sub_matchings.size());
     for (auto index : util::irange(0UL, sub_matchings.size()))
     {
-        BOOST_ASSERT(sub.nodes.size() > 1);
+        BOOST_ASSERT(sub_matchings[index].nodes.size() > 1);
 
         // FIXME we only run this to obtain the geometry
         // The clean way would be to get this directly from the map matching plugin
@@ -177,7 +177,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
             sub_routes[index].segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
         shortest_path(sub_routes[index].segment_end_coordinates, {}, sub_routes[index]);
-        BOOST_ASSERT(raw_route.shortest_path_length != INVALID_EDGE_WEIGHT);
+        BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
 
     api::MatchAPI match_api{BasePlugin::facade, parameters};
