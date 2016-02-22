@@ -403,9 +403,36 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+                        const unsigned max_results) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results);
+    }
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
                         const unsigned max_results,
-                        const int bearing = 0,
-                        const int bearing_range = 180) override final
+                        const double max_distance) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance);
+    }
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+                        const unsigned max_results,
+                        const int bearing,
+                        const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {
@@ -415,6 +442,23 @@ class InternalDataFacade final : public BaseDataFacade
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
                                                        bearing_range);
+    }
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+                        const unsigned max_results,
+                        const double max_distance,
+                        const int bearing,
+                        const int bearing_range) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance,
+                                                       bearing, bearing_range);
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(

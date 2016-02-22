@@ -82,8 +82,8 @@ template <typename RTreeT> class GeospatialQuery
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
                         const unsigned max_results,
-                        const int bearing = 0,
-                        const int bearing_range = 180)
+                        const int bearing,
+                        const int bearing_range)
     {
         auto results = rtree.Nearest(input_coordinate,
                                      [this, bearing, bearing_range](const EdgeData &data)
@@ -93,6 +93,67 @@ template <typename RTreeT> class GeospatialQuery
                                      [max_results](const std::size_t num_results, const double)
                                      {
                                          return num_results >= max_results;
+                                     });
+
+        return MakePhantomNodes(input_coordinate, results);
+    }
+
+    // Returns max_results nearest PhantomNodes in the given bearing range within the maximum distance.
+    // Does not filter by small/big component!
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+                        const unsigned max_results,
+                        const double max_distance,
+                        const int bearing,
+                        const int bearing_range)
+    {
+        auto results = rtree.Nearest(input_coordinate,
+                                     [this, bearing, bearing_range](const EdgeData &data)
+                                     {
+                                         return checkSegmentBearing(data, bearing, bearing_range);
+                                     },
+                                     [max_results, max_distance](const std::size_t num_results, const double min_dist)
+                                     {
+                                         return num_results >= max_results || min_dist > max_distance;
+                                     });
+
+        return MakePhantomNodes(input_coordinate, results);
+    }
+
+    // Returns max_results nearest PhantomNodes.
+    // Does not filter by small/big component!
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+                        const unsigned max_results)
+    {
+        auto results = rtree.Nearest(input_coordinate,
+                                     [](const EdgeData &)
+                                     {
+                                         return std::make_pair(true, true);
+                                     },
+                                     [max_results](const std::size_t num_results, const double)
+                                     {
+                                         return num_results >= max_results;
+                                     });
+
+        return MakePhantomNodes(input_coordinate, results);
+    }
+
+    // Returns max_results nearest PhantomNodes in the given max distance.
+    // Does not filter by small/big component!
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+                        const unsigned max_results,
+                        const double max_distance)
+    {
+        auto results = rtree.Nearest(input_coordinate,
+                                     [](const EdgeData &)
+                                     {
+                                         return std::make_pair(true, true);
+                                     },
+                                     [max_results, max_distance](const std::size_t num_results, const double min_dist)
+                                     {
+                                         return num_results >= max_results || min_dist > max_distance;
                                      });
 
         return MakePhantomNodes(input_coordinate, results);
