@@ -41,6 +41,7 @@ class MatchAPI final : public RouteAPI
                                    sub_routes[index].source_traversed_in_reverse,
                                    sub_routes[index].target_traversed_in_reverse);
             route.values["confidence"] = sub_matchings[index].confidence;
+            routes.values.push_back(std::move(route));
         }
         response.values["tracepoints"] = MakeTracepoints(sub_matchings);
         response.values["routes"] = std::move(routes);
