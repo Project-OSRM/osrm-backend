@@ -7,7 +7,7 @@
 //#include "engine/plugins/hello_world.hpp"
 #include "engine/plugins/nearest.hpp"
 //#include "engine/plugins/timestamp.hpp"
-//#include "engine/plugins/trip.hpp"
+#include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/plugins/match.hpp"
 
@@ -145,7 +145,7 @@ Engine::Engine(EngineConfig &config)
     route_plugin = create<ViaRoutePlugin>(*query_data_facade, config.max_locations_viaroute);
     table_plugin = create<TablePlugin>(*query_data_facade, config.max_locations_distance_table);
     nearest_plugin = create<NearestPlugin>(*query_data_facade);
-    // trip_plugin = ceate<TripPlugin>(*query_data_facade, config.max_locations_trip);
+    trip_plugin = create<TripPlugin>(*query_data_facade, config.max_locations_trip);
     match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
 }
 
@@ -171,8 +171,7 @@ Status Engine::Nearest(const api::NearestParameters &params, util::json::Object 
 
 Status Engine::Trip(const api::TripParameters &params, util::json::Object &result)
 {
-    // return RunQuery(lock, *query_data_facade, params, *trip_plugin, result);
-    return Status::Error;
+    return RunQuery(lock, *query_data_facade, params, *trip_plugin, result);
 }
 
 Status Engine::Match(const api::MatchParameters &params, util::json::Object &result)
