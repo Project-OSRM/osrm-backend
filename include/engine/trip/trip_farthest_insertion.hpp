@@ -1,7 +1,7 @@
 #ifndef TRIP_FARTHEST_INSERTION_HPP
 #define TRIP_FARTHEST_INSERTION_HPP
 
-#include "engine/search_engine.hpp"
+#include "util/typedefs.hpp"
 #include "util/dist_table_wrapper.hpp"
 #include "util/typedefs.hpp"
 
