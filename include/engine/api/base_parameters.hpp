@@ -7,6 +7,7 @@
 #include <boost/optional.hpp>
 
 #include <vector>
+#include <algorithm>
 
 namespace osrm
 {
@@ -32,7 +33,19 @@ struct BaseParameters
     {
         return (hints.empty() || hints.size() == coordinates.size()) &&
                (bearings.empty() || bearings.size() == coordinates.size()) &&
-               (radiuses.empty() || radiuses.size() == coordinates.size());
+               (radiuses.empty() || radiuses.size() == coordinates.size()) &&
+               std::all_of(bearings.begin(), bearings.end(),
+                           [](const boost::optional<Bearing> bearing_and_range)
+                           {
+                               if (bearing_and_range)
+                               {
+                                   return bearing_and_range->bearing >= 0 &&
+                                          bearing_and_range->bearing <= 360 &&
+                                          bearing_and_range->range >= 0 &&
+                                          bearing_and_range->range <= 180;
+                               }
+                               return true;
+                           });
     }
 };
 
