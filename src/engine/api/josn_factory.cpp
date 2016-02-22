@@ -101,14 +101,6 @@ util::json::Array coordinateToLonLat(const FixedPointCoordinate &coordinate)
     return array;
 }
 
-util::json::Array coordinateToLatLon(const FixedPointCoordinate &coordinate)
-{
-    util::json::Array array;
-    array.values.push_back(coordinate.lat / COORDINATE_PRECISION);
-    array.values.push_back(coordinate.lon / COORDINATE_PRECISION);
-    return array;
-}
-
 // FIXME this actually needs to be configurable from the profiles
 std::string modeToString(const extractor::TravelMode mode)
 {
@@ -134,9 +126,9 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     step_maneuver.values["type"] = detail::instructionToString(maneuver.instruction);
-    step_maneuver.values["location"] = detail::coordinateToLatLon(maneuver.location);
-    step_maneuver.values["heading_before"] = maneuver.heading_before;
-    step_maneuver.values["heading_after"] = maneuver.heading_after;
+    step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
+    step_maneuver.values["bearing_before"] = maneuver.bearing_before;
+    step_maneuver.values["bearing_after"] = maneuver.bearing_after;
     return step_maneuver;
 }
 
@@ -146,7 +138,7 @@ util::json::Object makeRouteStep(guidance::RouteStep &&step,
     util::json::Object route_step;
     route_step.values["distance"] = step.distance;
     route_step.values["duration"] = step.duration;
-    route_step.values["way_name"] = std::move(step.way_name);
+    route_step.values["name"] = std::move(step.name);
     route_step.values["mode"] = detail::modeToString(step.mode);
     route_step.values["maneuver"] = makeStepManeuver(step.maneuver);
     if (geometry)
@@ -172,11 +164,11 @@ util::json::Object makeRoute(const guidance::Route &route,
 }
 
 util::json::Object
-makeWaypoint(const FixedPointCoordinate location, std::string &&way_name, const Hint &hint)
+makeWaypoint(const FixedPointCoordinate location, std::string &&name, const Hint &hint)
 {
     util::json::Object waypoint;
-    waypoint.values["location"] = detail::coordinateToLatLon(location);
-    waypoint.values["way_name"] = std::move(way_name);
+    waypoint.values["location"] = detail::coordinateToLonLat(location);
+    waypoint.values["name"] = std::move(name);
     waypoint.values["hint"] = hint.ToBase64();
     return waypoint;
 }
