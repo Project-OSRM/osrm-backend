@@ -76,7 +76,7 @@ util::json::Object makeRoute(const guidance::Route &route,
                              boost::optional<util::json::Value> geometry);
 
 util::json::Object
-makeWaypoint(const FixedPointCoordinate location, std::string &&way_name, const Hint &hint);
+makeWaypoint(const FixedPointCoordinate location, std::string &&name, const Hint &hint);
 
 util::json::Object makeRouteLeg(guidance::RouteLeg &&leg, util::json::Array &&steps);
 

@@ -14,8 +14,8 @@ namespace guidance
 struct StepManeuver
 {
     util::FixedPointCoordinate location;
-    double heading_before;
-    double heading_after;
+    double bearing_before;
+    double bearing_after;
     extractor::TurnInstruction instruction;
 };
 
