@@ -1,7 +1,7 @@
 #ifndef TRIP_NEAREST_NEIGHBOUR_HPP
 #define TRIP_NEAREST_NEIGHBOUR_HPP
 
-#include "engine/search_engine.hpp"
+#include "util/typedefs.hpp"
 #include "util/simple_logger.hpp"
 #include "util/dist_table_wrapper.hpp"
 
