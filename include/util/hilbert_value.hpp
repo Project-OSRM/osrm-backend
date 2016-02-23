@@ -11,7 +11,7 @@ namespace util
 {
 
 // Computes a 64 bit value that corresponds to the hilbert space filling curve
-std::uint64_t hilbertCode(const FixedPointCoordinate coordinate);
+std::uint64_t hilbertCode(const Coordinate coordinate);
 }
 }
 

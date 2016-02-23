@@ -38,7 +38,7 @@ namespace detail
 
 std::string instructionToString(extractor::TurnInstruction instruction);
 
-util::json::Array coordinateToLonLat(const FixedPointCoordinate &coordinate);
+util::json::Array coordinateToLonLat(const util::Coordinate &coordinate);
 
 std::string modeToString(const extractor::TravelMode mode);
 
@@ -58,7 +58,7 @@ util::json::Object makeGeoJSONLineString(ForwardIter begin, ForwardIter end)
     geojson.values["type"] = "LineString";
     util::json::Array coordinates;
     std::transform(begin, end, std::back_inserter(coordinates.values),
-                   [](const util::FixedPointCoordinate loc)
+                   [](const util::Coordinate loc)
                    {
                        return detail::coordinateToLonLat(loc);
                    });
@@ -76,7 +76,7 @@ util::json::Object makeRoute(const guidance::Route &route,
                              boost::optional<util::json::Value> geometry);
 
 util::json::Object
-makeWaypoint(const FixedPointCoordinate location, std::string &&name, const Hint &hint);
+makeWaypoint(const util::Coordinate location, std::string &&name, const Hint &hint);
 
 util::json::Object makeRouteLeg(guidance::RouteLeg &&leg, util::json::Array &&steps);
 

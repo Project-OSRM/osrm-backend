@@ -21,7 +21,7 @@ class BaseService
     BaseService(OSRM &routing_machine) : routing_machine(routing_machine) {}
     virtual ~BaseService() = default;
 
-    virtual engine::Status RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+    virtual engine::Status RunQuery(std::vector<util::Coordinate> coordinates,
                                     std::string &options,
                                     util::json::Object &json_result) = 0;
 

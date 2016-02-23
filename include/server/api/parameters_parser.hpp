@@ -33,7 +33,7 @@ template <typename ParameterT,
           typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0>
 boost::optional<ParameterT> parseParameters(std::string options_string)
 {
-    const auto first = options_string.begin();
+    auto first = options_string.begin();
     const auto last = options_string.end();
     return parseParameters<ParameterT>(first, last);
 }

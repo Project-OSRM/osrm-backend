@@ -39,7 +39,7 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
 }
 } // anon. ns
 
-engine::Status NearestService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+engine::Status NearestService::RunQuery(std::vector<util::Coordinate> coordinates,
                                         std::string &options,
                                         util::json::Object &result)
 {
