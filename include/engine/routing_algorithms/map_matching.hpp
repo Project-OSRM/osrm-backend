@@ -115,7 +115,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         {
             for (auto t = 0UL; t < candidates_list.size(); ++t)
             {
-                emission_log_probabilities[t].resize(candidates_list.size());
+                emission_log_probabilities[t].resize(candidates_list[t].size());
                 std::transform(candidates_list[t].begin(), candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
                                [this](const PhantomNodeWithDistance &candidate)
@@ -128,7 +128,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         {
             for (auto t = 0UL; t < candidates_list.size(); ++t)
             {
-                emission_log_probabilities[t].resize(candidates_list.size());
+                emission_log_probabilities[t].resize(candidates_list[t].size());
                 if (trace_gps_precision[t])
                 {
                     map_matching::EmissionLogProbability emission_log_probability(
