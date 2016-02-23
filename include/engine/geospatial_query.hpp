@@ -41,7 +41,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns nearest PhantomNodes in the given bearing range within max_distance.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const double max_distance)
     {
         auto results =
@@ -58,7 +58,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns nearest PhantomNodes in the given bearing range within max_distance.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const double max_distance,
                                const int bearing,
                                const int bearing_range)
@@ -80,7 +80,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns max_results nearest PhantomNodes in the given bearing range.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing,
                         const int bearing_range)
@@ -101,7 +101,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns max_results nearest PhantomNodes in the given bearing range within the maximum distance.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance,
                         const int bearing,
@@ -123,7 +123,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns max_results nearest PhantomNodes.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results)
     {
         auto results = rtree.Nearest(input_coordinate,
@@ -142,7 +142,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns max_results nearest PhantomNodes in the given max distance.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance)
     {
@@ -162,7 +162,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate, const double max_distance)
+        const util::Coordinate input_coordinate, const double max_distance)
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -197,7 +197,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate)
+        const util::Coordinate input_coordinate)
     {
         bool has_small_component = false;
         bool has_big_component = false;
@@ -232,7 +232,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
+        const util::Coordinate input_coordinate,
         const int bearing,
         const int bearing_range)
     {
@@ -277,7 +277,7 @@ template <typename RTreeT> class GeospatialQuery
     // Returns the nearest phantom node. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
+        const util::Coordinate input_coordinate,
         const double max_distance,
         const int bearing,
         const int bearing_range)
@@ -322,7 +322,7 @@ template <typename RTreeT> class GeospatialQuery
 
   private:
     std::vector<PhantomNodeWithDistance>
-    MakePhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    MakePhantomNodes(const util::Coordinate input_coordinate,
                      const std::vector<EdgeData> &results) const
     {
         std::vector<PhantomNodeWithDistance> distance_and_phantoms(results.size());
@@ -334,10 +334,10 @@ template <typename RTreeT> class GeospatialQuery
         return distance_and_phantoms;
     }
 
-    PhantomNodeWithDistance MakePhantomNode(const util::FixedPointCoordinate input_coordinate,
+    PhantomNodeWithDistance MakePhantomNode(const util::Coordinate input_coordinate,
                                             const EdgeData &data) const
     {
-        util::FixedPointCoordinate point_on_segment;
+        util::Coordinate point_on_segment;
         double ratio;
         const auto current_perpendicular_distance =
             util::coordinate_calculation::perpendicularDistance(

@@ -27,7 +27,7 @@ struct PhantomNode
                 unsigned packed_geometry_id,
                 bool is_tiny_component,
                 unsigned component_id,
-                util::FixedPointCoordinate location,
+                util::Coordinate location,
                 unsigned short fwd_segment_position,
                 extractor::TravelMode forward_travel_mode,
                 extractor::TravelMode backward_travel_mode)
@@ -89,7 +89,7 @@ struct PhantomNode
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
     template <class OtherT>
-    explicit PhantomNode(const OtherT &other, const util::FixedPointCoordinate foot_point)
+    explicit PhantomNode(const OtherT &other, const util::Coordinate foot_point)
     {
         forward_node_id = other.forward_edge_based_node_id;
         reverse_node_id = other.reverse_edge_based_node_id;
@@ -130,7 +130,7 @@ struct PhantomNode
 #ifndef _MSC_VER
     static_assert(sizeof(ComponentType) == 4, "ComponentType needs to 4 bytes big");
 #endif
-    util::FixedPointCoordinate location;
+    util::Coordinate location;
     unsigned short fwd_segment_position;
     // note 4 bits would suffice for each,
     // but the saved byte would be padding anyway

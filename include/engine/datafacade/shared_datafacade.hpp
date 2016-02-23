@@ -48,7 +48,7 @@ class SharedDataFacade final : public BaseDataFacade
     using InputEdge = typename QueryGraph::InputEdge;
     using RTreeLeaf = typename super::RTreeLeaf;
     using SharedRTree =
-        util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, true>::vector, true>;
+        util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree>;
     using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
     using RTreeNode = typename SharedRTree::TreeNode;
@@ -67,7 +67,7 @@ class SharedDataFacade final : public BaseDataFacade
     std::unique_ptr<storage::SharedMemory> m_large_memory;
     std::string m_timestamp;
 
-    std::shared_ptr<util::ShM<util::FixedPointCoordinate, true>::vector> m_coordinate_list;
+    std::shared_ptr<util::ShM<util::Coordinate, true>::vector> m_coordinate_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<extractor::TurnInstruction, true>::vector m_turn_instruction_list;
@@ -134,9 +134,9 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadNodeAndEdgeInformation()
     {
-        auto coordinate_list_ptr = data_layout->GetBlockPtr<util::FixedPointCoordinate>(
+        auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
             shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
-        m_coordinate_list = util::make_unique<util::ShM<util::FixedPointCoordinate, true>::vector>(
+        m_coordinate_list = util::make_unique<util::ShM<util::Coordinate, true>::vector>(
             coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
@@ -372,7 +372,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     // node and edge information access
-    util::FixedPointCoordinate GetCoordinateOfNode(const NodeID id) const override final
+    util::Coordinate GetCoordinateOfNode(const NodeID id) const override final
     {
         return m_coordinate_list->at(id);
     };
@@ -409,8 +409,8 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<RTreeLeaf>
-    GetEdgesInBox(const util::FixedPointCoordinate &south_west,
-                  const util::FixedPointCoordinate &north_east) override final
+    GetEdgesInBox(const util::Coordinate south_west,
+                  const util::Coordinate north_east) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -423,7 +423,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
@@ -436,7 +436,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
                                const int bearing,
                                const int bearing_range) override final
@@ -452,7 +452,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
@@ -465,7 +465,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance) override final
     {
@@ -479,7 +479,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing,
                         const int bearing_range) override final
@@ -495,7 +495,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance,
                         const int bearing,
@@ -512,7 +512,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate) override final
+        const util::Coordinate input_coordinate) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -525,7 +525,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate, const double max_distance) override final
+        const util::Coordinate input_coordinate, const double max_distance) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -538,7 +538,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
+        const util::Coordinate input_coordinate,
         const double max_distance,
         const int bearing,
         const int bearing_range) override final
@@ -554,7 +554,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
+        const util::Coordinate input_coordinate,
         const int bearing,
         const int bearing_range) override final
     {

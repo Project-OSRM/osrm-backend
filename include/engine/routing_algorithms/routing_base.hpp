@@ -795,8 +795,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             nodes.target_phantom = target_phantom;
             UnpackPath(packed_leg.begin(), packed_leg.end(), nodes, unpacked_path);
 
-            util::FixedPointCoordinate previous_coordinate = source_phantom.location;
-            util::FixedPointCoordinate current_coordinate;
+            util::Coordinate previous_coordinate = source_phantom.location;
+            util::Coordinate current_coordinate;
             distance = 0;
             for (const auto &p : unpacked_path)
             {

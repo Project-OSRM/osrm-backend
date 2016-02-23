@@ -40,8 +40,8 @@ struct MatchingDebugInfo
                 json::Object state;
                 state.values["transitions"] = json::Array();
                 state.values["coordinate"] =
-                    json::make_array(elem_s.phantom_node.location.lat / COORDINATE_PRECISION,
-                                     elem_s.phantom_node.location.lon / COORDINATE_PRECISION);
+                    json::make_array(static_cast<double>(toFloating(elem_s.phantom_node.location.lat)),
+                                     static_cast<double>(toFloating(elem_s.phantom_node.location.lon)));
                 state.values["viterbi"] =
                     json::clamp_float(engine::map_matching::IMPOSSIBLE_LOG_PROB);
                 state.values["pruned"] = 0u;

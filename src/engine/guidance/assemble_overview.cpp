@@ -20,10 +20,10 @@ namespace
 
 unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometries)
 {
-    int min_lon = std::numeric_limits<int>::max();
-    int min_lat = std::numeric_limits<int>::max();
-    int max_lon = -std::numeric_limits<int>::max();
-    int max_lat = -std::numeric_limits<int>::max();
+    util::FixedLongitude min_lon{std::numeric_limits<int>::max()};
+    util::FixedLongitude max_lon{-std::numeric_limits<int>::max()};
+    util::FixedLatitude min_lat{std::numeric_limits<int>::max()};
+    util::FixedLatitude max_lat{-std::numeric_limits<int>::max()};
 
     for (const auto &leg_geometry : leg_geometries)
     {
@@ -36,12 +36,15 @@ unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometri
         }
     }
 
-    return util::tiles::getBBMaxZoomTile(min_lon, min_lat, max_lon, max_lat).z;
+    return util::tiles::getBBMaxZoomTile(toFloating(min_lon), toFloating(min_lat),
+                                         toFloating(max_lon), toFloating(max_lat))
+        .z;
 }
 
-std::vector<util::FixedPointCoordinate> simplifyGeometry(const std::vector<LegGeometry> &leg_geometries, const unsigned zoom_level)
+std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &leg_geometries,
+                                               const unsigned zoom_level)
 {
-    std::vector<util::FixedPointCoordinate> overview_geometry;
+    std::vector<util::Coordinate> overview_geometry;
     auto leg_index = 0UL;
     for (const auto geometry : leg_geometries)
     {
@@ -59,7 +62,7 @@ std::vector<util::FixedPointCoordinate> simplifyGeometry(const std::vector<LegGe
 }
 }
 
-std::vector<util::FixedPointCoordinate>
+std::vector<util::Coordinate>
 assembleOverview(const std::vector<LegGeometry> &leg_geometries, const bool use_simplification)
 {
     if (use_simplification)
@@ -75,7 +78,7 @@ assembleOverview(const std::vector<LegGeometry> &leg_geometries, const bool use_
                                              return sum + leg_geometry.locations.size();
                                          }) -
                          leg_geometries.size() + 1;
-    std::vector<util::FixedPointCoordinate> overview_geometry;
+    std::vector<util::Coordinate> overview_geometry;
     overview_geometry.reserve(overview_size);
 
     auto leg_index = 0UL;

@@ -22,7 +22,7 @@ class TableService final : public BaseService
   public:
     TableService(OSRM &routing_machine) : BaseService(routing_machine) {}
 
-    engine::Status RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+    engine::Status RunQuery(std::vector<util::Coordinate> coordinates,
                             std::string &options,
                             util::json::Object &result) final override;
 
