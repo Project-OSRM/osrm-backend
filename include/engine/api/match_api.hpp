@@ -44,7 +44,7 @@ class MatchAPI final : public RouteAPI
             routes.values.push_back(std::move(route));
         }
         response.values["tracepoints"] = MakeTracepoints(sub_matchings);
-        response.values["routes"] = std::move(routes);
+        response.values["matchings"] = std::move(routes);
         response.values["code"] = "ok";
     }
 
