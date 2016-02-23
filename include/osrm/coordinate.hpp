@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-    using util::FixedPointCoordinate;
+using util::Coordinate;
 }
 
 #endif
