@@ -12,8 +12,12 @@ namespace extractor
 
 struct ExternalMemoryNode : QueryNode
 {
-    ExternalMemoryNode(int lat, int lon, OSMNodeID node_id, bool barrier, bool traffic_lights)
-        : QueryNode(lat, lon, node_id), barrier(barrier), traffic_lights(traffic_lights)
+    ExternalMemoryNode(const util::FixedLongitude lon_,
+                       const util::FixedLatitude lat_,
+                       OSMNodeID node_id_,
+                       bool barrier_,
+                       bool traffic_lights_)
+        : QueryNode(lon_, lat_, node_id_), barrier(barrier_), traffic_lights(traffic_lights_)
     {
     }
 
@@ -21,12 +25,14 @@ struct ExternalMemoryNode : QueryNode
 
     static ExternalMemoryNode min_value()
     {
-        return ExternalMemoryNode(0, 0, MIN_OSM_NODEID, false, false);
+        return ExternalMemoryNode(util::FixedLongitude(0), util::FixedLatitude(0), MIN_OSM_NODEID,
+                                  false, false);
     }
 
     static ExternalMemoryNode max_value()
     {
-        return ExternalMemoryNode(std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
+        return ExternalMemoryNode(util::FixedLongitude(std::numeric_limits<int>::max()),
+                                  util::FixedLatitude(std::numeric_limits<int>::max()),
                                   MAX_OSM_NODEID, false, false);
     }
 

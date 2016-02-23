@@ -28,10 +28,10 @@ class BasePlugin
     datafacade::BaseDataFacade &facade;
     BasePlugin(datafacade::BaseDataFacade &facade_) : facade(facade_) {}
 
-    bool CheckAllCoordinates(const std::vector<util::FixedPointCoordinate> &coordinates)
+    bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates)
     {
         return !std::any_of(std::begin(coordinates), std::end(coordinates),
-                            [](const util::FixedPointCoordinate &coordinate)
+                            [](const util::Coordinate coordinate)
                             {
                                 return !coordinate.IsValid();
                             });
@@ -150,9 +150,11 @@ class BasePlugin
         return phantom_nodes;
     }
 
-    std::vector<std::vector<PhantomNodeWithDistance>> GetPhantomNodes(const api::BaseParameters &parameters, unsigned number_of_results)
+    std::vector<std::vector<PhantomNodeWithDistance>>
+    GetPhantomNodes(const api::BaseParameters &parameters, unsigned number_of_results)
     {
-        std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(parameters.coordinates.size());
+        std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
+            parameters.coordinates.size());
 
         const bool use_hints = !parameters.hints.empty();
         const bool use_bearings = !parameters.bearings.empty();
@@ -176,32 +178,28 @@ class BasePlugin
             {
                 if (use_radiuses && parameters.radiuses[i])
                 {
-                    phantom_nodes[i] =
-                        facade.NearestPhantomNodes(
-                            parameters.coordinates[i], number_of_results, *parameters.radiuses[i],
-                            parameters.bearings[i]->bearing, parameters.bearings[i]->range);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(
+                        parameters.coordinates[i], number_of_results, *parameters.radiuses[i],
+                        parameters.bearings[i]->bearing, parameters.bearings[i]->range);
                 }
                 else
                 {
-                    phantom_nodes[i] =
-                        facade.NearestPhantomNodes(
-                            parameters.coordinates[i], number_of_results, parameters.bearings[i]->bearing,
-                            parameters.bearings[i]->range);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(
+                        parameters.coordinates[i], number_of_results,
+                        parameters.bearings[i]->bearing, parameters.bearings[i]->range);
                 }
             }
             else
             {
                 if (use_radiuses && parameters.radiuses[i])
                 {
-                    phantom_nodes[i] =
-                        facade.NearestPhantomNodes(
-                            parameters.coordinates[i], number_of_results, *parameters.radiuses[i]);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(
+                        parameters.coordinates[i], number_of_results, *parameters.radiuses[i]);
                 }
                 else
                 {
                     phantom_nodes[i] =
-                        facade.NearestPhantomNodes(
-                            parameters.coordinates[i], number_of_results);
+                        facade.NearestPhantomNodes(parameters.coordinates[i], number_of_results);
                 }
             }
 

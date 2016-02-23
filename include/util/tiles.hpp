@@ -1,6 +1,8 @@
 #ifndef UTIL_TILES_HPP
 #define UTIL_TILES_HPP
 
+#include "util/coordinate.hpp"
+
 #include <boost/assert.hpp>
 
 #include <cmath>
@@ -46,20 +48,20 @@ inline unsigned getBBMaxZoom(const Tile top_left, const Tile bottom_left)
 }
 }
 
-inline Tile pointToTile(const double lon, const double lat)
+inline Tile pointToTile(const FloatLongitude lon, const FloatLatitude lat)
 {
-    auto sin_lat = std::sin(lat * M_PI / 180.);
+    auto sin_lat = std::sin(static_cast<double>(lat) * M_PI / 180.);
     auto p2z = std::pow(2, detail::MAX_ZOOM);
-    unsigned x = p2z * (lon / 360. + 0.5);
+    unsigned x = p2z * (static_cast<double>(lon) / 360. + 0.5);
     unsigned y = p2z * (0.5 - 0.25 * std::log((1 + sin_lat) / (1 - sin_lat)) / M_PI);
 
     return Tile{x, y, detail::MAX_ZOOM};
 }
 
-inline Tile getBBMaxZoomTile(const double min_lon,
-                             const double min_lat,
-                             const double max_lon,
-                             const double max_lat)
+inline Tile getBBMaxZoomTile(const FloatLongitude min_lon,
+                             const FloatLatitude min_lat,
+                             const FloatLongitude max_lon,
+                             const FloatLatitude max_lat)
 {
     const auto top_left = pointToTile(min_lon, min_lat);
     const auto bottom_left = pointToTile(max_lon, max_lat);
