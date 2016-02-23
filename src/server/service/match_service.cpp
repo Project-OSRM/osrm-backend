@@ -40,7 +40,7 @@ std::string getWrongOptionHelp(const engine::api::MatchParameters &parameters)
 }
 } // anon. ns
 
-engine::Status MatchService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+engine::Status MatchService::RunQuery(std::vector<util::Coordinate> coordinates,
                                       std::string &options,
                                       util::json::Object &result)
 {

@@ -18,21 +18,30 @@ namespace osrm
     {                                                                                              \
         static_assert(std::is_arithmetic<From>(), "");                                             \
         From x;                                                                                    \
-        friend std::ostream& operator<<(std::ostream& stream, const To& inst);                     \
+        friend std::ostream &operator<<(std::ostream &stream, const To &inst);                     \
                                                                                                    \
       public:                                                                                      \
         To() = default;                                                                            \
         explicit To(const From x_) : x(x_) {}                                                      \
         explicit operator From &() { return x; }                                                   \
-        explicit operator const From &() const { return x; }                                       \
-        bool operator<(const To &z_) const { return x < static_cast<const From>(z_); }             \
-        bool operator>(const To &z_) const { return x > static_cast<const From>(z_); }             \
-        bool operator<=(const To &z_) const { return x <= static_cast<const From>(z_); }           \
-        bool operator>=(const To &z_) const { return x >= static_cast<const From>(z_); }           \
-        bool operator==(const To &z_) const { return x == static_cast<const From>(z_); }           \
-        bool operator!=(const To &z_) const { return x != static_cast<const From>(z_); }           \
+        explicit operator From() const { return x; }                                               \
+        To operator+(const To rhs_) const { return To(x + static_cast<const From>(rhs_)); }        \
+        To operator-(const To rhs_) const { return To(x - static_cast<const From>(rhs_)); }        \
+        To operator*(const To rhs_) const { return To(x * static_cast<const From>(rhs_)); }        \
+        To operator/(const To rhs_) const { return To(x / static_cast<const From>(rhs_)); }        \
+        bool operator<(const To z_) const { return x < static_cast<const From>(z_); }              \
+        bool operator>(const To z_) const { return x > static_cast<const From>(z_); }              \
+        bool operator<=(const To z_) const { return x <= static_cast<const From>(z_); }            \
+        bool operator>=(const To z_) const { return x >= static_cast<const From>(z_); }            \
+        bool operator==(const To z_) const { return x == static_cast<const From>(z_); }            \
+        bool operator!=(const To z_) const { return x != static_cast<const From>(z_); }            \
     };                                                                                             \
-    inline From To##_to_##From(To to) { return static_cast<From>(to); }                            \
+    inline std::ostream &operator<<(std::ostream &stream, const To &inst)                          \
+    {                                                                                              \
+        return stream << #To << '(' << inst.x << ')';                                              \
+    }
+
+#define OSRM_STRONG_TYPEDEF_HASHABLE(From, To)                                                     \
     namespace std                                                                                  \
     {                                                                                              \
     template <> struct hash<To>                                                                    \
@@ -42,9 +51,6 @@ namespace osrm
             return std::hash<From>()(static_cast<const From>(k));                                  \
         }                                                                                          \
     };                                                                                             \
-    }                                                                                              \
-    inline std::ostream& operator<<(std::ostream& stream, const To& inst) {                        \
-        return stream << #To << '(' << inst.x << ')';                                              \
     }
 }
 
