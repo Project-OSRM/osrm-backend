@@ -43,7 +43,7 @@ class TripAPI final : public RouteAPI
             routes.values.push_back(std::move(route));
         }
         response.values["waypoints"] = MakeWaypoints(sub_trips, phantoms);
-        response.values["routes"] = std::move(routes);
+        response.values["trips"] = std::move(routes);
         response.values["code"] = "ok";
     }
 
