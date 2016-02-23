@@ -57,7 +57,6 @@ std::string encode(std::vector<int> &numbers)
 }
 } // anonymous ns
 
-
 std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter end)
 {
     auto size = std::distance(begin, end);
@@ -69,20 +68,22 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
     std::vector<int> delta_numbers;
     BOOST_ASSERT(size > 0);
     delta_numbers.reserve((size - 1) * 2);
-    util::FixedPointCoordinate previous_coordinate = {0, 0};
-    std::for_each(begin, end, [&delta_numbers, &previous_coordinate](const FixedPointCoordinate loc)
-    {
-            const int lat_diff = (loc.lat - previous_coordinate.lat) * detail::COORDINATE_TO_POLYLINE;
-            const int lon_diff = (loc.lon - previous_coordinate.lon) * detail::COORDINATE_TO_POLYLINE;
-            delta_numbers.emplace_back(lat_diff);
-            delta_numbers.emplace_back(lon_diff);
-            previous_coordinate = loc;
-    });
+    util::Coordinate previous_coordinate{util::FixedLongitude(0), util::FixedLatitude(0)};
+    std::for_each(begin, end, [&delta_numbers, &previous_coordinate](const util::Coordinate loc)
+                  {
+                      const int lat_diff = static_cast<int>(loc.lat - previous_coordinate.lat) *
+                                           detail::COORDINATE_TO_POLYLINE;
+                      const int lon_diff = static_cast<int>(loc.lon - previous_coordinate.lon) *
+                                           detail::COORDINATE_TO_POLYLINE;
+                      delta_numbers.emplace_back(lat_diff);
+                      delta_numbers.emplace_back(lon_diff);
+                      previous_coordinate = loc;
+                  });
     return encode(delta_numbers);
 }
-std::vector<util::FixedPointCoordinate> decodePolyline(const std::string &geometry_string)
+std::vector<util::Coordinate> decodePolyline(const std::string &geometry_string)
 {
-    std::vector<util::FixedPointCoordinate> new_coordinates;
+    std::vector<util::Coordinate> new_coordinates;
     int index = 0, len = geometry_string.size();
     int lat = 0, lng = 0;
 
@@ -109,9 +110,9 @@ std::vector<util::FixedPointCoordinate> decodePolyline(const std::string &geomet
         int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
         lng += dlng;
 
-        util::FixedPointCoordinate p;
-        p.lat = lat * detail::POLYLINE_TO_COORDINATE;
-        p.lon = lng * detail::POLYLINE_TO_COORDINATE;
+        util::Coordinate p;
+        p.lat = util::FixedLatitude(lat * detail::POLYLINE_TO_COORDINATE);
+        p.lon = util::FixedLongitude(lng * detail::POLYLINE_TO_COORDINATE);
         new_coordinates.push_back(p);
     }
 

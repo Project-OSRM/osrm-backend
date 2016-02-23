@@ -23,7 +23,7 @@ struct BaseParameters
         short range;
     };
 
-    std::vector<util::FixedPointCoordinate> coordinates;
+    std::vector<util::Coordinate> coordinates;
     std::vector<boost::optional<Hint>> hints;
     std::vector<boost::optional<double>> radiuses;
     std::vector<boost::optional<Bearing>> bearings;

@@ -55,7 +55,7 @@ class InternalDataFacade final : public BaseDataFacade
     using InputEdge = typename QueryGraph::InputEdge;
     using RTreeLeaf = typename super::RTreeLeaf;
     using InternalRTree =
-        util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, false>::vector, false>;
+        util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, false>::vector, false>;
     using InternalGeospatialQuery = GeospatialQuery<InternalRTree, BaseDataFacade>;
 
     InternalDataFacade() {}
@@ -65,7 +65,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::unique_ptr<QueryGraph> m_query_graph;
     std::string m_timestamp;
 
-    std::shared_ptr<util::ShM<util::FixedPointCoordinate, false>::vector> m_coordinate_list;
+    std::shared_ptr<util::ShM<util::Coordinate, false>::vector> m_coordinate_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::TurnInstruction, false>::vector m_turn_instruction_list;
@@ -134,15 +134,12 @@ class InternalDataFacade final : public BaseDataFacade
         extractor::QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
-        m_coordinate_list =
-            std::make_shared<std::vector<util::FixedPointCoordinate>>(number_of_coordinates);
+        m_coordinate_list = std::make_shared<std::vector<util::Coordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-            m_coordinate_list->at(i) =
-                util::FixedPointCoordinate(current_node.lat, current_node.lon);
-            BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
-            BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
+            m_coordinate_list->at(i) = util::Coordinate(current_node.lon, current_node.lat);
+            BOOST_ASSERT(m_coordinate_list->at(i).IsValid());
         }
         nodes_input_stream.close();
 
@@ -340,7 +337,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     // node and edge information access
-    util::FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const override final
+    util::Coordinate GetCoordinateOfNode(const unsigned id) const override final
     {
         return m_coordinate_list->at(id);
     };
@@ -360,22 +357,21 @@ class InternalDataFacade final : public BaseDataFacade
         return m_travel_mode_list.at(id);
     }
 
-    std::vector<RTreeLeaf>
-    GetEdgesInBox(const util::FixedPointCoordinate &south_west,
-                  const util::FixedPointCoordinate &north_east) override final
+    std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
+                                         const util::Coordinate north_east) override final
     {
         if (!m_static_rtree.get())
         {
             LoadRTree();
             BOOST_ASSERT(m_geospatial_query.get());
         }
-        const util::RectangleInt2D bbox{
-            south_west.lon, north_east.lon, south_west.lat, north_east.lat};
+        const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
+                                        north_east.lat};
         return m_geospatial_query->Search(bbox);
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance) override final
     {
         if (!m_static_rtree.get())
@@ -388,7 +384,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
                                const int bearing,
                                const int bearing_range) override final
@@ -404,7 +400,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results) override final
     {
         if (!m_static_rtree.get())
@@ -417,7 +413,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance) override final
     {
@@ -431,7 +427,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing,
                         const int bearing_range) override final
@@ -447,7 +443,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance,
                         const int bearing,
@@ -463,8 +459,9 @@ class InternalDataFacade final : public BaseDataFacade
                                                        bearing, bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate, const double max_distance) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance) override final
     {
         if (!m_static_rtree.get())
         {
@@ -477,7 +474,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate) override final
+        const util::Coordinate input_coordinate) override final
     {
         if (!m_static_rtree.get())
         {
@@ -489,11 +486,11 @@ class InternalDataFacade final : public BaseDataFacade
             input_coordinate);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
-        const double max_distance,
-        const int bearing,
-        const int bearing_range) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {
@@ -505,10 +502,10 @@ class InternalDataFacade final : public BaseDataFacade
             input_coordinate, max_distance, bearing, bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
-        const int bearing,
-        const int bearing_range) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {

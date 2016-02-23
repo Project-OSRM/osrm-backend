@@ -22,8 +22,7 @@ struct EdgeBasedNode
     EdgeBasedNode()
         : forward_edge_based_node_id(SPECIAL_NODEID), reverse_edge_based_node_id(SPECIAL_NODEID),
           u(SPECIAL_NODEID), v(SPECIAL_NODEID), name_id(0),
-          forward_packed_geometry_id(SPECIAL_EDGEID),
-          reverse_packed_geometry_id(SPECIAL_EDGEID),
+          forward_packed_geometry_id(SPECIAL_EDGEID), reverse_packed_geometry_id(SPECIAL_EDGEID),
           component{INVALID_COMPONENTID, false},
           fwd_segment_position(std::numeric_limits<unsigned short>::max()),
           forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
@@ -47,21 +46,19 @@ struct EdgeBasedNode
           reverse_edge_based_node_id(reverse_edge_based_node_id), u(u), v(v), name_id(name_id),
           forward_packed_geometry_id(forward_weight_or_packed_geometry_id_),
           reverse_packed_geometry_id(reverse_weight_or_packed_geometry_id_),
-          component{component_id, is_tiny_component},
-          fwd_segment_position(fwd_segment_position), forward_travel_mode(forward_travel_mode),
-          backward_travel_mode(backward_travel_mode)
+          component{component_id, is_tiny_component}, fwd_segment_position(fwd_segment_position),
+          forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
     {
         BOOST_ASSERT((forward_edge_based_node_id != SPECIAL_NODEID) ||
                      (reverse_edge_based_node_id != SPECIAL_NODEID));
     }
 
-    static inline util::FixedPointCoordinate Centroid(const util::FixedPointCoordinate a,
-                                                      const util::FixedPointCoordinate b)
+    static inline util::Coordinate Centroid(const util::Coordinate a, const util::Coordinate b)
     {
-        util::FixedPointCoordinate centroid;
+        util::Coordinate centroid;
         // The coordinates of the midpoint are given by:
-        centroid.lat = (a.lat + b.lat) / 2;
-        centroid.lon = (a.lon + b.lon) / 2;
+        centroid.lon = (a.lon + b.lon) / util::FixedLongitude(2);
+        centroid.lat = (a.lat + b.lat) / util::FixedLatitude(2);
         return centroid;
     }
 

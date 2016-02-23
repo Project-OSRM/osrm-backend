@@ -304,7 +304,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         {
             util::SimpleLogger().Write(LogLevel::logWARNING)
                 << "Found invalid node reference "
-                << OSMNodeID_to_uint64_t(edge_iterator->result.osm_target_id);
+                << static_cast<uint64_t>(edge_iterator->result.osm_target_id);
             edge_iterator->result.target = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -317,12 +317,14 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
         BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
-        BOOST_ASSERT(edge_iterator->source_coordinate.lat != std::numeric_limits<int>::min());
-        BOOST_ASSERT(edge_iterator->source_coordinate.lon != std::numeric_limits<int>::min());
+        BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
+                     util::FixedLatitude(std::numeric_limits<int>::min()));
+        BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
+                     util::FixedLongitude(std::numeric_limits<int>::min()));
 
         const double distance = util::coordinate_calculation::greatCircleDistance(
-            edge_iterator->source_coordinate.lat, edge_iterator->source_coordinate.lon,
-            node_iterator->lat, node_iterator->lon);
+            edge_iterator->source_coordinate,
+            util::Coordinate(node_iterator->lon, node_iterator->lat));
 
         if (util::lua_function_exists(segment_state, "segment_function"))
         {
