@@ -74,10 +74,8 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
 #ifndef NDEBUG
     for (const EdgeBasedNode &node : m_edge_based_node_list)
     {
-        BOOST_ASSERT(m_node_info_list.at(node.u).lat != INT_MAX);
-        BOOST_ASSERT(m_node_info_list.at(node.u).lon != INT_MAX);
-        BOOST_ASSERT(m_node_info_list.at(node.v).lon != INT_MAX);
-        BOOST_ASSERT(m_node_info_list.at(node.v).lat != INT_MAX);
+        BOOST_ASSERT(util::Coordinate(m_node_info_list[node.u].lon, m_node_info_list[node.u].lat).IsValid());
+        BOOST_ASSERT(util::Coordinate(m_node_info_list[node.v].lon, m_node_info_list[node.v].lat).IsValid());
     }
 #endif
     using std::swap; // Koenig swap
@@ -538,7 +536,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             const QueryNode &to = m_node_info_list[target_node.first];
                             const double segment_length =
                                 util::coordinate_calculation::greatCircleDistance(
-                                    from.lat, from.lon, to.lat, to.lon);
+                                    util::Coordinate(from.lon, from.lat),
+                                    util::Coordinate(to.lon, to.lat));
 
                             edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id),
                                                     sizeof(to.node_id));
@@ -556,8 +555,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         const QueryNode from = m_node_info_list[node_u];
                         const QueryNode to = m_node_info_list[node_v];
                         const double segment_length =
-                            util::coordinate_calculation::greatCircleDistance(from.lat, from.lon,
-                                                                              to.lat, to.lon);
+                            util::coordinate_calculation::greatCircleDistance(
+                                util::Coordinate(from.lon, from.lat),
+                                util::Coordinate(to.lon, to.lat));
                         edge_segment_file.write(reinterpret_cast<const char *>(&node_count),
                                                 sizeof(node_count));
                         edge_segment_file.write(reinterpret_cast<const char *>(&from.node_id),
@@ -682,18 +682,20 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
                         instruction_right_of_begin != TurnInstruction::TurnSlightRight)
                     {
                         std::int32_t resolved_count = 0;
-                        //uses side-effects in resolve
+                        // uses side-effects in resolve
                         if (!keepStraight(candidate_at_end.angle) &&
                             !resolve(candidate_at_end.instruction, instruction_left_of_end,
                                      RESOLVE_TO_LEFT))
-                            util::SimpleLogger().Write(logDEBUG) << "[warning] failed to resolve conflict";
+                            util::SimpleLogger().Write(logDEBUG)
+                                << "[warning] failed to resolve conflict";
                         else
                             ++resolved_count;
-                        //uses side-effects in resolve
+                        // uses side-effects in resolve
                         if (!keepStraight(candidate_at_begin.angle) &&
                             !resolve(candidate_at_begin.instruction, instruction_right_of_begin,
                                      RESOLVE_TO_RIGHT))
-                            util::SimpleLogger().Write(logDEBUG) << "[warning] failed to resolve conflict";
+                            util::SimpleLogger().Write(logDEBUG)
+                                << "[warning] failed to resolve conflict";
                         else
                             ++resolved_count;
                         if (resolved_count >= 1 &&
@@ -1134,10 +1136,9 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
 {
     if (m_compressed_edge_container.HasEntryForID(via_eid))
     {
-        util::FixedPointCoordinate prev = util::FixedPointCoordinate(
-                                       m_node_info_list[INVERTED ? tgt : src].lat,
-                                       m_node_info_list[INVERTED ? tgt : src].lon),
-                                   cur;
+        util::Coordinate prev = util::Coordinate(m_node_info_list[INVERTED ? tgt : src].lon,
+                                                 m_node_info_list[INVERTED ? tgt : src].lat),
+                         cur;
         // walk along the edge for the first 5 meters
         const auto &geometry = m_compressed_edge_container.GetBucketReference(via_eid);
         double dist = 0;
@@ -1166,8 +1167,8 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
             for (auto itr = geometry.rbegin(), end = geometry.rend(); itr != end; ++itr)
             {
                 const auto compressed_node = *itr;
-                cur = util::FixedPointCoordinate(m_node_info_list[compressed_node.first].lat,
-                                                 m_node_info_list[compressed_node.first].lon);
+                cur = util::Coordinate(m_node_info_list[compressed_node.first].lon,
+                                       m_node_info_list[compressed_node.first].lat);
                 this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
                 if (dist + this_dist > DESIRED_SEGMENT_LENGTH)
                 {
@@ -1178,7 +1179,7 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
                 prev = cur;
                 prev_id = compressed_node.first;
             }
-            cur = util::FixedPointCoordinate(m_node_info_list[src].lat, m_node_info_list[src].lon);
+            cur = util::Coordinate(m_node_info_list[src].lon, m_node_info_list[src].lat);
             this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
             return selectBestCandidate(src, dist + this_dist, prev_id, dist);
         }
@@ -1187,8 +1188,8 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
             for (auto itr = geometry.begin(), end = geometry.end(); itr != end; ++itr)
             {
                 const auto compressed_node = *itr;
-                cur = util::FixedPointCoordinate(m_node_info_list[compressed_node.first].lat,
-                                                 m_node_info_list[compressed_node.first].lon);
+                cur = util::Coordinate(m_node_info_list[compressed_node.first].lon,
+                                       m_node_info_list[compressed_node.first].lat);
                 this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
                 if (dist + this_dist > DESIRED_SEGMENT_LENGTH)
                 {
@@ -1199,7 +1200,7 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
                 prev = cur;
                 prev_id = compressed_node.first;
             }
-            cur = util::FixedPointCoordinate(m_node_info_list[tgt].lat, m_node_info_list[tgt].lon);
+            cur = util::Coordinate(m_node_info_list[tgt].lon, m_node_info_list[tgt].lat);
             this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
             return selectBestCandidate(tgt, dist + this_dist, prev_id, dist);
         }

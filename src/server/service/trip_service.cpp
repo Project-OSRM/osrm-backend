@@ -38,7 +38,7 @@ std::string getWrongOptionHelp(const engine::api::TripParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TripService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+engine::Status TripService::RunQuery(std::vector<util::Coordinate> coordinates,
                                       std::string &options,
                                       util::json::Object &result)
 {

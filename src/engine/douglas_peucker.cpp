@@ -24,21 +24,21 @@ namespace
 struct CoordinatePairCalculator
 {
     CoordinatePairCalculator() = delete;
-    CoordinatePairCalculator(const util::FixedPointCoordinate coordinate_a,
-                             const util::FixedPointCoordinate coordinate_b)
+    CoordinatePairCalculator(const util::Coordinate coordinate_a,
+                             const util::Coordinate coordinate_b)
     {
         // initialize distance calculator with two fixed coordinates a, b
-        first_lat = (coordinate_a.lat / COORDINATE_PRECISION) * util::RAD;
-        first_lon = (coordinate_a.lon / COORDINATE_PRECISION) * util::RAD;
-        second_lat = (coordinate_b.lat / COORDINATE_PRECISION) * util::RAD;
-        second_lon = (coordinate_b.lon / COORDINATE_PRECISION) * util::RAD;
+        first_lon = static_cast<double>(toFloating(coordinate_a.lon)) * util::RAD;
+        first_lat = static_cast<double>(toFloating(coordinate_a.lat)) * util::RAD;
+        second_lon = static_cast<double>(toFloating(coordinate_b.lon)) * util::RAD;
+        second_lat = static_cast<double>(toFloating(coordinate_b.lat)) * util::RAD;
     }
 
-    int operator()(const util::FixedPointCoordinate other) const
+    int operator()(const util::Coordinate other) const
     {
         // set third coordinate c
-        const float float_lat1 = (other.lat / COORDINATE_PRECISION) * util::RAD;
-        const float float_lon1 = (other.lon / COORDINATE_PRECISION) * util::RAD;
+        const float float_lon1 = static_cast<double>(toFloating(other.lon)) * util::RAD;
+        const float float_lat1 = static_cast<double>(toFloating(other.lat)) * util::RAD;
 
         // compute distance (a,c)
         const float x_value_1 = (first_lon - float_lon1) * cos((float_lat1 + first_lat) / 2.f);
@@ -61,9 +61,9 @@ struct CoordinatePairCalculator
 };
 }
 
-std::vector<util::FixedPointCoordinate>
-douglasPeucker(std::vector<util::FixedPointCoordinate>::const_iterator begin,
-               std::vector<util::FixedPointCoordinate>::const_iterator end,
+std::vector<util::Coordinate>
+douglasPeucker(std::vector<util::Coordinate>::const_iterator begin,
+               std::vector<util::Coordinate>::const_iterator end,
                     const unsigned zoom_level)
 {
     BOOST_ASSERT_MSG(zoom_level < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE,
@@ -131,7 +131,7 @@ douglasPeucker(std::vector<util::FixedPointCoordinate>::const_iterator begin,
     }
 
     auto simplified_size = std::count(is_necessary.begin(), is_necessary.end(), true);
-    std::vector<util::FixedPointCoordinate> simplified_geometry;
+    std::vector<util::Coordinate> simplified_geometry;
     simplified_geometry.reserve(simplified_size);
     for (auto idx : boost::irange<std::size_t>(0UL, size))
     {

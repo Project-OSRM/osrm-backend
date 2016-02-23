@@ -41,7 +41,7 @@ template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 {
     std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const
     {
-        return OSMNodeID_to_uint64_t(k.first) ^ (OSMNodeID_to_uint64_t(k.second) << 12);
+        return static_cast<uint64_t>(k.first) ^ (static_cast<uint64_t>(k.second) << 12);
     }
 };
 }
