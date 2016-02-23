@@ -117,7 +117,7 @@ class BasePlugin
     {
         std::vector<std::vector<PhantomNodeWithDistance>> phantom_nodes(
             parameters.coordinates.size());
-        BOOST_ASSERT(parameters.radiuses.size() == parameters.coordinates.size());
+        BOOST_ASSERT(radiuses.size() == parameters.coordinates.size());
 
         const bool use_hints = !parameters.hints.empty();
         const bool use_bearings = !parameters.bearings.empty();
