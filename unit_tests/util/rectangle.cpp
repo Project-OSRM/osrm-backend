@@ -26,23 +26,23 @@ BOOST_AUTO_TEST_CASE(get_min_dist_test)
     //           |
     //           +- -80
     //           |
-    RectangleInt2D nw(10 * COORDINATE_PRECISION, 80 * COORDINATE_PRECISION,
-                      10 * COORDINATE_PRECISION, 100 * COORDINATE_PRECISION);
-    RectangleInt2D ne(10 * COORDINATE_PRECISION, 80 * COORDINATE_PRECISION,
-                      -100 * COORDINATE_PRECISION, -10 * COORDINATE_PRECISION);
-    RectangleInt2D sw(-80 * COORDINATE_PRECISION, -10 * COORDINATE_PRECISION,
-                      10 * COORDINATE_PRECISION, 100 * COORDINATE_PRECISION);
-    RectangleInt2D se(-80 * COORDINATE_PRECISION, -10 * COORDINATE_PRECISION,
-                      -100 * COORDINATE_PRECISION, -10 * COORDINATE_PRECISION);
+    RectangleInt2D nw{FloatLongitude(10), FloatLongitude(100), FloatLatitude(10),
+                      FloatLatitude(80)};
+    // RectangleInt2D ne {FloatLongitude(-100), FloatLongitude(-10), FloatLatitude(10),
+    // FloatLatitude(80)};
+    // RectangleInt2D sw {FloatLongitude(10), FloatLongitude(100), FloatLatitude(-80),
+    // FloatLatitude(-10)};
+    RectangleInt2D se{FloatLongitude(-100), FloatLongitude(-10), FloatLatitude(-80),
+                      FloatLatitude(-10)};
 
-    FixedPointCoordinate nw_sw(9.9 * COORDINATE_PRECISION, 9.9 * COORDINATE_PRECISION);
-    FixedPointCoordinate nw_se(9.9 * COORDINATE_PRECISION, 100.1 * COORDINATE_PRECISION);
-    FixedPointCoordinate nw_ne(80.1 * COORDINATE_PRECISION, 100.1 * COORDINATE_PRECISION);
-    FixedPointCoordinate nw_nw(80.1 * COORDINATE_PRECISION, 9.9 * COORDINATE_PRECISION);
-    FixedPointCoordinate nw_s(9.9 * COORDINATE_PRECISION, 55 * COORDINATE_PRECISION);
-    FixedPointCoordinate nw_e(45.0 * COORDINATE_PRECISION, 100.1 * COORDINATE_PRECISION);
-    FixedPointCoordinate nw_w(45.0 * COORDINATE_PRECISION, 9.9 * COORDINATE_PRECISION);
-    FixedPointCoordinate nw_n(80.1 * COORDINATE_PRECISION, 55 * COORDINATE_PRECISION);
+    Coordinate nw_sw{FloatLongitude(9.9), FloatLatitude(9.9)};
+    Coordinate nw_se{FloatLongitude(100.1), FloatLatitude(9.9)};
+    Coordinate nw_ne{FloatLongitude(100.1), FloatLatitude(80.1)};
+    Coordinate nw_nw{FloatLongitude(9.9), FloatLatitude(80.1)};
+    Coordinate nw_s{FloatLongitude(55), FloatLatitude(9.9)};
+    Coordinate nw_e{FloatLongitude(100.1), FloatLatitude(45.0)};
+    Coordinate nw_w{FloatLongitude(9.9), FloatLatitude(45.0)};
+    Coordinate nw_n{FloatLongitude(55), FloatLatitude(80.1)};
     BOOST_CHECK_CLOSE(nw.GetMinDist(nw_sw), 15611.9, 0.1);
     BOOST_CHECK_CLOSE(nw.GetMinDist(nw_se), 15611.9, 0.1);
     BOOST_CHECK_CLOSE(nw.GetMinDist(nw_ne), 11287.4, 0.1);
@@ -52,14 +52,14 @@ BOOST_AUTO_TEST_CASE(get_min_dist_test)
     BOOST_CHECK_CLOSE(nw.GetMinDist(nw_w), 7864.89, 0.1);
     BOOST_CHECK_CLOSE(nw.GetMinDist(nw_n), 11122.6, 0.1);
 
-    FixedPointCoordinate se_ne(-9.9 * COORDINATE_PRECISION, -9.9 * COORDINATE_PRECISION);
-    FixedPointCoordinate se_nw(-9.9 * COORDINATE_PRECISION, -100.1 * COORDINATE_PRECISION);
-    FixedPointCoordinate se_sw(-80.1 * COORDINATE_PRECISION, -100.1 * COORDINATE_PRECISION);
-    FixedPointCoordinate se_se(-80.1 * COORDINATE_PRECISION, -9.9 * COORDINATE_PRECISION);
-    FixedPointCoordinate se_n(-9.9 * COORDINATE_PRECISION, -55 * COORDINATE_PRECISION);
-    FixedPointCoordinate se_w(-45.0 * COORDINATE_PRECISION, -100.1 * COORDINATE_PRECISION);
-    FixedPointCoordinate se_e(-45.0 * COORDINATE_PRECISION, -9.9 * COORDINATE_PRECISION);
-    FixedPointCoordinate se_s(-80.1 * COORDINATE_PRECISION, -55 * COORDINATE_PRECISION);
+    Coordinate se_ne{FloatLongitude(-9.9), FloatLatitude(-9.9)};
+    Coordinate se_nw{FloatLongitude(-100.1), FloatLatitude(-9.9)};
+    Coordinate se_sw{FloatLongitude(-100.1), FloatLatitude(-80.1)};
+    Coordinate se_se{FloatLongitude(-9.9), FloatLatitude(-80.1)};
+    Coordinate se_n{FloatLongitude(-55), FloatLatitude(-9.9)};
+    Coordinate se_w{FloatLongitude(-100.1), FloatLatitude(-45.0)};
+    Coordinate se_e{FloatLongitude(-9.9), FloatLatitude(-45.0)};
+    Coordinate se_s{FloatLongitude(-55), FloatLatitude(-80.1)};
     BOOST_CHECK_CLOSE(se.GetMinDist(se_sw), 11287.4, 0.1);
     BOOST_CHECK_CLOSE(se.GetMinDist(se_se), 11287.4, 0.1);
     BOOST_CHECK_CLOSE(se.GetMinDist(se_ne), 15611.9, 0.1);

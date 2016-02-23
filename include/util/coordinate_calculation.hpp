@@ -1,7 +1,7 @@
 #ifndef COORDINATE_CALCULATION
 #define COORDINATE_CALCULATION
 
-#include "osrm/coordinate.hpp"
+#include "util/coordinate.hpp"
 
 #include <string>
 #include <utility>
@@ -18,55 +18,47 @@ const constexpr long double EARTH_RADIUS = 6372797.560856;
 
 namespace coordinate_calculation
 {
-double haversineDistance(const int lat1, const int lon1, const int lat2, const int lon2);
 
-double haversineDistance(const FixedPointCoordinate first_coordinate,
-                         const FixedPointCoordinate second_coordinate);
+double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
-double greatCircleDistance(const FixedPointCoordinate first_coordinate,
-                           const FixedPointCoordinate second_coordinate);
+double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
-double greatCircleDistance(const int lat1, const int lon1, const int lat2, const int lon2);
+double perpendicularDistance(const Coordinate segment_source,
+                             const Coordinate segment_target,
+                             const Coordinate query_location);
 
-double perpendicularDistance(const FixedPointCoordinate segment_source,
-                             const FixedPointCoordinate segment_target,
-                             const FixedPointCoordinate query_location);
-
-double perpendicularDistance(const FixedPointCoordinate segment_source,
-                             const FixedPointCoordinate segment_target,
-                             const FixedPointCoordinate query_location,
-                             FixedPointCoordinate &nearest_location,
+double perpendicularDistance(const Coordinate segment_source,
+                             const Coordinate segment_target,
+                             const Coordinate query_location,
+                             Coordinate &nearest_location,
                              double &ratio);
 
-double
-perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate segment_source,
-                                             const FixedPointCoordinate segment_target,
-                                             const FixedPointCoordinate query_location,
-                                             const std::pair<double, double> projected_coordinate);
+double perpendicularDistanceFromProjectedCoordinate(
+    const Coordinate segment_source,
+    const Coordinate segment_target,
+    const Coordinate query_location,
+    const std::pair<double, double> projected_xy_coordinate);
 
-double
-perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate segment_source,
-                                             const FixedPointCoordinate segment_target,
-                                             const FixedPointCoordinate query_location,
-                                             const std::pair<double, double> projected_coordinate,
-                                             FixedPointCoordinate &nearest_location,
-                                             double &ratio);
+double perpendicularDistanceFromProjectedCoordinate(
+    const Coordinate segment_source,
+    const Coordinate segment_target,
+    const Coordinate query_location,
+    const std::pair<double, double> projected_xy_coordinate,
+    Coordinate &nearest_location,
+    double &ratio);
 
 double degToRad(const double degree);
 double radToDeg(const double radian);
 
-double bearing(const FixedPointCoordinate first_coordinate,
-               const FixedPointCoordinate second_coordinate);
+double bearing(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 // Get angle of line segment (A,C)->(C,B)
-double computeAngle(const FixedPointCoordinate first,
-                    const FixedPointCoordinate second,
-                    const FixedPointCoordinate third);
+double computeAngle(const Coordinate first, const Coordinate second, const Coordinate third);
 
 namespace mercator
 {
-double yToLat(const double value);
-double latToY(const double latitude);
+FloatLatitude yToLat(const double value);
+double latToY(const FloatLatitude latitude);
 } // ns mercator
 } // ns coordinate_calculation
 } // ns util

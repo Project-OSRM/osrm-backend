@@ -31,6 +31,16 @@ auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_v
     return object.get_value_by_key(key, "");
 }
 
+template <class T> double latToDouble(T const &object)
+{
+    return static_cast<double>(util::toFloating(object.lat));
+}
+
+template <class T> double lonToDouble(T const &object)
+{
+    return static_cast<double>(util::toFloating(object.lon));
+}
+
 // Error handler
 int luaErrorCallback(lua_State *state)
 {
@@ -108,18 +118,18 @@ void ScriptingEnvironment::InitLuaState(lua_State *lua_state)
              .def("get_value_by_key", &get_value_by_key<osmium::Way>)
              .def("id", &osmium::Way::id),
          luabind::class_<InternalExtractorEdge>("EdgeSource")
-             .property("source_coordinate", &InternalExtractorEdge::source_coordinate)
-             .property("weight_data", &InternalExtractorEdge::weight_data),
+             .def_readonly("source_coordinate", &InternalExtractorEdge::source_coordinate)
+             .def_readwrite("weight_data", &InternalExtractorEdge::weight_data),
          luabind::class_<InternalExtractorEdge::WeightData>("WeightData")
              .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
          luabind::class_<ExternalMemoryNode>("EdgeTarget")
-             .property("lat", &ExternalMemoryNode::lat)
-             .property("lon", &ExternalMemoryNode::lon),
-         luabind::class_<util::FixedPointCoordinate>("Coordinate")
-             .property("lat", &util::FixedPointCoordinate::lat)
-             .property("lon", &util::FixedPointCoordinate::lon),
+             .property("lon", &lonToDouble<ExternalMemoryNode>)
+             .property("lat", &latToDouble<ExternalMemoryNode>),
+         luabind::class_<util::Coordinate>("Coordinate")
+             .property("lon", &lonToDouble<util::Coordinate>)
+             .property("lat", &latToDouble<util::Coordinate>),
          luabind::class_<RasterDatum>("RasterDatum")
-             .property("datum", &RasterDatum::datum)
+             .def_readonly("datum", &RasterDatum::datum)
              .def("invalid_data", &RasterDatum::get_invalid)];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))

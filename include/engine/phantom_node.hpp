@@ -28,7 +28,7 @@ struct PhantomNode
                 unsigned reverse_packed_geometry_id_,
                 bool is_tiny_component,
                 unsigned component_id,
-                util::FixedPointCoordinate location,
+                util::Coordinate location,
                 unsigned short fwd_segment_position,
                 extractor::TravelMode forward_travel_mode,
                 extractor::TravelMode backward_travel_mode)
@@ -37,9 +37,9 @@ struct PhantomNode
           forward_offset(forward_offset), reverse_offset(reverse_offset),
           forward_packed_geometry_id(forward_packed_geometry_id_),
           reverse_packed_geometry_id(reverse_packed_geometry_id_),
-          component{component_id, is_tiny_component},
-          location(std::move(location)), fwd_segment_position(fwd_segment_position),
-          forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
+          component{component_id, is_tiny_component}, location(std::move(location)),
+          fwd_segment_position(fwd_segment_position), forward_travel_mode(forward_travel_mode),
+          backward_travel_mode(backward_travel_mode)
     {
     }
 
@@ -47,10 +47,9 @@ struct PhantomNode
         : forward_node_id(SPECIAL_NODEID), reverse_node_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), forward_weight(INVALID_EDGE_WEIGHT),
           reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0), reverse_offset(0),
-          forward_packed_geometry_id(SPECIAL_EDGEID),
-          reverse_packed_geometry_id(SPECIAL_EDGEID),
-          component{INVALID_COMPONENTID, false},
-          fwd_segment_position(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          forward_packed_geometry_id(SPECIAL_EDGEID), reverse_packed_geometry_id(SPECIAL_EDGEID),
+          component{INVALID_COMPONENTID, false}, fwd_segment_position(0),
+          forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
@@ -94,7 +93,12 @@ struct PhantomNode
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
     template <class OtherT>
-    explicit PhantomNode(const OtherT &other, int forward_weight_, int forward_offset_, int reverse_weight_, int reverse_offset_, const util::FixedPointCoordinate foot_point)
+    explicit PhantomNode(const OtherT &other,
+                         int forward_weight_,
+                         int forward_offset_,
+                         int reverse_weight_,
+                         int reverse_offset_,
+                         const util::Coordinate foot_point)
     {
         forward_node_id = other.forward_edge_based_node_id;
         reverse_node_id = other.reverse_edge_based_node_id;
@@ -137,7 +141,7 @@ struct PhantomNode
 #ifndef _MSC_VER
     static_assert(sizeof(ComponentType) == 4, "ComponentType needs to 4 bytes big");
 #endif
-    util::FixedPointCoordinate location;
+    util::Coordinate location;
     unsigned short fwd_segment_position;
     // note 4 bits would suffice for each,
     // but the saved byte would be padding anyway

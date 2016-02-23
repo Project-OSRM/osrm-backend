@@ -52,10 +52,8 @@ int main(int argc, const char *argv[]) try
 
     // Route is in Berlin. Latitude, Longitude
     // TODO(daniel-j-h): use either coordinate_precision or better provide double,double-taking ctor
-    params.coordinates.push_back({static_cast<int>(43.731142 * osrm::COORDINATE_PRECISION),
-                                  static_cast<int>(7.419758 * osrm::COORDINATE_PRECISION)});
-    params.coordinates.push_back({static_cast<int>(43.736825 * osrm::COORDINATE_PRECISION),
-                                  static_cast<int>(7.419505 * osrm::COORDINATE_PRECISION)});
+    params.coordinates.push_back({osrm::util::FloatLongitude(7.419758), osrm::util::FloatLatitude(43.731142)});
+    params.coordinates.push_back({osrm::util::FloatLongitude(7.419505), osrm::util::FloatLatitude(43.736825)});
 
     // Response is in JSON format
     osrm::json::Object result;

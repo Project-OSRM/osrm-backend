@@ -1,5 +1,9 @@
 #include "server/api/parameters_parser.hpp"
 
+#include "engine/api/base_parameters.hpp"
+#include "engine/api/route_parameters.hpp"
+#include "engine/api/table_parameters.hpp"
+
 #include <fstream>
 
 namespace osrm
@@ -156,7 +160,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         engine::api::RouteParameters::GeometriesType::Polyline,
         engine::api::RouteParameters::OverviewType::Simplified,
         std::vector<boost::optional<bool>>{},
-        std::vector<util::FixedPointCoordinate>{},
+        std::vector<util::Coordinate>{},
         hints_4,
         std::vector<boost::optional<double>>{},
         std::vector<boost::optional<engine::api::BaseParameters::Bearing>>{}};
@@ -186,7 +190,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         engine::api::RouteParameters::GeometriesType::Polyline,
         engine::api::RouteParameters::OverviewType::Simplified,
         std::vector<boost::optional<bool>>{},
-        std::vector<util::FixedPointCoordinate>{},
+        std::vector<util::Coordinate>{},
         std::vector<boost::optional<engine::Hint>> {},
         std::vector<boost::optional<double>>{},
         bearings_4};

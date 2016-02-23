@@ -21,15 +21,15 @@ BOOST_AUTO_TEST_CASE(removed_middle_test)
          /     \
         x       x
     */
-    std::vector<util::FixedPointCoordinate> coordinates = {
-        util::FixedPointCoordinate(5 * COORDINATE_PRECISION, 5 * COORDINATE_PRECISION),
-        util::FixedPointCoordinate(6 * COORDINATE_PRECISION, 6 * COORDINATE_PRECISION),
-        util::FixedPointCoordinate(10 * COORDINATE_PRECISION, 10 * COORDINATE_PRECISION),
-        util::FixedPointCoordinate(5 * COORDINATE_PRECISION, 15 * COORDINATE_PRECISION)};
+    std::vector<util::Coordinate> coordinates = {
+        util::Coordinate(util::FloatLongitude(5), util::FloatLatitude(5)),
+        util::Coordinate(util::FloatLongitude(6), util::FloatLatitude(6)),
+        util::Coordinate(util::FloatLongitude(10), util::FloatLatitude(10)),
+        util::Coordinate(util::FloatLongitude(15), util::FloatLatitude(5))};
 
     // FIXME this test fails for everything below z4 because the DP algorithms
     // only used a naive distance measurement
-    //for (unsigned z = 0; z < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE; z++)
+    // for (unsigned z = 0; z < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE; z++)
     for (unsigned z = 0; z < 2; z++)
     {
         auto result = douglasPeucker(coordinates, z);
@@ -51,20 +51,22 @@ BOOST_AUTO_TEST_CASE(remove_second_node_test)
                   |
                   x
         */
-        std::vector<util::FixedPointCoordinate> input = {
-            util::FixedPointCoordinate(5 * COORDINATE_PRECISION, 5 * COORDINATE_PRECISION),
-            util::FixedPointCoordinate(5 * COORDINATE_PRECISION,
-                                       5 * COORDINATE_PRECISION +
-                                           detail::DOUGLAS_PEUCKER_THRESHOLDS[z]),
-            util::FixedPointCoordinate(10 * COORDINATE_PRECISION, 10 * COORDINATE_PRECISION),
-            util::FixedPointCoordinate(10 * COORDINATE_PRECISION,
-                                       10 + COORDINATE_PRECISION +
-                                           detail::DOUGLAS_PEUCKER_THRESHOLDS[z] * 2),
-            util::FixedPointCoordinate(5 * COORDINATE_PRECISION, 15 * COORDINATE_PRECISION),
-            util::FixedPointCoordinate(5 * COORDINATE_PRECISION +
-                                           detail::DOUGLAS_PEUCKER_THRESHOLDS[z],
-                                       15 * COORDINATE_PRECISION),
-        };
+        std::vector<util::Coordinate> input = {
+            util::Coordinate(util::FixedLongitude(5 * COORDINATE_PRECISION),
+                             util::FixedLatitude(5 * COORDINATE_PRECISION)),
+            util::Coordinate(util::FixedLongitude(5 * COORDINATE_PRECISION),
+                             util::FixedLatitude(5 * COORDINATE_PRECISION +
+                                                 detail::DOUGLAS_PEUCKER_THRESHOLDS[z])),
+            util::Coordinate(util::FixedLongitude(10 * COORDINATE_PRECISION),
+                             util::FixedLatitude(10 * COORDINATE_PRECISION)),
+            util::Coordinate(util::FixedLongitude(10 * COORDINATE_PRECISION),
+                             util::FixedLatitude(10 + COORDINATE_PRECISION +
+                                                 detail::DOUGLAS_PEUCKER_THRESHOLDS[z] * 2)),
+            util::Coordinate(util::FixedLongitude(5 * COORDINATE_PRECISION),
+                             util::FixedLatitude(15 * COORDINATE_PRECISION)),
+            util::Coordinate(util::FixedLongitude(5 * COORDINATE_PRECISION +
+                                                  detail::DOUGLAS_PEUCKER_THRESHOLDS[z]),
+                             util::FixedLatitude(15 * COORDINATE_PRECISION))};
         BOOST_TEST_MESSAGE("Threshold (" << z << "): " << detail::DOUGLAS_PEUCKER_THRESHOLDS[z]);
         auto result = douglasPeucker(input, z);
         BOOST_CHECK_EQUAL(result.size(), 4);

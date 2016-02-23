@@ -8,7 +8,10 @@
 
 // OpenStreetMap node ids are higher than 2^32
 OSRM_STRONG_TYPEDEF(uint64_t, OSMNodeID)
+OSRM_STRONG_TYPEDEF_HASHABLE(uint64_t, OSMNodeID)
+
 OSRM_STRONG_TYPEDEF(uint32_t, OSMWayID)
+OSRM_STRONG_TYPEDEF_HASHABLE(uint32_t, OSMWayID)
 
 static const OSMNodeID SPECIAL_OSM_NODEID = OSMNodeID(std::numeric_limits<std::uint64_t>::max());
 static const OSMWayID SPECIAL_OSM_WAYID = OSMWayID(std::numeric_limits<std::uint32_t>::max());
