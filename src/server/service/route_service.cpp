@@ -38,7 +38,7 @@ std::string getWrongOptionHelp(const engine::api::RouteParameters &parameters)
 }
 } // anon. ns
 
-engine::Status RouteService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+engine::Status RouteService::RunQuery(std::vector<util::Coordinate> coordinates,
                                       std::string &options,
                                       util::json::Object &result)
 {

@@ -28,9 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef COORDINATE_HPP_
 #define COORDINATE_HPP_
 
+#include "util/strong_typedef.hpp"
+
 #include <iosfwd> //for std::ostream
 #include <string>
 #include <type_traits>
+#include <cstddef>
 
 namespace osrm
 {
@@ -40,35 +43,60 @@ constexpr const double COORDINATE_PRECISION = 1e6;
 namespace util
 {
 
-struct FixedPointCoordinate
+OSRM_STRONG_TYPEDEF(int32_t, FixedLatitude)
+OSRM_STRONG_TYPEDEF(int32_t, FixedLongitude)
+OSRM_STRONG_TYPEDEF(double, FloatLatitude)
+OSRM_STRONG_TYPEDEF(double, FloatLongitude)
+
+inline FixedLatitude toFixed(const FloatLatitude floating)
 {
-    int lat;
-    int lon;
+    return FixedLatitude(static_cast<double>(floating) * COORDINATE_PRECISION);
+}
 
-    FixedPointCoordinate();
-    FixedPointCoordinate(int lat, int lon);
+inline FixedLongitude toFixed(const FloatLongitude floating)
+{
+    return FixedLongitude(static_cast<double>(floating) * COORDINATE_PRECISION);
+}
 
-    template <class T>
-    FixedPointCoordinate(const T &coordinate)
-        : lat(coordinate.lat), lon(coordinate.lon)
+inline FloatLatitude toFloating(const FixedLatitude fixed)
+{
+    return FloatLatitude(static_cast<int32_t>(fixed) / COORDINATE_PRECISION);
+}
+
+inline FloatLongitude toFloating(const FixedLongitude fixed)
+{
+    return FloatLongitude(static_cast<int32_t>(fixed) / COORDINATE_PRECISION);
+}
+
+// Coordinate encoded as longitude, latitude
+struct Coordinate
+{
+    FixedLongitude lon;
+    FixedLatitude lat;
+
+    Coordinate();
+    Coordinate(const FixedLongitude lon_, const FixedLatitude lat_);
+    Coordinate(const FloatLongitude lon_, const FloatLatitude lat_);
+
+    template <class T> Coordinate(const T &coordinate) : lon(coordinate.lon), lat(coordinate.lat)
     {
-        static_assert(!std::is_same<T, FixedPointCoordinate>::value, "This constructor should not be used for FixedPointCoordinates");
-        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
-                      "coordinate types incompatible");
+        static_assert(!std::is_same<T, Coordinate>::value,
+                      "This constructor should not be used for Coordinates");
         static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value,
+                      "coordinate types incompatible");
+        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
                       "coordinate types incompatible");
     }
 
     bool IsValid() const;
-    friend bool operator==(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs);
-    friend bool operator!=(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs);
-    friend std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate coordinate);
+    friend bool operator==(const Coordinate lhs, const Coordinate rhs);
+    friend bool operator!=(const Coordinate lhs, const Coordinate rhs);
+    friend std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
 };
 
-bool operator==(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs);
-std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate coordinate);
+bool operator==(const Coordinate lhs, const Coordinate rhs);
+std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
 }
-
 }
 
 #endif /* COORDINATE_HPP_ */

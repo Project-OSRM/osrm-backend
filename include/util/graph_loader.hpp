@@ -86,7 +86,7 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     {
         input_stream.read(reinterpret_cast<char *>(&current_node),
                           sizeof(extractor::ExternalMemoryNode));
-        node_array.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
+        node_array.emplace_back(current_node.lon, current_node.lat, current_node.node_id);
         if (current_node.barrier)
         {
             barrier_node_list.emplace_back(i);
