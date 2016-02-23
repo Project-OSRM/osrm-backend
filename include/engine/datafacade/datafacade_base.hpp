@@ -64,7 +64,7 @@ class BaseDataFacade
     FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const = 0;
 
     // node and edge information access
-    virtual util::FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const = 0;
+    virtual util::Coordinate GetCoordinateOfNode(const unsigned id) const = 0;
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const = 0;
 
@@ -80,49 +80,48 @@ class BaseDataFacade
 
     virtual extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 
-    virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::FixedPointCoordinate &south_west,
-                                                 const util::FixedPointCoordinate &north_east) = 0;
+    virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
+                                                 const util::Coordinate north_east) = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
                                const int bearing,
                                const int bearing_range) = 0;
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance) = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const double max_distance,
                         const int bearing,
                         const int bearing_range) = 0;
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing,
                         const int bearing_range) = 0;
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
-                        const unsigned max_results) = 0;
+    NearestPhantomNodes(const util::Coordinate input_coordinate, const unsigned max_results) = 0;
     virtual std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
-                        const unsigned max_results, const double max_distance) = 0;
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
+                        const unsigned max_results,
+                        const double max_distance) = 0;
 
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate) = 0;
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance) = 0;
+    virtual std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance,
+                                                      const int bearing,
+                                                      const int bearing_range) = 0;
     virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate) = 0;
-    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate, const double max_distance) = 0;
-    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
-        const double max_distance,
-        const int bearing,
-        const int bearing_range) = 0;
-    virtual std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
-        const int bearing,
-        const int bearing_range) = 0;
+        const util::Coordinate input_coordinate, const int bearing, const int bearing_range) = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 

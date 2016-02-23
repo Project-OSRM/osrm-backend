@@ -38,9 +38,9 @@ std::string getWrongOptionHelp(const engine::api::TripParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TripService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
-                                      std::string &options,
-                                      util::json::Object &result)
+engine::Status TripService::RunQuery(std::vector<util::Coordinate> coordinates,
+                                     std::string &options,
+                                     util::json::Object &result)
 {
     auto options_iterator = options.begin();
     auto parameters =
@@ -67,7 +67,6 @@ engine::Status TripService::RunQuery(std::vector<util::FixedPointCoordinate> coo
 
     return BaseService::routing_machine.Trip(*parameters, result);
 }
-
 }
 }
 }

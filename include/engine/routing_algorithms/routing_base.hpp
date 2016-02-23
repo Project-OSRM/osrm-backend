@@ -334,7 +334,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                         id_vector);
         const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
                                     phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
-                                    unpacked_path.empty();
+                                   unpacked_path.empty();
 
         std::size_t start_index = 0;
         if (is_local_path)
@@ -351,8 +351,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         if (target_traversed_in_reverse)
         {
             std::reverse(id_vector.begin(), id_vector.end());
-            end_index =
-                id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
+            end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
         }
 
         if (start_index > end_index)
@@ -365,8 +364,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
             unpacked_path.emplace_back(
-                PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                         0, extractor::TurnInstruction::NoTurn,
+                PathData{id_vector[i], phantom_node_pair.target_phantom.name_id, 0,
+                         extractor::TurnInstruction::NoTurn,
                          target_traversed_in_reverse
                              ? phantom_node_pair.target_phantom.backward_travel_mode
                              : phantom_node_pair.target_phantom.forward_travel_mode});
@@ -385,7 +384,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             // looks like a trivially true check but tests for underflow
             BOOST_ASSERT(last_index > second_to_last_index);
 
-            if (unpacked_path[last_index].turn_via_node == unpacked_path[second_to_last_index].turn_via_node)
+            if (unpacked_path[last_index].turn_via_node ==
+                unpacked_path[second_to_last_index].turn_via_node)
             {
                 unpacked_path.pop_back();
             }
@@ -743,8 +743,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         nodes.target_phantom = target_phantom;
         UnpackPath(packed_path.begin(), packed_path.end(), nodes, unpacked_path);
 
-        util::FixedPointCoordinate previous_coordinate = source_phantom.location;
-        util::FixedPointCoordinate current_coordinate;
+        util::Coordinate previous_coordinate = source_phantom.location;
+        util::Coordinate current_coordinate;
         double distance = 0;
         for (const auto &p : unpacked_path)
         {

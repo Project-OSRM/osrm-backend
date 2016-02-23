@@ -15,19 +15,25 @@ using namespace osrm::util;
 
 BOOST_AUTO_TEST_CASE(point_to_tile_test)
 {
-    tiles::Tile tile_1_reference{2306375680,1409941503,32};
-    tiles::Tile tile_2_reference{2308259840,1407668224,32};
-    tiles::Tile tile_3_reference{616562688,2805989376,32};
-    tiles::Tile tile_4_reference{1417674752,2084569088,32};
-    tiles::Tile tile_5_reference{616562688,2805989376,32};
-    tiles::Tile tile_6_reference{712654285,2671662374,32};
+    tiles::Tile tile_1_reference{2306375680, 1409941503, 32};
+    tiles::Tile tile_2_reference{2308259840, 1407668224, 32};
+    tiles::Tile tile_3_reference{616562688, 2805989376, 32};
+    tiles::Tile tile_4_reference{1417674752, 2084569088, 32};
+    tiles::Tile tile_5_reference{616562688, 2805989376, 32};
+    tiles::Tile tile_6_reference{712654285, 2671662374, 32};
 
-    auto tile_1 = tiles::pointToTile(13.31817626953125,52.449314140869696);
-    auto tile_2 = tiles::pointToTile(13.476104736328125,52.56529070208021);
-    auto tile_3 = tiles::pointToTile(-128.32031249999997,-48.224672649565186);
-    auto tile_4 = tiles::pointToTile(-61.17187499999999,5.266007882805498);
-    auto tile_5 = tiles::pointToTile(-128.32031249999997,-48.224672649565186);
-    auto tile_6 = tiles::pointToTile(-120.266007882805532,-40.17187499999999);
+    auto tile_1 =
+        tiles::pointToTile(FloatLongitude(13.31817626953125), FloatLatitude(52.449314140869696));
+    auto tile_2 =
+        tiles::pointToTile(FloatLongitude(13.476104736328125), FloatLatitude(52.56529070208021));
+    auto tile_3 =
+        tiles::pointToTile(FloatLongitude(-128.32031249999997), FloatLatitude(-48.224672649565186));
+    auto tile_4 =
+        tiles::pointToTile(FloatLongitude(-61.17187499999999), FloatLatitude(5.266007882805498));
+    auto tile_5 =
+        tiles::pointToTile(FloatLongitude(-128.32031249999997), FloatLatitude(-48.224672649565186));
+    auto tile_6 =
+        tiles::pointToTile(FloatLongitude(-120.266007882805532), FloatLatitude(-40.17187499999999));
     BOOST_CHECK_EQUAL(tile_1.x, tile_1_reference.x);
     BOOST_CHECK_EQUAL(tile_1.y, tile_1_reference.y);
     BOOST_CHECK_EQUAL(tile_1.z, tile_1_reference.z);
@@ -54,12 +60,15 @@ BOOST_AUTO_TEST_CASE(bounding_box_to_tile_test)
     tiles::Tile tile_1_reference{17, 10, 5};
     tiles::Tile tile_2_reference{0, 0, 0};
     tiles::Tile tile_3_reference{0, 2, 2};
-    auto tile_1 = tiles::getBBMaxZoomTile(13.31817626953125, 52.449314140869696,
-                                          13.476104736328125, 52.56529070208021);
-    auto tile_2 = tiles::getBBMaxZoomTile(-128.32031249999997, -48.224672649565186,
-                                          -61.17187499999999, 5.266007882805498);
-    auto tile_3 = tiles::getBBMaxZoomTile(-128.32031249999997, -48.224672649565186,
-                                          -120.2660078828055, -40.17187499999999);
+    auto tile_1 = tiles::getBBMaxZoomTile(
+        FloatLongitude(13.31817626953125), FloatLatitude(52.449314140869696),
+        FloatLongitude(13.476104736328125), FloatLatitude(52.56529070208021));
+    auto tile_2 = tiles::getBBMaxZoomTile(
+        FloatLongitude(-128.32031249999997), FloatLatitude(-48.224672649565186),
+        FloatLongitude(-61.17187499999999), FloatLatitude(5.266007882805498));
+    auto tile_3 = tiles::getBBMaxZoomTile(
+        FloatLongitude(-128.32031249999997), FloatLatitude(-48.224672649565186),
+        FloatLongitude(-120.2660078828055), FloatLatitude(-40.17187499999999));
     BOOST_CHECK_EQUAL(tile_1.x, tile_1_reference.x);
     BOOST_CHECK_EQUAL(tile_1.y, tile_1_reference.y);
     BOOST_CHECK_EQUAL(tile_1.z, tile_1_reference.z);
