@@ -57,7 +57,7 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TableService::RunQuery(std::vector<util::FixedPointCoordinate> coordinates,
+engine::Status TableService::RunQuery(std::vector<util::Coordinate> coordinates,
                                       std::string &options,
                                       util::json::Object &result)
 {

@@ -85,7 +85,7 @@ struct InternalExtractorEdge
     // intermediate edge weight
     WeightData weight_data;
     // coordinate of the source node
-    util::FixedPointCoordinate source_coordinate;
+    util::Coordinate source_coordinate;
 
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_osm_value()

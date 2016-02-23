@@ -47,9 +47,9 @@ struct URLGrammar : boost::spirit::qi::grammar<Iterator>
         };
         const auto add_coordinate = [this](const boost::fusion::vector<double, double> &lonLat)
         {
-            parsed_url.coordinates.emplace_back(
-                util::FixedPointCoordinate(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION,
-                                           boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION));
+            parsed_url.coordinates.emplace_back(util::Coordinate(
+                util::FixedLongitude(boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION),
+                util::FixedLatitude(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION)));
         };
         const auto polyline_to_coordinates = [this](const std::string &polyline)
         {
