@@ -43,7 +43,7 @@ template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 {
     std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const
     {
-        return OSMNodeID_to_uint64_t(k.first) ^ (OSMNodeID_to_uint64_t(k.second) << 12);
+        return static_cast<uint64_t>(k.first) ^ (static_cast<uint64_t>(k.second) << 12);
     }
 };
 }
@@ -78,9 +78,8 @@ int Contractor::Run()
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
     std::size_t max_edge_id = LoadEdgeExpandedGraph(
-        config.edge_based_graph_path, edge_based_edge_list, 
-        config.edge_segment_lookup_path, config.edge_penalty_path, 
-        config.segment_speed_lookup_path, config.node_based_graph_path,
+        config.edge_based_graph_path, edge_based_edge_list, config.edge_segment_lookup_path,
+        config.edge_penalty_path, config.segment_speed_lookup_path, config.node_based_graph_path,
         config.geometry_path, config.rtree_leaf_path);
 
     // Contracting the edge-expanded graph
@@ -203,7 +202,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
             if (!nodes_input_stream)
             {
-                throw util::exception("Failed to open "+nodes_filename);
+                throw util::exception("Failed to open " + nodes_filename);
             }
 
             unsigned number_of_nodes = 0;
@@ -211,7 +210,8 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             internal_to_external_node_map.resize(number_of_nodes);
 
             // Load all the query nodes into a vector
-            nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])), number_of_nodes * sizeof(extractor::QueryNode));
+            nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
+                                    number_of_nodes * sizeof(extractor::QueryNode));
         }
 
         std::vector<unsigned> m_geometry_indices;
@@ -221,7 +221,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             std::ifstream geometry_stream(geometry_filename, std::ios::binary);
             if (!geometry_stream)
             {
-                throw util::exception("Failed to open "+geometry_filename);
+                throw util::exception("Failed to open " + geometry_filename);
             }
             unsigned number_of_indices = 0;
             unsigned number_of_compressed_geometries = 0;
@@ -232,18 +232,20 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             if (number_of_indices > 0)
             {
                 geometry_stream.read((char *)&(m_geometry_indices[0]),
-                                    number_of_indices * sizeof(unsigned));
+                                     number_of_indices * sizeof(unsigned));
             }
 
             geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
 
             BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
             m_geometry_list.resize(number_of_compressed_geometries);
-    
+
             if (number_of_compressed_geometries > 0)
             {
-                geometry_stream.read((char *)&(m_geometry_list[0]),
-                                    number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+                geometry_stream.read(
+                    (char *)&(m_geometry_list[0]),
+                    number_of_compressed_geometries *
+                        sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
             }
         }
 
@@ -257,7 +259,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             std::ifstream leaf_node_file(rtree_leaf_filename, std::ios::binary | std::ios::in);
             if (!leaf_node_file)
             {
-                throw util::exception("Failed to open "+rtree_leaf_filename);
+                throw util::exception("Failed to open " + rtree_leaf_filename);
             }
             uint64_t m_element_count;
             leaf_node_file.read((char *)&m_element_count, sizeof(uint64_t));
@@ -267,90 +269,115 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             {
                 leaf_node_file.read(reinterpret_cast<char *>(&current_node), sizeof(current_node));
 
-                for (size_t i=0; i< current_node.object_count; i++)
+                for (size_t i = 0; i < current_node.object_count; i++)
                 {
-                    auto & leaf_object = current_node.objects[i];
+                    auto &leaf_object = current_node.objects[i];
                     extractor::QueryNode *u;
                     extractor::QueryNode *v;
 
                     if (leaf_object.forward_packed_geometry_id != SPECIAL_EDGEID)
                     {
-                        const unsigned forward_begin = m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
+                        const unsigned forward_begin =
+                            m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
 
                         if (leaf_object.fwd_segment_position == 0)
                         {
                             u = &(internal_to_external_node_map[leaf_object.u]);
-                            v = &(internal_to_external_node_map[m_geometry_list[forward_begin].node_id]);
+                            v = &(internal_to_external_node_map[m_geometry_list[forward_begin]
+                                                                    .node_id]);
                         }
                         else
                         {
-                            u = &(internal_to_external_node_map[m_geometry_list[forward_begin + leaf_object.fwd_segment_position - 1].node_id]);
-                            v = &(internal_to_external_node_map[m_geometry_list[forward_begin + leaf_object.fwd_segment_position].node_id]);
+                            u = &(internal_to_external_node_map
+                                      [m_geometry_list[forward_begin +
+                                                       leaf_object.fwd_segment_position - 1]
+                                           .node_id]);
+                            v = &(internal_to_external_node_map
+                                      [m_geometry_list[forward_begin +
+                                                       leaf_object.fwd_segment_position]
+                                           .node_id]);
                         }
                         const double segment_length =
-                                util::coordinate_calculation::greatCircleDistance(
-                                        u->lat, u->lon, v->lat, v->lon);
+                            util::coordinate_calculation::greatCircleDistance(
+                                util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
 
-                        auto forward_speed_iter = segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
+                        auto forward_speed_iter =
+                            segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
                         if (forward_speed_iter != segment_speed_lookup.end())
                         {
-                            int new_segment_weight =
-                                std::max(1, static_cast<int>(std::floor(
-                                            (segment_length * 10.) / (forward_speed_iter->second / 3.6) + .5)));
-                            m_geometry_list[forward_begin + leaf_object.fwd_segment_position].weight = new_segment_weight;
+                            int new_segment_weight = std::max(
+                                1, static_cast<int>(std::floor(
+                                       (segment_length * 10.) / (forward_speed_iter->second / 3.6) +
+                                       .5)));
+                            m_geometry_list[forward_begin + leaf_object.fwd_segment_position]
+                                .weight = new_segment_weight;
                         }
                     }
                     if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
                     {
-                        const unsigned reverse_begin = m_geometry_indices.at(leaf_object.reverse_packed_geometry_id);
-                        const unsigned reverse_end = m_geometry_indices.at(leaf_object.reverse_packed_geometry_id + 1);
+                        const unsigned reverse_begin =
+                            m_geometry_indices.at(leaf_object.reverse_packed_geometry_id);
+                        const unsigned reverse_end =
+                            m_geometry_indices.at(leaf_object.reverse_packed_geometry_id + 1);
 
-                        int rev_segment_position = (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
+                        int rev_segment_position =
+                            (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
                         if (rev_segment_position == 0)
                         {
                             u = &(internal_to_external_node_map[leaf_object.v]);
-                            v = &(internal_to_external_node_map[m_geometry_list[reverse_begin].node_id]);
+                            v = &(internal_to_external_node_map[m_geometry_list[reverse_begin]
+                                                                    .node_id]);
                         }
                         else
                         {
-                            u = &(internal_to_external_node_map[m_geometry_list[reverse_begin + rev_segment_position - 1].node_id]);
-                            v = &(internal_to_external_node_map[m_geometry_list[reverse_begin + rev_segment_position].node_id]);
+                            u = &(internal_to_external_node_map
+                                      [m_geometry_list[reverse_begin + rev_segment_position - 1]
+                                           .node_id]);
+                            v = &(
+                                internal_to_external_node_map[m_geometry_list[reverse_begin +
+                                                                              rev_segment_position]
+                                                                  .node_id]);
                         }
                         const double segment_length =
-                                util::coordinate_calculation::greatCircleDistance(
-                                        u->lat, u->lon, v->lat, v->lon);
+                            util::coordinate_calculation::greatCircleDistance(
+                                util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
 
-                        auto reverse_speed_iter = segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
+                        auto reverse_speed_iter =
+                            segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
                         if (reverse_speed_iter != segment_speed_lookup.end())
                         {
-                            int new_segment_weight =
-                                std::max(1, static_cast<int>(std::floor(
-                                            (segment_length * 10.) / (reverse_speed_iter->second / 3.6) + .5)));
-                            m_geometry_list[reverse_begin + rev_segment_position].weight = new_segment_weight;
+                            int new_segment_weight = std::max(
+                                1, static_cast<int>(std::floor(
+                                       (segment_length * 10.) / (reverse_speed_iter->second / 3.6) +
+                                       .5)));
+                            m_geometry_list[reverse_begin + rev_segment_position].weight =
+                                new_segment_weight;
                         }
                     }
                 }
                 m_element_count -= current_node.object_count;
-
             }
         }
-        
+
         // Now save out the updated compressed geometries
         {
             std::ofstream geometry_stream(geometry_filename, std::ios::binary);
             if (!geometry_stream)
             {
-                throw util::exception("Failed to open "+geometry_filename+" for writing");
+                throw util::exception("Failed to open " + geometry_filename + " for writing");
             }
             const unsigned number_of_indices = m_geometry_indices.size();
             const unsigned number_of_compressed_geometries = m_geometry_list.size();
-            geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices), sizeof(unsigned));
-            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_indices[0])), number_of_indices * sizeof(unsigned));
-            geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries), sizeof(unsigned));
-            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])), number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+            geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices),
+                                  sizeof(unsigned));
+            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_indices[0])),
+                                  number_of_indices * sizeof(unsigned));
+            geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries),
+                                  sizeof(unsigned));
+            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])),
+                                  number_of_compressed_geometries *
+                                      sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
         }
-
-
     }
 
     // TODO: can we read this in bulk?  util::DeallocatingVector isn't necessarily
