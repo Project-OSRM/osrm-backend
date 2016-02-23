@@ -57,11 +57,11 @@ BOOST_AUTO_TEST_CASE(invalid_urls)
 
 BOOST_AUTO_TEST_CASE(valid_urls)
 {
-    std::vector<util::FixedPointCoordinate> coords_1 = {
+    std::vector<util::Coordinate> coords_1 = {
         // lat,lon
-        util::FixedPointCoordinate(1 * COORDINATE_PRECISION, 0 * COORDINATE_PRECISION),
-        util::FixedPointCoordinate(3 * COORDINATE_PRECISION, 2 * COORDINATE_PRECISION),
-        util::FixedPointCoordinate(5 * COORDINATE_PRECISION, 4 * COORDINATE_PRECISION),
+        util::Coordinate(util::FloatLongitude(0), util::FloatLatitude(1)),
+        util::Coordinate(util::FloatLongitude(2), util::FloatLatitude(3)),
+        util::Coordinate(util::FloatLongitude(4), util::FloatLatitude(5)),
     };
     api::ParsedURL reference_1{"route", 1, "profile", coords_1, "options=value&foo=bar"};
     auto result_1 = api::parseURL("/route/v1/profile/0,1;2,3;4,5?options=value&foo=bar");
@@ -83,9 +83,8 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     BOOST_CHECK_EQUAL(reference_2.options,     result_2->options);
 
     // one coordinate
-    std::vector<util::FixedPointCoordinate> coords_3 = {
-        // lat,lon
-        util::FixedPointCoordinate(1 * COORDINATE_PRECISION, 0 * COORDINATE_PRECISION),
+    std::vector<util::Coordinate> coords_3 = {
+        util::Coordinate(util::FloatLongitude(0), util::FloatLatitude(1)),
     };
     api::ParsedURL reference_3{"route", 1, "profile", coords_3, ""};
     auto result_3 = api::parseURL("/route/v1/profile/0,1");

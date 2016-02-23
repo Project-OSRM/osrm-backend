@@ -58,13 +58,12 @@ struct EdgeBasedNode
                      (reverse_edge_based_node_id != SPECIAL_NODEID));
     }
 
-    static inline util::FixedPointCoordinate Centroid(const util::FixedPointCoordinate a,
-                                                      const util::FixedPointCoordinate b)
+    static inline util::Coordinate Centroid(const util::Coordinate a, const util::Coordinate b)
     {
-        util::FixedPointCoordinate centroid;
+        util::Coordinate centroid;
         // The coordinates of the midpoint are given by:
-        centroid.lat = (a.lat + b.lat) / 2;
-        centroid.lon = (a.lon + b.lon) / 2;
+        centroid.lon = (a.lon + b.lon) / util::FixedLongitude(2);
+        centroid.lat = (a.lat + b.lat) / util::FixedLatitude(2);
         return centroid;
     }
 
@@ -81,10 +80,10 @@ struct EdgeBasedNode
     // the heap with the correct offset to the end points.
     // We keep the weight of the segment in forward and reverse direction around to
     // support start points in the middle of a segment (PhantomNode).
-    int forward_weight; // u->v
-    int reverse_weight; // u<-v
-    int forward_offset; // distance x->y->u in the above example
-    int reverse_offset; // distance v<-w<-z in the above example
+    int forward_weight;          // u->v
+    int reverse_weight;          // u<-v
+    int forward_offset;          // distance x->y->u in the above example
+    int reverse_offset;          // distance v<-w<-z in the above example
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
     struct
     {

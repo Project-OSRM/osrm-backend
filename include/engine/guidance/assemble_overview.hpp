@@ -3,6 +3,8 @@
 
 #include "engine/guidance/leg_geometry.hpp"
 
+#include "util/coordinate.hpp"
+
 #include <vector>
 
 namespace osrm
@@ -12,7 +14,7 @@ namespace engine
 namespace guidance
 {
 
-std::vector<util::FixedPointCoordinate>
+std::vector<util::Coordinate>
 assembleOverview(const std::vector<LegGeometry> &leg_geometries, const bool use_simplification);
 
 } // namespace guidance

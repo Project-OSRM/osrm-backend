@@ -16,8 +16,7 @@
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
-
-#include "osrm/coordinate.hpp"
+#include "util/coordinate.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -40,7 +39,7 @@ namespace storage
 using RTreeLeaf =
     typename engine::datafacade::BaseDataFacade::RTreeLeaf;
 using RTreeNode = util::StaticRTree<RTreeLeaf,
-                                    util::ShM<util::FixedPointCoordinate, true>::vector,
+                                    util::ShM<util::Coordinate, true>::vector,
                                     true>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 
@@ -312,7 +311,7 @@ int Storage::Run()
     boost::filesystem::ifstream nodes_input_stream(nodes_data_path, std::ios::binary);
     unsigned coordinate_list_size = 0;
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
-    shared_layout_ptr->SetBlockSize<util::FixedPointCoordinate>(SharedDataLayout::COORDINATE_LIST,
+    shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
                                                                 coordinate_list_size);
 
     // load geometries sizes
@@ -460,15 +459,15 @@ int Storage::Run()
     }
 
     // Loading list of coordinates
-    util::FixedPointCoordinate *coordinates_ptr =
-        shared_layout_ptr->GetBlockPtr<util::FixedPointCoordinate, true>(
+    util::Coordinate *coordinates_ptr =
+        shared_layout_ptr->GetBlockPtr<util::Coordinate, true>(
             shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
 
     extractor::QueryNode current_node;
     for (unsigned i = 0; i < coordinate_list_size; ++i)
     {
         nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-        coordinates_ptr[i] = util::FixedPointCoordinate(current_node.lat, current_node.lon);
+        coordinates_ptr[i] = util::Coordinate(current_node.lon, current_node.lat);
     }
     nodes_input_stream.close();
 

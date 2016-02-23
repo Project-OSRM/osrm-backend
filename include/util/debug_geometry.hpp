@@ -3,7 +3,7 @@
 
 #include "contractor/contractor_config.hpp"
 #include "extractor/query_node.hpp"
-#include "osrm/coordinate.hpp"
+#include "util/coordinate.hpp"
 #include <boost/filesystem/fstream.hpp>
 
 #ifndef DEBUG_GEOMETRY
@@ -25,7 +25,7 @@ inline void DEBUG_GEOMETRY_STOP() {}
 inline void DEBUG_TURNS_START(const std::string & /* debug_turns_filename */) {}
 inline void DEBUG_TURN(const NodeID /* node */,
                        const std::vector<extractor::QueryNode> & /* m_node_info_list */,
-                       const FixedPointCoordinate /* first_coordinate */,
+                       const util::Coordinate /* first_coordinate */,
                        const int /* turn_angle */,
                        const int /* turn_penalty */)
 {
@@ -70,7 +70,7 @@ boost::filesystem::ofstream dg_debug_turns_file;
 bool dg_output_turn_debug = false;
 bool dg_first_turn_debug = true;
 
-std::unordered_map<OSMNodeID, util::FixedPointCoordinate> node_lookup_map;
+std::unordered_map<OSMNodeID, util::Coordinate> node_lookup_map;
 
 inline void DEBUG_GEOMETRY_START(const contractor::ContractorConfig &config)
 {
@@ -91,7 +91,7 @@ inline void DEBUG_GEOMETRY_START(const contractor::ContractorConfig &config)
     {
         nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
         node_lookup_map[current_node.node_id] =
-            util::FixedPointCoordinate(current_node.lat, current_node.lon);
+            util::Coordinate(current_node.lat, current_node.lon);
     }
     nodes_input_stream.close();
 
@@ -198,7 +198,7 @@ inline void DEBUG_UTURN(const NodeID node,
 
 inline void DEBUG_TURN(const NodeID node,
                        const std::vector<extractor::QueryNode> &m_node_info_list,
-                       const FixedPointCoordinate first_coordinate,
+                       const util::Coordinate first_coordinate,
                        const int turn_angle,
                        const int turn_penalty)
 {

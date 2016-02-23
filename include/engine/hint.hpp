@@ -4,6 +4,9 @@
 #include "engine/object_encoder.hpp"
 #include "engine/phantom_node.hpp"
 
+#include "util/coordinate.hpp"
+#include "phantom_node.hpp"
+
 #include <boost/assert.hpp>
 
 #include <cstdint>
@@ -19,15 +22,15 @@ namespace engine
 // Is returned as a temporary identifier for snapped coodinates
 struct Hint
 {
-    FixedPointCoordinate input_coordinate;
+    util::Coordinate input_coordinate;
     PhantomNode phantom;
     std::uint32_t data_checksum;
 
     template <typename DataFacadeT>
-    bool IsValid(const FixedPointCoordinate new_input_coordinates, DataFacadeT &facade) const
+    bool IsValid(const util::Coordinate new_input_coordinates, DataFacadeT &facade) const
     {
-        auto is_same_input_coordinate = new_input_coordinates.lat == input_coordinate.lat &&
-                                        new_input_coordinates.lon == input_coordinate.lon;
+        auto is_same_input_coordinate = new_input_coordinates.lon == input_coordinate.lon &&
+                                        new_input_coordinates.lat == input_coordinate.lat;
         return is_same_input_coordinate && phantom.IsValid(facade.GetNumberOfNodes()) &&
                facade.GetCheckSum() == data_checksum;
     }

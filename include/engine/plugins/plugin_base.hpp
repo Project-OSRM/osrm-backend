@@ -28,10 +28,10 @@ class BasePlugin
     datafacade::BaseDataFacade &facade;
     BasePlugin(datafacade::BaseDataFacade &facade_) : facade(facade_) {}
 
-    bool CheckAllCoordinates(const std::vector<util::FixedPointCoordinate> &coordinates)
+    bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates)
     {
         return !std::any_of(std::begin(coordinates), std::end(coordinates),
-                            [](const util::FixedPointCoordinate &coordinate)
+                            [](const util::Coordinate coordinate)
                             {
                                 return !coordinate.IsValid();
                             });

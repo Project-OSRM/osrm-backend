@@ -8,7 +8,7 @@ namespace util
 namespace
 {
 
-std::uint64_t bitInterleaving(const std::uint32_t latitude, const std::uint32_t longitude)
+std::uint64_t bitInterleaving(const std::uint32_t longitude, const std::uint32_t latitude)
 {
     std::uint64_t result = 0;
     for (std::int8_t index = 31; index >= 0; --index)
@@ -69,11 +69,11 @@ void transposeCoordinate(std::uint32_t *x)
 }
 } // anonymous ns
 
-std::uint64_t hilbertCode(const FixedPointCoordinate coordinate)
+std::uint64_t hilbertCode(const Coordinate coordinate)
 {
-    unsigned location[2];
-    location[0] = coordinate.lat + static_cast<int>(90 * COORDINATE_PRECISION);
-    location[1] = coordinate.lon + static_cast<int>(180 * COORDINATE_PRECISION);
+    std::uint32_t location[2];
+    location[0] = static_cast<std::int32_t>(coordinate.lon) + static_cast<std::int32_t>(180 * COORDINATE_PRECISION);
+    location[1] = static_cast<std::int32_t>(coordinate.lat) + static_cast<std::int32_t>(90 * COORDINATE_PRECISION);
 
     transposeCoordinate(location);
     return bitInterleaving(location[0], location[1]);
