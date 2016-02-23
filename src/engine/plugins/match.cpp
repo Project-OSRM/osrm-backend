@@ -26,7 +26,7 @@ namespace plugins
 {
 
 // Filters PhantomNodes to obtain a set of viable candiates
-void filterCandidates(const std::vector<util::FixedPointCoordinate> &coordinates,
+void filterCandidates(const std::vector<util::Coordinate> &coordinates,
                       MatchPlugin::CandidateLists &candidates_lists)
 {
     for (const auto current_coordinate : util::irange<std::size_t>(0, coordinates.size()))

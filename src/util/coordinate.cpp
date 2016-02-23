@@ -16,49 +16,52 @@ namespace osrm
 namespace util
 {
 
-FixedPointCoordinate::FixedPointCoordinate()
-    : lat(std::numeric_limits<int>::min()), lon(std::numeric_limits<int>::min())
+Coordinate::Coordinate()
+    : lon(std::numeric_limits<int>::min()), lat(std::numeric_limits<int>::min())
 {
 }
 
-FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon)
+Coordinate::Coordinate(const FloatLongitude lon_, const FloatLatitude lat_)
+    : Coordinate(toFixed(lon_), toFixed(lat_))
+{
+}
+
+Coordinate::Coordinate(const FixedLongitude lon_, const FixedLatitude lat_) : lon(lon_), lat(lat_)
 {
 #ifndef NDEBUG
-    if (0 != (std::abs(lat) >> 30))
+    if (0 != (std::abs(static_cast<int>(lon)) >> 30))
     {
-        std::bitset<32> y_coordinate_vector(lat);
-        SimpleLogger().Write(logDEBUG) << "broken lat: " << lat
-                                       << ", bits: " << y_coordinate_vector;
-    }
-    if (0 != (std::abs(lon) >> 30))
-    {
-        std::bitset<32> x_coordinate_vector(lon);
+        std::bitset<32> x_coordinate_vector(static_cast<int>(lon));
         SimpleLogger().Write(logDEBUG) << "broken lon: " << lon
                                        << ", bits: " << x_coordinate_vector;
+    }
+    if (0 != (std::abs(static_cast<int>(lat)) >> 30))
+    {
+        std::bitset<32> y_coordinate_vector(static_cast<int>(lat));
+        SimpleLogger().Write(logDEBUG) << "broken lat: " << lat
+                                       << ", bits: " << y_coordinate_vector;
     }
 #endif
 }
 
-bool FixedPointCoordinate::IsValid() const
+bool Coordinate::IsValid() const
 {
-    return !(lat > 90 * COORDINATE_PRECISION || lat < -90 * COORDINATE_PRECISION ||
-             lon > 180 * COORDINATE_PRECISION || lon < -180 * COORDINATE_PRECISION);
+    return !(lat > FixedLatitude(90 * COORDINATE_PRECISION) ||
+             lat < FixedLatitude(-90 * COORDINATE_PRECISION) ||
+             lon > FixedLongitude(180 * COORDINATE_PRECISION) ||
+             lon < FixedLongitude(-180 * COORDINATE_PRECISION));
 }
 
-bool operator==(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs)
+bool operator==(const Coordinate lhs, const Coordinate rhs)
 {
     return lhs.lat == rhs.lat && lhs.lon == rhs.lon;
 }
 
-bool operator!=(const FixedPointCoordinate lhs, const FixedPointCoordinate rhs)
-{
-    return !(lhs == rhs);
-}
+bool operator!=(const Coordinate lhs, const Coordinate rhs) { return !(lhs == rhs); }
 
-std::ostream &operator<<(std::ostream &out, const FixedPointCoordinate coordinate)
+std::ostream &operator<<(std::ostream &out, const Coordinate coordinate)
 {
-    out << "(" << static_cast<double>(coordinate.lat / COORDINATE_PRECISION) << ","
-        << static_cast<double>(coordinate.lon / COORDINATE_PRECISION) << ")";
+    out << "(lon:" << toFloating(coordinate.lon) << ", lat:" << toFloating(coordinate.lat) << ")";
     return out;
 }
 }
