@@ -81,6 +81,7 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
                   });
     return encode(delta_numbers);
 }
+
 std::vector<util::Coordinate> decodePolyline(const std::string &geometry_string)
 {
     std::vector<util::Coordinate> new_coordinates;

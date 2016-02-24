@@ -4,6 +4,7 @@
 #include "util/dynamic_graph.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "util/graph_utils.hpp"
+#include "engine/guidance/classification_data.hpp"
 
 #include <tbb/parallel_sort.h>
 
@@ -45,6 +46,7 @@ struct NodeBasedEdgeData
     bool roundabout : 1;
     bool startpoint : 1;
     extractor::TravelMode travel_mode : 4;
+    engine::guidance::RoadClassificationData road_classification;
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
@@ -74,6 +76,7 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
             output_edge.data.access_restricted = input_edge.access_restricted;
             output_edge.data.travel_mode = input_edge.travel_mode;
             output_edge.data.startpoint = input_edge.startpoint;
+            output_edge.data.road_classification = input_edge.road_classification;
         });
 
     tbb::parallel_sort(edges_list.begin(), edges_list.end());
