@@ -25,11 +25,6 @@ artifacts:
 #  - path: osrm_Debug.zip
 #    name: osrm_Debug.zip
 
-branches:
-  only:
-    - master
-    - develop
-
 deploy:
   provider: FTP
   server:
