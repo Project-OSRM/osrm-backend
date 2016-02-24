@@ -7,6 +7,7 @@
 
 #include "osrm/coordinate.hpp"
 
+#include <iomanip>
 #include <algorithm>
 #include <utility>
 #include <limits>
@@ -186,7 +187,14 @@ struct RectangleInt2D
         const bool lats_contained = (location.lat >= min_lat) && (location.lat <= max_lat);
         return lons_contained && lats_contained;
     }
+
+    friend std::ostream& operator<<(std::ostream& out, const RectangleInt2D& rect);
 };
+inline std::ostream& operator<<(std::ostream& out, const RectangleInt2D& rect)
+{
+    out << std::setprecision(12) << "(" << toFloating(rect.min_lon) << "," << toFloating(rect.max_lon) << "," << toFloating(rect.min_lat) << "," << toFloating(rect.max_lat) << ")";
+    return out;
+}
 }
 }
 
