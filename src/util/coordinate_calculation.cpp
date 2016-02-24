@@ -60,8 +60,7 @@ double haversineDistance(const Coordinate coordinate_1,
     return EARTH_RADIUS * charv;
 }
 
-double greatCircleDistance(const Coordinate coordinate_1,
-                           const Coordinate coordinate_2)
+double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
     auto lon1 = static_cast<int>(coordinate_1.lon);
     auto lat1 = static_cast<int>(coordinate_1.lat);
@@ -103,15 +102,16 @@ double perpendicularDistance(const Coordinate segment_source,
 
     return perpendicularDistanceFromProjectedCoordinate(
         segment_source, segment_target, query_location,
-        {static_cast<double>(toFloating(query_location.lon)), mercator::latToY(toFloating(query_location.lat))},
+        {static_cast<double>(toFloating(query_location.lon)),
+         mercator::latToY(toFloating(query_location.lat))},
         nearest_location, ratio);
 }
 
-double
-perpendicularDistanceFromProjectedCoordinate(const Coordinate source_coordinate,
-                                             const Coordinate target_coordinate,
-                                             const Coordinate query_location,
-                                             const std::pair<double, double> projected_xy_coordinate)
+double perpendicularDistanceFromProjectedCoordinate(
+    const Coordinate source_coordinate,
+    const Coordinate target_coordinate,
+    const Coordinate query_location,
+    const std::pair<double, double> projected_xy_coordinate)
 {
     double ratio;
     Coordinate nearest_location;
@@ -121,13 +121,13 @@ perpendicularDistanceFromProjectedCoordinate(const Coordinate source_coordinate,
                                                         nearest_location, ratio);
 }
 
-double
-perpendicularDistanceFromProjectedCoordinate(const Coordinate segment_source,
-                                             const Coordinate segment_target,
-                                             const Coordinate query_location,
-                                             const std::pair<double, double> projected_xy_coordinate,
-                                             Coordinate &nearest_location,
-                                             double &ratio)
+double perpendicularDistanceFromProjectedCoordinate(
+    const Coordinate segment_source,
+    const Coordinate segment_target,
+    const Coordinate query_location,
+    const std::pair<double, double> projected_xy_coordinate,
+    Coordinate &nearest_location,
+    double &ratio)
 {
     using namespace coordinate_calculation;
 
@@ -214,10 +214,10 @@ double radToDeg(const double radian)
     return radian * (180.0 * (1. / pi<double>()));
 }
 
-double bearing(const Coordinate first_coordinate,
-               const Coordinate second_coordinate)
+double bearing(const Coordinate first_coordinate, const Coordinate second_coordinate)
 {
-    const double lon_diff = static_cast<double>(toFloating(second_coordinate.lon - first_coordinate.lon));
+    const double lon_diff =
+        static_cast<double>(toFloating(second_coordinate.lon - first_coordinate.lon));
     const double lon_delta = degToRad(lon_diff);
     const double lat1 = degToRad(static_cast<double>(toFloating(first_coordinate.lat)));
     const double lat2 = degToRad(static_cast<double>(toFloating(second_coordinate.lat)));
@@ -237,19 +237,17 @@ double bearing(const Coordinate first_coordinate,
     return result;
 }
 
-double computeAngle(const Coordinate first,
-                    const Coordinate second,
-                    const Coordinate third)
+double computeAngle(const Coordinate first, const Coordinate second, const Coordinate third)
 {
     using namespace boost::math::constants;
     using namespace coordinate_calculation;
 
     const double v1x = static_cast<double>(toFloating(first.lon - second.lon));
-    const double v1y = mercator::latToY(toFloating(first.lat)) -
-                       mercator::latToY(toFloating(second.lat));
+    const double v1y =
+        mercator::latToY(toFloating(first.lat)) - mercator::latToY(toFloating(second.lat));
     const double v2x = static_cast<double>(toFloating(third.lon - second.lon));
-    const double v2y = mercator::latToY(toFloating(third.lat)) -
-                       mercator::latToY(toFloating(second.lat));
+    const double v2y =
+        mercator::latToY(toFloating(third.lat)) - mercator::latToY(toFloating(second.lat));
 
     double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / pi<double>();
 
@@ -261,14 +259,24 @@ double computeAngle(const Coordinate first,
     return angle;
 }
 
+Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
+{
+    BOOST_ASSERT(0 <= factor && factor <= 1.0);
+    return {from.lon + toFixed(FloatLongitude(
+                           factor * static_cast<double>(toFloating(to.lon - from.lon)))),
+            from.lat + toFixed(FloatLatitude(
+                           factor * static_cast<double>(toFloating(to.lat - from.lat))))};
+}
+
 namespace mercator
 {
 FloatLatitude yToLat(const double value)
 {
     using namespace boost::math::constants;
 
-    return FloatLatitude(180. * (1. / pi<long double>()) *
-           (2. * std::atan(std::exp(value * pi<double>() / 180.)) - half_pi<double>()));
+    return FloatLatitude(
+        180. * (1. / pi<long double>()) *
+        (2. * std::atan(std::exp(value * pi<double>() / 180.)) - half_pi<double>()));
 }
 
 double latToY(const FloatLatitude latitude)
@@ -276,8 +284,10 @@ double latToY(const FloatLatitude latitude)
     using namespace boost::math::constants;
 
     return 180. * (1. / pi<double>()) *
-           std::log(std::tan((pi<double>() / 4.) + static_cast<double>(latitude) * (pi<double>() / 180.) / 2.));
+           std::log(std::tan((pi<double>() / 4.) +
+                             static_cast<double>(latitude) * (pi<double>() / 180.) / 2.));
 }
+
 } // ns mercato // ns mercatorr
 } // ns coordinate_calculation
 } // ns util

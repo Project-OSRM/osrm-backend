@@ -12,9 +12,9 @@ namespace engine
 {
 namespace detail
 {
-    constexpr double POLYLINE_PECISION = 1e5;
-    constexpr double COORDINATE_TO_POLYLINE = POLYLINE_PECISION / COORDINATE_PRECISION;
-    constexpr double POLYLINE_TO_COORDINATE = COORDINATE_PRECISION / POLYLINE_PECISION;
+    constexpr double POLYLINE_PRECISION = 1e5;
+    constexpr double COORDINATE_TO_POLYLINE = POLYLINE_PRECISION / COORDINATE_PRECISION;
+    constexpr double POLYLINE_TO_COORDINATE = COORDINATE_PRECISION / POLYLINE_PRECISION;
 }
 
 using CoordVectorForwardIter = std::vector<util::Coordinate>::const_iterator;

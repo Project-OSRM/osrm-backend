@@ -5,15 +5,17 @@
 
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/speed_profile.hpp"
-#include "util/typedefs.hpp"
+#include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
-#include "util/deallocating_vector.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/turn_instructions.hpp"
+
+#include "engine/guidance/turn_instruction.hpp"
+
 #include "util/node_based_graph.hpp"
-#include "extractor/restriction_map.hpp"
+#include "util/typedefs.hpp"
+#include "util/deallocating_vector.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -77,12 +79,12 @@ class EdgeBasedGraphFactory
     // with known angle.
     // Handles special cases like u-turns and roundabouts
     // For basic turns, the turn based on the angle-classification is returned
-    TurnInstruction AnalyzeTurn(const NodeID u,
-                                const EdgeID e1,
-                                const NodeID v,
-                                const EdgeID e2,
-                                const NodeID w,
-                                const double angle) const;
+    engine::guidance::TurnInstruction AnalyzeTurn(const NodeID u,
+                                                  const EdgeID e1,
+                                                  const NodeID v,
+                                                  const EdgeID e2,
+                                                  const NodeID w,
+                                                  const double angle) const;
 
     std::int32_t GetTurnPenalty(double angle, lua_State *lua_state) const;
 
@@ -139,9 +141,9 @@ class EdgeBasedGraphFactory
     {
         EdgeID eid; // the id of the arc
         bool valid; // a turn may be relevant to good instructions, even if we cannot take the road
-        double angle;                // the approximated angle of the turn
-        TurnInstruction instruction; // a proposed instruction
-        double confidence;           // how close to the border is the turn?
+        double angle;                                  // the approximated angle of the turn
+        engine::guidance::TurnInstruction instruction; // a proposed instruction
+        double confidence;                             // how close to the border is the turn?
 
         std::string toString() const
         {
@@ -152,7 +154,8 @@ class EdgeBasedGraphFactory
             result += " angle: ";
             result += std::to_string(angle);
             result += " instruction: ";
-            result += std::to_string(static_cast<std::int32_t>(instruction));
+            result += std::to_string(static_cast<std::int32_t>(instruction.type)) + " " +
+                      std::to_string(static_cast<std::int32_t>(instruction.direction_modifier));
             result += " confidence: ";
             result += std::to_string(confidence);
             return result;
@@ -162,19 +165,23 @@ class EdgeBasedGraphFactory
     // Use In Order to generate base turns
 
     // cannot be const due to the counters...
-    std::vector<TurnCandidate> getTurnCandidates(NodeID from, EdgeID via_edge);
-    std::vector<TurnCandidate> optimizeCandidates(NodeID via_edge,
+    std::vector<TurnCandidate> getTurnCandidates(const NodeID from, const EdgeID via_edge);
+    std::vector<TurnCandidate> optimizeCandidates(const EdgeID via_edge,
                                                   std::vector<TurnCandidate> turn_candidates) const;
-    std::vector<TurnCandidate> suppressTurns(EdgeID via_edge,
+
+    std::vector<TurnCandidate> optimizeRamps(const EdgeID via_edge,
                                              std::vector<TurnCandidate> turn_candidates) const;
 
-    QueryNode getRepresentativeCoordinate(const NodeID src,
-                                          const NodeID tgt,
-                                          const EdgeID via_eid,
-                                          bool INVERTED) const;
+    engine::guidance::TurnType
+    checkForkAndEnd(const EdgeID via_edge, const std::vector<TurnCandidate> &turn_candidates) const;
+    std::vector<TurnCandidate> handleForkAndEnd(const engine::guidance::TurnType type,
+                                                std::vector<TurnCandidate> turn_candidates) const;
 
-    bool isObviousChoice(EdgeID coming_from_eid,
-                         std::size_t turn_index,
+    std::vector<TurnCandidate> suppressTurns(const EdgeID via_edge,
+                                             std::vector<TurnCandidate> turn_candidates) const;
+
+    bool isObviousChoice(const EdgeID coming_from_eid,
+                         const std::size_t turn_index,
                          const std::vector<TurnCandidate> &turn_candidates) const;
 
     std::size_t restricted_turns_counter;
