@@ -134,8 +134,8 @@ perpendicularDistanceFromProjectedCoordinate(const Coordinate segment_source,
     BOOST_ASSERT(query_location.IsValid());
 
     // initialize values
-    const double x = projected_xy_coordinate.first;
-    const double y = projected_xy_coordinate.second;
+    const double x = projected_xy_coordinate.second;
+    const double y = projected_xy_coordinate.first;
     const double a = mercator::latToY(toFloating(segment_source.lat));
     const double b = static_cast<double>(toFloating(segment_source.lon));
     const double c = mercator::latToY(toFloating(segment_target.lat));
