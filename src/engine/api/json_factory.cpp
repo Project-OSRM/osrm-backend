@@ -24,74 +24,14 @@ namespace json
 namespace detail
 {
 
-std::string instructionToString(extractor::TurnInstruction instruction)
+std::string instructionTypeToString(guidance::TurnType type)
 {
-    std::string token;
-    // FIXME this could be an array.
-    switch (instruction)
-    {
-    case extractor::TurnInstruction::GoStraight:
-        token = "continue";
-        break;
-    case extractor::TurnInstruction::TurnSlightRight:
-        token = "bear right";
-        break;
-    case extractor::TurnInstruction::TurnRight:
-        token = "right";
-        break;
-    case extractor::TurnInstruction::TurnSharpRight:
-        token = "sharp right";
-        break;
-    case extractor::TurnInstruction::UTurn:
-        token = "uturn";
-        break;
-    case extractor::TurnInstruction::TurnSharpLeft:
-        token = "sharp left";
-        break;
-    case extractor::TurnInstruction::TurnLeft:
-        token = "left";
-        break;
-    case extractor::TurnInstruction::TurnSlightLeft:
-        token = "bear left";
-        break;
-    case extractor::TurnInstruction::HeadOn:
-        token = "head on";
-        break;
-    case extractor::TurnInstruction::EnterRoundAbout:
-        token = "enter roundabout";
-        break;
-    case extractor::TurnInstruction::LeaveRoundAbout:
-        token = "leave roundabout";
-        break;
-    case extractor::TurnInstruction::StayOnRoundAbout:
-        token = "stay on roundabout";
-        break;
-    case extractor::TurnInstruction::StartAtEndOfStreet:
-        token = "depart";
-        break;
-    case extractor::TurnInstruction::ReachedYourDestination:
-        token = "arrive";
-        break;
-    case extractor::TurnInstruction::NameChanges:
-        token = "name changed";
-        break;
+    return guidance::turn_type_names[static_cast<std::size_t>(type)];
+}
 
-    case extractor::TurnInstruction::NoTurn:
-    case extractor::TurnInstruction::ReachViaLocation:
-    case extractor::TurnInstruction::EnterAgainstAllowedDirection:
-    case extractor::TurnInstruction::LeaveAgainstAllowedDirection:
-    case extractor::TurnInstruction::InverseAccessRestrictionFlag:
-    case extractor::TurnInstruction::AccessRestrictionFlag:
-    case extractor::TurnInstruction::AccessRestrictionPenalty:
-        BOOST_ASSERT_MSG(false, "Invalid turn type used");
-        break;
-
-    default:
-        BOOST_ASSERT_MSG(false, "unknown TurnInstruction");
-        break;
-    }
-
-    return token;
+std::string instructionModifierToString(guidance::DirectionModifier modifier)
+{
+    return guidance::modifier_names[static_cast<std::size_t>(modifier)];
 }
 
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
@@ -159,10 +99,14 @@ std::string modeToString(const extractor::TravelMode mode)
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
-    step_maneuver.values["type"] = detail::instructionToString(maneuver.instruction);
+    step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
+    step_maneuver.values["modifier"] =
+        detail::instructionModifierToString(maneuver.instruction.direction_modifier);
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = maneuver.bearing_before;
     step_maneuver.values["bearing_after"] = maneuver.bearing_after;
+    if( maneuver.exit != 0 )
+      step_maneuver.values["exit"] = maneuver.exit;
     return step_maneuver;
 }
 

@@ -7,7 +7,7 @@
 #include "extractor/external_memory_node.hpp"
 #include "contractor/query_edge.hpp"
 #include "engine/phantom_node.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "engine/guidance/turn_instruction.hpp"
 #include "util/integer_range.hpp"
 #include "util/exception.hpp"
 #include "util/string_util.hpp"
@@ -76,7 +76,7 @@ class BaseDataFacade
     virtual void GetUncompressedWeights(const EdgeID id,
                                          std::vector<EdgeWeight> &result_weights) const = 0;
 
-    virtual extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
+    virtual guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
 
     virtual extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 
