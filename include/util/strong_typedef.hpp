@@ -38,7 +38,7 @@ namespace osrm
     };                                                                                             \
     inline std::ostream &operator<<(std::ostream &stream, const To &inst)                          \
     {                                                                                              \
-        return stream << #To << '(' << inst.x << ')';                                              \
+        return stream << inst.x;                                                                   \
     }
 
 #define OSRM_STRONG_TYPEDEF_HASHABLE(From, To)                                                     \
