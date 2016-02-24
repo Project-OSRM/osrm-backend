@@ -186,7 +186,7 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
 
     // compute the duration table of all phantom nodes
     const auto result_table = util::DistTableWrapper<EdgeWeight>(
-        duration_table(snapped_phantoms), number_of_locations);
+        duration_table(snapped_phantoms, {}, {}), number_of_locations);
 
     if (result_table.size() == 0)
     {
