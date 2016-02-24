@@ -36,9 +36,9 @@ struct TableParametersGrammar final : public BaseParametersGrammar
         {
             parameters.sources = std::move(sources);
         };
-        destinations_rule = qi::lit("destinations=") >> -qi::uint_ % ";";
-        sources_rule = qi::lit("sources=") >> -qi::uint_ % ";";
-        table_rule = destinations_rule[set_destiantions] | sources_rule[set_sources];
+        destinations_rule = (qi::lit("destinations=") >> (qi::ulong_ % ";")[set_destiantions]) | qi::lit("destinations=all");
+        sources_rule = (qi::lit("sources=") >> (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
+        table_rule = destinations_rule | sources_rule;
         root_rule = -((base_rule | table_rule) % '&');
     }
 
@@ -46,8 +46,8 @@ struct TableParametersGrammar final : public BaseParametersGrammar
 
   private:
     qi::rule<Iterator> root_rule, table_rule;
-    qi::rule<Iterator, SourcesT()> sources_rule;
-    qi::rule<Iterator, DestinationsT()> destinations_rule;
+    qi::rule<Iterator> sources_rule;
+    qi::rule<Iterator> destinations_rule;
 };
 }
 }
