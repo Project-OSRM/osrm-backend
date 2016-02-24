@@ -1,6 +1,7 @@
 #ifndef OSRM_GUIDANCE_GUIDANCE_TOOLKIT_HPP_
 #define OSRM_GUIDANCE_GUIDANCE_TOOLKIT_HPP_
 
+#include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 
@@ -41,8 +42,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
                                  const util::Coordinate final_coordinate,
                                  const std::vector<extractor::QueryNode> &query_nodes)
 {
-    const auto extractCoordinateFromNode = [](
-        const extractor::QueryNode &node) -> util::Coordinate
+    const auto extractCoordinateFromNode = [](const extractor::QueryNode &node) -> util::Coordinate
     {
         return {node.lon, node.lat};
     };
@@ -104,8 +104,7 @@ getRepresentativeCoordinate(const NodeID from_node,
                             const extractor::CompressedEdgeContainer &compressed_geometries,
                             const std::vector<extractor::QueryNode> &query_nodes)
 {
-    const auto extractCoordinateFromNode = [](
-        const extractor::QueryNode &node) -> util::Coordinate
+    const auto extractCoordinateFromNode = [](const extractor::QueryNode &node) -> util::Coordinate
     {
         return {node.lon, node.lat};
     };
@@ -169,7 +168,9 @@ inline DirectionModifier shiftCW(const DirectionModifier modifier)
 inline bool entersRoundabout(const TurnInstruction instruction)
 {
     return (instruction.type == TurnType::EnterRoundabout ||
-            instruction.type == TurnType::EnterRotary);
+            instruction.type == TurnType::EnterRotary ||
+            instruction.type == TurnType::EnterRoundaboutAtExit ||
+            instruction.type == TurnType::EnterRotaryAtExit);
 }
 
 inline bool leavesRoundabout(const TurnInstruction instruction)
@@ -378,6 +379,11 @@ inline DirectionModifier bearingToDirectionModifier(const std::string &bearing)
 
     const static std::map<std::string, DirectionModifier> hash = buildHash();
     return hash.find(bearing)->second;
+}
+
+inline DirectionModifier bearingToDirectionModifier(const double angle)
+{
+    return bearingToDirectionModifier( util::bearing::get(angle) );
 }
 
 inline bool isHighway(FunctionalRoadClass road_class)
