@@ -59,19 +59,7 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
     }
 
     auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(params));
-
-    const auto result_table = [&]
-    {
-        if (params.sources.empty())
-        {
-            BOOST_ASSERT(params.destinations.empty());
-            return distance_table(snapped_phantoms);
-        }
-        else
-        {
-            return distance_table(snapped_phantoms, params.sources, params.destinations);
-        }
-    }();
+    auto result_table = distance_table(snapped_phantoms, params.sources, params.destinations);
 
     if (result_table.empty())
     {
