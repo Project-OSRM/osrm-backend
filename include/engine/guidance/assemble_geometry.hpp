@@ -7,7 +7,7 @@
 #include "engine/guidance/leg_geometry.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/coordinate.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "engine/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
 
 #include <vector>
@@ -49,7 +49,7 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
         current_distance +=
             util::coordinate_calculation::haversineDistance(prev_coordinate, coordinate);
 
-        if (path_point.turn_instruction != extractor::TurnInstruction::NoTurn)
+        if (path_point.turn_instruction != TurnInstruction::NO_TURN())
         {
             geometry.segment_distances.push_back(current_distance);
             geometry.segment_offsets.push_back(geometry.locations.size());
