@@ -46,78 +46,6 @@ class ManyToManyRouting final
     {
     }
 
-    // semmetric version
-    std::vector<EdgeWeight> operator()(const std::vector<PhantomNode> &phantom_nodes) const
-    {
-        const auto number_of_sources = phantom_nodes.size();
-        const auto number_of_targets = phantom_nodes.size();
-        const auto number_of_entries = number_of_sources * number_of_targets;
-        std::vector<EdgeWeight> result_table(number_of_entries,
-                                             std::numeric_limits<EdgeWeight>::max());
-
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            super::facade->GetNumberOfNodes());
-
-        QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
-
-        SearchSpaceWithBuckets search_space_with_buckets;
-
-        unsigned column_idx = 0;
-        for (const auto &phantom : phantom_nodes)
-        {
-            query_heap.Clear();
-            // insert target(s) at distance 0
-
-            if (SPECIAL_NODEID != phantom.forward_node_id)
-            {
-                query_heap.Insert(phantom.forward_node_id, phantom.GetForwardWeightPlusOffset(),
-                                  phantom.forward_node_id);
-            }
-            if (SPECIAL_NODEID != phantom.reverse_node_id)
-            {
-                query_heap.Insert(phantom.reverse_node_id, phantom.GetReverseWeightPlusOffset(),
-                                  phantom.reverse_node_id);
-            }
-
-            // explore search space
-            while (!query_heap.Empty())
-            {
-                BackwardRoutingStep(column_idx, query_heap, search_space_with_buckets);
-            }
-            ++column_idx;
-        }
-
-        // for each source do forward search
-        unsigned row_idx = 0;
-        for (const auto &phantom : phantom_nodes)
-        {
-            query_heap.Clear();
-            // insert target(s) at distance 0
-
-            if (SPECIAL_NODEID != phantom.forward_node_id)
-            {
-                query_heap.Insert(phantom.forward_node_id, -phantom.GetForwardWeightPlusOffset(),
-                                  phantom.forward_node_id);
-            }
-            if (SPECIAL_NODEID != phantom.reverse_node_id)
-            {
-                query_heap.Insert(phantom.reverse_node_id, -phantom.GetReverseWeightPlusOffset(),
-                                  phantom.reverse_node_id);
-            }
-
-            // explore search space
-            while (!query_heap.Empty())
-            {
-                ForwardRoutingStep(row_idx, number_of_targets, query_heap,
-                                   search_space_with_buckets, result_table);
-            }
-            ++row_idx;
-        }
-
-        return result_table;
-    }
-
-    // asymmetric version
     std::vector<EdgeWeight> operator()(const std::vector<PhantomNode> &phantom_nodes,
                                        const std::vector<std::size_t> &source_indices,
                                        const std::vector<std::size_t> &target_indices) const
@@ -136,9 +64,8 @@ class ManyToManyRouting final
         SearchSpaceWithBuckets search_space_with_buckets;
 
         unsigned column_idx = 0;
-        for (const auto index : target_indices)
+        const auto search_target_phantom = [&](const PhantomNode &phantom)
         {
-            const auto &phantom = phantom_nodes[index];
             query_heap.Clear();
             // insert target(s) at distance 0
 
@@ -159,13 +86,12 @@ class ManyToManyRouting final
                 BackwardRoutingStep(column_idx, query_heap, search_space_with_buckets);
             }
             ++column_idx;
-        }
+        };
 
         // for each source do forward search
         unsigned row_idx = 0;
-        for (const auto index : source_indices)
+        const auto search_source_phantom = [&](const PhantomNode& phantom)
         {
-            const auto &phantom = phantom_nodes[index];
             query_heap.Clear();
             // insert target(s) at distance 0
 
@@ -187,6 +113,38 @@ class ManyToManyRouting final
                                    search_space_with_buckets, result_table);
             }
             ++row_idx;
+        };
+
+        if (target_indices.empty())
+        {
+            for (const auto &phantom : phantom_nodes)
+            {
+                search_target_phantom(phantom);
+            }
+        }
+        else
+        {
+            for (const auto index : target_indices)
+            {
+                const auto &phantom = phantom_nodes[index];
+                search_target_phantom(phantom);
+            }
+        }
+
+        if (source_indices.empty())
+        {
+            for (const auto &phantom : phantom_nodes)
+            {
+                search_source_phantom(phantom);
+            }
+        }
+        else
+        {
+            for (const auto index : source_indices)
+            {
+                const auto &phantom = phantom_nodes[index];
+                search_source_phantom(phantom);
+            }
         }
 
         return result_table;
