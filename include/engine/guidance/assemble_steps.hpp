@@ -4,11 +4,13 @@
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
 #include "engine/guidance/leg_geometry.hpp"
+#include "engine/guidance/guidance_toolkit.hpp"
+#include "engine/guidance/turn_instruction.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/coordinate.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "util/bearing.hpp"
 #include "extractor/travel_mode.hpp"
 
 #include <vector>
@@ -22,9 +24,10 @@ namespace guidance
 namespace detail
 {
 // FIXME move implementation to cpp
-inline StepManeuver stepManeuverFromGeometry(const extractor::TurnInstruction instruction,
+inline StepManeuver stepManeuverFromGeometry(const TurnInstruction instruction,
                                              const LegGeometry &leg_geometry,
-                                             std::size_t segment_index)
+                                             const std::size_t segment_index,
+                                             const unsigned exit)
 {
     auto turn_index = leg_geometry.BackIndex(segment_index);
     BOOST_ASSERT(turn_index > 0);
@@ -40,7 +43,7 @@ inline StepManeuver stepManeuverFromGeometry(const extractor::TurnInstruction in
     const double post_turn_bearing =
         util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
 
-    return StepManeuver{turn_coordinate, pre_turn_bearing, post_turn_bearing, instruction};
+    return StepManeuver{turn_coordinate, pre_turn_bearing, post_turn_bearing, instruction, exit};
 }
 }
 
@@ -75,28 +78,31 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     auto segment_index = 0;
     if (leg_data.size() > 0)
     {
-        StepManeuver maneuver = detail::stepManeuverFromGeometry(extractor::TurnInstruction::StartAtEndOfStreet,
-                                                                 leg_geometry, segment_index);
+        StepManeuver maneuver = detail::stepManeuverFromGeometry(
+            TurnInstruction{TurnType::Location, DirectionModifier::Straight}, leg_geometry,
+            segment_index, INVALID_EXIT_NR);
 
+        // TODO fix this: it makes no sense
         // PathData saves the information we need of the segment _before_ the turn,
         // but a RouteStep is with regard to the segment after the turn.
         // We need to skip the first segment because it is already covered by the
+        // initial start of a route
         for (const auto &path_point : leg_data)
         {
-            if (path_point.turn_instruction != extractor::TurnInstruction::NoTurn)
+            if (path_point.turn_instruction != TurnInstruction::NO_TURN())
             {
-                auto name = facade.get_name_for_id(path_point.name_id);
+                const auto name = facade.get_name_for_id(path_point.name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
-                steps.push_back(RouteStep{path_point.name_id, std::move(name),
-                                          path_point.duration_until_turn / 10.0, distance,
-                                          path_point.travel_mode, maneuver,
-                                          leg_geometry.FrontIndex(segment_index),
-                                          leg_geometry.BackIndex(segment_index) + 1});
-                maneuver = detail::stepManeuverFromGeometry(path_point.turn_instruction,
-                                                            leg_geometry, segment_index);
+                steps.push_back(RouteStep{
+                    path_point.name_id, name, path_point.duration_until_turn / 10.0, distance,
+                    path_point.travel_mode, maneuver, leg_geometry.FrontIndex(segment_index),
+                    leg_geometry.BackIndex(segment_index) + 1});
+                maneuver = detail::stepManeuverFromGeometry(
+                    path_point.turn_instruction, leg_geometry, segment_index, path_point.exit);
                 segment_index++;
             }
         }
+        // TODO remove this hack
         const auto distance = leg_geometry.segment_distances[segment_index];
         steps.push_back(RouteStep{target_node.name_id, facade.get_name_for_id(target_node.name_id),
                                   target_duration, distance, target_mode, maneuver,
@@ -110,19 +116,24 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // |-------------t target_duration
         // x---*---*---*---z compressed edge
         //       |-------| duration
+        StepManeuver maneuver = {source_node.location, 0., 0.,
+                                 TurnInstruction{TurnType::Location, DirectionModifier::Straight},
+                                 INVALID_EXIT_NR};
+
         steps.push_back(RouteStep{
             source_node.name_id, facade.get_name_for_id(source_node.name_id),
             target_duration - source_duration, leg_geometry.segment_distances[segment_index],
-            source_mode,
-            StepManeuver{source_node.location, 0., 0., extractor::TurnInstruction::StartAtEndOfStreet},
-            leg_geometry.FrontIndex(segment_index), leg_geometry.BackIndex(segment_index) + 1});
+            source_mode, std::move(maneuver), leg_geometry.FrontIndex(segment_index),
+            leg_geometry.BackIndex(segment_index) + 1});
     }
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
     // This step has length zero, the only reason we need it is the target location
     steps.push_back(RouteStep{
         target_node.name_id, facade.get_name_for_id(target_node.name_id), 0., 0., target_mode,
-        StepManeuver{target_node.location, 0., 0., extractor::TurnInstruction::ReachedYourDestination},
+        StepManeuver{target_node.location, 0., 0.,
+                     TurnInstruction{TurnType::Location, DirectionModifier::Straight},
+                     INVALID_EXIT_NR},
         leg_geometry.locations.size(), leg_geometry.locations.size()});
 
     return steps;
