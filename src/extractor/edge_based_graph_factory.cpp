@@ -9,6 +9,9 @@
 #include "util/timing_util.hpp"
 #include "util/exception.hpp"
 
+#include "engine/guidance/turn_classification.hpp"
+#include "engine/guidance/guidance_toolkit.hpp"
+
 #include <boost/assert.hpp>
 
 #include <algorithm>
@@ -34,14 +37,31 @@ const double constexpr STRAIGHT_ANGLE = 180.;
 // if a turn deviates this much from going straight, it will be kept straight
 const double constexpr MAXIMAL_ALLOWED_NO_TURN_DEVIATION = 2.;
 // angle that lies between two nearly indistinguishable roads
-const double constexpr NARROW_TURN_ANGLE = 25.;
+const double constexpr NARROW_TURN_ANGLE = 35.;
 // angle difference that can be classified as straight, if its the only narrow turn
 const double constexpr FUZZY_STRAIGHT_ANGLE = 15.;
 const double constexpr DISTINCTION_RATIO = 2;
 
+using engine::guidance::TurnPossibility;
+using engine::guidance::TurnInstruction;
+using engine::guidance::DirectionModifier;
+using engine::guidance::TurnType;
+using engine::guidance::FunctionalRoadClass;
+
+using engine::guidance::classifyIntersection;
+using engine::guidance::isLowPriorityRoadClass;
+using engine::guidance::angularDeviation;
+using engine::guidance::getTurnDirection;
+using engine::guidance::getRepresentativeCoordinate;
+using engine::guidance::isBasic;
+using engine::guidance::isRampClass;
+using engine::guidance::isUturn;
+using engine::guidance::isConflict;
+using engine::guidance::isSlightTurn;
+using engine::guidance::isSlightModifier;
+using engine::guidance::mirrorDirectionModifier;
+
 // Configuration to find representative candidate for turn angle calculations
-const double constexpr MINIMAL_SEGMENT_LENGTH = 1.;
-const double constexpr DESIRED_SEGMENT_LENGTH = 10.;
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
@@ -320,8 +340,55 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
 
+    struct CompareTurnPossibilities
+    {
+        bool operator()(const std::vector<TurnPossibility> &left,
+                        const std::vector<TurnPossibility> &right) const
+        {
+            if (left.size() < right.size())
+                return true;
+            if (left.size() > right.size())
+                return false;
+            for (std::size_t i = 0; i < left.size(); ++i)
+            {
+                if ((((int)left[i].angle + 16) % 256) / 32 <
+                    (((int)right[i].angle + 16) % 256) / 32)
+                    return true;
+                if ((((int)left[i].angle + 16) % 256) / 32 >
+                    (((int)right[i].angle + 16) % 256) / 32)
+                    return false;
+            }
+            return false;
+        }
+    };
+
+// temporary switch to allow display of turn types
+#define SHOW_TURN_TYPES 0
+#if SHOW_TURN_TYPES
+    std::map<std::vector<TurnPossibility>, std::vector<util::FixedPointCoordinate>,
+             CompareTurnPossibilities> turn_types;
+#endif
+
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
+#if SHOW_TURN_TYPES
+        auto turn_possibilities = classifyIntersection(
+            node_u, *m_node_based_graph, m_compressed_edge_container, m_node_info_list);
+        if (turn_possibilities.empty())
+            continue;
+        auto set = turn_types.find(turn_possibilities);
+        if (set != turn_types.end())
+        {
+            if (set->second.size() < 5)
+                set->second.emplace_back(m_node_info_list[node_u].lat,
+                                         m_node_info_list[node_u].lon);
+        }
+        else
+        {
+            turn_types[turn_possibilities] = std::vector<util::FixedPointCoordinate>(
+                1, {m_node_info_list[node_u].lat, m_node_info_list[node_u].lon});
+        }
+#endif
         // progress.printStatus(node_u);
         for (const EdgeID edge_form_u : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
@@ -332,8 +399,33 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             ++node_based_edge_counter;
             auto turn_candidates = getTurnCandidates(node_u, edge_form_u);
+#define PRINT_DEBUG_CANDIDATES 0
+#if PRINT_DEBUG_CANDIDATES
+            std::cout << "Initial Candidates:\n";
+            for (auto tc : turn_candidates)
+                std::cout << "\t" << tc.toString() << " "
+                          << (int)m_node_based_graph->GetEdgeData(tc.eid)
+                                 .road_classification.road_class
+                          << std::endl;
+#endif
             turn_candidates = optimizeCandidates(edge_form_u, turn_candidates);
+#if PRINT_DEBUG_CANDIDATES
+            std::cout << "Optimized Candidates:\n";
+            for (auto tc : turn_candidates)
+                std::cout << "\t" << tc.toString() << " "
+                          << (int)m_node_based_graph->GetEdgeData(tc.eid)
+                                 .road_classification.road_class
+                          << std::endl;
+#endif
             turn_candidates = suppressTurns(edge_form_u, turn_candidates);
+#if PRINT_DEBUG_CANDIDATES
+            std::cout << "Suppressed Candidates:\n";
+            for (auto tc : turn_candidates)
+                std::cout << "\t" << tc.toString() << " "
+                          << (int)m_node_based_graph->GetEdgeData(tc.eid)
+                                 .road_classification.road_class
+                          << std::endl;
+#endif
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_form_u);
 
@@ -360,9 +452,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 }
 
                 const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);
-                const TurnInstruction turn_instruction = turn.instruction;
+                const auto turn_instruction = turn.instruction;
 
-                if (turn_instruction == TurnInstruction::UTurn)
+                if (isUturn(turn_instruction))
                 {
                     distance += speed_profile.u_turn_penalty;
                 }
@@ -473,6 +565,21 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }
         }
     }
+#if SHOW_TURN_TYPES
+    std::cout << "[info] found " << turn_types.size() << " turn types." << std::endl;
+    for (const auto &tt : turn_types)
+    {
+        std::cout << tt.second.size();
+        for (auto coord : tt.second)
+            std::cout << " " << coord.lat << " " << coord.lon;
+
+        std::cout << " " << tt.first.size();
+        for (auto tte : tt.first)
+            std::cout << " " << (int)tte.angle;
+
+        std::cout << std::endl;
+    }
+#endif
 
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
@@ -493,9 +600,107 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                  << " turns over barriers";
 }
 
+std::vector<EdgeBasedGraphFactory::TurnCandidate>
+EdgeBasedGraphFactory::optimizeRamps(const EdgeID via_edge,
+                                     std::vector<TurnCandidate> turn_candidates) const
+{
+    EdgeID continue_eid = SPECIAL_EDGEID;
+    double continue_angle = 0;
+    const auto &in_edge_data = m_node_based_graph->GetEdgeData(via_edge);
+    for (auto &candidate : turn_candidates)
+    {
+        if (candidate.instruction.direction_modifier == DirectionModifier::UTurn)
+            continue;
+
+        const auto &out_edge_data = m_node_based_graph->GetEdgeData(candidate.eid);
+        if (out_edge_data.name_id == in_edge_data.name_id)
+        {
+            continue_eid = candidate.eid;
+            continue_angle = candidate.angle;
+            if (angularDeviation(candidate.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
+                isRampClass(in_edge_data.road_classification.road_class))
+                candidate.instruction = TurnType::Suppressed;
+            break;
+        }
+    }
+
+    if (continue_eid != SPECIAL_EDGEID)
+    {
+        bool to_the_right = true;
+        for (auto &candidate : turn_candidates)
+        {
+            if (candidate.eid == continue_eid)
+            {
+                to_the_right = false;
+                continue;
+            }
+
+            if (candidate.instruction.type != TurnType::Ramp)
+                continue;
+
+            if (isSlightModifier(candidate.instruction.direction_modifier))
+                candidate.instruction.direction_modifier =
+                    (to_the_right) ? DirectionModifier::SlightRight : DirectionModifier::SlightLeft;
+        }
+    }
+    return turn_candidates;
+}
+
+TurnType
+EdgeBasedGraphFactory::checkForkAndEnd(const EdgeID via_eid,
+                                       const std::vector<TurnCandidate> &turn_candidates) const
+{
+    if (turn_candidates.size() != 3 ||
+        turn_candidates.front().instruction.direction_modifier != DirectionModifier::UTurn)
+        return TurnType::Invalid;
+
+    if (isOnRoundabout(turn_candidates[1].instruction))
+    {
+        BOOST_ASSERT(isOnRoundabout(turn_candidates[2].instruction));
+        return TurnType::Invalid;
+    }
+    BOOST_ASSERT(!isOnRoundabout(turn_candidates[2].instruction));
+
+    FunctionalRoadClass road_classes[3] = {
+        m_node_based_graph->GetEdgeData(via_eid).road_classification.road_class,
+        m_node_based_graph->GetEdgeData(turn_candidates[1].eid).road_classification.road_class,
+        m_node_based_graph->GetEdgeData(turn_candidates[2].eid).road_classification.road_class};
+
+    if (angularDeviation(turn_candidates[1].angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
+        angularDeviation(turn_candidates[2].angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE)
+    {
+        if (road_classes[0] != road_classes[1] || road_classes[1] != road_classes[2])
+            return TurnType::Invalid;
+
+        if (turn_candidates[1].valid && turn_candidates[2].valid)
+            return TurnType::Fork;
+    }
+
+    else if (angularDeviation(turn_candidates[1].angle, 90) < NARROW_TURN_ANGLE &&
+             angularDeviation(turn_candidates[2].angle, 270) < NARROW_TURN_ANGLE)
+    {
+        return TurnType::EndOfRoad;
+    }
+
+    return TurnType::Invalid;
+}
+
+std::vector<EdgeBasedGraphFactory::TurnCandidate>
+EdgeBasedGraphFactory::handleForkAndEnd(const TurnType type,
+                                        std::vector<TurnCandidate> turn_candidates) const
+{
+    turn_candidates[1].instruction.type = type;
+    turn_candidates[1].instruction.direction_modifier =
+        (type == TurnType::Fork) ? DirectionModifier::SlightRight : DirectionModifier::Right;
+    turn_candidates[2].instruction.type = type;
+    turn_candidates[2].instruction.direction_modifier =
+        (type == TurnType::Fork) ? DirectionModifier::SlightLeft : DirectionModifier::Left;
+    return turn_candidates;
+}
+
 // requires sorted candidates
 std::vector<EdgeBasedGraphFactory::TurnCandidate>
-EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
+EdgeBasedGraphFactory::optimizeCandidates(const EdgeID via_eid,
                                           std::vector<TurnCandidate> turn_candidates) const
 {
     BOOST_ASSERT_MSG(std::is_sorted(turn_candidates.begin(), turn_candidates.end(),
@@ -507,6 +712,12 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
     if (turn_candidates.size() <= 1)
         return turn_candidates;
 
+    TurnType type = checkForkAndEnd(via_eid, turn_candidates);
+    if (type != TurnType::Invalid)
+        return handleForkAndEnd(type, std::move(turn_candidates));
+
+    turn_candidates = optimizeRamps(via_eid, std::move(turn_candidates));
+
     const auto getLeft = [&turn_candidates](std::size_t index)
     {
         return (index + 1) % turn_candidates.size();
@@ -517,12 +728,14 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
     };
 
     // handle availability of multiple u-turns (e.g. street with separated small parking roads)
-    if (turn_candidates[0].instruction == TurnInstruction::UTurn && turn_candidates[0].angle == 0)
+    if (isUturn(turn_candidates[0].instruction) && turn_candidates[0].angle == 0)
     {
-        if (turn_candidates[getLeft(0)].instruction == TurnInstruction::UTurn)
-            turn_candidates[getLeft(0)].instruction = TurnInstruction::TurnSharpLeft;
-        if (turn_candidates[getRight(0)].instruction == TurnInstruction::UTurn)
-            turn_candidates[getRight(0)].instruction = TurnInstruction::TurnSharpRight;
+        if (isUturn(turn_candidates[getLeft(0)].instruction))
+            turn_candidates[getLeft(0)].instruction.direction_modifier =
+                DirectionModifier::SharpLeft;
+        if (isUturn(turn_candidates[getRight(0)].instruction))
+            turn_candidates[getRight(0)].instruction.direction_modifier =
+                DirectionModifier::SharpRight;
     }
 
     const auto keepStraight = [](double angle)
@@ -533,8 +746,8 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
     for (std::size_t turn_index = 0; turn_index < turn_candidates.size(); ++turn_index)
     {
         auto &turn = turn_candidates[turn_index];
-        if (turn.instruction > TurnInstruction::TurnSlightLeft ||
-            turn.instruction == TurnInstruction::UTurn)
+        if (!isBasic(turn.instruction.type) || isUturn(turn.instruction) ||
+            isOnRoundabout(turn.instruction))
             continue;
         auto &left = turn_candidates[getLeft(turn_index)];
         if (turn.angle == left.angle)
@@ -572,10 +785,12 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
             auto &candidate_at_begin = turn_candidates[conflict_begin];
             if (conflict_size == 2)
             {
-                if (turn.instruction == TurnInstruction::GoStraight)
+                if (turn.instruction.direction_modifier == DirectionModifier::Straight)
                 {
-                    if (instruction_left_of_end != TurnInstruction::TurnSlightLeft &&
-                        instruction_right_of_begin != TurnInstruction::TurnSlightRight)
+                    if (instruction_left_of_end.direction_modifier !=
+                            DirectionModifier::SlightLeft &&
+                        instruction_right_of_begin.direction_modifier !=
+                            DirectionModifier::SlightRight)
                     {
                         std::int32_t resolved_count = 0;
                         // uses side-effects in resolve
@@ -622,8 +837,8 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
                 if (isSlightTurn(turn.instruction) || isSharpTurn(turn.instruction))
                 {
                     auto resolve_direction =
-                        (turn.instruction == TurnInstruction::TurnSlightRight ||
-                         turn.instruction == TurnInstruction::TurnSharpLeft)
+                        (turn.instruction.direction_modifier == DirectionModifier::SlightRight ||
+                         turn.instruction.direction_modifier == DirectionModifier::SharpLeft)
                             ? RESOLVE_TO_RIGHT
                             : RESOLVE_TO_LEFT;
                     if (resolve_direction == RESOLVE_TO_RIGHT &&
@@ -688,8 +903,8 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
     return turn_candidates;
 }
 
-bool EdgeBasedGraphFactory::isObviousChoice(EdgeID via_eid,
-                                            std::size_t turn_index,
+bool EdgeBasedGraphFactory::isObviousChoice(const EdgeID via_eid,
+                                            const std::size_t turn_index,
                                             const std::vector<TurnCandidate> &turn_candidates) const
 {
     const auto getLeft = [&turn_candidates](std::size_t index)
@@ -707,8 +922,8 @@ bool EdgeBasedGraphFactory::isObviousChoice(EdgeID via_eid,
 
     const auto &candidate_to_the_right = turn_candidates[getRight(turn_index)];
 
-    const auto hasValidRatio = [](const TurnCandidate &left, const TurnCandidate &center,
-                                  const TurnCandidate &right)
+    const auto hasValidRatio = [this](const TurnCandidate &left, const TurnCandidate &center,
+                                      const TurnCandidate &right)
     {
         auto angle_left = (left.angle > 180) ? angularDeviation(left.angle, STRAIGHT_ANGLE) : 180;
         auto angle_right =
@@ -720,11 +935,31 @@ bool EdgeBasedGraphFactory::isObviousChoice(EdgeID via_eid,
                     : (angle_left > self_angle && angle_right / self_angle > DISTINCTION_RATIO));
     };
     // only valid turn
+    if (!isLowPriorityRoadClass(
+            m_node_based_graph->GetEdgeData(candidate.eid).road_classification.road_class))
+    {
+        bool is_only_normal_road = true;
+        BOOST_ASSERT(turn_candidates[0].instruction.type == TurnType::Turn &&
+                     turn_candidates[0].instruction.direction_modifier == DirectionModifier::UTurn);
+        for (size_t i = 0; i < turn_candidates.size(); ++i)
+        {
+            if (i == turn_index || turn_candidates[i].angle == 0) // skip self and u-turn
+                continue;
+            if (!isLowPriorityRoadClass(m_node_based_graph->GetEdgeData(turn_candidates[i].eid)
+                                            .road_classification.road_class))
+            {
+                is_only_normal_road = false;
+                break;
+            }
+        }
+        if (is_only_normal_road == true)
+            return true;
+    }
 
     return turn_candidates.size() == 1 ||
            // only non u-turn
            (turn_candidates.size() == 2 &&
-            candidate_to_the_left.instruction == TurnInstruction::UTurn) || // nearly straight turn
+            isUturn(candidate_to_the_left.instruction)) || // nearly straight turn
            angularDeviation(candidate.angle, STRAIGHT_ANGLE) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION ||
            hasValidRatio(candidate_to_the_left, candidate, candidate_to_the_right) ||
            (in_data.name_id != 0 && in_data.name_id == out_data.name_id &&
@@ -732,22 +967,59 @@ bool EdgeBasedGraphFactory::isObviousChoice(EdgeID via_eid,
 }
 
 std::vector<EdgeBasedGraphFactory::TurnCandidate>
-EdgeBasedGraphFactory::suppressTurns(EdgeID via_eid,
+EdgeBasedGraphFactory::suppressTurns(const EdgeID via_eid,
                                      std::vector<TurnCandidate> turn_candidates) const
 {
-    // remove invalid candidates
+    if (turn_candidates.size() == 3)
+    {
+        BOOST_ASSERT(turn_candidates[0].instruction.direction_modifier ==
+                     DirectionModifier::UTurn);
+        if (isLowPriorityRoadClass(m_node_based_graph->GetEdgeData(turn_candidates[1].eid)
+                                       .road_classification.road_class) &&
+            !isLowPriorityRoadClass(m_node_based_graph->GetEdgeData(turn_candidates[2].eid)
+                                        .road_classification.road_class))
+        {
+            if (angularDeviation(turn_candidates[2].angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE)
+            {
+                if (m_node_based_graph->GetEdgeData(turn_candidates[2].eid).name_id ==
+                    m_node_based_graph->GetEdgeData(via_eid).name_id)
+                {
+                    turn_candidates[2].instruction = TurnInstruction::NO_TURN();
+                }
+                else
+                {
+                    turn_candidates[2].instruction.type = TurnType::NewName;
+                }
+                return turn_candidates;
+            }
+        }
+        else if (isLowPriorityRoadClass(m_node_based_graph->GetEdgeData(turn_candidates[2].eid)
+                                            .road_classification.road_class) &&
+                 !isLowPriorityRoadClass(m_node_based_graph->GetEdgeData(turn_candidates[1].eid)
+                                             .road_classification.road_class))
+        {
+            if (angularDeviation(turn_candidates[1].angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE)
+            {
+                if (m_node_based_graph->GetEdgeData(turn_candidates[1].eid).name_id ==
+                    m_node_based_graph->GetEdgeData(via_eid).name_id)
+                {
+                    turn_candidates[1].instruction = TurnInstruction::NO_TURN();
+                }
+                else
+                {
+                    turn_candidates[1].instruction.type = TurnType::NewName;
+                }
+                return turn_candidates;
+            }
+        }
+    }
+
     BOOST_ASSERT_MSG(std::is_sorted(turn_candidates.begin(), turn_candidates.end(),
                                     [](const TurnCandidate &left, const TurnCandidate &right)
                                     {
                                         return left.angle < right.angle;
                                     }),
                      "Turn Candidates not sorted by angle.");
-    const auto end_valid = std::remove_if(turn_candidates.begin(), turn_candidates.end(),
-                                          [](const TurnCandidate &candidate)
-                                          {
-                                              return !candidate.valid;
-                                          });
-    turn_candidates.erase(end_valid, turn_candidates.end());
 
     const auto getLeft = [&turn_candidates](std::size_t index)
     {
@@ -777,56 +1049,73 @@ EdgeBasedGraphFactory::suppressTurns(EdgeID via_eid,
     for (std::size_t turn_index = 0; turn_index < turn_candidates.size(); ++turn_index)
     {
         auto &candidate = turn_candidates[turn_index];
+        if (!isBasic(candidate.instruction.type))
+            continue;
+
         const EdgeData &out_data = m_node_based_graph->GetEdgeData(candidate.eid);
-        if (candidate.valid && candidate.instruction != TurnInstruction::UTurn)
+        if (out_data.name_id == in_data.name_id && in_data.name_id != 0 &&
+            candidate.instruction.direction_modifier != DirectionModifier::UTurn &&
+            !has_obvious_with_same_name)
+        {
+            candidate.instruction.type = TurnType::Continue;
+        }
+        if (candidate.valid && !isUturn(candidate.instruction))
         {
             // TODO road category would be useful to indicate obviousness of turn
             // check if turn can be omitted or at least changed
             const auto &left = turn_candidates[getLeft(turn_index)];
             const auto &right = turn_candidates[getRight(turn_index)];
 
-            // make very slight instructions straight, if they are the only valid choice going with
+            // make very slight instructions straight, if they are the only valid choice going
+            // with
             // at most a slight turn
-            if (candidate.instruction < TurnInstruction::ReachViaLocation &&
-                (!isSlightTurn(getTurnDirection(left.angle)) || !left.valid) &&
-                (!isSlightTurn(getTurnDirection(right.angle)) || !right.valid) &&
+            if ((!isSlightModifier(getTurnDirection(left.angle)) || !left.valid) &&
+                (!isSlightModifier(getTurnDirection(right.angle)) || !right.valid) &&
                 angularDeviation(candidate.angle, STRAIGHT_ANGLE) < FUZZY_STRAIGHT_ANGLE)
-                candidate.instruction = TurnInstruction::GoStraight;
+                candidate.instruction.direction_modifier = DirectionModifier::Straight;
 
             // TODO this smaller comparison for turns is DANGEROUS, has to be revised if turn
             // instructions change
-            if (candidate.instruction < TurnInstruction::ReachViaLocation)
+            if (in_data.travel_mode ==
+                out_data.travel_mode) // make sure to always announce mode changes
             {
-                if (in_data.travel_mode ==
-                    out_data.travel_mode) // make sure to always announce mode changes
+                if (isObviousChoice(via_eid, turn_index, turn_candidates))
                 {
-                    if (isObviousChoice(via_eid, turn_index, turn_candidates))
-                    {
 
-                        if (in_data.name_id == out_data.name_id) // same road
-                        {
-                            candidate.instruction = TurnInstruction::NoTurn;
-                        }
-
-                        else if (!has_obvious_with_same_name)
-                        {
-                            // TODO discuss, we might want to keep the current name of the turn. But
-                            // this would mean emitting a turn when you just keep on a road
-                            candidate.instruction = TurnInstruction::NameChanges;
-                        }
-                        else if (candidate.angle < obvious_with_same_name_angle)
-                            candidate.instruction = TurnInstruction::TurnSlightRight;
-                        else
-                            candidate.instruction = TurnInstruction::TurnSlightLeft;
-                    }
-                    else if (candidate.instruction == TurnInstruction::GoStraight &&
-                             has_obvious_with_same_name)
+                    if (in_data.name_id == out_data.name_id) // same road
                     {
-                        if (candidate.angle < obvious_with_same_name_angle)
-                            candidate.instruction = TurnInstruction::TurnSlightRight;
-                        else
-                            candidate.instruction = TurnInstruction::TurnSlightLeft;
+                        candidate.instruction.type = TurnType::Suppressed;
                     }
+
+                    else if (!has_obvious_with_same_name)
+                    {
+                        // TODO discuss, we might want to keep the current name of the turn. But
+                        // this would mean emitting a turn when you just keep on a road
+                        if (isRampClass(in_data.road_classification.road_class) &&
+                            !isRampClass(out_data.road_classification.road_class))
+                        {
+                            candidate.instruction.type = TurnType::Merge;
+                            candidate.instruction.direction_modifier =
+                                mirrorDirectionModifier(candidate.instruction.direction_modifier);
+                        }
+                        else
+                        {
+                            if (engine::guidance::canBeSuppressed(candidate.instruction.type))
+                                candidate.instruction.type = TurnType::NewName;
+                        }
+                    }
+                    else if (candidate.angle < obvious_with_same_name_angle)
+                        candidate.instruction.direction_modifier = DirectionModifier::SlightRight;
+                    else
+                        candidate.instruction.direction_modifier = DirectionModifier::SlightLeft;
+                }
+                else if (candidate.instruction.direction_modifier == DirectionModifier::Straight &&
+                         has_obvious_with_same_name)
+                {
+                    if (candidate.angle < obvious_with_same_name_angle)
+                        candidate.instruction.direction_modifier = DirectionModifier::SlightRight;
+                    else
+                        candidate.instruction.direction_modifier = DirectionModifier::SlightLeft;
                 }
             }
         }
@@ -835,7 +1124,7 @@ EdgeBasedGraphFactory::suppressTurns(EdgeID via_eid,
 }
 
 std::vector<EdgeBasedGraphFactory::TurnCandidate>
-EdgeBasedGraphFactory::getTurnCandidates(NodeID from_node, EdgeID via_eid)
+EdgeBasedGraphFactory::getTurnCandidates(const NodeID from_node, const EdgeID via_eid)
 {
     std::vector<TurnCandidate> turn_candidates;
     const NodeID turn_node = m_node_based_graph->GetTarget(via_eid);
@@ -843,6 +1132,7 @@ EdgeBasedGraphFactory::getTurnCandidates(NodeID from_node, EdgeID via_eid)
         m_restriction_map->CheckForEmanatingIsOnlyTurn(from_node, turn_node);
     const bool is_barrier_node = m_barrier_nodes.find(turn_node) != m_barrier_nodes.end();
 
+    bool has_non_roundabout = false, has_roundabout_entry;
     for (const EdgeID onto_edge : m_node_based_graph->GetAdjacentEdgeRange(turn_node))
     {
         bool turn_is_valid = true;
@@ -905,21 +1195,40 @@ EdgeBasedGraphFactory::getTurnCandidates(NodeID from_node, EdgeID via_eid)
 
         // unpack first node of second segment if packed
 
-        const auto first_coordinate =
-            getRepresentativeCoordinate(from_node, turn_node, via_eid, INVERT);
-        const auto third_coordinate =
-            getRepresentativeCoordinate(turn_node, to_node, onto_edge, !INVERT);
+        const auto first_coordinate = getRepresentativeCoordinate(
+            from_node, turn_node, via_eid, INVERT, m_compressed_edge_container, m_node_info_list);
+        const auto third_coordinate = getRepresentativeCoordinate(
+            turn_node, to_node, onto_edge, !INVERT, m_compressed_edge_container, m_node_info_list);
 
         const auto angle = util::coordinate_calculation::computeAngle(
             first_coordinate, m_node_info_list[turn_node], third_coordinate);
 
         const auto turn = AnalyzeTurn(from_node, via_eid, turn_node, onto_edge, to_node, angle);
 
+        if (turn_is_valid && !entersRoundabout(turn))
+            has_non_roundabout = true;
+        else if (turn_is_valid)
+            has_roundabout_entry = true;
+
         auto confidence = getTurnConfidence(angle, turn);
         if (!turn_is_valid)
             confidence *= 0.8; // makes invalid turns more likely to be resolved in conflicts
 
         turn_candidates.push_back({onto_edge, turn_is_valid, angle, turn, confidence});
+    }
+
+    if (has_non_roundabout && has_roundabout_entry)
+    {
+        for (auto &candidate : turn_candidates)
+        {
+            if (entersRoundabout(candidate.instruction))
+            {
+                if (candidate.instruction.type == TurnType::EnterRotary)
+                    candidate.instruction.type = TurnType::EnterRotaryAtExit;
+                if (candidate.instruction.type == TurnType::EnterRoundabout)
+                    candidate.instruction.type = TurnType::EnterRoundaboutAtExit;
+            }
+        }
     }
 
     const auto ByAngle = [](const TurnCandidate &first, const TurnCandidate second)
@@ -990,9 +1299,11 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
 
     const EdgeData &data1 = m_node_based_graph->GetEdgeData(edge1);
     const EdgeData &data2 = m_node_based_graph->GetEdgeData(edge2);
+    bool from_ramp = isRampClass(data1.road_classification.road_class);
+    bool to_ramp = isRampClass(data2.road_classification.road_class);
     if (node_u == node_w)
     {
-        return TurnInstruction::UTurn;
+        return {TurnType::Turn, DirectionModifier::UTurn};
     }
 
     // roundabouts need to be handled explicitely
@@ -1002,9 +1313,9 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
         if (1 == m_node_based_graph->GetDirectedOutDegree(node_v))
         {
             // No turn possible.
-            return TurnInstruction::NoTurn;
+            return TurnInstruction::NO_TURN();
         }
-        return TurnInstruction::StayOnRoundAbout;
+        return TurnInstruction::REMAIN_ROUNDABOUT(getTurnDirection(angle));
     }
     // Does turn start or end on roundabout?
     if (data1.roundabout || data2.roundabout)
@@ -1012,97 +1323,23 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
         // We are entering the roundabout
         if ((!data1.roundabout) && data2.roundabout)
         {
-            return TurnInstruction::EnterRoundAbout;
+            return TurnInstruction::ENTER_ROUNDABOUT(getTurnDirection(angle));
         }
         // We are leaving the roundabout
         if (data1.roundabout && (!data2.roundabout))
         {
-            return TurnInstruction::LeaveRoundAbout;
+            return TurnInstruction::EXIT_ROUNDABOUT(getTurnDirection(angle));
         }
+    }
+
+    if (!from_ramp && to_ramp)
+    {
+        return {TurnType::Ramp, getTurnDirection(angle)};
     }
 
     // assign a designated turn angle instruction purely based on the angle
-    return getTurnDirection(angle);
+    return {TurnType::Turn, getTurnDirection(angle)};
 }
 
-QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
-                                                             const NodeID tgt,
-                                                             const EdgeID via_eid,
-                                                             bool INVERTED) const
-{
-    if (m_compressed_edge_container.HasEntryForID(via_eid))
-    {
-        util::Coordinate prev = util::Coordinate(m_node_info_list[INVERTED ? tgt : src].lon,
-                                                 m_node_info_list[INVERTED ? tgt : src].lat),
-                         cur;
-        // walk along the edge for the first 5 meters
-        const auto &geometry = m_compressed_edge_container.GetBucketReference(via_eid);
-        double dist = 0;
-        double this_dist = 0;
-        NodeID prev_id = INVERTED ? tgt : src;
-
-        const auto selectBestCandidate = [this](const NodeID current, const double current_distance,
-                                                const NodeID previous,
-                                                const double previous_distance)
-        {
-            if (current_distance < DESIRED_SEGMENT_LENGTH ||
-                current_distance - DESIRED_SEGMENT_LENGTH <
-                    DESIRED_SEGMENT_LENGTH - previous_distance ||
-                previous_distance < MINIMAL_SEGMENT_LENGTH)
-            {
-                return m_node_info_list[current];
-            }
-            else
-            {
-                return m_node_info_list[previous];
-            }
-        };
-
-        if (INVERTED)
-        {
-            for (auto itr = geometry.rbegin(), end = geometry.rend(); itr != end; ++itr)
-            {
-                const auto compressed_node = *itr;
-                cur = util::Coordinate(m_node_info_list[compressed_node.node_id].lon,
-                                       m_node_info_list[compressed_node.node_id].lat);
-                this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
-                if (dist + this_dist > DESIRED_SEGMENT_LENGTH)
-                {
-                    return selectBestCandidate(compressed_node.node_id, dist + this_dist, prev_id,
-                                               dist);
-                }
-                dist += this_dist;
-                prev = cur;
-                prev_id = compressed_node.node_id;
-            }
-            cur = util::Coordinate(m_node_info_list[src].lon, m_node_info_list[src].lat);
-            this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
-            return selectBestCandidate(src, dist + this_dist, prev_id, dist);
-        }
-        else
-        {
-            for (auto itr = geometry.begin(), end = geometry.end(); itr != end; ++itr)
-            {
-                const auto compressed_node = *itr;
-                cur = util::Coordinate(m_node_info_list[compressed_node.node_id].lon,
-                                       m_node_info_list[compressed_node.node_id].lat);
-                this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
-                if (dist + this_dist > DESIRED_SEGMENT_LENGTH)
-                {
-                    return selectBestCandidate(compressed_node.node_id, dist + this_dist, prev_id,
-                                               dist);
-                }
-                dist += this_dist;
-                prev = cur;
-                prev_id = compressed_node.node_id;
-            }
-            cur = util::Coordinate(m_node_info_list[tgt].lon, m_node_info_list[tgt].lat);
-            this_dist = util::coordinate_calculation::haversineDistance(prev, cur);
-            return selectBestCandidate(tgt, dist + this_dist, prev_id, dist);
-        }
-    }
-    // default: If the edge is very short, or we do not have a compressed geometry
-    return m_node_info_list[INVERTED ? src : tgt];
-}
 } // namespace extractor
 } // namespace osrm

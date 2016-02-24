@@ -257,6 +257,15 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     return angle;
 }
 
+Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
+{
+    BOOST_ASSERT(0 <= factor && factor <= 1.0);
+    return {from.lon + toFixed(FloatLongitude(
+                           factor * static_cast<double>(toFloating(to.lon - from.lon)))),
+            from.lat + toFixed(FloatLatitude(
+                           factor * static_cast<double>(toFloating(to.lat - from.lat))))};
+}
+
 namespace mercator
 {
 FloatLatitude yToLat(const double value)
@@ -276,6 +285,7 @@ double latToY(const FloatLatitude latitude)
            std::log(std::tan((pi<double>() / 4.) +
                              static_cast<double>(latitude) * (pi<double>() / 180.) / 2.));
 }
+
 } // ns mercato // ns mercatorr
 } // ns coordinate_calculation
 } // ns util
