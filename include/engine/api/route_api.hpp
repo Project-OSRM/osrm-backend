@@ -12,6 +12,7 @@
 #include "engine/guidance/assemble_geometry.hpp"
 #include "engine/guidance/assemble_overview.hpp"
 #include "engine/guidance/assemble_steps.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/internal_route_result.hpp"
 
@@ -67,7 +68,7 @@ class RouteAPI : public BaseAPI
     }
 
     util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
-                                 const std::vector<std::vector<PathData>> &unpacked_path_segments,
+                                 std::vector<std::vector<PathData>> unpacked_path_segments,
                                  const std::vector<bool> &source_traversed_in_reverse,
                                  const std::vector<bool> &target_traversed_in_reverse) const
     {
@@ -76,10 +77,13 @@ class RouteAPI : public BaseAPI
         auto number_of_legs = segment_end_coordinates.size();
         legs.reserve(number_of_legs);
         leg_geometries.reserve(number_of_legs);
+
+        unpacked_path_segments = guidance::postProcess( std::move(unpacked_path_segments) );
         for (auto idx : util::irange(0UL, number_of_legs))
         {
             const auto &phantoms = segment_end_coordinates[idx];
             const auto &path_data = unpacked_path_segments[idx];
+
             const bool reversed_source = source_traversed_in_reverse[idx];
             const bool reversed_target = target_traversed_in_reverse[idx];
 
