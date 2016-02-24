@@ -19,6 +19,10 @@ const constexpr long double EARTH_RADIUS = 6372797.560856;
 namespace coordinate_calculation
 {
 
+//! Projects both coordinates and takes the euclidean distance of the projected points
+// Does not return meters!
+double euclideanDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
+
 double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
