@@ -24,7 +24,7 @@ namespace guidance
 namespace detail
 {
 // FIXME move implementation to cpp
-inline StepManeuver stepManeuverFromGeometry(const TurnInstruction instruction,
+inline StepManeuver stepManeuverFromGeometry(TurnInstruction instruction,
                                              const LegGeometry &leg_geometry,
                                              const std::size_t segment_index,
                                              const unsigned exit)
@@ -45,7 +45,9 @@ inline StepManeuver stepManeuverFromGeometry(const TurnInstruction instruction,
 
     return StepManeuver{turn_coordinate, pre_turn_bearing, post_turn_bearing, instruction, exit};
 }
+
 }
+
 
 template <typename DataFacadeT>
 std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
