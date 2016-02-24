@@ -17,6 +17,18 @@ namespace util
 namespace coordinate_calculation
 {
 
+double euclideanDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
+{
+    const double x1 = static_cast<double>(toFloating(coordinate_1.lon));
+    const double y1 = mercator::latToY(toFloating(coordinate_1.lat));
+    const double x2 = static_cast<double>(toFloating(coordinate_2.lon));
+    const double y2 = mercator::latToY(toFloating(coordinate_2.lat));
+    const double dx = x1 - x2;
+    const double dy = y1 - y2;
+
+    return std::sqrt(dx * dx + dy * dy);
+}
+
 double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
     auto lon1 = static_cast<int>(coordinate_1.lon);
