@@ -4,7 +4,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "engine/guidance/turn_instruction.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -280,7 +280,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const extractor::TurnInstruction turn_instruction =
+                const guidance::TurnInstruction turn_instruction =
                     facade->GetTurnInstructionForEdgeID(ed.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
@@ -290,8 +290,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 if (!facade->EdgeIsCompressed(ed.id))
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
-                    unpacked_path.push_back(PathData {facade->GetGeometryIndexForEdgeID(ed.id), name_index,
-                                               ed.distance, turn_instruction, travel_mode});
+                    unpacked_path.push_back(PathData{facade->GetGeometryIndexForEdgeID(ed.id),
+                                                     name_index, ed.distance, turn_instruction,
+                                                     travel_mode,INVALID_EXIT_NR});
                 }
                 else
                 {
@@ -312,9 +313,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     BOOST_ASSERT(start_index <= end_index);
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
-                        unpacked_path.push_back(PathData {id_vector[i], name_index,
-                                                   0, extractor::TurnInstruction::NoTurn,
-                                                   travel_mode});
+                        unpacked_path.push_back(PathData{id_vector[i], name_index, 0,
+                                                         guidance::TurnInstruction::NO_TURN(),
+                                                         travel_mode,INVALID_EXIT_NR});
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().duration_until_turn = ed.distance;
@@ -362,10 +363,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
                 unpacked_path.emplace_back(
                     PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                             0, extractor::TurnInstruction::NoTurn,
+                             0, guidance::TurnInstruction::NO_TURN(),
                              target_traversed_in_reverse
                                  ? phantom_node_pair.target_phantom.backward_travel_mode
-                                 : phantom_node_pair.target_phantom.forward_travel_mode});
+                                 : phantom_node_pair.target_phantom.forward_travel_mode,INVALID_EXIT_NR});
             }
         }
 
@@ -382,7 +383,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             // looks like a trivially true check but tests for underflow
             BOOST_ASSERT(last_index > second_to_last_index);
 
-            if (unpacked_path[last_index].turn_via_node == unpacked_path[second_to_last_index].turn_via_node)
+            if (unpacked_path[last_index].turn_via_node ==
+                unpacked_path[second_to_last_index].turn_via_node)
             {
                 unpacked_path.pop_back();
             }

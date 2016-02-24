@@ -67,7 +67,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::shared_ptr<util::ShM<util::Coordinate, false>::vector> m_coordinate_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
-    util::ShM<extractor::TurnInstruction, false>::vector m_turn_instruction_list;
+    util::ShM<guidance::TurnInstruction, false>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, false>::vector m_travel_mode_list;
     util::ShM<char, false>::vector m_names_char_list;
     util::ShM<bool, false>::vector m_edge_is_compressed;
@@ -347,7 +347,7 @@ class InternalDataFacade final : public BaseDataFacade
         return m_edge_is_compressed.at(id);
     }
 
-    extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }

@@ -1,17 +1,19 @@
-#ifndef TURN_INSTRUCTIONS_HPP
-#define TURN_INSTRUCTIONS_HPP
+#ifndef OSRM_GUIDANCE_INSTRUCTION_SYMBOLS_HPP
+#define OSRM_GUIDANCE_INSTRUCTION_SYMBOLS_HPP
 
-#include <algorithm>
-#include <cmath>
+#include "guidance/turn_instruction.hpp"
+#include "guidance/guidance_toolkit.hpp"
 
-#include <boost/assert.hpp>
+#include "util/simple_logger.hpp"
 
 namespace osrm
 {
-namespace extractor
+namespace engine
+{
+namespace guidance
 {
 
-enum class TurnInstruction : unsigned char
+enum class InstructionSymbol : unsigned char
 {
     NoTurn = 0,
     GoStraight,
@@ -37,6 +39,60 @@ enum class TurnInstruction : unsigned char
     AccessRestrictionPenalty = 129
 };
 
+inline InstructionSymbol directTranslation(const DirectionModifier direction_modifier)
+{
+    const constexpr InstructionSymbol translation[] = {
+        InstructionSymbol::UTurn,      InstructionSymbol::TurnSharpRight,
+        InstructionSymbol::TurnRight,  InstructionSymbol::TurnSlightRight,
+        InstructionSymbol::GoStraight, InstructionSymbol::TurnSlightLeft,
+        InstructionSymbol::TurnLeft,   InstructionSymbol::TurnSharpLeft};
+    return translation[direction_modifier];
+}
+
+inline bool canTranslateDirectly(const TurnType type)
+{
+    return type == TurnType::Continue   // remain on a street
+           || type == TurnType::NewName // no turn, but name changes
+           || type == TurnType::Turn    // basic turn
+           || type == TurnType::Ramp    // special turn (highway ramp exits)
+           || type == TurnType::Fork    // fork road splitting up
+           || type == TurnType::EndOfRoad || type == TurnType::Restriction ||
+           type == TurnType::Merge || type == TurnType::Notification;
+}
+
+inline InstructionSymbol getSymbol(const TurnInstruction instruction)
+{
+    if (canTranslateDirectly(instruction.type))
+    {
+        return directTranslation(instruction.direction_modifier);
+    }
+    else if (instruction.type == TurnType::EnterRoundabout ||
+             instruction.type == TurnType::EnterRotary)
+    {
+        return InstructionSymbol::EnterRoundAbout;
+    }
+    else
+    {
+        util::SimpleLogger().Write(logDEBUG)
+            << "Unreasonable request for symbol: "
+            << std::to_string(static_cast<int>(instruction.type)) << " "
+            << std::to_string(static_cast<int>(instruction.direction_modifier));
+        return InstructionSymbol::NoTurn;
+    }
+}
+
+inline InstructionSymbol getLocationSymbol(const LocationType type)
+{
+    if (type == LocationType::Start)
+        return InstructionSymbol::HeadOn;
+    if (type == LocationType::Intermediate)
+        return InstructionSymbol::ReachViaLocation;
+    if (type == LocationType::Destination)
+        return InstructionSymbol::ReachedYourDestination;
+    return InstructionSymbol::NoTurn;
+}
+
+#if 0
 // shiftable turns to left and right
 const constexpr bool shiftable_left[] = {false, false, true, true, true, false, false, true, true};
 const constexpr bool shiftable_right[] = {false, false, true, true, false, false, true, true, true};
@@ -178,5 +234,10 @@ inline bool isConflict(const TurnInstruction first, const TurnInstruction second
 }
 }
 }
+#endif
 
-#endif /* TURN_INSTRUCTIONS_HPP */
+} // namespace guidance
+} // namespace engine
+} // namespace osrm
+
+#endif /* OSRM_GUIDANCE_INSTRUCTION_SYMBOLS_HPP */

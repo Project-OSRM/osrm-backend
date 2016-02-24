@@ -3,8 +3,10 @@
 
 #include "util/coordinate.hpp"
 
-#include <string>
+#include <iostream>
 #include <utility>
+
+#include <boost/assert.hpp>
 
 namespace osrm
 {
@@ -65,6 +67,8 @@ double bearing(const Coordinate first_coordinate,
 double computeAngle(const Coordinate first,
                     const Coordinate second,
                     const Coordinate third);
+
+Coordinate interpolateLinear( double factor, const Coordinate from, const Coordinate to );
 
 namespace mercator
 {
