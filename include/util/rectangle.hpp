@@ -26,6 +26,13 @@ struct RectangleInt2D
     {
     }
 
+    RectangleInt2D(int32_t min_lat, int32_t max_lat, int32_t min_lon, int32_t max_lon)
+        : min_lon(min_lon),
+          max_lon(max_lon),
+          min_lat(min_lat), max_lat(max_lat)
+    {
+    }
+
     int32_t min_lon, max_lon;
     int32_t min_lat, max_lat;
 
