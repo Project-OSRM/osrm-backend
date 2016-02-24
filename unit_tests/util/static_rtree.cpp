@@ -1,7 +1,6 @@
 #include "util/coordinate_calculation.hpp"
 #include "engine/geospatial_query.hpp"
 #include "util/static_rtree.hpp"
-#include "extractor/query_node.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "util/typedefs.hpp"
 
@@ -109,12 +108,10 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         {
             int lon = lon_udist(g);
             int lat = lat_udist(g);
-            nodes.emplace_back(
-                extractor::QueryNode(FixedLongitude(lat), FixedLatitude(lon), OSMNodeID(i)));
             coords->emplace_back(Coordinate(FixedLongitude(lon), FixedLatitude(lat)));
         }
 
-        std::uniform_int_distribution<> edge_udist(0, nodes.size() - 1);
+        std::uniform_int_distribution<> edge_udist(0, coords->size() - 1);
 
         std::unordered_set<std::pair<unsigned, unsigned>, TupleHash> used_edges;
 
@@ -133,7 +130,6 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         }
     }
 
-    std::vector<extractor::QueryNode> nodes;
     std::shared_ptr<std::vector<Coordinate>> coords;
     std::vector<TestData> edges;
 };
@@ -148,8 +144,6 @@ struct GraphFixture
         for (unsigned i = 0; i < input_coords.size(); i++)
         {
             coords->emplace_back(input_coords[i].first, input_coords[i].second);
-            nodes.emplace_back(extractor::QueryNode(toFixed(input_coords[i].first),
-                                                    toFixed(input_coords[i].second), OSMNodeID(i)));
         }
 
         for (const auto &pair : input_edges)
@@ -167,7 +161,6 @@ struct GraphFixture
         }
     }
 
-    std::vector<extractor::QueryNode> nodes;
     std::shared_ptr<std::vector<Coordinate>> coords;
     std::vector<TestData> edges;
 };
@@ -184,6 +177,7 @@ typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
                            TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>
     TestRandomGraphFixture_MultipleLevels;
+typedef RandomGraphFixture<10, 30> TestRandomGraphFixture_10_30;
 
 template <typename RTreeT>
 void simple_verify_rtree(RTreeT &rtree,
@@ -248,18 +242,11 @@ void build_rtree(const std::string &prefix,
 {
     nodes_path = prefix + ".ramIndex";
     leaves_path = prefix + ".fileIndex";
-    const std::string coords_path = prefix + ".nodes";
 
-    boost::filesystem::ofstream node_stream(coords_path, std::ios::binary);
-    const auto num_nodes = static_cast<unsigned>(fixture->nodes.size());
-    node_stream.write((char *)&num_nodes, sizeof(unsigned));
-    node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(extractor::QueryNode));
-    node_stream.close();
-
-    RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->nodes);
+    RTreeT r(fixture->edges, nodes_path, leaves_path, *fixture->coords);
 }
 
-template <typename FixtureT, typename RTreeT = TestStaticRTree>
+template <typename RTreeT = TestStaticRTree, typename FixtureT>
 void construction_test(const std::string &prefix, FixtureT *fixture)
 {
     std::string leaves_path;
@@ -270,6 +257,12 @@ void construction_test(const std::string &prefix, FixtureT *fixture)
 
     simple_verify_rtree(rtree, fixture->coords, fixture->edges);
     sampling_verify_rtree(rtree, lsnn, *fixture->coords, 100);
+}
+
+BOOST_FIXTURE_TEST_CASE(construct_tiny, TestRandomGraphFixture_10_30)
+{
+    using TinyTestTree = StaticRTree<TestData, std::vector<Coordinate>, false, 2, 1>;
+    construction_test<TinyTestTree>("test_tiny", this);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_half_leaf_test, TestRandomGraphFixture_LeafHalfFull)
@@ -307,14 +300,8 @@ BOOST_AUTO_TEST_CASE(regression_test)
         {
             Coord{FloatLongitude{0.0}, FloatLatitude{40.0}}, //
             Coord{FloatLongitude{5.0}, FloatLatitude{35.0}}, //
-            Coord{FloatLongitude{5.0},
-                  FloatLatitude{
-                      5.0,
-                  }}, //
-            Coord{FloatLongitude{10.0},
-                  FloatLatitude{
-                      0.0,
-                  }},                                          //
+            Coord{FloatLongitude{5.0}, FloatLatitude{5.0,}}, //
+            Coord{FloatLongitude{10.0}, FloatLatitude{0.0}}, //
             Coord{FloatLongitude{10.0}, FloatLatitude{20.0}},  //
             Coord{FloatLongitude{5.0}, FloatLatitude{20.0}},   //
             Coord{FloatLongitude{100.0}, FloatLatitude{40.0}}, //
