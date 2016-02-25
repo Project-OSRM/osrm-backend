@@ -69,6 +69,16 @@ enum TurnType // at the moment we can support 32 turn types, without increasing 
     Notification            // Travel Mode Changes`
 };
 
+inline bool isValidModifier( const TurnType type, const DirectionModifier modifier )
+{
+  if( type == TurnType::Location && 
+      modifier != DirectionModifier::Left
+      && modifier != DirectionModifier::Straight
+      && modifier != DirectionModifier::Right )
+    return false;
+  return true;
+}
+
 const constexpr char *turn_type_names[] = {"invalid",
                                            "no turn",
                                            "waypoint",
