@@ -133,7 +133,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 }
 
 util::json::Object makeRouteStep(guidance::RouteStep &&step,
-                                 boost::optional<util::json::Value> geometry)
+                                 util::json::Value geometry)
 {
     util::json::Object route_step;
     route_step.values["distance"] = step.distance;
@@ -141,10 +141,7 @@ util::json::Object makeRouteStep(guidance::RouteStep &&step,
     route_step.values["name"] = std::move(step.name);
     route_step.values["mode"] = detail::modeToString(step.mode);
     route_step.values["maneuver"] = makeStepManeuver(step.maneuver);
-    if (geometry)
-    {
-        route_step.values["geometry"] = std::move(*geometry);
-    }
+    route_step.values["geometry"] = std::move(geometry);
     return route_step;
 }
 
@@ -184,24 +181,20 @@ util::json::Object makeRouteLeg(guidance::RouteLeg &&leg, util::json::Array &&st
 }
 
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> &&legs,
-                                const std::vector<guidance::LegGeometry> &leg_geometries)
+                                std::vector<util::json::Value> step_geometries)
 {
     util::json::Array json_legs;
+    auto step_geometry_iter = step_geometries.begin();
     for (const auto idx : boost::irange(0UL, legs.size()))
     {
         auto &&leg = std::move(legs[idx]);
-        const auto &leg_geometry = leg_geometries[idx];
         util::json::Array json_steps;
         json_steps.values.reserve(leg.steps.size());
-        const auto begin_iter = leg_geometry.locations.begin();
         std::transform(
             std::make_move_iterator(leg.steps.begin()), std::make_move_iterator(leg.steps.end()),
-            std::back_inserter(json_steps.values), [&begin_iter](guidance::RouteStep &&step)
+            std::back_inserter(json_steps.values), [&step_geometry_iter](guidance::RouteStep &&step)
             {
-                // FIXME we only support polyline here
-                auto geometry = boost::make_optional<util::json::Value>(
-                    makePolyline(begin_iter + step.geometry_begin, begin_iter + step.geometry_end));
-                return makeRouteStep(std::move(step), std::move(geometry));
+                return makeRouteStep(std::move(step), std::move(*step_geometry_iter++));
             });
         json_legs.values.push_back(makeRouteLeg(std::move(leg), std::move(json_steps)));
     }
