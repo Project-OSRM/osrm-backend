@@ -31,59 +31,8 @@ struct ExtractionWay
         is_startpoint = true;
         is_access_restricted = false;
         name.clear();
-        forward_travel_mode = TRAVEL_MODE_DEFAULT;
-        backward_travel_mode = TRAVEL_MODE_DEFAULT;
-    }
-
-    enum Directions
-    {
-        notSure = 0,
-        oneway,
-        bidirectional,
-        opposite
-    };
-
-    // These accessor methods exists to support the depreciated "way.direction" access
-    // in LUA. Since the direction attribute was removed from ExtractionWay, the
-    // accessors translate to/from the mode attributes.
-    void set_direction(const Directions m)
-    {
-        if (Directions::oneway == m)
-        {
-            forward_travel_mode = TRAVEL_MODE_DEFAULT;
-            backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
-        }
-        else if (Directions::opposite == m)
-        {
-            forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
-            backward_travel_mode = TRAVEL_MODE_DEFAULT;
-        }
-        else if (Directions::bidirectional == m)
-        {
-            forward_travel_mode = TRAVEL_MODE_DEFAULT;
-            backward_travel_mode = TRAVEL_MODE_DEFAULT;
-        }
-    }
-
-    Directions get_direction() const
-    {
-        if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode &&
-            TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
-        {
-            return Directions::bidirectional;
-        }
-        else if (TRAVEL_MODE_INACCESSIBLE != forward_travel_mode)
-        {
-            return Directions::oneway;
-        }
-        else if (TRAVEL_MODE_INACCESSIBLE != backward_travel_mode)
-        {
-            return Directions::opposite;
-        }
-        else
-        {
-            return Directions::notSure;
-        }
+        forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
     }
 
     // These accessors exists because it's not possible to take the address of a bitfield,
