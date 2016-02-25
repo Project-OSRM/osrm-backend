@@ -149,11 +149,6 @@ local max = math.max
 
 local speed_reduction = 0.8
 
---modes
-local mode_normal = 1
-local mode_ferry = 2
-local mode_movable_bridge = 3
-
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
     vector:Add(v)
@@ -248,6 +243,9 @@ function way_function (way, result)
     return
   end
 
+  result.forward_mode = mode.driving
+  result.backward_mode = mode.driving
+
   -- handling ferries and piers
   local route_speed = speed_profile[route]
   if (route_speed and route_speed > 0) then
@@ -256,8 +254,8 @@ function way_function (way, result)
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
     end
-    result.forward_mode = mode_ferry
-    result.backward_mode = mode_ferry
+    result.forward_mode = mode.ferry
+    result.backward_mode = mode.ferry
     result.forward_speed = route_speed
     result.backward_speed = route_speed
   end
@@ -271,8 +269,8 @@ function way_function (way, result)
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
     end
-    result.forward_mode = mode_movable_bridge
-    result.backward_mode = mode_movable_bridge
+    result.forward_mode = mode.movable_bridge
+    result.backward_mode = mode.movable_bridge
     result.forward_speed = bridge_speed
     result.backward_speed = bridge_speed
   end
@@ -378,14 +376,14 @@ function way_function (way, result)
   -- Set direction according to tags on way
   if obey_oneway then
     if oneway == "-1" then
-      result.forward_mode = 0
+      result.forward_mode = mode.inaccessible
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
-      result.backward_mode = 0
+      result.backward_mode = mode.inaccessible
     end
   end
 
@@ -393,7 +391,7 @@ function way_function (way, result)
   local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward"))
   local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward"))
   if maxspeed_forward and maxspeed_forward > 0 then
-    if 0 ~= result.forward_mode and 0 ~= result.backward_mode then
+    if mode.inaccessible ~= result.forward_mode and mode.inaccessible ~= result.backward_mode then
       result.backward_speed = result.forward_speed
     end
     result.forward_speed = maxspeed_forward
@@ -408,15 +406,15 @@ function way_function (way, result)
   local advisory_backward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:backward"))
   -- apply bi-directional advisory speed first
   if advisory_speed and advisory_speed > 0 then
-    if 0 ~= result.forward_mode then
+    if mode.inaccessible ~= result.forward_mode then
       result.forward_speed = advisory_speed
     end
-    if 0 ~= result.backward_mode then
+    if mode.inaccessible ~= result.backward_mode then
       result.backward_speed = advisory_speed
     end
   end
   if advisory_forward and advisory_forward > 0 then
-    if 0 ~= result.forward_mode and 0 ~= result.backward_mode then
+    if mode.inaccessible ~= result.forward_mode and mode.inaccessible ~= result.backward_mode then
       result.backward_speed = result.forward_speed
     end
     result.forward_speed = advisory_forward
@@ -439,7 +437,7 @@ function way_function (way, result)
     end
   end
 
-  local is_bidirectional = result.forward_mode ~= 0 and result.backward_mode ~= 0
+  local is_bidirectional = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible
 
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
@@ -461,7 +459,7 @@ function way_function (way, result)
   end
 
   -- only allow this road as start point if it not a ferry
-  result.is_startpoint = result.forward_mode == mode_normal or result.backward_mode == mode_normal
+  result.is_startpoint = result.forward_mode == mode.driving or result.backward_mode == mode.driving
 end
 
 function turn_function (angle)
