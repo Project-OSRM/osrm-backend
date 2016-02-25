@@ -171,13 +171,17 @@ inline bool entersRoundabout(const TurnInstruction instruction)
     return (instruction.type == TurnType::EnterRoundabout ||
             instruction.type == TurnType::EnterRotary ||
             instruction.type == TurnType::EnterRoundaboutAtExit ||
-            instruction.type == TurnType::EnterRotaryAtExit);
+            instruction.type == TurnType::EnterRotaryAtExit ||
+            instruction.type == TurnType::EnterAndExitRoundabout ||
+            instruction.type == TurnType::EnterAndExitRotary);
 }
 
 inline bool leavesRoundabout(const TurnInstruction instruction)
 {
     return (instruction.type == TurnType::ExitRoundabout ||
-            instruction.type == TurnType::ExitRotary);
+            instruction.type == TurnType::ExitRotary ||
+            instruction.type == TurnType::EnterAndExitRoundabout ||
+            instruction.type == TurnType::EnterAndExitRotary);
 }
 
 inline bool staysOnRoundabout(const TurnInstruction instruction)
@@ -384,7 +388,7 @@ inline DirectionModifier bearingToDirectionModifier(const std::string &bearing)
 
 inline DirectionModifier bearingToDirectionModifier(const double angle)
 {
-    return bearingToDirectionModifier( util::bearing::get(angle) );
+    return bearingToDirectionModifier(util::bearing::get(angle));
 }
 
 inline bool isHighway(FunctionalRoadClass road_class)
