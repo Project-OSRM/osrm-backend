@@ -39,7 +39,8 @@ class MatchAPI final : public RouteAPI
             auto route = MakeRoute(sub_routes[index].segment_end_coordinates,
                                    sub_routes[index].unpacked_path_segments,
                                    sub_routes[index].source_traversed_in_reverse,
-                                   sub_routes[index].target_traversed_in_reverse);
+                                   sub_routes[index].target_traversed_in_reverse,
+                                   nullptr);
             route.values["confidence"] = sub_matchings[index].confidence;
             routes.values.push_back(std::move(route));
         }
@@ -62,7 +63,7 @@ class MatchAPI final : public RouteAPI
         {
             MatchingIndex() = default;
             MatchingIndex(unsigned sub_matching_index_, unsigned point_index_)
-              : sub_matching_index(sub_matching_index_), point_index(point_index_)
+                : sub_matching_index(sub_matching_index_), point_index(point_index_)
             {
             }
 
