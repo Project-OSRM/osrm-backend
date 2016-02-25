@@ -69,10 +69,6 @@ u_turn_penalty           = 2
 use_turn_restrictions    = false
 local fallback_names     = true
 
---modes
-local mode_normal = 1
-local mode_ferry = 2
-
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
     vector:Add(v)
@@ -138,6 +134,9 @@ function way_function (way, result)
     return
   end
 
+  result.forward_mode = mode.walking
+  result.backward_mode = mode.walking
+
   local name = way:get_value_by_key("name")
   local ref = way:get_value_by_key("ref")
   local junction = way:get_value_by_key("junction")
@@ -175,8 +174,8 @@ function way_function (way, result)
     result.forward_speed = route_speeds[route]
     result.backward_speed = route_speeds[route]
   end
-    result.forward_mode = mode_ferry
-    result.backward_mode = mode_ferry
+    result.forward_mode = mode.ferry
+    result.backward_mode = mode.ferry
   elseif railway and platform_speeds[railway] then
     -- railway platforms (old tagging scheme)
     result.forward_speed = platform_speeds[railway]
@@ -205,11 +204,11 @@ function way_function (way, result)
 
   -- oneway
   if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
-    result.backward_mode = 0
+    result.backward_mode = mode.inaccessible
   elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
     -- nothing to do
   elseif onewayClass == "-1" then
-    result.forward_mode = 0
+    result.forward_mode = mode.inaccessible
   end
 
   -- surfaces
