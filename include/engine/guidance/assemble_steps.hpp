@@ -79,7 +79,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     steps.reserve(number_of_segments);
 
     // TODO do computation based on distance and choose better next vertex
-    BOOST_ASSERT(leg_geometry.size() >= 4); // source, phantom, closest positions on way
+    BOOST_ASSERT(leg_geometry.locations.size() >= 4); // source, phantom, closest positions on way
     const auto initial_modifier =
         source_location
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
