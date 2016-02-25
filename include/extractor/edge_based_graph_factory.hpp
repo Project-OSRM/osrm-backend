@@ -10,6 +10,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/turn_analysis.hpp"
 
 #include "engine/guidance/turn_instruction.hpp"
 
@@ -128,52 +129,9 @@ class EdgeBasedGraphFactory
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 
-    struct TurnCandidate
-    {
-        EdgeID eid; // the id of the arc
-        bool valid; // a turn may be relevant to good instructions, even if we cannot take the road
-        double angle;                                  // the approximated angle of the turn
-        engine::guidance::TurnInstruction instruction; // a proposed instruction
-        double confidence;                             // how close to the border is the turn?
-
-        std::string toString() const
-        {
-            std::string result = "[turn] ";
-            result += std::to_string(eid);
-            result += " valid: ";
-            result += std::to_string(valid);
-            result += " angle: ";
-            result += std::to_string(angle);
-            result += " instruction: ";
-            result += std::to_string(static_cast<std::int32_t>(instruction.type)) + " " +
-                      std::to_string(static_cast<std::int32_t>(instruction.direction_modifier));
-            result += " confidence: ";
-            result += std::to_string(confidence);
-            return result;
-        }
-    };
-
     // Use In Order to generate base turns
-
+    std::vector<TurnCandidate> getTurns(const NodeID from, const EdgeID via_edge);
     // cannot be const due to the counters...
-    std::vector<TurnCandidate> getTurnCandidates(const NodeID from, const EdgeID via_edge);
-    std::vector<TurnCandidate> optimizeCandidates(const EdgeID via_edge,
-                                                  std::vector<TurnCandidate> turn_candidates) const;
-
-    std::vector<TurnCandidate> optimizeRamps(const EdgeID via_edge,
-                                             std::vector<TurnCandidate> turn_candidates) const;
-
-    engine::guidance::TurnType
-    checkForkAndEnd(const EdgeID via_edge, const std::vector<TurnCandidate> &turn_candidates) const;
-    std::vector<TurnCandidate> handleForkAndEnd(const engine::guidance::TurnType type,
-                                                std::vector<TurnCandidate> turn_candidates) const;
-
-    std::vector<TurnCandidate> suppressTurns(const EdgeID via_edge,
-                                             std::vector<TurnCandidate> turn_candidates) const;
-
-    bool isObviousChoice(const EdgeID coming_from_eid,
-                         const std::size_t turn_index,
-                         const std::vector<TurnCandidate> &turn_candidates) const;
 
     std::size_t restricted_turns_counter;
     std::size_t skipped_uturns_counter;
