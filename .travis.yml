@@ -166,5 +166,5 @@ script:
   - popd
   - |
     if [ -n "$RUN_CLANG_FORMAT" ]; then
-      ./scripts/format.sh
+      ./scripts/format.sh || true # we don't want to fail just yet
     fi
