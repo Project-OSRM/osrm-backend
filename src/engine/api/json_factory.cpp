@@ -107,11 +107,44 @@ std::string modeToString(const extractor::TravelMode mode)
     std::string token;
     switch (mode)
     {
-    case TRAVEL_MODE_DEFAULT:
-        token = "default";
-        break;
     case TRAVEL_MODE_INACCESSIBLE:
         token = "inaccessible";
+        break;
+    case TRAVEL_MODE_DRIVING:
+        token = "driving";
+        break;
+    case TRAVEL_MODE_CYCLING:
+        token = "cycling";
+        break;
+    case TRAVEL_MODE_WALKING:
+        token = "walking";
+        break;
+    case TRAVEL_MODE_FERRY:
+        token = "ferry";
+        break;
+    case TRAVEL_MODE_TRAIN:
+        token = "train";
+        break;
+    case TRAVEL_MODE_PUSHING_BIKE:
+        token = "pushing bike";
+        break;
+    case TRAVEL_MODE_MOVABLE_BRIDGE:
+        token = "movable bridge";
+        break;
+    case TRAVEL_MODE_STEPS_UP:
+        token = "steps up";
+        break;
+    case TRAVEL_MODE_STEPS_DOWN:
+        token = "steps down";
+        break;
+    case TRAVEL_MODE_RIVER_UP:
+        token = "river upstream";
+        break;
+    case TRAVEL_MODE_RIVER_DOWN:
+        token = "river downstream";
+        break;
+    case TRAVEL_MODE_ROUTE:
+        token = "rout";
         break;
     default:
         token = "other";
@@ -132,8 +165,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     return step_maneuver;
 }
 
-util::json::Object makeRouteStep(guidance::RouteStep &&step,
-                                 util::json::Value geometry)
+util::json::Object makeRouteStep(guidance::RouteStep &&step, util::json::Value geometry)
 {
     util::json::Object route_step;
     route_step.values["distance"] = step.distance;
