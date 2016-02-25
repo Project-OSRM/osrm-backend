@@ -5,6 +5,7 @@
 #include "engine/guidance/route_leg.hpp"
 #include "engine/guidance/route.hpp"
 #include "engine/guidance/leg_geometry.hpp"
+#include "engine/guidance/turn_instruction.hpp"
 #include "engine/polyline_compressor.hpp"
 #include "engine/hint.hpp"
 
@@ -103,8 +104,9 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
-    step_maneuver.values["modifier"] =
-        detail::instructionModifierToString(maneuver.instruction.direction_modifier);
+    if( isValidModifier( maneuver.instruction.type, maneuver.instruction.direction_modifier )
+      step_maneuver.values["modifier"] =
+          detail::instructionModifierToString(maneuver.instruction.direction_modifier);
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = maneuver.bearing_before;
     step_maneuver.values["bearing_after"] = maneuver.bearing_after;
