@@ -31,12 +31,14 @@ auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_v
     return object.get_value_by_key(key, "");
 }
 
-template <class T> double latToDouble(T const &object)
+template <class T>
+double latToDouble(T const &object)
 {
     return static_cast<double>(util::toFloating(object.lat));
 }
 
-template <class T> double lonToDouble(T const &object)
+template <class T>
+double lonToDouble(T const &object)
 {
     return static_cast<double>(util::toFloating(object.lon));
 }
@@ -67,82 +69,70 @@ void ScriptingEnvironment::InitLuaState(lua_State *lua_state)
     util::luaAddScriptFolderToLoadPath(lua_state, file_name.c_str());
 
     // Add our function to the state's global scope
-    luabind::module(
-        lua_state)[luabind::def("print", util::LUA_print<std::string>),
-                   luabind::def("durationIsValid", durationIsValid),
-                   luabind::def("parseDuration", parseDuration),
-                   luabind::class_<TravelMode>("mode")
-                       .enum_("enums")[luabind::value("inaccessible", TRAVEL_MODE_INACCESSIBLE),
-                                       luabind::value("driving", TRAVEL_MODE_DRIVING),
-                                       luabind::value("cycling", TRAVEL_MODE_CYCLING),
-                                       luabind::value("walking", TRAVEL_MODE_WALKING),
-                                       luabind::value("ferry", TRAVEL_MODE_FERRY),
-                                       luabind::value("train", TRAVEL_MODE_TRAIN),
-                                       luabind::value("pushing_bike", TRAVEL_MODE_PUSHING_BIKE),
-                                       luabind::value("movable_bridge", TRAVEL_MODE_MOVABLE_BRIDGE),
-                                       luabind::value("steps_up", TRAVEL_MODE_STEPS_UP),
-                                       luabind::value("steps_down", TRAVEL_MODE_STEPS_DOWN),
-                                       luabind::value("river_up", TRAVEL_MODE_RIVER_UP),
-                                       luabind::value("river_down", TRAVEL_MODE_RIVER_DOWN),
-                                       luabind::value("route", TRAVEL_MODE_ROUTE)],
-                   luabind::class_<SourceContainer>("sources")
-                       .def(luabind::constructor<>())
-                       .def("load", &SourceContainer::loadRasterSource)
-                       .def("query", &SourceContainer::getRasterDataFromSource)
-                       .def("interpolate", &SourceContainer::getRasterInterpolateFromSource),
-                   luabind::class_<const float>("constants")
-                       .enum_("enums")[luabind::value("precision", COORDINATE_PRECISION)],
+    luabind::module(lua_state)
+        [luabind::def("print", util::LUA_print<std::string>),
+         luabind::def("durationIsValid", durationIsValid),
+         luabind::def("parseDuration", parseDuration),
+         luabind::class_<SourceContainer>("sources")
+             .def(luabind::constructor<>())
+             .def("load", &SourceContainer::loadRasterSource)
+             .def("query", &SourceContainer::getRasterDataFromSource)
+             .def("interpolate", &SourceContainer::getRasterInterpolateFromSource),
+         luabind::class_<const float>("constants")
+             .enum_("enums")[luabind::value("precision", COORDINATE_PRECISION)],
 
-                   luabind::class_<std::vector<std::string>>("vector").def(
-                       "Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(
-                                  &std::vector<std::string>::push_back)),
+         luabind::class_<std::vector<std::string>>("vector")
+             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(
+                             &std::vector<std::string>::push_back)),
 
-                   luabind::class_<osmium::Location>("Location")
-                       .def<location_member_ptr_type>("lat", &osmium::Location::lat)
-                       .def<location_member_ptr_type>("lon", &osmium::Location::lon),
+         luabind::class_<osmium::Location>("Location")
+             .def<location_member_ptr_type>("lat", &osmium::Location::lat)
+             .def<location_member_ptr_type>("lon", &osmium::Location::lon),
 
-                   luabind::class_<osmium::Node>("Node")
-                       // .def<node_member_ptr_type>("tags", &osmium::Node::tags)
-                       .def("location", &osmium::Node::location)
-                       .def("get_value_by_key", &osmium::Node::get_value_by_key)
-                       .def("get_value_by_key", &get_value_by_key<osmium::Node>)
-                       .def("id", &osmium::Node::id),
+         luabind::class_<osmium::Node>("Node")
+             // .def<node_member_ptr_type>("tags", &osmium::Node::tags)
+             .def("location", &osmium::Node::location)
+             .def("get_value_by_key", &osmium::Node::get_value_by_key)
+             .def("get_value_by_key", &get_value_by_key<osmium::Node>)
+             .def("id", &osmium::Node::id),
 
-                   luabind::class_<ExtractionNode>("ResultNode")
-                       .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
-                       .def_readwrite("barrier", &ExtractionNode::barrier),
+         luabind::class_<ExtractionNode>("ResultNode")
+             .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
+             .def_readwrite("barrier", &ExtractionNode::barrier),
 
-                   luabind::class_<ExtractionWay>("ResultWay")
-                       // .def(luabind::constructor<>())
-                       .def_readwrite("forward_speed", &ExtractionWay::forward_speed)
-                       .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
-                       .def_readwrite("name", &ExtractionWay::name)
-                       .def_readwrite("roundabout", &ExtractionWay::roundabout)
-                       .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
-                       .def_readwrite("is_startpoint", &ExtractionWay::is_startpoint)
-                       .def_readwrite("duration", &ExtractionWay::duration)
-                       .property("forward_mode", &ExtractionWay::get_forward_mode,
-                                 &ExtractionWay::set_forward_mode)
-                       .property("backward_mode", &ExtractionWay::get_backward_mode,
-                                 &ExtractionWay::set_backward_mode),
-                   luabind::class_<osmium::Way>("Way")
-                       .def("get_value_by_key", &osmium::Way::get_value_by_key)
-                       .def("get_value_by_key", &get_value_by_key<osmium::Way>)
-                       .def("id", &osmium::Way::id),
-                   luabind::class_<InternalExtractorEdge>("EdgeSource")
-                       .def_readonly("source_coordinate", &InternalExtractorEdge::source_coordinate)
-                       .def_readwrite("weight_data", &InternalExtractorEdge::weight_data),
-                   luabind::class_<InternalExtractorEdge::WeightData>("WeightData")
-                       .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
-                   luabind::class_<ExternalMemoryNode>("EdgeTarget")
-                       .property("lon", &lonToDouble<ExternalMemoryNode>)
-                       .property("lat", &latToDouble<ExternalMemoryNode>),
-                   luabind::class_<util::Coordinate>("Coordinate")
-                       .property("lon", &lonToDouble<util::Coordinate>)
-                       .property("lat", &latToDouble<util::Coordinate>),
-                   luabind::class_<RasterDatum>("RasterDatum")
-                       .def_readonly("datum", &RasterDatum::datum)
-                       .def("invalid_data", &RasterDatum::get_invalid)];
+         luabind::class_<ExtractionWay>("ResultWay")
+             // .def(luabind::constructor<>())
+             .def_readwrite("forward_speed", &ExtractionWay::forward_speed)
+             .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
+             .def_readwrite("name", &ExtractionWay::name)
+             .def_readwrite("roundabout", &ExtractionWay::roundabout)
+             .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
+             .def_readwrite("is_startpoint", &ExtractionWay::is_startpoint)
+             .def_readwrite("duration", &ExtractionWay::duration)
+             .property("forward_mode", &ExtractionWay::get_forward_mode,
+                       &ExtractionWay::set_forward_mode)
+             .property("backward_mode", &ExtractionWay::get_backward_mode,
+                       &ExtractionWay::set_backward_mode)
+             .enum_("constants")[luabind::value("notSure", 0), luabind::value("oneway", 1),
+                                 luabind::value("bidirectional", 2), luabind::value("opposite", 3)],
+         luabind::class_<osmium::Way>("Way")
+             .def("get_value_by_key", &osmium::Way::get_value_by_key)
+             .def("get_value_by_key", &get_value_by_key<osmium::Way>)
+             .def("id", &osmium::Way::id),
+         luabind::class_<InternalExtractorEdge>("EdgeSource")
+             .def_readonly("source_coordinate", &InternalExtractorEdge::source_coordinate)
+             .def_readwrite("weight_data", &InternalExtractorEdge::weight_data),
+         luabind::class_<InternalExtractorEdge::WeightData>("WeightData")
+             .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
+         luabind::class_<ExternalMemoryNode>("EdgeTarget")
+             .property("lon", &lonToDouble<ExternalMemoryNode>)
+             .property("lat", &latToDouble<ExternalMemoryNode>),
+         luabind::class_<util::Coordinate>("Coordinate")
+             .property("lon", &lonToDouble<util::Coordinate>)
+             .property("lat", &latToDouble<util::Coordinate>),
+         luabind::class_<RasterDatum>("RasterDatum")
+             .def_readonly("datum", &RasterDatum::datum)
+             .def("invalid_data", &RasterDatum::get_invalid)];
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))
     {

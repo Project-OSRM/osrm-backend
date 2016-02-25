@@ -133,29 +133,7 @@ class RouteAPI : public BaseAPI
             json_overview = MakeGeometry(overview.begin(), overview.end());
         }
 
-        std::vector<util::json::Value> step_geometries;
-        for (const auto idx : util::irange(0UL, legs.size()))
-        {
-            auto &leg_geometry = leg_geometries[idx];
-            std::transform(
-                legs[idx].steps.begin(), legs[idx].steps.end(), std::back_inserter(step_geometries),
-                [this, &leg_geometry](const guidance::RouteStep &step)
-                {
-                    if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
-                    {
-                        return static_cast<util::json::Value>(
-                            json::makePolyline(leg_geometry.locations.begin() + step.geometry_begin,
-                                               leg_geometry.locations.begin() + step.geometry_end));
-                    }
-                    BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
-                    return static_cast<util::json::Value>(json::makeGeoJSONLineString(
-                        leg_geometry.locations.begin() + step.geometry_begin,
-                        leg_geometry.locations.begin() + step.geometry_end));
-                });
-        }
-
-        return json::makeRoute(route,
-                               json::makeRouteLegs(std::move(legs), std::move(step_geometries)),
+        return json::makeRoute(route, json::makeRouteLegs(std::move(legs), leg_geometries),
                                std::move(json_overview));
     }
 

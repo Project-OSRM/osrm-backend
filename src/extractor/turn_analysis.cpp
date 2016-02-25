@@ -43,6 +43,7 @@ using engine::guidance::isSlightTurn;
 using engine::guidance::isSlightModifier;
 using engine::guidance::mirrorDirectionModifier;
 
+#define PRINT_DEBUG_CANDIDATES 0
 std::vector<TurnCandidate>
 getTurns(const NodeID from,
          const EdgeID via_edge,
@@ -52,12 +53,36 @@ getTurns(const NodeID from,
          const std::unordered_set<NodeID> &barrier_nodes,
          const CompressedEdgeContainer &compressed_edge_container)
 {
-    auto turn_candidates = turn_analysis::getTurnCandidates(
-        from, via_edge, node_based_graph, node_info_list, restriction_map, barrier_nodes,
-        compressed_edge_container);
+    auto turn_candidates =
+        detail::getTurnCandidates(from, via_edge, node_based_graph, node_info_list, restriction_map,
+                                  barrier_nodes, compressed_edge_container);
+
+    // main priority: roundabouts
+    const auto &in_edge_data = node_based_graph->GetEdgeData(via_edge);
+    bool on_roundabout = in_edge_data.roundabout;
+    bool can_enter_roundabout = false;
+    bool can_exit_roundabout = false;
+    for (const auto &candidate : turn_candidates)
+    {
+        if (node_based_graph->GetEdgeData(candidate.eid).roundabout)
+        {
+            can_enter_roundabout = true;
+        }
+        else
+        {
+            can_exit_roundabout = true;
+        }
+    }
+    if (on_roundabout || can_enter_roundabout)
+    {
+        return detail::handleRoundabouts(from, via_edge, on_roundabout, can_enter_roundabout,
+                                         can_exit_roundabout, std::move(turn_candidates),
+                                         node_based_graph);
+    }
+
     turn_candidates =
-        turn_analysis::setTurnTypes(from, via_edge, std::move(turn_candidates), node_based_graph);
-#define PRINT_DEBUG_CANDIDATES 0
+        detail::setTurnTypes(from, via_edge, std::move(turn_candidates), node_based_graph);
+
 #if PRINT_DEBUG_CANDIDATES
     std::cout << "Initial Candidates:\n";
     for (auto tc : turn_candidates)
@@ -65,8 +90,8 @@ getTurns(const NodeID from,
                   << (int)node_based_graph->GetEdgeData(tc.eid).road_classification.road_class
                   << std::endl;
 #endif
-    turn_candidates = turn_analysis::optimizeCandidates(via_edge, std::move(turn_candidates),
-                                                        node_based_graph, node_info_list);
+    turn_candidates = detail::optimizeCandidates(via_edge, std::move(turn_candidates),
+                                                 node_based_graph, node_info_list);
 #if PRINT_DEBUG_CANDIDATES
     std::cout << "Optimized Candidates:\n";
     for (auto tc : turn_candidates)
@@ -74,8 +99,7 @@ getTurns(const NodeID from,
                   << (int)node_based_graph->GetEdgeData(tc.eid).road_classification.road_class
                   << std::endl;
 #endif
-    turn_candidates =
-        turn_analysis::suppressTurns(via_edge, std::move(turn_candidates), node_based_graph);
+    turn_candidates = detail::suppressTurns(via_edge, std::move(turn_candidates), node_based_graph);
 #if PRINT_DEBUG_CANDIDATES
     std::cout << "Suppressed Candidates:\n";
     for (auto tc : turn_candidates)
@@ -84,6 +108,93 @@ getTurns(const NodeID from,
                   << std::endl;
 #endif
     return turn_candidates;
+}
+
+namespace detail
+{
+
+std::vector<TurnCandidate>
+handleRoundabouts(const NodeID from,
+                  const EdgeID via_edge,
+                  const bool on_roundabout,
+                  const bool can_enter_roundabout,
+                  const bool can_exit_roundabout,
+                  std::vector<TurnCandidate> turn_candidates,
+                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
+{
+    (void)from;
+    // TODO requires differentiation between roundabouts and rotaries
+    NodeID node_v = node_based_graph->GetTarget(via_edge);
+    if (on_roundabout)
+    {
+        // Shoule hopefully have only a single exit and continue
+        // at least for cars. How about bikes?
+        for (auto &candidate : turn_candidates)
+        {
+            const auto &out_data = node_based_graph->GetEdgeData(candidate.eid);
+            if (out_data.roundabout)
+            {
+                // TODO can forks happen in roundabouts? E.g. required lane changes
+                if (1 == node_based_graph->GetDirectedOutDegree(node_v))
+                {
+                    // No turn possible.
+                    candidate.instruction = TurnInstruction::NO_TURN();
+                }
+                else
+                {
+                    candidate.instruction =
+                        TurnInstruction::REMAIN_ROUNDABOUT(getTurnDirection(candidate.angle));
+                }
+            }
+            else
+            {
+                candidate.instruction =
+                    TurnInstruction::EXIT_ROUNDABOUT(getTurnDirection(candidate.angle));
+            }
+        }
+#if PRINT_DEBUG_CANDIDATES
+        std::cout << "On Roundabout Candidates:\n";
+        for (auto tc : turn_candidates)
+            std::cout << "\t" << tc.toString() << " "
+                      << (int)node_based_graph->GetEdgeData(tc.eid).road_classification.road_class
+                      << std::endl;
+#endif
+        return turn_candidates;
+    }
+    else
+    {
+        (void)can_enter_roundabout;
+        BOOST_ASSERT(can_enter_roundabout);
+        for (auto &candidate : turn_candidates)
+        {
+            const auto &out_data = node_based_graph->GetEdgeData(candidate.eid);
+            if (out_data.roundabout)
+            {
+                candidate.instruction =
+                    TurnInstruction::ENTER_ROUNDABOUT(getTurnDirection(candidate.angle));
+                if (can_exit_roundabout)
+                {
+                    if (candidate.instruction.type == TurnType::EnterRotary)
+                        candidate.instruction.type = TurnType::EnterRotaryAtExit;
+                    if (candidate.instruction.type == TurnType::EnterRoundabout)
+                        candidate.instruction.type = TurnType::EnterRoundaboutAtExit;
+                }
+            }
+            else
+            {
+                candidate.instruction = {TurnType::EnterAndExitRoundabout,
+                                         getTurnDirection(candidate.angle)};
+            }
+        }
+#if PRINT_DEBUG_CANDIDATES
+        std::cout << "Into Roundabout Candidates:\n";
+        for (auto tc : turn_candidates)
+            std::cout << "\t" << tc.toString() << " "
+                      << (int)node_based_graph->GetEdgeData(tc.eid).road_classification.road_class
+                      << std::endl;
+#endif
+        return turn_candidates;
+    }
 }
 
 std::vector<TurnCandidate>
@@ -839,6 +950,7 @@ AnalyzeTurn(const NodeID node_u,
     return {TurnType::Turn, getTurnDirection(angle)};
 }
 
+} // anemspace detail
 } // namespace turn_analysis
 } // namespace extractor
-} // namespace osrm
+} // nameNspace osrm

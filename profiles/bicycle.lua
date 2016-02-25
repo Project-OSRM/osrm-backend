@@ -105,6 +105,13 @@ local safety_penalty            = 1.0
 local use_public_transport      = true
 local fallback_names            = true
 
+--modes
+local mode_normal = 1
+local mode_pushing = 2
+local mode_ferry = 3
+local mode_train = 4
+local mode_movable_bridge = 5
+
 local function parse_maxspeed(source)
     if not source then
         return 0
@@ -184,9 +191,6 @@ function way_function (way, result)
     return
   end
 
-  result.forward_mode = mode.cycling
-  result.backward_mode = mode.cycling
-
   -- other tags
   local name = way:get_value_by_key("name")
   local ref = way:get_value_by_key("ref")
@@ -233,14 +237,14 @@ function way_function (way, result)
     if duration and durationIsValid(duration) then
       result.duration = math.max( parseDuration(duration), 1 )
     end
-    result.forward_mode = mode.movable_bridge
-    result.backward_mode = mode.movable_bridge
+    result.forward_mode = mode_movable_bridge
+    result.backward_mode = mode_movable_bridge
     result.forward_speed = bridge_speed
     result.backward_speed = bridge_speed
   elseif route_speeds[route] then
     -- ferries (doesn't cover routes tagged using relations)
-    result.forward_mode = mode.ferry
-    result.backward_mode = mode.ferry
+    result.forward_mode = mode_ferry
+    result.backward_mode = mode_ferry
     result.ignore_in_grid = true
     if duration and durationIsValid(duration) then
       result.duration = math.max( 1, parseDuration(duration) )
@@ -258,8 +262,8 @@ function way_function (way, result)
     result.forward_speed = platform_speeds[public_transport]
     result.backward_speed = platform_speeds[public_transport]
   elseif use_public_transport and railway and railway_speeds[railway] then
-      result.forward_mode = mode.train
-      result.backward_mode = mode.train
+      result.forward_mode = mode_train
+      result.backward_mode = mode_train
      -- railways
     if access and access_tag_whitelist[access] then
       result.forward_speed = railway_speeds[railway]
@@ -289,27 +293,27 @@ function way_function (way, result)
         -- pedestrian-only ways and areas
         result.forward_speed = pedestrian_speeds[highway]
         result.backward_speed = pedestrian_speeds[highway]
-        result.forward_mode = mode.pushing_bike
-        result.backward_mode = mode.pushing_bike
+        result.forward_mode = mode_pushing
+        result.backward_mode = mode_pushing
       elseif man_made and man_made_speeds[man_made] then
         -- man made structures
         result.forward_speed = man_made_speeds[man_made]
         result.backward_speed = man_made_speeds[man_made]
-        result.forward_mode = mode.pushing_bike
-        result.backward_mode = mode.pushing_bike
+        result.forward_mode = mode_pushing
+        result.backward_mode = mode_pushing
       elseif foot == 'yes' then
         result.forward_speed = walking_speed
         result.backward_speed = walking_speed
-        result.forward_mode = mode.pushing_bike
-        result.backward_mode = mode.pushing_bike
+        result.forward_mode = mode_pushing
+        result.backward_mode = mode_pushing
       elseif foot_forward == 'yes' then
         result.forward_speed = walking_speed
-        result.forward_mode = mode.pushing_bike
-        result.backward_mode = mode.inaccessible
+        result.forward_mode = mode_pushing
+        result.backward_mode = 0
       elseif foot_backward == 'yes' then
         result.forward_speed = walking_speed
-        result.forward_mode = mode.inaccessible
-        result.backward_mode = mode.pushing_bike
+        result.forward_mode = 0
+        result.backward_mode = mode_pushing
       end
     end
   end
@@ -321,48 +325,48 @@ function way_function (way, result)
   end
 
   if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
-    result.backward_mode = mode.inaccessible
+    result.backward_mode = 0
   elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
     -- prevent implied oneway
   elseif onewayClass == "-1" then
-    result.forward_mode = mode.inaccessible
+    result.forward_mode = 0
   elseif oneway == "no" or oneway == "0" or oneway == "false" then
     -- prevent implied oneway
   elseif cycleway and string.find(cycleway, "opposite") == 1 then
     if impliedOneway then
-      result.forward_mode = mode.inaccessible
-      result.backward_mode = mode.cycling
+      result.forward_mode = 0
+      result.backward_mode = mode_normal
       result.backward_speed = bicycle_speeds["cycleway"]
     end
   elseif cycleway_left and cycleway_tags[cycleway_left] and cycleway_right and cycleway_tags[cycleway_right] then
     -- prevent implied
   elseif cycleway_left and cycleway_tags[cycleway_left] then
     if impliedOneway then
-      result.forward_mode = mode.inaccessible
-      result.backward_mode = mode.cycling
+      result.forward_mode = 0
+      result.backward_mode = mode_normal
       result.backward_speed = bicycle_speeds["cycleway"]
     end
   elseif cycleway_right and cycleway_tags[cycleway_right] then
     if impliedOneway then
-      result.forward_mode = mode.cycling
+      result.forward_mode = mode_normal
       result.backward_speed = bicycle_speeds["cycleway"]
-      result.backward_mode = mode.cycling
+      result.backward_mode = 0
     end
   elseif oneway == "-1" then
-    result.forward_mode = mode.inaccessible
+    result.forward_mode = 0
   elseif oneway == "yes" or oneway == "1" or oneway == "true" or impliedOneway then
-    result.backward_mode = mode.inaccessible
+    result.backward_mode = 0
   end
 
   -- pushing bikes
   if bicycle_speeds[highway] or pedestrian_speeds[highway] then
     if foot ~= "no" and junction ~= "roundabout" then
-      if result.backward_mode == mode.inaccessible then
+      if result.backward_mode == 0 then
         result.backward_speed = walking_speed
-        result.backward_mode = mode.pushing_bike
-      elseif result.forward_mode == mode.inaccessible then
+        result.backward_mode = mode_pushing
+      elseif result.forward_mode == 0 then
         result.forward_speed = walking_speed
-        result.forward_mode = mode.pushing_bike
+        result.forward_mode = mode_pushing
       end
     end
   end
@@ -378,8 +382,8 @@ function way_function (way, result)
 
   -- dismount
   if bicycle == "dismount" then
-    result.forward_mode = mode.pushing_bike
-    result.backward_mode = mode.pushing_bike
+    result.forward_mode = mode_pushing
+    result.backward_mode = mode_pushing
     result.forward_speed = walking_speed
     result.backward_speed = walking_speed
   end

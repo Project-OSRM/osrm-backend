@@ -269,7 +269,6 @@ class BasePlugin
             // we didn't found a fitting node, return error
             if (!phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()))
             {
-                phantom_node_pairs.pop_back();
                 break;
             }
             BOOST_ASSERT(phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()));
