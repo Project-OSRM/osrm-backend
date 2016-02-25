@@ -243,13 +243,18 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     // compute all round trip routes
     std::vector<InternalRouteResult> routes;
     routes.reserve(trips.size());
-    for (auto &trip : trips)
+    std::vector<std::vector<util::Coordinate>> ordered_coordinates;
+    ordered_coordinates.reserve(trips.size());
+    for (const auto &trip : trips)
     {
         routes.push_back(ComputeRoute(snapped_phantoms, parameters, trip));
+        ordered_coordinates.push_back( std::vector<util::Coordinate>() );
+        for( const auto nid : trip )
+          ordered_coordinates.back().push_back( parameters.coordinates[nid] );
     }
 
     api::TripAPI trip_api{BasePlugin::facade, parameters};
-    trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result);
+    trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result, &ordered_coordinates);
 
     return Status::Ok;
 }
