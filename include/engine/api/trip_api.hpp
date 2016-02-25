@@ -28,7 +28,8 @@ class TripAPI final : public RouteAPI
     void MakeResponse(const std::vector<std::vector<NodeID>> &sub_trips,
                       const std::vector<InternalRouteResult> &sub_routes,
                       const std::vector<PhantomNode> &phantoms,
-                      util::json::Object &response) const
+                      util::json::Object &response,
+                      const std::vector<std::vector<util::Coordinate>> * const coordinates) const
     {
         auto number_of_routes = sub_trips.size();
         util::json::Array routes;
@@ -39,7 +40,8 @@ class TripAPI final : public RouteAPI
             auto route = MakeRoute(sub_routes[index].segment_end_coordinates,
                                    sub_routes[index].unpacked_path_segments,
                                    sub_routes[index].source_traversed_in_reverse,
-                                   sub_routes[index].target_traversed_in_reverse);
+                                   sub_routes[index].target_traversed_in_reverse,
+                                   coordinates ? &((*coordinates)[index]) : nullptr);
             routes.values.push_back(std::move(route));
         }
         response.values["waypoints"] = MakeWaypoints(sub_trips, phantoms);
