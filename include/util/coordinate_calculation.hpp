@@ -3,10 +3,7 @@
 
 #include "util/coordinate.hpp"
 
-#include <iostream>
 #include <utility>
-
-#include <boost/assert.hpp>
 
 namespace osrm
 {
