@@ -152,7 +152,6 @@ class RouteAPI : public BaseAPI
                         leg_geometry.locations.begin() + step.geometry_end));
                 });
         }
-
         return json::makeRoute(route,
                                json::makeRouteLegs(std::move(legs), std::move(step_geometries)),
                                std::move(json_overview));
