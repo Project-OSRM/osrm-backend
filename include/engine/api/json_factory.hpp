@@ -81,7 +81,7 @@ makeWaypoint(const util::Coordinate location, std::string &&name, const Hint &hi
 util::json::Object makeRouteLeg(guidance::RouteLeg &&leg, util::json::Array &&steps);
 
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> &&legs,
-                                const std::vector<guidance::LegGeometry> &leg_geometries);
+                                std::vector<util::json::Value> step_geometries);
 }
 }
 } // namespace engine
