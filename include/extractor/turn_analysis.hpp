@@ -41,6 +41,7 @@ struct TurnCandidate
 namespace turn_analysis
 {
 
+// the entry into the turn analysis
 std::vector<TurnCandidate>
 getTurns(const NodeID from_node,
          const EdgeID via_eid,
@@ -49,6 +50,34 @@ getTurns(const NodeID from_node,
          const std::shared_ptr<RestrictionMap const> restriction_map,
          const std::unordered_set<NodeID> &barrier_nodes,
          const CompressedEdgeContainer &compressed_edge_container);
+
+namespace detail
+{
+
+// Check for restrictions/barriers and generate a list of valid and invalid turns present at the
+// node reached
+// from `from_node` via `via_eid`
+std::vector<TurnCandidate>
+getTurnCandidates(const NodeID from_node,
+                  const EdgeID via_eid,
+                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph,
+                  const std::vector<QueryNode> &node_info_list,
+                  const std::shared_ptr<RestrictionMap const> restriction_map,
+                  const std::unordered_set<NodeID> &barrier_nodes,
+                  const CompressedEdgeContainer &compressed_edge_container);
+
+// handle roundabouts
+// TODO distinguish roundabouts and rotaries
+std::vector<TurnCandidate>
+handleRoundabouts(const NodeID from,
+                  const EdgeID via_edge,
+                  const bool on_roundabout,
+                  const bool can_enter_roundabout,
+                  const bool can_exit_roundabout,
+                  std::vector<TurnCandidate> turn_candidates,
+                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+
+// handle intersections
 
 std::vector<TurnCandidate>
 setTurnTypes(const NodeID from,
@@ -84,15 +113,6 @@ suppressTurns(const EdgeID via_eid,
               std::vector<TurnCandidate> turn_candidates,
               const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-std::vector<TurnCandidate>
-getTurnCandidates(const NodeID from_node,
-                  const EdgeID via_eid,
-                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph,
-                  const std::vector<QueryNode> &node_info_list,
-                  const std::shared_ptr<RestrictionMap const> restriction_map,
-                  const std::unordered_set<NodeID> &barrier_nodes,
-                  const CompressedEdgeContainer &compressed_edge_container);
-
 // node_u -- (edge_1) --> node_v -- (edge_2) --> node_w
 engine::guidance::TurnInstruction
 AnalyzeTurn(const NodeID node_u,
@@ -102,6 +122,7 @@ AnalyzeTurn(const NodeID node_u,
             const NodeID node_w,
             const double angle,
             const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+} // namespace detail
 } // namespace turn_analysis
 } // namespace extractor
 } // namespace osrm
