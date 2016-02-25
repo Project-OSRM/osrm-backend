@@ -51,7 +51,7 @@ classifyIntersection(NodeID nid,
     const auto base_coordinate = getRepresentativeCoordinate(nid, graph.GetTarget(base_id), base_id,
                                                              graph.GetEdgeData(base_id).reversed,
                                                              compressed_geometries, query_nodes);
-    const auto node_coordinate = Coordinate(query_nodes[nid].lon, query_nodes[nid].lat);
+    const auto node_coordinate = util::Coordinate(query_nodes[nid].lon, query_nodes[nid].lat);
 
     // generate a list of all turn angles between a base edge, the node and a current edge
     for (const EdgeID eid : graph.GetAdjacentEdgeRange(nid))
