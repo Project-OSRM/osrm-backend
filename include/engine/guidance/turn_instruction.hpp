@@ -60,9 +60,11 @@ enum TurnType // at the moment we can support 32 turn types, without increasing 
     EndOfRoad,              // T intersection
     EnterRoundabout,        // Entering a small Roundabout
     EnterRoundaboutAtExit,  // Entering a small Roundabout at a countable exit
+    EnterAndExitRoundabout, // Touching a roundabout
     ExitRoundabout,         // Exiting a small Roundabout
     EnterRotary,            // Enter a rotary
     EnterRotaryAtExit,      // Enter A Rotary at a countable exit
+    EnterAndExitRotary,     // Touching a rotary
     ExitRotary,             // Exit a rotary
     StayOnRoundabout,       // Continue on Either a small or a large Roundabout
     Restriction,            // Cross a Barrier, requires barrier penalties instead of full block
@@ -82,7 +84,7 @@ inline bool isValidModifier( const TurnType type, const DirectionModifier modifi
 const constexpr char *turn_type_names[] = {"invalid",
                                            "no turn",
                                            "waypoint",
-                                           "passing intersection",
+                                           "invalid",
                                            "new name",
                                            "continue",
                                            "turn",
@@ -91,10 +93,12 @@ const constexpr char *turn_type_names[] = {"invalid",
                                            "fork",
                                            "end of road",
                                            "roundabout",
-                                           "invalid"
+                                           "invalid",
+                                           "roundabout",
                                            "invalid",
                                            "traffic circle",
                                            "invalid",
+                                           "traffic circle",
                                            "invalid",
                                            "invalid",
                                            "restriction",

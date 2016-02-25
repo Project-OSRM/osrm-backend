@@ -84,8 +84,8 @@ void print(const std::vector<std::vector<PathData>> &leg_data)
 
 std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>> leg_data)
 {
-    if( leg_data.empty() )
-      return leg_data;
+    if (leg_data.empty())
+        return leg_data;
 
 #define PRINT_DEBUG 0
     unsigned carry_exit = 0;
@@ -98,19 +98,19 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
     bool on_roundabout = false;
     for (auto &path_data : leg_data)
     {
-        if( not path_data.empty() )
-          path_data[0].exit = carry_exit;
+        if (not path_data.empty())
+            path_data[0].exit = carry_exit;
 
         for (std::size_t data_index = 0; data_index + 1 < path_data.size(); ++data_index)
         {
-            if (entersRoundabout(path_data[data_index].turn_instruction) )
+            if (entersRoundabout(path_data[data_index].turn_instruction))
             {
                 path_data[data_index].exit += 1;
                 on_roundabout = true;
             }
 
             if (isSilent(path_data[data_index].turn_instruction) &&
-                 path_data[data_index].turn_instruction != TurnInstruction::NO_TURN())
+                path_data[data_index].turn_instruction != TurnInstruction::NO_TURN())
             {
                 path_data[data_index].exit += 1;
             }
@@ -118,7 +118,7 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
             {
                 if (!on_roundabout)
                 {
-                    BOOST_ASSERT(leg_data[0][0].turn_instruction.type == TurnType::NO_TURN() );
+                    BOOST_ASSERT(leg_data[0][0].turn_instruction.type == TurnType::NO_TURN());
                     if (path_data[data_index].turn_instruction.type == ExitRoundabout)
                         leg_data[0][0].turn_instruction.type = TurnType::EnterRoundabout;
                     if (path_data[data_index].turn_instruction.type == ExitRotary)
@@ -160,15 +160,16 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
         {
             if (entersRoundabout(path_data[data_index - 1].turn_instruction))
             {
-                if( !on_roundabout )
-                  path_data[data_index-1].exit = 0;
+                if (!on_roundabout && !leavesRoundabout(path_data[data_index - 1].turn_instruction))
+                    path_data[data_index - 1].exit = 0;
                 on_roundabout = false;
             }
             if (on_roundabout)
             {
                 path_data[data_index - 2].exit = path_data[data_index - 1].exit;
             }
-            if (leavesRoundabout(path_data[data_index - 1].turn_instruction))
+            if (leavesRoundabout(path_data[data_index - 1].turn_instruction) &&
+                !entersRoundabout(path_data[data_index - 1].turn_instruction))
             {
                 path_data[data_index - 2].exit = path_data[data_index - 1].exit;
                 on_roundabout = true;
@@ -191,7 +192,8 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
     {
         for (auto &data : path_data)
         {
-            if (isSilent(data.turn_instruction) || leavesRoundabout(data.turn_instruction))
+            if (isSilent(data.turn_instruction) || (leavesRoundabout(data.turn_instruction) &&
+                                                    !entersRoundabout(data.turn_instruction)))
             {
                 data.turn_instruction = TurnInstruction::NO_TURN();
                 data.exit = 0;
