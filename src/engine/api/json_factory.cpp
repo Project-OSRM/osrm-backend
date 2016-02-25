@@ -85,7 +85,7 @@ std::string modeToString(const extractor::TravelMode mode)
         token = "river downstream";
         break;
     case TRAVEL_MODE_ROUTE:
-        token = "rout";
+        token = "route";
         break;
     default:
         token = "other";
@@ -106,8 +106,8 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = maneuver.bearing_before;
     step_maneuver.values["bearing_after"] = maneuver.bearing_after;
-    if( maneuver.exit != 0 )
-      step_maneuver.values["exit"] = maneuver.exit;
+    if (maneuver.exit != 0)
+        step_maneuver.values["exit"] = maneuver.exit;
     return step_maneuver;
 }
 
@@ -178,7 +178,7 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
 
     return json_legs;
 }
-}
-}
+} // namespace json
+} // namespace api
 } // namespace engine
 } // namespace osrm
