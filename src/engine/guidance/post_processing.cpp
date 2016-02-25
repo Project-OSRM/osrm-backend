@@ -98,7 +98,9 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
     bool on_roundabout = false;
     for (auto &path_data : leg_data)
     {
-        path_data[0].exit = carry_exit;
+        if( not path_data.empty() )
+          path_data[0].exit = carry_exit;
+
         for (std::size_t data_index = 0; data_index + 1 < path_data.size(); ++data_index)
         {
             if (entersRoundabout(path_data[data_index].turn_instruction) )
