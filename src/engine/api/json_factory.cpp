@@ -100,7 +100,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
-    if( isValidModifier( maneuver.instruction.type, maneuver.instruction.direction_modifier )
+    if( isValidModifier( maneuver.instruction.type, maneuver.instruction.direction_modifier ) )
       step_maneuver.values["modifier"] =
           detail::instructionModifierToString(maneuver.instruction.direction_modifier);
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
