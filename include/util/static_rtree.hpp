@@ -20,7 +20,7 @@
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
 
-#include <variant/variant.hpp>
+#include <boost/variant.hpp>
 
 #include <algorithm>
 #include <array>
@@ -85,7 +85,7 @@ class StaticRTree
         std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
     };
 
-    using QueryNodeType = mapbox::util::variant<TreeNode, EdgeDataT>;
+    using QueryNodeType = boost::variant<TreeNode, EdgeDataT>;
     struct QueryCandidate
     {
         inline bool operator<(const QueryCandidate &other) const
@@ -362,33 +362,31 @@ class StaticRTree
 
             traversal_queue.pop();
 
-            if (current_query_node.node.template is<TreeNode>())
-            { // current object is a tree node
-                const TreeNode &current_tree_node =
-                    current_query_node.node.template get<TreeNode>();
-                if (current_tree_node.child_is_on_disk)
+            const TreeNode *current_tree_node = boost::get<TreeNode>(&current_query_node.node);
+            const EdgeData *current_segment = boost::get<EdgeDataT>(&current_query_node.node);
+
+            if (current_tree_node)
+            {
+                if (current_tree_node->child_is_on_disk)
                 {
-                    ExploreLeafNode(current_tree_node.children[0], input_coordinate,
+                    ExploreLeafNode(current_tree_node->children[0], input_coordinate,
                                     projected_coordinate, traversal_queue);
                 }
                 else
                 {
-                    ExploreTreeNode(current_tree_node, input_coordinate, traversal_queue);
+                    ExploreTreeNode(*current_tree_node, input_coordinate, traversal_queue);
                 }
             }
-            else
+            else if (current_segment)
             {
-                // inspecting an actual road segment
-                const auto &current_segment = current_query_node.node.template get<EdgeDataT>();
-
-                auto use_segment = filter(current_segment);
+                auto use_segment = filter(*current_segment);
                 if (!use_segment.first && !use_segment.second)
                 {
                     continue;
                 }
 
                 // store phantom node in result vector
-                results.push_back(std::move(current_segment));
+                results.push_back(*current_segment);
 
                 if (!use_segment.first)
                 {
@@ -398,6 +396,10 @@ class StaticRTree
                 {
                     results.back().reverse_edge_based_node_id = SPECIAL_NODEID;
                 }
+            }
+            else
+            {
+                BOOST_ASSERT(false);
             }
         }
 

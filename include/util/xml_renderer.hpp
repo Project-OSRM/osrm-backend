@@ -5,6 +5,8 @@
 
 #include "osrm/json_container.hpp"
 
+#include <boost/variant.hpp>
+
 namespace osrm
 {
 namespace util
@@ -12,7 +14,7 @@ namespace util
 namespace json
 {
 
-struct XMLToArrayRenderer : mapbox::util::static_visitor<>
+struct XMLToArrayRenderer
 {
     explicit XMLToArrayRenderer(std::vector<char> &_out) : out(_out) {}
 
@@ -44,7 +46,7 @@ struct XMLToArrayRenderer : mapbox::util::static_visitor<>
                 out.insert(out.end(), ++(each).first.begin(), each.first.end());
                 out.push_back('=');
             }
-            mapbox::util::apply_visitor(XMLToArrayRenderer(out), each.second);
+            apply_visitor(XMLToArrayRenderer(out), each.second);
             if (each.first.at(0) != '_')
             {
                 out.push_back('/');
@@ -57,7 +59,7 @@ struct XMLToArrayRenderer : mapbox::util::static_visitor<>
     {
         for (auto &&each : array.values)
         {
-            mapbox::util::apply_visitor(XMLToArrayRenderer(out), each);
+            apply_visitor(XMLToArrayRenderer(out), each);
         }
     }
 
@@ -86,7 +88,7 @@ struct XMLToArrayRenderer : mapbox::util::static_visitor<>
 template <class JSONObject> inline void xml_render(std::vector<char> &out, const JSONObject &object)
 {
     Value value = object;
-    mapbox::util::apply_visitor(XMLToArrayRenderer(out), value);
+    apply_visitor(XMLToArrayRenderer(out), value);
 }
 
 template <class JSONObject> inline void gpx_render(std::vector<char> &out, const JSONObject &object)

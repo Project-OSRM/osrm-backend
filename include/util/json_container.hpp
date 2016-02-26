@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_HPP
 #define JSON_CONTAINER_HPP
 
-#include <variant/variant.hpp>
+#include <boost/variant.hpp>
 
 #include <vector>
 #include <string>
@@ -50,7 +50,7 @@ namespace json
 struct Object;
 struct Array;
 
-struct String
+struct String final
 {
     String() = default;
     String(const char *value_) : value{value_} {}
@@ -58,39 +58,39 @@ struct String
     std::string value;
 };
 
-struct Number
+struct Number final
 {
     Number() = default;
     Number(double value_) : value{value_} {}
     double value;
 };
 
-struct True
+struct True final
 {
 };
 
-struct False
+struct False final
 {
 };
 
-struct Null
+struct Null final
 {
 };
 
-using Value = mapbox::util::variant<String,
-                                    Number,
-                                    mapbox::util::recursive_wrapper<Object>,
-                                    mapbox::util::recursive_wrapper<Array>,
-                                    True,
-                                    False,
-                                    Null>;
+using Value = boost::variant<String,
+                             Number,
+                             boost::recursive_wrapper<Object>,
+                             boost::recursive_wrapper<Array>,
+                             True,
+                             False,
+                             Null>;
 
-struct Object
+struct Object final
 {
     std::unordered_map<std::string, Value> values;
 };
 
-struct Array
+struct Array final
 {
     std::vector<Value> values;
 };

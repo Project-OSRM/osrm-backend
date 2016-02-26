@@ -14,6 +14,8 @@
 #include <iterator>
 #include <string>
 
+#include <boost/variant.hpp>
+
 namespace osrm
 {
 namespace util
@@ -44,7 +46,7 @@ struct Renderer
         for (auto it = object.values.begin(), end = object.values.end(); it != end;)
         {
             out << "\"" << it->first << "\":";
-            mapbox::util::apply_visitor(Renderer(out), it->second);
+            apply_visitor(Renderer(out), it->second);
             if (++it != end)
             {
                 out << ",";
@@ -58,7 +60,7 @@ struct Renderer
         out << "[";
         for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
-            mapbox::util::apply_visitor(Renderer(out), *it);
+            apply_visitor(Renderer(out), *it);
             if (++it != end)
             {
                 out << ",";
@@ -105,7 +107,7 @@ struct ArrayRenderer
             out.push_back('\"');
             out.push_back(':');
 
-            mapbox::util::apply_visitor(ArrayRenderer(out), it->second);
+            apply_visitor(ArrayRenderer(out), it->second);
             if (++it != end)
             {
                 out.push_back(',');
@@ -119,7 +121,7 @@ struct ArrayRenderer
         out.push_back('[');
         for (auto it = array.values.cbegin(), end = array.values.cend(); it != end;)
         {
-            mapbox::util::apply_visitor(ArrayRenderer(out), *it);
+            apply_visitor(ArrayRenderer(out), *it);
             if (++it != end)
             {
                 out.push_back(',');
@@ -153,13 +155,13 @@ struct ArrayRenderer
 inline void render(std::ostream &out, const Object &object)
 {
     Value value = object;
-    mapbox::util::apply_visitor(Renderer(out), value);
+    apply_visitor(Renderer(out), value);
 }
 
 inline void render(std::vector<char> &out, const Object &object)
 {
     Value value = object;
-    mapbox::util::apply_visitor(ArrayRenderer(out), value);
+    apply_visitor(ArrayRenderer(out), value);
 }
 
 } // namespace json
