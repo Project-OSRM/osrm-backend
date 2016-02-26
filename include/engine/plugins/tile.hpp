@@ -69,7 +69,7 @@ inline void lonlat2merc(double &x, double &y)
 const constexpr double tile_size_ = 256.0;
 
 //
-void from_pixels(double shift, double &x, double &y)
+inline void from_pixels(double shift, double &x, double &y)
 {
     double b = shift / 2.0;
     x = (x - b) / (shift / 360.0);
@@ -78,7 +78,8 @@ void from_pixels(double shift, double &x, double &y)
 }
 
 // Converts a WMS tile coordinate (z,x,y) into a mercator bounding box
-void xyz2mercator(int x, int y, int z, double &minx, double &miny, double &maxx, double &maxy)
+inline void
+xyz2mercator(int x, int y, int z, double &minx, double &miny, double &maxx, double &maxy)
 {
     minx = x * tile_size_;
     miny = (y + 1.0) * tile_size_;
@@ -92,7 +93,7 @@ void xyz2mercator(int x, int y, int z, double &minx, double &miny, double &maxx,
 }
 
 // Converts a WMS tile coordinate (z,x,y) into a wsg84 bounding box
-void xyz2wsg84(int x, int y, int z, double &minx, double &miny, double &maxx, double &maxy)
+inline void xyz2wsg84(int x, int y, int z, double &minx, double &miny, double &maxx, double &maxy)
 {
     minx = x * tile_size_;
     miny = (y + 1.0) * tile_size_;
