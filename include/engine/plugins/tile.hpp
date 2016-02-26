@@ -30,16 +30,16 @@ namespace plugins
 {
 
 // from mapnik/well_known_srs.hpp
-static const double EARTH_RADIUS = 6378137.0;
-static const double EARTH_DIAMETER = EARTH_RADIUS * 2.0;
-static const double EARTH_CIRCUMFERENCE = EARTH_DIAMETER * M_PI;
-static const double MAXEXTENT = EARTH_CIRCUMFERENCE / 2.0;
-static const double M_PI_by2 = M_PI / 2.0;
-static const double D2R = M_PI / 180.0;
-static const double R2D = 180.0 / M_PI;
-static const double M_PIby360 = M_PI / 360.0;
-static const double MAXEXTENTby180 = MAXEXTENT / 180.0;
-static const double MAX_LATITUDE = R2D * (2.0 * std::atan(std::exp(180.0 * D2R)) - M_PI_by2);
+const constexpr double EARTH_RADIUS = 6378137.0;
+const constexpr double EARTH_DIAMETER = EARTH_RADIUS * 2.0;
+const constexpr double EARTH_CIRCUMFERENCE = EARTH_DIAMETER * M_PI;
+const constexpr double MAXEXTENT = EARTH_CIRCUMFERENCE / 2.0;
+const constexpr double M_PI_by2 = M_PI / 2.0;
+const constexpr double D2R = M_PI / 180.0;
+const constexpr double R2D = 180.0 / M_PI;
+const constexpr double M_PIby360 = M_PI / 360.0;
+const constexpr double MAXEXTENTby180 = MAXEXTENT / 180.0;
+const constexpr double MAX_LATITUDE = R2D * (2.0 * std::atan(std::exp(180.0 * D2R)) - M_PI_by2);
 
 // from mapnik-vector-tile
 namespace detail_pbf
@@ -66,7 +66,7 @@ inline void lonlat2merc(double &x, double &y)
 }
 
 // This is the global default tile size for all Mapbox Vector Tiles
-const static double tile_size_ = 256.0;
+const constexpr double tile_size_ = 256.0;
 
 //
 void from_pixels(double shift, double &x, double &y)
