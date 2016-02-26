@@ -22,19 +22,23 @@ namespace util
 struct RectangleInt2D
 {
     RectangleInt2D()
-        : min_lon(std::numeric_limits<int32_t>::max()),
-          max_lon(std::numeric_limits<int32_t>::min()),
-          min_lat(std::numeric_limits<int32_t>::max()), max_lat(std::numeric_limits<int32_t>::min())
+        : min_lon(std::numeric_limits<std::int32_t>::max()),
+          max_lon(std::numeric_limits<std::int32_t>::min()),
+          min_lat(std::numeric_limits<std::int32_t>::max()),
+          max_lat(std::numeric_limits<std::int32_t>::min())
     {
     }
 
-    RectangleInt2D(int32_t min_lon_, int32_t max_lon_, int32_t min_lat_, int32_t max_lat_)
+    RectangleInt2D(std::int32_t min_lon_,
+                   std::int32_t max_lon_,
+                   std::int32_t min_lat_,
+                   std::int32_t max_lat_)
         : min_lon(min_lon_), max_lon(max_lon_), min_lat(min_lat_), max_lat(max_lat_)
     {
     }
 
-    int32_t min_lon, max_lon;
-    int32_t min_lat, max_lat;
+    std::int32_t min_lon, max_lon;
+    std::int32_t min_lat, max_lat;
 
     void MergeBoundingBoxes(const RectangleInt2D &other)
     {
@@ -42,10 +46,10 @@ struct RectangleInt2D
         max_lon = std::max(max_lon, other.max_lon);
         min_lat = std::min(min_lat, other.min_lat);
         max_lat = std::max(max_lat, other.max_lat);
-        BOOST_ASSERT(min_lat != std::numeric_limits<int32_t>::min());
-        BOOST_ASSERT(min_lon != std::numeric_limits<int32_t>::min());
-        BOOST_ASSERT(max_lat != std::numeric_limits<int32_t>::min());
-        BOOST_ASSERT(max_lon != std::numeric_limits<int32_t>::min());
+        BOOST_ASSERT(min_lat != std::numeric_limits<std::int32_t>::min());
+        BOOST_ASSERT(min_lon != std::numeric_limits<std::int32_t>::min());
+        BOOST_ASSERT(max_lat != std::numeric_limits<std::int32_t>::min());
+        BOOST_ASSERT(max_lon != std::numeric_limits<std::int32_t>::min());
     }
 
     FixedPointCoordinate Centroid() const
