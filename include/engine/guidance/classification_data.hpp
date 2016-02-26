@@ -107,6 +107,11 @@ struct RoadClassificationData
     };
 };
 
+inline bool operator==( const RoadClassificationData lhs, const RoadClassificationData rhs )
+{
+  return lhs.road_class == rhs.road_class;
+}
+
 } // namespace guidance
 } // namespace engine
 } // namespace osrm
