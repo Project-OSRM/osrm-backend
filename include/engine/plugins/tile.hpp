@@ -8,8 +8,11 @@
 #include <protozero/pbf_writer.hpp>
 
 #include <string>
+#include <vector>
+#include <utility>
+
 #include <cmath>
-#include <algorithm>
+#include <cstdint>
 
 /*
  * This plugin generates Mapbox Vector tiles that show the internal
