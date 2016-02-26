@@ -9,8 +9,6 @@
 #include "util/timing_util.hpp"
 #include "util/exception.hpp"
 
-#include "util/debug_geometry.hpp"
-
 #include <boost/assert.hpp>
 
 #include <algorithm>
@@ -244,20 +242,11 @@ void EdgeBasedGraphFactory::FlushVectorToStream(
     original_edge_data_vector.clear();
 }
 
-#ifdef DEBUG_GEOMETRY
-void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
-                                lua_State *lua_state,
-                                const std::string &edge_segment_lookup_filename,
-                                const std::string &edge_penalty_filename,
-                                const bool generate_edge_lookup,
-                                const std::string &debug_turns_path)
-#else
 void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
                                 lua_State *lua_state,
                                 const std::string &edge_segment_lookup_filename,
                                 const std::string &edge_penalty_filename,
                                 const bool generate_edge_lookup)
-#endif
 {
     TIMER_START(renumber);
     m_max_edge_id = RenumberEdges() - 1;
@@ -269,13 +258,8 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
     TIMER_STOP(generate_nodes);
 
     TIMER_START(generate_edges);
-#ifdef DEBUG_GEOMETRY
-    GenerateEdgeExpandedEdges(original_edge_data_filename, lua_state, edge_segment_lookup_filename,
-                              edge_penalty_filename, generate_edge_lookup, debug_turns_path);
-#else
     GenerateEdgeExpandedEdges(original_edge_data_filename, lua_state, edge_segment_lookup_filename,
                               edge_penalty_filename, generate_edge_lookup);
-#endif
 
     TIMER_STOP(generate_edges);
 
@@ -367,22 +351,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 }
 
 /// Actually it also generates OriginalEdgeData and serializes them...
-#ifdef DEBUG_GEOMETRY
-void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
-    const std::string &original_edge_data_filename,
-    lua_State *lua_state,
-    const std::string &edge_segment_lookup_filename,
-    const std::string &edge_fixed_penalties_filename,
-    const bool generate_edge_lookup,
-    const std::string &debug_turns_path)
-#else
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const std::string &original_edge_data_filename,
     lua_State *lua_state,
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_fixed_penalties_filename,
     const bool generate_edge_lookup)
-#endif
 {
     util::SimpleLogger().Write() << "generating edge-expanded edges";
 
@@ -413,10 +387,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
-
-#ifdef DEBUG_GEOMETRY
-    util::DEBUG_TURNS_START(debug_turns_path);
-#endif
 
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
@@ -455,9 +425,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 if (m_traffic_lights.find(node_v) != m_traffic_lights.end())
                 {
                     distance += speed_profile.traffic_signal_penalty;
-
-                    util::DEBUG_SIGNAL(node_v, m_node_info_list,
-                                       speed_profile.traffic_signal_penalty);
                 }
 
                 const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);
@@ -466,8 +433,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 if (turn_instruction == TurnInstruction::UTurn)
                 {
                     distance += speed_profile.u_turn_penalty;
-
-                    util::DEBUG_UTURN(node_v, m_node_info_list, speed_profile.u_turn_penalty);
                 }
 
                 distance += turn_penalty;
@@ -574,8 +539,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }
         }
     }
-
-    util::DEBUG_TURNS_STOP();
 
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
@@ -1059,7 +1022,7 @@ EdgeBasedGraphFactory::getTurnCandidates(NodeID from_node, EdgeID via_eid)
         }
     }
     return turn_candidates;
-};
+}
 
 int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const
 {

@@ -146,5 +146,10 @@ void RouteParameters::SetCoordinatesFromGeometry(const std::string &geometry_str
 {
     coordinates = polylineDecode(geometry_string);
 }
+
+void RouteParameters::SetX(const int &x_) { x = x_; }
+void RouteParameters::SetZ(const int &z_) { z = z_; }
+void RouteParameters::SetY(const int &y_) { y = y_; }
+
 }
 }

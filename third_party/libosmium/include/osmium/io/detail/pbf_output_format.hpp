@@ -44,10 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include <time.h>
 #include <utility>
 
-// needed for older boost libraries
-#define BOOST_RESULT_OF_USE_DECLTYPE
-#include <boost/iterator/transform_iterator.hpp>
-
 #include <protozero/pbf_builder.hpp>
 
 #include <osmium/handler.hpp>
@@ -441,22 +437,19 @@ namespace osmium {
 
                 template <typename T>
                 void add_meta(const osmium::OSMObject& object, T& pbf_object) {
-                    const osmium::TagList& tags = object.tags();
+                    {
+                        protozero::packed_field_uint32 field{pbf_object, protozero::pbf_tag_type(T::enum_type::packed_uint32_keys)};
+                        for (const auto& tag : object.tags()) {
+                            field.add_element(m_primitive_block.store_in_stringtable(tag.key()));
+                        }
+                    }
 
-                    auto map_tag_key = [this](const osmium::Tag& tag) -> uint32_t {
-                        return m_primitive_block.store_in_stringtable(tag.key());
-                    };
-                    auto map_tag_value = [this](const osmium::Tag& tag) -> uint32_t {
-                        return m_primitive_block.store_in_stringtable(tag.value());
-                    };
-
-                    pbf_object.add_packed_uint32(T::enum_type::packed_uint32_keys,
-                        boost::make_transform_iterator(tags.begin(), map_tag_key),
-                        boost::make_transform_iterator(tags.end(), map_tag_key));
-
-                    pbf_object.add_packed_uint32(T::enum_type::packed_uint32_vals,
-                        boost::make_transform_iterator(tags.begin(), map_tag_value),
-                        boost::make_transform_iterator(tags.end(), map_tag_value));
+                    {
+                        protozero::packed_field_uint32 field{pbf_object, protozero::pbf_tag_type(T::enum_type::packed_uint32_vals)};
+                        for (const auto& tag : object.tags()) {
+                            field.add_element(m_primitive_block.store_in_stringtable(tag.value()));
+                        }
+                    }
 
                     if (m_options.add_metadata) {
                         protozero::pbf_builder<OSMFormat::Info> pbf_info(pbf_object, T::enum_type::optional_Info_info);
@@ -596,12 +589,12 @@ namespace osmium {
                     pbf_relation.add_int64(OSMFormat::Relation::required_int64_id, relation.id());
                     add_meta(relation, pbf_relation);
 
-                    auto map_member_role = [this](const osmium::RelationMember& member) -> uint32_t {
-                        return m_primitive_block.store_in_stringtable(member.role());
-                    };
-                    pbf_relation.add_packed_int32(OSMFormat::Relation::packed_int32_roles_sid,
-                        boost::make_transform_iterator(relation.members().begin(), map_member_role),
-                        boost::make_transform_iterator(relation.members().end(), map_member_role));
+                    {
+                        protozero::packed_field_int32 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_int32_roles_sid)};
+                        for (const auto& member : relation.members()) {
+                            field.add_element(m_primitive_block.store_in_stringtable(member.role()));
+                        }
+                    }
 
                     static auto map_member_ref = [](osmium::RelationMemberList::const_iterator member) noexcept -> osmium::object_id_type {
                         return member->ref();
@@ -612,12 +605,12 @@ namespace osmium {
                     it_type last { members.cend(), members.cend(), map_member_ref };
                     pbf_relation.add_packed_sint64(OSMFormat::Relation::packed_sint64_memids, first, last);
 
-                    static auto map_member_type = [](const osmium::RelationMember& member) noexcept -> int32_t {
-                        return int32_t(osmium::item_type_to_nwr_index(member.type()));
-                    };
-                    pbf_relation.add_packed_int32(OSMFormat::Relation::packed_MemberType_types,
-                        boost::make_transform_iterator(relation.members().begin(), map_member_type),
-                        boost::make_transform_iterator(relation.members().end(), map_member_type));
+                    {
+                        protozero::packed_field_int32 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_MemberType_types)};
+                        for (const auto& member : relation.members()) {
+                            field.add_element(int32_t(osmium::item_type_to_nwr_index(member.type())));
+                        }
+                    }
                 }
 
             }; // class PBFOutputFormat

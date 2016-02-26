@@ -13,6 +13,22 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 
+## [2.6.1] - 2016-02-22
+
+### Added
+
+- Add `WITH_PROFILING` option to CMake config. When enabled, this sets the
+  `-fno-omit-frame-pointer` compiler option.
+
+### Changed
+
+- Massive speed improvements when building multipolygons.
+- Uses (and includes) new version 1.3.0 of protozero library.
+- Removed dependency on Boost Iterator for PBF writer.
+- Example program `osmium_area_test` now uses `cerr` instead of `cout` for
+  debug output.
+
+
 ## [2.6.0] - 2016-02-04
 
 ### Added
@@ -260,7 +276,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.6.0...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.6.1...HEAD
+[2.6.1]: https://github.com/osmcode/libosmium/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/osmcode/libosmium/compare/v2.5.4...v2.6.0
 [2.5.4]: https://github.com/osmcode/libosmium/compare/v2.5.3...v2.5.4
 [2.5.3]: https://github.com/osmcode/libosmium/compare/v2.5.2...v2.5.3

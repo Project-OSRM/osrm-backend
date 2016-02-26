@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!--
+    This viewer allows you to render the vector map tiles available
+    from osrm-routed at the /tile?x={x}&y={y}&z={z} URL.
+
+    Simply start OSRM at localhost on port 5000 and open this html
+    file in your browser.  Requires OSRM 4.9.2 or greater.
+-->
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='dist/mapbox-gl.js'></script>
+    <link href='dist/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiZGFucGF0IiwiYSI6ImNpa3V1anRhYTAwZGJ1NG0zODFzNGJlODcifQ.uij09akrFl0fq3XUjXRY7g';
+var simple = {
+    "version": 8,
+    "sources": {
+        "osrm": {
+            "type": "vector",
+            "tiles": ["http://localhost:5000/tile?tz={z}&tx={x}&ty={y}"]
+        }
+    },
+    "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "#ffffff"
+            }
+        }, {
+            "id": "a", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+            "filter" : [ "<", "speed", 10 ],
+            "paint": { "line-color": "#ff0000", "line-offset": 2, "line-width" : 0.25 }
+        }, { "id": "b", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 10], [ "<", "speed", 15 ]],
+             "paint": { "line-color": "#f00800", "line-offset": 2, "line-width" : 0.5 }
+        }, { "id": "c", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 15], [ "<", "speed", 20 ]],
+             "paint": { "line-color": "#cA1100", "line-offset": 2, "line-width" : 0.75 }
+        }, { "id": "d", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 20], [ "<", "speed", 25 ]],
+             "paint": { "line-color": "#c41A00", "line-offset": 2, "line-width" : 1 }
+        }, { "id": "e", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 25], [ "<", "speed", 30 ]],
+             "paint": { "line-color": "#bD2300", "line-offset": 2, "line-width" : 1.25 }
+        }, { "id": "f", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 30], [ "<", "speed", 35 ]],
+             "paint": { "line-color": "#b72C00", "line-offset": 2, "line-width" : 1.5 }
+        }, { "id": "g", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 35], [ "<", "speed", 40 ]],
+             "paint": { "line-color": "#b13500", "line-offset": 2, "line-width" : 1.75 }
+        }, { "id": "h", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 40], [ "<", "speed", 45 ]],
+             "paint": { "line-color": "#aB3E00", "line-offset": 2, "line-width" : 2.25 }
+        }, { "id": "i", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 45], [ "<", "speed", 50 ]],
+             "paint": { "line-color": "#a44700", "line-offset": 2, "line-width" : 2.5 }
+        }, { "id": "j", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 50], [ "<", "speed", 55 ]],
+             "paint": { "line-color": "#9E5000", "line-offset": 2, "line-width" : 2.75 },
+        }, { "id": "k", "type": "line", "source": "osrm", "source-layer": "speeds",
+             "filter" : [ "all", [ ">=", "speed", 55], [ "<", "speed", 60 ]],
+             "paint": { "line-color": "#985900", "line-offset": 2, "line-width" : 3 },
+             "line": { "line-cap" : "round" }
+        }, { "id": "l", "type": "line", "source": "osrm", "source-layer": "speeds",
+             "filter" : [ "all", [ ">=", "speed", 60], [ "<", "speed", 65 ]],
+             "paint": { "line-color": "#826200", "line-offset": 2, "line-width" : 3.25 },
+             "layout": { "line-cap" : "round" }
+        }, { "id": "m", "type": "line", "source": "osrm", "source-layer": "speeds",
+             "filter" : [ "all", [ ">=", "speed", 65], [ "<", "speed", 70 ]],
+             "paint": { "line-color": "#8B6B00", "line-offset": 2, "line-width" : 3.5 },
+             "layout": { "line-cap" : "round" }
+        }, { "id": "n", "type": "line", "source": "osrm", "source-layer": "speeds",
+             "filter" : [ "all", [ ">=", "speed", 70], [ "<", "speed", 75 ]],
+             "paint": { "line-color": "#557400", "line-offset": 2, "line-width" : 3.75 },
+             "layout": { "line-cap" : "round" }
+        }, { "id": "o", "type": "line", "source": "osrm", "source-layer": "speeds",
+             "filter" : [ "all", [ ">=", "speed", 75], [ "<", "speed", 80 ]],
+             "paint": { "line-color": "#4F7D00", "line-offset": 2, "line-width" : 4 },
+             "layout": { "line-cap" : "round" }
+        }, { "id": "p", "type": "line", "source": "osrm", "source-layer": "speeds", 
+             "filter" : [ "all", [ ">=", "speed", 80], [ "<", "speed", 85 ]],
+             "paint": { "line-color": "#498600", "line-offset": 2, "line-width" : 4.25 },
+             "layout": { "line-cap" : "round" }
+        }, { "id": "q", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 85], [ "<", "speed", 90 ]],
+             "paint": { "line-color": "#328F00", "line-offset": 2, "line-width" : 4.5 }
+        }, { "id": "r", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 90], [ "<", "speed", 95 ]],
+             "paint": { "line-color": "#2C9800", "line-offset": 2, "line-width" : 4.75 }
+        }, { "id": "s", "type": "line", "source": "osrm", "source-layer": "speeds", "layout": { "line-cap" : "round" },
+             "filter" : [ "all", [ ">=", "speed", 95], [ "<", "speed", 100 ]],
+             "paint": { "line-color": "#16A100", "line-offset": 3, "line-width" : 5 }
+        }, { "id": "t", "type": "line", "source": "osrm", "source-layer": "speeds",
+             "filter" : [ ">=", "speed", 100],
+             "paint": { "line-color": "#00AA00", "line-offset": 4, "line-width" : 6 },
+             "layout": { "line-cap" : "round" }
+        }, {
+            "id": "speed-label",
+            "type": "symbol",
+            "source": "osrm",
+            "source-layer": "speeds",
+            "minzoom": 13,
+            "layout": {
+                "visibility": "visible",
+                "text-field": "{speed} km/h ➡",
+                "text-font": [
+                    "Arial Unicode MS Regular"
+                ],
+                "symbol-placement": "line",
+                "text-padding": 4,
+                "text-max-width": 7,
+                "text-size": 9.5,
+                "text-offset": [ 0,2 ],
+                "text-keep-upright": false
+                    
+            },
+        }
+    ]
+};
+
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: simple,
+    zoom: 13,
+    center: [-122.4536, 37.796]
+});
+
+map.addControl(new mapboxgl.Navigation());
+</script>
+
+</body>
+</html>
+

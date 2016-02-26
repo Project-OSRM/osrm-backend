@@ -18,7 +18,7 @@ documentation.
 
 #include <type_traits>
 
-#include <protozero/pbf_types.hpp>
+#include <protozero/types.hpp>
 #include <protozero/pbf_writer.hpp>
 
 namespace protozero {
@@ -26,8 +26,10 @@ namespace protozero {
 /**
  * The pbf_builder is used to write PBF formatted messages into a buffer. It
  * is based on the pbf_writer class and has all the same methods. The
- * difference is that whereever the pbf_writer class takes an integer tag,
- * this template class takes a tag of the template type T.
+ * difference is that while the pbf_writer class takes an integer tag,
+ * this template class takes a tag of the template type T. The idea is that
+ * T will be an enumeration value and this helps reduce the possibility of
+ * programming errors.
  *
  * Almost all methods in this class can throw an std::bad_alloc exception if
  * the std::string used as a buffer wants to resize.
@@ -77,7 +79,7 @@ public:
 #undef PROTOZERO_WRITER_WRAP_ADD_SCALAR
 /// @endcond
 
-    inline void add_bytes(T tag, const char* value, size_t size) {
+    inline void add_bytes(T tag, const char* value, std::size_t size) {
         pbf_writer::add_bytes(pbf_tag_type(tag), value, size);
     }
 
@@ -85,7 +87,7 @@ public:
         pbf_writer::add_bytes(pbf_tag_type(tag), value);
     }
 
-    inline void add_string(T tag, const char* value, size_t size) {
+    inline void add_string(T tag, const char* value, std::size_t size) {
         pbf_writer::add_string(pbf_tag_type(tag), value, size);
     }
 
@@ -97,7 +99,7 @@ public:
         pbf_writer::add_string(pbf_tag_type(tag), value);
     }
 
-    inline void add_message(T tag, const char* value, size_t size) {
+    inline void add_message(T tag, const char* value, std::size_t size) {
         pbf_writer::add_message(pbf_tag_type(tag), value, size);
     }
 

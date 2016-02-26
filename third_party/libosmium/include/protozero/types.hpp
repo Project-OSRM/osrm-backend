@@ -1,5 +1,5 @@
-#ifndef PROTOZERO_PBF_TYPES_HPP
-#define PROTOZERO_PBF_TYPES_HPP
+#ifndef PROTOZERO_TYPES_HPP
+#define PROTOZERO_TYPES_HPP
 
 /*****************************************************************************
 
@@ -11,7 +11,7 @@ documentation.
 *****************************************************************************/
 
 /**
- * @file pbf_types.hpp
+ * @file types.hpp
  *
  * @brief Contains the declaration of low-level types used in the pbf format.
  */
@@ -46,4 +46,4 @@ namespace protozero {
 
 } // end namespace protozero
 
-#endif // PROTOZERO_PBF_TYPES_HPP
+#endif // PROTOZERO_TYPES_HPP

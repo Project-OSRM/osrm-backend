@@ -25,7 +25,7 @@ documentation.
 
 #include <protozero/config.hpp>
 #include <protozero/exception.hpp>
-#include <protozero/pbf_types.hpp>
+#include <protozero/types.hpp>
 #include <protozero/varint.hpp>
 
 #if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
@@ -94,11 +94,12 @@ class pbf_reader {
 #ifdef PROTOZERO_USE_BARE_POINTER_FOR_PACKED_FIXED
 
     template <typename T>
-    inline std::pair<const T*, const T*> packed_fixed() {
-        protozero_assert(tag() != 0 && "call next() before accessing field value");
-        auto len = get_len_and_skip();
-        protozero_assert(len % sizeof(T) == 0);
-        return std::make_pair(reinterpret_cast<const T*>(m_data-len), reinterpret_cast<const T*>(m_data));
+    using const_fixed_iterator = const T*;
+
+    template <typename T>
+    inline std::pair<const_fixed_iterator<T>, const_fixed_iterator<T>> create_fixed_iterator_pair(const char* first, const char* last) {
+        return std::make_pair(reinterpret_cast<const T*>(first),
+                              reinterpret_cast<const T*>(last));
     }
 
 #else
@@ -157,15 +158,20 @@ class pbf_reader {
     }; // class const_fixed_iterator
 
     template <typename T>
+    inline std::pair<const_fixed_iterator<T>, const_fixed_iterator<T>> create_fixed_iterator_pair(const char* first, const char* last) {
+        return std::make_pair(const_fixed_iterator<T>(first, last),
+                              const_fixed_iterator<T>(last, last));
+    }
+
+#endif
+
+    template <typename T>
     inline std::pair<const_fixed_iterator<T>, const_fixed_iterator<T>> packed_fixed() {
         protozero_assert(tag() != 0 && "call next() before accessing field value");
         auto len = get_len_and_skip();
         protozero_assert(len % sizeof(T) == 0);
-        return std::make_pair(const_fixed_iterator<T>(m_data-len, m_data),
-                              const_fixed_iterator<T>(m_data, m_data));
+        return create_fixed_iterator_pair<T>(m_data-len, m_data);
     }
-
-#endif
 
     template <typename T> inline T get_varint();
     template <typename T> inline T get_svarint();
@@ -187,7 +193,7 @@ public:
      *
      * @post There is no current field.
      */
-    inline pbf_reader(const char *data, size_t length) noexcept;
+    inline pbf_reader(const char *data, std::size_t length) noexcept;
 
     /**
      * Construct a pbf_reader message from a data pointer and a length. The pointer
@@ -198,7 +204,7 @@ public:
      *
      * @post There is no current field.
      */
-    inline pbf_reader(std::pair<const char *, size_t> data) noexcept;
+    inline pbf_reader(std::pair<const char *, std::size_t> data) noexcept;
 
     /**
      * Construct a pbf_reader message from a std::string. A pointer to the string
@@ -247,8 +253,8 @@ public:
      * buffer. Of course you have to know reasonably well what data to expect
      * and how it is encoded for this number to have any meaning.
      */
-    size_t length() const noexcept {
-        return size_t(m_end - m_data);
+    std::size_t length() const noexcept {
+        return std::size_t(m_end - m_data);
     }
 
     /**
@@ -832,14 +838,14 @@ public:
 
 }; // class pbf_reader
 
-pbf_reader::pbf_reader(const char *data, size_t length) noexcept
+pbf_reader::pbf_reader(const char *data, std::size_t length) noexcept
     : m_data(data),
       m_end(data + length),
       m_wire_type(pbf_wire_type::unknown),
       m_tag(0) {
 }
 
-pbf_reader::pbf_reader(std::pair<const char *, size_t> data) noexcept
+pbf_reader::pbf_reader(std::pair<const char *, std::size_t> data) noexcept
     : m_data(data.first),
       m_end(data.first + data.second),
       m_wire_type(pbf_wire_type::unknown),
@@ -935,7 +941,7 @@ void pbf_reader::skip() {
             skip_bytes(4);
             break;
         default:
-            throw unknown_pbf_wire_type_exception();
+            protozero_assert(false && "can not be here because next() should have thrown already");
     }
 }
 

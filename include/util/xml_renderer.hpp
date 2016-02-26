@@ -16,6 +16,13 @@ struct XMLToArrayRenderer : mapbox::util::static_visitor<>
 {
     explicit XMLToArrayRenderer(std::vector<char> &_out) : out(_out) {}
 
+    void operator()(const Buffer &buffer) const
+    {
+        out.push_back('\"');
+        out.insert(out.end(), buffer.value.begin(), buffer.value.end());
+        out.push_back('\"');
+    }
+
     void operator()(const String &string) const
     {
         out.push_back('\"');

@@ -15,6 +15,7 @@
 #include "util/range_table.hpp"
 #include "util/graph_loader.hpp"
 #include "util/simple_logger.hpp"
+#include "util/rectangle.hpp"
 
 #include "osrm/coordinate.hpp"
 
@@ -355,6 +356,20 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const override final
     {
         return m_travel_mode_list.at(id);
+    }
+
+    std::vector<RTreeLeaf> GetEdgesInBox(const util::FixedPointCoordinate & south_west,
+                                         const util::FixedPointCoordinate & north_east)
+        override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+        util::RectangleInt2D bbox = {south_west.lon, north_east.lon,
+                                     south_west.lat, north_east.lat};
+        return m_geospatial_query->Search(bbox);
     }
 
     std::vector<PhantomNodeWithDistance>
