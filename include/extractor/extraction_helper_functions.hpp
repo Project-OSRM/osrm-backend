@@ -17,7 +17,7 @@ namespace osrm
 namespace extractor
 {
 
-bool simple_duration_is_valid(const std::string &s)
+inline bool simple_duration_is_valid(const std::string &s)
 {
     boost::regex simple_format(
         "((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",
@@ -32,7 +32,7 @@ bool simple_duration_is_valid(const std::string &s)
     return false;
 }
 
-bool iso_8601_duration_is_valid(const std::string &s)
+inline bool iso_8601_duration_is_valid(const std::string &s)
 {
     util::iso_8601_grammar<std::string::const_iterator> iso_parser;
     const bool result = boost::spirit::qi::parse(s.begin(), s.end(), iso_parser);
@@ -45,12 +45,12 @@ bool iso_8601_duration_is_valid(const std::string &s)
     return false;
 }
 
-bool durationIsValid(const std::string &s)
+inline bool durationIsValid(const std::string &s)
 {
     return simple_duration_is_valid(s) || iso_8601_duration_is_valid(s);
 }
 
-unsigned parseDuration(const std::string &s)
+inline unsigned parseDuration(const std::string &s)
 {
     if (simple_duration_is_valid(s))
     {
