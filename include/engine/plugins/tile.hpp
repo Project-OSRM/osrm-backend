@@ -45,7 +45,7 @@ const constexpr double MAX_LATITUDE = R2D * (2.0 * std::atan(std::exp(180.0 * D2
 namespace detail_pbf
 {
 
-inline unsigned encode_length(unsigned len) { return (len << 3u) | 2u; }
+inline unsigned encode_length(const unsigned len) { return (len << 3u) | 2u; }
 }
 
 // Converts a regular WSG84 lon/lat pair into
@@ -69,23 +69,23 @@ inline void lonlat2merc(double &x, double &y)
 const constexpr double tile_size_ = 256.0;
 
 //
-inline void from_pixels(double shift, double &x, double &y)
+inline void from_pixels(const double shift, double &x, double &y)
 {
-    double b = shift / 2.0;
+    const double b = shift / 2.0;
     x = (x - b) / (shift / 360.0);
-    double g = (y - b) / -(shift / (2 * M_PI));
+    const double g = (y - b) / -(shift / (2 * M_PI));
     y = R2D * (2.0 * std::atan(std::exp(g)) - M_PI_by2);
 }
 
 // Converts a WMS tile coordinate (z,x,y) into a mercator bounding box
-inline void
-xyz2mercator(int x, int y, int z, double &minx, double &miny, double &maxx, double &maxy)
+inline void xyz2mercator(
+    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
 {
     minx = x * tile_size_;
     miny = (y + 1.0) * tile_size_;
     maxx = (x + 1.0) * tile_size_;
     maxy = y * tile_size_;
-    double shift = std::pow(2.0, z) * tile_size_;
+    const double shift = std::pow(2.0, z) * tile_size_;
     from_pixels(shift, minx, miny);
     from_pixels(shift, maxx, maxy);
     lonlat2merc(minx, miny);
@@ -93,52 +93,52 @@ xyz2mercator(int x, int y, int z, double &minx, double &miny, double &maxx, doub
 }
 
 // Converts a WMS tile coordinate (z,x,y) into a wsg84 bounding box
-inline void xyz2wsg84(int x, int y, int z, double &minx, double &miny, double &maxx, double &maxy)
+inline void xyz2wsg84(
+    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
 {
     minx = x * tile_size_;
     miny = (y + 1.0) * tile_size_;
     maxx = (x + 1.0) * tile_size_;
     maxy = y * tile_size_;
-    double shift = std::pow(2.0, z) * tile_size_;
+    const double shift = std::pow(2.0, z) * tile_size_;
     from_pixels(shift, minx, miny);
     from_pixels(shift, maxx, maxy);
 }
 
 // emulates mapbox::box2d, just a simple container for
 // a box
-class bbox
+struct bbox final
 {
-  public:
-    double minx;
-    double miny;
-    double maxx;
-    double maxy;
-    bbox(double _minx, double _miny, double _maxx, double _maxy)
+    bbox(const double _minx, const double _miny, const double _maxx, const double _maxy)
         : minx(_minx), miny(_miny), maxx(_maxx), maxy(_maxy)
     {
     }
 
     double width() const { return maxx - minx; }
-
     double height() const { return maxy - miny; }
+
+    const double minx;
+    const double miny;
+    const double maxx;
+    const double maxy;
 };
 
 // Simple container class for WSG84 coordinates
-class point_type_d
+struct point_type_d final
 {
-  public:
-    double x;
-    double y;
     point_type_d(double _x, double _y) : x(_x), y(_y) {}
+
+    const double x;
+    const double y;
 };
 
 // Simple container for integer coordinates (i.e. pixel coords)
-class point_type_i
+struct point_type_i final
 {
-  public:
-    std::int64_t x;
-    std::int64_t y;
     point_type_i(std::int64_t _x, std::int64_t _y) : x(_x), y(_y) {}
+
+    const std::int64_t x;
+    const std::int64_t y;
 };
 
 using line_type = std::vector<point_type_i>;
@@ -148,17 +148,17 @@ using line_typed = std::vector<point_type_d>;
 // Encodes a linestring using protobuf zigzag encoding
 inline bool encode_linestring(line_type line,
                               protozero::packed_field_uint32 &geometry,
-                              int32_t &start_x,
-                              int32_t &start_y)
+                              std::int32_t &start_x,
+                              std::int32_t &start_y)
 {
-    std::size_t line_size = line.size();
+    const std::size_t line_size = line.size();
     // line_size -= detail_pbf::repeated_point_count(line);
     if (line_size < 2)
     {
         return false;
     }
 
-    unsigned line_to_length = static_cast<unsigned>(line_size) - 1;
+    const unsigned line_to_length = static_cast<const unsigned>(line_size) - 1;
 
     auto pt = line.begin();
     geometry.add_element(9); // move_to | (1 << 3)
@@ -169,8 +169,8 @@ inline bool encode_linestring(line_type line,
     geometry.add_element(detail_pbf::encode_length(line_to_length));
     for (++pt; pt != line.end(); ++pt)
     {
-        int32_t dx = pt->x - start_x;
-        int32_t dy = pt->y - start_y;
+        const std::int32_t dx = pt->x - start_x;
+        const std::int32_t dy = pt->y - start_y;
         /*if (dx == 0 && dy == 0)
         {
             continue;
@@ -202,21 +202,21 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
         xyz2wsg84(route_parameters.x, route_parameters.y, route_parameters.z, min_lon, min_lat,
                   max_lon, max_lat);
 
-        FixedPointCoordinate southwest = {static_cast<int32_t>(min_lat * COORDINATE_PRECISION),
-                                          static_cast<int32_t>(min_lon * COORDINATE_PRECISION)};
-        FixedPointCoordinate northeast = {static_cast<int32_t>(max_lat * COORDINATE_PRECISION),
-                                          static_cast<int32_t>(max_lon * COORDINATE_PRECISION)};
+        FixedPointCoordinate southwest{static_cast<std::int32_t>(min_lat * COORDINATE_PRECISION),
+                                       static_cast<std::int32_t>(min_lon * COORDINATE_PRECISION)};
+        FixedPointCoordinate northeast{static_cast<std::int32_t>(max_lat * COORDINATE_PRECISION),
+                                       static_cast<std::int32_t>(max_lon * COORDINATE_PRECISION)};
 
         // Fetch all the segments that are in our bounding box.
         // This hits the OSRM StaticRTree
-        auto edges = facade->GetEdgesInBox(southwest, northeast);
+        const auto edges = facade->GetEdgesInBox(southwest, northeast);
 
         // TODO: extract speed values for compressed and uncompressed geometries
 
         // Convert tile coordinates into mercator coordinates
         xyz2mercator(route_parameters.x, route_parameters.y, route_parameters.z, min_lon, min_lat,
                      max_lon, max_lat);
-        bbox tile_bbox(min_lon, min_lat, max_lon, max_lat);
+        const bbox tile_bbox{min_lon, min_lat, max_lon, max_lat};
 
         // Protobuf serialized blocks when objects go out of scope, hence
         // the extra scoping below.
@@ -244,7 +244,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                     const auto a = facade->GetCoordinateOfNode(edge.u);
                     const auto b = facade->GetCoordinateOfNode(edge.v);
                     // Calculate the length in meters
-                    double length = osrm::util::coordinate_calculation::haversineDistance(
+                    const double length = osrm::util::coordinate_calculation::haversineDistance(
                         a.lon, a.lat, b.lon, b.lat);
 
                     // If this is a valid forward edge, go ahead and add it to the tile
@@ -261,8 +261,8 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                                               b.lat / COORDINATE_PRECISION);
 
                         // Calculate the speed for this line
-                        uint32_t speed =
-                            static_cast<uint32_t>(round(length / edge.forward_weight * 10 * 3.6));
+                        std::uint32_t speed = static_cast<std::uint32_t>(
+                            round(length / edge.forward_weight * 10 * 3.6));
 
                         line_type tile_line;
                         for (auto const &pt : geo_line)
@@ -326,8 +326,8 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
                         geo_line.emplace_back(a.lon / COORDINATE_PRECISION,
                                               a.lat / COORDINATE_PRECISION);
 
-                        uint32_t speed =
-                            static_cast<uint32_t>(round(length / edge.forward_weight * 10 * 3.6));
+                        const auto speed = static_cast<const std::uint32_t>(
+                            round(length / edge.forward_weight * 10 * 3.6));
 
                         line_type tile_line;
                         for (auto const &pt : geo_line)
@@ -373,7 +373,7 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
             // Now, we write out the possible speed value arrays and possible is_tiny
             // values.  Field type 4 is the "values" field.  It's a variable type field,
             // so requires a two-step write (create the field, then write its value)
-            for (size_t i = 0; i < 128; i++)
+            for (std::size_t i = 0; i < 128; i++)
             {
                 {
                     // Writing field type 4 == variant type
@@ -403,8 +403,8 @@ template <class DataFacadeT> class TilePlugin final : public BasePlugin
     }
 
   private:
-    DataFacadeT *facade;
-    std::string descriptor_string;
+    DataFacadeT *const facade;
+    const std::string descriptor_string;
 };
 }
 }
