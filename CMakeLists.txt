@@ -29,6 +29,7 @@ if(WIN32 AND MSVC_VERSION LESS 1800)
   message(FATAL_ERROR "Building with Microsoft compiler needs Visual Studio 2013 or later (Express version works too)")
 endif()
 
+option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(ENABLE_ASSERTIONS OFF)
@@ -421,7 +422,7 @@ COMMENT "Generating API documentation with Doxygen" VERBATIM
 endif()
 
 # prefix compilation with ccache by default if available and on clang or gcc
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)
     message(STATUS "Using ccache to speed up incremental builds")
