@@ -8,8 +8,10 @@
 #include "osrm/coordinate.hpp"
 
 #include <algorithm>
-#include <cstdint>
+#include <utility>
 #include <limits>
+
+#include <cstdint>
 
 namespace osrm
 {
