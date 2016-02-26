@@ -26,9 +26,10 @@ struct RectangleInt2D
     {
     }
 
-    RectangleInt2D(int32_t min_lon_, int32_t max_lon_, int32_t min_lat_, int32_t max_lat_) :
-        min_lon(min_lon_), max_lon(max_lon_),
-        min_lat(min_lat_), max_lat(max_lat_) {}
+    RectangleInt2D(int32_t min_lon_, int32_t max_lon_, int32_t min_lat_, int32_t max_lat_)
+        : min_lon(min_lon_), max_lon(max_lon_), min_lat(min_lat_), max_lat(max_lat_)
+    {
+    }
 
     int32_t min_lon, max_lon;
     int32_t min_lat, max_lat;
@@ -59,8 +60,8 @@ struct RectangleInt2D
     {
         // Standard box intersection test - check if boxes *don't* overlap,
         // and return the negative of that
-        return ! (max_lon < other.min_lon || min_lon > other.max_lon
-               || max_lat < other.min_lat || min_lat > other.max_lat);
+        return !(max_lon < other.min_lon || min_lon > other.max_lon || max_lat < other.min_lat ||
+                 min_lat > other.max_lat);
     }
 
     double GetMinDist(const FixedPointCoordinate location) const

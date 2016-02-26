@@ -76,8 +76,8 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 
-    virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::FixedPointCoordinate & south_west,
-                                                 const util::FixedPointCoordinate & north_east) = 0;
+    virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::FixedPointCoordinate &south_west,
+                                                 const util::FixedPointCoordinate &north_east) = 0;
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,

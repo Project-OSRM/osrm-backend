@@ -29,11 +29,10 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
 
     // declare a group of options that will be allowed both on command line
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "profile,p",
-        boost::program_options::value<boost::filesystem::path>(&extractor_config.profile_path)
-            ->default_value("profile.lua"),
-        "Path to LUA routing profile")(
+    config_options.add_options()("profile,p",
+                                 boost::program_options::value<boost::filesystem::path>(
+                                     &extractor_config.profile_path)->default_value("profile.lua"),
+                                 "Path to LUA routing profile")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
             ->default_value(tbb::task_scheduler_init::default_num_threads()),
@@ -43,9 +42,8 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
             ->implicit_value(true)
             ->default_value(false),
         "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs")(
-        "small-component-size",
-        boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
-            ->default_value(1000),
+        "small-component-size", boost::program_options::value<unsigned int>(
+                                    &extractor_config.small_component_size)->default_value(1000),
         "Number of nodes required before a strongly-connected-componennt is considered big "
         "(affects nearest neighbor snapping)");
 

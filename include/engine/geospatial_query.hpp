@@ -33,13 +33,10 @@ template <typename RTreeT> class GeospatialQuery
     {
     }
 
-    std::vector<EdgeData>
-    Search(const util::RectangleInt2D & bbox)
+    std::vector<EdgeData> Search(const util::RectangleInt2D &bbox)
     {
         return rtree.SearchInBox(bbox);
-
     }
-
 
     // Returns nearest PhantomNodes in the given bearing range within max_distance.
     // Does not filter by small/big component!

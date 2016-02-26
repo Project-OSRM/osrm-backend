@@ -123,8 +123,7 @@ void RequestHandler::handle_request(const http::request &current_request,
                       json_result.values["pbf"].get<osrm::util::json::Buffer>().value.cend(),
                       std::back_inserter(current_reply.content));
 
-            current_reply.headers.emplace_back("Content-Type",
-                                               "application/x-protobuf");
+            current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
         }
         else if (route_parameters.jsonp_parameter.empty())
         { // json file

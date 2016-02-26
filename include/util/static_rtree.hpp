@@ -322,7 +322,7 @@ class StaticRTree
     }
 
     /* Returns all features inside the bounding box */
-    std::vector<EdgeDataT> SearchInBox(const Rectangle & search_rectangle)
+    std::vector<EdgeDataT> SearchInBox(const Rectangle &search_rectangle)
     {
 
         std::vector<EdgeDataT> results;
@@ -345,11 +345,14 @@ class StaticRTree
                 {
                     const auto &current_edge = current_leaf_node.objects[i];
 
-                    Rectangle bbox =
-                      {std::min((*m_coordinate_list)[current_edge.u].lon, (*m_coordinate_list)[current_edge.v].lon),
-                       std::max((*m_coordinate_list)[current_edge.u].lon, (*m_coordinate_list)[current_edge.v].lon),
-                       std::min((*m_coordinate_list)[current_edge.u].lat, (*m_coordinate_list)[current_edge.v].lat),
-                       std::max((*m_coordinate_list)[current_edge.u].lat, (*m_coordinate_list)[current_edge.v].lat)};
+                    Rectangle bbox = {std::min((*m_coordinate_list)[current_edge.u].lon,
+                                               (*m_coordinate_list)[current_edge.v].lon),
+                                      std::max((*m_coordinate_list)[current_edge.u].lon,
+                                               (*m_coordinate_list)[current_edge.v].lon),
+                                      std::min((*m_coordinate_list)[current_edge.u].lat,
+                                               (*m_coordinate_list)[current_edge.v].lat),
+                                      std::max((*m_coordinate_list)[current_edge.u].lat,
+                                               (*m_coordinate_list)[current_edge.v].lat)};
 
                     if (bbox.Intersects(search_rectangle))
                     {

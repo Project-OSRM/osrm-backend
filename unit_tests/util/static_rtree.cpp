@@ -308,15 +308,20 @@ BOOST_AUTO_TEST_CASE(regression_test)
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-            Coord(40.0, 0.0), Coord(35.0, 5.0),
+         Coord(40.0, 0.0),
+         Coord(35.0, 5.0),
 
-            Coord(5.0, 5.0), Coord(0.0, 10.0),
+         Coord(5.0, 5.0),
+         Coord(0.0, 10.0),
 
-            Coord(20.0, 10.0), Coord(20.0, 5.0),
+         Coord(20.0, 10.0),
+         Coord(20.0, 5.0),
 
-            Coord(40.0, 100.0), Coord(35.0, 105.0),
+         Coord(40.0, 100.0),
+         Coord(35.0, 105.0),
 
-            Coord(5.0, 105.0), Coord(0.0, 110.0),
+         Coord(5.0, 105.0),
+         Coord(0.0, 110.0),
         },
         {Edge(0, 1), Edge(2, 3), Edge(4, 5), Edge(6, 7), Edge(8, 9)});
 
@@ -404,7 +409,7 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-            Coord(0.0, 0.0), Coord(10.0, 10.0),
+         Coord(0.0, 0.0), Coord(10.0, 10.0),
         },
         {Edge(0, 1), Edge(1, 0)});
 
@@ -463,14 +468,10 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
     using Edge = std::pair<unsigned, unsigned>;
 
     GraphFixture fixture(
-            {
-            Coord(0.0,0.0),
-            Coord(1.0,1.0),
-            Coord(2.0,2.0),
-            Coord(3.0,3.0),
-            Coord(4.0,4.0),
-            },
-            {Edge(0,1), Edge(1,2), Edge(2,3), Edge(3,4)});
+        {
+         Coord(0.0, 0.0), Coord(1.0, 1.0), Coord(2.0, 2.0), Coord(3.0, 3.0), Coord(4.0, 4.0),
+        },
+        {Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4)});
 
     std::string leaves_path;
     std::string nodes_path;
@@ -479,20 +480,22 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
     engine::GeospatialQuery<MiniStaticRTree> query(rtree, fixture.coords);
 
     {
-        RectangleInt2D bbox = {static_cast<uint32_t>(0.5 * COORDINATE_PRECISION), static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(0.5 * COORDINATE_PRECISION), static_cast<uint32_t>(1.5 * COORDINATE_PRECISION)};
+        RectangleInt2D bbox = {static_cast<uint32_t>(0.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(0.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
-        RectangleInt2D bbox = {static_cast<uint32_t>(1.5 * COORDINATE_PRECISION), static_cast<uint32_t>(3.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION), static_cast<uint32_t>(3.5 * COORDINATE_PRECISION)};
+        RectangleInt2D bbox = {static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(3.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
+                               static_cast<uint32_t>(3.5 * COORDINATE_PRECISION)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 3);
     }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

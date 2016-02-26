@@ -645,18 +645,20 @@ EdgeBasedGraphFactory::optimizeCandidates(NodeID via_eid,
                         instruction_right_of_begin != TurnInstruction::TurnSlightRight)
                     {
                         std::int32_t resolved_count = 0;
-                        //uses side-effects in resolve
+                        // uses side-effects in resolve
                         if (!keepStraight(candidate_at_end.angle) &&
                             !resolve(candidate_at_end.instruction, instruction_left_of_end,
                                      RESOLVE_TO_LEFT))
-                            util::SimpleLogger().Write(logDEBUG) << "[warning] failed to resolve conflict";
+                            util::SimpleLogger().Write(logDEBUG)
+                                << "[warning] failed to resolve conflict";
                         else
                             ++resolved_count;
-                        //uses side-effects in resolve
+                        // uses side-effects in resolve
                         if (!keepStraight(candidate_at_begin.angle) &&
                             !resolve(candidate_at_begin.instruction, instruction_right_of_begin,
                                      RESOLVE_TO_RIGHT))
-                            util::SimpleLogger().Write(logDEBUG) << "[warning] failed to resolve conflict";
+                            util::SimpleLogger().Write(logDEBUG)
+                                << "[warning] failed to resolve conflict";
                         else
                             ++resolved_count;
                         if (resolved_count >= 1 &&
@@ -772,8 +774,8 @@ bool EdgeBasedGraphFactory::isObviousChoice(EdgeID via_eid,
 
     const auto &candidate_to_the_right = turn_candidates[getRight(turn_index)];
 
-    const auto hasValidRatio = [](const TurnCandidate &left, const TurnCandidate &center,
-                                  const TurnCandidate &right)
+    const auto hasValidRatio =
+        [](const TurnCandidate &left, const TurnCandidate &center, const TurnCandidate &right)
     {
         auto angle_left = (left.angle > 180) ? angularDeviation(left.angle, STRAIGHT_ANGLE) : 180;
         auto angle_right =
@@ -1107,9 +1109,9 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
         double this_dist = 0;
         NodeID prev_id = INVERTED ? tgt : src;
 
-        const auto selectBestCandidate = [this](const NodeID current, const double current_distance,
-                                                const NodeID previous,
-                                                const double previous_distance)
+        const auto selectBestCandidate =
+            [this](const NodeID current, const double current_distance, const NodeID previous,
+                   const double previous_distance)
         {
             if (current_distance < DESIRED_SEGMENT_LENGTH ||
                 current_distance - DESIRED_SEGMENT_LENGTH <

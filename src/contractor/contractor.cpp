@@ -291,7 +291,7 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
 
 std::size_t
 Contractor::WriteContractedGraph(unsigned max_node_id,
-                              const util::DeallocatingVector<QueryEdge> &contracted_edge_list)
+                                 const util::DeallocatingVector<QueryEdge> &contracted_edge_list)
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
@@ -423,7 +423,7 @@ void Contractor::ContractGraph(
     node_levels.swap(inout_node_levels);
 
     GraphContractor graph_contractor(max_edge_id + 1, edge_based_edge_list, std::move(node_levels),
-                          std::move(node_weights));
+                                     std::move(node_weights));
     graph_contractor.Run(config.core_factor);
     graph_contractor.GetEdges(contracted_edge_list);
     graph_contractor.GetCoreMarker(is_core_node);
