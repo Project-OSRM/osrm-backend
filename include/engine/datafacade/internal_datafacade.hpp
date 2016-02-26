@@ -367,7 +367,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             LoadRTree();
             BOOST_ASSERT(m_geospatial_query.get());
         }
-        util::RectangleInt2D bbox = {
+        const util::RectangleInt2D bbox{
             south_west.lon, north_east.lon, south_west.lat, north_east.lat};
         return m_geospatial_query->Search(bbox);
     }
