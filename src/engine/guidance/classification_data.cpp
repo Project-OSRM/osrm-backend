@@ -2,6 +2,8 @@
 
 #include <osmium/osm.hpp>
 
+#include <iostream>
+
 namespace osrm
 {
 namespace engine

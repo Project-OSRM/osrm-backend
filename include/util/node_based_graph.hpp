@@ -51,7 +51,7 @@ struct NodeBasedEdgeData
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
         return (reversed == other.reversed) && (name_id == other.name_id) &&
-               (travel_mode == other.travel_mode);
+               (travel_mode == other.travel_mode && road_classification == other.road_classification);
     }
 };
 

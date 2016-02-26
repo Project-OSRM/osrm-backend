@@ -59,6 +59,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                      boost::optional<util::Coordinate> source_location,
                                      boost::optional<util::Coordinate> target_location)
 {
+    (void) source_location;
     const auto source_duration =
         (source_traversed_in_reverse ? source_node.GetReverseWeightPlusOffset()
                                      : source_node.GetForwardWeightPlusOffset()) /
@@ -80,19 +81,15 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
 
     // TODO do computation based on distance and choose better next vertex
     BOOST_ASSERT(leg_geometry.locations.size() >= 4); // source, phantom, closest positions on way
-    const auto initial_modifier =
-        source_location
-            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  source_location.get(), leg_geometry.locations[0], leg_geometry.locations[1]))
-            : DirectionModifier::UTurn;
 
     auto segment_index = 0;
     if (leg_data.size() > 0)
     {
 
-        StepManeuver maneuver =
-            detail::stepManeuverFromGeometry(TurnInstruction{TurnType::Location, initial_modifier},
-                                             leg_geometry, segment_index, INVALID_EXIT_NR);
+        StepManeuver maneuver = detail::stepManeuverFromGeometry(
+            TurnInstruction{TurnType::Location, DirectionModifier::UTurn}, leg_geometry,
+            segment_index, INVALID_EXIT_NR);
+        maneuver.instruction.direction_modifier = bearingToDirectionModifier(maneuver.bearing_before);
 
         // TODO fix this: it makes no sense
         // PathData saves the information we need of the segment _before_ the turn,
@@ -129,8 +126,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // x---*---*---*---z compressed edge
         //       |-------| duration
         StepManeuver maneuver = {source_node.location, 0., 0.,
-                                 TurnInstruction{TurnType::Location, initial_modifier},
+                                 TurnInstruction{TurnType::Location, DirectionModifier::UTurn},
                                  INVALID_EXIT_NR};
+        maneuver.instruction.direction_modifier = bearingToDirectionModifier(maneuver.bearing_before);
 
         steps.push_back(RouteStep{source_node.name_id, facade.get_name_for_id(source_node.name_id),
                                   target_duration - source_duration,
