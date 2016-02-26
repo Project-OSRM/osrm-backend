@@ -39,8 +39,8 @@ namespace util
 template <class EdgeDataT,
           class CoordinateListT = std::vector<FixedPointCoordinate>,
           bool UseSharedMemory = false,
-          uint32_t BRANCHING_FACTOR = 64,
-          uint32_t LEAF_NODE_SIZE = 1024>
+          std::uint32_t BRANCHING_FACTOR = 64,
+          std::uint32_t LEAF_NODE_SIZE = 1024>
 class StaticRTree
 {
   public:
@@ -54,15 +54,16 @@ class StaticRTree
     {
         TreeNode() : child_count(0), child_is_on_disk(false) {}
         Rectangle minimum_bounding_rectangle;
-        uint32_t child_count : 31;
+        std::uint32_t child_count : 31;
         bool child_is_on_disk : 1;
-        uint32_t children[BRANCHING_FACTOR];
+        std::uint32_t children[BRANCHING_FACTOR];
     };
 
   private:
     struct WrappedInputElement
     {
-        explicit WrappedInputElement(const uint64_t _hilbert_value, const uint32_t _array_index)
+        explicit WrappedInputElement(const uint64_t _hilbert_value,
+                                     const std::uint32_t _array_index)
             : m_hilbert_value(_hilbert_value), m_array_index(_array_index)
         {
         }
@@ -70,7 +71,7 @@ class StaticRTree
         WrappedInputElement() : m_hilbert_value(0), m_array_index(UINT_MAX) {}
 
         uint64_t m_hilbert_value;
-        uint32_t m_array_index;
+        std::uint32_t m_array_index;
 
         inline bool operator<(const WrappedInputElement &other) const
         {
@@ -81,7 +82,7 @@ class StaticRTree
     struct LeafNode
     {
         LeafNode() : object_count(0), objects() {}
-        uint32_t object_count;
+        std::uint32_t object_count;
         std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
     };
 
@@ -164,12 +165,12 @@ class StaticRTree
 
             LeafNode current_leaf;
             TreeNode current_node;
-            for (uint32_t current_element_index = 0; LEAF_NODE_SIZE > current_element_index;
+            for (std::uint32_t current_element_index = 0; LEAF_NODE_SIZE > current_element_index;
                  ++current_element_index)
             {
                 if (m_element_count > (processed_objects_count + current_element_index))
                 {
-                    uint32_t index_of_next_object =
+                    std::uint32_t index_of_next_object =
                         input_wrapper_vector[processed_objects_count + current_element_index]
                             .m_array_index;
                     current_leaf.objects[current_element_index] =
@@ -193,16 +194,16 @@ class StaticRTree
         // close leaf file
         leaf_node_file.close();
 
-        uint32_t processing_level = 0;
+        std::uint32_t processing_level = 0;
         while (1 < tree_nodes_in_level.size())
         {
             std::vector<TreeNode> tree_nodes_in_next_level;
-            uint32_t processed_tree_nodes_in_level = 0;
+            std::uint32_t processed_tree_nodes_in_level = 0;
             while (processed_tree_nodes_in_level < tree_nodes_in_level.size())
             {
                 TreeNode parent_node;
                 // pack BRANCHING_FACTOR elements into tree_nodes each
-                for (uint32_t current_child_node_index = 0;
+                for (std::uint32_t current_child_node_index = 0;
                      BRANCHING_FACTOR > current_child_node_index; ++current_child_node_index)
                 {
                     if (processed_tree_nodes_in_level < tree_nodes_in_level.size())
@@ -232,17 +233,18 @@ class StaticRTree
         // reverse and renumber tree to have root at index 0
         std::reverse(m_search_tree.begin(), m_search_tree.end());
 
-        uint32_t search_tree_size = m_search_tree.size();
-        tbb::parallel_for(tbb::blocked_range<uint32_t>(0, search_tree_size),
-                          [this, &search_tree_size](const tbb::blocked_range<uint32_t> &range)
+        std::uint32_t search_tree_size = m_search_tree.size();
+        tbb::parallel_for(tbb::blocked_range<std::uint32_t>(0, search_tree_size),
+                          [this, &search_tree_size](const tbb::blocked_range<std::uint32_t> &range)
                           {
-                              for (uint32_t i = range.begin(), end = range.end(); i != end; ++i)
+                              for (std::uint32_t i = range.begin(), end = range.end(); i != end;
+                                   ++i)
                               {
                                   TreeNode &current_tree_node = this->m_search_tree[i];
-                                  for (uint32_t j = 0; j < current_tree_node.child_count; ++j)
+                                  for (std::uint32_t j = 0; j < current_tree_node.child_count; ++j)
                                   {
-                                      const uint32_t old_id = current_tree_node.children[j];
-                                      const uint32_t new_id = search_tree_size - old_id - 1;
+                                      const std::uint32_t old_id = current_tree_node.children[j];
+                                      const std::uint32_t new_id = search_tree_size - old_id - 1;
                                       current_tree_node.children[j] = new_id;
                                   }
                               }
@@ -251,9 +253,9 @@ class StaticRTree
         // open tree file
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);
 
-        uint32_t size_of_tree = m_search_tree.size();
+        std::uint32_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
-        tree_node_file.write((char *)&size_of_tree, sizeof(uint32_t));
+        tree_node_file.write((char *)&size_of_tree, sizeof(std::uint32_t));
         tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
         // close tree node file.
         tree_node_file.close();
@@ -277,8 +279,8 @@ class StaticRTree
         }
         boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
 
-        uint32_t tree_size = 0;
-        tree_node_file.read((char *)&tree_size, sizeof(uint32_t));
+        std::uint32_t tree_size = 0;
+        tree_node_file.read((char *)&tree_size, sizeof(std::uint32_t));
 
         m_search_tree.resize(tree_size);
         if (tree_size > 0)
@@ -324,7 +326,6 @@ class StaticRTree
     /* Returns all features inside the bounding box */
     std::vector<EdgeDataT> SearchInBox(const Rectangle &search_rectangle)
     {
-
         std::vector<EdgeDataT> results;
 
         std::queue<TreeNode> traversal_queue;
@@ -345,14 +346,14 @@ class StaticRTree
                 {
                     const auto &current_edge = current_leaf_node.objects[i];
 
-                    Rectangle bbox = {std::min((*m_coordinate_list)[current_edge.u].lon,
-                                               (*m_coordinate_list)[current_edge.v].lon),
-                                      std::max((*m_coordinate_list)[current_edge.u].lon,
-                                               (*m_coordinate_list)[current_edge.v].lon),
-                                      std::min((*m_coordinate_list)[current_edge.u].lat,
-                                               (*m_coordinate_list)[current_edge.v].lat),
-                                      std::max((*m_coordinate_list)[current_edge.u].lat,
-                                               (*m_coordinate_list)[current_edge.v].lat)};
+                    const Rectangle bbox{std::min((*m_coordinate_list)[current_edge.u].lon,
+                                                  (*m_coordinate_list)[current_edge.v].lon),
+                                         std::max((*m_coordinate_list)[current_edge.u].lon,
+                                                  (*m_coordinate_list)[current_edge.v].lon),
+                                         std::min((*m_coordinate_list)[current_edge.u].lat,
+                                                  (*m_coordinate_list)[current_edge.v].lat),
+                                         std::max((*m_coordinate_list)[current_edge.u].lat,
+                                                  (*m_coordinate_list)[current_edge.v].lat)};
 
                     if (bbox.Intersects(search_rectangle))
                     {
@@ -364,9 +365,9 @@ class StaticRTree
             {
                 // If it's a tree node, look at all children and add them
                 // to the search queue if their bounding boxes intersect
-                for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
+                for (std::uint32_t i = 0; i < current_tree_node.child_count; ++i)
                 {
-                    const int32_t child_id = current_tree_node.children[i];
+                    const std::int32_t child_id = current_tree_node.children[i];
                     const auto &child_tree_node = m_search_tree[child_id];
                     const auto &child_rectangle = child_tree_node.minimum_bounding_rectangle;
 
@@ -494,9 +495,9 @@ class StaticRTree
                          const FixedPointCoordinate input_coordinate,
                          QueueT &traversal_queue)
     {
-        for (uint32_t i = 0; i < parent.child_count; ++i)
+        for (std::uint32_t i = 0; i < parent.child_count; ++i)
         {
-            const int32_t child_id = parent.children[i];
+            const std::int32_t child_id = parent.children[i];
             const auto &child_tree_node = m_search_tree[child_id];
             const auto &child_rectangle = child_tree_node.minimum_bounding_rectangle;
             const float lower_bound_to_element = child_rectangle.GetMinDist(input_coordinate);
@@ -504,7 +505,7 @@ class StaticRTree
         }
     }
 
-    inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode &result_node)
+    inline void LoadLeafFromDisk(const std::uint32_t leaf_id, LeafNode &result_node)
     {
         if (!leaves_stream.is_open())
         {
@@ -524,10 +525,10 @@ class StaticRTree
     template <typename CoordinateT>
     void InitializeMBRectangle(Rectangle &rectangle,
                                const std::array<EdgeDataT, LEAF_NODE_SIZE> &objects,
-                               const uint32_t element_count,
+                               const std::uint32_t element_count,
                                const std::vector<CoordinateT> &coordinate_list)
     {
-        for (uint32_t i = 0; i < element_count; ++i)
+        for (std::uint32_t i = 0; i < element_count; ++i)
         {
             BOOST_ASSERT(objects[i].u < coordinate_list.size());
             BOOST_ASSERT(objects[i].v < coordinate_list.size());
