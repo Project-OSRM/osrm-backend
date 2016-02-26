@@ -53,7 +53,7 @@ struct Array;
 // For encoding raw binary data in a JSON response
 struct Buffer
 {
-    Buffer() {}
+    Buffer() = default;
     Buffer(const char *value) : value(value) {}
     Buffer(std::string value) : value(std::move(value)) {}
     std::string value;
