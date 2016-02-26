@@ -140,6 +140,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
         NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0" AND NOT MINGW)
       message(STATUS "Using gcc specific binutils for LTO.")
       set(CMAKE_AR     "/usr/bin/gcc-ar")
+      set(CMAKE_NM     "/usr/bin/gcc-nm")
       set(CMAKE_RANLIB "/usr/bin/gcc-ranlib")
     endif()
 
