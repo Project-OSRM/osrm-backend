@@ -47,7 +47,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         query = ('?') >> +(zoom | output | jsonp | checksum | uturns | location_with_options |
                            destination_with_options | source_with_options | cmp | language |
                            instruction | geometry | alt_route | old_API | num_results |
-                           matching_beta | gps_precision | classify | locs);
+                           matching_beta | gps_precision | matching_prune_factor | classify | locs);
         // all combinations of timestamp, uturn, hint and bearing without duplicates
         t_u = (u >> -timestamp) | (timestamp >> -u);
         t_h = (hint >> -timestamp) | (timestamp >> -hint);
@@ -106,6 +106,8 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                         qi::float_[boost::bind(&HandlerT::SetMatchingBeta, handler, ::_1)];
         gps_precision = (-qi::lit('&')) >> qi::lit("gps_precision") >> '=' >>
                         qi::float_[boost::bind(&HandlerT::SetGPSPrecision, handler, ::_1)];
+        matching_prune_factor = (-qi::lit('&')) >> qi::lit("matching_prune_factor") >> '=' >>
+                        qi::float_[boost::bind(&HandlerT::SetMatchingPruneFactor, handler, ::_1)];
         classify = (-qi::lit('&')) >> qi::lit("classify") >> '=' >>
                    qi::bool_[boost::bind(&HandlerT::SetClassify, handler, ::_1)];
         locs = (-qi::lit('&')) >> qi::lit("locs") >> '=' >>
@@ -123,7 +125,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location,
         destination, source, hint, timestamp, bearing, stringwithDot, stringwithPercent, language,
         geometry, cmp, alt_route, u, uturns, old_API, num_results, matching_beta, gps_precision,
-        classify, locs, instruction, stringforPolyline;
+        matching_prune_factor, classify, locs, instruction, stringforPolyline;
 
     HandlerT *handler;
 };

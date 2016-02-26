@@ -315,7 +315,8 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         SubMatchingList sub_matchings;
         search_engine_ptr->map_matching(candidates_lists, input_coords, input_timestamps,
                                         route_parameters.matching_beta,
-                                        route_parameters.gps_precision, sub_matchings);
+                                        route_parameters.gps_precision, sub_matchings,
+                                        route_parameters.matching_prune_factor );
 
         util::json::Array matchings;
         for (auto &sub : sub_matchings)
