@@ -181,8 +181,8 @@ int main(int argc, char *argv[]) try
             {
                 total_network_length +=
                     100 * osrm::util::coordinate_calculation::greatCircleDistance(
-                              coordinate_list[source].lat, coordinate_list[source].lon,
-                              coordinate_list[target].lat, coordinate_list[target].lon);
+                              coordinate_list[source],
+                              coordinate_list[target]);
 
                 BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
                 BOOST_ASSERT(source != SPECIAL_NODEID);
@@ -197,11 +197,11 @@ int main(int argc, char *argv[]) try
                 {
                     OGRLineString line_string;
                     line_string.addPoint(
-                        coordinate_list[source].lon / osrm::COORDINATE_PRECISION,
-                        coordinate_list[source].lat / osrm::COORDINATE_PRECISION);
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[source].lon)),
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[source].lat)));
                     line_string.addPoint(
-                        coordinate_list[target].lon / osrm::COORDINATE_PRECISION,
-                        coordinate_list[target].lat / osrm::COORDINATE_PRECISION);
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[target].lon)),
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[target].lat)));
 
                     OGRFeature *po_feature =
                         OGRFeature::CreateFeature(po_layer->GetLayerDefn());
