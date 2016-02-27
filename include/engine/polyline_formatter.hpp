@@ -18,7 +18,7 @@ util::json::String polylineEncodeAsJSON(const std::vector<SegmentInformation> &g
 
 // Does not encode the geometry in polyline format, instead returning an unencoded JSON object
 util::json::Array polylineUnencodedAsJSON(const std::vector<SegmentInformation> &geometry);
-}
-}
+} // namespace engine
+} // namespace osrm
 
 #endif /* POLYLINE_FORMATTER_HPP */

@@ -3,8 +3,10 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <string>
+#include <iostream>
 #include <utility>
+
+#include <boost/assert.hpp>
 
 namespace osrm
 {
@@ -62,6 +64,12 @@ double bearing(const FixedPointCoordinate first_coordinate,
 double computeAngle(const FixedPointCoordinate first,
                     const FixedPointCoordinate second,
                     const FixedPointCoordinate third);
+
+inline FixedPointCoordinate interpolateLinear( double factor, const FixedPointCoordinate from, const FixedPointCoordinate to )
+{
+  BOOST_ASSERT( 0 <= factor && factor <= 1.0 );
+  return {from.lat + static_cast<int>(factor * (to.lat - from.lat)), from.lon + static_cast<int>(factor * (to.lon - from.lon))};
+}
 
 namespace mercator
 {

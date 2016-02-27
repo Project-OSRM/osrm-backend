@@ -3,6 +3,7 @@
 
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
+#include "guidance/classification_data.hpp"
 
 #include <string>
 #include <vector>
@@ -33,6 +34,7 @@ struct ExtractionWay
         name.clear();
         forward_travel_mode = TRAVEL_MODE_DEFAULT;
         backward_travel_mode = TRAVEL_MODE_DEFAULT;
+        road_classification_data.invalidate();
     }
 
     enum Directions
@@ -102,6 +104,7 @@ struct ExtractionWay
     bool is_startpoint;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
+    guidance::RoadClassificationData road_classification_data;
 };
 }
 }

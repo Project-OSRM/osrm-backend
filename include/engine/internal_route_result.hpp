@@ -3,7 +3,7 @@
 
 #include "engine/phantom_node.hpp"
 #include "extractor/travel_mode.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "guidance/turn_instruction.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
@@ -19,14 +19,14 @@ struct PathData
 {
     PathData()
         : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT), segment_duration(INVALID_EDGE_WEIGHT),
-          turn_instruction(extractor::TurnInstruction::NoTurn),
+          turn_instruction(guidance::TurnInstruction::INVALID()),
           travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
     PathData(NodeID node,
              unsigned name_id,
-             extractor::TurnInstruction turn_instruction,
+             guidance::TurnInstruction turn_instruction,
              EdgeWeight segment_duration,
              extractor::TravelMode travel_mode)
         : node(node), name_id(name_id), segment_duration(segment_duration),
@@ -36,7 +36,7 @@ struct PathData
     NodeID node;
     unsigned name_id;
     EdgeWeight segment_duration;
-    extractor::TurnInstruction turn_instruction;
+    guidance::TurnInstruction turn_instruction;
     extractor::TravelMode travel_mode : 4;
 };
 
