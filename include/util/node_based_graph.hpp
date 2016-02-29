@@ -50,6 +50,7 @@ struct NodeBasedEdgeData
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
+        //TODO roundabout/startpoint/access_restricted should all be part of this??
         return (reversed == other.reversed) && (name_id == other.name_id) &&
                (travel_mode == other.travel_mode && road_classification == other.road_classification);
     }

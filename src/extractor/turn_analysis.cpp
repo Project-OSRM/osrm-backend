@@ -725,7 +725,7 @@ noTurnOrNewName(const NodeID from,
     const auto &out_data = node_based_graph->GetEdgeData(candidate.eid);
     if (in_data.name_id == out_data.name_id)
     {
-        if (candidate.angle != 0)
+        if (angularDeviation(candidate.angle, 0) > 0.01)
             return TurnInstruction::NO_TURN();
 
         return {TurnType::Turn, DirectionModifier::UTurn};
@@ -769,7 +769,7 @@ handleOneWayTurn(const NodeID from,
     BOOST_ASSERT(turn_candidates[0].instruction.type == TurnType::Turn &&
                  turn_candidates[0].instruction.direction_modifier == DirectionModifier::UTurn);
 #if PRINT_DEBUG_CANDIDATES
-    std::cout << "Basic Turn Candidates:\n";
+    std::cout << "Basic (one) Turn Candidates:\n";
     for (auto tc : turn_candidates)
         std::cout << "\t" << tc.toString() << " "
                   << (int)node_based_graph->GetEdgeData(tc.eid).road_classification.road_class
@@ -791,7 +791,7 @@ handleTwoWayTurn(const NodeID from,
         getInstructionForObvious(from, via_edge, turn_candidates[1], node_based_graph);
 
 #if PRINT_DEBUG_CANDIDATES
-    std::cout << "Basic Turn Candidates:\n";
+    std::cout << "Basic Two Turns Candidates:\n";
     for (auto tc : turn_candidates)
         std::cout << "\t" << tc.toString() << " "
                   << (int)node_based_graph->GetEdgeData(tc.eid).road_classification.road_class
@@ -808,8 +808,11 @@ handleThreeWayTurn(const NodeID from,
 {
     const auto isObviousOfTwo = [](const TurnCandidate turn, const TurnCandidate other)
     {
-        return angularDeviation(turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
-               angularDeviation(other.angle, STRAIGHT_ANGLE) > 120;
+        return (angularDeviation(turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
+                angularDeviation(other.angle, STRAIGHT_ANGLE) > 85) ||
+               (angularDeviation(other.angle, STRAIGHT_ANGLE) /
+                    angularDeviation(turn.angle, STRAIGHT_ANGLE) >
+                1.4);
     };
     // Two nearly straight turns -> FORK
     //          OOOOOOO
@@ -945,7 +948,7 @@ handleThreeWayTurn(const NodeID from,
                  node_based_graph->GetEdgeData(turn_candidates[2].eid).name_id)
     {
         const auto findTurn = [isObviousOfTwo](const TurnCandidate turn,
-                                 const TurnCandidate other) -> TurnInstruction
+                                               const TurnCandidate other) -> TurnInstruction
         {
             return {isObviousOfTwo(turn, other) ? TurnType::Merge : TurnType::Turn,
                     getTurnDirection(turn.angle)};
@@ -959,14 +962,70 @@ handleThreeWayTurn(const NodeID from,
              node_based_graph->GetEdgeData(via_edge).name_id ==
                  node_based_graph->GetEdgeData(turn_candidates[1].eid).name_id)
     {
+        if (isObviousOfTwo(turn_candidates[1], turn_candidates[2]))
+        {
+            turn_candidates[1].instruction = TurnInstruction::NO_TURN();
+        }
+        else
+        {
+            turn_candidates[1].instruction = {TurnType::Continue,
+                                              getTurnDirection(turn_candidates[1].angle)};
+        }
+        turn_candidates[2].instruction = {TurnType::Turn,
+                                          getTurnDirection(turn_candidates[2].angle)};
     }
     // other street merges from the right
     else if (INVALID_NAME_ID != node_based_graph->GetEdgeData(via_edge).name_id &&
              node_based_graph->GetEdgeData(via_edge).name_id ==
                  node_based_graph->GetEdgeData(turn_candidates[2].eid).name_id)
     {
+        if (isObviousOfTwo(turn_candidates[2], turn_candidates[1]))
+        {
+            turn_candidates[2].instruction = TurnInstruction::NO_TURN();
+        }
+        else
+        {
+            turn_candidates[2].instruction = {TurnType::Continue,
+                                              getTurnDirection(turn_candidates[2].angle)};
+        }
+        turn_candidates[1].instruction = {TurnType::Turn,
+                                          getTurnDirection(turn_candidates[1].angle)};
     }
-// unnamed intersections
+    else
+    {
+        const unsigned in_name_id = node_based_graph->GetEdgeData(via_edge).name_id;
+        const unsigned out_names[2] = {
+            node_based_graph->GetEdgeData(turn_candidates[1].eid).name_id,
+            node_based_graph->GetEdgeData(turn_candidates[2].eid).name_id};
+        if (isObviousOfTwo(turn_candidates[1], turn_candidates[2]))
+        {
+            turn_candidates[1].instruction = {
+                (in_name_id != INVALID_NAME_ID || out_names[0] != INVALID_NAME_ID)
+                    ? TurnType::NewName
+                    : TurnType::NoTurn,
+                getTurnDirection(turn_candidates[1].angle)};
+        }
+        else
+        {
+            turn_candidates[1].instruction = {TurnType::Turn,
+                                              getTurnDirection(turn_candidates[1].angle)};
+        }
+
+        if (isObviousOfTwo(turn_candidates[2], turn_candidates[1]))
+        {
+            turn_candidates[2].instruction = {
+                (in_name_id != INVALID_NAME_ID || out_names[1] != INVALID_NAME_ID)
+                    ? TurnType::NewName
+                    : TurnType::NoTurn,
+                getTurnDirection(turn_candidates[2].angle)};
+        }
+        else
+        {
+            turn_candidates[2].instruction = {TurnType::Turn,
+                                              getTurnDirection(turn_candidates[2].angle)};
+        }
+    }
+// unnamed intersections or basic three way turn
 
 // remain at basic turns
 // TODO handle obviousness, Handle Merges
@@ -1616,7 +1675,13 @@ mergeSegregatedRoads(const NodeID from_node,
                      std::vector<TurnCandidate> turn_candidates,
                      const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
-    // TODO handle turn angles better
+#define PRINT_SEGREGATION_INFO 0
+
+#if PRINT_SEGREGATION_INFO
+    std::cout << "Input:\n";
+    for (const auto &candidate : turn_candidates)
+        std::cout << "\t" << candidate.toString() << std::endl;
+#endif
     const auto getLeft = [&](std::size_t index)
     {
         return (index + 1) % turn_candidates.size();
@@ -1626,24 +1691,109 @@ mergeSegregatedRoads(const NodeID from_node,
     {
         return (index + turn_candidates.size() - 1) % turn_candidates.size();
     };
-    const auto isInvalidEquivalent = [&](std::size_t this_turn, std::size_t valid_turn)
-    {
-        if (!turn_candidates[valid_turn].valid || turn_candidates[this_turn].valid)
-            return false;
 
-        return angularDeviation(turn_candidates[this_turn].angle,
-                                turn_candidates[valid_turn].angle) < NARROW_TURN_ANGLE;
+    const auto mergable = [&](std::size_t first, std::size_t second) -> bool
+    {
+        const auto &first_data = node_based_graph->GetEdgeData(turn_candidates[first].eid);
+        const auto &second_data = node_based_graph->GetEdgeData(turn_candidates[second].eid);
+#if PRINT_SEGREGATION_INFO
+        std::cout << "First:  " << first_data.name_id << " " << first_data.travel_mode << " "
+                  << first_data.road_classification.road_class << " "
+                  << turn_candidates[first].angle << " " << first_data.reversed << "\n";
+        std::cout << "Second: " << second_data.name_id << " " << second_data.travel_mode << " "
+                  << second_data.road_classification.road_class << " "
+                  << turn_candidates[second].angle << " " << second_data.reversed << std::endl;
+        std::cout << "Deviation: "
+                  << angularDeviation(turn_candidates[first].angle, turn_candidates[second].angle)
+                  << std::endl;
+#endif
+
+        return first_data.name_id != INVALID_NAME_ID && first_data.name_id == second_data.name_id &&
+               !first_data.roundabout && !second_data.roundabout &&
+               first_data.travel_mode == second_data.travel_mode &&
+               first_data.road_classification == second_data.road_classification &&
+               // compatible threshold
+               angularDeviation(turn_candidates[first].angle, turn_candidates[second].angle) < 60 &&
+               first_data.reversed != second_data.reversed;
     };
+
+    const auto merge = [](const TurnCandidate &first, const TurnCandidate &second) -> TurnCandidate
+    {
+        if (!first.valid)
+        {
+            TurnCandidate result = second;
+            result.angle = (first.angle + second.angle) / 2;
+            if (first.angle - second.angle > 180)
+                result.angle += 180;
+            if (result.angle > 360)
+                result.angle -= 360;
+
+#if PRINT_SEGREGATION_INFO
+            std::cout << "Merged: " << first.angle << " and " << second.angle << " to "
+                      << result.angle << std::endl;
+#endif
+            return result;
+        }
+        else
+        {
+            BOOST_ASSERT(!second.valid);
+            TurnCandidate result = first;
+            result.angle = (first.angle + second.angle) / 2;
+
+            if (first.angle - second.angle > 180)
+                result.angle += 180;
+            if (result.angle > 360)
+                result.angle -= 360;
+
+#if PRINT_SEGREGATION_INFO
+            std::cout << "Merged: " << first.angle << " and " << second.angle << " to "
+                      << result.angle << std::endl;
+#endif
+            return result;
+        }
+    };
+    if (turn_candidates.size() == 1)
+        return turn_candidates;
+
+    if (mergable(0, turn_candidates.size() - 1))
+    {
+        // std::cout << "First merge" << std::endl;
+        const double correction_factor =
+            (360 - turn_candidates[turn_candidates.size() - 1].angle) / 2;
+        for (std::size_t i = 1; i + 1 < turn_candidates.size(); ++i)
+            turn_candidates[i].angle += correction_factor;
+        turn_candidates[turn_candidates.size() - 1].angle = 0;
+    }
+    else if (mergable(0, 1))
+    {
+        // std::cout << "First merge" << std::endl;
+        const double correction_factor = (turn_candidates[1].angle) / 2;
+        for (std::size_t i = 2; i < turn_candidates.size(); ++i)
+            turn_candidates[i].angle += correction_factor;
+        turn_candidates[1].angle = 0;
+    }
 
     for (std::size_t index = 0; index < turn_candidates.size(); ++index)
     {
-        if (isInvalidEquivalent(index, getRight(index)) ||
-            isInvalidEquivalent(index, getLeft(index)))
+        if (mergable(index, getRight(index)))
         {
+            turn_candidates[getRight(index)] =
+                merge(turn_candidates[getRight(index)], turn_candidates[index]);
             turn_candidates.erase(turn_candidates.begin() + index);
             --index;
         }
     }
+
+    const auto ByAngle = [](const TurnCandidate &first, const TurnCandidate second)
+    {
+        return first.angle < second.angle;
+    };
+    std::sort(std::begin(turn_candidates), std::end(turn_candidates), ByAngle);
+#if PRINT_SEGREGATION_INFO
+    std::cout << "Result:\n";
+    for (const auto &candidate : turn_candidates)
+        std::cout << "\t" << candidate.toString() << std::endl;
+#endif
     return turn_candidates;
 }
 
