@@ -39,7 +39,8 @@ const constexpr double D2R = M_PI / 180.0;
 const constexpr double R2D = 180.0 / M_PI;
 const constexpr double M_PIby360 = M_PI / 360.0;
 const constexpr double MAXEXTENTby180 = MAXEXTENT / 180.0;
-const constexpr double MAX_LATITUDE = R2D * (2.0 * std::atan(std::exp(180.0 * D2R)) - M_PI_by2);
+const double MAX_LATITUDE = R2D * (2.0 * std::atan(std::exp(180.0 * D2R)) - M_PI_by2);
+// ^ math functions are not constexpr since they have side-effects (setting errno) :(
 
 // from mapnik-vector-tile
 namespace detail_pbf
