@@ -118,7 +118,7 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
             {
                 if (!on_roundabout)
                 {
-                    BOOST_ASSERT(leg_data[0][0].turn_instruction.type == TurnType::NO_TURN());
+                    BOOST_ASSERT(leg_data[0][0].turn_instruction.type == TurnInstruction::NO_TURN());
                     if (path_data[data_index].turn_instruction.type == ExitRoundabout)
                         leg_data[0][0].turn_instruction.type = TurnType::EnterRoundabout;
                     if (path_data[data_index].turn_instruction.type == ExitRotary)
@@ -196,6 +196,7 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
                                                     !entersRoundabout(data.turn_instruction)))
             {
                 data.turn_instruction = TurnInstruction::NO_TURN();
+                data.duration_until_turn = 0;
                 data.exit = 0;
             }
         }
