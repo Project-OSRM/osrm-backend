@@ -196,6 +196,7 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
                                                     !entersRoundabout(data.turn_instruction)))
             {
                 data.turn_instruction = TurnInstruction::NO_TURN();
+                data.duration_until_turn = 0;
                 data.exit = 0;
             }
         }
