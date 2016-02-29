@@ -230,9 +230,7 @@ include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 
 find_package(Boost 1.49.0 COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-if(NOT Boost_FOUND)
-  message(FATAL_ERROR "Fatal error: Boost (version >= 1.49.0) required.\n")
-endif()
+add_definitions(-DBOOST_TEST_DYN_LINK -DBOOST_SPIRIT_USE_PHOENIX_V3 -DBOOST_RESULT_OF_USE_DECLTYPE)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)
