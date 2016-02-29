@@ -79,10 +79,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     std::vector<RouteStep> steps;
     steps.reserve(number_of_segments);
 
-    // TODO do computation based on distance and choose better next vertex
-    BOOST_ASSERT(leg_geometry.locations.size() >= 4); // source, phantom, closest positions on way
-
-    auto segment_index = 0;
+    std::size_t segment_index = 0;
     if (leg_data.size() > 0)
     {
 
