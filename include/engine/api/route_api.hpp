@@ -86,7 +86,7 @@ class RouteAPI : public BaseAPI
         leg_geometries.reserve(number_of_legs);
 
         unpacked_path_segments = guidance::postProcess(std::move(unpacked_path_segments));
-        BOOST_ASSERT(locations.size() == number_of_legs + 1);
+        BOOST_ASSERT(locations->size() == number_of_legs + 1);
         for (auto idx : util::irange(0UL, number_of_legs))
         {
             const auto &phantoms = segment_end_coordinates[idx];
