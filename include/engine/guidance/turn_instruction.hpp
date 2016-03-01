@@ -125,7 +125,7 @@ struct TurnInstruction
 
     static TurnInstruction NO_TURN()
     {
-        return TurnInstruction(TurnType::NoTurn, DirectionModifier::Straight);
+        return TurnInstruction(TurnType::NoTurn, DirectionModifier::UTurn);
     }
 
     static TurnInstruction REMAIN_ROUNDABOUT(const DirectionModifier modifier)
@@ -141,6 +141,11 @@ struct TurnInstruction
     static TurnInstruction EXIT_ROUNDABOUT(const DirectionModifier modifier)
     {
         return TurnInstruction(TurnType::ExitRoundabout, modifier);
+    }
+
+    static TurnInstruction SUPPRESSED(const DirectionModifier modifier)
+    {
+        return TurnInstruction{TurnType::Suppressed,modifier};
     }
 };
 
