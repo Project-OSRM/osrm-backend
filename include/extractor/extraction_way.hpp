@@ -3,7 +3,6 @@
 
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
-#include "engine/guidance/classification_data.hpp"
 
 #include <string>
 #include <vector>
@@ -34,7 +33,6 @@ struct ExtractionWay
         name.clear();
         forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
-        road_classification_data.invalidate();
     }
 
     // These accessors exists because it's not possible to take the address of a bitfield,
@@ -53,7 +51,6 @@ struct ExtractionWay
     bool is_startpoint;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
-    engine::guidance::RoadClassificationData road_classification_data;
 };
 }
 }

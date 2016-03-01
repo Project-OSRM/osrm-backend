@@ -29,7 +29,7 @@ class TripAPI final : public RouteAPI
                       const std::vector<InternalRouteResult> &sub_routes,
                       const std::vector<PhantomNode> &phantoms,
                       util::json::Object &response,
-                      const std::vector<std::vector<util::Coordinate>> * const coordinates) const
+                      const std::vector<std::vector<util::Coordinate>> *const coordinates) const
     {
         auto number_of_routes = sub_trips.size();
         util::json::Array routes;

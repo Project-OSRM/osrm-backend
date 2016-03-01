@@ -1,4 +1,4 @@
-#include "extractor/turn_analysis.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/simple_logger.hpp"
 
@@ -8,8 +8,7 @@ namespace osrm
 {
 namespace extractor
 {
-
-namespace turn_analysis
+namespace guidance
 {
 // configuration of turn classification
 const bool constexpr INVERT = true;
@@ -28,26 +27,6 @@ const double constexpr DISTINCTION_RATIO = 2;
 const unsigned constexpr INVALID_NAME_ID = 0;
 
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
-
-using engine::guidance::TurnPossibility;
-using engine::guidance::TurnInstruction;
-using engine::guidance::DirectionModifier;
-using engine::guidance::TurnType;
-using engine::guidance::FunctionalRoadClass;
-
-using engine::guidance::classifyIntersection;
-using engine::guidance::isLowPriorityRoadClass;
-using engine::guidance::angularDeviation;
-using engine::guidance::getTurnDirection;
-using engine::guidance::getRepresentativeCoordinate;
-using engine::guidance::isBasic;
-using engine::guidance::isRampClass;
-using engine::guidance::isUturn;
-using engine::guidance::isConflict;
-using engine::guidance::isSlightTurn;
-using engine::guidance::isSlightModifier;
-using engine::guidance::mirrorDirectionModifier;
-using engine::guidance::canBeSuppressed;
 
 #define PRINT_DEBUG_CANDIDATES 0
 std::vector<TurnCandidate>
@@ -419,7 +398,8 @@ handleFromMotorway(const NodeID from,
                 if (candidate.valid)
                 {
                     BOOST_ASSERT(isRampClass(candidate.eid, node_based_graph));
-                    candidate.instruction = TurnInstruction::SUPPRESSED(getTurnDirection(candidate.angle));
+                    candidate.instruction =
+                        TurnInstruction::SUPPRESSED(getTurnDirection(candidate.angle));
                 }
             }
         }
@@ -447,27 +427,26 @@ handleFromMotorway(const NodeID from,
                     if (candidate.angle == continue_angle)
                     {
                         if (continues)
-                            candidate.instruction = TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
+                            candidate.instruction =
+                                TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
                         else // TODO handle turn direction correctly
                             candidate.instruction = {TurnType::Merge, DirectionModifier::Straight};
                     }
                     else if (candidate.angle < continue_angle)
                     {
-                        BOOST_ASSERT(isRampClass(node_based_graph->GetEdgeData(candidate.eid)
-                                                     .road_classification.road_class));
-                        candidate.instruction = {TurnType::Ramp,
-                                                 (candidate.angle < 145)
-                                                     ? DirectionModifier::Right
-                                                     : DirectionModifier::SlightRight};
+                        candidate.instruction = {
+                            isRampClass(candidate.eid, node_based_graph) ? TurnType::Ramp
+                                                                         : TurnType::Turn,
+                            (candidate.angle < 145) ? DirectionModifier::Right
+                                                    : DirectionModifier::SlightRight};
                     }
                     else if (candidate.angle > continue_angle)
                     {
-                        BOOST_ASSERT(isRampClass(node_based_graph->GetEdgeData(candidate.eid)
-                                                     .road_classification.road_class));
-                        candidate.instruction = {TurnType::Ramp,
-                                                 (candidate.angle > 215)
-                                                     ? DirectionModifier::Left
-                                                     : DirectionModifier::SlightLeft};
+                        candidate.instruction = {
+                            isRampClass(candidate.eid, node_based_graph) ? TurnType::Ramp
+                                                                         : TurnType::Turn,
+                            (candidate.angle > 215) ? DirectionModifier::Left
+                                                    : DirectionModifier::SlightLeft};
                     }
                 }
             }
@@ -633,7 +612,8 @@ handleMotorwayJunction(const NodeID from,
                        const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
     (void)from;
-    BOOST_ASSERT(!turn_candidates[0].valid);
+    // BOOST_ASSERT(!turn_candidates[0].valid); //This fails due to @themarex handling of dead end
+    // streets
     const auto &in_data = node_based_graph->GetEdgeData(via_edge);
 
     // coming from motorway
@@ -766,6 +746,7 @@ handleOneWayTurn(const NodeID from,
                  std::vector<TurnCandidate> turn_candidates,
                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
+    BOOST_ASSERT(turn_candidates[0].angle < 0.001);
     (void)from, (void)via_edge, (void)node_based_graph;
     if (!turn_candidates[0].valid)
     {
@@ -773,8 +754,6 @@ handleOneWayTurn(const NodeID from,
             << "Graph Broken. Dead end without exit found or missing reverse edge.";
     }
 
-    BOOST_ASSERT(turn_candidates[0].instruction.type == TurnType::Turn &&
-                 turn_candidates[0].instruction.direction_modifier == DirectionModifier::UTurn);
 #if PRINT_DEBUG_CANDIDATES
     std::cout << "Basic (one) Turn Candidates:\n";
     for (auto tc : turn_candidates)
@@ -791,8 +770,7 @@ handleTwoWayTurn(const NodeID from,
                  std::vector<TurnCandidate> turn_candidates,
                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
-    BOOST_ASSERT(turn_candidates[0].instruction.type == TurnType::Turn &&
-                 turn_candidates[0].instruction.direction_modifier == DirectionModifier::UTurn);
+    BOOST_ASSERT(turn_candidates[0].angle < 0.001);
 
     turn_candidates[1].instruction =
         getInstructionForObvious(from, via_edge, turn_candidates[1], node_based_graph);
@@ -813,6 +791,7 @@ handleThreeWayTurn(const NodeID from,
                    std::vector<TurnCandidate> turn_candidates,
                    const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
+    BOOST_ASSERT(turn_candidates[0].angle < 0.001);
     const auto isObviousOfTwo = [](const TurnCandidate turn, const TurnCandidate other)
     {
         return (angularDeviation(turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
@@ -971,7 +950,8 @@ handleThreeWayTurn(const NodeID from,
     {
         if (isObviousOfTwo(turn_candidates[1], turn_candidates[2]))
         {
-            turn_candidates[1].instruction = TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
+            turn_candidates[1].instruction =
+                TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
         }
         else
         {
@@ -988,7 +968,8 @@ handleThreeWayTurn(const NodeID from,
     {
         if (isObviousOfTwo(turn_candidates[2], turn_candidates[1]))
         {
-            turn_candidates[2].instruction = TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
+            turn_candidates[2].instruction =
+                TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
         }
         else
         {
@@ -1199,8 +1180,7 @@ optimizeCandidates(const EdgeID via_eid,
     for (std::size_t turn_index = 0; turn_index < turn_candidates.size(); ++turn_index)
     {
         auto &turn = turn_candidates[turn_index];
-        if (!isBasic(turn.instruction.type) || isUturn(turn.instruction) ||
-            isOnRoundabout(turn.instruction))
+        if (!isBasic(turn.instruction.type) || isUturn(turn.instruction))
             continue;
         auto &left = turn_candidates[getLeft(turn_index)];
         if (turn.angle == left.angle)
@@ -1393,8 +1373,7 @@ bool isObviousChoice(const EdgeID via_eid,
             node_based_graph->GetEdgeData(candidate.eid).road_classification.road_class))
     {
         bool is_only_normal_road = true;
-        BOOST_ASSERT(turn_candidates[0].instruction.type == TurnType::Turn &&
-                     turn_candidates[0].instruction.direction_modifier == DirectionModifier::UTurn);
+        // TODO find out why this can also be reached for non-u-turns
         for (size_t i = 0; i < turn_candidates.size(); ++i)
         {
             if (i == turn_index || turn_candidates[i].angle == 0) // skip self and u-turn
@@ -1554,7 +1533,7 @@ suppressTurns(const EdgeID via_eid,
                         }
                         else
                         {
-                            if (engine::guidance::canBeSuppressed(candidate.instruction.type))
+                            if (canBeSuppressed(candidate.instruction.type))
                                 candidate.instruction.type = TurnType::NewName;
                         }
                     }
@@ -1841,21 +1820,20 @@ handleConflicts(const NodeID from,
     (void)from;
     (void)via_edge;
     (void)node_based_graph;
-    const auto isConflict = []( const TurnCandidate &left, const TurnCandidate &right )
+    const auto isConflict = [](const TurnCandidate &left, const TurnCandidate &right)
     {
         // most obvious, same instructions conflict
-        if( left.instruction == right.instruction )
-          return true;
+        if (left.instruction == right.instruction)
+            return true;
 
         return left.instruction.direction_modifier != DirectionModifier::UTurn &&
                left.instruction.direction_modifier == right.instruction.direction_modifier;
     };
 
-
     return turn_candidates;
 }
 
 } // anemspace detail
-} // namespace turn_analysis
+} // namespace guidance
 } // namespace extractor
 } // namespace osrm
