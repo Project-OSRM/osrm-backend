@@ -7,7 +7,6 @@
 #include "util/json_renderer.hpp"
 #include "util/simple_logger.hpp"
 #include "util/string_util.hpp"
-#include "util/xml_renderer.hpp"
 #include "util/typedefs.hpp"
 
 #include "engine/route_parameters.hpp"
@@ -117,15 +116,7 @@ void RequestHandler::handle_request(const http::request &current_request,
         // set headers
         current_reply.headers.emplace_back("Content-Length",
                                            std::to_string(current_reply.content.size()));
-        if ("gpx" == route_parameters.output_format)
-        { // gpx file
-            util::json::gpx_render(current_reply.content, json_result.values["route"]);
-            current_reply.headers.emplace_back("Content-Type",
-                                               "application/gpx+xml; charset=UTF-8");
-            current_reply.headers.emplace_back("Content-Disposition",
-                                               "attachment; filename=\"route.gpx\"");
-        }
-        else if (route_parameters.jsonp_parameter.empty())
+        if (route_parameters.jsonp_parameter.empty())
         { // json file
             util::json::render(current_reply.content, json_result);
             current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");

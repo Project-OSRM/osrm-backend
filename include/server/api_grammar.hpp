@@ -62,8 +62,7 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         destination_with_options = destination >> -location_options;
         zoom = (-qi::lit('&')) >> qi::lit('z') >> '=' >>
                qi::short_[boost::bind(&HandlerT::SetZoomLevel, handler, ::_1)];
-        output = (-qi::lit('&')) >> qi::lit("output") >> '=' >>
-                 string[boost::bind(&HandlerT::SetOutputFormat, handler, ::_1)];
+        output = (-qi::lit('&')) >> qi::lit("output=json");
         jsonp = (-qi::lit('&')) >> qi::lit("jsonp") >> '=' >>
                 stringwithPercent[boost::bind(&HandlerT::SetJSONpParameter, handler, ::_1)];
         checksum = (-qi::lit('&')) >> qi::lit("checksum") >> '=' >>
