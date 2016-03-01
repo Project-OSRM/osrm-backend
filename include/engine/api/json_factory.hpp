@@ -38,7 +38,7 @@ namespace detail
 
 std::string instructionToString(extractor::TurnInstruction instruction);
 
-util::json::Array coordinateToLonLat(const util::Coordinate &coordinate);
+util::json::Array coordinateToLonLat(const util::Coordinate coordinate);
 
 std::string modeToString(const extractor::TravelMode mode);
 
