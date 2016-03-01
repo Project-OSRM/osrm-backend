@@ -128,6 +128,14 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return;
     }
 
+    // FIXME this need to be moved into the profiles
+    const char *data = input_way.get_value_by_key("highway");
+    guidance::RoadClassificationData road_classification;
+    if (data)
+    {
+        road_classification.road_class = guidance::functionalRoadClassFromTag(data);
+    }
+
     // Get the unique identifier for the street name
     const auto &string_map_iterator = string_map.find(parsed_way.name);
     unsigned name_id = external_memory.name_lengths.size();
@@ -173,7 +181,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                     name_id, backward_weight_data, true, false,
                                     parsed_way.roundabout, parsed_way.is_access_restricted,
                                     parsed_way.is_startpoint, parsed_way.backward_travel_mode,
-                                    false,parsed_way.road_classification_data));
+                                    false, road_classification));
                             });
 
         external_memory.way_start_end_id_list.push_back(
@@ -193,7 +201,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                     name_id, forward_weight_data, true, !forward_only,
                                     parsed_way.roundabout, parsed_way.is_access_restricted,
                                     parsed_way.is_startpoint, parsed_way.forward_travel_mode,
-                                    split_edge,parsed_way.road_classification_data));
+                                    split_edge, road_classification));
                             });
         if (split_edge)
         {
@@ -206,7 +214,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                         OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
                         backward_weight_data, false, true, parsed_way.roundabout,
                         parsed_way.is_access_restricted, parsed_way.is_startpoint,
-                        parsed_way.backward_travel_mode, true,parsed_way.road_classification_data));
+                        parsed_way.backward_travel_mode, true, road_classification));
                 });
         }
 

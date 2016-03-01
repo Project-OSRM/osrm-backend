@@ -10,9 +10,9 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/turn_analysis.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -71,12 +71,12 @@ class EdgeBasedGraphFactory
     // with known angle.
     // Handles special cases like u-turns and roundabouts
     // For basic turns, the turn based on the angle-classification is returned
-    engine::guidance::TurnInstruction AnalyzeTurn(const NodeID u,
-                                                  const EdgeID e1,
-                                                  const NodeID v,
-                                                  const EdgeID e2,
-                                                  const NodeID w,
-                                                  const double angle) const;
+    guidance::TurnInstruction AnalyzeTurn(const NodeID u,
+                                          const EdgeID e1,
+                                          const NodeID v,
+                                          const EdgeID e2,
+                                          const NodeID w,
+                                          const double angle) const;
 
     std::int32_t GetTurnPenalty(double angle, lua_State *lua_state) const;
 
@@ -128,10 +128,6 @@ class EdgeBasedGraphFactory
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
-
-    // Use In Order to generate base turns
-    std::vector<TurnCandidate> getTurns(const NodeID from, const EdgeID via_edge);
-    // cannot be const due to the counters...
 
     std::size_t restricted_turns_counter;
     std::size_t skipped_uturns_counter;

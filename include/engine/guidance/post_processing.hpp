@@ -12,7 +12,7 @@ namespace engine
 namespace guidance
 {
 
-std::vector<std::vector<PathData>> postProcess( std::vector<std::vector<PathData>> path_data );
+std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>> path_data);
 
 } // namespace guidance
 } // namespace engine

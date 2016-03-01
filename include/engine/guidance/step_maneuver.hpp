@@ -2,7 +2,7 @@
 #define ENGINE_GUIDANCE_STEP_MANEUVER_HPP
 
 #include "util/coordinate.hpp"
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 namespace osrm
 {
@@ -16,7 +16,7 @@ struct StepManeuver
     util::Coordinate location;
     double bearing_before;
     double bearing_after;
-    TurnInstruction instruction;
+    extractor::guidance::TurnInstruction instruction;
     unsigned exit;
 };
 } // namespace guidance
