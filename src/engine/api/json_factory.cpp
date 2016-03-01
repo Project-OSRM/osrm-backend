@@ -99,7 +99,7 @@ std::string instructionToString(extractor::TurnInstruction instruction)
     return token;
 }
 
-util::json::Array coordinateToLonLat(const util::Coordinate &coordinate)
+util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
 {
     util::json::Array array;
     array.values.push_back(static_cast<double>(toFloating(coordinate.lon)));
