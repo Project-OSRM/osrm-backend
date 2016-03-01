@@ -46,9 +46,7 @@ std::string modeToString(const extractor::TravelMode mode);
 
 template <typename ForwardIter> util::json::String makePolyline(ForwardIter begin, ForwardIter end)
 {
-    util::json::String polyline;
-    polyline.value = encodePolyline(begin, end);
-    return polyline;
+    return {encodePolyline(begin, end)};
 }
 
 template <typename ForwardIter>
