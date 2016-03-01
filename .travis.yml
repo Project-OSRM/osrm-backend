@@ -146,20 +146,20 @@ before_script:
 
 script:
   - make --jobs=2
-  - make tests --jobs=2
-  - make benchmarks
+  # - make tests --jobs=2
+  # - make benchmarks
   - sudo make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
-  - ./extractor-tests
-  - ./engine-tests
-  - ./util-tests
+  # - ./extractor-tests
+  # - ./engine-tests
+  # - ./util-tests
   - cd ..
-  - cucumber -p verify
-  - make -C test/data
+  # - cucumber -p verify
+  # - make -C test/data
   - mkdir example/build && cd example/build
   - cmake ..
   - make
-  - ./osrm-example ../../test/data/berlin-latest.osrm
+  # - ./osrm-example ../../test/data/berlin-latest.osrm
