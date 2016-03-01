@@ -10,10 +10,12 @@
 
 #include <boost/assert.hpp>
 #include <boost/range/irange.hpp>
+#include <boost/optional.hpp>
 
 #include <string>
 #include <utility>
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
 namespace osrm
