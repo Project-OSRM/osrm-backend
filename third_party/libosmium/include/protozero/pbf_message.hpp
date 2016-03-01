@@ -19,7 +19,7 @@ documentation.
 #include <type_traits>
 
 #include <protozero/pbf_reader.hpp>
-#include <protozero/pbf_types.hpp>
+#include <protozero/types.hpp>
 
 namespace protozero {
 

@@ -45,9 +45,9 @@ namespace osmium {
         int m_peak = 0;
 
 #ifdef __linux__
-        int parse_number(const std::string& line) {
-            int f = line.find_first_of("0123456789");
-            int l = line.find_last_of("0123456789");
+        static int parse_number(const std::string& line) {
+            const auto f = line.find_first_of("0123456789");
+            const auto l = line.find_last_of("0123456789");
             return std::atoi(line.substr(f, l-f+1).c_str());
         }
 #endif
