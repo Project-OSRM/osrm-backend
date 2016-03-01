@@ -188,7 +188,6 @@ int Extractor::run()
                                 local_state, "way_function",
                                 boost::cref(static_cast<const osmium::Way &>(*entity)),
                                 boost::ref(result_way));
-                            result_way.road_classification_data.augment(static_cast<const osmium::Way &>(*entity));
                             resulting_ways.push_back(std::make_pair(x, result_way));
                             break;
                         case osmium::item_type::relation:
