@@ -188,6 +188,12 @@ AnalyzeTurn(const NodeID node_u,
             const NodeID node_w,
             const double angle,
             const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+
+std::vector<TurnCandidate>
+handleConflicts(const NodeID from,
+                const EdgeID via_edge,
+                std::vector<TurnCandidate> turn_candidates,
+                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 } // namespace detail
 } // namespace turn_analysis
 } // namespace extractor
