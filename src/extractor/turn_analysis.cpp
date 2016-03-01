@@ -116,17 +116,23 @@ getTurns(const NodeID from,
         }
         if (turn_candidates.size() == 3)
         {
-            return detail::handleThreeWayTurn(from, via_edge, std::move(turn_candidates),
-                                              node_based_graph);
+            return detail::handleConflicts(
+                from, via_edge, detail::handleThreeWayTurn(
+                                    from, via_edge, std::move(turn_candidates), node_based_graph),
+                node_based_graph);
         }
         if (turn_candidates.size() == 4)
         {
-            return detail::handleFourWayTurn(from, via_edge, std::move(turn_candidates),
-                                             node_based_graph);
+            return detail::handleConflicts(
+                from, via_edge, detail::handleFourWayTurn(
+                                    from, via_edge, std::move(turn_candidates), node_based_graph),
+                node_based_graph);
         }
         // complex intersection, potentially requires conflict resolution
-        return detail::handleComplexTurn(from, via_edge, std::move(turn_candidates),
-                                         node_based_graph);
+        return detail::handleConflicts(
+            from, via_edge,
+            detail::handleComplexTurn(from, via_edge, std::move(turn_candidates), node_based_graph),
+            node_based_graph);
     }
 
 #if PRINT_DEBUG_CANDIDATES
@@ -413,7 +419,7 @@ handleFromMotorway(const NodeID from,
                 if (candidate.valid)
                 {
                     BOOST_ASSERT(isRampClass(candidate.eid, node_based_graph));
-                    candidate.instruction = TurnInstruction::NO_TURN();
+                    candidate.instruction = TurnInstruction::SUPPRESSED(getTurnDirection(candidate.angle));
                 }
             }
         }
@@ -441,7 +447,7 @@ handleFromMotorway(const NodeID from,
                     if (candidate.angle == continue_angle)
                     {
                         if (continues)
-                            candidate.instruction = TurnInstruction::NO_TURN();
+                            candidate.instruction = TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
                         else // TODO handle turn direction correctly
                             candidate.instruction = {TurnType::Merge, DirectionModifier::Straight};
                     }
@@ -727,7 +733,7 @@ noTurnOrNewName(const NodeID from,
     if (in_data.name_id == out_data.name_id)
     {
         if (angularDeviation(candidate.angle, 0) > 0.01)
-            return TurnInstruction::NO_TURN();
+            return TurnInstruction::SUPPRESSED(getTurnDirection(candidate.angle));
 
         return {TurnType::Turn, DirectionModifier::UTurn};
     }
@@ -965,7 +971,7 @@ handleThreeWayTurn(const NodeID from,
     {
         if (isObviousOfTwo(turn_candidates[1], turn_candidates[2]))
         {
-            turn_candidates[1].instruction = TurnInstruction::NO_TURN();
+            turn_candidates[1].instruction = TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
         }
         else
         {
@@ -982,7 +988,7 @@ handleThreeWayTurn(const NodeID from,
     {
         if (isObviousOfTwo(turn_candidates[2], turn_candidates[1]))
         {
-            turn_candidates[2].instruction = TurnInstruction::NO_TURN();
+            turn_candidates[2].instruction = TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
         }
         else
         {
@@ -1421,8 +1427,7 @@ suppressTurns(const EdgeID via_eid,
 {
     if (turn_candidates.size() == 3)
     {
-        BOOST_ASSERT(turn_candidates[0].instruction.direction_modifier ==
-                     DirectionModifier::UTurn);
+        BOOST_ASSERT(turn_candidates[0].instruction.direction_modifier == DirectionModifier::UTurn);
         if (isLowPriorityRoadClass(node_based_graph->GetEdgeData(turn_candidates[1].eid)
                                        .road_classification.road_class) &&
             !isLowPriorityRoadClass(node_based_graph->GetEdgeData(turn_candidates[2].eid)
@@ -1825,6 +1830,29 @@ AnalyzeTurn(const NodeID node_u,
 
     // assign a designated turn angle instruction purely based on the angle
     return {TurnType::Turn, getTurnDirection(angle)};
+}
+
+std::vector<TurnCandidate>
+handleConflicts(const NodeID from,
+                const EdgeID via_edge,
+                std::vector<TurnCandidate> turn_candidates,
+                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
+{
+    (void)from;
+    (void)via_edge;
+    (void)node_based_graph;
+    const auto isConflict = []( const TurnCandidate &left, const TurnCandidate &right )
+    {
+        // most obvious, same instructions conflict
+        if( left.instruction == right.instruction )
+          return true;
+
+        return left.instruction.direction_modifier != DirectionModifier::UTurn &&
+               left.instruction.direction_modifier == right.instruction.direction_modifier;
+    };
+
+
+    return turn_candidates;
 }
 
 } // anemspace detail
