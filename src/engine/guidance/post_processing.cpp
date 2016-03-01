@@ -1,6 +1,7 @@
 #include "engine/guidance/post_processing.hpp"
 #include "engine/guidance/turn_instruction.hpp"
-#include "engine/guidance/guidance_toolkit.hpp"
+
+#include "engine/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
 #include <iostream>
@@ -118,7 +119,8 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
             {
                 if (!on_roundabout)
                 {
-                    BOOST_ASSERT(leg_data[0][0].turn_instruction.type == TurnInstruction::NO_TURN());
+                    BOOST_ASSERT(leg_data[0][0].turn_instruction.type ==
+                                 TurnInstruction::NO_TURN());
                     if (path_data[data_index].turn_instruction.type == ExitRoundabout)
                         leg_data[0][0].turn_instruction.type = TurnType::EnterRoundabout;
                     if (path_data[data_index].turn_instruction.type == ExitRotary)

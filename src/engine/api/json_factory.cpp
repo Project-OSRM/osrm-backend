@@ -24,14 +24,36 @@ namespace json
 namespace detail
 {
 
+const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
+                                          "straight", "slight left", "left",  "sharp left"};
+
+// translations of TurnTypes. Not all types are exposed to the outside world.
+// invalid types should never be returned as part of the API
+const constexpr char *turn_type_names[] = {
+    "invalid", "no turn",    "waypoint",    "invalid",        "new name",    "continue",
+    "turn",    "merge",      "ramp",        "fork",           "end of road", "roundabout",
+    "invalid", "roundabout", "invalid",     "traffic circle", "invalid",     "traffic circle",
+    "invalid", "invalid",    "restriction", "notification"};
+
+// Check whether to include a modifier in the result of the API
+inline bool isValidModifier(const guidance::TurnType type,
+                            const guidance::DirectionModifier modifier)
+{
+    if (type == guidance::TurnType::Location && modifier != guidance::DirectionModifier::Left &&
+        modifier != guidance::DirectionModifier::Straight &&
+        modifier != guidance::DirectionModifier::Right)
+        return false;
+    return true;
+}
+
 std::string instructionTypeToString(guidance::TurnType type)
 {
-    return guidance::turn_type_names[static_cast<std::size_t>(type)];
+    return turn_type_names[static_cast<std::size_t>(type)];
 }
 
 std::string instructionModifierToString(guidance::DirectionModifier modifier)
 {
-    return guidance::modifier_names[static_cast<std::size_t>(modifier)];
+    return modifier_names[static_cast<std::size_t>(modifier)];
 }
 
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
@@ -100,9 +122,9 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
-    if( guidance::isValidModifier( maneuver.instruction.type, maneuver.instruction.direction_modifier ) )
-      step_maneuver.values["modifier"] =
-          detail::instructionModifierToString(maneuver.instruction.direction_modifier);
+    if (detail::isValidModifier(maneuver.instruction.type, maneuver.instruction.direction_modifier))
+        step_maneuver.values["modifier"] =
+            detail::instructionModifierToString(maneuver.instruction.direction_modifier);
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = maneuver.bearing_before;
     step_maneuver.values["bearing_after"] = maneuver.bearing_after;

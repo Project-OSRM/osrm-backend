@@ -205,7 +205,7 @@ class BasePlugin
                 }
             }
 
-            // we didn't found a fitting node, return error
+            // we didn't find a fitting node, return error
             if (phantom_nodes[i].empty())
             {
                 break;
@@ -266,7 +266,7 @@ class BasePlugin
                 }
             }
 
-            // we didn't found a fitting node, return error
+            // we didn't find a fitting node, return error
             if (!phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()))
             {
                 //TODO document why?

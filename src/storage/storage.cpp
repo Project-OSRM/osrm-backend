@@ -37,9 +37,8 @@ namespace storage
 {
 
 using RTreeLeaf = typename engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode = util::StaticRTree<RTreeLeaf,
-                                    util::ShM<util::Coordinate, true>::vector,
-                                    true>::TreeNode;
+using RTreeNode =
+    util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 
 // delete a shared memory region. report warning if it could not be deleted
@@ -311,7 +310,7 @@ int Storage::Run()
     unsigned coordinate_list_size = 0;
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
-                                                                coordinate_list_size);
+                                                      coordinate_list_size);
 
     // load geometries sizes
     std::ifstream geometry_input_stream(geometries_data_path.string().c_str(), std::ios::binary);
@@ -458,9 +457,8 @@ int Storage::Run()
     }
 
     // Loading list of coordinates
-    util::Coordinate *coordinates_ptr =
-        shared_layout_ptr->GetBlockPtr<util::Coordinate, true>(
-            shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
+    util::Coordinate *coordinates_ptr = shared_layout_ptr->GetBlockPtr<util::Coordinate, true>(
+        shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
 
     extractor::QueryNode current_node;
     for (unsigned i = 0; i < coordinate_list_size; ++i)

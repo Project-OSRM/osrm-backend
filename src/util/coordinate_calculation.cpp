@@ -17,21 +17,19 @@ namespace util
 namespace coordinate_calculation
 {
 
-double euclideanDistance(const Coordinate coordinate_1,
-                         const Coordinate coordinate_2)
+double euclideanDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
     const double x1 = static_cast<double>(toFloating(coordinate_1.lon));
     const double y1 = mercator::latToY(toFloating(coordinate_1.lat));
     const double x2 = static_cast<double>(toFloating(coordinate_2.lon));
     const double y2 = mercator::latToY(toFloating(coordinate_2.lat));
-    const double dx = x1-x2;
-    const double dy = y1-y2;
+    const double dx = x1 - x2;
+    const double dy = y1 - y2;
 
     return std::sqrt(dx * dx + dy * dy);
 }
 
-double haversineDistance(const Coordinate coordinate_1,
-                         const Coordinate coordinate_2)
+double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
     auto lon1 = static_cast<int>(coordinate_1.lon);
     auto lat1 = static_cast<int>(coordinate_1.lat);
@@ -262,10 +260,11 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
 Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
 {
     BOOST_ASSERT(0 <= factor && factor <= 1.0);
-    return {from.lon + toFixed(FloatLongitude(
-                           factor * static_cast<double>(toFloating(to.lon - from.lon)))),
-            from.lat + toFixed(FloatLatitude(
-                           factor * static_cast<double>(toFloating(to.lat - from.lat))))};
+    return {
+        from.lon +
+            toFixed(FloatLongitude(factor * static_cast<double>(toFloating(to.lon - from.lon)))),
+        from.lat +
+            toFixed(FloatLatitude(factor * static_cast<double>(toFloating(to.lat - from.lat))))};
 }
 
 namespace mercator

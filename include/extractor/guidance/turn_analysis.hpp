@@ -1,9 +1,8 @@
 #ifndef OSRM_EXTRACTOR_TURN_ANALYSIS
 #define OSRM_EXTRACTOR_TURN_ANALYSIS
 
-#include "engine/guidance/turn_classification.hpp"
-#include "engine/guidance/guidance_toolkit.hpp"
-
+#include "extractor/guidance/turn_classification.hpp"
+#include "extractor/guidance/toolkit.hpp"
 #include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
 
@@ -12,6 +11,8 @@
 namespace osrm
 {
 namespace extractor
+{
+namespace guidance
 {
 
 struct TurnCandidate
@@ -38,8 +39,6 @@ struct TurnCandidate
         return result;
     }
 };
-namespace turn_analysis
-{
 
 // the entry into the turn analysis
 std::vector<TurnCandidate>
@@ -57,6 +56,7 @@ namespace detail
 // Check for restrictions/barriers and generate a list of valid and invalid turns present at the
 // node reached
 // from `from_node` via `via_eid`
+// The resulting candidates have to be analysed for their actual instructions later on.
 std::vector<TurnCandidate>
 getTurnCandidates(const NodeID from_node,
                   const EdgeID via_eid,
@@ -66,16 +66,28 @@ getTurnCandidates(const NodeID from_node,
                   const std::unordered_set<NodeID> &barrier_nodes,
                   const CompressedEdgeContainer &compressed_edge_container);
 
-// merge segregated roads to omit invalid turns in favor of treating segregated roads as one
+// Merge segregated roads to omit invalid turns in favor of treating segregated roads as one.
+// This function combines roads the following way:
+//
+//     *                           *
+//     *        is converted to    *
+//   v   ^                         +
+//   v   ^                         +
+//
+// The treatment results in a straight turn angle of 180º rather than a turn angle of approx 160
 std::vector<TurnCandidate>
 mergeSegregatedRoads(const NodeID from_node,
                      const EdgeID via_eid,
                      std::vector<TurnCandidate> turn_candidates,
                      const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-// handle roundabouts
+
 // TODO distinguish roundabouts and rotaries
 // TODO handle bike/walk cases that allow crossing a roundabout!
+
+// Processing of roundabouts
+// Produces instructions to enter/exit a roundabout or to stay on it.
+// Performs the distinction between roundabout and rotaries.
 std::vector<TurnCandidate>
 handleRoundabouts(const NodeID from,
                   const EdgeID via_edge,
@@ -85,11 +97,14 @@ handleRoundabouts(const NodeID from,
                   std::vector<TurnCandidate> turn_candidates,
                   const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//A Basic junction is a junction not requiring special treatment. It cannot contain anything
+//but streets of lesser priority than trunks and ramps (of any type). No roundabouts or motorway like types.
 bool isBasicJunction(const NodeID from,
                      const EdgeID via_edge,
                      const std::vector<TurnCandidate> &turn_candidates,
                      const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Indicates a Junction containing a motoryway
 bool isMotorwayJunction(const NodeID from,
                         const EdgeID via_edge,
                         const std::vector<TurnCandidate> &turn_candidates,
@@ -103,61 +118,79 @@ turnOrRamp(const NodeID from,
            const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
 // Get the Instruction for an obvious turn
+// Instruction will be a silent instruction
 engine::guidance::TurnInstruction
 getInstructionForObvious(const NodeID from,
                          const EdgeID via_edge,
                          const TurnCandidate &candidate,
                          const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Helper Function that decides between NoTurn or NewName
 engine::guidance::TurnInstruction
 noTurnOrNewName(const NodeID from,
                 const EdgeID via_edge,
                 const TurnCandidate &candidate,
                 const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-// handle basic intersections
+//Basic Turn Handling
+
+//Dead end.
 std::vector<TurnCandidate>
 handleOneWayTurn(const NodeID from,
                  const EdgeID via_edge,
                  std::vector<TurnCandidate> turn_candidates,
                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Mode Changes, new names...
 std::vector<TurnCandidate>
 handleTwoWayTurn(const NodeID from,
                  const EdgeID via_edge,
                  std::vector<TurnCandidate> turn_candidates,
                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Forks, T intersections and similar
 std::vector<TurnCandidate>
 handleThreeWayTurn(const NodeID from,
                    const EdgeID via_edge,
                    std::vector<TurnCandidate> turn_candidates,
                    const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Normal Intersection. Can still contain forks...
 std::vector<TurnCandidate>
 handleFourWayTurn(const NodeID from,
                   const EdgeID via_edge,
                   std::vector<TurnCandidate> turn_candidates,
                   const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Fallback for turns of high complexion
 std::vector<TurnCandidate>
 handleComplexTurn(const NodeID from,
                   const EdgeID via_edge,
                   std::vector<TurnCandidate> turn_candidates,
                   const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Any Junction containing motorways
 std::vector<TurnCandidate>
 handleMotorwayJunction(const NodeID from,
                        const EdgeID via_edge,
                        std::vector<TurnCandidate> turn_candidates,
                        const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Utility function, setting basic turn types. Prepares for normal turn handling.
 std::vector<TurnCandidate>
 setTurnTypes(const NodeID from,
              const EdgeID via_edge,
              std::vector<TurnCandidate> turn_candidates,
              const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+//Utility function to handle direction modifier conflicts if reasonably possible
+std::vector<TurnCandidate>
+handleConflicts(const NodeID from,
+                const EdgeID via_edge,
+                std::vector<TurnCandidate> turn_candidates,
+                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+
+//Old fallbacks, to be removed
 std::vector<TurnCandidate>
 optimizeRamps(const EdgeID via_edge,
               std::vector<TurnCandidate> turn_candidates,
@@ -189,13 +222,8 @@ AnalyzeTurn(const NodeID node_u,
             const double angle,
             const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-std::vector<TurnCandidate>
-handleConflicts(const NodeID from,
-                const EdgeID via_edge,
-                std::vector<TurnCandidate> turn_candidates,
-                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 } // namespace detail
-} // namespace turn_analysis
+} // namespace guidance
 } // namespace extractor
 } // namespace osrm
 

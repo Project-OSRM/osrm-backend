@@ -4,8 +4,8 @@
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
 #include "engine/guidance/leg_geometry.hpp"
-#include "engine/guidance/guidance_toolkit.hpp"
 #include "engine/guidance/turn_instruction.hpp"
+#include "engine/guidance/toolkit.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -59,7 +59,6 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                      boost::optional<util::Coordinate> source_location,
                                      boost::optional<util::Coordinate> target_location)
 {
-    (void) source_location;
     const auto source_duration =
         (source_traversed_in_reverse ? source_node.GetReverseWeightPlusOffset()
                                      : source_node.GetForwardWeightPlusOffset()) /
@@ -80,15 +79,20 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     steps.reserve(number_of_segments);
 
     std::size_t segment_index = 0;
+    const auto initial_modifier =
+        (source_location && leg_geometry.locations.size() >= 2)
+            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
+                  source_location.get(), *(leg_geometry.locations.begin()),
+                  *(leg_geometry.locations.begin() + 1)))
+            : DirectionModifier::UTurn;
+
     if (leg_data.size() > 0)
     {
 
-        StepManeuver maneuver = detail::stepManeuverFromGeometry(
-            TurnInstruction{TurnType::Location, DirectionModifier::UTurn}, leg_geometry,
-            segment_index, INVALID_EXIT_NR);
-        maneuver.instruction.direction_modifier = bearingToDirectionModifier(maneuver.bearing_before);
+        StepManeuver maneuver =
+            detail::stepManeuverFromGeometry(TurnInstruction{TurnType::Location, initial_modifier},
+                                             leg_geometry, segment_index, INVALID_EXIT_NR);
 
-        // TODO fix this: it makes no sense
         // PathData saves the information we need of the segment _before_ the turn,
         // but a RouteStep is with regard to the segment after the turn.
         // We need to skip the first segment because it is already covered by the
@@ -108,7 +112,6 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                 segment_index++;
             }
         }
-        // TODO remove this hack
         const auto distance = leg_geometry.segment_distances[segment_index];
         steps.push_back(RouteStep{target_node.name_id, facade.get_name_for_id(target_node.name_id),
                                   target_duration, distance, target_mode, maneuver,
@@ -123,9 +126,8 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // x---*---*---*---z compressed edge
         //       |-------| duration
         StepManeuver maneuver = {source_node.location, 0., 0.,
-                                 TurnInstruction{TurnType::Location, DirectionModifier::UTurn},
+                                 TurnInstruction{TurnType::Location, initial_modifier},
                                  INVALID_EXIT_NR};
-        maneuver.instruction.direction_modifier = bearingToDirectionModifier(maneuver.bearing_before);
 
         steps.push_back(RouteStep{source_node.name_id, facade.get_name_for_id(source_node.name_id),
                                   target_duration - source_duration,
@@ -136,10 +138,11 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
     const auto final_modifier =
-        target_location ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                              *(leg_geometry.locations.end() - 3),
-                              *(leg_geometry.locations.end() - 1), target_location.get()))
-                        : DirectionModifier::UTurn;
+        (target_location && leg_geometry.locations.size() >= 2)
+            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
+                  *(leg_geometry.locations.end() - 2), *(leg_geometry.locations.end() - 1),
+                  target_location.get()))
+            : DirectionModifier::UTurn;
     // This step has length zero, the only reason we need it is the target location
     steps.push_back(RouteStep{
         target_node.name_id, facade.get_name_for_id(target_node.name_id), 0., 0., target_mode,

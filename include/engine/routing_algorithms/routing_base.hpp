@@ -227,6 +227,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
 
         std::pair<NodeID, NodeID> edge;
+        const constexpr EdgeWeight TRAVEL_TIME_ZERO = 0;
         while (!recursion_stack.empty())
         {
             // edge.first         edge.second
@@ -292,7 +293,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
                     unpacked_path.push_back(PathData{facade->GetGeometryIndexForEdgeID(ed.id),
                                                      name_index, ed.distance, turn_instruction,
-                                                     travel_mode,INVALID_EXIT_NR});
+                                                     travel_mode, INVALID_EXIT_NR});
                 }
                 else
                 {
@@ -313,9 +314,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     BOOST_ASSERT(start_index <= end_index);
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
-                        unpacked_path.push_back(PathData{id_vector[i], name_index, 0,
+                        unpacked_path.push_back(PathData{id_vector[i], name_index, TRAVEL_TIME_ZERO,
                                                          guidance::TurnInstruction::NO_TURN(),
-                                                         travel_mode,INVALID_EXIT_NR});
+                                                         travel_mode, INVALID_EXIT_NR});
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().duration_until_turn = ed.distance;
@@ -363,10 +364,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
                 unpacked_path.emplace_back(
                     PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                             0, guidance::TurnInstruction::NO_TURN(),
+                             TRAVEL_TIME_ZERO, guidance::TurnInstruction::NO_TURN(),
                              target_traversed_in_reverse
                                  ? phantom_node_pair.target_phantom.backward_travel_mode
-                                 : phantom_node_pair.target_phantom.forward_travel_mode,INVALID_EXIT_NR});
+                                 : phantom_node_pair.target_phantom.forward_travel_mode,
+                             INVALID_EXIT_NR});
             }
         }
 

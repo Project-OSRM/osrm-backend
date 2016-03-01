@@ -10,7 +10,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/turn_analysis.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 
 #include "engine/guidance/turn_instruction.hpp"
 
@@ -128,10 +128,6 @@ class EdgeBasedGraphFactory
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
-
-    // Use In Order to generate base turns
-    std::vector<TurnCandidate> getTurns(const NodeID from, const EdgeID via_edge);
-    // cannot be const due to the counters...
 
     std::size_t restricted_turns_counter;
     std::size_t skipped_uturns_counter;
