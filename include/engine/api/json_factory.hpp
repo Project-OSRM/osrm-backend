@@ -55,11 +55,7 @@ util::json::Object makeGeoJSONLineString(ForwardIter begin, ForwardIter end)
     util::json::Object geojson;
     geojson.values["type"] = "LineString";
     util::json::Array coordinates;
-    std::transform(begin, end, std::back_inserter(coordinates.values),
-                   [](const util::Coordinate loc)
-                   {
-                       return detail::coordinateToLonLat(loc);
-                   });
+    std::transform(begin, end, std::back_inserter(coordinates.values), &detail::coordinateToLonLat);
     geojson.values["coordinates"] = std::move(coordinates);
     return geojson;
 }
