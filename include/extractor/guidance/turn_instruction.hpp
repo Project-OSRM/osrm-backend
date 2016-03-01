@@ -7,7 +7,7 @@
 
 namespace osrm
 {
-namespace engine
+namespace extractor
 {
 namespace guidance
 {
@@ -31,17 +31,6 @@ enum DirectionModifier
     SlightLeft,
     Left,
     SharpLeft
-};
-
-const constexpr char *modifier_names[detail::num_direction_modifiers] = {
-    "uturn",    "sharp right", "right", "slight right",
-    "straight", "slight left", "left",  "sharp left"};
-
-enum LocationType
-{
-    Start,
-    Intermediate,
-    Destination
 };
 
 // enum class TurnType : unsigned char
@@ -71,42 +60,7 @@ enum TurnType // at the moment we can support 32 turn types, without increasing 
     Notification            // Travel Mode Changes`
 };
 
-inline bool isValidModifier( const TurnType type, const DirectionModifier modifier )
-{
-  if( type == TurnType::Location && 
-      modifier != DirectionModifier::Left
-      && modifier != DirectionModifier::Straight
-      && modifier != DirectionModifier::Right )
-    return false;
-  return true;
-}
-
-const constexpr char *turn_type_names[] = {"invalid",
-                                           "no turn",
-                                           "waypoint",
-                                           "invalid",
-                                           "new name",
-                                           "continue",
-                                           "turn",
-                                           "merge",
-                                           "ramp",
-                                           "fork",
-                                           "end of road",
-                                           "roundabout",
-                                           "invalid",
-                                           "roundabout",
-                                           "invalid",
-                                           "traffic circle",
-                                           "invalid",
-                                           "traffic circle",
-                                           "invalid",
-                                           "invalid",
-                                           "restriction",
-                                           "notification"};
-
 // turn angle in 1.40625 degree -> 128 == 180 degree
-typedef uint8_t DiscreteAngle;
-
 struct TurnInstruction
 {
     TurnInstruction(const TurnType type = TurnType::Invalid,
@@ -135,7 +89,7 @@ struct TurnInstruction
 
     static TurnInstruction ENTER_ROUNDABOUT(const DirectionModifier modifier)
     {
-          return TurnInstruction(TurnType::EnterRoundabout, modifier);
+        return TurnInstruction(TurnType::EnterRoundabout, modifier);
     }
 
     static TurnInstruction EXIT_ROUNDABOUT(const DirectionModifier modifier)
@@ -145,7 +99,7 @@ struct TurnInstruction
 
     static TurnInstruction SUPPRESSED(const DirectionModifier modifier)
     {
-        return TurnInstruction{TurnType::Suppressed,modifier};
+        return TurnInstruction{TurnType::Suppressed, modifier};
     }
 };
 
@@ -159,15 +113,8 @@ inline bool operator==(const TurnInstruction lhs, const TurnInstruction rhs)
     return lhs.type == rhs.type && lhs.direction_modifier == rhs.direction_modifier;
 }
 
-// Silent Turn Instructions are not to be mentioned to the outside world
-inline bool isSilent(const TurnInstruction instruction)
-{
-    return instruction.type == TurnType::NoTurn || instruction.type == TurnType::Suppressed ||
-           instruction.type == TurnType::StayOnRoundabout;
-}
-
 } // namespace guidance
-} // namespace engine
+} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_

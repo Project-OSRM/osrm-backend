@@ -4,7 +4,7 @@
 #include "util/dynamic_graph.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "util/graph_utils.hpp"
-#include "engine/guidance/classification_data.hpp"
+#include "extractor/guidance/classification_data.hpp"
 
 #include <tbb/parallel_sort.h>
 
@@ -46,13 +46,15 @@ struct NodeBasedEdgeData
     bool roundabout : 1;
     bool startpoint : 1;
     extractor::TravelMode travel_mode : 4;
-    engine::guidance::RoadClassificationData road_classification;
+    extractor::guidance::RoadClassificationData road_classification;
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
-        //TODO roundabout/startpoint/access_restricted should all be part of this??
-        return (reversed == other.reversed) && (name_id == other.name_id) &&
-               (travel_mode == other.travel_mode && road_classification == other.road_classification);
+        return (name_id == other.name_id) && (reversed == other.reversed) &&
+               (roundabout == other.roundabout) && (startpoint == other.startpoint) &&
+               (access_restricted == other.access_restricted) &&
+               (travel_mode == other.travel_mode) &&
+               (road_classification == other.road_classification);
     }
 };
 
