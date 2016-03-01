@@ -58,7 +58,9 @@ double bearing(const Coordinate first_coordinate, const Coordinate second_coordi
 // Get angle of line segment (A,C)->(C,B)
 double computeAngle(const Coordinate first, const Coordinate second, const Coordinate third);
 
-Coordinate interpolateLinear( double factor, const Coordinate from, const Coordinate to );
+// factor in [0,1]. Returns point along the straight line between from and to. 0 returns from, 1
+// returns to
+Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to);
 
 namespace mercator
 {

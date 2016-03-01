@@ -9,7 +9,7 @@
 
 #include "osrm/coordinate.hpp"
 #include <utility>
-#include "engine/guidance/classification_data.hpp"
+#include "extractor/guidance/classification_data.hpp"
 
 namespace osrm
 {
@@ -52,7 +52,7 @@ struct InternalExtractorEdge
                  true,
                  TRAVEL_MODE_INACCESSIBLE,
                  false,
-                 engine::guidance::RoadClassificationData::INVALID())
+                 guidance::RoadClassificationData())
     {
     }
 
@@ -67,7 +67,7 @@ struct InternalExtractorEdge
                                    bool startpoint,
                                    TravelMode travel_mode,
                                    bool is_split,
-                                   engine::guidance::RoadClassificationData road_classification)
+                                   guidance::RoadClassificationData road_classification)
         : result(OSMNodeID(source),
                  OSMNodeID(target),
                  name_id,
@@ -96,13 +96,13 @@ struct InternalExtractorEdge
     {
         return InternalExtractorEdge(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, WeightData(), false, false,
                                      false, false, true, TRAVEL_MODE_INACCESSIBLE, false,
-                                     engine::guidance::RoadClassificationData::INVALID());
+                                     guidance::RoadClassificationData());
     }
     static InternalExtractorEdge max_osm_value()
     {
         return InternalExtractorEdge(MAX_OSM_NODEID, MAX_OSM_NODEID, 0, WeightData(), false, false,
                                      false, false, true, TRAVEL_MODE_INACCESSIBLE, false,
-                                     engine::guidance::RoadClassificationData::INVALID());
+                                     guidance::RoadClassificationData());
     }
 
     static InternalExtractorEdge min_internal_value()

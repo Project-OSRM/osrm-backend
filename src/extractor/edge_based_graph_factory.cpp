@@ -1,6 +1,5 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
-#include "extractor/turn_analysis.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/percent.hpp"
@@ -10,8 +9,7 @@
 #include "util/timing_util.hpp"
 #include "util/exception.hpp"
 
-#include "engine/guidance/turn_classification.hpp"
-#include "engine/guidance/guidance_toolkit.hpp"
+#include "extractor/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
 
@@ -305,56 +303,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
-
-    struct CompareTurnPossibilities
-    {
-        bool operator()(const std::vector<engine::guidance::TurnPossibility> &left,
-                        const std::vector<engine::guidance::TurnPossibility> &right) const
-        {
-            if (left.size() < right.size())
-                return true;
-            if (left.size() > right.size())
-                return false;
-            for (std::size_t i = 0; i < left.size(); ++i)
-            {
-                if ((((int)left[i].angle + 16) % 256) / 32 <
-                    (((int)right[i].angle + 16) % 256) / 32)
-                    return true;
-                if ((((int)left[i].angle + 16) % 256) / 32 >
-                    (((int)right[i].angle + 16) % 256) / 32)
-                    return false;
-            }
-            return false;
-        }
-    };
-
-// temporary switch to allow display of turn types
-#define SHOW_TURN_TYPES 0
-#if SHOW_TURN_TYPES
-    std::map<std::vector<engine::guidance::TurnPossibility>,
-             std::vector<util::FixedPointCoordinate>, CompareTurnPossibilities> turn_types;
-#endif
-
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
-#if SHOW_TURN_TYPES
-        auto turn_possibilities = classifyIntersection(
-            node_u, *m_node_based_graph, m_compressed_edge_container, m_node_info_list);
-        if (turn_possibilities.empty())
-            continue;
-        auto set = turn_types.find(turn_possibilities);
-        if (set != turn_types.end())
-        {
-            if (set->second.size() < 5)
-                set->second.emplace_back(m_node_info_list[node_u].lat,
-                                         m_node_info_list[node_u].lon);
-        }
-        else
-        {
-            turn_types[turn_possibilities] = std::vector<util::FixedPointCoordinate>(
-                1, {m_node_info_list[node_u].lat, m_node_info_list[node_u].lon});
-        }
-#endif
         // progress.printStatus(node_u);
         for (const EdgeID edge_from_u : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
@@ -364,8 +314,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }
 
             ++node_based_edge_counter;
-            auto turn_candidates = turn_analysis::getTurns(node_u, edge_from_u, m_node_based_graph, m_node_info_list, m_restriction_map, m_barrier_nodes,
-                    m_compressed_edge_container);
+            auto turn_candidates = guidance::getTurns(
+                node_u, edge_from_u, m_node_based_graph, m_node_info_list, m_restriction_map,
+                m_barrier_nodes, m_compressed_edge_container);
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
 
@@ -394,7 +345,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);
                 const auto turn_instruction = turn.instruction;
 
-                if (isUturn(turn_instruction))
+                if (guidance::isUturn(turn_instruction))
                 {
                     distance += speed_profile.u_turn_penalty;
                 }
@@ -505,21 +456,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }
         }
     }
-#if SHOW_TURN_TYPES
-    std::cout << "[info] found " << turn_types.size() << " turn types." << std::endl;
-    for (const auto &tt : turn_types)
-    {
-        std::cout << tt.second.size();
-        for (auto coord : tt.second)
-            std::cout << " " << coord.lat << " " << coord.lon;
-
-        std::cout << " " << tt.first.size();
-        for (auto tte : tt.first)
-            std::cout << " " << (int)tte.angle;
-
-        std::cout << std::endl;
-    }
-#endif
 
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
