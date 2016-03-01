@@ -8,7 +8,7 @@
 #include "util/static_rtree.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "extractor/travel_mode.hpp"
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "storage/storage.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_barriers.hpp"
@@ -225,7 +225,7 @@ int Storage::Run()
                                               number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::TravelMode>(SharedDataLayout::TRAVEL_MODE,
                                                            number_of_original_edges);
-    shared_layout_ptr->SetBlockSize<engine::guidance::TurnInstruction>(
+    shared_layout_ptr->SetBlockSize<extractor::guidance::TurnInstruction>(
         SharedDataLayout::TURN_INSTRUCTION, number_of_original_edges);
     // note: there are 32 geometry indicators in one unsigned block
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDICATORS,
@@ -393,8 +393,8 @@ int Storage::Run()
         shared_layout_ptr->GetBlockPtr<extractor::TravelMode, true>(shared_memory_ptr,
                                                                     SharedDataLayout::TRAVEL_MODE);
 
-    engine::guidance::TurnInstruction *turn_instructions_ptr =
-        shared_layout_ptr->GetBlockPtr<engine::guidance::TurnInstruction, true>(
+    extractor::guidance::TurnInstruction *turn_instructions_ptr =
+        shared_layout_ptr->GetBlockPtr<extractor::guidance::TurnInstruction, true>(
             shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
 
     unsigned *geometries_indicator_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(

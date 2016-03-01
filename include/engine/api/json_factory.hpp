@@ -1,7 +1,7 @@
 #ifndef ENGINE_RESPONSE_OBJECTS_HPP_
 #define ENGINE_RESPONSE_OBJECTS_HPP_
 
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
 #include "engine/polyline_compressor.hpp"
 #include "engine/guidance/route_step.hpp"
@@ -32,8 +32,8 @@ namespace json
 namespace detail
 {
 
-std::string instructionTypeToString(guidance::TurnType type);
-std::string instructionModifierToString(guidance::DirectionModifier modifier);
+std::string instructionTypeToString(extractor::guidance::TurnType type);
+std::string instructionModifierToString(extractor::guidance::DirectionModifier modifier);
 
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate);
 

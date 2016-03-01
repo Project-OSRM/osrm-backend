@@ -7,6 +7,8 @@
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 
+#include "extractor/guidance/turn_instruction.hpp"
+
 #include "engine/geospatial_query.hpp"
 #include "util/range_table.hpp"
 #include "util/static_graph.hpp"
@@ -70,7 +72,7 @@ class SharedDataFacade final : public BaseDataFacade
     std::shared_ptr<util::ShM<util::Coordinate, true>::vector> m_coordinate_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
-    util::ShM<guidance::TurnInstruction, true>::vector m_turn_instruction_list;
+    util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, true>::vector m_travel_mode_list;
     util::ShM<char, true>::vector m_names_char_list;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
@@ -146,9 +148,9 @@ class SharedDataFacade final : public BaseDataFacade
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
-        auto turn_instruction_list_ptr = data_layout->GetBlockPtr<guidance::TurnInstruction>(
+        auto turn_instruction_list_ptr = data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
             shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
-        typename util::ShM<guidance::TurnInstruction, true>::vector turn_instruction_list(
+        typename util::ShM<extractor::guidance::TurnInstruction, true>::vector turn_instruction_list(
             turn_instruction_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list = std::move(turn_instruction_list);
@@ -411,7 +413,7 @@ class SharedDataFacade final : public BaseDataFacade
         return m_via_node_list.at(id);
     }
 
-    guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }
