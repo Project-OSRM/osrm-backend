@@ -58,7 +58,7 @@ namespace osmium {
              */
             class SegmentList {
 
-                typedef std::vector<NodeRefSegment> slist_type;
+                using slist_type = std::vector<NodeRefSegment>;
 
                 slist_type m_segments;
 
@@ -67,10 +67,11 @@ namespace osmium {
             public:
 
                 explicit SegmentList(bool debug) noexcept :
+                    m_segments(),
                     m_debug(debug) {
                 }
 
-                ~SegmentList() = default;
+                ~SegmentList() noexcept = default;
 
                 SegmentList(const SegmentList&) = delete;
                 SegmentList(SegmentList&&) = delete;
@@ -88,6 +89,15 @@ namespace osmium {
                 }
 
                 typedef slist_type::const_iterator const_iterator;
+                typedef slist_type::iterator iterator;
+
+                iterator begin() noexcept {
+                    return m_segments.begin();
+                }
+
+                iterator end() noexcept {
+                    return m_segments.end();
+                }
 
                 const_iterator begin() const noexcept {
                     return m_segments.begin();
@@ -98,8 +108,8 @@ namespace osmium {
                 }
 
                 /**
-                 * Enable or disable debug output to stderr. This is for Osmium
-                 * developers only.
+                 * Enable or disable debug output to stderr. This is used
+                 * for debugging libosmium itself.
                  */
                 void enable_debug_output(bool debug = true) noexcept {
                     m_debug = debug;
@@ -148,9 +158,9 @@ namespace osmium {
 
                 /**
                  * Find duplicate segments (ie same start and end point) in the
-                 * list and remove them. This will always remove pairs of the same
-                 * segment. So if there are three, for instance, two will be
-                 * removed and one will be left.
+                 * list and remove them. This will always remove pairs of the
+                 * same segment. So if there are three, for instance, two will
+                 * be removed and one will be left.
                  */
                 void erase_duplicate_segments() {
                     while (true) {
@@ -168,7 +178,8 @@ namespace osmium {
                 /**
                  * Find intersection between segments.
                  *
-                 * @param problem_reporter Any intersections found are reported to this object.
+                 * @param problem_reporter Any intersections found are
+                 *                         reported to this object.
                  * @returns true if there are intersections.
                  */
                 bool find_intersections(osmium::area::ProblemReporter* problem_reporter) const {

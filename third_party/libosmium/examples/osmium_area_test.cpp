@@ -99,13 +99,13 @@ int main(int argc, char* argv[]) {
     osmium::area::Assembler::config_type assembler_config;
     osmium::area::MultipolygonCollector<osmium::area::Assembler> collector(assembler_config);
 
-    std::cout << "Pass 1...\n";
+    std::cerr << "Pass 1...\n";
     osmium::io::Reader reader1(infile, osmium::osm_entity_bits::relation);
     collector.read_relations(reader1);
     reader1.close();
-    std::cout << "Pass 1 done\n";
+    std::cerr << "Pass 1 done\n";
 
-    std::cout << "Memory:\n";
+    std::cerr << "Memory:\n";
     collector.used_memory();
 
     index_pos_type index_pos;
@@ -113,15 +113,15 @@ int main(int argc, char* argv[]) {
     location_handler_type location_handler(index_pos, index_neg);
     location_handler.ignore_errors(); // XXX
 
-    std::cout << "Pass 2...\n";
+    std::cerr << "Pass 2...\n";
     osmium::io::Reader reader2(infile);
     osmium::apply(reader2, location_handler, collector.handler([&handler](osmium::memory::Buffer&& buffer) {
         osmium::apply(buffer, handler);
     }));
     reader2.close();
-    std::cout << "Pass 2 done\n";
+    std::cerr << "Pass 2 done\n";
 
-    std::cout << "Memory:\n";
+    std::cerr << "Memory:\n";
     collector.used_memory();
 
     std::vector<const osmium::Relation*> incomplete_relations = collector.get_incomplete_relations();
