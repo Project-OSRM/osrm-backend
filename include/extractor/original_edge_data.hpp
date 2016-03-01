@@ -2,7 +2,7 @@
 #define ORIGINAL_EDGE_DATA_HPP
 
 #include "extractor/travel_mode.hpp"
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "util/typedefs.hpp"
 
 #include <limits>
@@ -16,7 +16,7 @@ struct OriginalEdgeData
 {
     explicit OriginalEdgeData(NodeID via_node,
                               unsigned name_id,
-                              engine::guidance::TurnInstruction turn_instruction,
+                              guidance::TurnInstruction turn_instruction,
                               TravelMode travel_mode)
         : via_node(via_node), name_id(name_id), turn_instruction(turn_instruction),
           travel_mode(travel_mode)
@@ -26,14 +26,14 @@ struct OriginalEdgeData
     OriginalEdgeData()
         : via_node(std::numeric_limits<unsigned>::max()),
           name_id(std::numeric_limits<unsigned>::max()),
-          turn_instruction(engine::guidance::TurnInstruction::INVALID()),
+          turn_instruction(guidance::TurnInstruction::INVALID()),
           travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
     NodeID via_node;
     unsigned name_id;
-    engine::guidance::TurnInstruction turn_instruction;
+    guidance::TurnInstruction turn_instruction;
     TravelMode travel_mode;
 };
 }
