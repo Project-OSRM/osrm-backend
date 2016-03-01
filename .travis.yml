@@ -5,10 +5,10 @@ dist: trusty
 notifications:
   email: false
 
-branches:
-  only:
-    - master
-    - develop
+# branches:
+#   only:
+#     - master
+#     - develop
 
 matrix:
   fast_finish: true
