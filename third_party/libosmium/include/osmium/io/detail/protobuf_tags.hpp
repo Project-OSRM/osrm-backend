@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <protozero/pbf_types.hpp>
+#include <protozero/types.hpp>
 
 namespace osmium {
 

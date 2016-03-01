@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/types.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/memory/buffer.hpp>
+#include <osmium/util/iterator.hpp>
 #include <osmium/visitor.hpp>
 
 #include <osmium/relations/detail/relation_meta.hpp>
@@ -60,6 +61,17 @@ namespace osmium {
      * @brief Code related to the assembly of OSM relations
      */
     namespace relations {
+
+        namespace detail {
+
+            template <typename R>
+            inline typename std::iterator_traits<typename R::iterator>::difference_type count_not_removed(const R& range) {
+                return std::count_if(range.begin(), range.end(), [](MemberMeta& mm) {
+                    return !mm.removed();
+                });
+            }
+
+        } // namespace detail
 
         /**
          * The Collector class collects members of a relation. This is a generic
@@ -175,7 +187,9 @@ namespace osmium {
              * One vector each for nodes, ways, and relations containing all
              * mappings from member ids to their relations.
              */
-            std::vector<MemberMeta> m_member_meta[3];
+            using mm_vector_type = std::vector<MemberMeta>;
+            using mm_iterator = mm_vector_type::iterator;
+            mm_vector_type m_member_meta[3];
 
             int m_count_complete = 0;
 
@@ -183,6 +197,11 @@ namespace osmium {
             callback_func_type m_callback;
 
             static constexpr size_t initial_buffer_size = 1024 * 1024;
+
+            iterator_range<mm_iterator> find_member_meta(osmium::item_type type, osmium::object_id_type id) {
+                auto& mmv = member_meta(type);
+                return iterator_range<mm_iterator>{std::equal_range(mmv.begin(), mmv.end(), MemberMeta(id))};
+            }
 
         public:
 
@@ -367,10 +386,9 @@ namespace osmium {
              *          relation and false otherwise
              */
             bool find_and_add_object(const osmium::OSMObject& object) {
-                auto& mmv = member_meta(object.type());
-                auto range = std::equal_range(mmv.begin(), mmv.end(), MemberMeta(object.id()));
+                auto range = find_member_meta(object.type(), object.id());
 
-                if (osmium::relations::count_not_removed(range.first, range.second) == 0) {
+                if (detail::count_not_removed(range) == 0) {
                     // nothing found
                     return false;
                 }
@@ -379,13 +397,12 @@ namespace osmium {
                     members_buffer().add_item(object);
                     const size_t member_offset = members_buffer().commit();
 
-                    for (auto it = range.first; it != range.second; ++it) {
-                        it->set_buffer_offset(member_offset);
+                    for (auto& member_meta : range) {
+                        member_meta.set_buffer_offset(member_offset);
                     }
                 }
 
-                for (auto it = range.first; it != range.second; ++it) {
-                    MemberMeta& member_meta = *it;
+                for (auto& member_meta : range) {
                     if (member_meta.removed()) {
                         break;
                     }
@@ -405,11 +422,6 @@ namespace osmium {
                     }
                 }
 
-                // Remove MemberMetas that were marked as removed.
-                mmv.erase(std::remove_if(mmv.begin(), mmv.end(), [](MemberMeta& mm) {
-                    return mm.removed();
-                }), mmv.end());
-
                 return true;
             }
 
@@ -417,19 +429,18 @@ namespace osmium {
                 const osmium::Relation& relation = get_relation(relation_meta);
                 for (const auto& member : relation.members()) {
                     if (member.ref() != 0) {
-                        auto& mmv = member_meta(member.type());
-                        auto range = std::equal_range(mmv.begin(), mmv.end(), MemberMeta(member.ref()));
-                        assert(range.first != range.second);
+                        auto range = find_member_meta(member.type(), member.ref());
+                        assert(!range.empty());
 
                         // if this is the last time this object was needed
                         // then mark it as removed
-                        if (osmium::relations::count_not_removed(range.first, range.second) == 1) {
-                            get_member(range.first->buffer_offset()).set_removed(true);
+                        if (detail::count_not_removed(range) == 1) {
+                            get_member(range.begin()->buffer_offset()).set_removed(true);
                         }
 
-                        for (auto it = range.first; it != range.second; ++it) {
-                            if (!it->removed() && relation.id() == get_relation(it->relation_pos()).id()) {
-                                it->remove();
+                        for (auto& member_meta : range) {
+                            if (!member_meta.removed() && relation.id() == get_relation(member_meta.relation_pos()).id()) {
+                                member_meta.remove();
                                 break;
                             }
                         }
@@ -446,24 +457,24 @@ namespace osmium {
                 const uint64_t relations_buffer_capacity = m_relations_buffer.capacity();
                 const uint64_t members_buffer_capacity = m_members_buffer.capacity();
 
-                std::cout << "  nR  = m_relations.capacity() ........... = " << std::setw(12) << m_relations.capacity() << "\n";
-                std::cout << "  nMN = m_member_meta[NODE].capacity() ... = " << std::setw(12) << m_member_meta[0].capacity() << "\n";
-                std::cout << "  nMW = m_member_meta[WAY].capacity() .... = " << std::setw(12) << m_member_meta[1].capacity() << "\n";
-                std::cout << "  nMR = m_member_meta[RELATION].capacity() = " << std::setw(12) << m_member_meta[2].capacity() << "\n";
-                std::cout << "  nM  = m_member_meta[*].capacity() ...... = " << std::setw(12) << nmembers << "\n";
+                std::cerr << "  nR  = m_relations.capacity() ........... = " << std::setw(12) << m_relations.capacity() << "\n";
+                std::cerr << "  nMN = m_member_meta[NODE].capacity() ... = " << std::setw(12) << m_member_meta[0].capacity() << "\n";
+                std::cerr << "  nMW = m_member_meta[WAY].capacity() .... = " << std::setw(12) << m_member_meta[1].capacity() << "\n";
+                std::cerr << "  nMR = m_member_meta[RELATION].capacity() = " << std::setw(12) << m_member_meta[2].capacity() << "\n";
+                std::cerr << "  nM  = m_member_meta[*].capacity() ...... = " << std::setw(12) << nmembers << "\n";
 
-                std::cout << "  sRM = sizeof(RelationMeta) ............. = " << std::setw(12) << sizeof(RelationMeta) << "\n";
-                std::cout << "  sMM = sizeof(MemberMeta) ............... = " << std::setw(12) << sizeof(MemberMeta) << "\n\n";
+                std::cerr << "  sRM = sizeof(RelationMeta) ............. = " << std::setw(12) << sizeof(RelationMeta) << "\n";
+                std::cerr << "  sMM = sizeof(MemberMeta) ............... = " << std::setw(12) << sizeof(MemberMeta) << "\n\n";
 
-                std::cout << "  nR * sRM ............................... = " << std::setw(12) << relations << "\n";
-                std::cout << "  nM * sMM ............................... = " << std::setw(12) << members << "\n";
-                std::cout << "  relations_buffer_capacity .............. = " << std::setw(12) << relations_buffer_capacity << "\n";
-                std::cout << "  members_buffer_capacity ................ = " << std::setw(12) << members_buffer_capacity << "\n";
+                std::cerr << "  nR * sRM ............................... = " << std::setw(12) << relations << "\n";
+                std::cerr << "  nM * sMM ............................... = " << std::setw(12) << members << "\n";
+                std::cerr << "  relations_buffer_capacity .............. = " << std::setw(12) << relations_buffer_capacity << "\n";
+                std::cerr << "  members_buffer_capacity ................ = " << std::setw(12) << members_buffer_capacity << "\n";
 
                 const uint64_t total = relations + members + relations_buffer_capacity + members_buffer_capacity;
 
-                std::cout << "  total .................................. = " << std::setw(12) << total << "\n";
-                std::cout << "  =======================================================\n";
+                std::cerr << "  total .................................. = " << std::setw(12) << total << "\n";
+                std::cerr << "  =======================================================\n";
 
                 return relations_buffer_capacity + members_buffer_capacity + relations + members;
             }
@@ -481,10 +492,9 @@ namespace osmium {
             }
 
             size_t get_offset(osmium::item_type type, osmium::object_id_type id) {
-                const auto& mmv = member_meta(type);
-                const auto range = std::equal_range(mmv.cbegin(), mmv.cend(), MemberMeta(id));
-                assert(range.first != range.second);
-                return range.first->buffer_offset();
+                const auto range = find_member_meta(type, id);
+                assert(!range.empty());
+                return range.begin()->buffer_offset();
             }
 
             template <typename TIter>
@@ -502,11 +512,10 @@ namespace osmium {
 
             void moving_in_buffer(size_t old_offset, size_t new_offset) {
                 const osmium::OSMObject& object = m_members_buffer.get<osmium::OSMObject>(old_offset);
-                auto& mmv = member_meta(object.type());
-                auto range = std::equal_range(mmv.begin(), mmv.end(), MemberMeta(object.id()));
-                for (auto it = range.first; it != range.second; ++it) {
-                    assert(it->buffer_offset() == old_offset);
-                    it->set_buffer_offset(new_offset);
+                auto range = find_member_meta(object.type(), object.id());
+                for (auto& member_meta : range) {
+                    assert(member_meta.buffer_offset() == old_offset);
+                    member_meta.set_buffer_offset(new_offset);
                 }
             }
 

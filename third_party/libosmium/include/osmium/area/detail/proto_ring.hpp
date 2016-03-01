@@ -118,12 +118,20 @@ namespace osmium {
                     return m_segments.front();
                 }
 
+                const NodeRef& get_node_ref_front() const {
+                    return get_segment_front().first();
+                }
+
                 const NodeRefSegment& get_segment_back() const {
                     return m_segments.back();
                 }
 
                 NodeRefSegment& get_segment_back() {
                     return m_segments.back();
+                }
+
+                const NodeRef& get_node_ref_back() const {
+                    return get_segment_back().second();
                 }
 
                 bool closed() const {
