@@ -12,6 +12,7 @@
 #include "engine/guidance/turn_instruction.hpp"
 
 #include <map>
+#include <cmath>
 
 namespace osrm
 {
