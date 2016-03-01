@@ -47,6 +47,7 @@ using engine::guidance::isConflict;
 using engine::guidance::isSlightTurn;
 using engine::guidance::isSlightModifier;
 using engine::guidance::mirrorDirectionModifier;
+using engine::guidance::canBeSuppressed;
 
 #define PRINT_DEBUG_CANDIDATES 0
 std::vector<TurnCandidate>

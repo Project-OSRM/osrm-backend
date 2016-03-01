@@ -77,7 +77,7 @@ add_dependencies(UTIL FingerPrintConfigure)
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(osrm-extract src/tools/extract.cpp src/engine/guidance/classification_data.cpp)
-add_executable(osrm-prepare src/tools/contract.cpp)
+add_executable(osrm-prepare src/tools/contract.cpp src/engine/guidance/classification_data.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL> src/extractor/compressed_edge_container.cpp)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
 add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
