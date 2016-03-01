@@ -90,6 +90,10 @@ std::string instructionToString(extractor::TurnInstruction instruction)
     case extractor::TurnInstruction::AccessRestrictionPenalty:
         BOOST_ASSERT_MSG(false, "Invalid turn type used");
         break;
+
+    default:
+        BOOST_ASSERT_MSG(false, "unknown TurnInstruction");
+        break;
     }
 
     return token;
