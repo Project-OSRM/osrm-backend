@@ -13,6 +13,10 @@
 #include <iterator>
 #include <vector>
 
+using TurnType = osrm::extractor::guidance::TurnType;
+using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
+using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
+
 namespace osrm
 {
 namespace engine
@@ -24,14 +28,36 @@ namespace json
 namespace detail
 {
 
-std::string instructionTypeToString(guidance::TurnType type)
+const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
+                                          "straight", "slight left", "left",  "sharp left"};
+
+// translations of TurnTypes. Not all types are exposed to the outside world.
+// invalid types should never be returned as part of the API
+const constexpr char *turn_type_names[] = {
+    "invalid", "no turn",    "waypoint",    "invalid",        "new name",    "continue",
+    "turn",    "merge",      "ramp",        "fork",           "end of road", "roundabout",
+    "invalid", "roundabout", "invalid",     "traffic circle", "invalid",     "traffic circle",
+    "invalid", "invalid",    "restriction", "notification"};
+
+// Check whether to include a modifier in the result of the API
+inline bool isValidModifier(const TurnType type,
+                            const DirectionModifier modifier)
 {
-    return guidance::turn_type_names[static_cast<std::size_t>(type)];
+    if (type == TurnType::Location && modifier != DirectionModifier::Left &&
+        modifier != DirectionModifier::Straight &&
+        modifier != DirectionModifier::Right)
+        return false;
+    return true;
 }
 
-std::string instructionModifierToString(guidance::DirectionModifier modifier)
+std::string instructionTypeToString(TurnType type)
 {
-    return guidance::modifier_names[static_cast<std::size_t>(modifier)];
+    return turn_type_names[static_cast<std::size_t>(type)];
+}
+
+std::string instructionModifierToString(DirectionModifier modifier)
+{
+    return modifier_names[static_cast<std::size_t>(modifier)];
 }
 
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
@@ -100,9 +126,9 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
-    if( guidance::isValidModifier( maneuver.instruction.type, maneuver.instruction.direction_modifier ) )
-      step_maneuver.values["modifier"] =
-          detail::instructionModifierToString(maneuver.instruction.direction_modifier);
+    if (detail::isValidModifier(maneuver.instruction.type, maneuver.instruction.direction_modifier))
+        step_maneuver.values["modifier"] =
+            detail::instructionModifierToString(maneuver.instruction.direction_modifier);
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = maneuver.bearing_before;
     step_maneuver.values["bearing_after"] = maneuver.bearing_after;

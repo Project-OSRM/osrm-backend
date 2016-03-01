@@ -140,9 +140,9 @@ InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &sna
     {
         uturns.resize(trip.size() + 1);
         std::transform(trip.begin(), trip.end(), uturns.begin(), [&parameters](const NodeID idx)
-                {
-                return parameters.uturns[idx];
-                });
+                       {
+                           return parameters.uturns[idx];
+                       });
         BOOST_ASSERT(uturns.size() > 0);
         uturns.back() = parameters.uturns[trip.front()];
     }
@@ -248,9 +248,9 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     for (const auto &trip : trips)
     {
         routes.push_back(ComputeRoute(snapped_phantoms, parameters, trip));
-        ordered_coordinates.push_back( std::vector<util::Coordinate>() );
-        for( const auto nid : trip )
-          ordered_coordinates.back().push_back( parameters.coordinates[nid] );
+        ordered_coordinates.push_back(std::vector<util::Coordinate>());
+        for (const auto nid : trip)
+            ordered_coordinates.back().push_back(parameters.coordinates[nid]);
     }
 
     api::TripAPI trip_api{BasePlugin::facade, parameters};
