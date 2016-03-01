@@ -1,0 +1,159 @@
+#-----------------------------------------------------------------------------
+#
+#  Configuration for continuous integration service at travis-ci.org
+#
+#-----------------------------------------------------------------------------
+
+language: cpp
+
+sudo: false
+
+matrix:
+  include:
+
+    # 1/ Linux Clang Builds
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['llvm-toolchain-precise-3.5', 'ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['clang-3.5', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='clang++-3.5' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['llvm-toolchain-precise-3.5', 'ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['clang-3.5', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='clang++-3.5' BUILD_TYPE='Dev'
+
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['llvm-toolchain-precise-3.6', 'ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['clang-3.6', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='clang++-3.6' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['llvm-toolchain-precise-3.6', 'ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['clang-3.6', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='clang++-3.6' BUILD_TYPE='Dev'
+
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['llvm-toolchain-precise-3.7', 'ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['clang-3.7', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='clang++-3.7' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['llvm-toolchain-precise-3.7', 'ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['clang-3.7', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='clang++-3.7' BUILD_TYPE='Dev'
+
+
+    # 2/ Linux GCC Builds
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['g++-4.8', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='g++-4.8' COMPILER_FLAGS='-Wno-return-type' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['g++-4.8', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='g++-4.8' COMPILER_FLAGS='-Wno-return-type' BUILD_TYPE='Dev'
+
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['g++-4.9', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='g++-4.9' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['g++-4.9', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='g++-4.9' BUILD_TYPE='Dev'
+
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['g++-5', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='g++-5' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'boost-latest']
+          packages: ['g++-5', 'libboost1.55-all-dev', 'libgdal-dev', 'libgeos++-dev', 'libproj-dev', 'libsparsehash-dev', 'spatialite-bin']
+      env: COMPILER='g++-5' BUILD_TYPE='Dev'
+
+
+    # 3/ OSX Clang Builds
+    - os: osx
+      osx_image: xcode6.4
+      compiler: clang
+      env: COMPILER='clang++' BUILD_TYPE='Dev'
+
+    - os: osx
+      osx_image: xcode6.4
+      compiler: clang
+      env: COMPILER='clang++' BUILD_TYPE='Release'
+
+
+    - os: osx
+      osx_image: xcode7
+      compiler: clang
+      env: COMPILER='clang++' BUILD_TYPE='Dev'
+
+    - os: osx
+      osx_image: xcode7
+      compiler: clang
+      env: COMPILER='clang++' BUILD_TYPE='Release'
+
+
+install:
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
+  - git clone --quiet --depth 1 https://github.com/osmcode/osm-testdata.git
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      brew remove gdal
+      brew install cmake boost google-sparsehash gdal
+    fi
+
+before_script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - mkdir build && cd build
+  - CXX=${COMPILER} CXXFLAGS=${COMPILER_FLAGS} cmake -LA .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DOSM_TESTDATA="${TRAVIS_BUILD_DIR}/deps/osm-testdata"
+
+script:
+  - make VERBOSE=1
+  - ctest --output-on-failure
+
