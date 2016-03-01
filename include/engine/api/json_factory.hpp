@@ -4,6 +4,11 @@
 #include "extractor/turn_instructions.hpp"
 #include "extractor/travel_mode.hpp"
 #include "engine/polyline_compressor.hpp"
+#include "engine/guidance/route_step.hpp"
+#include "engine/guidance/step_maneuver.hpp"
+#include "engine/guidance/route_leg.hpp"
+#include "engine/guidance/route.hpp"
+#include "engine/guidance/leg_geometry.hpp"
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 
@@ -19,15 +24,6 @@ namespace engine
 {
 
 struct Hint;
-
-namespace guidance
-{
-class RouteLeg;
-class RouteStep;
-class StepManeuver;
-class Route;
-class LegGeometry;
-}
 
 namespace api
 {
@@ -62,19 +58,19 @@ util::json::Object makeGeoJSONLineString(ForwardIter begin, ForwardIter end)
 
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver);
 
-util::json::Object makeRouteStep(guidance::RouteStep &&step,
+util::json::Object makeRouteStep(guidance::RouteStep step,
                                  boost::optional<util::json::Value> geometry);
 
 util::json::Object makeRoute(const guidance::Route &route,
-                             util::json::Array &&legs,
+                             util::json::Array legs,
                              boost::optional<util::json::Value> geometry);
 
 util::json::Object
-makeWaypoint(const util::Coordinate location, std::string &&name, const Hint &hint);
+makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint);
 
-util::json::Object makeRouteLeg(guidance::RouteLeg &&leg, util::json::Array &&steps);
+util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps);
 
-util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> &&legs,
+util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
                                 std::vector<util::json::Value> step_geometries);
 }
 }
