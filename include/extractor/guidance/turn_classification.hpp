@@ -1,8 +1,7 @@
 #ifndef OSRM_GUIDANCE_TURN_CLASSIFICATION_HPP_
 #define OSRM_GUIDANCE_TURN_CLASSIFICATION_HPP_
 
-#include "engine/guidance/turn_instruction.hpp"
-#include "engine/guidance/guidance_toolkit.hpp"
+#include "extractor/guidance/toolkit.hpp"
 
 #include "util/typedefs.hpp"
 #include "util/coordinate.hpp"
@@ -17,7 +16,7 @@
 
 namespace osrm
 {
-namespace engine
+namespace extractor
 {
 namespace guidance
 {
@@ -33,6 +32,26 @@ struct TurnPossibility
 
     DiscreteAngle angle;
     EdgeID edge_id;
+};
+
+struct CompareTurnPossibilities
+{
+    bool operator()(const std::vector<TurnPossibility> &left,
+                    const std::vector<TurnPossibility> &right) const
+    {
+        if (left.size() < right.size())
+            return true;
+        if (left.size() > right.size())
+            return false;
+        for (std::size_t i = 0; i < left.size(); ++i)
+        {
+            if ((((int)left[i].angle + 16) % 256) / 32 < (((int)right[i].angle + 16) % 256) / 32)
+                return true;
+            if ((((int)left[i].angle + 16) % 256) / 32 > (((int)right[i].angle + 16) % 256) / 32)
+                return false;
+        }
+        return false;
+    }
 };
 
 inline std::vector<TurnPossibility>
@@ -98,7 +117,7 @@ classifyIntersection(NodeID nid,
 }
 
 } // namespace guidance
-} // namespace engine
+} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_TURN_CLASSIFICATION_HPP_
