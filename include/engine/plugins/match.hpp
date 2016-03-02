@@ -260,7 +260,7 @@ template <class DataFacadeT> class MapMatchingPlugin : public BasePlugin
         if (max_locations_map_matching > 0 &&
             static_cast<int>(route_parameters.coordinates.size()) > max_locations_map_matching)
         {
-            json_result.values["status_message"] = "Too many coodindates";
+            json_result.values["status_message"] = "Too many coordinates";
             return Status::Error;
         }
 
