@@ -92,9 +92,9 @@ struct RouteParameters
 
     void SetCoordinatesFromGeometry(const std::string &geometry_string);
 
-    void SetX(const int &x);
-    void SetZ(const int &z);
-    void SetY(const int &y);
+    bool SetX(const int x);
+    bool SetZ(const int z);
+    bool SetY(const int y);
 
     short zoom_level;
     bool print_instructions;

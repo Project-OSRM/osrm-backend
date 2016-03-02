@@ -16,6 +16,18 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
 {
     explicit APIGrammar(HandlerT *h) : APIGrammar::base_type(api_call), handler(h)
     {
+        const auto set_x_wrapper = [this](const int x, bool &pass)
+        {
+            pass = handler->SetX(x);
+        };
+        const auto set_y_wrapper = [this](const int y, bool &pass)
+        {
+            pass = handler->SetY(y);
+        };
+        const auto set_z_wrapper = [this](const int z, bool &pass)
+        {
+            pass = handler->SetZ(z);
+        };
         const auto add_bearing_wrapper = [this](
             const boost::fusion::vector<int, boost::optional<int>> &received_bearing, bool &pass)
         {
@@ -110,12 +122,12 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
         locs = (-qi::lit('&')) >> qi::lit("locs") >> '=' >>
                stringforPolyline[boost::bind(&HandlerT::SetCoordinatesFromGeometry, handler, ::_1)];
 
-        z = (-qi::lit('&')) >> qi::lit("tz") >> '=' >>
-            qi::int_[boost::bind(&HandlerT::SetZ, handler, ::_1)];
         x = (-qi::lit('&')) >> qi::lit("tx") >> '=' >>
-            qi::int_[boost::bind(&HandlerT::SetX, handler, ::_1)];
+            qi::int_[boost::bind<void>(set_x_wrapper, ::_1, ::_3)];
         y = (-qi::lit('&')) >> qi::lit("ty") >> '=' >>
-            qi::int_[boost::bind(&HandlerT::SetY, handler, ::_1)];
+            qi::int_[boost::bind<void>(set_y_wrapper, ::_1, ::_3)];
+        z = (-qi::lit('&')) >> qi::lit("tz") >> '=' >>
+            qi::int_[boost::bind<void>(set_z_wrapper, ::_1, ::_3)];
 
         string = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));

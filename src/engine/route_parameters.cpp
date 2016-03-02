@@ -144,8 +144,25 @@ void RouteParameters::SetCoordinatesFromGeometry(const std::string &geometry_str
     coordinates = polylineDecode(geometry_string);
 }
 
-void RouteParameters::SetX(const int &x_) { x = x_; }
-void RouteParameters::SetZ(const int &z_) { z = z_; }
-void RouteParameters::SetY(const int &y_) { y = y_; }
+bool RouteParameters::SetX(const int x_)
+{
+    x = x_;
+    return true;
+}
+bool RouteParameters::SetZ(const int z_)
+{
+    if (z_ < 12)
+    {
+        return false;
+    }
+
+    z = z_;
+    return true;
+}
+bool RouteParameters::SetY(const int y_)
+{
+    y = y_;
+    return true;
+}
 }
 }
