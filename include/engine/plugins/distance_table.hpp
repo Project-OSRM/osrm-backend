@@ -44,6 +44,13 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
     Status HandleRequest(const RouteParameters &route_parameters,
                          util::json::Object &json_result) override final
     {
+        return NonConstHandleRequest(route_parameters, json_result);
+    }
+
+    // XXX: should be const-ref, but we need to artificially source, destination values
+    // so consider this a hack for 4.9, in 5.0 we refactored and handle it beautifully!
+    Status NonConstHandleRequest(RouteParameters route_parameters, util::json::Object &json_result)
+    {
         if (!check_all_coordinates(route_parameters.coordinates))
         {
             json_result.values["status_message"] = "Coordinates are invalid";
@@ -59,31 +66,35 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return Status::Error;
         }
 
+        const auto number_of_coordinates = route_parameters.coordinates.size();
+
+        BOOST_ASSERT(route_parameters.is_source.size() <= number_of_coordinates);
+        BOOST_ASSERT(route_parameters.is_destination.size() <= number_of_coordinates);
+
         // The check_all_coordinates guard above makes sure we have at least 2 coordinates.
-        // This guard makes sure is_source, is_destination, coordinates are parallel arrays.
-        if (route_parameters.is_source.size() != route_parameters.coordinates.size() ||
-            route_parameters.is_destination.size() != route_parameters.coordinates.size())
+        // This establishes the parallel array invariant for is_source, is_destination, coordinates
+        if (route_parameters.is_source.size() == 0)
         {
-            json_result.values["status_message"] =
-                "Number of sources and destinations does not match number of coordinates";
-            return Status::Error;
+            const auto where = route_parameters.is_source.end();
+            const auto n = number_of_coordinates - route_parameters.is_source.size();
+            route_parameters.is_source.insert(where, n, true);
         }
+
+        if (route_parameters.is_destination.size() == 0)
+        {
+            const auto where = route_parameters.is_destination.end();
+            const auto n = number_of_coordinates - route_parameters.is_destination.size();
+            route_parameters.is_destination.insert(where, n, true);
+        }
+
+        // parallel array invariant
+        BOOST_ASSERT(route_parameters.coordinates.size() == route_parameters.is_source.size());
+        BOOST_ASSERT(route_parameters.coordinates.size() == route_parameters.is_destination.size());
 
         const auto number_of_sources = std::count(route_parameters.is_source.begin(), //
                                                   route_parameters.is_source.end(), true);
         const auto number_of_destination = std::count(route_parameters.is_destination.begin(), //
                                                       route_parameters.is_destination.end(), true);
-
-        // At this point we know that we
-        //  - have at least n=2 coordinates and
-        //  - have n booleans in is_source and n booleans in is_destination
-        //  This guard makes sure we have at least one source and one target.
-        if (number_of_sources < 1 || number_of_destination < 1)
-        {
-            json_result.values["status_message"] =
-                "At least one source and one destination required";
-            return Status::Error;
-        }
 
         if (max_locations_distance_table > 0 &&
             (number_of_sources * number_of_destination >
