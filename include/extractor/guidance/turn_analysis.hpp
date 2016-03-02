@@ -20,8 +20,8 @@ struct TurnCandidate
     EdgeID eid;   // the id of the arc
     bool valid;   // a turn may be relevant to good instructions, even if we cannot take the road
     double angle; // the approximated angle of the turn
-    engine::guidance::TurnInstruction instruction; // a proposed instruction
-    double confidence;                             // how close to the border is the turn?
+    TurnInstruction instruction; // a proposed instruction
+    double confidence;           // how close to the border is the turn?
 
     std::string toString() const
     {
@@ -81,7 +81,6 @@ mergeSegregatedRoads(const NodeID from_node,
                      std::vector<TurnCandidate> turn_candidates,
                      const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-
 // TODO distinguish roundabouts and rotaries
 // TODO handle bike/walk cases that allow crossing a roundabout!
 
@@ -97,100 +96,100 @@ handleRoundabouts(const NodeID from,
                   std::vector<TurnCandidate> turn_candidates,
                   const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//A Basic junction is a junction not requiring special treatment. It cannot contain anything
-//but streets of lesser priority than trunks and ramps (of any type). No roundabouts or motorway like types.
+// A Basic junction is a junction not requiring special treatment. It cannot contain anything
+// but streets of lesser priority than trunks and ramps (of any type). No roundabouts or motorway
+// like types.
 bool isBasicJunction(const NodeID from,
                      const EdgeID via_edge,
                      const std::vector<TurnCandidate> &turn_candidates,
                      const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Indicates a Junction containing a motoryway
+// Indicates a Junction containing a motoryway
 bool isMotorwayJunction(const NodeID from,
                         const EdgeID via_edge,
                         const std::vector<TurnCandidate> &turn_candidates,
                         const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
 // Decide whether a turn is a turn or a ramp access
-engine::guidance::TurnType
-turnOrRamp(const NodeID from,
-           const EdgeID via_edge,
-           const TurnCandidate &candidate,
-           const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+TurnType turnOrRamp(const NodeID from,
+                    const EdgeID via_edge,
+                    const TurnCandidate &candidate,
+                    const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
 // Get the Instruction for an obvious turn
 // Instruction will be a silent instruction
-engine::guidance::TurnInstruction
+TurnInstruction
 getInstructionForObvious(const NodeID from,
                          const EdgeID via_edge,
                          const TurnCandidate &candidate,
                          const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Helper Function that decides between NoTurn or NewName
-engine::guidance::TurnInstruction
+// Helper Function that decides between NoTurn or NewName
+TurnInstruction
 noTurnOrNewName(const NodeID from,
                 const EdgeID via_edge,
                 const TurnCandidate &candidate,
                 const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Basic Turn Handling
+// Basic Turn Handling
 
-//Dead end.
+// Dead end.
 std::vector<TurnCandidate>
 handleOneWayTurn(const NodeID from,
                  const EdgeID via_edge,
                  std::vector<TurnCandidate> turn_candidates,
                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Mode Changes, new names...
+// Mode Changes, new names...
 std::vector<TurnCandidate>
 handleTwoWayTurn(const NodeID from,
                  const EdgeID via_edge,
                  std::vector<TurnCandidate> turn_candidates,
                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Forks, T intersections and similar
+// Forks, T intersections and similar
 std::vector<TurnCandidate>
 handleThreeWayTurn(const NodeID from,
                    const EdgeID via_edge,
                    std::vector<TurnCandidate> turn_candidates,
                    const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Normal Intersection. Can still contain forks...
+// Normal Intersection. Can still contain forks...
 std::vector<TurnCandidate>
 handleFourWayTurn(const NodeID from,
                   const EdgeID via_edge,
                   std::vector<TurnCandidate> turn_candidates,
                   const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Fallback for turns of high complexion
+// Fallback for turns of high complexion
 std::vector<TurnCandidate>
 handleComplexTurn(const NodeID from,
                   const EdgeID via_edge,
                   std::vector<TurnCandidate> turn_candidates,
                   const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Any Junction containing motorways
+// Any Junction containing motorways
 std::vector<TurnCandidate>
 handleMotorwayJunction(const NodeID from,
                        const EdgeID via_edge,
                        std::vector<TurnCandidate> turn_candidates,
                        const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Utility function, setting basic turn types. Prepares for normal turn handling.
+// Utility function, setting basic turn types. Prepares for normal turn handling.
 std::vector<TurnCandidate>
 setTurnTypes(const NodeID from,
              const EdgeID via_edge,
              std::vector<TurnCandidate> turn_candidates,
              const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Utility function to handle direction modifier conflicts if reasonably possible
+// Utility function to handle direction modifier conflicts if reasonably possible
 std::vector<TurnCandidate>
 handleConflicts(const NodeID from,
                 const EdgeID via_edge,
                 std::vector<TurnCandidate> turn_candidates,
                 const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
-//Old fallbacks, to be removed
+// Old fallbacks, to be removed
 std::vector<TurnCandidate>
 optimizeRamps(const EdgeID via_edge,
               std::vector<TurnCandidate> turn_candidates,
@@ -213,7 +212,7 @@ suppressTurns(const EdgeID via_eid,
               const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
 // node_u -- (edge_1) --> node_v -- (edge_2) --> node_w
-engine::guidance::TurnInstruction
+TurnInstruction
 AnalyzeTurn(const NodeID node_u,
             const EdgeID edge1,
             const NodeID node_v,

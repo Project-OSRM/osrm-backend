@@ -13,6 +13,10 @@
 #include <iterator>
 #include <vector>
 
+using TurnType = osrm::extractor::guidance::TurnType;
+using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
+using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
+
 namespace osrm
 {
 namespace engine
@@ -36,22 +40,22 @@ const constexpr char *turn_type_names[] = {
     "invalid", "invalid",    "restriction", "notification"};
 
 // Check whether to include a modifier in the result of the API
-inline bool isValidModifier(const guidance::TurnType type,
-                            const guidance::DirectionModifier modifier)
+inline bool isValidModifier(const TurnType type,
+                            const DirectionModifier modifier)
 {
-    if (type == guidance::TurnType::Location && modifier != guidance::DirectionModifier::Left &&
-        modifier != guidance::DirectionModifier::Straight &&
-        modifier != guidance::DirectionModifier::Right)
+    if (type == TurnType::Location && modifier != DirectionModifier::Left &&
+        modifier != DirectionModifier::Straight &&
+        modifier != DirectionModifier::Right)
         return false;
     return true;
 }
 
-std::string instructionTypeToString(guidance::TurnType type)
+std::string instructionTypeToString(TurnType type)
 {
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
-std::string instructionModifierToString(guidance::DirectionModifier modifier)
+std::string instructionModifierToString(DirectionModifier modifier)
 {
     return modifier_names[static_cast<std::size_t>(modifier)];
 }

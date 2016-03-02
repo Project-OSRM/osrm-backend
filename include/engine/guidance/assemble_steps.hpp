@@ -4,8 +4,8 @@
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
 #include "engine/guidance/leg_geometry.hpp"
-#include "engine/guidance/turn_instruction.hpp"
 #include "engine/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -25,7 +25,7 @@ namespace guidance
 namespace detail
 {
 // FIXME move implementation to cpp
-inline StepManeuver stepManeuverFromGeometry(TurnInstruction instruction,
+inline StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                              const LegGeometry &leg_geometry,
                                              const std::size_t segment_index,
                                              const unsigned exit)
@@ -84,14 +84,15 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
                   source_location.get(), *(leg_geometry.locations.begin()),
                   *(leg_geometry.locations.begin() + 1)))
-            : DirectionModifier::UTurn;
+            : extractor::guidance::DirectionModifier::UTurn;
 
     if (leg_data.size() > 0)
     {
 
-        StepManeuver maneuver =
-            detail::stepManeuverFromGeometry(TurnInstruction{TurnType::Location, initial_modifier},
-                                             leg_geometry, segment_index, INVALID_EXIT_NR);
+        StepManeuver maneuver = detail::stepManeuverFromGeometry(
+            extractor::guidance::TurnInstruction{extractor::guidance::TurnType::Location,
+                                                 initial_modifier},
+            leg_geometry, segment_index, INVALID_EXIT_NR);
 
         // PathData saves the information we need of the segment _before_ the turn,
         // but a RouteStep is with regard to the segment after the turn.
@@ -99,7 +100,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // initial start of a route
         for (const auto &path_point : leg_data)
         {
-            if (path_point.turn_instruction != TurnInstruction::NO_TURN())
+            if (path_point.turn_instruction != extractor::guidance::TurnInstruction::NO_TURN())
             {
                 const auto name = facade.get_name_for_id(path_point.name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
@@ -126,7 +127,8 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // x---*---*---*---z compressed edge
         //       |-------| duration
         StepManeuver maneuver = {source_node.location, 0., 0.,
-                                 TurnInstruction{TurnType::Location, initial_modifier},
+                                 extractor::guidance::TurnInstruction{
+                                     extractor::guidance::TurnType::Location, initial_modifier},
                                  INVALID_EXIT_NR};
 
         steps.push_back(RouteStep{source_node.name_id, facade.get_name_for_id(source_node.name_id),
@@ -142,12 +144,14 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
                   *(leg_geometry.locations.end() - 2), *(leg_geometry.locations.end() - 1),
                   target_location.get()))
-            : DirectionModifier::UTurn;
+            : extractor::guidance::DirectionModifier::UTurn;
     // This step has length zero, the only reason we need it is the target location
     steps.push_back(RouteStep{
         target_node.name_id, facade.get_name_for_id(target_node.name_id), 0., 0., target_mode,
         StepManeuver{target_node.location, 0., 0.,
-                     TurnInstruction{TurnType::Location, final_modifier}, INVALID_EXIT_NR},
+                     extractor::guidance::TurnInstruction{extractor::guidance::TurnType::Location,
+                                                          final_modifier},
+                     INVALID_EXIT_NR},
         leg_geometry.locations.size(), leg_geometry.locations.size()});
 
     return steps;

@@ -28,10 +28,6 @@ const unsigned constexpr INVALID_NAME_ID = 0;
 
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
-using engine::guidance::TurnInstruction;
-using engine::guidance::DirectionModifier;
-using engine::guidance::TurnType;
-
 #define PRINT_DEBUG_CANDIDATES 0
 std::vector<TurnCandidate>
 getTurns(const NodeID from,

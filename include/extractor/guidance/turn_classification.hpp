@@ -1,7 +1,6 @@
 #ifndef OSRM_GUIDANCE_TURN_CLASSIFICATION_HPP_
 #define OSRM_GUIDANCE_TURN_CLASSIFICATION_HPP_
 
-#include "engine/guidance/turn_instruction.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/typedefs.hpp"

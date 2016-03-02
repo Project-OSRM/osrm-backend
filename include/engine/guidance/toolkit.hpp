@@ -1,7 +1,7 @@
 #ifndef OSRM_UTIL_GUIDANCE_TOOLKIT_HPP_
 #define OSRM_UTIL_GUIDANCE_TOOLKIT_HPP_
 
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "util/bearing.hpp"
 
 namespace osrm
@@ -12,47 +12,47 @@ namespace guidance
 {
 
 // Silent Turn Instructions are not to be mentioned to the outside world but
-inline bool isSilent(const TurnInstruction instruction)
+inline bool isSilent(const extractor::guidance::TurnInstruction instruction)
 {
-    return instruction.type == TurnType::NoTurn || instruction.type == TurnType::Suppressed ||
-           instruction.type == TurnType::StayOnRoundabout;
+    return instruction.type == extractor::guidance::TurnType::NoTurn || instruction.type == extractor::guidance::TurnType::Suppressed ||
+           instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
 }
 
-inline bool entersRoundabout(const TurnInstruction instruction)
+inline bool entersRoundabout(const extractor::guidance::TurnInstruction instruction)
 {
-    return (instruction.type == TurnType::EnterRoundabout ||
-            instruction.type == TurnType::EnterRotary ||
-            instruction.type == TurnType::EnterRoundaboutAtExit ||
-            instruction.type == TurnType::EnterRotaryAtExit ||
-            instruction.type == TurnType::EnterAndExitRoundabout ||
-            instruction.type == TurnType::EnterAndExitRotary);
+    return (instruction.type == extractor::guidance::TurnType::EnterRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
 }
 
-inline bool leavesRoundabout(const TurnInstruction instruction)
+inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruction)
 {
-    return (instruction.type == TurnType::ExitRoundabout ||
-            instruction.type == TurnType::ExitRotary ||
-            instruction.type == TurnType::EnterAndExitRoundabout ||
-            instruction.type == TurnType::EnterAndExitRotary);
+    return (instruction.type == extractor::guidance::TurnType::ExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::ExitRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
 }
 
-inline bool staysOnRoundabout(const TurnInstruction instruction)
+inline bool staysOnRoundabout(const extractor::guidance::TurnInstruction instruction)
 {
-    return instruction.type == TurnType::StayOnRoundabout;
+    return instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
 }
 
-inline DirectionModifier angleToDirectionModifier(const double bearing)
+inline extractor::guidance::DirectionModifier angleToDirectionModifier(const double bearing)
 {
     if (bearing < 135)
     {
-        return DirectionModifier::Right;
+        return extractor::guidance::DirectionModifier::Right;
     }
 
     if (bearing <= 225)
     {
-        return DirectionModifier::Straight;
+        return extractor::guidance::DirectionModifier::Straight;
     }
-    return DirectionModifier::Left;
+    return extractor::guidance::DirectionModifier::Left;
 }
 
 } // namespace guidance

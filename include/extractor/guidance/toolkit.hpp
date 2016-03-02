@@ -10,7 +10,7 @@
 
 #include "extractor/guidance/discrete_angle.hpp"
 #include "extractor/guidance/classification_data.hpp"
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include <map>
 #include <cmath>
@@ -27,7 +27,7 @@ namespace detail
 const constexpr double DESIRED_SEGMENT_LENGTH = 10.0;
 const constexpr bool shiftable_ccw[] = {false, true, true, false, false, true, true, false};
 const constexpr bool shiftable_cw[] = {false, false, true, true, false, false, true, true};
-const constexpr uint8_t modifier_bounds[engine::guidance::detail::num_direction_modifiers] = {
+const constexpr uint8_t modifier_bounds[detail::num_direction_modifiers] = {
     0, 36, 93, 121, 136, 163, 220, 255};
 const constexpr double discrete_angle_step_size = 360. / 256.;
 
@@ -133,15 +133,15 @@ getRepresentativeCoordinate(const NodeID from_node,
 }
 
 // shift an instruction around the degree circle in CCW order
-inline engine::guidance::DirectionModifier
-forcedShiftCCW(const engine::guidance::DirectionModifier modifier)
+inline DirectionModifier
+forcedShiftCCW(const DirectionModifier modifier)
 {
-    return static_cast<engine::guidance::DirectionModifier>(
-        (static_cast<uint32_t>(modifier) + 1) % engine::guidance::detail::num_direction_modifiers);
+    return static_cast<DirectionModifier>(
+        (static_cast<uint32_t>(modifier) + 1) % detail::num_direction_modifiers);
 }
 
-inline engine::guidance::DirectionModifier
-shiftCCW(const engine::guidance::DirectionModifier modifier)
+inline DirectionModifier
+shiftCCW(const DirectionModifier modifier)
 {
     if (detail::shiftable_ccw[static_cast<int>(modifier)])
         return forcedShiftCCW(modifier);
@@ -150,16 +150,16 @@ shiftCCW(const engine::guidance::DirectionModifier modifier)
 }
 
 // shift an instruction around the degree circle in CW order
-inline engine::guidance::DirectionModifier
-forcedShiftCW(const engine::guidance::DirectionModifier modifier)
+inline DirectionModifier
+forcedShiftCW(const DirectionModifier modifier)
 {
-    return static_cast<engine::guidance::DirectionModifier>(
-        (static_cast<uint32_t>(modifier) + engine::guidance::detail::num_direction_modifiers - 1) %
-        engine::guidance::detail::num_direction_modifiers);
+    return static_cast<DirectionModifier>(
+        (static_cast<uint32_t>(modifier) + detail::num_direction_modifiers - 1) %
+        detail::num_direction_modifiers);
 }
 
-inline engine::guidance::DirectionModifier
-shiftCW(const engine::guidance::DirectionModifier modifier)
+inline DirectionModifier
+shiftCW(const DirectionModifier modifier)
 {
     if (detail::shiftable_cw[static_cast<int>(modifier)])
         return forcedShiftCW(modifier);
@@ -167,20 +167,20 @@ shiftCW(const engine::guidance::DirectionModifier modifier)
         return modifier;
 }
 
-inline bool isBasic(const engine::guidance::TurnType type)
+inline bool isBasic(const TurnType type)
 {
-    return type == engine::guidance::TurnType::Turn ||
-           type == engine::guidance::TurnType::EndOfRoad;
+    return type == TurnType::Turn ||
+           type == TurnType::EndOfRoad;
 }
 
-inline bool isUturn(const engine::guidance::TurnInstruction instruction)
+inline bool isUturn(const TurnInstruction instruction)
 {
     return isBasic(instruction.type) &&
-           instruction.direction_modifier == engine::guidance::DirectionModifier::UTurn;
+           instruction.direction_modifier == DirectionModifier::UTurn;
 }
 
-inline bool resolve(engine::guidance::TurnInstruction &to_resolve,
-                    const engine::guidance::TurnInstruction neighbor,
+inline bool resolve(TurnInstruction &to_resolve,
+                    const TurnInstruction neighbor,
                     bool resolve_cw)
 {
     const auto shifted_turn = resolve_cw ? shiftCW(to_resolve.direction_modifier)
@@ -193,9 +193,9 @@ inline bool resolve(engine::guidance::TurnInstruction &to_resolve,
     return true;
 }
 
-inline bool resolveTransitive(engine::guidance::TurnInstruction &first,
-                              engine::guidance::TurnInstruction &second,
-                              const engine::guidance::TurnInstruction third,
+inline bool resolveTransitive(TurnInstruction &first,
+                              TurnInstruction &second,
+                              const TurnInstruction third,
                               bool resolve_cw)
 {
     if (resolve(second, third, resolve_cw))
@@ -207,36 +207,36 @@ inline bool resolveTransitive(engine::guidance::TurnInstruction &first,
     return false;
 }
 
-inline bool isSlightTurn(const engine::guidance::TurnInstruction turn)
+inline bool isSlightTurn(const TurnInstruction turn)
 {
-    return (isBasic(turn.type) || turn.type == engine::guidance::TurnType::NoTurn) &&
-           (turn.direction_modifier == engine::guidance::DirectionModifier::Straight ||
-            turn.direction_modifier == engine::guidance::DirectionModifier::SlightRight ||
-            turn.direction_modifier == engine::guidance::DirectionModifier::SlightLeft);
+    return (isBasic(turn.type) || turn.type == TurnType::NoTurn) &&
+           (turn.direction_modifier == DirectionModifier::Straight ||
+            turn.direction_modifier == DirectionModifier::SlightRight ||
+            turn.direction_modifier == DirectionModifier::SlightLeft);
 }
 
-inline bool isSlightModifier(const engine::guidance::DirectionModifier direction_modifier)
+inline bool isSlightModifier(const DirectionModifier direction_modifier)
 {
-    return (direction_modifier == engine::guidance::DirectionModifier::Straight ||
-            direction_modifier == engine::guidance::DirectionModifier::SlightRight ||
-            direction_modifier == engine::guidance::DirectionModifier::SlightLeft);
+    return (direction_modifier == DirectionModifier::Straight ||
+            direction_modifier == DirectionModifier::SlightRight ||
+            direction_modifier == DirectionModifier::SlightLeft);
 }
 
-inline bool isSharpTurn(const engine::guidance::TurnInstruction turn)
+inline bool isSharpTurn(const TurnInstruction turn)
 {
     return isBasic(turn.type) &&
-           (turn.direction_modifier == engine::guidance::DirectionModifier::SharpLeft ||
-            turn.direction_modifier == engine::guidance::DirectionModifier::SharpRight);
+           (turn.direction_modifier == DirectionModifier::SharpLeft ||
+            turn.direction_modifier == DirectionModifier::SharpRight);
 }
 
-inline bool isStraight(const engine::guidance::TurnInstruction turn)
+inline bool isStraight(const TurnInstruction turn)
 {
-    return (isBasic(turn.type) || turn.type == engine::guidance::TurnType::NoTurn) &&
-           turn.direction_modifier == engine::guidance::DirectionModifier::Straight;
+    return (isBasic(turn.type) || turn.type == TurnType::NoTurn) &&
+           turn.direction_modifier == DirectionModifier::Straight;
 }
 
-inline bool isConflict(const engine::guidance::TurnInstruction first,
-                       const engine::guidance::TurnInstruction second)
+inline bool isConflict(const TurnInstruction first,
+                       const TurnInstruction second)
 {
     return (first.type == second.type && first.direction_modifier == second.direction_modifier) ||
            (isStraight(first) && isStraight(second));
@@ -260,18 +260,18 @@ inline double angularDeviation(const double angle, const double from)
     return std::min(360 - deviation, deviation);
 }
 
-inline double getAngularPenalty(const double angle, engine::guidance::TurnInstruction instruction)
+inline double getAngularPenalty(const double angle, TurnInstruction instruction)
 {
     const double center[] = {0, 45, 90, 135, 180, 225, 270, 315};
     return angularDeviation(center[static_cast<int>(instruction.direction_modifier)], angle);
 }
 
-inline double getTurnConfidence(const double angle, engine::guidance::TurnInstruction instruction)
+inline double getTurnConfidence(const double angle, TurnInstruction instruction)
 {
 
     // special handling of U-Turns and Roundabout
     if (!isBasic(instruction.type) ||
-        instruction.direction_modifier == engine::guidance::DirectionModifier::UTurn)
+        instruction.direction_modifier == DirectionModifier::UTurn)
         return 1.0;
 
     const double deviations[] = {0, 45, 50, 35, 10, 35, 50, 45};
@@ -281,48 +281,48 @@ inline double getTurnConfidence(const double angle, engine::guidance::TurnInstru
 }
 
 // Translates between angles and their human-friendly directional representation
-inline engine::guidance::DirectionModifier getTurnDirection(const double angle)
+inline DirectionModifier getTurnDirection(const double angle)
 {
     // An angle of zero is a u-turn
     // 180 goes perfectly straight
     // 0-180 are right turns
     // 180-360 are left turns
     if (angle > 0 && angle < 60)
-        return engine::guidance::DirectionModifier::SharpRight;
+        return DirectionModifier::SharpRight;
     if (angle >= 60 && angle < 140)
-        return engine::guidance::DirectionModifier::Right;
+        return DirectionModifier::Right;
     if (angle >= 140 && angle < 170)
-        return engine::guidance::DirectionModifier::SlightRight;
+        return DirectionModifier::SlightRight;
     if (angle >= 170 && angle <= 190)
-        return engine::guidance::DirectionModifier::Straight;
+        return DirectionModifier::Straight;
     if (angle > 190 && angle <= 220)
-        return engine::guidance::DirectionModifier::SlightLeft;
+        return DirectionModifier::SlightLeft;
     if (angle > 220 && angle <= 300)
-        return engine::guidance::DirectionModifier::Left;
+        return DirectionModifier::Left;
     if (angle > 300 && angle < 360)
-        return engine::guidance::DirectionModifier::SharpLeft;
-    return engine::guidance::DirectionModifier::UTurn;
+        return DirectionModifier::SharpLeft;
+    return DirectionModifier::UTurn;
 }
 
 // swaps left <-> right modifier types
-inline engine::guidance::DirectionModifier
-mirrorDirectionModifier(const engine::guidance::DirectionModifier modifier)
+inline DirectionModifier
+mirrorDirectionModifier(const DirectionModifier modifier)
 {
-    const constexpr engine::guidance::DirectionModifier results[] = {
-        engine::guidance::DirectionModifier::UTurn,
-        engine::guidance::DirectionModifier::SharpLeft,
-        engine::guidance::DirectionModifier::Left,
-        engine::guidance::DirectionModifier::SlightLeft,
-        engine::guidance::DirectionModifier::Straight,
-        engine::guidance::DirectionModifier::SlightRight,
-        engine::guidance::DirectionModifier::Right,
-        engine::guidance::DirectionModifier::SharpRight};
+    const constexpr DirectionModifier results[] = {
+        DirectionModifier::UTurn,
+        DirectionModifier::SharpLeft,
+        DirectionModifier::Left,
+        DirectionModifier::SlightLeft,
+        DirectionModifier::Straight,
+        DirectionModifier::SlightRight,
+        DirectionModifier::Right,
+        DirectionModifier::SharpRight};
     return results[modifier];
 }
 
-inline bool canBeSuppressed(const engine::guidance::TurnType type)
+inline bool canBeSuppressed(const TurnType type)
 {
-    if (type == engine::guidance::TurnType::Turn)
+    if (type == TurnType::Turn)
         return true;
     return false;
 }

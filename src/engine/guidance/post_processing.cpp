@@ -1,10 +1,14 @@
 #include "engine/guidance/post_processing.hpp"
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
 #include <iostream>
+
+using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
+using TurnType = osrm::extractor::guidance::TurnType;
+using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
 
 namespace osrm
 {
@@ -121,9 +125,9 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
                 {
                     BOOST_ASSERT(leg_data[0][0].turn_instruction.type ==
                                  TurnInstruction::NO_TURN());
-                    if (path_data[data_index].turn_instruction.type == ExitRoundabout)
+                    if (path_data[data_index].turn_instruction.type == TurnType::ExitRoundabout)
                         leg_data[0][0].turn_instruction.type = TurnType::EnterRoundabout;
-                    if (path_data[data_index].turn_instruction.type == ExitRotary)
+                    if (path_data[data_index].turn_instruction.type == TurnType::ExitRotary)
                         leg_data[0][0].turn_instruction.type = TurnType::EnterRotary;
                     path_data[data_index].exit += 1;
                 }

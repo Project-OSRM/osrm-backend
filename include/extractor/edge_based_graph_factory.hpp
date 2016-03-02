@@ -12,7 +12,7 @@
 #include "extractor/query_node.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 
-#include "engine/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -71,12 +71,12 @@ class EdgeBasedGraphFactory
     // with known angle.
     // Handles special cases like u-turns and roundabouts
     // For basic turns, the turn based on the angle-classification is returned
-    engine::guidance::TurnInstruction AnalyzeTurn(const NodeID u,
-                                                  const EdgeID e1,
-                                                  const NodeID v,
-                                                  const EdgeID e2,
-                                                  const NodeID w,
-                                                  const double angle) const;
+    guidance::TurnInstruction AnalyzeTurn(const NodeID u,
+                                          const EdgeID e1,
+                                          const NodeID v,
+                                          const EdgeID e2,
+                                          const NodeID w,
+                                          const double angle) const;
 
     std::int32_t GetTurnPenalty(double angle, lua_State *lua_state) const;
 

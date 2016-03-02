@@ -7,7 +7,7 @@
 
 namespace osrm
 {
-namespace engine
+namespace extractor
 {
 namespace guidance
 {
@@ -114,7 +114,7 @@ inline bool operator==(const TurnInstruction lhs, const TurnInstruction rhs)
 }
 
 } // namespace guidance
-} // namespace engine
+} // namespace extractor
 } // namespace osrm
 
 #endif // OSRM_GUIDANCE_TURN_INSTRUCTION_HPP_
