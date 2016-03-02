@@ -111,11 +111,11 @@ template <typename Iterator, class HandlerT> struct APIGrammar : qi::grammar<Ite
                stringforPolyline[boost::bind(&HandlerT::SetCoordinatesFromGeometry, handler, ::_1)];
 
         z = (-qi::lit('&')) >> qi::lit("tz") >> '=' >>
-            qi::int_[boost::bind<void>(&HandlerT::SetZ, handler, ::_1)];
+            qi::int_[boost::bind(&HandlerT::SetZ, handler, ::_1)];
         x = (-qi::lit('&')) >> qi::lit("tx") >> '=' >>
-            qi::int_[boost::bind<void>(&HandlerT::SetX, handler, ::_1)];
+            qi::int_[boost::bind(&HandlerT::SetX, handler, ::_1)];
         y = (-qi::lit('&')) >> qi::lit("ty") >> '=' >>
-            qi::int_[boost::bind<void>(&HandlerT::SetY, handler, ::_1)];
+            qi::int_[boost::bind(&HandlerT::SetY, handler, ::_1)];
 
         string = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));
