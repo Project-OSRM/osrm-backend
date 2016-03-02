@@ -59,18 +59,31 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             return Status::Error;
         }
 
-        auto number_of_sources =
-            std::count_if(route_parameters.is_source.begin(), route_parameters.is_source.end(),
-                          [](const bool is_source)
-                          {
-                              return is_source;
-                          });
-        auto number_of_destination =
-            std::count_if(route_parameters.is_destination.begin(),
-                          route_parameters.is_destination.end(), [](const bool is_destination)
-                          {
-                              return is_destination;
-                          });
+        // The check_all_coordinates guard above makes sure we have at least 2 coordinates.
+        // This guard makes sure is_source, is_destination, coordinates are parallel arrays.
+        if (route_parameters.is_source.size() != route_parameters.coordinates.size() ||
+            route_parameters.is_destination.size() != route_parameters.coordinates.size())
+        {
+            json_result.values["status_message"] =
+                "Number of sources and destinations does not match number of coordinates";
+            return Status::Error;
+        }
+
+        const auto number_of_sources = std::count(route_parameters.is_source.begin(), //
+                                                  route_parameters.is_source.end(), true);
+        const auto number_of_destination = std::count(route_parameters.is_destination.begin(), //
+                                                      route_parameters.is_destination.end(), true);
+
+        // At this point we know that we
+        //  - have at least n=2 coordinates and
+        //  - have n booleans in is_source and n booleans in is_destination
+        //  This guard makes sure we have at least one source and one target.
+        if (number_of_sources < 1 || number_of_destination < 1)
+        {
+            json_result.values["status_message"] =
+                "At least one source and one destination required";
+            return Status::Error;
+        }
 
         if (max_locations_distance_table > 0 &&
             (number_of_sources * number_of_destination >
@@ -123,6 +136,7 @@ template <class DataFacadeT> class DistanceTablePlugin final : public BasePlugin
             const int range = input_bearings.size() > 0
                                   ? (input_bearings[i].second ? *input_bearings[i].second : 10)
                                   : 180;
+
             if (route_parameters.is_source[i])
             {
                 *phantom_node_source_out_iter =
