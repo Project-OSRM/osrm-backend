@@ -36,6 +36,10 @@ struct TableParameters : public BaseParameters
         if (!BaseParameters::IsValid())
             return false;
 
+        // Distance Table makes only sense with 2+ coordinates and 1+ sources and 1+ destinations
+        if (coordinates.size() < 2 || sources.size() < 1 || destinations.size() < 1)
+            return false;
+
         // 1/ The user is able to specify duplicates in srcs and dsts, in that case it's her fault
 
         // 2/ len(srcs) and len(dsts) smaller or equal to len(locations)
