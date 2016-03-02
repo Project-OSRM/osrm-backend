@@ -9,7 +9,7 @@
 //#include "engine/plugins/timestamp.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
-//#include "engine/plugins/tile.hpp"
+#include "engine/plugins/tile.hpp"
 #include "engine/plugins/match.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
@@ -87,16 +87,16 @@ namespace
 {
 // Abstracted away the query locking into a template function
 // Works the same for every plugin.
-template <typename ParameterT, typename PluginT>
+template <typename ParameterT, typename PluginT, typename ResultT>
 osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::EngineLock> &lock,
                               osrm::engine::datafacade::BaseDataFacade &facade,
                               const ParameterT &parameters,
                               PluginT &plugin,
-                              osrm::util::json::Object &json_result)
+                              ResultT &result)
 {
     if (!lock)
     {
-        return plugin.HandleRequest(parameters, json_result);
+        return plugin.HandleRequest(parameters, result);
     }
 
     BOOST_ASSERT(lock);
@@ -108,7 +108,7 @@ osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::Engine
     // things while the query is running
     boost::shared_lock<boost::shared_mutex> data_lock{shared_facade.data_mutex};
 
-    osrm::engine::Status status = plugin.HandleRequest(parameters, json_result);
+    osrm::engine::Status status = plugin.HandleRequest(parameters, result);
 
     lock->DecreaseQueryCount();
     return status;
@@ -148,6 +148,7 @@ Engine::Engine(EngineConfig &config)
     nearest_plugin = create<NearestPlugin>(*query_data_facade);
     trip_plugin = create<TripPlugin>(*query_data_facade, config.max_locations_trip);
     match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
+    tile_plugin = create<TilePlugin>(*query_data_facade);
 }
 
 // make sure we deallocate the unique ptr at a position where we know the size of the plugins
@@ -178,6 +179,11 @@ Status Engine::Trip(const api::TripParameters &params, util::json::Object &resul
 Status Engine::Match(const api::MatchParameters &params, util::json::Object &result)
 {
     return RunQuery(lock, *query_data_facade, params, *match_plugin, result);
+}
+
+Status Engine::Tile(const api::TileParameters &params, std::string &result)
+{
+    return RunQuery(lock, *query_data_facade, params, *tile_plugin, result);
 }
 
 } // engine ns
