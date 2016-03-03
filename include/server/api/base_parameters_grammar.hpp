@@ -33,9 +33,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
     using Iterator = std::string::iterator;
     using RadiusesT = std::vector<boost::optional<double>>;
 
-    BaseParametersGrammar(qi::rule<Iterator> &child_rule,
+    BaseParametersGrammar(qi::rule<Iterator> &root_rule_,
                           engine::api::BaseParameters &parameters_)
-        : BaseParametersGrammar::base_type(child_rule), base_parameters(parameters_)
+        : BaseParametersGrammar::base_type(root_rule_), base_parameters(parameters_)
     {
         const auto add_bearing = [this](boost::optional<boost::fusion::vector2<short, short>> bearing_range) {
             boost::optional<engine::api::BaseParameters::Bearing> bearing;
@@ -54,26 +54,45 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
                 base_parameters.hints.push_back(engine::Hint::FromBase64(hint_string));
             }
         };
+        const auto add_coordinate = [this](const boost::fusion::vector<double, double> &lonLat)
+        {
+            base_parameters.coordinates.emplace_back(
+                util::Coordinate(util::FixedLongitude(boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION),
+                                 util::FixedLatitude(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION)));
+        };
+        const auto polyline_to_coordinates = [this](const std::string &polyline)
+        {
+            base_parameters.coordinates = engine::decodePolyline(polyline);
+        };
 
         alpha_numeral = +qi::char_("a-zA-Z0-9");
+        polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
         base64_char = qi::char_("a-zA-Z0-9--_");
 
         radiuses_rule = qi::lit("radiuses=") >> -qi::double_ % ";";
         hints_rule = qi::lit("hints=") >> qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
         bearings_rule =
             qi::lit("bearings=") >> (-(qi::short_ >> ',' >> qi::short_))[add_bearing] % ";";
+        polyline_rule = qi::as_string[qi::lit("polyline(") >> +polyline_chars >>
+                                      qi::lit(")")][polyline_to_coordinates];
+        location_rule = (qi::double_ >> qi::lit(',') >> qi::double_)[add_coordinate];
+        query_rule = (location_rule % ';') | polyline_rule;
+
         base_rule = bearings_rule | radiuses_rule[set_radiuses] | hints_rule;
     }
 
+protected:
     qi::rule<Iterator> base_rule;
+    qi::rule<Iterator> query_rule;
 
 private:
     engine::api::BaseParameters &base_parameters;
     qi::rule<Iterator> bearings_rule;
     qi::rule<Iterator> hints_rule;
+    qi::rule<Iterator> polyline_rule, location_rule;
     qi::rule<Iterator, RadiusesT()> radiuses_rule;
     qi::rule<Iterator, unsigned char()> base64_char;
-    qi::rule<Iterator, std::string()> alpha_numeral;
+    qi::rule<Iterator, std::string()> alpha_numeral, polyline_chars;
 };
 }
 }

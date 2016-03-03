@@ -1,8 +1,8 @@
 #ifndef SERVER_API_ROUTE_PARAMETERS_PARSER_HPP
 #define SERVER_API_ROUTE_PARAMETERS_PARSER_HPP
 
-#include "engine/api/route_parameters.hpp"
-#include "engine/api/table_parameters.hpp"
+#include "engine/api/base_parameters.hpp"
+#include "engine/api/tile_parameters.hpp"
 
 #include <boost/optional/optional.hpp>
 
@@ -20,7 +20,11 @@ namespace api
 
 namespace detail
 {
-template <typename T> using is_parameter_t = std::is_base_of<engine::api::BaseParameters, T>;
+template <typename T>
+using is_parameter_t =
+    std::integral_constant<bool,
+                           std::is_base_of<engine::api::BaseParameters, T>::value ||
+                               std::is_same<engine::api::TileParameters, T>::value>;
 } // ns detail
 
 // Starts parsing and iter and modifies it until iter == end or parsing failed

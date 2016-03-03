@@ -25,13 +25,6 @@ struct Renderer
 {
     explicit Renderer(std::ostream &_out) : out(_out) {}
 
-    void operator()(const Buffer &buffer) const
-    {
-        out << "\"";
-        out << escape_JSON(buffer.value);
-        out << "\"";
-    }
-
     void operator()(const String &string) const
     {
         out << "\"";
@@ -87,14 +80,6 @@ struct Renderer
 struct ArrayRenderer
 {
     explicit ArrayRenderer(std::vector<char> &_out) : out(_out) {}
-
-    void operator()(const Buffer &buffer) const
-    {
-        out.push_back('\"');
-        const auto string_to_insert = escape_JSON(buffer.value);
-        out.insert(std::end(out), std::begin(string_to_insert), std::end(string_to_insert));
-        out.push_back('\"');
-    }
 
     void operator()(const String &string) const
     {

@@ -75,13 +75,15 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         uturns_rule = qi::lit("uturns=") >> -qi::bool_ % ";";
         route_rule = steps_rule[set_steps] | alternative_rule[set_alternative] | geometries_rule |
                      overview_rule | uturns_rule[set_uturns];
-        root_rule = -((base_rule | route_rule) % '&');
+
+        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (route_rule | base_rule) % '&');
     }
 
     engine::api::RouteParameters parameters;
 
   private:
-    qi::rule<Iterator> root_rule, route_rule, geometries_rule, overview_rule;
+    qi::rule<Iterator> root_rule;
+    qi::rule<Iterator> route_rule, geometries_rule, overview_rule;
     qi::rule<Iterator, UturnsT()> uturns_rule;
     qi::rule<Iterator, StepsT()> steps_rule;
     qi::rule<Iterator, AlternativeT()> alternative_rule;
