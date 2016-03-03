@@ -45,8 +45,6 @@ void RequestHandler::HandleRequest(const http::request &current_request,
         return;
     }
 
-    util::json::Object json_result;
-
     // parse command
     try
     {
@@ -81,11 +79,14 @@ void RequestHandler::HandleRequest(const http::request &current_request,
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());;
+        ServiceHandler::ResultT result;
+
 
         // check if the was an error with the request
         if (maybe_parsed_url && api_iterator == request_string.end())
         {
-            const engine::Status status = service_handler->RunQuery(std::move(*maybe_parsed_url), json_result);
+
+            const engine::Status status = service_handler->RunQuery(std::move(*maybe_parsed_url), result);
             if (status != engine::Status::Ok)
             {
                 // 4xx bad request return code
@@ -104,20 +105,33 @@ void RequestHandler::HandleRequest(const http::request &current_request,
             std::string context(context_begin, context_end);
 
             current_reply.status = http::reply::bad_request;
+            result = util::json::Object();
+            auto& json_result = result.get<util::json::Object>();
             json_result.values["code"] = "invalid-url";
             json_result.values["message"] =
                 "URL string malformed close to position " + std::to_string(position) + ": \"" + context + "\"";
         }
 
+
         current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
         current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
         current_reply.headers.emplace_back("Access-Control-Allow-Headers",
                                            "X-Requested-With, Content-Type");
-        current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
-        current_reply.headers.emplace_back("Content-Disposition",
-                "inline; filename=\"response.json\"");
+        if (result.is<util::json::Object>())
+        {
+            current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
+            current_reply.headers.emplace_back("Content-Disposition",
+                    "inline; filename=\"response.json\"");
 
-        util::json::render(current_reply.content, json_result);
+            util::json::render(current_reply.content, result.get<util::json::Object>());
+        }
+        else
+        {
+            BOOST_ASSERT(result.is<std::string>());
+            std::copy(result.get<std::string>().cbegin(), result.get<std::string>().cend(), std::back_inserter(current_reply.content));
+
+            current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
+        }
 
         // set headers
         current_reply.headers.emplace_back("Content-Length",

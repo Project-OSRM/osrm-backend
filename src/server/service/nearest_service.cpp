@@ -39,35 +39,33 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
 }
 } // anon. ns
 
-engine::Status NearestService::RunQuery(std::vector<util::Coordinate> coordinates,
-                                        std::string &options,
-                                        util::json::Object &result)
+engine::Status NearestService::RunQuery(std::string &query, ResultT &result)
 {
-    auto options_iterator = options.begin();
+    result = util::json::Object();
+    auto& json_result = result.get<util::json::Object>();
+
+    auto query_iterator = query.begin();
     auto parameters =
-        api::parseParameters<engine::api::NearestParameters>(options_iterator, options.end());
-    if (!parameters || options_iterator != options.end())
+        api::parseParameters<engine::api::NearestParameters>(query_iterator, query.end());
+    if (!parameters || query_iterator != query.end())
     {
-        const auto position = std::distance(options.begin(), options_iterator);
-        result.values["code"] = "invalid-options";
-        result.values["message"] =
-            "Options string malformed close to position " + std::to_string(position);
+        const auto position = std::distance(query.begin(), query_iterator);
+        json_result.values["code"] = "invalid-query";
+        json_result.values["message"] =
+            "Query string malformed close to position " + std::to_string(position);
         return engine::Status::Error;
     }
-
     BOOST_ASSERT(parameters);
-    parameters->coordinates = std::move(coordinates);
 
     if (!parameters->IsValid())
     {
-        result.values["code"] = "invalid-options";
-        result.values["message"] = getWrongOptionHelp(*parameters);
+        json_result.values["code"] = "invalid-options";
+        json_result.values["message"] = getWrongOptionHelp(*parameters);
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters->IsValid());
 
-    return BaseService::routing_machine.Nearest(*parameters, result);
-    return Status::Error;
+    return BaseService::routing_machine.Nearest(*parameters, json_result);
 }
 }
 }

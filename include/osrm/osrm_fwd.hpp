@@ -24,6 +24,7 @@ struct TableParameters;
 struct NearestParameters;
 struct TripParameters;
 struct MatchParameters;
+struct TileParameters;
 } // ns api
 
 class Engine;
