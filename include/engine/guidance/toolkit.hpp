@@ -14,7 +14,8 @@ namespace guidance
 // Silent Turn Instructions are not to be mentioned to the outside world but
 inline bool isSilent(const extractor::guidance::TurnInstruction instruction)
 {
-    return instruction.type == extractor::guidance::TurnType::NoTurn || instruction.type == extractor::guidance::TurnType::Suppressed ||
+    return instruction.type == extractor::guidance::TurnType::NoTurn ||
+           instruction.type == extractor::guidance::TurnType::Suppressed ||
            instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
 }
 

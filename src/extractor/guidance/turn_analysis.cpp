@@ -1,6 +1,7 @@
 #include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/simple_logger.hpp"
+#include "util/coordinate.hpp"
 
 #include <cstddef>
 
@@ -28,6 +29,22 @@ const unsigned constexpr INVALID_NAME_ID = 0;
 
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
+struct Localizer
+{
+    const std::vector<QueryNode> *node_info_list = nullptr;
+
+    util::Coordinate operator()(const NodeID nid)
+    {
+        if (node_info_list)
+        {
+            return {(*node_info_list)[nid].lon, (*node_info_list)[nid].lat};
+        }
+        return {};
+    }
+};
+
+static Localizer localizer;
+
 #define PRINT_DEBUG_CANDIDATES 0
 std::vector<TurnCandidate>
 getTurns(const NodeID from,
@@ -38,6 +55,7 @@ getTurns(const NodeID from,
          const std::unordered_set<NodeID> &barrier_nodes,
          const CompressedEdgeContainer &compressed_edge_container)
 {
+    localizer.node_info_list = &node_info_list;
     auto turn_candidates =
         detail::getTurnCandidates(from, via_edge, node_based_graph, node_info_list, restriction_map,
                                   barrier_nodes, compressed_edge_container);
@@ -264,20 +282,29 @@ inline std::vector<TurnCandidate> fallbackTurnAssignmentMotorway(
     std::vector<TurnCandidate> turn_candidates,
     const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
+    util::SimpleLogger().Write(logWARNING) << "Fallback turn assignment";
     for (auto &candidate : turn_candidates)
     {
+        const auto &out_data = node_based_graph->GetEdgeData(candidate.eid);
+
+        util::SimpleLogger().Write(logWARNING)
+            << "Candidate: " << candidate.toString() << " Name: " << out_data.name_id
+            << " Road Class: " << (int)out_data.road_classification.road_class
+            << " At: " << localizer(node_based_graph->GetTarget(candidate.eid));
+
         if (!candidate.valid)
             continue;
-        const auto &out_data = node_based_graph->GetEdgeData(candidate.eid);
+
         const auto type = isMotorwayClass(out_data.road_classification.road_class) ? TurnType::Merge
                                                                                    : TurnType::Turn;
         if (angularDeviation(candidate.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE)
             candidate.instruction = {type, DirectionModifier::Straight};
         else
         {
-            candidate.instruction = {type, candidate.angle > STRAIGHT_ANGLE
-                                               ? DirectionModifier::SlightLeft
-                                               : DirectionModifier::SlightRight};
+            candidate.instruction = {type,
+                                     candidate.angle > STRAIGHT_ANGLE
+                                         ? DirectionModifier::SlightLeft
+                                         : DirectionModifier::SlightRight};
         }
     }
     return turn_candidates;
@@ -380,7 +407,7 @@ handleFromMotorway(const NodeID from,
         else
         {
             // FALLBACK, this should hopefully never be reached
-            util::SimpleLogger().Write(logDEBUG)
+            util::SimpleLogger().Write(logWARNING)
                 << "Fallback reached from motorway, no continue angle, " << turn_candidates.size()
                 << " candidates, " << countValid(turn_candidates) << " valid ones.";
             fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
@@ -454,7 +481,16 @@ handleFromMotorway(const NodeID from,
         // handle motorway forks
         else if (exiting_motorways > 1)
         {
-            if (exiting_motorways != 2 || turn_candidates.size() != 3)
+            if (exiting_motorways == 2 && turn_candidates.size() == 2)
+            {
+                turn_candidates[1].instruction =
+                    getInstructionForObvious(from, via_edge, turn_candidates[1], node_based_graph);
+                util::SimpleLogger().Write(logWARNING)
+                    << "Disable U-Turn on a freeway at "
+                    << localizer(node_based_graph->GetTarget(via_edge));
+                turn_candidates[0].valid = false; // UTURN on the freeway
+            }
+            else if (exiting_motorways != 2 || turn_candidates.size() != 3)
             {
                 util::SimpleLogger().Write(logWARNING) << "Found motorway junction with more than "
                                                           "2 exiting motorways or additional ramps!"
@@ -485,8 +521,9 @@ handleMotorwayRamp(const NodeID from,
                    std::vector<TurnCandidate> turn_candidates,
                    const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
+    unsigned num_valid_turns = countValid(turn_candidates);
     // ramp straight into a motorway/ramp
-    if (turn_candidates.size() == 2)
+    if (num_valid_turns == 1)
     {
         BOOST_ASSERT(!turn_candidates[0].valid);
         BOOST_ASSERT(isMotorwayClass(turn_candidates[1].eid, node_based_graph));
@@ -498,8 +535,6 @@ handleMotorwayRamp(const NodeID from,
     }
     else if (turn_candidates.size() == 3)
     {
-        unsigned num_valid_turns = countValid(turn_candidates);
-
         // merging onto a passing highway / or two ramps merging onto the same highway
         if (num_valid_turns == 1)
         {
@@ -587,11 +622,35 @@ handleMotorwayRamp(const NodeID from,
             }
         }
     }
+    // On - Off Ramp on passing Motorway, Ramp onto Fork(?)
+    else if (turn_candidates.size() == 4)
+    {
+        bool passed_highway_entry = false;
+        for (auto &candidate : turn_candidates)
+        {
+            const auto &edge_data = node_based_graph->GetEdgeData(candidate.eid);
+            if (!candidate.valid && isMotorwayClass(edge_data.road_classification.road_class))
+            {
+                passed_highway_entry = true;
+            }
+            else if (isMotorwayClass(edge_data.road_classification.road_class))
+            {
+                candidate.instruction = {TurnType::Merge,
+                                         passed_highway_entry ? DirectionModifier::SlightRight
+                                                              : DirectionModifier::SlightLeft};
+            }
+            else
+            {
+                BOOST_ASSERT(isRampClass(edge_data.road_classification.road_class));
+                candidate.instruction = {TurnType::Ramp, getTurnDirection(candidate.angle)};
+            }
+        }
+    }
     else
     { // FALLBACK, hopefully this should never been reached
-        util::SimpleLogger().Write(logDEBUG) << "Reached fallback on motorway ramp with "
-                                             << turn_candidates.size() << " candidates and "
-                                             << countValid(turn_candidates) << " valid turns.";
+        util::SimpleLogger().Write(logWARNING) << "Reached fallback on motorway ramp with "
+                                               << turn_candidates.size() << " candidates and "
+                                               << countValid(turn_candidates) << " valid turns.";
         fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
     }
 
@@ -672,17 +731,31 @@ bool isMotorwayJunction(const NodeID from,
 {
     (void)from;
 
+    bool has_motorway = false;
+    bool has_normal_roads = false;
+
     for (const auto &candidate : turn_candidates)
     {
         const auto &out_data = node_based_graph->GetEdgeData(candidate.eid);
-        if (candidate.valid &&
-            (out_data.road_classification.road_class == FunctionalRoadClass::MOTORWAY ||
-             out_data.road_classification.road_class == FunctionalRoadClass::TRUNK))
-            return true;
+        // not merging or forking?
+        if ((angularDeviation(candidate.angle, 0) > 35 &&
+             angularDeviation(candidate.angle, 180) > 35) ||
+            (candidate.valid && angularDeviation(candidate.angle, 0) < 35))
+            return false;
+        else if (candidate.valid &&
+                 (out_data.road_classification.road_class == FunctionalRoadClass::MOTORWAY ||
+                  out_data.road_classification.road_class == FunctionalRoadClass::TRUNK))
+            has_motorway = true;
+        else if (candidate.valid && !isRampClass(out_data.road_classification.road_class))
+            has_normal_roads = true;
     }
 
+    if (has_normal_roads)
+        return false;
+
     const auto &in_data = node_based_graph->GetEdgeData(via_edge);
-    return in_data.road_classification.road_class == FunctionalRoadClass::MOTORWAY ||
+    return has_motorway ||
+           in_data.road_classification.road_class == FunctionalRoadClass::MOTORWAY ||
            in_data.road_classification.road_class == FunctionalRoadClass::TRUNK;
 }
 
@@ -933,8 +1006,8 @@ handleThreeWayTurn(const NodeID from,
              node_based_graph->GetEdgeData(turn_candidates[1].eid).name_id ==
                  node_based_graph->GetEdgeData(turn_candidates[2].eid).name_id)
     {
-        const auto findTurn = [isObviousOfTwo](const TurnCandidate turn,
-                                               const TurnCandidate other) -> TurnInstruction
+        const auto findTurn = [isObviousOfTwo](const TurnCandidate turn, const TurnCandidate other)
+                                  -> TurnInstruction
         {
             return {isObviousOfTwo(turn, other) ? TurnType::Merge : TurnType::Turn,
                     getTurnDirection(turn.angle)};
@@ -1185,7 +1258,7 @@ optimizeCandidates(const EdgeID via_eid,
         auto &left = turn_candidates[getLeft(turn_index)];
         if (turn.angle == left.angle)
         {
-            util::SimpleLogger().Write(logDEBUG)
+            util::SimpleLogger().Write(logWARNING)
                 << "[warning] conflicting turn angles, identical road duplicated? "
                 << node_info_list[node_based_graph->GetTarget(via_eid)].lat << " "
                 << node_info_list[node_based_graph->GetTarget(via_eid)].lon << std::endl;
@@ -1356,8 +1429,8 @@ bool isObviousChoice(const EdgeID via_eid,
 
     const auto &candidate_to_the_right = turn_candidates[getRight(turn_index)];
 
-    const auto hasValidRatio = [&](const TurnCandidate &left, const TurnCandidate &center,
-                                   const TurnCandidate &right)
+    const auto hasValidRatio =
+        [&](const TurnCandidate &left, const TurnCandidate &center, const TurnCandidate &right)
     {
         auto angle_left = (left.angle > 180) ? angularDeviation(left.angle, STRAIGHT_ANGLE) : 180;
         auto angle_right =
@@ -1688,9 +1761,8 @@ mergeSegregatedRoads(const NodeID from_node,
         std::cout << "Second: " << second_data.name_id << " " << second_data.travel_mode << " "
                   << second_data.road_classification.road_class << " "
                   << turn_candidates[second].angle << " " << second_data.reversed << std::endl;
-        std::cout << "Deviation: "
-                  << angularDeviation(turn_candidates[first].angle, turn_candidates[second].angle)
-                  << std::endl;
+        std::cout << "Deviation: " << angularDeviation(turn_candidates[first].angle,
+                                                       turn_candidates[second].angle) << std::endl;
 #endif
 
         return first_data.name_id != INVALID_NAME_ID && first_data.name_id == second_data.name_id &&
