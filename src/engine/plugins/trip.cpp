@@ -254,7 +254,7 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     }
 
     api::TripAPI trip_api{BasePlugin::facade, parameters};
-    trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result, &ordered_coordinates);
+    trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result, ordered_coordinates);
 
     return Status::Ok;
 }
