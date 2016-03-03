@@ -18,8 +18,7 @@ struct ParsedURL
     std::string service;
     unsigned version;
     std::string profile;
-    std::vector<util::Coordinate> coordinates;
-    std::string options;
+    std::string query;
 };
 
 }

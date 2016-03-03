@@ -70,7 +70,7 @@ struct MatchParametersGrammar final : public BaseParametersGrammar
         timestamps_rule = qi::lit("timestamps=") >> qi::uint_ % ";";
         match_rule = steps_rule[set_steps] | geometries_rule |
                      overview_rule | timestamps_rule[set_timestamps];
-        root_rule = -((base_rule | match_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (match_rule | base_rule) % '&');
     }
 
     engine::api::MatchParameters parameters;

@@ -41,45 +41,29 @@ struct URLGrammar : boost::spirit::qi::grammar<Iterator>
         {
             parsed_url.profile = std::move(profile);
         };
-        const auto set_options = [this](std::string &options)
+        const auto set_query = [this](std::string &query)
         {
-            parsed_url.options = std::move(options);
-        };
-        const auto add_coordinate = [this](const boost::fusion::vector<double, double> &lonLat)
-        {
-            parsed_url.coordinates.emplace_back(
-                util::Coordinate(util::FixedLongitude(boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION),
-                                 util::FixedLatitude(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION)));
-        };
-        const auto polyline_to_coordinates = [this](const std::string &polyline)
-        {
-            parsed_url.coordinates = engine::decodePolyline(polyline);
+            parsed_url.query = std::move(query);
         };
 
         alpha_numeral = qi::char_("a-zA-Z0-9");
         polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
-        all_chars = polyline_chars | qi::char_("=,;:&");
-
-        polyline_rule = qi::as_string[qi::lit("polyline(") >> +polyline_chars >>
-                                      qi::lit(")")][polyline_to_coordinates];
-        location_rule = (qi::double_ >> qi::lit(',') >> qi::double_)[add_coordinate];
-        query_rule = (location_rule % ';') | polyline_rule;
+        all_chars = polyline_chars | qi::char_("=,;:&().");
 
         service_rule = +alpha_numeral;
         version_rule = qi::uint_;
         profile_rule = +alpha_numeral;
-        options_rule = *all_chars;
+        query_rule = +all_chars;
 
         url_rule = qi::lit('/') >> service_rule[set_service] >> qi::lit('/') >> qi::lit('v') >>
                    version_rule[set_version] >> qi::lit('/') >> profile_rule[set_profile] >>
-                   qi::lit('/') >> query_rule >> -(qi::lit('?') >> options_rule[set_options]);
+                   qi::lit('/') >> query_rule[set_query];
     }
 
     ParsedURL parsed_url;
 
     qi::rule<Iterator> url_rule;
-    qi::rule<Iterator, std::string()> options_rule, service_rule, profile_rule;
-    qi::rule<Iterator> query_rule, polyline_rule, location_rule;
+    qi::rule<Iterator, std::string()> service_rule, profile_rule, query_rule;
     qi::rule<Iterator, unsigned()> version_rule;
     qi::rule<Iterator, char()> alpha_numeral, all_chars, polyline_chars;
 };
