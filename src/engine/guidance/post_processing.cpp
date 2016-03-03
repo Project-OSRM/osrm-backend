@@ -51,8 +51,7 @@ PathData mergeInto(PathData destination, const PathData &source)
         BOOST_ASSERT(canMergeTrivially(destination, source));
         return detail::forwardInto(destination, source);
     }
-    if (source.turn_instruction == TurnType::Suppressed &&
-        detail::canMergeTrivially(destination, source))
+    if (source.turn_instruction.type == TurnType::Suppressed)
     {
         return detail::forwardInto(destination, source);
     }
