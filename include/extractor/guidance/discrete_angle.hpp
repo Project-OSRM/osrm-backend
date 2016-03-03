@@ -1,6 +1,8 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_DISCRETE_ANGLE
 #define OSRM_EXTRACTOR_GUIDANCE_DISCRETE_ANGLE
 
+#include <cstdint>
+
 namespace osrm
 {
 namespace extractor
@@ -8,7 +10,8 @@ namespace extractor
 namespace guidance
 {
 
-typedef uint8_t DiscreteAngle;
+using DiscreteAngle = std::uint8_t;
+
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm
