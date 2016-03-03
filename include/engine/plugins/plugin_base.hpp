@@ -267,7 +267,7 @@ class BasePlugin
             // we didn't find a fitting node, return error
             if (!phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()))
             {
-                //TODO document why?
+                // TODO document why?
                 phantom_node_pairs.pop_back();
                 break;
             }
