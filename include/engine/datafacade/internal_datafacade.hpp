@@ -208,7 +208,8 @@ class InternalDataFacade final : public BaseDataFacade
         if (number_of_compressed_geometries > 0)
         {
             geometry_stream.read((char *)&(m_geometry_list[0]),
-                                 number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+                                 number_of_compressed_geometries *
+                                     sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
         }
     }
 
@@ -217,7 +218,8 @@ class InternalDataFacade final : public BaseDataFacade
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
         m_static_rtree.reset(new InternalRTree(ram_index_path, file_index_path, m_coordinate_list));
-        m_geospatial_query.reset(new InternalGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
+        m_geospatial_query.reset(
+            new InternalGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
     void LoadStreetNames(const boost::filesystem::path &names_file)
@@ -553,19 +555,27 @@ class InternalDataFacade final : public BaseDataFacade
 
         result_nodes.clear();
         result_nodes.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end, [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge){ result_nodes.emplace_back(edge.node_id); });
+        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
+                      {
+                          result_nodes.emplace_back(edge.node_id);
+                      });
     }
 
-    virtual void GetUncompressedWeights(const EdgeID id,
-                                        std::vector<EdgeWeight> &result_weights) const override final
+    virtual void
+    GetUncompressedWeights(const EdgeID id,
+                           std::vector<EdgeWeight> &result_weights) const override final
     {
         const unsigned begin = m_geometry_indices.at(id);
         const unsigned end = m_geometry_indices.at(id + 1);
 
         result_weights.clear();
         result_weights.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end, [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge){ result_weights.emplace_back(edge.weight); });
-
+        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
+                      {
+                          result_weights.emplace_back(edge.weight);
+                      });
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }

@@ -22,7 +22,6 @@ struct RouteLeg
     std::string summary;
     std::vector<RouteStep> steps;
 };
-
 }
 }
 }
