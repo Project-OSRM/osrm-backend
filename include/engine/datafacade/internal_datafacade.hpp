@@ -329,7 +329,8 @@ class InternalDataFacade final : public BaseDataFacade
         return m_coordinate_list->at(id);
     }
 
-    extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    extractor::guidance::TurnInstruction
+    GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }

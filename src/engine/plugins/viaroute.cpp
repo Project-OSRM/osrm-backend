@@ -59,8 +59,8 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
 
     InternalRouteResult raw_route;
-    auto build_phantom_pairs = [&raw_route](const PhantomNode &first_node,
-                                            const PhantomNode &second_node)
+    auto build_phantom_pairs =
+        [&raw_route](const PhantomNode &first_node, const PhantomNode &second_node)
     {
         raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
     };
