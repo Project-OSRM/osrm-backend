@@ -4,6 +4,8 @@
 #include "extractor/travel_mode.hpp"
 #include "engine/guidance/step_maneuver.hpp"
 
+#include <cstddef>
+
 #include <string>
 #include <vector>
 
