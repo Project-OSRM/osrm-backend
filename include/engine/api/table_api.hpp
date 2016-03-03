@@ -37,7 +37,8 @@ class TableAPI final : public BaseAPI
                               util::json::Object &response) const
     {
         auto number_of_sources = parameters.sources.size();
-        auto number_of_destinations = parameters.destinations.size();;
+        auto number_of_destinations = parameters.destinations.size();
+        ;
 
         // symmetric case
         if (parameters.sources.empty())
@@ -60,7 +61,8 @@ class TableAPI final : public BaseAPI
             response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
         }
 
-        response.values["durations"] = MakeTable(durations, number_of_sources, number_of_destinations);
+        response.values["durations"] =
+            MakeTable(durations, number_of_sources, number_of_destinations);
         response.values["code"] = "ok";
     }
 
@@ -105,14 +107,15 @@ class TableAPI final : public BaseAPI
             auto row_begin_iterator = values.begin() + (row * number_of_columns);
             auto row_end_iterator = values.begin() + ((row + 1) * number_of_columns);
             json_row.values.resize(number_of_columns);
-            std::transform(row_begin_iterator, row_end_iterator, json_row.values.begin(), [](const EdgeWeight duration)
-                {
-                  if (duration == INVALID_EDGE_WEIGHT)
-                  {
-                      return util::json::Value(util::json::Null());
-                  }
-                  return util::json::Value(util::json::Number(duration / 10.));
-                });
+            std::transform(row_begin_iterator, row_end_iterator, json_row.values.begin(),
+                           [](const EdgeWeight duration)
+                           {
+                               if (duration == INVALID_EDGE_WEIGHT)
+                               {
+                                   return util::json::Value(util::json::Null());
+                               }
+                               return util::json::Value(util::json::Number(duration / 10.));
+                           });
             json_table.values.push_back(std::move(json_row));
         }
         return json_table;

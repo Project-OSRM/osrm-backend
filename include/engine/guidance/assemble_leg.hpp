@@ -134,6 +134,7 @@ RouteLeg assembleLeg(const DataFacadeT &facade,
     // `forward_weight`: duration of (d,t)
     // `forward_offset`: duration of (c, d)
     //
+    // TODO discuss, this should not be the case after danpats fixes
     // The PathData will contain entries of b, c and d. But only c will contain
     // a duration value since its the only point associated with a turn.
     // As such we want to slice of the duration for (a,s) and add the duration for
