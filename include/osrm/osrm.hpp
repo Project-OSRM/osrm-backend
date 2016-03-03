@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "osrm/status.hpp"
 
 #include <memory>
+#include <string>
 
 namespace osrm
 {
@@ -42,6 +43,7 @@ using engine::api::TableParameters;
 using engine::api::NearestParameters;
 using engine::api::TripParameters;
 using engine::api::MatchParameters;
+using engine::api::TileParameters;
 
 class OSRM final
 {
@@ -57,6 +59,7 @@ class OSRM final
     Status Nearest(const NearestParameters &parameters, json::Object &result);
     Status Trip(const TripParameters &parameters, json::Object &result);
     Status Match(const MatchParameters &parameters, json::Object &result);
+    Status Tile(const TileParameters &parameters, std::string &result);
 
   private:
     std::unique_ptr<engine::Engine> engine_;

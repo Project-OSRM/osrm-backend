@@ -22,9 +22,7 @@ class NearestService final : public BaseService
   public:
     NearestService(OSRM &routing_machine) : BaseService(routing_machine) {}
 
-    engine::Status RunQuery(std::vector<util::Coordinate> coordinates,
-                            std::string &options,
-                            util::json::Object &result) final override;
+    engine::Status RunQuery(std::string &query, ResultT &result) final override;
 
     unsigned GetVersion() final override { return 1; }
 };
