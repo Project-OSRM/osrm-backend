@@ -1,6 +1,6 @@
 #include "server/service/table_service.hpp"
 
-#include "engine/api/route_parameters.hpp"
+#include "engine/api/table_parameters.hpp"
 #include "server/api/parameters_parser.hpp"
 
 #include "util/json_container.hpp"
@@ -57,35 +57,33 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TableService::RunQuery(std::vector<util::Coordinate> coordinates,
-                                      std::string &options,
-                                      util::json::Object &result)
+engine::Status TableService::RunQuery(std::string &query, ResultT &result)
 {
+    result = util::json::Object();
+    auto &json_result = result.get<util::json::Object>();
 
-    auto options_iterator = options.begin();
+    auto query_iterator = query.begin();
     auto parameters =
-        api::parseParameters<engine::api::TableParameters>(options_iterator, options.end());
-    if (!parameters || options_iterator != options.end())
+        api::parseParameters<engine::api::TableParameters>(query_iterator, query.end());
+    if (!parameters || query_iterator != query.end())
     {
-        const auto position = std::distance(options.begin(), options_iterator);
-        result.values["code"] = "invalid-options";
-        result.values["message"] =
-            "Options string malformed close to position " + std::to_string(position);
+        const auto position = std::distance(query.begin(), query_iterator);
+        json_result.values["code"] = "invalid-query";
+        json_result.values["message"] =
+            "Query string malformed close to position " + std::to_string(position);
         return engine::Status::Error;
     }
-
     BOOST_ASSERT(parameters);
-    parameters->coordinates = std::move(coordinates);
 
     if (!parameters->IsValid())
     {
-        result.values["code"] = "invalid-options";
-        result.values["message"] = getWrongOptionHelp(*parameters);
+        json_result.values["code"] = "invalid-options";
+        json_result.values["message"] = getWrongOptionHelp(*parameters);
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters->IsValid());
 
-    return BaseService::routing_machine.Table(*parameters, result);
+    return BaseService::routing_machine.Table(*parameters, json_result);
 }
 }
 }
