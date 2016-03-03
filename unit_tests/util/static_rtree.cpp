@@ -25,7 +25,6 @@
 #include <unordered_set>
 #include <vector>
 
-
 BOOST_AUTO_TEST_SUITE(static_rtree)
 
 using namespace osrm;
@@ -306,8 +305,11 @@ BOOST_AUTO_TEST_CASE(regression_test)
         {
             Coord{FloatLongitude{0.0}, FloatLatitude{40.0}}, //
             Coord{FloatLongitude{5.0}, FloatLatitude{35.0}}, //
-            Coord{FloatLongitude{5.0}, FloatLatitude{5.0,}}, //
-            Coord{FloatLongitude{10.0}, FloatLatitude{0.0}}, //
+            Coord{FloatLongitude{5.0},
+                  FloatLatitude{
+                      5.0,
+                  }},                                          //
+            Coord{FloatLongitude{10.0}, FloatLatitude{0.0}},   //
             Coord{FloatLongitude{10.0}, FloatLatitude{20.0}},  //
             Coord{FloatLongitude{5.0}, FloatLatitude{20.0}},   //
             Coord{FloatLongitude{100.0}, FloatLatitude{40.0}}, //
@@ -407,7 +409,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     build_rtree<GraphFixture, MiniStaticRTree>("test_bearing", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
     std::unique_ptr<MockDataFacade> mockfacade_ptr(new MockDataFacade);
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords, *mockfacade_ptr);
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
+                                                                   *mockfacade_ptr);
 
     Coordinate input(FloatLongitude(5.1), FloatLatitude(5.0));
 
@@ -472,7 +475,8 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
     build_rtree<GraphFixture, MiniStaticRTree>("test_bbox", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
     std::unique_ptr<MockDataFacade> mockfacade_ptr(new MockDataFacade);
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords, *mockfacade_ptr);
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
+                                                                   *mockfacade_ptr);
 
     {
         RectangleInt2D bbox = {FloatLongitude(0.5), FloatLongitude(1.5), FloatLatitude(0.5),

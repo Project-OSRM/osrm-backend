@@ -24,8 +24,6 @@ bool constrainParamSize(const char *msg_template,
     }
     return false;
 }
-
 }
 }
 }
-

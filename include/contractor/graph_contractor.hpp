@@ -142,9 +142,9 @@ class GraphContractor
 
     template <class ContainerT>
     GraphContractor(int nodes,
-               ContainerT &input_edge_list,
-               std::vector<float> &&node_levels_,
-               std::vector<EdgeWeight> &&node_weights_)
+                    ContainerT &input_edge_list,
+                    std::vector<float> &&node_levels_,
+                    std::vector<EdgeWeight> &&node_weights_)
         : node_levels(std::move(node_levels_)), node_weights(std::move(node_weights_))
     {
         std::vector<ContractorEdge> edges;
@@ -239,7 +239,8 @@ class GraphContractor
                 }
             }
         }
-        util::SimpleLogger().Write() << "merged " << edges.size() - edge << " edges out of " << edges.size();
+        util::SimpleLogger().Write() << "merged " << edges.size() - edge << " edges out of "
+                                     << edges.size();
         edges.resize(edge);
         contractor_graph = std::make_shared<ContractorGraph>(nodes, edges);
         edges.clear();
@@ -696,7 +697,7 @@ class GraphContractor
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!heap.WasInserted(to))
             {
-                heap.Insert(to, to_distance, ContractorHeapData {current_hop, false});
+                heap.Insert(to, to_distance, ContractorHeapData{current_hop, false});
             }
             // Found a shorter Path -> Update distance
             else if (to_distance < heap.GetKey(to))
@@ -803,7 +804,7 @@ class GraphContractor
             }
 
             heap.Clear();
-            heap.Insert(source, 0, ContractorHeapData {});
+            heap.Insert(source, 0, ContractorHeapData{});
             int max_distance = 0;
             unsigned number_of_targets = 0;
 
@@ -858,7 +859,7 @@ class GraphContractor
                 max_distance = std::max(max_distance, path_distance);
                 if (!heap.WasInserted(target))
                 {
-                    heap.Insert(target, INVALID_EDGE_WEIGHT, ContractorHeapData {0, true});
+                    heap.Insert(target, INVALID_EDGE_WEIGHT, ContractorHeapData{0, true});
                     ++number_of_targets;
                 }
             }
