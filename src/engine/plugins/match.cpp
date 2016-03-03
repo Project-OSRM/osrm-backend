@@ -160,6 +160,11 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     SubMatchingList sub_matchings = map_matching(candidates_lists, parameters.coordinates,
                                                  parameters.timestamps, parameters.radiuses);
 
+    if (sub_matchings.size() == 0)
+    {
+        return Error("NoMatch", "Could not match the trace.", json_result);
+    }
+
     std::vector<InternalRouteResult> sub_routes(sub_matchings.size());
     for (auto index : util::irange(0UL, sub_matchings.size()))
     {
