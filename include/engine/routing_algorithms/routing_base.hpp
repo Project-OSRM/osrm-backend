@@ -283,8 +283,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const auto turn_instruction =
-                    facade->GetTurnInstructionForEdgeID(ed.id);
+                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
                         ? phantom_node_pair.source_phantom.backward_travel_mode
@@ -320,9 +319,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(start_index < end_index);
                 for (std::size_t i = start_index; i < end_index; ++i)
                 {
-                    unpacked_path.push_back(PathData{id_vector[i], name_index, weight_vector[i],
-                                                     extractor::guidance::TurnInstruction::NO_TURN(),
-                                                     travel_mode, INVALID_EXIT_NR});
+                    unpacked_path.push_back(
+                        PathData{id_vector[i], name_index, weight_vector[i],
+                                 extractor::guidance::TurnInstruction::NO_TURN(), travel_mode,
+                                 INVALID_EXIT_NR});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
