@@ -33,22 +33,26 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
     using Iterator = std::string::iterator;
     using RadiusesT = std::vector<boost::optional<double>>;
 
-    BaseParametersGrammar(qi::rule<Iterator> &root_rule_,
-                          engine::api::BaseParameters &parameters_)
+    BaseParametersGrammar(qi::rule<Iterator> &root_rule_, engine::api::BaseParameters &parameters_)
         : BaseParametersGrammar::base_type(root_rule_), base_parameters(parameters_)
     {
-        const auto add_bearing = [this](boost::optional<boost::fusion::vector2<short, short>> bearing_range) {
+        const auto add_bearing =
+            [this](boost::optional<boost::fusion::vector2<short, short>> bearing_range)
+        {
             boost::optional<engine::api::BaseParameters::Bearing> bearing;
             if (bearing_range)
             {
-                bearing = engine::api::BaseParameters::Bearing {boost::fusion::at_c<0>(*bearing_range), boost::fusion::at_c<1>(*bearing_range)};
+                bearing = engine::api::BaseParameters::Bearing{
+                    boost::fusion::at_c<0>(*bearing_range), boost::fusion::at_c<1>(*bearing_range)};
             }
             base_parameters.bearings.push_back(std::move(bearing));
         };
-        const auto set_radiuses = [this](RadiusesT& radiuses) {
+        const auto set_radiuses = [this](RadiusesT &radiuses)
+        {
             base_parameters.radiuses = std::move(radiuses);
         };
-        const auto add_hint = [this](const std::string& hint_string) {
+        const auto add_hint = [this](const std::string &hint_string)
+        {
             if (hint_string.size() > 0)
             {
                 base_parameters.hints.push_back(engine::Hint::FromBase64(hint_string));
@@ -56,9 +60,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         };
         const auto add_coordinate = [this](const boost::fusion::vector<double, double> &lonLat)
         {
-            base_parameters.coordinates.emplace_back(
-                util::Coordinate(util::FixedLongitude(boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION),
-                                 util::FixedLatitude(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION)));
+            base_parameters.coordinates.emplace_back(util::Coordinate(
+                util::FixedLongitude(boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION),
+                util::FixedLatitude(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION)));
         };
         const auto polyline_to_coordinates = [this](const std::string &polyline)
         {
@@ -70,7 +74,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         base64_char = qi::char_("a-zA-Z0-9--_");
 
         radiuses_rule = qi::lit("radiuses=") >> -qi::double_ % ";";
-        hints_rule = qi::lit("hints=") >> qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
+        hints_rule =
+            qi::lit("hints=") >>
+            qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
         bearings_rule =
             qi::lit("bearings=") >> (-(qi::short_ >> ',' >> qi::short_))[add_bearing] % ";";
         polyline_rule = qi::as_string[qi::lit("polyline(") >> +polyline_chars >>
@@ -81,11 +87,11 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         base_rule = bearings_rule | radiuses_rule[set_radiuses] | hints_rule;
     }
 
-protected:
+  protected:
     qi::rule<Iterator> base_rule;
     qi::rule<Iterator> query_rule;
 
-private:
+  private:
     engine::api::BaseParameters &base_parameters;
     qi::rule<Iterator> bearings_rule;
     qi::rule<Iterator> hints_rule;

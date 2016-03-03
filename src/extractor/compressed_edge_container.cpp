@@ -78,7 +78,7 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
         const unsigned unpacked_size = current_vector.size();
         control_sum += unpacked_size;
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != unpacked_size);
-        for (const auto & current_node : current_vector)
+        for (const auto &current_node : current_vector)
         {
             geometry_out_stream.write((char *)&(current_node), sizeof(CompressedEdge));
         }
@@ -145,7 +145,7 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
-        edge_bucket_list1.emplace_back(CompressedEdge { via_node_id, weight1 });
+        edge_bucket_list1.emplace_back(CompressedEdge{via_node_id, weight1});
     }
 
     BOOST_ASSERT(0 < edge_bucket_list1.size());
@@ -176,11 +176,11 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     else
     {
         // we are certain that the second edge is atomic.
-        edge_bucket_list1.emplace_back( CompressedEdge { target_node_id, weight2 });
+        edge_bucket_list1.emplace_back(CompressedEdge{target_node_id, weight2});
     }
 }
 
-void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id, 
+void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
                                                   const NodeID target_node_id,
                                                   const EdgeWeight weight)
 {
@@ -217,11 +217,9 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
     // Don't re-add this if it's already in there.
     if (edge_bucket_list.empty())
     {
-        edge_bucket_list.emplace_back(CompressedEdge { target_node_id, weight });
+        edge_bucket_list.emplace_back(CompressedEdge{target_node_id, weight});
     }
 }
-
-
 
 void CompressedEdgeContainer::PrintStatistics() const
 {

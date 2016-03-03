@@ -14,11 +14,11 @@ namespace map_matching
 
 struct MatchingConfidence
 {
-private:
+  private:
     using ClassifierT = BayesClassifier<LaplaceDistribution, LaplaceDistribution, double>;
     using TraceClassification = ClassifierT::ClassificationT;
 
-public:
+  public:
     MatchingConfidence()
         : // the values were derived from fitting a laplace distribution
           // to the values of manually classified traces
@@ -47,8 +47,8 @@ public:
         BOOST_ASSERT(label_with_confidence.first == ClassifierT::ClassLabel::NEGATIVE);
         return 1 - label_with_confidence.second;
     }
-private:
 
+  private:
     ClassifierT classifier;
 };
 }

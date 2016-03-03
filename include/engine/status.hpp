@@ -11,7 +11,6 @@ enum class Status
     Ok,
     Error
 };
-
 }
 }
 

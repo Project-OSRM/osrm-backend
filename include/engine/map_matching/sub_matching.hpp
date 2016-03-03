@@ -18,7 +18,6 @@ struct SubMatching
     std::vector<unsigned> indices;
     double confidence;
 };
-
 }
 }
 }

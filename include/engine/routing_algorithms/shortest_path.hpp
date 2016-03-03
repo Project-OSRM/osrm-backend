@@ -37,8 +37,9 @@ class ShortestPathRouting final
 
     ~ShortestPathRouting() {}
 
-    inline bool
-    forceLoop(bool forward, const PhantomNode &source_phantom, const PhantomNode &target_phantom) const
+    inline bool forceLoop(bool forward,
+                          const PhantomNode &source_phantom,
+                          const PhantomNode &target_phantom) const
     {
         if (forward)
             return source_phantom.forward_node_id == target_phantom.forward_node_id &&
@@ -209,7 +210,8 @@ class ShortestPathRouting final
                     const std::vector<boost::optional<bool>> &uturn_indicators,
                     InternalRouteResult &raw_route_data) const
     {
-        BOOST_ASSERT(uturn_indicators.empty() || uturn_indicators.size() == phantom_nodes_vector.size() + 1);
+        BOOST_ASSERT(uturn_indicators.empty() ||
+                     uturn_indicators.size() == phantom_nodes_vector.size() + 1);
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
@@ -247,8 +249,11 @@ class ShortestPathRouting final
             const auto &source_phantom = phantom_node_pair.source_phantom;
             const auto &target_phantom = phantom_node_pair.target_phantom;
 
-            const bool use_uturn_default = !use_uturn_indicators || !uturn_indicators[current_leg + 1];
-            const bool allow_u_turn_at_via = (use_uturn_default && UTURN_DEFAULT) || (!use_uturn_default && *uturn_indicators[current_leg + 1]);
+            const bool use_uturn_default =
+                !use_uturn_indicators || !uturn_indicators[current_leg + 1];
+            const bool allow_u_turn_at_via =
+                (use_uturn_default && UTURN_DEFAULT) ||
+                (!use_uturn_default && *uturn_indicators[current_leg + 1]);
 
             bool search_to_forward_node = target_phantom.forward_node_id != SPECIAL_NODEID;
             bool search_to_reverse_node = target_phantom.reverse_node_id != SPECIAL_NODEID;

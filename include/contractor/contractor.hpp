@@ -38,7 +38,7 @@ class Contractor
     {
     }
     Contractor(const Contractor &) = delete;
-    Contractor& operator=(const Contractor &) = delete;
+    Contractor &operator=(const Contractor &) = delete;
 
     int Run();
 
