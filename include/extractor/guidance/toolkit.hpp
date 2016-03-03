@@ -133,15 +133,13 @@ getRepresentativeCoordinate(const NodeID from_node,
 }
 
 // shift an instruction around the degree circle in CCW order
-inline DirectionModifier
-forcedShiftCCW(const DirectionModifier modifier)
+inline DirectionModifier forcedShiftCCW(const DirectionModifier modifier)
 {
-    return static_cast<DirectionModifier>(
-        (static_cast<uint32_t>(modifier) + 1) % detail::num_direction_modifiers);
+    return static_cast<DirectionModifier>((static_cast<uint32_t>(modifier) + 1) %
+                                          detail::num_direction_modifiers);
 }
 
-inline DirectionModifier
-shiftCCW(const DirectionModifier modifier)
+inline DirectionModifier shiftCCW(const DirectionModifier modifier)
 {
     if (detail::shiftable_ccw[static_cast<int>(modifier)])
         return forcedShiftCCW(modifier);
@@ -150,16 +148,14 @@ shiftCCW(const DirectionModifier modifier)
 }
 
 // shift an instruction around the degree circle in CW order
-inline DirectionModifier
-forcedShiftCW(const DirectionModifier modifier)
+inline DirectionModifier forcedShiftCW(const DirectionModifier modifier)
 {
     return static_cast<DirectionModifier>(
         (static_cast<uint32_t>(modifier) + detail::num_direction_modifiers - 1) %
         detail::num_direction_modifiers);
 }
 
-inline DirectionModifier
-shiftCW(const DirectionModifier modifier)
+inline DirectionModifier shiftCW(const DirectionModifier modifier)
 {
     if (detail::shiftable_cw[static_cast<int>(modifier)])
         return forcedShiftCW(modifier);
@@ -169,19 +165,15 @@ shiftCW(const DirectionModifier modifier)
 
 inline bool isBasic(const TurnType type)
 {
-    return type == TurnType::Turn ||
-           type == TurnType::EndOfRoad;
+    return type == TurnType::Turn || type == TurnType::EndOfRoad;
 }
 
 inline bool isUturn(const TurnInstruction instruction)
 {
-    return isBasic(instruction.type) &&
-           instruction.direction_modifier == DirectionModifier::UTurn;
+    return isBasic(instruction.type) && instruction.direction_modifier == DirectionModifier::UTurn;
 }
 
-inline bool resolve(TurnInstruction &to_resolve,
-                    const TurnInstruction neighbor,
-                    bool resolve_cw)
+inline bool resolve(TurnInstruction &to_resolve, const TurnInstruction neighbor, bool resolve_cw)
 {
     const auto shifted_turn = resolve_cw ? shiftCW(to_resolve.direction_modifier)
                                          : shiftCCW(to_resolve.direction_modifier);
@@ -224,9 +216,8 @@ inline bool isSlightModifier(const DirectionModifier direction_modifier)
 
 inline bool isSharpTurn(const TurnInstruction turn)
 {
-    return isBasic(turn.type) &&
-           (turn.direction_modifier == DirectionModifier::SharpLeft ||
-            turn.direction_modifier == DirectionModifier::SharpRight);
+    return isBasic(turn.type) && (turn.direction_modifier == DirectionModifier::SharpLeft ||
+                                  turn.direction_modifier == DirectionModifier::SharpRight);
 }
 
 inline bool isStraight(const TurnInstruction turn)
@@ -235,8 +226,7 @@ inline bool isStraight(const TurnInstruction turn)
            turn.direction_modifier == DirectionModifier::Straight;
 }
 
-inline bool isConflict(const TurnInstruction first,
-                       const TurnInstruction second)
+inline bool isConflict(const TurnInstruction first, const TurnInstruction second)
 {
     return (first.type == second.type && first.direction_modifier == second.direction_modifier) ||
            (isStraight(first) && isStraight(second));
@@ -245,8 +235,7 @@ inline bool isConflict(const TurnInstruction first,
 inline DiscreteAngle discretizeAngle(const double angle)
 {
     BOOST_ASSERT(angle >= 0. && angle <= 360.);
-    return DiscreteAngle(
-        static_cast<uint8_t>(angle / detail::discrete_angle_step_size));
+    return DiscreteAngle(static_cast<uint8_t>(angle / detail::discrete_angle_step_size));
 }
 
 inline double angleFromDiscreteAngle(const DiscreteAngle angle)
@@ -270,8 +259,7 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
 {
 
     // special handling of U-Turns and Roundabout
-    if (!isBasic(instruction.type) ||
-        instruction.direction_modifier == DirectionModifier::UTurn)
+    if (!isBasic(instruction.type) || instruction.direction_modifier == DirectionModifier::UTurn)
         return 1.0;
 
     const double deviations[] = {0, 45, 50, 35, 10, 35, 50, 45};
@@ -305,18 +293,16 @@ inline DirectionModifier getTurnDirection(const double angle)
 }
 
 // swaps left <-> right modifier types
-inline DirectionModifier
-mirrorDirectionModifier(const DirectionModifier modifier)
+inline DirectionModifier mirrorDirectionModifier(const DirectionModifier modifier)
 {
-    const constexpr DirectionModifier results[] = {
-        DirectionModifier::UTurn,
-        DirectionModifier::SharpLeft,
-        DirectionModifier::Left,
-        DirectionModifier::SlightLeft,
-        DirectionModifier::Straight,
-        DirectionModifier::SlightRight,
-        DirectionModifier::Right,
-        DirectionModifier::SharpRight};
+    const constexpr DirectionModifier results[] = {DirectionModifier::UTurn,
+                                                   DirectionModifier::SharpLeft,
+                                                   DirectionModifier::Left,
+                                                   DirectionModifier::SlightLeft,
+                                                   DirectionModifier::Straight,
+                                                   DirectionModifier::SlightRight,
+                                                   DirectionModifier::Right,
+                                                   DirectionModifier::SharpRight};
     return results[modifier];
 }
 
