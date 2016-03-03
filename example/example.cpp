@@ -38,7 +38,7 @@ int main(int argc, const char *argv[]) try
     // The following shows how to use the Route service; configure this service
     RouteParameters params;
 
-    // Rout in monaco
+    // Route in monaco
     params.coordinates.push_back({util::FloatLongitude(7.419758), util::FloatLatitude(43.731142)});
     params.coordinates.push_back({util::FloatLongitude(7.419505), util::FloatLatitude(43.736825)});
 

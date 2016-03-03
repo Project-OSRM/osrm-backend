@@ -3,6 +3,6 @@
 #include "util/json_container.hpp"
 namespace osrm
 {
-    namespace json = osrm::util::json;
+namespace json = osrm::util::json;
 }
 #endif

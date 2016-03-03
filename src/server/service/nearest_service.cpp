@@ -42,7 +42,7 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
 engine::Status NearestService::RunQuery(std::string &query, ResultT &result)
 {
     result = util::json::Object();
-    auto& json_result = result.get<util::json::Object>();
+    auto &json_result = result.get<util::json::Object>();
 
     auto query_iterator = query.begin();
     auto parameters =

@@ -25,7 +25,8 @@ ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(con
     service_map["tile"] = util::make_unique<service::TileService>(routing_machine);
 }
 
-engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url, service::BaseService::ResultT &result)
+engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
+                                        service::BaseService::ResultT &result)
 {
     const auto &service_iter = service_map.find(parsed_url.service);
     if (service_iter == service_map.end())
