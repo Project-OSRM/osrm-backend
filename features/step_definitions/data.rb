@@ -10,8 +10,8 @@ Given /^the extract extra arguments "(.*?)"$/ do |args|
     set_extract_args args
 end
 
-Given /^the prepare extra arguments "(.*?)"$/ do |args|
-    set_prepare_args args
+Given /^the contract extra arguments "(.*?)"$/ do |args|
+    set_contract_args args
 end
 
 Given /^a grid size of (\d+) meters$/ do |meters|

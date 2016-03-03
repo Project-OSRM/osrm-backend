@@ -288,8 +288,8 @@ def prepare_data
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
     log "== Preparing #{extracted_file}.osm...", :preprocess
-    log "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{@prepare_args} #{extracted_file}.osrm >>#{PREPROCESS_LOG_FILE} 2>&1"
-    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{@prepare_args} #{extracted_file}.osrm >>#{PREPROCESS_LOG_FILE} 2>&1"
+    log "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{@contract_args} #{extracted_file}.osrm >>#{PREPROCESS_LOG_FILE} 2>&1"
+    unless system "#{LOAD_LIBRARIES}#{BIN_PATH}/osrm-contract #{@contract_args} #{extracted_file}.osrm >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise PrepareError.new $?.exitstatus, "osrm-contract exited with code #{$?.exitstatus}."
     end

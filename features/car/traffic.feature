@@ -34,7 +34,7 @@ Feature: Traffic - speeds
     Scenario: Weighting not based on raster sources
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
-        Given the prepare extra arguments "--segment-speed-file speeds.csv"
+        Given the contract extra arguments "--segment-speed-file speeds.csv"
         And I route I should get
             | from | to | route | speed   |
             | a    | b  | ab    | 27 km/h |

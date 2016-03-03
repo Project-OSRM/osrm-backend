@@ -91,6 +91,9 @@ add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTests
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL>)
 
+target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
+target_include_directories(rtree-bench PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
+
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_BUILD_TYPE Release)

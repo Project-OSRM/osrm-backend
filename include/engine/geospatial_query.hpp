@@ -172,7 +172,6 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             datafacade.GetUncompressedWeights(data.reverse_packed_geometry_id,
                                               reverse_weight_vector);
 
-            //BOOST_ASSERT(reverse_weight_vector.size() == forward_weight_vector.size());
             BOOST_ASSERT(data.fwd_segment_position < reverse_weight_vector.size());
 
             for (std::size_t i = 0; i < reverse_weight_vector.size() - data.fwd_segment_position - 1; i++)

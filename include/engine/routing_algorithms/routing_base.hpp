@@ -346,8 +346,6 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                     phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
                                     unpacked_path.empty();
 
-        std::cout << "Got id vector of size " << id_vector.size() << "\n";
-
         std::size_t start_index = 0;
         if (is_local_path)
         {
