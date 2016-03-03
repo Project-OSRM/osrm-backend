@@ -29,14 +29,12 @@ namespace osrm
 namespace server
 {
 
-
 void RequestHandler::RegisterServiceHandler(std::unique_ptr<ServiceHandler> service_handler_)
 {
     service_handler = std::move(service_handler_);
 }
 
-void RequestHandler::HandleRequest(const http::request &current_request,
-                                    http::reply &current_reply)
+void RequestHandler::HandleRequest(const http::request &current_request, http::reply &current_reply)
 {
     if (!service_handler)
     {
@@ -78,15 +76,16 @@ void RequestHandler::HandleRequest(const http::request &current_request,
             << request_string;
 
         auto api_iterator = request_string.begin();
-        auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());;
+        auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
+        ;
         ServiceHandler::ResultT result;
-
 
         // check if the was an error with the request
         if (maybe_parsed_url && api_iterator == request_string.end())
         {
 
-            const engine::Status status = service_handler->RunQuery(std::move(*maybe_parsed_url), result);
+            const engine::Status status =
+                service_handler->RunQuery(std::move(*maybe_parsed_url), result);
             if (status != engine::Status::Ok)
             {
                 // 4xx bad request return code
@@ -101,17 +100,17 @@ void RequestHandler::HandleRequest(const http::request &current_request,
         {
             const auto position = std::distance(request_string.begin(), api_iterator);
             const auto context_begin = request_string.begin() + std::max(position - 3UL, 0UL);
-            const auto context_end = request_string.begin() + std::min(position + 3UL, request_string.size());
+            const auto context_end =
+                request_string.begin() + std::min(position + 3UL, request_string.size());
             std::string context(context_begin, context_end);
 
             current_reply.status = http::reply::bad_request;
             result = util::json::Object();
-            auto& json_result = result.get<util::json::Object>();
+            auto &json_result = result.get<util::json::Object>();
             json_result.values["code"] = "invalid-url";
-            json_result.values["message"] =
-                "URL string malformed close to position " + std::to_string(position) + ": \"" + context + "\"";
+            json_result.values["message"] = "URL string malformed close to position " +
+                                            std::to_string(position) + ": \"" + context + "\"";
         }
-
 
         current_reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
         current_reply.headers.emplace_back("Access-Control-Allow-Methods", "GET");
@@ -121,14 +120,15 @@ void RequestHandler::HandleRequest(const http::request &current_request,
         {
             current_reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
             current_reply.headers.emplace_back("Content-Disposition",
-                    "inline; filename=\"response.json\"");
+                                               "inline; filename=\"response.json\"");
 
             util::json::render(current_reply.content, result.get<util::json::Object>());
         }
         else
         {
             BOOST_ASSERT(result.is<std::string>());
-            std::copy(result.get<std::string>().cbegin(), result.get<std::string>().cend(), std::back_inserter(current_reply.content));
+            std::copy(result.get<std::string>().cbegin(), result.get<std::string>().cend(),
+                      std::back_inserter(current_reply.content));
 
             current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
         }
@@ -144,6 +144,5 @@ void RequestHandler::HandleRequest(const http::request &current_request,
                                                << ", uri: " << current_request.uri;
     }
 }
-
 }
 }

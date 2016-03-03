@@ -278,8 +278,7 @@ int Extractor::run()
 
         util::SimpleLogger().Write() << "Saving edge-based node weights to file.";
         TIMER_START(timer_write_node_weights);
-        util::serializeVector(config.edge_based_node_weights_output_path,
-                                  edge_based_node_weights);
+        util::serializeVector(config.edge_based_node_weights_output_path, edge_based_node_weights);
         TIMER_STOP(timer_write_node_weights);
         util::SimpleLogger().Write() << "Done writing. (" << TIMER_SEC(timer_write_node_weights)
                                      << ")";

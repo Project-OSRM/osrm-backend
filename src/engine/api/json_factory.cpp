@@ -28,14 +28,8 @@ namespace json
 namespace detail
 {
 
-const constexpr char *modifier_names[] = {"uturn",
-                                          "sharp right",
-                                          "right",
-                                          "slight right",
-                                          "straight",
-                                          "slight left",
-                                          "left",
-                                          "sharp left"};
+const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
+                                          "straight", "slight left", "left",  "sharp left"};
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API

@@ -96,8 +96,8 @@ BOOST_FIXTURE_TEST_CASE(array_test, TestRandomArrayEntryFixture)
 
 BOOST_AUTO_TEST_CASE(target_test)
 {
-    std::vector<TestInputEdge> input_edges = {
-        TestInputEdge{0, 1, TestData{1}}, TestInputEdge{3, 0, TestData{2}}};
+    std::vector<TestInputEdge> input_edges = {TestInputEdge{0, 1, TestData{1}},
+                                              TestInputEdge{3, 0, TestData{2}}};
     TestStaticGraph simple_graph = TestStaticGraph(4, input_edges);
 
     auto target = simple_graph.GetTarget(simple_graph.FindEdge(3, 0));
