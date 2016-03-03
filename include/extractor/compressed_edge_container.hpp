@@ -18,9 +18,9 @@ class CompressedEdgeContainer
   public:
     struct CompressedEdge
     {
-    public:
-        NodeID node_id;  // refers to an internal node-based-node
-        EdgeWeight weight;  // the weight of the edge leading to this node
+      public:
+        NodeID node_id;    // refers to an internal node-based-node
+        EdgeWeight weight; // the weight of the edge leading to this node
     };
     using EdgeBucket = std::vector<CompressedEdge>;
 
@@ -32,9 +32,8 @@ class CompressedEdgeContainer
                       const EdgeWeight weight1,
                       const EdgeWeight weight2);
 
-    void AddUncompressedEdge(const EdgeID edgei_id, 
-                             const NodeID target_node,
-                             const EdgeWeight weight);
+    void
+    AddUncompressedEdge(const EdgeID edgei_id, const NodeID target_node, const EdgeWeight weight);
 
     bool HasEntryForID(const EdgeID edge_id) const;
     void PrintStatistics() const;

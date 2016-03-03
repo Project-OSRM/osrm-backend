@@ -15,12 +15,8 @@ struct TileParameters final
     unsigned z;
 
     // FIXME check if x and y work with z
-    bool IsValid()
-    {
-        return z < 20;
-    };
+    bool IsValid() { return z < 20; };
 };
-
 }
 }
 }

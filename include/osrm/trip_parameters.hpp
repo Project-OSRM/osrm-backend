@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-    using engine::api::TripParameters;
+using engine::api::TripParameters;
 }
 
 #endif

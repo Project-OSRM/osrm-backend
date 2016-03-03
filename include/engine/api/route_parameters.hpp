@@ -28,14 +28,15 @@ struct RouteParameters : public BaseParameters
 
     RouteParameters() = default;
 
-    template<typename... Args>
+    template <typename... Args>
     RouteParameters(const bool steps_,
                     const bool alternative_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    std::vector<boost::optional<bool>> uturns_, Args... args_)
-        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternative{alternative_}, geometries{geometries_},
-          overview{overview_}, uturns{std::move(uturns_)}
+                    std::vector<boost::optional<bool>> uturns_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternative{alternative_},
+          geometries{geometries_}, overview{overview_}, uturns{std::move(uturns_)}
     {
     }
 

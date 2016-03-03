@@ -244,7 +244,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
             // assumes minumum of 0.1 m/s
-            const int duration_uppder_bound = ((haversine_distance + max_distance_delta) * 0.25) * 10;
+            const int duration_uppder_bound =
+                ((haversine_distance + max_distance_delta) * 0.25) * 10;
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0u, prev_viterbi.size()))
@@ -274,8 +275,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         network_distance = super::GetNetworkDistanceWithCore(
                             forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
                             prev_unbroken_timestamps_list[s].phantom_node,
-                            current_timestamps_list[s_prime].phantom_node,
-                            duration_uppder_bound);
+                            current_timestamps_list[s_prime].phantom_node, duration_uppder_bound);
                     }
                     else
                     {

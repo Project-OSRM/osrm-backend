@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-    using engine::api::MatchParameters;
+using engine::api::MatchParameters;
 }
 
 #endif
