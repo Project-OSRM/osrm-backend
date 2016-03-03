@@ -772,7 +772,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                       SearchEngineData::QueryHeap &reverse_core_heap,
                                       const PhantomNode &source_phantom,
                                       const PhantomNode &target_phantom,
-                                      int duration_upper_bound=INVALID_EDGE_WEIGHT) const
+                                      int duration_upper_bound = INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
@@ -826,7 +826,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                               SearchEngineData::QueryHeap &reverse_heap,
                               const PhantomNode &source_phantom,
                               const PhantomNode &target_phantom,
-                              int duration_upper_bound=INVALID_EDGE_WEIGHT) const
+                              int duration_upper_bound = INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());

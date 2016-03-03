@@ -323,8 +323,8 @@ int Storage::Run()
     boost::iostreams::seek(geometry_input_stream, number_of_geometries_indices * sizeof(unsigned),
                            BOOST_IOS::cur);
     geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
-    shared_layout_ptr->SetBlockSize<extractor::CompressedEdgeContainer::CompressedEdge>(SharedDataLayout::GEOMETRIES_LIST,
-                                              number_of_compressed_geometries);
+    shared_layout_ptr->SetBlockSize<extractor::CompressedEdgeContainer::CompressedEdge>(
+        SharedDataLayout::GEOMETRIES_LIST, number_of_compressed_geometries);
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
                                  << shared_layout_ptr->GetSizeOfLayout() << " bytes";
@@ -442,8 +442,9 @@ int Storage::Run()
             (char *)geometries_index_ptr,
             shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_INDEX));
     }
-    extractor::CompressedEdgeContainer::CompressedEdge *geometries_list_ptr = shared_layout_ptr->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge, true>(
-        shared_memory_ptr, SharedDataLayout::GEOMETRIES_LIST);
+    extractor::CompressedEdgeContainer::CompressedEdge *geometries_list_ptr =
+        shared_layout_ptr->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge, true>(
+            shared_memory_ptr, SharedDataLayout::GEOMETRIES_LIST);
 
     geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
     BOOST_ASSERT(temporary_value ==
