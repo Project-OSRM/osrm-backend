@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-    using engine::api::TableParameters;
+using engine::api::TableParameters;
 }
 
 #endif

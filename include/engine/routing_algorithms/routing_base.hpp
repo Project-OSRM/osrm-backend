@@ -496,7 +496,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 std::vector<NodeID> &packed_leg,
                 const bool force_loop_forward,
                 const bool force_loop_reverse,
-                const int duration_uppder_bound=INVALID_EDGE_WEIGHT) const
+                const int duration_uppder_bound = INVALID_EDGE_WEIGHT) const
     {
         NodeID middle = SPECIAL_NODEID;
         distance = duration_uppder_bound;
@@ -777,7 +777,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                       SearchEngineData::QueryHeap &reverse_core_heap,
                                       const PhantomNode &source_phantom,
                                       const PhantomNode &target_phantom,
-                                      int duration_uppder_bound=INVALID_EDGE_WEIGHT) const
+                                      int duration_uppder_bound = INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
@@ -831,7 +831,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                               SearchEngineData::QueryHeap &reverse_heap,
                               const PhantomNode &source_phantom,
                               const PhantomNode &target_phantom,
-                              int duration_uppder_bound=INVALID_EDGE_WEIGHT) const
+                              int duration_uppder_bound = INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());

@@ -39,7 +39,8 @@ RequestParser::parse(http::request &current_request, char *begin, char *end)
     return std::make_tuple(result, selected_compression);
 }
 
-RequestParser::RequestStatus RequestParser::consume(http::request &current_request, const char input)
+RequestParser::RequestStatus RequestParser::consume(http::request &current_request,
+                                                    const char input)
 {
     switch (state)
     {

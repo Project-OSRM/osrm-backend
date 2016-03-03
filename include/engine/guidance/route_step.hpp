@@ -31,7 +31,6 @@ struct RouteStep
     std::size_t geometry_begin;
     std::size_t geometry_end;
 };
-
 }
 }
 }
