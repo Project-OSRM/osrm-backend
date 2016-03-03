@@ -27,8 +27,8 @@ namespace detail
 const constexpr double DESIRED_SEGMENT_LENGTH = 10.0;
 const constexpr bool shiftable_ccw[] = {false, true, true, false, false, true, true, false};
 const constexpr bool shiftable_cw[] = {false, false, true, true, false, false, true, true};
-const constexpr uint8_t modifier_bounds[detail::num_direction_modifiers] = {
-    0, 36, 93, 121, 136, 163, 220, 255};
+const constexpr uint8_t modifier_bounds[detail::num_direction_modifiers] = {0,   36,  93,  121,
+                                                                            136, 163, 220, 255};
 const constexpr double discrete_angle_step_size = 360. / 256.;
 
 template <typename IteratorType>
@@ -294,14 +294,10 @@ inline DirectionModifier getTurnDirection(const double angle)
 // swaps left <-> right modifier types
 inline DirectionModifier mirrorDirectionModifier(const DirectionModifier modifier)
 {
-    const constexpr DirectionModifier results[] = {DirectionModifier::UTurn,
-                                                   DirectionModifier::SharpLeft,
-                                                   DirectionModifier::Left,
-                                                   DirectionModifier::SlightLeft,
-                                                   DirectionModifier::Straight,
-                                                   DirectionModifier::SlightRight,
-                                                   DirectionModifier::Right,
-                                                   DirectionModifier::SharpRight};
+    const constexpr DirectionModifier results[] = {
+        DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
+        DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
+        DirectionModifier::Right,      DirectionModifier::SharpRight};
     return results[modifier];
 }
 
