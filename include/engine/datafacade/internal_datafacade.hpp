@@ -343,7 +343,8 @@ class InternalDataFacade final : public BaseDataFacade
         return m_edge_is_compressed.at(id);
     }
 
-    extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    extractor::guidance::TurnInstruction
+    GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }

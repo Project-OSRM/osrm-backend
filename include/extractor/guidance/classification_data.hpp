@@ -41,7 +41,7 @@ enum class FunctionalRoadClass : short
 
 inline FunctionalRoadClass functionalRoadClassFromTag(std::string const &value)
 {
-    //FIXME at some point this should be part of the profiles
+    // FIXME at some point this should be part of the profiles
     const static auto initializeClassHash = []()
     {
         std::unordered_map<std::string, FunctionalRoadClass> hash;

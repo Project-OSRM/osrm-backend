@@ -78,7 +78,8 @@ class BaseDataFacade
     virtual void GetUncompressedWeights(const EdgeID id,
                                          std::vector<EdgeWeight> &result_weights) const = 0;
 
-    virtual extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const = 0;
+    virtual extractor::guidance::TurnInstruction
+    GetTurnInstructionForEdgeID(const unsigned id) const = 0;
 
     virtual extractor::TravelMode GetTravelModeForEdgeID(const unsigned id) const = 0;
 
