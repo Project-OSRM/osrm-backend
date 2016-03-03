@@ -68,16 +68,16 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
     std::vector<int> delta_numbers;
     BOOST_ASSERT(size > 0);
     delta_numbers.reserve((size - 1) * 2);
-    util::Coordinate previous_coordinate{util::FixedLongitude(0), util::FixedLatitude(0)};
-    std::for_each(begin, end, [&delta_numbers, &previous_coordinate](const util::Coordinate loc)
+    int current_lat = 0;
+    int current_lon = 0;
+    std::for_each(begin, end, [&delta_numbers, &current_lat, &current_lon](const util::Coordinate loc)
                   {
-                      const int lat_diff = static_cast<int>(loc.lat - previous_coordinate.lat) *
-                                           detail::COORDINATE_TO_POLYLINE;
-                      const int lon_diff = static_cast<int>(loc.lon - previous_coordinate.lon) *
-                                           detail::COORDINATE_TO_POLYLINE;
+                      const int lat_diff = std::round(static_cast<int>(loc.lat) * detail::COORDINATE_TO_POLYLINE) - current_lat;
+                      const int lon_diff = std::round(static_cast<int>(loc.lon) * detail::COORDINATE_TO_POLYLINE) - current_lon;
                       delta_numbers.emplace_back(lat_diff);
                       delta_numbers.emplace_back(lon_diff);
-                      previous_coordinate = loc;
+                      current_lat += lat_diff;
+                      current_lon += lon_diff;
                   });
     return encode(delta_numbers);
 }
