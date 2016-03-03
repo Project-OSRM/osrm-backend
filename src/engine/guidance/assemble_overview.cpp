@@ -8,6 +8,9 @@
 #include <vector>
 #include <tuple>
 #include <numeric>
+#include <utility>
+#include <iterator>
+#include <limits>
 
 namespace osrm
 {
@@ -21,9 +24,9 @@ namespace
 unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometries)
 {
     util::FixedLongitude min_lon{std::numeric_limits<int>::max()};
-    util::FixedLongitude max_lon{-std::numeric_limits<int>::max()};
+    util::FixedLongitude max_lon{std::numeric_limits<int>::min()};
     util::FixedLatitude min_lat{std::numeric_limits<int>::max()};
-    util::FixedLatitude max_lat{-std::numeric_limits<int>::max()};
+    util::FixedLatitude max_lat{std::numeric_limits<int>::min()};
 
     for (const auto &leg_geometry : leg_geometries)
     {
