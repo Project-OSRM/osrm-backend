@@ -26,49 +26,36 @@ int main(int argc, const char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    // Path to .osrm base file
-    std::string base{argv[1]};
+    using namespace osrm;
 
-    // Configure routing machine
-    osrm::EngineConfig config;
-
-    // TODO(daniel-j-h): this is ugly, provide easier way for users
-    config.server_paths["ramindex"] = base + ".ramIndex";
-    config.server_paths["fileindex"] = base + ".fileIndex";
-    config.server_paths["hsgrdata"] = base + ".hsgr";
-    config.server_paths["nodesdata"] = base + ".nodes";
-    config.server_paths["edgesdata"] = base + ".edges";
-    config.server_paths["coredata"] = base + ".core";
-    config.server_paths["geometries"] = base + ".geometry";
-    config.server_paths["timestamp"] = base + ".timestamp";
-    config.server_paths["namesdata"] = base + ".names";
+    // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
+    EngineConfig config{argv[1]};
     config.use_shared_memory = false;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
-    osrm::OSRM osrm{config};
+    OSRM osrm{config};
 
     // The following shows how to use the Route service; configure this service
-    osrm::RouteParameters params;
+    RouteParameters params;
 
     // Route is in Berlin. Latitude, Longitude
-    // TODO(daniel-j-h): use either coordinate_precision or better provide double,double-taking ctor
-    params.coordinates.push_back({osrm::util::FloatLongitude(13.438640), osrm::util::FloatLatitude(52.519930)});
-    params.coordinates.push_back({osrm::util::FloatLongitude(13.415852), osrm::util::FloatLatitude(52.513191)});
+    params.coordinates.push_back({util::FloatLongitude(13.438640), util::FloatLatitude(52.519930)});
+    params.coordinates.push_back({util::FloatLongitude(13.415852), util::FloatLatitude(52.513191)});
 
     // Response is in JSON format
-    osrm::json::Object result;
+    json::Object result;
 
     // Execute routing request, this does the heavy lifting
     const auto status = osrm.Route(params, result);
 
-    if (status == osrm::Status::Ok)
+    if (status == Status::Ok)
     {
-        auto &routes = result.values["routes"].get<osrm::json::Array>();
+        auto &routes = result.values["routes"].get<json::Array>();
 
         // Let's just use the first route
-        auto &route = routes.values.at(0).get<osrm::json::Object>();
-        const auto distance = route.values["distance"].get<osrm::json::Number>().value;
-        const auto duration = route.values["duration"].get<osrm::json::Number>().value;
+        auto &route = routes.values.at(0).get<json::Object>();
+        const auto distance = route.values["distance"].get<json::Number>().value;
+        const auto duration = route.values["duration"].get<json::Number>().value;
 
         // Warn users if extract does not contain the default Berlin coordinates from above
         if (distance == 0 or duration == 0)
@@ -80,10 +67,10 @@ int main(int argc, const char *argv[]) try
         std::cout << "Distance: " << distance << " meter\n";
         std::cout << "Duration: " << duration << " seconds\n";
     }
-    else if (status == osrm::Status::Error)
+    else if (status == Status::Error)
     {
-        const auto code = result.values["code"].get<osrm::json::String>().value;
-        const auto message = result.values["message"].get<osrm::json::String>().value;
+        const auto code = result.values["code"].get<json::String>().value;
+        const auto message = result.values["message"].get<json::String>().value;
 
         std::cout << "Code: " << code << "\n";
         std::cout << "Message: " << code << "\n";
