@@ -14,6 +14,7 @@
 
 #include <map>
 #include <cmath>
+#include <cstdint>
 
 namespace osrm
 {
@@ -27,14 +28,14 @@ namespace detail
 const constexpr double DESIRED_SEGMENT_LENGTH = 10.0;
 const constexpr bool shiftable_ccw[] = {false, true, true, false, false, true, true, false};
 const constexpr bool shiftable_cw[] = {false, false, true, true, false, false, true, true};
-const constexpr uint8_t modifier_bounds[detail::num_direction_modifiers] = {0,   36,  93,  121,
-                                                                            136, 163, 220, 255};
+const constexpr std::uint8_t modifier_bounds[detail::num_direction_modifiers] = {
+    0, 36, 93, 121, 136, 163, 220, 255};
 const constexpr double discrete_angle_step_size = 360. / 256.;
 
 template <typename IteratorType>
 util::Coordinate
 getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
-                                 IteratorType compressed_geometry_begin,
+                                 const IteratorType compressed_geometry_begin,
                                  const IteratorType compressed_geometry_end,
                                  const util::Coordinate final_coordinate,
                                  const std::vector<extractor::QueryNode> &query_nodes)
@@ -134,7 +135,7 @@ getRepresentativeCoordinate(const NodeID from_node,
 // shift an instruction around the degree circle in CCW order
 inline DirectionModifier forcedShiftCCW(const DirectionModifier modifier)
 {
-    return static_cast<DirectionModifier>((static_cast<uint32_t>(modifier) + 1) %
+    return static_cast<DirectionModifier>((static_cast<std::uint32_t>(modifier) + 1) %
                                           detail::num_direction_modifiers);
 }
 
@@ -150,7 +151,7 @@ inline DirectionModifier shiftCCW(const DirectionModifier modifier)
 inline DirectionModifier forcedShiftCW(const DirectionModifier modifier)
 {
     return static_cast<DirectionModifier>(
-        (static_cast<uint32_t>(modifier) + detail::num_direction_modifiers - 1) %
+        (static_cast<std::uint32_t>(modifier) + detail::num_direction_modifiers - 1) %
         detail::num_direction_modifiers);
 }
 
@@ -234,7 +235,7 @@ inline bool isConflict(const TurnInstruction first, const TurnInstruction second
 inline DiscreteAngle discretizeAngle(const double angle)
 {
     BOOST_ASSERT(angle >= 0. && angle <= 360.);
-    return DiscreteAngle(static_cast<uint8_t>(angle / detail::discrete_angle_step_size));
+    return DiscreteAngle(static_cast<std::uint8_t>(angle / detail::discrete_angle_step_size));
 }
 
 inline double angleFromDiscreteAngle(const DiscreteAngle angle)
