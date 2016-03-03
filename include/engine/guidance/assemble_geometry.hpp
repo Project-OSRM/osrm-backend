@@ -12,6 +12,7 @@
 #include "extractor/travel_mode.hpp"
 
 #include <vector>
+#include <utility>
 
 namespace osrm
 {
