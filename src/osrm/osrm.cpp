@@ -46,4 +46,9 @@ engine::Status OSRM::Match(const engine::api::MatchParameters &params, json::Obj
     return engine_->Match(params, result);
 }
 
+engine::Status OSRM::Tile(const engine::api::TileParameters &params, std::string &result)
+{
+    return engine_->Tile(params, result);
+}
+
 } // ns osrm
