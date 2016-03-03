@@ -210,7 +210,7 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
         }
     }
 
-    return std::move(leg_data);
+    return leg_data;
 }
 
 } // namespace guidance
