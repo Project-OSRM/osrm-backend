@@ -5,6 +5,7 @@
 
 #include <boost/assert.hpp>
 #include <iostream>
+#include <vector>
 
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
 using TurnType = osrm::extractor::guidance::TurnType;
@@ -78,9 +79,11 @@ void print(const std::vector<std::vector<PathData>> &leg_data)
         int segment = 0;
         for (const auto &data : leg)
         {
-            std::cout << "\t\t[" << ++segment << "]: " << (int)data.turn_instruction.type << " "
-                      << (int)data.turn_instruction.direction_modifier << " exit: " << data.exit
-                      << "\n";
+            const auto type = static_cast<int>(data.turn_instruction.type);
+            const auto modifier = static_cast<int>(data.turn_instruction.direction_modifier);
+
+            std::cout << "\t\t[" << ++segment << "]: " << type << " " << modifier
+                      << " exit: " << data.exit << "\n";
         }
     }
     std::cout << std::endl;
