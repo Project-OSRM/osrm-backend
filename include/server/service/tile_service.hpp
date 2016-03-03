@@ -1,5 +1,5 @@
-#ifndef SERVER_SERVICE_ROUTE_SERVICE_HPP
-#define SERVER_SERVICE_ROUTE_SERVICE_HPP
+#ifndef SERVER_SERVICE_TILE_SERVICE_HPP
+#define SERVER_SERVICE_TILE_SERVICE_HPP
 
 #include "server/service/base_service.hpp"
 
@@ -17,10 +17,10 @@ namespace server
 namespace service
 {
 
-class RouteService final : public BaseService
+class TileService final : public BaseService
 {
   public:
-    RouteService(OSRM &routing_machine) : BaseService(routing_machine) {}
+    TileService(OSRM &routing_machine) : BaseService(routing_machine) {}
 
     engine::Status RunQuery(std::string &query, ResultT &result) final override;
 
