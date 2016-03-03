@@ -5,7 +5,7 @@
 #include "engine/guidance/route.hpp"
 
 #include <vector>
-#include <algorithm>
+#include <numeric>
 
 namespace osrm
 {
