@@ -3,6 +3,8 @@
 
 #include "util/simple_logger.hpp"
 
+#include <cstdint>
+
 #include <string>
 #include <unordered_map>
 
@@ -19,7 +21,7 @@ namespace extractor
 namespace guidance
 {
 
-enum class FunctionalRoadClass : short
+enum class FunctionalRoadClass : std::uint8_t
 {
     UNKNOWN = 0,
     MOTORWAY,
