@@ -5,6 +5,7 @@
 #include "engine/phantom_node.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/leg_geometry.hpp"
+#include "engine/guidance/toolkit.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/coordinate.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -49,7 +50,7 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
         current_distance +=
             util::coordinate_calculation::haversineDistance(prev_coordinate, coordinate);
 
-        if (path_point.turn_instruction != extractor::guidance::TurnInstruction::NO_TURN())
+        if (!isSilent(path_point.turn_instruction))
         {
             geometry.segment_distances.push_back(current_distance);
             geometry.segment_offsets.push_back(geometry.locations.size());
