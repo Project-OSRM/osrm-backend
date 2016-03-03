@@ -6,6 +6,9 @@
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/internal_route_result.hpp"
 
+#include <cstddef>
+#include <cstdint>
+
 #include <vector>
 #include <array>
 #include <algorithm>
