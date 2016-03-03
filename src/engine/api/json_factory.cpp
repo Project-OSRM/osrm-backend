@@ -28,8 +28,14 @@ namespace json
 namespace detail
 {
 
-const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
-                                          "straight", "slight left", "left",  "sharp left"};
+const constexpr char *modifier_names[] = {"uturn",
+                                          "sharp right",
+                                          "right",
+                                          "slight right",
+                                          "straight",
+                                          "slight left",
+                                          "left",
+                                          "sharp left"};
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
@@ -40,12 +46,10 @@ const constexpr char *turn_type_names[] = {
     "invalid", "invalid",    "restriction", "notification"};
 
 // Check whether to include a modifier in the result of the API
-inline bool isValidModifier(const TurnType type,
-                            const DirectionModifier modifier)
+inline bool isValidModifier(const TurnType type, const DirectionModifier modifier)
 {
     if (type == TurnType::Location && modifier != DirectionModifier::Left &&
-        modifier != DirectionModifier::Straight &&
-        modifier != DirectionModifier::Right)
+        modifier != DirectionModifier::Straight && modifier != DirectionModifier::Right)
         return false;
     return true;
 }
