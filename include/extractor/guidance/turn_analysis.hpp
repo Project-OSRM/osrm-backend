@@ -6,6 +6,11 @@
 #include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
 
+#include <cstdint>
+
+#include <string>
+#include <vector>
+#include <memory>
 #include <unordered_set>
 
 namespace osrm
