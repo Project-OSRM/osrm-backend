@@ -945,12 +945,13 @@ handleThreeWayTurn(const NodeID from,
                     angularDeviation(turn.angle, STRAIGHT_ANGLE) >
                 1.4);
     };
-    // Two nearly straight turns -> FORK
-    //          OOOOOOO
-    //        /
-    // IIIIII
-    //        \
-    //          OOOOOOO
+    /* Two nearly straight turns -> FORK
+                OOOOOOO
+              /
+       IIIIII
+              \
+                OOOOOOO
+    */
     if (angularDeviation(turn_candidates[1].angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
         angularDeviation(turn_candidates[2].angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE)
     {
