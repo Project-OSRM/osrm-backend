@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-    using util::Coordinate;
+using util::Coordinate;
 }
 
 #endif

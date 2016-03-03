@@ -82,8 +82,7 @@ void benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_quer
                    {
                        return rtree.Nearest(q, 1);
                    });
-    benchmarkQuery(queries, "raw RTree queries (10 results)",
-                   [&rtree](const util::Coordinate &q)
+    benchmarkQuery(queries, "raw RTree queries (10 results)", [&rtree](const util::Coordinate &q)
                    {
                        return rtree.Nearest(q, 10);
                    });
@@ -97,13 +96,11 @@ void benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_quer
                    {
                        return geo_query.NearestPhantomNodesInRange(q, 1000);
                    });
-    benchmarkQuery(queries, "PhantomNode query (1 result)",
-                   [&geo_query](const util::Coordinate &q)
+    benchmarkQuery(queries, "PhantomNode query (1 result)", [&geo_query](const util::Coordinate &q)
                    {
                        return geo_query.NearestPhantomNodes(q, 1);
                    });
-    benchmarkQuery(queries, "PhantomNode query (10 result)",
-                   [&geo_query](const util::Coordinate &q)
+    benchmarkQuery(queries, "PhantomNode query (10 result)", [&geo_query](const util::Coordinate &q)
                    {
                        return geo_query.NearestPhantomNodes(q, 10);
                    });

@@ -134,13 +134,11 @@ class InternalDataFacade final : public BaseDataFacade
         extractor::QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
-        m_coordinate_list =
-            std::make_shared<std::vector<util::Coordinate>>(number_of_coordinates);
+        m_coordinate_list = std::make_shared<std::vector<util::Coordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-            m_coordinate_list->at(i) =
-                util::Coordinate(current_node.lon, current_node.lat);
+            m_coordinate_list->at(i) = util::Coordinate(current_node.lon, current_node.lat);
             BOOST_ASSERT(m_coordinate_list->at(i).IsValid());
         }
         nodes_input_stream.close();
@@ -349,7 +347,8 @@ class InternalDataFacade final : public BaseDataFacade
         return m_edge_is_compressed.at(id);
     }
 
-    extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    extractor::guidance::TurnInstruction
+    GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }
@@ -359,9 +358,8 @@ class InternalDataFacade final : public BaseDataFacade
         return m_travel_mode_list.at(id);
     }
 
-    std::vector<RTreeLeaf>
-    GetEdgesInBox(const util::Coordinate south_west,
-                  const util::Coordinate north_east) override final
+    std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
+                                         const util::Coordinate north_east) override final
     {
         if (!m_static_rtree.get())
         {
@@ -462,8 +460,9 @@ class InternalDataFacade final : public BaseDataFacade
                                                        bearing, bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate, const double max_distance) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance) override final
     {
         if (!m_static_rtree.get())
         {
@@ -488,11 +487,11 @@ class InternalDataFacade final : public BaseDataFacade
             input_coordinate);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const double max_distance,
-        const int bearing,
-        const int bearing_range) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {
@@ -504,10 +503,10 @@ class InternalDataFacade final : public BaseDataFacade
             input_coordinate, max_distance, bearing, bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const int bearing,
-        const int bearing_range) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {

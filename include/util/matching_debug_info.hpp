@@ -39,9 +39,9 @@ struct MatchingDebugInfo
             {
                 json::Object state;
                 state.values["transitions"] = json::Array();
-                state.values["coordinate"] =
-                    json::make_array(static_cast<double>(toFloating(elem_s.phantom_node.location.lat)),
-                                     static_cast<double>(toFloating(elem_s.phantom_node.location.lon)));
+                state.values["coordinate"] = json::make_array(
+                    static_cast<double>(toFloating(elem_s.phantom_node.location.lat)),
+                    static_cast<double>(toFloating(elem_s.phantom_node.location.lon)));
                 state.values["viterbi"] =
                     json::clamp_float(engine::map_matching::IMPOSSIBLE_LOG_PROB);
                 state.values["pruned"] = 0u;
@@ -124,8 +124,10 @@ struct MatchingDebugInfo
         json::Array a;
         for (const bool v : breakage)
         {
-            if (v) a.values.emplace_back(json::True());
-            else a.values.emplace_back(json::False());
+            if (v)
+                a.values.emplace_back(json::True());
+            else
+                a.values.emplace_back(json::False());
         }
 
         json::get(*object, "breakage") = std::move(a);

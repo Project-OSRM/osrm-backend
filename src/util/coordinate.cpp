@@ -63,8 +63,7 @@ bool operator!=(const Coordinate lhs, const Coordinate rhs) { return !(lhs == rh
 std::ostream &operator<<(std::ostream &out, const Coordinate coordinate)
 {
     out << std::setprecision(12) << "(lon:" << toFloating(coordinate.lon)
-        << ", lat:" << toFloating(coordinate.lat)
-        << ")";
+        << ", lat:" << toFloating(coordinate.lat) << ")";
     return out;
 }
 }

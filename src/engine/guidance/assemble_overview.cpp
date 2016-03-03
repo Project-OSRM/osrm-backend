@@ -37,8 +37,7 @@ unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometri
     }
 
     return util::tiles::getBBMaxZoomTile(toFloating(min_lon), toFloating(min_lat),
-                                         toFloating(max_lon), toFloating(max_lat))
-        .z;
+                                         toFloating(max_lon), toFloating(max_lat)).z;
 }
 
 std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &leg_geometries,
@@ -62,8 +61,8 @@ std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &l
 }
 }
 
-std::vector<util::Coordinate>
-assembleOverview(const std::vector<LegGeometry> &leg_geometries, const bool use_simplification)
+std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &leg_geometries,
+                                               const bool use_simplification)
 {
     if (use_simplification)
     {

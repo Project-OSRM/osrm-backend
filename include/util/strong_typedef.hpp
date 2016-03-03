@@ -18,13 +18,13 @@ namespace osrm
     {                                                                                              \
         static_assert(std::is_arithmetic<From>(), "");                                             \
         From x;                                                                                    \
-        friend std::ostream& operator<<(std::ostream& stream, const To& inst);                     \
+        friend std::ostream &operator<<(std::ostream &stream, const To &inst);                     \
                                                                                                    \
       public:                                                                                      \
         To() = default;                                                                            \
         explicit To(const From x_) : x(x_) {}                                                      \
         explicit operator From &() { return x; }                                                   \
-        explicit operator From () const { return x; }                                        \
+        explicit operator From() const { return x; }                                               \
         To operator+(const To rhs_) const { return To(x + static_cast<const From>(rhs_)); }        \
         To operator-(const To rhs_) const { return To(x - static_cast<const From>(rhs_)); }        \
         To operator*(const To rhs_) const { return To(x * static_cast<const From>(rhs_)); }        \
@@ -36,7 +36,8 @@ namespace osrm
         bool operator==(const To z_) const { return x == static_cast<const From>(z_); }            \
         bool operator!=(const To z_) const { return x != static_cast<const From>(z_); }            \
     };                                                                                             \
-    inline std::ostream& operator<<(std::ostream& stream, const To& inst) {                        \
+    inline std::ostream &operator<<(std::ostream &stream, const To &inst)                          \
+    {                                                                                              \
         return stream << inst.x;                                                                   \
     }
 
@@ -51,7 +52,6 @@ namespace osrm
         }                                                                                          \
     };                                                                                             \
     }
-
 }
 
 #endif // OSRM_STRONG_TYPEDEF_HPP

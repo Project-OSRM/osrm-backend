@@ -20,7 +20,6 @@ struct ParsedURL
     std::string profile;
     std::string query;
 };
-
 }
 }
 }

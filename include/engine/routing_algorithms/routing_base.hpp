@@ -92,7 +92,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     (!force_loop_forward ||
                      forward_heap.GetData(node).parent !=
                          node) // if loops are forced, they are so at the source
-                    && (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
+                    &&
+                    (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
                 {
                     middle_node_id = node;
                     upper_bound = new_distance;
@@ -281,8 +282,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const auto turn_instruction =
-                    facade->GetTurnInstructionForEdgeID(ed.id);
+                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
                         ? phantom_node_pair.source_phantom.backward_travel_mode
@@ -292,8 +292,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
                     unpacked_path.push_back(PathData{facade->GetGeometryIndexForEdgeID(ed.id),
-                                                     name_index, ed.distance, turn_instruction,
-                                                     travel_mode, INVALID_EXIT_NR});
+                                                     name_index,
+                                                     ed.distance,
+                                                     turn_instruction,
+                                                     travel_mode,
+                                                     INVALID_EXIT_NR});
                 }
                 else
                 {
@@ -314,9 +317,13 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     BOOST_ASSERT(start_index <= end_index);
                     for (std::size_t i = start_index; i < end_index; ++i)
                     {
-                        unpacked_path.push_back(PathData{id_vector[i], name_index, TRAVEL_TIME_ZERO,
-                                                         extractor::guidance::TurnInstruction::NO_TURN(),
-                                                         travel_mode, INVALID_EXIT_NR});
+                        unpacked_path.push_back(
+                            PathData{id_vector[i],
+                                     name_index,
+                                     TRAVEL_TIME_ZERO,
+                                     extractor::guidance::TurnInstruction::NO_TURN(),
+                                     travel_mode,
+                                     INVALID_EXIT_NR});
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().duration_until_turn = ed.distance;
@@ -363,8 +370,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(i < id_vector.size());
                 BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
                 unpacked_path.emplace_back(
-                    PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                             TRAVEL_TIME_ZERO, extractor::guidance::TurnInstruction::NO_TURN(),
+                    PathData{id_vector[i],
+                             phantom_node_pair.target_phantom.name_id,
+                             TRAVEL_TIME_ZERO,
+                             extractor::guidance::TurnInstruction::NO_TURN(),
                              target_traversed_in_reverse
                                  ? phantom_node_pair.target_phantom.backward_travel_mode
                                  : phantom_node_pair.target_phantom.forward_travel_mode,
@@ -606,8 +615,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
         // TODO check if unordered_set might be faster
         // sort by id and increasing by distance
-        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
-                                         const std::pair<NodeID, EdgeWeight> &rhs)
+        auto entry_point_comparator =
+            [](const std::pair<NodeID, EdgeWeight> &lhs, const std::pair<NodeID, EdgeWeight> &rhs)
         {
             return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
         };

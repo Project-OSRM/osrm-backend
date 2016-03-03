@@ -50,8 +50,10 @@ class ManyToManyRouting final
                                        const std::vector<std::size_t> &source_indices,
                                        const std::vector<std::size_t> &target_indices) const
     {
-        const auto number_of_sources = source_indices.empty() ? phantom_nodes.size() : source_indices.size();
-        const auto number_of_targets = target_indices.empty() ? phantom_nodes.size() : target_indices.size();
+        const auto number_of_sources =
+            source_indices.empty() ? phantom_nodes.size() : source_indices.size();
+        const auto number_of_targets =
+            target_indices.empty() ? phantom_nodes.size() : target_indices.size();
         const auto number_of_entries = number_of_sources * number_of_targets;
         std::vector<EdgeWeight> result_table(number_of_entries,
                                              std::numeric_limits<EdgeWeight>::max());
@@ -90,7 +92,7 @@ class ManyToManyRouting final
 
         // for each source do forward search
         unsigned row_idx = 0;
-        const auto search_source_phantom = [&](const PhantomNode& phantom)
+        const auto search_source_phantom = [&](const PhantomNode &phantom)
         {
             query_heap.Clear();
             // insert target(s) at distance 0

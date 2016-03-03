@@ -148,11 +148,13 @@ class SharedDataFacade final : public BaseDataFacade
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
-        auto turn_instruction_list_ptr = data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
-            shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
-        typename util::ShM<extractor::guidance::TurnInstruction, true>::vector turn_instruction_list(
-            turn_instruction_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
+        auto turn_instruction_list_ptr =
+            data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
+                shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
+        typename util::ShM<extractor::guidance::TurnInstruction, true>::vector
+            turn_instruction_list(
+                turn_instruction_list_ptr,
+                data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list = std::move(turn_instruction_list);
 
         auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
@@ -244,8 +246,7 @@ class SharedDataFacade final : public BaseDataFacade
         }
         data_timestamp_ptr = static_cast<storage::SharedDataTimestamp *>(
             storage::makeSharedMemory(storage::CURRENT_REGIONS,
-                                      sizeof(storage::SharedDataTimestamp), false, false)
-                ->Ptr());
+                                      sizeof(storage::SharedDataTimestamp), false, false)->Ptr());
         CURRENT_LAYOUT = storage::LAYOUT_NONE;
         CURRENT_DATA = storage::DATA_NONE;
         CURRENT_TIMESTAMP = 0;
@@ -316,8 +317,8 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadNames();
                 LoadCoreInformation();
 
-                util::SimpleLogger().Write() << "number of geometries: "
-                                             << m_coordinate_list->size();
+                util::SimpleLogger().Write()
+                    << "number of geometries: " << m_coordinate_list->size();
                 for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
                 {
                     if (!GetCoordinateOfNode(i).IsValid())
@@ -400,7 +401,8 @@ class SharedDataFacade final : public BaseDataFacade
         return m_via_node_list.at(id);
     }
 
-    extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    extractor::guidance::TurnInstruction
+    GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }
@@ -410,9 +412,8 @@ class SharedDataFacade final : public BaseDataFacade
         return m_travel_mode_list.at(id);
     }
 
-    std::vector<RTreeLeaf>
-    GetEdgesInBox(const util::Coordinate south_west,
-                  const util::Coordinate north_east) override final
+    std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
+                                         const util::Coordinate north_east) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -526,8 +527,9 @@ class SharedDataFacade final : public BaseDataFacade
             input_coordinate);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate, const double max_distance) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -539,11 +541,11 @@ class SharedDataFacade final : public BaseDataFacade
             input_coordinate, max_distance);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const double max_distance,
-        const int bearing,
-        const int bearing_range) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {
@@ -555,10 +557,10 @@ class SharedDataFacade final : public BaseDataFacade
             input_coordinate, max_distance, bearing, bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate,
-        const int bearing,
-        const int bearing_range) override final
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
     {
         if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
         {

@@ -300,16 +300,18 @@ BOOST_AUTO_TEST_CASE(regression_test)
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-            Coord{FloatLongitude{0.0}, FloatLatitude{40.0}}, //
-            Coord{FloatLongitude{5.0}, FloatLatitude{35.0}}, //
-            Coord{FloatLongitude{5.0}, FloatLatitude{5.0,}}, //
-            Coord{FloatLongitude{10.0}, FloatLatitude{0.0}}, //
-            Coord{FloatLongitude{10.0}, FloatLatitude{20.0}},  //
-            Coord{FloatLongitude{5.0}, FloatLatitude{20.0}},   //
-            Coord{FloatLongitude{100.0}, FloatLatitude{40.0}}, //
-            Coord{FloatLongitude{105.0}, FloatLatitude{35.0}}, //
-            Coord{FloatLongitude{105.0}, FloatLatitude{5.0}},  //
-            Coord{FloatLongitude{110.0}, FloatLatitude{0.0}},  //
+         Coord{FloatLongitude{0.0}, FloatLatitude{40.0}}, //
+         Coord{FloatLongitude{5.0}, FloatLatitude{35.0}}, //
+         Coord{FloatLongitude{5.0},
+               FloatLatitude{
+                   5.0, }},                                 //
+         Coord{FloatLongitude{10.0}, FloatLatitude{0.0}},   //
+         Coord{FloatLongitude{10.0}, FloatLatitude{20.0}},  //
+         Coord{FloatLongitude{5.0}, FloatLatitude{20.0}},   //
+         Coord{FloatLongitude{100.0}, FloatLatitude{40.0}}, //
+         Coord{FloatLongitude{105.0}, FloatLatitude{35.0}}, //
+         Coord{FloatLongitude{105.0}, FloatLatitude{5.0}},  //
+         Coord{FloatLongitude{110.0}, FloatLatitude{0.0}},  //
         },
         {Edge(0, 1), Edge(2, 3), Edge(4, 5), Edge(6, 7), Edge(8, 9)});
 
@@ -393,8 +395,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
-            Coord(FloatLongitude(10.0), FloatLatitude(10.0)),
+         Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
+         Coord(FloatLongitude(10.0), FloatLatitude(10.0)),
         },
         {Edge(0, 1), Edge(1, 0)});
 
@@ -454,11 +456,11 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
 
     GraphFixture fixture(
         {
-            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
-            Coord(FloatLongitude(1.0), FloatLatitude(1.0)),
-            Coord(FloatLongitude(2.0), FloatLatitude(2.0)),
-            Coord(FloatLongitude(3.0), FloatLatitude(3.0)),
-            Coord(FloatLongitude(4.0), FloatLatitude(4.0)),
+         Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
+         Coord(FloatLongitude(1.0), FloatLatitude(1.0)),
+         Coord(FloatLongitude(2.0), FloatLatitude(2.0)),
+         Coord(FloatLongitude(3.0), FloatLatitude(3.0)),
+         Coord(FloatLongitude(4.0), FloatLatitude(4.0)),
         },
         {Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4)});
 
@@ -469,15 +471,15 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
     engine::GeospatialQuery<MiniStaticRTree> query(rtree, fixture.coords);
 
     {
-        RectangleInt2D bbox = {FloatLongitude(0.5), FloatLongitude(1.5), FloatLatitude(0.5),
-                               FloatLatitude(1.5)};
+        RectangleInt2D bbox = {
+            FloatLongitude(0.5), FloatLongitude(1.5), FloatLatitude(0.5), FloatLatitude(1.5)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
-        RectangleInt2D bbox = {FloatLongitude(1.5), FloatLongitude(3.5), FloatLatitude(1.5),
-                               FloatLatitude(3.5)};
+        RectangleInt2D bbox = {
+            FloatLongitude(1.5), FloatLongitude(3.5), FloatLatitude(1.5), FloatLatitude(3.5)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 3);
     }

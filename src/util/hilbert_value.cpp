@@ -72,8 +72,10 @@ void transposeCoordinate(std::uint32_t *x)
 std::uint64_t hilbertCode(const Coordinate coordinate)
 {
     std::uint32_t location[2];
-    location[0] = static_cast<std::int32_t>(coordinate.lon) + static_cast<std::int32_t>(180 * COORDINATE_PRECISION);
-    location[1] = static_cast<std::int32_t>(coordinate.lat) + static_cast<std::int32_t>(90 * COORDINATE_PRECISION);
+    location[0] = static_cast<std::int32_t>(coordinate.lon) +
+                  static_cast<std::int32_t>(180 * COORDINATE_PRECISION);
+    location[1] = static_cast<std::int32_t>(coordinate.lat) +
+                  static_cast<std::int32_t>(90 * COORDINATE_PRECISION);
 
     transposeCoordinate(location);
     return bitInterleaving(location[0], location[1]);

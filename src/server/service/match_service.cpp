@@ -43,7 +43,7 @@ std::string getWrongOptionHelp(const engine::api::MatchParameters &parameters)
 engine::Status MatchService::RunQuery(std::string &query, ResultT &result)
 {
     result = util::json::Object();
-    auto& json_result = result.get<util::json::Object>();
+    auto &json_result = result.get<util::json::Object>();
 
     auto query_iterator = query.begin();
     auto parameters =

@@ -279,8 +279,7 @@ int Extractor::run()
 
         util::SimpleLogger().Write() << "Saving edge-based node weights to file.";
         TIMER_START(timer_write_node_weights);
-        util::serializeVector(config.edge_based_node_weights_output_path,
-                                  edge_based_node_weights);
+        util::serializeVector(config.edge_based_node_weights_output_path, edge_based_node_weights);
         TIMER_STOP(timer_write_node_weights);
         util::SimpleLogger().Write() << "Done writing. (" << TIMER_SEC(timer_write_node_weights)
                                      << ")";
@@ -343,8 +342,8 @@ void Extractor::SetupScriptingEnvironment(lua_State *lua_state,
         throw util::exception(msg.str());
     }
     speed_profile.traffic_signal_penalty = 10 * lua_tointeger(lua_state, -1);
-    util::SimpleLogger().Write(logDEBUG) << "traffic_signal_penalty: "
-                                         << speed_profile.traffic_signal_penalty;
+    util::SimpleLogger().Write(logDEBUG)
+        << "traffic_signal_penalty: " << speed_profile.traffic_signal_penalty;
 
     if (0 != luaL_dostring(lua_state, "return u_turn_penalty\n"))
     {

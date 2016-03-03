@@ -142,9 +142,9 @@ class GraphContractor
 
     template <class ContainerT>
     GraphContractor(int nodes,
-               ContainerT &input_edge_list,
-               std::vector<float> &&node_levels_,
-               std::vector<EdgeWeight> &&node_weights_)
+                    ContainerT &input_edge_list,
+                    std::vector<float> &&node_levels_,
+                    std::vector<EdgeWeight> &&node_weights_)
         : node_levels(std::move(node_levels_)), node_weights(std::move(node_weights_))
     {
         std::vector<ContractorEdge> edges;
@@ -239,7 +239,8 @@ class GraphContractor
                 }
             }
         }
-        util::SimpleLogger().Write() << "merged " << edges.size() - edge << " edges out of " << edges.size();
+        util::SimpleLogger().Write() << "merged " << edges.size() - edge << " edges out of "
+                                     << edges.size();
         edges.resize(edge);
         contractor_graph = std::make_shared<ContractorGraph>(nodes, edges);
         edges.clear();
@@ -298,8 +299,8 @@ class GraphContractor
 
             std::cout << "initializing elimination PQ ..." << std::flush;
             tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, PQGrainSize),
-                              [this, &node_priorities, &node_depth,
-                               &thread_data_list](const tbb::blocked_range<int> &range)
+                              [this, &node_priorities, &node_depth, &thread_data_list](
+                                  const tbb::blocked_range<int> &range)
                               {
                                   ContractorThreadData *data = thread_data_list.getThreadData();
                                   for (int x = range.begin(), end = range.end(); x != end; ++x)
@@ -377,7 +378,8 @@ class GraphContractor
                             // node is not yet contracted.
                             // add (renumbered) outgoing edges to new util::DynamicGraph.
                             ContractorEdge new_edge = {new_node_id_from_orig_id_map[source],
-                                                       new_node_id_from_orig_id_map[target], data};
+                                                       new_node_id_from_orig_id_map[target],
+                                                       data};
 
                             new_edge.data.is_original_via_node_ID = true;
                             BOOST_ASSERT_MSG(SPECIAL_NODEID != new_node_id_from_orig_id_map[source],
@@ -420,8 +422,8 @@ class GraphContractor
 
             tbb::parallel_for(
                 tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), IndependentGrainSize),
-                [this, &node_priorities, &remaining_nodes,
-                 &thread_data_list](const tbb::blocked_range<std::size_t> &range)
+                [this, &node_priorities, &remaining_nodes, &thread_data_list](
+                    const tbb::blocked_range<std::size_t> &range)
                 {
                     ContractorThreadData *data = thread_data_list.getThreadData();
                     // determine independent node set
@@ -449,8 +451,8 @@ class GraphContractor
                 tbb::parallel_for(
                     tbb::blocked_range<std::size_t>(begin_independent_nodes_idx,
                                                     end_independent_nodes_idx, ContractGrainSize),
-                    [this, remaining_nodes, flushed_contractor,
-                     current_level](const tbb::blocked_range<std::size_t> &range)
+                    [this, remaining_nodes, flushed_contractor, current_level](
+                        const tbb::blocked_range<std::size_t> &range)
                     {
                         if (flushed_contractor)
                         {
@@ -477,8 +479,8 @@ class GraphContractor
             tbb::parallel_for(tbb::blocked_range<std::size_t>(begin_independent_nodes_idx,
                                                               end_independent_nodes_idx,
                                                               ContractGrainSize),
-                              [this, &remaining_nodes,
-                               &thread_data_list](const tbb::blocked_range<std::size_t> &range)
+                              [this, &remaining_nodes, &thread_data_list](
+                                  const tbb::blocked_range<std::size_t> &range)
                               {
                                   ContractorThreadData *data = thread_data_list.getThreadData();
                                   for (int position = range.begin(), end = range.end();
@@ -543,8 +545,8 @@ class GraphContractor
                 tbb::parallel_for(
                     tbb::blocked_range<int>(begin_independent_nodes_idx, end_independent_nodes_idx,
                                             NeighboursGrainSize),
-                    [this, &node_priorities, &remaining_nodes, &node_depth,
-                     &thread_data_list](const tbb::blocked_range<int> &range)
+                    [this, &node_priorities, &remaining_nodes, &node_depth, &thread_data_list](
+                        const tbb::blocked_range<int> &range)
                     {
                         ContractorThreadData *data = thread_data_list.getThreadData();
                         for (int position = range.begin(), end = range.end(); position != end;
@@ -696,7 +698,7 @@ class GraphContractor
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!heap.WasInserted(to))
             {
-                heap.Insert(to, to_distance, ContractorHeapData {current_hop, false});
+                heap.Insert(to, to_distance, ContractorHeapData{current_hop, false});
             }
             // Found a shorter Path -> Update distance
             else if (to_distance < heap.GetKey(to))
@@ -803,7 +805,7 @@ class GraphContractor
             }
 
             heap.Clear();
-            heap.Insert(source, 0, ContractorHeapData {});
+            heap.Insert(source, 0, ContractorHeapData{});
             int max_distance = 0;
             unsigned number_of_targets = 0;
 
@@ -858,7 +860,7 @@ class GraphContractor
                 max_distance = std::max(max_distance, path_distance);
                 if (!heap.WasInserted(target))
                 {
-                    heap.Insert(target, INVALID_EDGE_WEIGHT, ContractorHeapData {0, true});
+                    heap.Insert(target, INVALID_EDGE_WEIGHT, ContractorHeapData{0, true});
                     ++number_of_targets;
                 }
             }

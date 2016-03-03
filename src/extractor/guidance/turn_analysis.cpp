@@ -275,9 +275,10 @@ inline std::vector<TurnCandidate> fallbackTurnAssignmentMotorway(
             candidate.instruction = {type, DirectionModifier::Straight};
         else
         {
-            candidate.instruction = {type, candidate.angle > STRAIGHT_ANGLE
-                                               ? DirectionModifier::SlightLeft
-                                               : DirectionModifier::SlightRight};
+            candidate.instruction = {type,
+                                     candidate.angle > STRAIGHT_ANGLE
+                                         ? DirectionModifier::SlightLeft
+                                         : DirectionModifier::SlightRight};
         }
     }
     return turn_candidates;
@@ -933,8 +934,8 @@ handleThreeWayTurn(const NodeID from,
              node_based_graph->GetEdgeData(turn_candidates[1].eid).name_id ==
                  node_based_graph->GetEdgeData(turn_candidates[2].eid).name_id)
     {
-        const auto findTurn = [isObviousOfTwo](const TurnCandidate turn,
-                                               const TurnCandidate other) -> TurnInstruction
+        const auto findTurn = [isObviousOfTwo](const TurnCandidate turn, const TurnCandidate other)
+                                  -> TurnInstruction
         {
             return {isObviousOfTwo(turn, other) ? TurnType::Merge : TurnType::Turn,
                     getTurnDirection(turn.angle)};
@@ -1356,8 +1357,8 @@ bool isObviousChoice(const EdgeID via_eid,
 
     const auto &candidate_to_the_right = turn_candidates[getRight(turn_index)];
 
-    const auto hasValidRatio = [&](const TurnCandidate &left, const TurnCandidate &center,
-                                   const TurnCandidate &right)
+    const auto hasValidRatio =
+        [&](const TurnCandidate &left, const TurnCandidate &center, const TurnCandidate &right)
     {
         auto angle_left = (left.angle > 180) ? angularDeviation(left.angle, STRAIGHT_ANGLE) : 180;
         auto angle_right =
@@ -1688,9 +1689,8 @@ mergeSegregatedRoads(const NodeID from_node,
         std::cout << "Second: " << second_data.name_id << " " << second_data.travel_mode << " "
                   << second_data.road_classification.road_class << " "
                   << turn_candidates[second].angle << " " << second_data.reversed << std::endl;
-        std::cout << "Deviation: "
-                  << angularDeviation(turn_candidates[first].angle, turn_candidates[second].angle)
-                  << std::endl;
+        std::cout << "Deviation: " << angularDeviation(turn_candidates[first].angle,
+                                                       turn_candidates[second].angle) << std::endl;
 #endif
 
         return first_data.name_id != INVALID_NAME_ID && first_data.name_id == second_data.name_id &&

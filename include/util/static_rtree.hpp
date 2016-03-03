@@ -122,8 +122,8 @@ class StaticRTree
         // generate auxiliary vector of hilbert-values
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, m_element_count),
-            [&input_data_vector, &input_wrapper_vector,
-             &coordinate_list](const tbb::blocked_range<uint64_t> &range)
+            [&input_data_vector, &input_wrapper_vector, &coordinate_list](
+                const tbb::blocked_range<uint64_t> &range)
             {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end; ++element_counter)

@@ -317,8 +317,10 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
         BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
-        BOOST_ASSERT(edge_iterator->source_coordinate.lat != util::FixedLatitude(std::numeric_limits<int>::min()));
-        BOOST_ASSERT(edge_iterator->source_coordinate.lon != util::FixedLongitude(std::numeric_limits<int>::min()));
+        BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
+                     util::FixedLatitude(std::numeric_limits<int>::min()));
+        BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
+                     util::FixedLongitude(std::numeric_limits<int>::min()));
 
         const double distance = util::coordinate_calculation::greatCircleDistance(
             edge_iterator->source_coordinate,

@@ -38,8 +38,7 @@ std::string getWrongOptionHelp(const engine::api::TripParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TripService::RunQuery(std::string &query,
-                                     ResultT &result)
+engine::Status TripService::RunQuery(std::string &query, ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();

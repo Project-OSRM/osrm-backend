@@ -45,7 +45,6 @@ struct LegGeometry
         BOOST_ASSERT(segment_offsets.size() > 0);
         return segment_offsets.size() - 1;
     }
-
 };
 }
 }

@@ -61,13 +61,12 @@ struct CoordinatePairCalculator
 };
 }
 
-std::vector<util::Coordinate>
-douglasPeucker(std::vector<util::Coordinate>::const_iterator begin,
-               std::vector<util::Coordinate>::const_iterator end,
-                    const unsigned zoom_level)
+std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::const_iterator begin,
+                                             std::vector<util::Coordinate>::const_iterator end,
+                                             const unsigned zoom_level)
 {
     BOOST_ASSERT_MSG(zoom_level < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE,
-            "unsupported zoom level");
+                     "unsupported zoom level");
 
     const auto size = std::distance(begin, end);
     if (size < 2)
@@ -83,7 +82,7 @@ douglasPeucker(std::vector<util::Coordinate>::const_iterator begin,
 
     std::stack<GeometryRange> recursion_stack;
 
-    recursion_stack.emplace(0UL, size-1);
+    recursion_stack.emplace(0UL, size - 1);
 
     // mark locations as 'necessary' by divide-and-conquer
     while (!recursion_stack.empty())

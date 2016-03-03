@@ -30,13 +30,20 @@ struct RectangleInt2D
     {
     }
 
-    RectangleInt2D(FixedLongitude min_lon_, FixedLongitude max_lon_, FixedLatitude min_lat_, FixedLatitude max_lat_)
+    RectangleInt2D(FixedLongitude min_lon_,
+                   FixedLongitude max_lon_,
+                   FixedLatitude min_lat_,
+                   FixedLatitude max_lat_)
         : min_lon(min_lon_), max_lon(max_lon_), min_lat(min_lat_), max_lat(max_lat_)
     {
     }
 
-    RectangleInt2D(FloatLongitude min_lon_, FloatLongitude max_lon_, FloatLatitude min_lat_, FloatLatitude max_lat_)
-        : min_lon(toFixed(min_lon_)), max_lon(toFixed(max_lon_)), min_lat(toFixed(min_lat_)), max_lat(toFixed(max_lat_))
+    RectangleInt2D(FloatLongitude min_lon_,
+                   FloatLongitude max_lon_,
+                   FloatLatitude min_lat_,
+                   FloatLatitude max_lat_)
+        : min_lon(toFixed(min_lon_)), max_lon(toFixed(max_lon_)), min_lat(toFixed(min_lat_)),
+          max_lat(toFixed(max_lat_))
     {
     }
 
@@ -188,11 +195,13 @@ struct RectangleInt2D
         return lons_contained && lats_contained;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const RectangleInt2D& rect);
+    friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect);
 };
-inline std::ostream& operator<<(std::ostream& out, const RectangleInt2D& rect)
+inline std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)
 {
-    out << std::setprecision(12) << "(" << toFloating(rect.min_lon) << "," << toFloating(rect.max_lon) << "," << toFloating(rect.min_lat) << "," << toFloating(rect.max_lat) << ")";
+    out << std::setprecision(12) << "(" << toFloating(rect.min_lon) << ","
+        << toFloating(rect.max_lon) << "," << toFloating(rect.min_lat) << ","
+        << toFloating(rect.max_lat) << ")";
     return out;
 }
 }

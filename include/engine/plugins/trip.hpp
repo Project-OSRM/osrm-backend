@@ -47,7 +47,6 @@ class TripPlugin final : public BasePlugin
 
     Status HandleRequest(const api::TripParameters &parameters, util::json::Object &json_result);
 };
-
 }
 }
 }

@@ -5,8 +5,7 @@
 
 namespace osrm
 {
-    using engine::EngineConfig;
+using engine::EngineConfig;
 }
 
 #endif
-

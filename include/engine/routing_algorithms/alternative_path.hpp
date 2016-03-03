@@ -468,10 +468,10 @@ class AlternativeRouting final
                                           partially_unpacked_shortest_path.size())) -
             1;
         for (int64_t current_node = 0; (current_node < packed_path_length) &&
-                                       (partially_unpacked_via_path[current_node] ==
-                                            partially_unpacked_shortest_path[current_node] &&
-                                        partially_unpacked_via_path[current_node + 1] ==
-                                            partially_unpacked_shortest_path[current_node + 1]);
+                                           (partially_unpacked_via_path[current_node] ==
+                                                partially_unpacked_shortest_path[current_node] &&
+                                            partially_unpacked_via_path[current_node + 1] ==
+                                                partially_unpacked_shortest_path[current_node + 1]);
              ++current_node)
         {
             EdgeID selected_edge =
