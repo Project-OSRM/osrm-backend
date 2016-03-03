@@ -41,6 +41,21 @@ namespace engine
 
 struct EngineConfig
 {
+    EngineConfig() = default;
+
+    EngineConfig(const boost::filesystem::path &base)
+        : server_paths{{"ramindex", base.string() + ".ramIndex"},
+                       {"fileindex", base.string() + ".fileIndex"},
+                       {"hsgrdata", base.string() + ".hsgr"},
+                       {"nodesdata", base.string() + ".nodes"},
+                       {"edgesdata", base.string() + ".edges"},
+                       {"coredata", base.string() + ".core"},
+                       {"geometries", base.string() + ".geometry"},
+                       {"timestamp", base.string() + ".timestamp"},
+                       {"namesdata", base.string() + ".names"}}
+    {
+    }
+
     std::unordered_map<std::string, boost::filesystem::path> server_paths;
     int max_locations_trip = -1;
     int max_locations_viaroute = -1;
@@ -48,7 +63,6 @@ struct EngineConfig
     int max_locations_map_matching = -1;
     bool use_shared_memory = true;
 };
-
 }
 }
 
