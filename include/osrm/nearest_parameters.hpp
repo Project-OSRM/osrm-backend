@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-    using engine::api::NearestParameters;
+using engine::api::NearestParameters;
 }
 
 #endif

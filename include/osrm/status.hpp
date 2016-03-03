@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-    using engine::Status;
+using engine::Status;
 }
 
 #endif

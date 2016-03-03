@@ -32,7 +32,6 @@ class ServiceHandler
     engine::Status RunQuery(api::ParsedURL parsed_url, ResultT &result);
 
   private:
-
     std::unordered_map<std::string, std::unique_ptr<service::BaseService>> service_map;
     OSRM routing_machine;
 };
