@@ -5,6 +5,8 @@
 #include "util/coordinate.hpp"
 #include "osrm/osrm.hpp"
 
+#include <variant/variant.hpp>
+
 #include <string>
 #include <vector>
 
@@ -18,12 +20,12 @@ namespace service
 class BaseService
 {
   public:
+    using ResultT = mapbox::util::variant<util::json::Object, std::string>;
+
     BaseService(OSRM &routing_machine) : routing_machine(routing_machine) {}
     virtual ~BaseService() = default;
 
-    virtual engine::Status RunQuery(std::vector<util::Coordinate> coordinates,
-                                    std::string &options,
-                                    util::json::Object &json_result) = 0;
+    virtual engine::Status RunQuery(std::string &query, ResultT &result) = 0;
 
     virtual unsigned GetVersion() = 0;
 
