@@ -5,6 +5,7 @@
 #include "server/api/nearest_parameter_grammar.hpp"
 #include "server/api/trip_parameter_grammar.hpp"
 #include "server/api/match_parameter_grammar.hpp"
+#include "server/api/tile_parameter_grammar.hpp"
 
 namespace osrm
 {
@@ -15,7 +16,10 @@ namespace api
 
 namespace detail
 {
-template <typename T> using is_grammar_t = std::is_base_of<BaseParametersGrammar, T>;
+template <typename T>
+using is_grammar_t = std::integral_constant<bool,
+                                            std::is_base_of<BaseParametersGrammar, T>::value ||
+                                                std::is_same<TileParametersGrammar, T>::value>;
 
 template <typename ParameterT,
           typename GrammarT,
@@ -68,6 +72,13 @@ boost::optional<engine::api::MatchParameters> parseParameters(std::string::itera
                                                               std::string::iterator end)
 {
     return detail::parseParameters<engine::api::MatchParameters, MatchParametersGrammar>(iter, end);
+}
+
+template <>
+boost::optional<engine::api::TileParameters> parseParameters(std::string::iterator &iter,
+                                                             std::string::iterator end)
+{
+    return detail::parseParameters<engine::api::TileParameters, TileParametersGrammar>(iter, end);
 }
 
 } // ns api
