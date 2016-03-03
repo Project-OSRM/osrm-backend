@@ -5,7 +5,8 @@
 #include "util/integer_range.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/range/iterator_range.hpp>
+
+#include <cstddef>
 
 #include <vector>
 #include <cstdlib>
