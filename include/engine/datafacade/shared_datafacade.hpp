@@ -226,10 +226,10 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto geometries_list_ptr =
             data_layout->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge>(
-                    shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
-        typename util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector geometry_list(
-            geometries_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
+                shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
+        typename util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector
+            geometry_list(geometries_list_ptr,
+                          data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
         m_geometry_list = std::move(geometry_list);
     }
 
@@ -247,7 +247,8 @@ class SharedDataFacade final : public BaseDataFacade
         }
         data_timestamp_ptr = static_cast<storage::SharedDataTimestamp *>(
             storage::makeSharedMemory(storage::CURRENT_REGIONS,
-                                      sizeof(storage::SharedDataTimestamp), false, false)->Ptr());
+                                      sizeof(storage::SharedDataTimestamp), false, false)
+                ->Ptr());
         CURRENT_LAYOUT = storage::LAYOUT_NONE;
         CURRENT_DATA = storage::DATA_NONE;
         CURRENT_TIMESTAMP = 0;
@@ -318,8 +319,8 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadNames();
                 LoadCoreInformation();
 
-                util::SimpleLogger().Write()
-                    << "number of geometries: " << m_coordinate_list->size();
+                util::SimpleLogger().Write() << "number of geometries: "
+                                             << m_coordinate_list->size();
                 for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
                 {
                     if (!GetCoordinateOfNode(i).IsValid())
@@ -394,19 +395,27 @@ class SharedDataFacade final : public BaseDataFacade
 
         result_nodes.clear();
         result_nodes.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end, [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge){ result_nodes.emplace_back(edge.node_id); });
+        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
+                      {
+                          result_nodes.emplace_back(edge.node_id);
+                      });
     }
 
-    virtual void GetUncompressedWeights(const EdgeID id,
-                                        std::vector<EdgeWeight> &result_weights) const override final
+    virtual void
+    GetUncompressedWeights(const EdgeID id,
+                           std::vector<EdgeWeight> &result_weights) const override final
     {
         const unsigned begin = m_geometry_indices.at(id);
         const unsigned end = m_geometry_indices.at(id + 1);
 
         result_weights.clear();
         result_weights.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end, [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge){ result_weights.emplace_back(edge.weight); });
-
+        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
+                      {
+                          result_weights.emplace_back(edge.weight);
+                      });
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final

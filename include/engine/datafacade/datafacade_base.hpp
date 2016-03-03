@@ -76,7 +76,7 @@ class BaseDataFacade
     // Gets the weight values for each segment in an uncompressed geometry.
     // Should always be 1 shorter than GetUncompressedGeometry
     virtual void GetUncompressedWeights(const EdgeID id,
-                                         std::vector<EdgeWeight> &result_weights) const = 0;
+                                        std::vector<EdgeWeight> &result_weights) const = 0;
 
     virtual extractor::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const unsigned id) const = 0;

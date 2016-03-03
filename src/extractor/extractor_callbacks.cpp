@@ -41,9 +41,7 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
     external_memory.all_nodes_list.push_back(
         {util::toFixed(util::FloatLongitude(input_node.location().lon())),
          util::toFixed(util::FloatLatitude(input_node.location().lat())),
-         OSMNodeID(input_node.id()),
-         result_node.barrier,
-         result_node.traffic_lights});
+         OSMNodeID(input_node.id()), result_node.barrier, result_node.traffic_lights});
 }
 
 void ExtractorCallbacks::ProcessRestriction(
@@ -125,8 +123,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (forward_weight_data.type == InternalExtractorEdge::WeightType::INVALID &&
         backward_weight_data.type == InternalExtractorEdge::WeightType::INVALID)
     {
-        util::SimpleLogger().Write(logDEBUG)
-            << "found way with bogus speed, id: " << input_way.id();
+        util::SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: "
+                                             << input_way.id();
         return;
     }
 
@@ -187,11 +185,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             });
 
         external_memory.way_start_end_id_list.push_back(
-            {OSMWayID(input_way.id()),
-             OSMNodeID(input_way.nodes().back().ref()),
+            {OSMWayID(input_way.id()), OSMNodeID(input_way.nodes().back().ref()),
              OSMNodeID(input_way.nodes()[input_way.nodes().size() - 2].ref()),
-             OSMNodeID(input_way.nodes()[1].ref()),
-             OSMNodeID(input_way.nodes()[0].ref())});
+             OSMNodeID(input_way.nodes()[1].ref()), OSMNodeID(input_way.nodes()[0].ref())});
     }
     else
     {
@@ -223,11 +219,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         }
 
         external_memory.way_start_end_id_list.push_back(
-            {OSMWayID(input_way.id()),
-             OSMNodeID(input_way.nodes().back().ref()),
+            {OSMWayID(input_way.id()), OSMNodeID(input_way.nodes().back().ref()),
              OSMNodeID(input_way.nodes()[input_way.nodes().size() - 2].ref()),
-             OSMNodeID(input_way.nodes()[1].ref()),
-             OSMNodeID(input_way.nodes()[0].ref())});
+             OSMNodeID(input_way.nodes()[1].ref()), OSMNodeID(input_way.nodes()[0].ref())});
     }
 }
 }
