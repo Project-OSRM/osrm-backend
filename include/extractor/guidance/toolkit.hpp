@@ -49,8 +49,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
     // get the length that is missing from the current segment to reach DESIRED_SEGMENT_LENGTH
     const auto getFactor = [](const double first_distance, const double second_distance)
     {
-        BOOST_ASSERT(first_distance < t constexpr double DESIRED_SEGMENT_LENGTH = 10.0;
-                     ietail::DESIRED_SEGMENT_LENGTH);
+        BOOST_ASSERT(first_distance < detail::DESIRED_SEGMENT_LENGTH);
         double segment_length = second_distance - first_distance;
         BOOST_ASSERT(segment_length > 0);
         BOOST_ASSERT(second_distance >= detail::DESIRED_SEGMENT_LENGTH);
@@ -62,7 +61,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
          compressed_geometry_itr != compressed_geometry_end; ++compressed_geometry_itr)
     {
         const auto next_coordinate =
-            extractCoordinateFromNode(query_nodes[compressed_geometry_itr->first]);
+            extractCoordinateFromNode(query_nodes[compressed_geometry_itr->node_id]);
         distance_to_next_coordinate =
             distance_to_current_coordinate +
             util::coordinate_calculation::haversineDistance(current_coordinate, next_coordinate);
