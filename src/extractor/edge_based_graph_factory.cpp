@@ -45,7 +45,7 @@ const double constexpr DESIRED_SEGMENT_LENGTH = 10.;
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-    CompressedEdgeContainer &compressed_edge_container,
+    const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
@@ -127,7 +127,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1));
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
     const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
-    BOOST_ASSERT(forward_geometry.size() == m_compressed_edge_container.GetBucketReference(edge_id_2).size());
+    BOOST_ASSERT(forward_geometry.size() ==
+                 m_compressed_edge_container.GetBucketReference(edge_id_2).size());
     const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
 
     // There should always be some geometry
@@ -149,10 +150,10 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
             // build edges
             m_edge_based_node_list.emplace_back(
                 forward_data.edge_id, reverse_data.edge_id, current_edge_source_coordinate_id,
-                current_edge_target_coordinate_id, forward_data.name_id, 
+                current_edge_target_coordinate_id, forward_data.name_id,
                 m_compressed_edge_container.GetPositionForID(edge_id_1),
-                m_compressed_edge_container.GetPositionForID(edge_id_2),
-                false, INVALID_COMPONENTID, i, forward_data.travel_mode, reverse_data.travel_mode);
+                m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID,
+                i, forward_data.travel_mode, reverse_data.travel_mode);
 
             m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
                                                       reverse_data.startpoint);
@@ -194,8 +195,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v, forward_data.name_id,
             m_compressed_edge_container.GetPositionForID(edge_id_1),
-            m_compressed_edge_container.GetPositionForID(edge_id_2),
-            false, INVALID_COMPONENTID, 0, forward_data.travel_mode, reverse_data.travel_mode);
+            m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID, 0,
+            forward_data.travel_mode, reverse_data.travel_mode);
         m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
                                                   reverse_data.startpoint);
     }
@@ -745,8 +746,8 @@ bool EdgeBasedGraphFactory::isObviousChoice(EdgeID via_eid,
 
     const auto &candidate_to_the_right = turn_candidates[getRight(turn_index)];
 
-    const auto hasValidRatio =
-        [](const TurnCandidate &left, const TurnCandidate &center, const TurnCandidate &right)
+    const auto hasValidRatio = [](const TurnCandidate &left, const TurnCandidate &center,
+                                  const TurnCandidate &right)
     {
         auto angle_left = (left.angle > 180) ? angularDeviation(left.angle, STRAIGHT_ANGLE) : 180;
         auto angle_right =
@@ -1080,9 +1081,9 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
         double this_dist = 0;
         NodeID prev_id = INVERTED ? tgt : src;
 
-        const auto selectBestCandidate =
-            [this](const NodeID current, const double current_distance, const NodeID previous,
-                   const double previous_distance)
+        const auto selectBestCandidate = [this](const NodeID current, const double current_distance,
+                                                const NodeID previous,
+                                                const double previous_distance)
         {
             if (current_distance < DESIRED_SEGMENT_LENGTH ||
                 current_distance - DESIRED_SEGMENT_LENGTH <
