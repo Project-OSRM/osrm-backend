@@ -221,6 +221,17 @@ AnalyzeTurn(const NodeID node_u,
             const double angle,
             const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
+// Assignment of specific turn types
+void assignFork(const EdgeID via_edge,
+                TurnCandidate &left,
+                TurnCandidate &right,
+                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+void assignFork(const EdgeID via_edge,
+                TurnCandidate &left,
+                TurnCandidate &center,
+                TurnCandidate &right,
+                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+
 } // namespace detail
 } // namespace guidance
 } // namespace extractor
