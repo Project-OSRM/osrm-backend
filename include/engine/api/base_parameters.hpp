@@ -2,6 +2,7 @@
 #define ENGINE_API_BASE_PARAMETERS_HPP
 
 #include "engine/hint.hpp"
+#include "engine/bearing.hpp"
 #include "util/coordinate.hpp"
 
 #include <boost/optional.hpp>
@@ -17,12 +18,6 @@ namespace api
 {
 struct BaseParameters
 {
-    struct Bearing
-    {
-        short bearing;
-        short range;
-    };
-
     std::vector<util::Coordinate> coordinates;
     std::vector<boost::optional<Hint>> hints;
     std::vector<boost::optional<double>> radiuses;
@@ -39,24 +34,12 @@ struct BaseParameters
                            {
                                if (bearing_and_range)
                                {
-                                   return bearing_and_range->bearing >= 0 &&
-                                          bearing_and_range->bearing <= 360 &&
-                                          bearing_and_range->range >= 0 &&
-                                          bearing_and_range->range <= 180;
+                                   return bearing_and_range->IsValid();
                                }
                                return true;
                            });
     }
 };
-
-inline bool operator==(const BaseParameters::Bearing lhs, const BaseParameters::Bearing rhs)
-{
-    return lhs.bearing == rhs.bearing && lhs.range == rhs.range;
-}
-inline bool operator!=(const BaseParameters::Bearing lhs, const BaseParameters::Bearing rhs)
-{
-    return !(lhs == rhs);
-}
 }
 }
 }
