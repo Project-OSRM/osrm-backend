@@ -1,0 +1,35 @@
+{
+  "name": "osrm-backend-test-suite",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Open Source Routing Machine is a high performance routing engine written in C++11 designed to run on OpenStreetMap data.",
+  "dependencies": {
+    "cucumber": "^0.9.4",
+    "d3-queue": "^2.0.3",
+    "node-timeout": "0.0.4",
+    "request": "^2.69.0",
+    "xmlbuilder": "^4.2.1"
+  },
+  "scripts": {
+    "lint": "eslint -c ./.eslintrc features/step_definitions/ features/support/",
+    "test": "npm run lint && ./node_modules/cucumber/bin/cucumber.js features/ -p verify",
+    "clean-test": "rm -rf test/cache",
+    "cucumber": "./node_modules/cucumber/bin/cucumber.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Project-OSRM/osrm-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Project-OSRM/osrm-backend/issues"
+  },
+  "homepage": "https://github.com/Project-OSRM/osrm-backend",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^2.4.0"
+  }
+}

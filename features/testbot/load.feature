@@ -34,7 +34,7 @@ Feature: Ways of loading data
             | s    | t  | st    |
             | t    | s  | st    |
 
-    Scenario: Load data datstore - xy
+    Scenario: Load data datastore - xy
         Given data is loaded with datastore
         Given the node map
             | x | y |

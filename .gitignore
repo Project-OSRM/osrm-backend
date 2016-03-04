@@ -73,7 +73,12 @@ stxxl.errlog
 ###################
 /sandbox/
 
+# Test related files #
+######################
 /test/profile.lua
+/test/cache
+/test/speeds.csv
+node_modules
 
 # Deprecated config file #
 ##########################

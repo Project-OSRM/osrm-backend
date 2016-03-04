@@ -28,6 +28,7 @@ Feature: Raster - weights
             0  0  0   250
             0  0  0   0
             """
+        And the data has been saved to disk
 
     Scenario: Weighting not based on raster sources
         Given the profile "testbot"

@@ -26,7 +26,7 @@ matrix:
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-5' BUILD_TYPE='Debug'
 
     - os: linux
@@ -34,7 +34,7 @@ matrix:
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-4.8' BUILD_TYPE='Debug'
 
     - os: linux
@@ -42,7 +42,7 @@ matrix:
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='clang++-3.8' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
 
     - os: osx
@@ -56,7 +56,7 @@ matrix:
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-5' BUILD_TYPE='Release'
 
     - os: linux
@@ -64,7 +64,7 @@ matrix:
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-4.8' BUILD_TYPE='Release'
 
     - os: linux
@@ -72,7 +72,7 @@ matrix:
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='clang++-3.8' BUILD_TYPE='Release'
 
     - os: osx
@@ -86,7 +86,7 @@ matrix:
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
     - os: linux
@@ -94,7 +94,7 @@ matrix:
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'rubygems-integration', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: COMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 
@@ -121,8 +121,11 @@ matrix:
     #  compiler: clang
     #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
+before_install:
+  - source ./scripts/install_node.sh 4
 
 install:
+  - npm install
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
   - |
@@ -142,12 +145,9 @@ before_script:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
-  - rvm use 1.9.3
-  - gem install bundler
-  - bundle install
   - mkdir build && pushd build
   - export CXX=${COMPILER}
-  - export OSRM_PORT=5000 OSRM_TIMEOUT=60
+  - export OSRM_PORT=5000 OSRM_TIMEOUT=6000
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
 
 script:
@@ -163,7 +163,7 @@ script:
   - ./engine-tests
   - ./util-tests
   - popd
-  - cucumber -p verify
+  - npm test
   - make -C test/data
   - mkdir example/build && pushd example/build
   - cmake ..

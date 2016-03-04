@@ -9,7 +9,7 @@ Feature: Bike - Mode flag
 
 	Background:
 		Given the profile "bicycle"
-    
+
     Scenario: Bike - Mode when using a ferry
     	Given the node map
     	 | a | b |   |
