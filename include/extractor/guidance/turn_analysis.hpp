@@ -111,10 +111,11 @@ bool isMotorwayJunction(const NodeID from,
                         const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
 // Decide whether a turn is a turn or a ramp access
-TurnType turnOrRamp(const NodeID from,
-                    const EdgeID via_edge,
-                    const TurnCandidate &candidate,
-                    const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
+TurnType
+findBasicTurnType(const NodeID from,
+                  const EdgeID via_edge,
+                  const TurnCandidate &candidate,
+                  const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph);
 
 // Get the Instruction for an obvious turn
 // Instruction will be a silent instruction
