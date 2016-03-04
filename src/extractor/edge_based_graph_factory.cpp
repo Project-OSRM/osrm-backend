@@ -127,6 +127,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1));
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
     const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
+    BOOST_ASSERT(forward_geometry.size() == m_compressed_edge_container.GetBucketReference(edge_id_2).size());
     const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
 
     // There should always be some geometry
@@ -136,9 +137,6 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     if (geometry_size > 1)
     {
         NodeID current_edge_source_coordinate_id = node_u;
-
-        const auto &reverse_geometry = m_compressed_edge_container.GetBucketReference(edge_id_2);
-        BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
 
         // traverse arrays from start and end respectively
         for (const auto i : util::irange(0u, geometry_size))
