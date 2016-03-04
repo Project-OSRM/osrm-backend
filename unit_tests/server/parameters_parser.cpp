@@ -5,6 +5,7 @@
 #include "engine/api/table_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
+#include "engine/api/tile_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
 
 #include <fstream>
@@ -48,11 +49,11 @@ std::ostream &operator<<(std::ostream &out, api::RouteParameters::OverviewType o
     }
     return out;
 }
-std::ostream &operator<<(std::ostream &out, api::RouteParameters::Bearing bearing)
+}
+std::ostream &operator<<(std::ostream &out, Bearing bearing)
 {
     out << bearing.bearing << "," << bearing.range;
     return out;
-}
 }
 }
 }
@@ -175,16 +176,15 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
             "_4ghA4JuzAD_IAAAo28BAOYAAAAzAAAAAgAAAEwAAAAAAAAAdIwAAJ4AAAAXiSEDfm7MAAEAAQGLSzmR"),
         engine::Hint::FromBase64(
             "03AhA0vnzAA_SAAA_____3wEAAAYAAAAQAAAAB4AAABAAAAAoUYBAJ4AAADlcCEDSefMAAMAAQGLSzmR")};
-    engine::api::RouteParameters reference_4{
-        false,
-        true,
-        engine::api::RouteParameters::GeometriesType::Polyline,
-        engine::api::RouteParameters::OverviewType::Simplified,
-        std::vector<boost::optional<bool>>{},
-        coords_1,
-        hints_4,
-        std::vector<boost::optional<double>>{},
-        std::vector<boost::optional<engine::api::BaseParameters::Bearing>>{}};
+    engine::api::RouteParameters reference_4{false,
+                                             true,
+                                             engine::api::RouteParameters::GeometriesType::Polyline,
+                                             engine::api::RouteParameters::OverviewType::Simplified,
+                                             std::vector<boost::optional<bool>>{},
+                                             coords_1,
+                                             hints_4,
+                                             std::vector<boost::optional<double>>{},
+                                             std::vector<boost::optional<engine::Bearing>>{}};
     auto result_4 = api::parseParameters<engine::api::RouteParameters>(
         "1,2;3,4?steps=false&hints="
         "rVghAzxMzABMAwAA5h4CAKMIAAAQAAAAGAAAAAYAAAAAAAAAch8BAJ4AAACpWCED_"
@@ -201,9 +201,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_4.radiuses, result_4->radiuses);
     CHECK_EQUAL_RANGE(reference_4.coordinates, result_4->coordinates);
 
-    std::vector<boost::optional<engine::api::BaseParameters::Bearing>> bearings_4 = {
-        boost::none, engine::api::BaseParameters::Bearing{200, 10},
-        engine::api::BaseParameters::Bearing{100, 5},
+    std::vector<boost::optional<engine::Bearing>> bearings_4 = {
+        boost::none, engine::Bearing{200, 10}, engine::Bearing{100, 5},
     };
     engine::api::RouteParameters reference_5{false,
                                              true,
