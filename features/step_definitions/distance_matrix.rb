@@ -29,7 +29,7 @@ When /^I request a travel time matrix I should get$/ do |table|
   reprocess
   actual = []
   actual << table.headers
-  OSRMLoader.load(self,"#{prepared_file}.osrm") do
+  OSRMLoader.load(self,"#{contracted_file}.osrm") do
     
     # compute matrix
     params = @query_params

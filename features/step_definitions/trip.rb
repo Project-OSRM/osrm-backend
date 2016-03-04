@@ -1,7 +1,7 @@
 When /^I plan a trip I should get$/ do |table|
   reprocess
   actual = []
-  OSRMLoader.load(self,"#{prepared_file}.osrm") do
+  OSRMLoader.load(self,"#{contracted_file}.osrm") do
     table.hashes.each_with_index do |row,ri|
       if row['request']
         got = {'request' => row['request'] }

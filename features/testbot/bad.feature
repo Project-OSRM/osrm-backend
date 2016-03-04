@@ -11,7 +11,7 @@ Feature: Handle bad data in a graceful manner
         Given the ways
             | nodes |
 
-        When the data has been prepared
+        When the data has been contracted
         Then "osrm-extract" should return code 1
 
     Scenario: Only dead-end oneways

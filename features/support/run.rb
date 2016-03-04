@@ -12,9 +12,9 @@ def run_bin bin, options
       opt.gsub! "{extracted_base}", "#{extracted_file}" 
     end
 
-    if opt.include? '{prepared_base}'
-      raise "*** {prepared_base} is missing" unless prepared_file
-      opt.gsub! "{prepared_base}", "#{prepared_file}" 
+    if opt.include? '{contracted_base}'
+      raise "*** {contracted_base} is missing" unless contracted_file
+      opt.gsub! "{contracted_base}", "#{contracted_file}" 
     end
     if opt.include? '{profile}'
       opt.gsub! "{profile}", "#{PROFILES_PATH}/#{@profile}.lua" 

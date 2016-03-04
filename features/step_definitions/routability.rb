@@ -44,7 +44,7 @@ Then /^routability should be$/ do |table|
   if table.headers&["forw","backw","bothw"] == []
     raise "*** routability tabel must contain either 'forw', 'backw' or 'bothw' column"
   end
-  OSRMLoader.load(self,"#{prepared_file}.osrm") do
+  OSRMLoader.load(self,"#{contracted_file}.osrm") do
     table.hashes.each_with_index do |row,i|
       output_row = row.dup
       attempts = []

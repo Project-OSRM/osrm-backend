@@ -173,7 +173,7 @@ Given /^the data has been extracted$/ do
   end
 end
 
-Given /^the data has been prepared$/ do
+Given /^the data has been contracted$/ do
   begin
     reprocess
   rescue OSRMError => e
