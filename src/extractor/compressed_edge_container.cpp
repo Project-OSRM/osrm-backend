@@ -189,9 +189,6 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
     BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
     BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight);
 
-    // There should be no entry for uncompressed edges
-    BOOST_ASSERT(!HasEntryForID(edge_id));
-
     // Add via node id. List is created if it does not exist
     if (!HasEntryForID(edge_id))
     {
@@ -215,10 +212,9 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
 
     std::vector<CompressedEdge> &edge_bucket_list = m_compressed_geometries[edge_bucket_id];
 
-    // We're adding uncompressed edges, there should be no entry
-    BOOST_ASSERT(edge_bucket_list.empty());
     // note we don't save the start coordinate: it is implicitly given by edge_id
     // weight is the distance to the (currently) last coordinate in the bucket
+    // Don't re-add this if it's already in there.
     if (edge_bucket_list.empty())
     {
         edge_bucket_list.emplace_back(CompressedEdge { target_node_id, weight });

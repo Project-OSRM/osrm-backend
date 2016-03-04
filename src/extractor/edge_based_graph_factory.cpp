@@ -124,43 +124,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
                  m_compressed_edge_container.HasEntryForID(edge_id_2));
-    if (m_compressed_edge_container.HasEntryForID(edge_id_1))
+    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1));
+    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
+    const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
+    const auto &reverse_geometry = m_compressed_edge_container.GetBucketReference(edge_id_2);
+    BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
+    BOOST_ASSERT(0 != forward_geometry.size());
+    const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
+
+    if (geometry_size > 1)
     {
-        BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
-
-        // reconstruct geometry and put in each individual edge with its offset
-        const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
-        const auto &reverse_geometry = m_compressed_edge_container.GetBucketReference(edge_id_2);
-        BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
-        BOOST_ASSERT(0 != forward_geometry.size());
-        const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
-        BOOST_ASSERT(geometry_size > 1);
-
-        // reconstruct bidirectional edge with individual weights and put each into the NN index
-
-        std::vector<int> forward_offsets(forward_geometry.size(), 0);
-        std::vector<int> reverse_offsets(reverse_geometry.size(), 0);
-
-        // quick'n'dirty prefix sum as std::partial_sum needs addtional casts
-        // TODO: move to lambda function with C++11
-        int temp_sum = 0;
-
-        for (const auto i : util::irange(0u, geometry_size))
-        {
-            forward_offsets[i] = temp_sum;
-            temp_sum += forward_geometry[i].weight;
-
-            BOOST_ASSERT(forward_data.distance >= temp_sum);
-        }
-
-        temp_sum = 0;
-        for (const auto i : util::irange(0u, geometry_size))
-        {
-            temp_sum += reverse_geometry[reverse_geometry.size() - 1 - i].weight;
-            reverse_offsets[i] = reverse_data.distance - temp_sum;
-            // BOOST_ASSERT(reverse_data.distance >= temp_sum);
-        }
-
         NodeID current_edge_source_coordinate_id = node_u;
 
         // traverse arrays from start and end respectively
@@ -194,7 +167,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     }
     else
     {
-        BOOST_ASSERT(!m_compressed_edge_container.HasEntryForID(edge_id_2));
+        //BOOST_ASSERT(!m_compressed_edge_container.HasEntryForID(edge_id_2));
 
         if (forward_data.edge_id != SPECIAL_NODEID)
         {
@@ -217,8 +190,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID ||
                      reverse_data.edge_id != SPECIAL_NODEID);
 
-        m_compressed_edge_container.AddUncompressedEdge(edge_id_1, node_v, forward_data.distance);
-        m_compressed_edge_container.AddUncompressedEdge(edge_id_2, node_u, reverse_data.distance);
+        //m_compressed_edge_container.AddUncompressedEdge(edge_id_1, node_v, forward_data.distance);
+        //m_compressed_edge_container.AddUncompressedEdge(edge_id_2, node_u, reverse_data.distance);
 
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v, forward_data.name_id,
