@@ -4,6 +4,7 @@
 #include "util/coordinate.hpp"
 
 #include <cstddef>
+#include <limits>
 
 namespace osrm
 {
@@ -28,6 +29,11 @@ const double constexpr DISTINCTION_RATIO = 2;
 const unsigned constexpr INVALID_NAME_ID = 0;
 
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
+
+bool requiresAnnouncedment(const EdgeData &from, const EdgeData &to)
+{
+    return !from.IsCompatibleTo(to);
+}
 
 struct Localizer
 {
@@ -282,7 +288,6 @@ inline std::vector<TurnCandidate> fallbackTurnAssignmentMotorway(
     std::vector<TurnCandidate> turn_candidates,
     const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
 {
-    util::SimpleLogger().Write(logWARNING) << "Fallback turn assignment";
     for (auto &candidate : turn_candidates)
     {
         const auto &out_data = node_based_graph->GetEdgeData(candidate.eid);
@@ -390,8 +395,7 @@ handleFromMotorway(const NodeID from,
             // splitting ramp at the end of a highway
             if (turn_candidates[1].valid && turn_candidates[2].valid)
             {
-                turn_candidates[1].instruction = {TurnType::Fork, DirectionModifier::SlightRight};
-                turn_candidates[2].instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+                assignFork(via_edge, turn_candidates[2], turn_candidates[1], node_based_graph);
             }
             else
             {
@@ -404,11 +408,13 @@ handleFromMotorway(const NodeID from,
                                                       getTurnDirection(turn_candidates[2].angle)};
             }
         }
-        else
+        else if (countValid(turn_candidates)) // check whether turns exist at all
         {
             // FALLBACK, this should hopefully never be reached
+            auto coord = localizer(node_based_graph->GetTarget(via_edge));
             util::SimpleLogger().Write(logWARNING)
-                << "Fallback reached from motorway, no continue angle, " << turn_candidates.size()
+                << "Fallback reached from motorway at " << toFloating(coord.lat) << " "
+                << toFloating(coord.lon) << ", no continue angle, " << turn_candidates.size()
                 << " candidates, " << countValid(turn_candidates) << " valid ones.";
             fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
         }
@@ -486,21 +492,71 @@ handleFromMotorway(const NodeID from,
                 turn_candidates[1].instruction =
                     getInstructionForObvious(from, via_edge, turn_candidates[1], node_based_graph);
                 util::SimpleLogger().Write(logWARNING)
-                    << "Disable U-Turn on a freeway at "
+                    << "Disabled U-Turn on a freeway at "
                     << localizer(node_based_graph->GetTarget(via_edge));
                 turn_candidates[0].valid = false; // UTURN on the freeway
             }
-            else if (exiting_motorways != 2 || turn_candidates.size() != 3)
+            else if (exiting_motorways == 2)
             {
-                util::SimpleLogger().Write(logWARNING) << "Found motorway junction with more than "
-                                                          "2 exiting motorways or additional ramps!"
-                                                       << std::endl;
-                fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
+                // standard fork
+                std::size_t first_valid = std::numeric_limits<std::size_t>::max(),
+                            second_valid = std::numeric_limits<std::size_t>::max();
+                for (std::size_t i = 0; i < turn_candidates.size(); ++i)
+                {
+                    if (turn_candidates[i].valid &&
+                        isMotorwayClass(turn_candidates[i].eid, node_based_graph))
+                    {
+                        if (first_valid < turn_candidates.size())
+                        {
+                            second_valid = i;
+                            break;
+                        }
+                        else
+                        {
+                            first_valid = i;
+                        }
+                    }
+                }
+                assignFork(via_edge, turn_candidates[second_valid], turn_candidates[first_valid],
+                           node_based_graph);
+            }
+            else if (exiting_motorways == 3)
+            {
+                // triple fork
+                std::size_t first_valid = std::numeric_limits<std::size_t>::max(),
+                            second_valid = std::numeric_limits<std::size_t>::max(),
+                            third_valid = std::numeric_limits<std::size_t>::max();
+                for (std::size_t i = 0; i < turn_candidates.size(); ++i)
+                {
+                    if (turn_candidates[i].valid &&
+                        isMotorwayClass(turn_candidates[i].eid, node_based_graph))
+                    {
+                        if (second_valid < turn_candidates.size())
+                        {
+                            third_valid = i;
+                            break;
+                        }
+                        else if (first_valid < turn_candidates.size())
+                        {
+                            second_valid = i;
+                        }
+                        else
+                        {
+                            first_valid = i;
+                        }
+                    }
+                }
+                assignFork(via_edge, turn_candidates[third_valid], turn_candidates[second_valid],
+                           turn_candidates[first_valid], node_based_graph);
             }
             else
             {
-                turn_candidates[1].instruction = {TurnType::Fork, DirectionModifier::SlightRight};
-                turn_candidates[2].instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+                auto coord = localizer(node_based_graph->GetTarget(via_edge));
+                util::SimpleLogger().Write(logWARNING)
+                    << "Found motorway junction with more than "
+                       "2 exiting motorways or additional ramps at " << toFloating(coord.lat) << " "
+                    << toFloating(coord.lon);
+                fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
             }
         } // done for more than one highway exit
     }
@@ -596,8 +652,8 @@ handleMotorwayRamp(const NodeID from,
             if (isMotorwayClass(turn_candidates[1].eid, node_based_graph) &&
                 isMotorwayClass(turn_candidates[2].eid, node_based_graph))
             {
-                turn_candidates[1].instruction = {TurnType::Merge, DirectionModifier::SlightRight};
-                turn_candidates[2].instruction = {TurnType::Merge, DirectionModifier::SlightLeft};
+                assignFork(via_edge, turn_candidates[2], turn_candidates[1],
+                           node_based_graph);
             }
             else
             {
@@ -743,11 +799,13 @@ bool isMotorwayJunction(const NodeID from,
              angularDeviation(candidate.angle, 180) > 35) ||
             (candidate.valid && angularDeviation(candidate.angle, 0) < 35))
             return false;
-        else if (candidate.valid &&
-                 (out_data.road_classification.road_class == FunctionalRoadClass::MOTORWAY ||
-                  out_data.road_classification.road_class == FunctionalRoadClass::TRUNK))
-            has_motorway = true;
-        else if (candidate.valid && !isRampClass(out_data.road_classification.road_class))
+        else if (out_data.road_classification.road_class == FunctionalRoadClass::MOTORWAY ||
+                 out_data.road_classification.road_class == FunctionalRoadClass::TRUNK)
+        {
+            if (candidate.valid)
+                has_motorway = true;
+        }
+        else if (!isRampClass(out_data.road_classification.road_class))
             has_normal_roads = true;
     }
 
@@ -1904,6 +1962,77 @@ handleConflicts(const NodeID from,
     };
 
     return turn_candidates;
+}
+
+void assignFork(const EdgeID via_edge,
+                TurnCandidate &left,
+                TurnCandidate &right,
+                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
+{
+    const auto &in_data = node_based_graph->GetEdgeData(via_edge);
+    { // left fork
+        const auto &out_data = node_based_graph->GetEdgeData(left.eid);
+        if (angularDeviation(left.angle, 180) < FUZZY_ANGLE_DIFFERENCE)
+        {
+            if (requiresAnnouncedment(in_data, out_data))
+            {
+                left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+            }
+            else
+            {
+                left.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+            }
+        }
+        else
+        {
+            left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+        }
+    }
+    { // right fork
+        const auto &out_data = node_based_graph->GetEdgeData(right.eid);
+        if (angularDeviation(right.angle, 180) < FUZZY_ANGLE_DIFFERENCE)
+        {
+            if (requiresAnnouncedment(in_data, out_data))
+            {
+                right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
+            }
+            else
+            {
+                right.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+            }
+        }
+        else
+        {
+            right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
+        }
+    }
+}
+
+void assignFork(const EdgeID via_edge,
+                TurnCandidate &left,
+                TurnCandidate &center,
+                TurnCandidate &right,
+                const std::shared_ptr<const util::NodeBasedDynamicGraph> node_based_graph)
+{
+    left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+    if (angularDeviation(center.angle, 180) < FUZZY_ANGLE_DIFFERENCE)
+    {
+        const auto &in_data = node_based_graph->GetEdgeData(via_edge);
+        const auto &out_data = node_based_graph->GetEdgeData(center.eid);
+        if (requiresAnnouncedment(in_data, out_data))
+        {
+            center.instruction = {TurnType::Fork, DirectionModifier::Straight};
+        }
+        else
+        {
+            center.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+        }
+    }
+    else
+    {
+        center.instruction = {TurnType::Fork, DirectionModifier::Straight};
+    }
+    right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
 }
 
 } // anemspace detail
