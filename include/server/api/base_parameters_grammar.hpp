@@ -5,6 +5,7 @@
 
 #include "engine/polyline_compressor.hpp"
 #include "engine/hint.hpp"
+#include "engine/bearing.hpp"
 
 #include <boost/spirit/include/qi_lit.hpp>
 #include <boost/spirit/include/qi_char_.hpp>
@@ -39,11 +40,11 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         const auto add_bearing =
             [this](boost::optional<boost::fusion::vector2<short, short>> bearing_range)
         {
-            boost::optional<engine::api::BaseParameters::Bearing> bearing;
+            boost::optional<engine::Bearing> bearing;
             if (bearing_range)
             {
-                bearing = engine::api::BaseParameters::Bearing{
-                    boost::fusion::at_c<0>(*bearing_range), boost::fusion::at_c<1>(*bearing_range)};
+                bearing = engine::Bearing{boost::fusion::at_c<0>(*bearing_range),
+                                          boost::fusion::at_c<1>(*bearing_range)};
             }
             base_parameters.bearings.push_back(std::move(bearing));
         };
