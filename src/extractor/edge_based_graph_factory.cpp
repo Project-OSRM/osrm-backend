@@ -127,14 +127,18 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1));
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
     const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
-    const auto &reverse_geometry = m_compressed_edge_container.GetBucketReference(edge_id_2);
-    BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
-    BOOST_ASSERT(0 != forward_geometry.size());
     const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
 
+    // There should always be some geometry
+    BOOST_ASSERT(0 != geometry_size);
+
+    // If there is more than one, this is a compressed geometry
     if (geometry_size > 1)
     {
         NodeID current_edge_source_coordinate_id = node_u;
+
+        const auto &reverse_geometry = m_compressed_edge_container.GetBucketReference(edge_id_2);
+        BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
 
         // traverse arrays from start and end respectively
         for (const auto i : util::irange(0u, geometry_size))
@@ -165,10 +169,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
         BOOST_ASSERT(current_edge_source_coordinate_id == node_v);
     }
+    // Otherwise, it's an uncompressed (single-segment) geometry
     else
     {
-        //BOOST_ASSERT(!m_compressed_edge_container.HasEntryForID(edge_id_2));
-
         if (forward_data.edge_id != SPECIAL_NODEID)
         {
             BOOST_ASSERT(!forward_data.reversed);
@@ -189,9 +192,6 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
         BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID ||
                      reverse_data.edge_id != SPECIAL_NODEID);
-
-        //m_compressed_edge_container.AddUncompressedEdge(edge_id_1, node_v, forward_data.distance);
-        //m_compressed_edge_container.AddUncompressedEdge(edge_id_2, node_u, reverse_data.distance);
 
         m_edge_based_node_list.emplace_back(
             forward_data.edge_id, reverse_data.edge_id, node_u, node_v, forward_data.name_id,
