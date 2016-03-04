@@ -129,77 +129,37 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
     BOOST_ASSERT(forward_geometry.size() ==
                  m_compressed_edge_container.GetBucketReference(edge_id_2).size());
-    const unsigned geometry_size = static_cast<unsigned>(forward_geometry.size());
+    const auto geometry_size = forward_geometry.size();
 
     // There should always be some geometry
     BOOST_ASSERT(0 != geometry_size);
 
-    // If there is more than one, this is a compressed geometry
-    if (geometry_size > 1)
+    NodeID current_edge_source_coordinate_id = node_u;
+
+    // traverse arrays from start and end respectively
+    for (const auto i : util::irange(0UL, geometry_size))
     {
-        NodeID current_edge_source_coordinate_id = node_u;
+        BOOST_ASSERT(
+            current_edge_source_coordinate_id ==
+            m_compressed_edge_container.GetBucketReference(edge_id_2)[geometry_size - 1 - i]
+                .node_id);
+        const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+        BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
-        // traverse arrays from start and end respectively
-        for (const auto i : util::irange(0u, geometry_size))
-        {
-            BOOST_ASSERT(current_edge_source_coordinate_id ==
-                         reverse_geometry[geometry_size - 1 - i].node_id);
-            const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
-            BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
-
-            // build edges
-            m_edge_based_node_list.emplace_back(
-                forward_data.edge_id, reverse_data.edge_id, current_edge_source_coordinate_id,
-                current_edge_target_coordinate_id, forward_data.name_id,
-                m_compressed_edge_container.GetPositionForID(edge_id_1),
-                m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID,
-                i, forward_data.travel_mode, reverse_data.travel_mode);
-
-            m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
-                                                      reverse_data.startpoint);
-            current_edge_source_coordinate_id = current_edge_target_coordinate_id;
-
-            BOOST_ASSERT(node_u != m_edge_based_node_list.back().u ||
-                         node_v != m_edge_based_node_list.back().v);
-
-            BOOST_ASSERT(node_u != m_edge_based_node_list.back().v ||
-                         node_v != m_edge_based_node_list.back().u);
-        }
-
-        BOOST_ASSERT(current_edge_source_coordinate_id == node_v);
-    }
-    // Otherwise, it's an uncompressed (single-segment) geometry
-    else
-    {
-        if (forward_data.edge_id != SPECIAL_NODEID)
-        {
-            BOOST_ASSERT(!forward_data.reversed);
-        }
-        else
-        {
-            BOOST_ASSERT(forward_data.reversed);
-        }
-
-        if (reverse_data.edge_id != SPECIAL_NODEID)
-        {
-            BOOST_ASSERT(!reverse_data.reversed);
-        }
-        else
-        {
-            BOOST_ASSERT(reverse_data.reversed);
-        }
-
-        BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID ||
-                     reverse_data.edge_id != SPECIAL_NODEID);
-
+        // build edges
         m_edge_based_node_list.emplace_back(
-            forward_data.edge_id, reverse_data.edge_id, node_u, node_v, forward_data.name_id,
+            forward_data.edge_id, reverse_data.edge_id, current_edge_source_coordinate_id,
+            current_edge_target_coordinate_id, forward_data.name_id,
             m_compressed_edge_container.GetPositionForID(edge_id_1),
-            m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID, 0,
+            m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID, i,
             forward_data.travel_mode, reverse_data.travel_mode);
+
         m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
                                                   reverse_data.startpoint);
+        current_edge_source_coordinate_id = current_edge_target_coordinate_id;
     }
+
+    BOOST_ASSERT(current_edge_source_coordinate_id == node_v);
 }
 
 void EdgeBasedGraphFactory::FlushVectorToStream(
