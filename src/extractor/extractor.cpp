@@ -386,6 +386,8 @@ void Extractor::FindComponents(unsigned max_edge_id,
     {
         BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(edge.weight, 1)) > 0,
                          "edge distance < 1");
+        BOOST_ASSERT(edge.source <= max_edge_id);
+        BOOST_ASSERT(edge.target <= max_edge_id);
         if (edge.forward)
         {
             edges.push_back({edge.source, edge.target, {}});
@@ -402,6 +404,8 @@ void Extractor::FindComponents(unsigned max_edge_id,
     {
         if (node.reverse_edge_based_node_id != SPECIAL_NODEID)
         {
+            BOOST_ASSERT(node.forward_edge_based_node_id <= max_edge_id);
+            BOOST_ASSERT(node.reverse_edge_based_node_id <= max_edge_id);
             edges.push_back({node.forward_edge_based_node_id, node.reverse_edge_based_node_id, {}});
             edges.push_back({node.reverse_edge_based_node_id, node.forward_edge_based_node_id, {}});
         }
