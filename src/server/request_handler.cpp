@@ -117,7 +117,7 @@ void RequestHandler::handle_request(const http::request &current_request,
         current_reply.headers.emplace_back("Access-Control-Allow-Headers",
                                            "X-Requested-With, Content-Type");
 
-        if (route_parameters.service == "tile")
+        if (route_parameters.service == "tile" && json_result.values.find("pbf") != json_result.values.end())
         {
             std::copy(json_result.values["pbf"].get<osrm::util::json::Buffer>().value.cbegin(),
                       json_result.values["pbf"].get<osrm::util::json::Buffer>().value.cend(),
