@@ -523,21 +523,20 @@ handleMotorwayRamp(const NodeID from,
 {
     unsigned num_valid_turns = countValid(turn_candidates);
     // ramp straight into a motorway/ramp
-    if (num_valid_turns == 1)
+    if (turn_candidates.size() == 2 && num_valid_turns == 1)
     {
         BOOST_ASSERT(!turn_candidates[0].valid);
         BOOST_ASSERT(isMotorwayClass(turn_candidates[1].eid, node_based_graph));
 
         turn_candidates[1].instruction =
             noTurnOrNewName(from, via_edge, turn_candidates[1], node_based_graph);
-        //{TurnType::Merge,
-        //                                  getTurnDirection(turn_candidates[1].angle)};
     }
     else if (turn_candidates.size() == 3)
     {
         // merging onto a passing highway / or two ramps merging onto the same highway
         if (num_valid_turns == 1)
         {
+            BOOST_ASSERT(!turn_candidates[0].valid);
             // check order of highways
             //          4
             //     5         3
@@ -565,6 +564,7 @@ handleMotorwayRamp(const NodeID from,
             }
             else
             {
+                BOOST_ASSERT(turn_candidates[2].valid);
                 if (isMotorwayClass(turn_candidates[2].eid, node_based_graph))
                 {
                     // circular order (5-0) onto 4
@@ -581,11 +581,13 @@ handleMotorwayRamp(const NodeID from,
                         noTurnOrNewName(from, via_edge, turn_candidates[1], node_based_graph);
             }
         }
-
         else
         {
+            BOOST_ASSERT(num_valid_turns == 2);
             // UTurn on ramps is not possible
-            BOOST_ASSERT(turn_candidates[1].valid && turn_candidates[2].valid);
+            BOOST_ASSERT(!turn_candidates[0].valid);
+            BOOST_ASSERT(turn_candidates[1].valid);
+            BOOST_ASSERT(turn_candidates[2].valid);
             // two motorways starting at end of ramp (fork)
             //  M       M
             //    \   /
@@ -680,7 +682,6 @@ handleMotorwayJunction(const NodeID from,
     {
         return handleFromMotorway(from, via_edge, std::move(turn_candidates), node_based_graph);
     }
-
     else // coming from a ramp
     {
         return handleMotorwayRamp(from, via_edge, std::move(turn_candidates), node_based_graph);
