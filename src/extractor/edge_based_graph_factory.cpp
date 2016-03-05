@@ -317,8 +317,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             ++node_based_edge_counter;
             auto turn_candidates =
-                guidance::getTurns(node_u, edge_from_u, m_node_based_graph, m_node_info_list,
-                                   m_restriction_map, m_barrier_nodes, m_compressed_edge_container);
+                guidance::getTurns(node_u, edge_from_u, *m_node_based_graph, m_node_info_list,
+                                   *m_restriction_map, m_barrier_nodes, m_compressed_edge_container);
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
 
