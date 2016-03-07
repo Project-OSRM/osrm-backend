@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
 #include <unordered_set>
 
 namespace osrm
@@ -149,11 +150,13 @@ class TurnAnalysis
     std::vector<TurnCandidate> handleMotorwayJunction(
         const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const;
 
-    std::vector<TurnCandidate> handleFromMotorway(
-        const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const;
+    std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
+                                                  const EdgeID via_edge,
+                                                  std::vector<TurnCandidate> turn_candidates) const;
 
-    std::vector<TurnCandidate> handleMotorwayRamp(
-        const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const;
+    std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
+                                                  const EdgeID via_edge,
+                                                  std::vector<TurnCandidate> turn_candidates) const;
 
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     std::vector<TurnCandidate> setTurnTypes(const NodeID from,
@@ -164,20 +167,6 @@ class TurnAnalysis
     std::vector<TurnCandidate> handleConflicts(const NodeID from,
                                                const EdgeID via_edge,
                                                std::vector<TurnCandidate> turn_candidates) const;
-
-    // Old fallbacks, to be removed
-    std::vector<TurnCandidate> optimizeRamps(const EdgeID via_edge,
-                                             std::vector<TurnCandidate> turn_candidates) const;
-
-    std::vector<TurnCandidate> optimizeCandidates(const EdgeID via_eid,
-                                                  std::vector<TurnCandidate> turn_candidates) const;
-
-    bool isObviousChoice(const EdgeID via_eid,
-                         const std::size_t turn_index,
-                         const std::vector<TurnCandidate> &turn_candidates) const;
-
-    std::vector<TurnCandidate> suppressTurns(const EdgeID via_eid,
-                                             std::vector<TurnCandidate> turn_candidates) const;
 
     // node_u -- (edge_1) --> node_v -- (edge_2) --> node_w
     TurnInstruction AnalyzeTurn(const NodeID node_u,
@@ -194,9 +183,19 @@ class TurnAnalysis
                     TurnCandidate &center,
                     TurnCandidate &right) const;
 
-    //Type specific fallbacks
+    void
+    handleDistinctConflict(const EdgeID via_edge, TurnCandidate &left, TurnCandidate &right) const;
+
+    // Type specific fallbacks
     std::vector<TurnCandidate>
     fallbackTurnAssignmentMotorway(std::vector<TurnCandidate> turn_candidates) const;
+
+    //Classification
+    std::size_t findObviousTurn( const EdgeID via_edge, const std::vector<TurnCandidate> &turn_candidates) const;
+    std::pair<std::size_t,std::size_t> findFork( const EdgeID via_edge, const std::vector<TurnCandidate> &turn_candidates) const;
+
+    std::vector<TurnCandidate> assignLeftTurns( const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates, const std::size_t starting_at ) const;
+    std::vector<TurnCandidate> assignRightTurns( const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates, const std::size_t up_to ) const;
 
 }; // class TurnAnalysis
 

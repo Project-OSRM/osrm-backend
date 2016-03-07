@@ -28,23 +28,17 @@ namespace json
 namespace detail
 {
 
-const constexpr char *modifier_names[] = {"uturn",
-                                          "sharp right",
-                                          "right",
-                                          "slight right",
-                                          "straight",
-                                          "slight left",
-                                          "left",
-                                          "sharp left"};
+const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
+                                          "straight", "slight left", "left",  "sharp left"};
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
 const constexpr char *turn_type_names[] = {
     "invalid",    "no turn",     "invalid",        "new name",    "continue",       "turn",
-    "merge",      "ramp",        "fork",           "end of road", "roundabout",     "invalid",
+    "turn",       "turn",        "turn",           "merge",       "ramp",           "ramp",
+    "ramp",       "ramp",        "fork",           "end of road", "roundabout",     "invalid",
     "roundabout", "invalid",     "traffic circle", "invalid",     "traffic circle", "invalid",
     "invalid",    "restriction", "notification"};
-
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
 // Check whether to include a modifier in the result of the API
@@ -54,6 +48,23 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
         maneuver.instruction.direction_modifier == DirectionModifier::UTurn)
         return false;
     return true;
+}
+
+inline bool isMultiTurn(const TurnType type)
+{
+    return (type == TurnType::FirstTurn || type == TurnType::SecondTurn ||
+            type == TurnType::ThirdTurn);
+}
+
+inline std::string getCount(const TurnType type)
+{
+    if (type == TurnType::FirstTurn)
+        return "1";
+    if (type == TurnType::SecondTurn)
+        return "2";
+    if (type == TurnType::ThirdTurn)
+        return "3";
+    return "0";
 }
 
 std::string instructionTypeToString(const TurnType type)
@@ -141,6 +152,8 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     else
         step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
 
+    if (detail::isMultiTurn(maneuver.instruction.type))
+        step_maneuver.values["count"] = detail::getCount(maneuver.instruction.type);
     if (detail::isValidModifier(maneuver))
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
