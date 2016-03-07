@@ -191,9 +191,6 @@ class StaticRTree
             processed_objects_count += current_leaf.object_count;
         }
 
-        // close leaf file
-        leaf_node_file.close();
-
         std::uint32_t processing_level = 0;
         while (1 < tree_nodes_in_level.size())
         {
@@ -257,8 +254,6 @@ class StaticRTree
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
         tree_node_file.write((char *)&size_of_tree, sizeof(std::uint32_t));
         tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
-        // close tree node file.
-        tree_node_file.close();
     }
 
     explicit StaticRTree(const boost::filesystem::path &node_file,
@@ -287,7 +282,7 @@ class StaticRTree
         {
             tree_node_file.read((char *)&m_search_tree[0], sizeof(TreeNode) * tree_size);
         }
-        tree_node_file.close();
+
         // open leaf node file and store thread specific pointer
         if (!boost::filesystem::exists(leaf_file))
         {

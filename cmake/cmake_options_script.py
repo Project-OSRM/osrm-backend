@@ -32,13 +32,11 @@ cache_file = "%s/cached_options.txt" % (scriptpath)
 db = None
 if os.access(cache_file, os.R_OK) == 0:
     db = load_db(sys.argv[1])
-    f = open(cache_file, "wb")
-    pickle.dump(db, f)
-    f.close()
+    with open(cache_file, "wb") as f:
+        pickle.dump(db, f)
 else:
-    f = open(cache_file)
-    db = pickle.load(f)
-    f.close()
+    with open(cache_file) as f:
+        db = pickle.load(f)
 
 if db and sys.argv[2] in db:
     for option in db[sys.argv[2]]:

@@ -94,7 +94,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
                 util::SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
             }
             getline(timestamp_stream, m_timestamp);
-            timestamp_stream.close();
         }
         if (m_timestamp.empty())
         {
@@ -144,7 +143,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
             BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
         }
-        nodes_input_stream.close();
 
         boost::filesystem::ifstream edges_input_stream(edges_file, std::ios::binary);
         unsigned number_of_edges = 0;
@@ -172,8 +170,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
                 ++compressed;
             }
         }
-
-        edges_input_stream.close();
     }
 
     void LoadCoreInformation(const boost::filesystem::path &core_data_file)
@@ -224,7 +220,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             geometry_stream.read((char *)&(m_geometry_list[0]),
                                  number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
         }
-        geometry_stream.close();
     }
 
     void LoadRTree()
@@ -250,7 +245,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         {
             util::SimpleLogger().Write(logWARNING) << "list of street names is empty";
         }
-        name_stream.close();
     }
 
   public:

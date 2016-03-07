@@ -45,7 +45,6 @@ FixedPointCoordinateListPtr loadCoordinates(const boost::filesystem::path &nodes
         BOOST_ASSERT((std::abs(coords->at(i).lat) >> 30) == 0);
         BOOST_ASSERT((std::abs(coords->at(i).lon) >> 30) == 0);
     }
-    nodes_input_stream.close();
     return coords;
 }
 

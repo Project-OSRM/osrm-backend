@@ -212,7 +212,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
             // Load all the query nodes into a vector
             nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])), number_of_nodes * sizeof(extractor::QueryNode));
-            nodes_input_stream.close();
         }
 
         std::vector<unsigned> m_geometry_indices;
@@ -246,7 +245,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                 geometry_stream.read((char *)&(m_geometry_list[0]),
                                     number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
             }
-            geometry_stream.close();
         }
 
         // Now, we iterate over all the segments stored in the StaticRTree, updating
@@ -256,7 +254,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
             using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
 
-            // Open file for reading *and* writing
             std::ifstream leaf_node_file(rtree_leaf_filename, std::ios::binary | std::ios::in);
             if (!leaf_node_file)
             {
@@ -336,8 +333,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                 m_element_count -= current_node.object_count;
 
             }
-            leaf_node_file.close();
-
         }
         
         // Now save out the updated compressed geometries
@@ -353,7 +348,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_indices[0])), number_of_indices * sizeof(unsigned));
             geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries), sizeof(unsigned));
             geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])), number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
-            geometry_stream.close();
         }
 
 

@@ -288,7 +288,6 @@ int Storage::Run()
         else
         {
             getline(timestamp_stream, m_timestamp);
-            timestamp_stream.close();
         }
     }
     if (m_timestamp.empty())

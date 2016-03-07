@@ -84,8 +84,6 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
         }
     }
     BOOST_ASSERT(control_sum == prefix_sum_of_list_indices);
-    // all done, let's close the resource
-    geometry_out_stream.close();
 }
 
 // Adds info for a compressed edge to the container.   edge_id_2

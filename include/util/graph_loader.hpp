@@ -194,7 +194,6 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
         hsgr_input_stream.read(reinterpret_cast<char *>(&edge_list[0]),
                                number_of_edges * sizeof(EdgeT));
     }
-    hsgr_input_stream.close();
 
     return number_of_nodes;
 }

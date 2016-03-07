@@ -476,7 +476,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     edge_data_file.seekp(std::ios::beg);
     edge_data_file.write((char *)&original_edges_counter, sizeof(unsigned));
-    edge_data_file.close();
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                                  << " edge based nodes";

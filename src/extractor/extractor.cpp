@@ -134,7 +134,6 @@ int Extractor::run()
 
         boost::filesystem::ofstream timestamp_out(config.timestamp_file_name);
         timestamp_out.write(timestamp.c_str(), timestamp.length());
-        timestamp_out.close();
 
         // initialize vectors holding parsed objects
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> resulting_nodes;
@@ -558,7 +557,6 @@ void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_exter
         node_stream.write((char *)internal_to_external_node_map.data(),
                           size_of_mapping * sizeof(QueryNode));
     }
-    node_stream.close();
 }
 
 /**
@@ -630,7 +628,6 @@ void Extractor::WriteEdgeBasedGraph(
     util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
 
     util::SimpleLogger().Write() << "Processed " << number_of_used_edges << " edges";
-    file_out_stream.close();
 }
 }
 }

@@ -233,7 +233,6 @@ int main(int argc, char *argv[]) try
         {
             random_csv << i << ", " << timing_results_raw_random[i] << std::endl;
         }
-        random_csv.close();
         osrm::tools::runStatistics(timing_results_raw_random, stats);
 
         osrm::util::SimpleLogger().Write() << "raw random I/O: " << std::setprecision(5)
@@ -305,7 +304,6 @@ int main(int argc, char *argv[]) try
         {
             seq_csv << i << ", " << timing_results_raw_seq[i] << std::endl;
         }
-        seq_csv.close();
         osrm::tools::runStatistics(timing_results_raw_seq, stats);
         osrm::util::SimpleLogger().Write() << "raw sequential I/O: " << std::setprecision(5)
                                            << std::fixed << "min: " << stats.min << "ms, "

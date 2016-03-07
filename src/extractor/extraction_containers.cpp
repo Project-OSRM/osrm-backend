@@ -90,8 +90,6 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareEdges(segment_state);
         WriteEdges(file_out_stream);
 
-        file_out_stream.close();
-
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
@@ -139,7 +137,6 @@ void ExtractionContainers::WriteNames(const std::string &names_file_name) const
 
     name_file_stream.write(write_buffer, buffer_len);
 
-    name_file_stream.close();
     TIMER_STOP(write_name_index);
     std::cout << "ok, after " << TIMER_SEC(write_name_index) << "s" << std::endl;
 }
@@ -586,7 +583,6 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
     }
     restrictions_out_stream.seekp(count_position);
     restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
-    restrictions_out_stream.close();
     util::SimpleLogger().Write() << "usable restrictions: " << written_restriction_count;
 }
 

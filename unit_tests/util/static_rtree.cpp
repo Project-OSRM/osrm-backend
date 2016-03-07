@@ -261,7 +261,6 @@ void build_rtree(const std::string &prefix,
     const auto num_nodes = static_cast<unsigned>(fixture->nodes.size());
     node_stream.write((char *)&num_nodes, sizeof(unsigned));
     node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(extractor::QueryNode));
-    node_stream.close();
 
     RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->nodes);
 }
