@@ -142,7 +142,7 @@ before_script:
   - mkdir build && pushd build
   - export CXX=${COMPILER}
   - export OSRM_PORT=5000 OSRM_TIMEOUT=60
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
 
 script:
   - make --jobs=2
