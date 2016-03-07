@@ -24,8 +24,6 @@ class ShortestPathRouting final
     using super = BasicRoutingInterface<DataFacadeT, ShortestPathRouting<DataFacadeT>>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
-    const static constexpr bool FORWARD_DIRECTION = true;
-    const static constexpr bool REVERSE_DIRECTION = false;
     const static constexpr bool DO_NOT_FORCE_LOOP = false;
 
   public:
@@ -36,23 +34,12 @@ class ShortestPathRouting final
 
     ~ShortestPathRouting() {}
 
-    inline bool
-    forceLoop(bool forward, const PhantomNode &source_phantom, const PhantomNode &target_phantom) const
-    {
-        if (forward)
-            return source_phantom.forward_node_id == target_phantom.forward_node_id &&
-                   source_phantom.GetForwardWeightPlusOffset() >
-                       target_phantom.GetForwardWeightPlusOffset();
-        else
-            return source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
-                   source_phantom.GetReverseWeightPlusOffset() >
-                       target_phantom.GetReverseWeightPlusOffset();
-    };
-
     // allows a uturn at the target_phantom
     // searches source forward/reverse -> target forward/reverse
     void SearchWithUTurn(QueryHeap &forward_heap,
                          QueryHeap &reverse_heap,
+                         QueryHeap &forward_core_heap,
+                         QueryHeap &reverse_core_heap,
                          const bool search_from_forward_node,
                          const bool search_from_reverse_node,
                          const bool search_to_forward_node,
@@ -95,9 +82,24 @@ class ShortestPathRouting final
 
         BOOST_ASSERT(forward_heap.Size() > 0);
         BOOST_ASSERT(reverse_heap.Size() > 0);
-        super::Search(forward_heap, reverse_heap, new_total_distance, leg_packed_path,
-                      forceLoop(FORWARD_DIRECTION, source_phantom, target_phantom),
-                      forceLoop(REVERSE_DIRECTION, source_phantom, target_phantom));
+
+        if (super::facade->GetCoreSize() > 0)
+        {
+            forward_core_heap.Clear();
+            reverse_core_heap.Clear();
+            BOOST_ASSERT(forward_core_heap.Size() == 0);
+            BOOST_ASSERT(reverse_core_heap.Size() == 0);
+            super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
+                                  new_total_distance, leg_packed_path,
+                                  super::NeedsLoopForward(source_phantom, target_phantom),
+                                  super::NeedsLoopBackwards(source_phantom, target_phantom));
+        }
+        else
+        {
+            super::Search(forward_heap, reverse_heap, new_total_distance, leg_packed_path,
+                          super::NeedsLoopForward(source_phantom, target_phantom),
+                          super::NeedsLoopBackwards(source_phantom, target_phantom));
+        }
     }
 
     // searches shortest path between:
@@ -105,6 +107,8 @@ class ShortestPathRouting final
     // source forward/reverse -> target reverse
     void Search(QueryHeap &forward_heap,
                 QueryHeap &reverse_heap,
+                QueryHeap &forward_core_heap,
+                QueryHeap &reverse_core_heap,
                 const bool search_from_forward_node,
                 const bool search_from_reverse_node,
                 const bool search_to_forward_node,
@@ -142,9 +146,25 @@ class ShortestPathRouting final
             }
             BOOST_ASSERT(forward_heap.Size() > 0);
             BOOST_ASSERT(reverse_heap.Size() > 0);
-            super::Search(
-                forward_heap, reverse_heap, new_total_distance_to_forward, leg_packed_path_forward,
-                forceLoop(FORWARD_DIRECTION, source_phantom, target_phantom), DO_NOT_FORCE_LOOP);
+
+            if (super::facade->GetCoreSize() > 0)
+            {
+                forward_core_heap.Clear();
+                reverse_core_heap.Clear();
+                BOOST_ASSERT(forward_core_heap.Size() == 0);
+                BOOST_ASSERT(reverse_core_heap.Size() == 0);
+                super::SearchWithCore(
+                    forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
+                    new_total_distance_to_forward, leg_packed_path_forward,
+                    super::NeedsLoopForward(source_phantom, target_phantom), DO_NOT_FORCE_LOOP);
+            }
+            else
+            {
+                super::Search(forward_heap, reverse_heap, new_total_distance_to_forward,
+                              leg_packed_path_forward,
+                              super::NeedsLoopForward(source_phantom, target_phantom),
+                              DO_NOT_FORCE_LOOP);
+            }
         }
 
         if (search_to_reverse_node)
@@ -170,9 +190,23 @@ class ShortestPathRouting final
             }
             BOOST_ASSERT(forward_heap.Size() > 0);
             BOOST_ASSERT(reverse_heap.Size() > 0);
-            super::Search(forward_heap, reverse_heap, new_total_distance_to_reverse,
-                          leg_packed_path_reverse, DO_NOT_FORCE_LOOP,
-                          forceLoop(REVERSE_DIRECTION, source_phantom, target_phantom));
+            if (super::facade->GetCoreSize() > 0)
+            {
+                forward_core_heap.Clear();
+                reverse_core_heap.Clear();
+                BOOST_ASSERT(forward_core_heap.Size() == 0);
+                BOOST_ASSERT(reverse_core_heap.Size() == 0);
+                super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap,
+                                      reverse_core_heap, new_total_distance_to_reverse,
+                                      leg_packed_path_reverse, DO_NOT_FORCE_LOOP,
+                                      super::NeedsLoopBackwards(source_phantom, target_phantom));
+            }
+            else
+            {
+                super::Search(forward_heap, reverse_heap, new_total_distance_to_reverse,
+                              leg_packed_path_reverse, DO_NOT_FORCE_LOOP,
+                              super::NeedsLoopBackwards(source_phantom, target_phantom));
+            }
         }
     }
 
@@ -209,9 +243,13 @@ class ShortestPathRouting final
         BOOST_ASSERT(uturn_indicators.size() == phantom_nodes_vector.size() + 1);
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
+            super::facade->GetNumberOfNodes());
 
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
+        QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
+        QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
 
         int total_distance_to_forward = 0;
         int total_distance_to_reverse = 0;
@@ -259,7 +297,8 @@ class ShortestPathRouting final
             {
                 if (allow_u_turn_at_via)
                 {
-                    SearchWithUTurn(forward_heap, reverse_heap, search_from_forward_node,
+                    SearchWithUTurn(forward_heap, reverse_heap, forward_core_heap,
+                                    reverse_core_heap, search_from_forward_node,
                                     search_from_reverse_node, search_to_forward_node,
                                     search_to_reverse_node, source_phantom, target_phantom,
                                     total_distance_to_forward, total_distance_to_reverse,
@@ -281,12 +320,12 @@ class ShortestPathRouting final
                 }
                 else
                 {
-                    Search(forward_heap, reverse_heap, search_from_forward_node,
-                           search_from_reverse_node, search_to_forward_node, search_to_reverse_node,
-                           source_phantom, target_phantom, total_distance_to_forward,
-                           total_distance_to_reverse, new_total_distance_to_forward,
-                           new_total_distance_to_reverse, packed_leg_to_forward,
-                           packed_leg_to_reverse);
+                    Search(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
+                           search_from_forward_node, search_from_reverse_node,
+                           search_to_forward_node, search_to_reverse_node, source_phantom,
+                           target_phantom, total_distance_to_forward, total_distance_to_reverse,
+                           new_total_distance_to_forward, new_total_distance_to_reverse,
+                           packed_leg_to_forward, packed_leg_to_reverse);
                 }
             }
 

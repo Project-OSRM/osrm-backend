@@ -123,9 +123,13 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
+            super::facade->GetNumberOfNodes());
 
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
+        QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
+        QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
 
         std::size_t breakage_begin = map_matching::INVALID_STATE;
         std::vector<std::size_t> split_points;
@@ -221,9 +225,23 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     reverse_heap.Clear();
 
                     // get distance diff between loc1/2 and locs/s_prime
-                    const auto network_distance = super::get_network_distance(
-                        forward_heap, reverse_heap, prev_unbroken_timestamps_list[s].phantom_node,
-                        current_timestamps_list[s_prime].phantom_node);
+                    double network_distance;
+                    if (super::facade->GetCoreSize() > 0)
+                    {
+                        forward_core_heap.Clear();
+                        reverse_core_heap.Clear();
+                        network_distance = super::GetNetworkDistanceWithCore(
+                            forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
+                            prev_unbroken_timestamps_list[s].phantom_node,
+                            current_timestamps_list[s_prime].phantom_node);
+                    }
+                    else
+                    {
+                        network_distance = super::GetNetworkDistance(
+                            forward_heap, reverse_heap,
+                            prev_unbroken_timestamps_list[s].phantom_node,
+                            current_timestamps_list[s_prime].phantom_node);
+                    }
 
                     const auto d_t = std::abs(network_distance - haversine_distance);
 

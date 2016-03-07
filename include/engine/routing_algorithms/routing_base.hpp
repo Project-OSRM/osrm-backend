@@ -727,20 +727,59 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
     }
 
+    bool NeedsLoopForward(const PhantomNode &source_phantom,
+                          const PhantomNode &target_phantom) const
+    {
+        return source_phantom.forward_node_id == target_phantom.forward_node_id &&
+               source_phantom.GetForwardWeightPlusOffset() >
+                   target_phantom.GetForwardWeightPlusOffset();
+    }
+
+    bool NeedsLoopBackwards(const PhantomNode &source_phantom,
+                            const PhantomNode &target_phantom) const
+    {
+        return source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
+               source_phantom.GetReverseWeightPlusOffset() >
+                   target_phantom.GetReverseWeightPlusOffset();
+    }
+
+    double GetPathDistance(const std::vector<NodeID> &packed_path,
+                           const PhantomNode &source_phantom,
+                           const PhantomNode &target_phantom) const
+    {
+        std::vector<PathData> unpacked_path;
+        PhantomNodes nodes;
+        nodes.source_phantom = source_phantom;
+        nodes.target_phantom = target_phantom;
+        UnpackPath(packed_path.begin(), packed_path.end(), nodes, unpacked_path);
+
+        util::FixedPointCoordinate previous_coordinate = source_phantom.location;
+        util::FixedPointCoordinate current_coordinate;
+        double distance = 0;
+        for (const auto &p : unpacked_path)
+        {
+            current_coordinate = facade->GetCoordinateOfNode(p.node);
+            distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
+                                                                        current_coordinate);
+            previous_coordinate = current_coordinate;
+        }
+        distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
+                                                                    target_phantom.location);
+        return distance;
+    }
+
     // Requires the heaps for be empty
     // If heaps should be adjusted to be initialized outside of this function,
     // the addition of force_loop parameters might be required
-    double get_network_distance(SearchEngineData::QueryHeap &forward_heap,
-                                SearchEngineData::QueryHeap &reverse_heap,
-                                const PhantomNode &source_phantom,
-                                const PhantomNode &target_phantom) const
+    double GetNetworkDistanceWithCore(SearchEngineData::QueryHeap &forward_heap,
+                                      SearchEngineData::QueryHeap &reverse_heap,
+                                      SearchEngineData::QueryHeap &forward_core_heap,
+                                      SearchEngineData::QueryHeap &reverse_core_heap,
+                                      const PhantomNode &source_phantom,
+                                      const PhantomNode &target_phantom) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
-        EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
-        NodeID middle_node = SPECIAL_NODEID;
-        EdgeWeight edge_offset = std::min(0, -source_phantom.GetForwardWeightPlusOffset());
-        edge_offset = std::min(edge_offset, -source_phantom.GetReverseWeightPlusOffset());
 
         if (source_phantom.forward_node_id != SPECIAL_NODEID)
         {
@@ -768,60 +807,72 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                 target_phantom.reverse_node_id);
         }
 
-        // search from s and t till new_min/(1+epsilon) > length_of_shortest_path
-        const constexpr bool STALLING_ENABLED = true;
-        const constexpr bool DO_NOT_FORCE_LOOPS = false;
-        while (0 < (forward_heap.Size() + reverse_heap.Size()))
-        {
-            if (0 < forward_heap.Size())
-            {
-                RoutingStep(forward_heap, reverse_heap, middle_node, upper_bound, edge_offset, true,
-                            STALLING_ENABLED, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
-            }
-            if (0 < reverse_heap.Size())
-            {
-                RoutingStep(reverse_heap, forward_heap, middle_node, upper_bound, edge_offset,
-                            false, STALLING_ENABLED, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
-            }
-        }
+        const bool constexpr DO_NOT_FORCE_LOOPS =
+            false; // prevents forcing of loops, since offsets are set correctly
+
+        int duration = INVALID_EDGE_WEIGHT;
+        std::vector<NodeID> packed_path;
+        SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap, duration,
+                       packed_path, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
 
         double distance = std::numeric_limits<double>::max();
-        if (upper_bound != INVALID_EDGE_WEIGHT)
+        if (duration != INVALID_EDGE_WEIGHT)
         {
-            std::vector<NodeID> packed_leg;
-            if (upper_bound != forward_heap.GetKey(middle_node) + reverse_heap.GetKey(middle_node))
-            {
-                // self loop
-                BOOST_ASSERT(forward_heap.GetData(middle_node).parent == middle_node &&
-                             reverse_heap.GetData(middle_node).parent == middle_node);
-                packed_leg.push_back(middle_node);
-                packed_leg.push_back(middle_node);
-            }
-            else
-            {
-                RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle_node, packed_leg);
-            }
-
-            std::vector<PathData> unpacked_path;
-            PhantomNodes nodes;
-            nodes.source_phantom = source_phantom;
-            nodes.target_phantom = target_phantom;
-            UnpackPath(packed_leg.begin(), packed_leg.end(), nodes, unpacked_path);
-
-            util::FixedPointCoordinate previous_coordinate = source_phantom.location;
-            util::FixedPointCoordinate current_coordinate;
-            distance = 0;
-            for (const auto &p : unpacked_path)
-            {
-                current_coordinate = facade->GetCoordinateOfNode(p.node);
-                distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
-                                                                            current_coordinate);
-                previous_coordinate = current_coordinate;
-            }
-            distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
-                                                                        target_phantom.location);
+            return GetPathDistance(packed_path, source_phantom, target_phantom);
         }
         return distance;
+    }
+
+    // Requires the heaps for be empty
+    // If heaps should be adjusted to be initialized outside of this function,
+    // the addition of force_loop parameters might be required
+    double GetNetworkDistance(SearchEngineData::QueryHeap &forward_heap,
+                              SearchEngineData::QueryHeap &reverse_heap,
+                              const PhantomNode &source_phantom,
+                              const PhantomNode &target_phantom) const
+    {
+        BOOST_ASSERT(forward_heap.Empty());
+        BOOST_ASSERT(reverse_heap.Empty());
+
+        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.forward_node_id,
+                                -source_phantom.GetForwardWeightPlusOffset(),
+                                source_phantom.forward_node_id);
+        }
+        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            forward_heap.Insert(source_phantom.reverse_node_id,
+                                -source_phantom.GetReverseWeightPlusOffset(),
+                                source_phantom.reverse_node_id);
+        }
+
+        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.forward_node_id,
+                                target_phantom.GetForwardWeightPlusOffset(),
+                                target_phantom.forward_node_id);
+        }
+        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        {
+            reverse_heap.Insert(target_phantom.reverse_node_id,
+                                target_phantom.GetReverseWeightPlusOffset(),
+                                target_phantom.reverse_node_id);
+        }
+
+        const bool constexpr DO_NOT_FORCE_LOOPS =
+            false; // prevents forcing of loops, since offsets are set correctly
+
+        int duration = INVALID_EDGE_WEIGHT;
+        std::vector<NodeID> packed_path;
+        Search(forward_heap, reverse_heap, duration, packed_path, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+
+        if (duration == INVALID_EDGE_WEIGHT)
+        {
+            return std::numeric_limits<double>::max();
+        }
+
+        return GetPathDistance(packed_path, source_phantom, target_phantom);
     }
 };
 }
