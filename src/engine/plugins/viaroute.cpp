@@ -87,7 +87,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     if (raw_route.is_valid())
     {
         api::RouteAPI route_api{BasePlugin::facade, route_parameters};
-        route_api.MakeResponse(raw_route, json_result, &route_parameters.coordinates);
+        route_api.MakeResponse(raw_route, json_result);
     }
     else
     {
