@@ -37,9 +37,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                      const PhantomNode &source_node,
                                      const PhantomNode &target_node,
                                      const bool source_traversed_in_reverse,
-                                     const bool target_traversed_in_reverse,
-                                     boost::optional<util::Coordinate> source_location,
-                                     boost::optional<util::Coordinate> target_location)
+                                     const bool target_traversed_in_reverse)
 {
     const auto source_duration =
         (source_traversed_in_reverse ? source_node.GetReverseWeightPlusOffset()
@@ -62,10 +60,11 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
 
     std::size_t segment_index = 0;
     const auto initial_modifier =
-        (source_location && leg_geometry.locations.size() >= 2)
+        leg_geometry.locations.size() >= 3
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  source_location.get(), *(leg_geometry.locations.begin()),
-                  *(leg_geometry.locations.begin() + 1)))
+                  leg_geometry.locations[0],
+                  leg_geometry.locations[1],
+                  leg_geometry.locations[2]))
             : extractor::guidance::DirectionModifier::UTurn;
 
     if (leg_data.size() > 0)
@@ -122,10 +121,11 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
     const auto final_modifier =
-        (target_location && leg_geometry.locations.size() >= 2)
+        leg_geometry.locations.size() >= 3
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  *(leg_geometry.locations.end() - 2), *(leg_geometry.locations.end() - 1),
-                  target_location.get()))
+                  leg_geometry.locations[leg_geometry.locations.size() - 3],
+                  leg_geometry.locations[leg_geometry.locations.size() - 2],
+                  leg_geometry.locations[leg_geometry.locations.size() - 1]))
             : extractor::guidance::DirectionModifier::UTurn;
     // This step has length zero, the only reason we need it is the target location
     steps.push_back(RouteStep{
