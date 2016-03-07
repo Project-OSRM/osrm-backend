@@ -42,8 +42,16 @@ enum TurnType // at the moment we can support 32 turn types, without increasing 
     NewName,                // no turn, but name changes
     Continue,               // remain on a street
     Turn,                   // basic turn
+    FirstTurn,              // First of x turns
+    SecondTurn,             // Second of x turns
+    ThirdTurn,              // Third of x turns
+    FourthTurn,             // Fourth of x turns
     Merge,                  // merge onto a street
     Ramp,                   // special turn (highway ramp exits)
+    FirstRamp,              // first turn onto a ramp
+    SecondRamp,             // second turn onto a ramp
+    ThirdRamp,              // third turn onto a ramp
+    FourthRamp,             // fourth turn onto a ramp
     Fork,                   // fork road splitting up
     EndOfRoad,              // T intersection
     EnterRoundabout,        // Entering a small Roundabout
