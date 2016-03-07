@@ -200,8 +200,6 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     // get scc components
     SCC_Component scc = SplitUnaccessibleLocations(number_of_locations, result_table);
 
-    using NodeIDIterator = typename std::vector<NodeID>::const_iterator;
-
     std::vector<std::vector<NodeID>> trips;
     trips.reserve(scc.GetNumberOfComponents());
     // run Trip computation for every SCC
@@ -212,25 +210,26 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
         BOOST_ASSERT_MSG(component_size > 0, "invalid component size");
 
         std::vector<NodeID> scc_route;
-        NodeIDIterator start = std::begin(scc.component) + scc.range[k];
-        NodeIDIterator end = std::begin(scc.component) + scc.range[k + 1];
+        auto route_begin = std::begin(scc.component) + scc.range[k];
+        auto route_end = std::begin(scc.component) + scc.range[k + 1];
 
         if (component_size > 1)
         {
 
             if (component_size < BF_MAX_FEASABLE)
             {
-                scc_route = trip::BruteForceTrip(start, end, number_of_locations, result_table);
+                scc_route =
+                    trip::BruteForceTrip(route_begin, route_end, number_of_locations, result_table);
             }
             else
             {
-                scc_route =
-                    trip::FarthestInsertionTrip(start, end, number_of_locations, result_table);
+                scc_route = trip::FarthestInsertionTrip(route_begin, route_end, number_of_locations,
+                                                        result_table);
             }
         }
         else
         {
-            scc_route = std::vector<NodeID>(start, end);
+            scc_route = std::vector<NodeID>(route_begin, route_end);
         }
 
         trips.push_back(std::move(scc_route));
