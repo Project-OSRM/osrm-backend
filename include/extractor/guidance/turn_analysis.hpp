@@ -99,14 +99,6 @@ std::vector<TurnCandidate> handleRoundabouts(const NodeID from,
                                              std::vector<TurnCandidate> turn_candidates,
                                              const util::NodeBasedDynamicGraph &node_based_graph);
 
-// A Basic junction is a junction not requiring special treatment. It cannot contain anything
-// but streets of lesser priority than trunks and ramps (of any type). No roundabouts or motorway
-// like types.
-bool isBasicJunction(const NodeID from,
-                     const EdgeID via_edge,
-                     const std::vector<TurnCandidate> &turn_candidates,
-                     const util::NodeBasedDynamicGraph &node_based_graph);
-
 // Indicates a Junction containing a motoryway
 bool isMotorwayJunction(const NodeID from,
                         const EdgeID via_edge,
@@ -121,7 +113,8 @@ TurnType findBasicTurnType(const NodeID from,
 
 // Get the Instruction for an obvious turn
 // Instruction will be a silent instruction
-TurnInstruction getInstructionForObvious(const NodeID from,
+TurnInstruction getInstructionForObvious(const std::size_t number_of_candidates,
+                                         const NodeID from,
                                          const EdgeID via_edge,
                                          const TurnCandidate &candidate,
                                          const util::NodeBasedDynamicGraph &node_based_graph);
