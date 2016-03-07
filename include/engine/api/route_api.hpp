@@ -37,23 +37,21 @@ class RouteAPI : public BaseAPI
     }
 
     void MakeResponse(const InternalRouteResult &raw_route,
-                      util::json::Object &response,
-                      const std::vector<util::Coordinate> *const locations) const
+                      util::json::Object &response) const
     {
         auto number_of_routes = raw_route.has_alternative() ? 2UL : 1UL;
         util::json::Array routes;
         routes.values.resize(number_of_routes);
         routes.values[0] =
             MakeRoute(raw_route.segment_end_coordinates, raw_route.unpacked_path_segments,
-                      raw_route.source_traversed_in_reverse, raw_route.target_traversed_in_reverse,
-                      locations);
+                      raw_route.source_traversed_in_reverse, raw_route.target_traversed_in_reverse);
         if (raw_route.has_alternative())
         {
             std::vector<std::vector<PathData>> wrapped_leg(1);
             wrapped_leg.front() = std::move(raw_route.unpacked_alternative);
             routes.values[1] = MakeRoute(raw_route.segment_end_coordinates, wrapped_leg,
                                          raw_route.alt_source_traversed_in_reverse,
-                                         raw_route.alt_target_traversed_in_reverse, locations);
+                                         raw_route.alt_target_traversed_in_reverse);
         }
         response.values["waypoints"] = BaseAPI::MakeWaypoints(raw_route.segment_end_coordinates);
         response.values["routes"] = std::move(routes);
@@ -76,8 +74,7 @@ class RouteAPI : public BaseAPI
     util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
                                  std::vector<std::vector<PathData>> unpacked_path_segments,
                                  const std::vector<bool> &source_traversed_in_reverse,
-                                 const std::vector<bool> &target_traversed_in_reverse,
-                                 const std::vector<util::Coordinate> *const locations) const
+                                 const std::vector<bool> &target_traversed_in_reverse) const
     {
         std::vector<guidance::RouteLeg> legs;
         std::vector<guidance::LegGeometry> leg_geometries;
@@ -86,7 +83,6 @@ class RouteAPI : public BaseAPI
         leg_geometries.reserve(number_of_legs);
 
         unpacked_path_segments = guidance::postProcess(std::move(unpacked_path_segments));
-        BOOST_ASSERT(locations->size() == number_of_legs + 1);
         for (auto idx : util::irange(0UL, number_of_legs))
         {
             const auto &phantoms = segment_end_coordinates[idx];
@@ -103,17 +99,9 @@ class RouteAPI : public BaseAPI
 
             if (parameters.steps)
             {
-                const auto getLoc = [](const std::vector<util::Coordinate> *const locations,
-                                       int idx) -> boost::optional<util::Coordinate>
-                {
-                    if (locations)
-                        return (*locations)[idx];
-                    return {};
-                };
                 leg.steps = guidance::assembleSteps(
                     BaseAPI::facade, path_data, leg_geometry, phantoms.source_phantom,
-                    phantoms.target_phantom, reversed_source, reversed_target,
-                    getLoc(locations, idx), getLoc(locations, idx + 1));
+                    phantoms.target_phantom, reversed_source, reversed_target);
                 ;
             }
 
