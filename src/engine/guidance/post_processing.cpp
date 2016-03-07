@@ -23,7 +23,7 @@ namespace detail
 bool canMergeTrivially(const PathData &destination, const PathData &source)
 {
     return destination.exit == 0 && destination.name_id == source.name_id &&
-           destination.travel_mode == source.travel_mode && isSilent(destination.turn_instruction);
+           destination.travel_mode == source.travel_mode && isSilent(source.turn_instruction);
 }
 
 PathData forwardInto(PathData destination, const PathData &source)
