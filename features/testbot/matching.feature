@@ -18,6 +18,20 @@ Feature: Basic Map Matching
             | trace | timestamps | matchings |
             | abcd  | 0 1 62 63  | ab,cd     |
 
+    Scenario: Testbot - Map matching with core factor
+        Given the contract extra arguments "--core 0.8"
+        Given the node map
+            | a | b | c | d |
+            |   |   | e |   |
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings |
+            | abcd  | 0 1 2 3    | abcd      |
+
     Scenario: Testbot - Map matching with small distortion
         Given the node map
             | a | b | c | d | e |

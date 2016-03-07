@@ -15,6 +15,20 @@ Feature: Via points
         When I route I should get
             | waypoints | route   |
             | a,b,c     | abc,abc |
+
+    Scenario: Simple via point with core factor
+        Given the contract extra arguments "--core 0.8"
+        Given the node map
+            | a | b | c |
+
+        And the ways
+            | nodes |
+            | abc   |
+
+        When I route I should get
+            | waypoints | route   |
+            | a,b,c     | abc,abc |
+            | c,b,a     | abc,abc |
             | c,b,a     | abc,abc |
 
     Scenario: Via point at a dead end
