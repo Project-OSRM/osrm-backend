@@ -500,9 +500,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 std::int32_t &distance,
                 std::vector<NodeID> &packed_leg,
                 const bool force_loop_forward,
-                const bool force_loop_reverse) const
+                const bool force_loop_reverse,
+                const int duration_uppder_bound=INVALID_EDGE_WEIGHT) const
     {
         NodeID middle = SPECIAL_NODEID;
+        distance = duration_uppder_bound;
 
         // get offset to account for offsets on phantom nodes on compressed edges
         const auto min_edge_offset = std::min(0, forward_heap.MinKey());
@@ -527,8 +529,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
 
         // No path found for both target nodes?
-        if (INVALID_EDGE_WEIGHT == distance || SPECIAL_NODEID == middle)
+        if (duration_uppder_bound <= distance || SPECIAL_NODEID == middle)
         {
+            distance = INVALID_EDGE_WEIGHT;
             return;
         }
 
@@ -567,10 +570,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                         int &distance,
                         std::vector<NodeID> &packed_leg,
                         const bool force_loop_forward,
-                        const bool force_loop_reverse) const
+                        const bool force_loop_reverse,
+                        int duration_uppder_bound = INVALID_EDGE_WEIGHT) const
     {
         NodeID middle = SPECIAL_NODEID;
-        distance = INVALID_EDGE_WEIGHT;
+        distance = duration_uppder_bound;
 
         std::vector<std::pair<NodeID, EdgeWeight>> forward_entry_points;
         std::vector<std::pair<NodeID, EdgeWeight>> reverse_entry_points;
@@ -678,8 +682,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
 
         // No path found for both target nodes?
-        if (INVALID_EDGE_WEIGHT == distance || SPECIAL_NODEID == middle)
+        if (duration_uppder_bound <= distance || SPECIAL_NODEID == middle)
         {
+            distance = INVALID_EDGE_WEIGHT;
             return;
         }
 
@@ -776,7 +781,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                       SearchEngineData::QueryHeap &forward_core_heap,
                                       SearchEngineData::QueryHeap &reverse_core_heap,
                                       const PhantomNode &source_phantom,
-                                      const PhantomNode &target_phantom) const
+                                      const PhantomNode &target_phantom,
+                                      int duration_uppder_bound=INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
@@ -813,7 +819,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         int duration = INVALID_EDGE_WEIGHT;
         std::vector<NodeID> packed_path;
         SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap, duration,
-                       packed_path, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+                       packed_path, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS, duration_uppder_bound);
 
         double distance = std::numeric_limits<double>::max();
         if (duration != INVALID_EDGE_WEIGHT)
@@ -829,7 +835,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     double GetNetworkDistance(SearchEngineData::QueryHeap &forward_heap,
                               SearchEngineData::QueryHeap &reverse_heap,
                               const PhantomNode &source_phantom,
-                              const PhantomNode &target_phantom) const
+                              const PhantomNode &target_phantom,
+                              int duration_uppder_bound=INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
@@ -865,7 +872,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         int duration = INVALID_EDGE_WEIGHT;
         std::vector<NodeID> packed_path;
-        Search(forward_heap, reverse_heap, duration, packed_path, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+        Search(forward_heap, reverse_heap, duration, packed_path, DO_NOT_FORCE_LOOPS,
+               DO_NOT_FORCE_LOOPS, duration_uppder_bound);
 
         if (duration == INVALID_EDGE_WEIGHT)
         {

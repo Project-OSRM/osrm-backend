@@ -40,6 +40,7 @@ using SubMatchingList = std::vector<SubMatching>;
 constexpr static const unsigned MAX_BROKEN_STATES = 10;
 constexpr static const double MAX_SPEED = 180 / 3.6; // 180km -> m/s
 constexpr static const unsigned SUSPICIOUS_DISTANCE_DELTA = 100;
+constexpr static const double MAX_DISTANCE_DELTA = 2000.;
 
 // implements a hidden markov model map matching algorithm
 template <class DataFacadeT>
@@ -102,7 +103,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
             else
             {
-                return std::numeric_limits<double>::max();
+                return MAX_DISTANCE_DELTA;
             }
         }();
 
@@ -200,6 +201,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
+            // assumes minumum of 0.1 m/s
+            const int duration_uppder_bound = ((haversine_distance + max_distance_delta) * 0.25) * 10;
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0u, prev_viterbi.size()))
@@ -224,7 +227,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     forward_heap.Clear();
                     reverse_heap.Clear();
 
-                    // get distance diff between loc1/2 and locs/s_prime
                     double network_distance;
                     if (super::facade->GetCoreSize() > 0)
                     {
@@ -233,7 +235,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         network_distance = super::GetNetworkDistanceWithCore(
                             forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
                             prev_unbroken_timestamps_list[s].phantom_node,
-                            current_timestamps_list[s_prime].phantom_node);
+                            current_timestamps_list[s_prime].phantom_node,
+                            duration_uppder_bound);
                     }
                     else
                     {
@@ -243,6 +246,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                             current_timestamps_list[s_prime].phantom_node);
                     }
 
+                    // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);
 
                     // very low probability transition -> prune
