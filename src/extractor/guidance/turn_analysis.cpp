@@ -75,7 +75,12 @@ std::vector<TurnCandidate> getTurns(const NodeID from,
     bool can_exit_roundabout = false;
     for (const auto &candidate : turn_candidates)
     {
-        if (node_based_graph.GetEdgeData(candidate.eid).roundabout)
+        const auto &edge_data = node_based_graph.GetEdgeData(candidate.eid);
+        //only check actual outgoing edges
+        if( edge_data.reversed )
+            continue;
+
+        if (edge_data.roundabout)
         {
             can_enter_roundabout = true;
         }
