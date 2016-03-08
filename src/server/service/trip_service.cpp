@@ -51,7 +51,7 @@ engine::Status TripService::RunQuery(std::string &query, ResultT &result)
         const auto position = std::distance(query.begin(), query_iterator);
         result = util::json::Object();
         auto &json_result = result.get<util::json::Object>();
-        json_result.values["code"] = "invalid-query";
+        json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
             "Query string malformed close to position " + std::to_string(position);
         return engine::Status::Error;
@@ -60,7 +60,7 @@ engine::Status TripService::RunQuery(std::string &query, ResultT &result)
 
     if (!parameters->IsValid())
     {
-        json_result.values["code"] = "invalid-options";
+        json_result.values["code"] = "InvalidOptions";
         json_result.values["message"] = getWrongOptionHelp(*parameters);
         return engine::Status::Error;
     }

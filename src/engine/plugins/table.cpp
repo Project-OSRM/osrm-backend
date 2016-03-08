@@ -36,12 +36,12 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
 
     if (!CheckAllCoordinates(params.coordinates))
     {
-        return Error("invalid-options", "Coordinates are invalid", result);
+        return Error("InvalidOptions", "Coordinates are invalid", result);
     }
 
     if (params.bearings.size() > 0 && params.coordinates.size() != params.bearings.size())
     {
-        return Error("invalid-options", "Number of bearings does not match number of coordinates",
+        return Error("InvalidOptions", "Number of bearings does not match number of coordinates",
                      result);
     }
 
@@ -50,7 +50,7 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
          static_cast<std::size_t>(max_locations_distance_table * max_locations_distance_table)))
     {
         return Error(
-            "invalid-options",
+            "InvalidOptions",
             "Number of entries " +
                 std::to_string(params.sources.size() * params.destinations.size()) +
                 " is higher than current maximum (" +
@@ -63,7 +63,7 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
 
     if (result_table.empty())
     {
-        return Error("no-table", "No table found", result);
+        return Error("NoTable", "No table found", result);
     }
 
     api::TableAPI table_api{facade, params};
