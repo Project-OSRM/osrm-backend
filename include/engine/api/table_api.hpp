@@ -17,6 +17,8 @@
 
 #include "util/integer_range.hpp"
 
+#include <boost/range/algorithm/transform.hpp>
+
 namespace osrm
 {
 namespace engine
@@ -72,13 +74,12 @@ class TableAPI final : public BaseAPI
         util::json::Array json_waypoints;
         json_waypoints.values.reserve(phantoms.size());
         BOOST_ASSERT(phantoms.size() == parameters.coordinates.size());
-        auto phantom_iter = phantoms.begin();
-        auto coordinate_iter = parameters.coordinates.begin();
-        for (; phantom_iter != phantoms.end() && coordinate_iter != parameters.coordinates.end();
-             ++phantom_iter, ++coordinate_iter)
-        {
-            json_waypoints.values.push_back(BaseAPI::MakeWaypoint(*coordinate_iter, *phantom_iter));
-        }
+
+        boost::range::transform(phantoms, std::back_inserter(json_waypoints.values),
+                                [this](const PhantomNode &phantom)
+                                {
+                                    return BaseAPI::MakeWaypoint(phantom);
+                                });
         return json_waypoints;
     }
 
@@ -87,12 +88,12 @@ class TableAPI final : public BaseAPI
     {
         util::json::Array json_waypoints;
         json_waypoints.values.reserve(indices.size());
-        for (auto idx : indices)
-        {
-            BOOST_ASSERT(idx < phantoms.size() && idx < parameters.coordinates.size());
-            json_waypoints.values.push_back(
-                BaseAPI::MakeWaypoint(parameters.coordinates[idx], phantoms[idx]));
-        }
+        boost::range::transform(indices, std::back_inserter(json_waypoints.values),
+                                [this, phantoms](const std::size_t idx)
+                                {
+                                    BOOST_ASSERT(idx < phantoms.size());
+                                    return BaseAPI::MakeWaypoint(phantoms[idx]);
+                                });
         return json_waypoints;
     }
 

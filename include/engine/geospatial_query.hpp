@@ -244,8 +244,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, bearing, bearing_range, &has_big_component,
-             &has_small_component](const EdgeData &data)
+            [this, bearing, bearing_range, &has_big_component, &has_small_component](
+                const EdgeData &data)
             {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !data.component.is_tiny));
@@ -290,8 +290,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, bearing, bearing_range, &has_big_component,
-             &has_small_component](const EdgeData &data)
+            [this, bearing, bearing_range, &has_big_component, &has_small_component](
+                const EdgeData &data)
             {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !data.component.is_tiny));
@@ -393,10 +393,14 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             reverse_weight *= 1.0 - ratio;
         }
 
-        auto transformed =
-            PhantomNodeWithDistance{PhantomNode{data, forward_weight, forward_offset,
-                                                reverse_weight, reverse_offset, point_on_segment},
-                                    current_perpendicular_distance};
+        auto transformed = PhantomNodeWithDistance{PhantomNode{data,
+                                                               forward_weight,
+                                                               forward_offset,
+                                                               reverse_weight,
+                                                               reverse_offset,
+                                                               point_on_segment,
+                                                               input_coordinate},
+                                                   current_perpendicular_distance};
 
         return transformed;
     }

@@ -43,16 +43,13 @@ namespace engine
 // Is returned as a temporary identifier for snapped coodinates
 struct Hint
 {
-    util::Coordinate input_coordinate;
     PhantomNode phantom;
     std::uint32_t data_checksum;
 
     template <typename DataFacadeT>
     bool IsValid(const util::Coordinate new_input_coordinates, DataFacadeT &facade) const
     {
-        auto is_same_input_coordinate = new_input_coordinates.lon == input_coordinate.lon &&
-                                        new_input_coordinates.lat == input_coordinate.lat;
-        return is_same_input_coordinate && phantom.IsValid(facade.GetNumberOfNodes()) &&
+        return phantom.IsValid(facade.GetNumberOfNodes(), new_input_coordinates) &&
                facade.GetCheckSum() == data_checksum;
     }
 
