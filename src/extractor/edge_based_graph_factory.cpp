@@ -302,6 +302,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
+    guidance::TurnAnalysis turn_analysis( *m_node_based_graph, m_node_info_list,
+                                       *m_restriction_map, m_barrier_nodes, m_compressed_edge_container );
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         // progress.printStatus(node_u);
@@ -313,9 +315,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }
 
             ++node_based_edge_counter;
-            auto turn_candidates =
-                guidance::getTurns(node_u, edge_from_u, *m_node_based_graph, m_node_info_list,
-                                   *m_restriction_map, m_barrier_nodes, m_compressed_edge_container);
+            auto turn_candidates = turn_analysis.getTurns(node_u, edge_from_u);
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
 
