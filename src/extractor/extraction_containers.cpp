@@ -627,7 +627,7 @@ void ExtractionContainers::PrepareRestrictions()
         if (way_start_and_end_iterator->way_id >
             OSMWayID(restrictions_iterator->restriction.from.way))
         {
-            util::SimpleLogger().Write(LogLevel::logDEBUG)
+            util::SimpleLogger().Write(LogLevel::logWARNING)
                 << "Restriction references invalid way: "
                 << restrictions_iterator->restriction.from.way;
             restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
@@ -644,7 +644,7 @@ void ExtractionContainers::PrepareRestrictions()
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
         if (via_id_iter == external_to_internal_node_id_map.end())
         {
-            util::SimpleLogger().Write(LogLevel::logDEBUG)
+            util::SimpleLogger().Write(LogLevel::logWARNING)
                 << "Restriction references invalid node: "
                 << restrictions_iterator->restriction.via.node;
             restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
@@ -657,7 +657,16 @@ void ExtractionContainers::PrepareRestrictions()
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
                 OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
-            BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
+            if (id_iter == external_to_internal_node_id_map.end())
+            {
+                util::SimpleLogger().Write(LogLevel::logWARNING)
+                    << "Way references invalid node: "
+                    << way_start_and_end_iterator->first_segment_target_id;
+                restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
+                ++restrictions_iterator;
+                ++way_start_and_end_iterator;
+                continue;
+            }
             restrictions_iterator->restriction.from.node = id_iter->second;
         }
         else if (OSMNodeID(way_start_and_end_iterator->last_segment_target_id) == via_node_id)
@@ -665,7 +674,16 @@ void ExtractionContainers::PrepareRestrictions()
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
                 OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
-            BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
+            if (id_iter == external_to_internal_node_id_map.end())
+            {
+                util::SimpleLogger().Write(LogLevel::logWARNING)
+                    << "Way references invalid node: "
+                    << way_start_and_end_iterator->last_segment_target_id;
+                restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
+                ++restrictions_iterator;
+                ++way_start_and_end_iterator;
+                continue;
+            }
             restrictions_iterator->restriction.from.node = id_iter->second;
         }
         ++restrictions_iterator;
@@ -726,14 +744,32 @@ void ExtractionContainers::PrepareRestrictions()
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
                 OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
-            BOOST_ASSERT(to_id_iter != external_to_internal_node_id_map.end());
+            if (to_id_iter == external_to_internal_node_id_map.end())
+            {
+                util::SimpleLogger().Write(LogLevel::logWARNING)
+                    << "Way references invalid node: "
+                    << way_start_and_end_iterator->first_segment_source_id;
+                restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
+                ++restrictions_iterator;
+                ++way_start_and_end_iterator;
+                continue;
+            }
             restrictions_iterator->restriction.to.node = to_id_iter->second;
         }
         else if (OSMNodeID(way_start_and_end_iterator->last_segment_target_id) == via_node_id)
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
                 OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
-            BOOST_ASSERT(to_id_iter != external_to_internal_node_id_map.end());
+            if (to_id_iter == external_to_internal_node_id_map.end())
+            {
+                util::SimpleLogger().Write(LogLevel::logWARNING)
+                    << "Way references invalid node: "
+                    << way_start_and_end_iterator->last_segment_source_id;
+                restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
+                ++restrictions_iterator;
+                ++way_start_and_end_iterator;
+                continue;
+            }
             restrictions_iterator->restriction.to.node = to_id_iter->second;
         }
         ++restrictions_iterator;
