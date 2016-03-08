@@ -10,7 +10,6 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/json_logger.hpp"
 #include "util/for_each_pair.hpp"
-#include "util/matching_debug_info.hpp"
 
 #include <cstddef>
 
@@ -162,9 +161,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             return sub_matchings;
         }
 
-        util::MatchingDebugInfo matching_debug(util::json::Logger::get());
-        matching_debug.initialize(candidates_list);
-
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
@@ -297,10 +293,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const double transition_pr = transition_log_probability(d_t);
                     new_value += transition_pr;
 
-                    matching_debug.add_transition_info(prev_unbroken_timestamp, t, s, s_prime,
-                                                       prev_viterbi[s], emission_pr, transition_pr,
-                                                       network_distance, haversine_distance);
-
                     if (new_value > current_viterbi[s_prime])
                     {
                         current_viterbi[s_prime] = new_value;
@@ -329,8 +321,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 prev_unbroken_timestamps.push_back(t);
             }
         }
-
-        matching_debug.set_viterbi(model.viterbi, model.pruned);
 
         if (!prev_unbroken_timestamps.empty())
         {
@@ -406,8 +396,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 matching.nodes.push_back(
                     candidates_list[timestamp_index][location_index].phantom_node);
                 matching_distance += model.path_distances[timestamp_index][location_index];
-
-                matching_debug.add_chosen(timestamp_index, location_index);
             }
             util::for_each_pair(
                 reconstructed_indices, [&trace_distance, &trace_coordinates](
@@ -423,7 +411,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             sub_matchings.push_back(matching);
             sub_matching_begin = sub_matching_end;
         }
-        matching_debug.add_breakage(model.breakage);
 
         return sub_matchings;
     }
