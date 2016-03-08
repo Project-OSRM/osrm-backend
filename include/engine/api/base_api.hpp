@@ -8,6 +8,7 @@
 #include "engine/hint.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/range/algorithm/transform.hpp>
 
 #include <vector>
 
@@ -33,24 +34,22 @@ class BaseAPI
 
         util::json::Array waypoints;
         waypoints.values.resize(parameters.coordinates.size());
-        waypoints.values[0] = MakeWaypoint(parameters.coordinates.front(),
-                                           segment_end_coordinates.front().source_phantom);
+        waypoints.values[0] = MakeWaypoint(segment_end_coordinates.front().source_phantom);
 
-        auto coord_iter = std::next(parameters.coordinates.begin());
         auto out_iter = std::next(waypoints.values.begin());
-        for (const auto &phantoms : segment_end_coordinates)
-        {
-            *out_iter++ = MakeWaypoint(*coord_iter++, phantoms.target_phantom);
-        }
+        boost::range::transform(segment_end_coordinates, out_iter,
+                                [this](const PhantomNodes &phantom_pair)
+                                {
+                                    return MakeWaypoint(phantom_pair.target_phantom);
+                                });
         return waypoints;
     }
 
   protected:
-    util::json::Object MakeWaypoint(const util::Coordinate input_coordinate,
-                                    const PhantomNode &phantom) const
+    util::json::Object MakeWaypoint(const PhantomNode &phantom) const
     {
         return json::makeWaypoint(phantom.location, facade.get_name_for_id(phantom.name_id),
-                                  Hint{input_coordinate, phantom, facade.GetCheckSum()});
+                                  Hint{phantom, facade.GetCheckSum()});
     }
 
     const datafacade::BaseDataFacade &facade;
