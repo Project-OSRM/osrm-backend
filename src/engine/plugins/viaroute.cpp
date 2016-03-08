@@ -34,7 +34,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     if (max_locations_viaroute > 0 &&
         (static_cast<int>(route_parameters.coordinates.size()) > max_locations_viaroute))
     {
-        return Error("too-big",
+        return Error("TooBig",
                      "Number of entries " + std::to_string(route_parameters.coordinates.size()) +
                          " is higher than current maximum (" +
                          std::to_string(max_locations_viaroute) + ")",
@@ -43,13 +43,13 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
     if (!CheckAllCoordinates(route_parameters.coordinates))
     {
-        return Error("invalid-value", "Invalid coordinate value.", json_result);
+        return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
     auto phantom_node_pairs = GetPhantomNodes(route_parameters);
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
-        return Error("no-segment",
+        return Error("NoSegment",
                      std::string("Could not find a matching segment for coordinate ") +
                          std::to_string(phantom_node_pairs.size()),
                      json_result);
@@ -100,11 +100,11 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
         if (not_in_same_component)
         {
-            return Error("no-route", "Impossible route between points", json_result);
+            return Error("NoRoute", "Impossible route between points", json_result);
         }
         else
         {
-            return Error("no-route", "No route found between points", json_result);
+            return Error("NoRoute", "No route found between points", json_result);
         }
     }
 

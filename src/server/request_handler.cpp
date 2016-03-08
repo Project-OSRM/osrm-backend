@@ -107,7 +107,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
             current_reply.status = http::reply::bad_request;
             result = util::json::Object();
             auto &json_result = result.get<util::json::Object>();
-            json_result.values["code"] = "invalid-url";
+            json_result.values["code"] = "InvalidUrl";
             json_result.values["message"] = "URL string malformed close to position " +
                                             std::to_string(position) + ": \"" + context + "\"";
         }
