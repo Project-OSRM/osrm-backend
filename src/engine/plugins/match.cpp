@@ -47,6 +47,10 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         }
 
         auto &candidates = candidates_lists[current_coordinate];
+        if (candidates.empty())
+        {
+            continue;
+        }
 
         // sort by forward id, then by reverse id and then by distance
         std::sort(
@@ -144,11 +148,14 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     auto candidates_lists = GetPhantomNodesInRange(parameters, search_radiuses);
 
     filterCandidates(parameters.coordinates, candidates_lists);
-    if (candidates_lists.size() != parameters.coordinates.size())
+    if (std::all_of(candidates_lists.begin(), candidates_lists.end(),
+                    [](const std::vector<PhantomNodeWithDistance> &candidates)
+                    {
+                        return candidates.empty();
+                    }))
     {
-        BOOST_ASSERT(candidates_lists.size() < parameters.coordinates.size());
-        return Error("NoSegment", std::string("Could not find a matching segment for coordinate ") +
-                                      std::to_string(candidates_lists.size()),
+        return Error("NoSegment",
+                     std::string("Could not find a matching segment for any coordinate."),
                      json_result);
     }
 
