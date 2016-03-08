@@ -68,7 +68,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
     if (1 == raw_route.segment_end_coordinates.size())
     {
-        if (route_parameters.alternative)
+        if (route_parameters.alternatives)
         {
             alternative_path(raw_route.segment_end_coordinates.front(), raw_route);
         }
