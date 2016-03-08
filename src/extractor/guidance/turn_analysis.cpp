@@ -905,7 +905,7 @@ std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
     {
         if (turn_candidates[1].valid && turn_candidates[2].valid)
         {
-            if (TurnType::Turn ==
+            if (TurnType::Ramp !=
                 findBasicTurnType(from, via_edge, turn_candidates[1], node_based_graph))
             {
                 if (angularDeviation(turn_candidates[1].angle, STRAIGHT_ANGLE) <
@@ -927,7 +927,7 @@ std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
             else
                 turn_candidates[1].instruction = {TurnType::Ramp, DirectionModifier::SlightRight};
 
-            if (TurnType::Turn ==
+            if (TurnType::Ramp !=
                 findBasicTurnType(from, via_edge, turn_candidates[2], node_based_graph))
             {
                 if (angularDeviation(turn_candidates[2].angle, STRAIGHT_ANGLE) <
