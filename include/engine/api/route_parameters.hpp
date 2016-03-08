@@ -30,18 +30,18 @@ struct RouteParameters : public BaseParameters
 
     template <typename... Args>
     RouteParameters(const bool steps_,
-                    const bool alternative_,
+                    const bool alternatives_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
                     std::vector<boost::optional<bool>> uturns_,
                     Args... args_)
-        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternative{alternative_},
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           geometries{geometries_}, overview{overview_}, uturns{std::move(uturns_)}
     {
     }
 
     bool steps = true;
-    bool alternative = true;
+    bool alternatives = true;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
     std::vector<boost::optional<bool>> uturns;
