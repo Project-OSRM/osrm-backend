@@ -173,7 +173,7 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     auto phantom_node_pairs = GetPhantomNodes(parameters);
     if (phantom_node_pairs.size() != parameters.coordinates.size())
     {
-        return Error("no-segment",
+        return Error("NoSegment",
                      std::string("Could not find a matching segment for coordinate ") +
                          std::to_string(phantom_node_pairs.size()),
                      json_result);

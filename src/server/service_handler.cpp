@@ -33,7 +33,7 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
     {
         result = util::json::Object();
         auto &json_result = result.get<util::json::Object>();
-        json_result.values["code"] = "invalid-service";
+        json_result.values["code"] = "InvalidService";
         json_result.values["message"] = "Service " + parsed_url.service + " not found!";
         return engine::Status::Error;
     }
@@ -43,7 +43,7 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
     {
         result = util::json::Object();
         auto &json_result = result.get<util::json::Object>();
-        json_result.values["code"] = "invalid-version";
+        json_result.values["code"] = "InvalidVersion";
         json_result.values["message"] = "Service " + parsed_url.service + " not found!";
         return engine::Status::Error;
     }
