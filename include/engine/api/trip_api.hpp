@@ -36,10 +36,10 @@ class TripAPI final : public RouteAPI
         BOOST_ASSERT(sub_trips.size() == sub_routes.size());
         for (auto index : util::irange<std::size_t>(0UL, sub_trips.size()))
         {
-            auto route = MakeRoute(
-                sub_routes[index].segment_end_coordinates, sub_routes[index].unpacked_path_segments,
-                sub_routes[index].source_traversed_in_reverse,
-                sub_routes[index].target_traversed_in_reverse);
+            auto route = MakeRoute(sub_routes[index].segment_end_coordinates,
+                                   sub_routes[index].unpacked_path_segments,
+                                   sub_routes[index].source_traversed_in_reverse,
+                                   sub_routes[index].target_traversed_in_reverse);
             routes.values.push_back(std::move(route));
         }
         response.values["waypoints"] = MakeWaypoints(sub_trips, phantoms);
@@ -90,8 +90,7 @@ class TripAPI final : public RouteAPI
             auto trip_index = input_idx_to_trip_idx[input_index];
             BOOST_ASSERT(!trip_index.NotUsed());
 
-            auto waypoint =
-                BaseAPI::MakeWaypoint(parameters.coordinates[input_index], phantoms[input_index]);
+            auto waypoint = BaseAPI::MakeWaypoint(phantoms[input_index]);
             waypoint.values["trips_index"] = trip_index.sub_trip_index;
             waypoint.values["waypoint_index"] = trip_index.point_index;
             waypoints.values.push_back(std::move(waypoint));
