@@ -106,15 +106,13 @@ bool isMotorwayJunction(const NodeID from,
                         const util::NodeBasedDynamicGraph &node_based_graph);
 
 // Decide whether a turn is a turn or a ramp access
-TurnType findBasicTurnType(const NodeID from,
-                           const EdgeID via_edge,
+TurnType findBasicTurnType(const EdgeID via_edge,
                            const TurnCandidate &candidate,
                            const util::NodeBasedDynamicGraph &node_based_graph);
 
 // Get the Instruction for an obvious turn
 // Instruction will be a silent instruction
 TurnInstruction getInstructionForObvious(const std::size_t number_of_candidates,
-                                         const NodeID from,
                                          const EdgeID via_edge,
                                          const TurnCandidate &candidate,
                                          const util::NodeBasedDynamicGraph &node_based_graph);
