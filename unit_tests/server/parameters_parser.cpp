@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&overview=foo"),
         22L);
     BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&alternative=foo"),
+        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&alternatives=foo"),
         22UL);
 }
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     auto result_1 = api::parseParameters<engine::api::RouteParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
     BOOST_CHECK_EQUAL(reference_1.steps, result_1->steps);
-    BOOST_CHECK_EQUAL(reference_1.alternative, result_1->alternative);
+    BOOST_CHECK_EQUAL(reference_1.alternatives, result_1->alternatives);
     BOOST_CHECK_EQUAL(reference_1.geometries, result_1->geometries);
     BOOST_CHECK_EQUAL(reference_1.overview, result_1->overview);
     CHECK_EQUAL_RANGE(reference_1.uturns, result_1->uturns);
@@ -140,10 +140,10 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     engine::api::RouteParameters reference_2{};
     reference_2.coordinates = coords_1;
     auto result_2 = api::parseParameters<engine::api::RouteParameters>(
-        "1,2;3,4?steps=true&alternative=true&geometries=polyline&overview=simplified");
+        "1,2;3,4?steps=true&alternatives=true&geometries=polyline&overview=simplified");
     BOOST_CHECK(result_2);
     BOOST_CHECK_EQUAL(reference_2.steps, result_2->steps);
-    BOOST_CHECK_EQUAL(reference_2.alternative, result_2->alternative);
+    BOOST_CHECK_EQUAL(reference_2.alternatives, result_2->alternatives);
     BOOST_CHECK_EQUAL(reference_2.geometries, result_2->geometries);
     BOOST_CHECK_EQUAL(reference_2.overview, result_2->overview);
     CHECK_EQUAL_RANGE(reference_2.uturns, result_2->uturns);
@@ -157,11 +157,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         engine::api::RouteParameters::OverviewType::False, uturns_3};
     reference_3.coordinates = coords_1;
     auto result_3 = api::parseParameters<engine::api::RouteParameters>(
-        "1,2;3,4?steps=false&alternative=false&geometries=geojson&overview=false&uturns=true;"
+        "1,2;3,4?steps=false&alternatives=false&geometries=geojson&overview=false&uturns=true;"
         "false;");
     BOOST_CHECK(result_3);
     BOOST_CHECK_EQUAL(reference_3.steps, result_3->steps);
-    BOOST_CHECK_EQUAL(reference_3.alternative, result_3->alternative);
+    BOOST_CHECK_EQUAL(reference_3.alternatives, result_3->alternatives);
     BOOST_CHECK_EQUAL(reference_3.geometries, result_3->geometries);
     BOOST_CHECK_EQUAL(reference_3.overview, result_3->overview);
     CHECK_EQUAL_RANGE(reference_3.uturns, result_3->uturns);
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         "3wEAAAYAAAAQAAAAB4AAABAAAAAoUYBAJ4AAADlcCEDSefMAAMAAQGLSzmR");
     BOOST_CHECK(result_4);
     BOOST_CHECK_EQUAL(reference_4.steps, result_4->steps);
-    BOOST_CHECK_EQUAL(reference_4.alternative, result_4->alternative);
+    BOOST_CHECK_EQUAL(reference_4.alternatives, result_4->alternatives);
     BOOST_CHECK_EQUAL(reference_4.geometries, result_4->geometries);
     BOOST_CHECK_EQUAL(reference_4.overview, result_4->overview);
     CHECK_EQUAL_RANGE(reference_4.uturns, result_4->uturns);
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         "1,2;3,4?steps=false&bearings=;200,10;100,5");
     BOOST_CHECK(result_5);
     BOOST_CHECK_EQUAL(reference_5.steps, result_5->steps);
-    BOOST_CHECK_EQUAL(reference_5.alternative, result_5->alternative);
+    BOOST_CHECK_EQUAL(reference_5.alternatives, result_5->alternatives);
     BOOST_CHECK_EQUAL(reference_5.geometries, result_5->geometries);
     BOOST_CHECK_EQUAL(reference_5.overview, result_5->overview);
     CHECK_EQUAL_RANGE(reference_5.uturns, result_5->uturns);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         api::parseParameters<engine::api::RouteParameters>("polyline(_ibE?_seK_seK_seK_seK)");
     BOOST_CHECK(result_6);
     BOOST_CHECK_EQUAL(reference_6.steps, result_6->steps);
-    BOOST_CHECK_EQUAL(reference_6.alternative, result_6->alternative);
+    BOOST_CHECK_EQUAL(reference_6.alternatives, result_6->alternatives);
     BOOST_CHECK_EQUAL(reference_6.geometries, result_6->geometries);
     BOOST_CHECK_EQUAL(reference_6.overview, result_6->overview);
     CHECK_EQUAL_RANGE(reference_6.uturns, result_6->uturns);
