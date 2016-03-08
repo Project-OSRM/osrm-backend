@@ -1,18 +1,12 @@
 #ifndef ENGINE_HINT_HPP
 #define ENGINE_HINT_HPP
 
-#include "engine/object_encoder.hpp"
 #include "engine/phantom_node.hpp"
 
 #include "util/coordinate.hpp"
-#include "phantom_node.hpp"
-
-#include <boost/assert.hpp>
-
-#include <cstdint>
-#include <cmath>
 
 #include <string>
+#include <cstdint>
 
 namespace osrm
 {
@@ -35,17 +29,8 @@ struct Hint
                facade.GetCheckSum() == data_checksum;
     }
 
-    std::string ToBase64() const { return encodeBase64(*this); }
-
-    static Hint FromBase64(const std::string &base64Hint)
-    {
-        BOOST_ASSERT_MSG(base64Hint.size() ==
-                             static_cast<std::size_t>(std::ceil(sizeof(Hint) / 3.) * 4),
-                         "Hint has invalid size");
-
-        auto decoded = decodeBase64<Hint>(base64Hint);
-        return decoded;
-    }
+    std::string ToBase64() const;
+    static Hint FromBase64(const std::string &base64Hint);
 };
 
 #ifndef _MSC_VER
