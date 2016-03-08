@@ -56,16 +56,16 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         {
             parameters.steps = steps;
         };
-        const auto set_alternative = [this](const AlternativeT alternative)
+        const auto set_alternatives = [this](const AlternativeT alternatives)
         {
-            parameters.alternative = alternative;
+            parameters.alternatives = alternatives;
         };
         const auto set_uturns = [this](UturnsT &uturns)
         {
             parameters.uturns = std::move(uturns);
         };
 
-        alternative_rule = qi::lit("alternative=") >> qi::bool_;
+        alternatives_rule = qi::lit("alternatives=") >> qi::bool_;
         steps_rule = qi::lit("steps=") >> qi::bool_;
         geometries_rule = qi::lit("geometries=geojson")[set_geojson_type] |
                           qi::lit("geometries=polyline")[set_polyline_type];
@@ -73,7 +73,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
                         qi::lit("overview=full")[set_full_type] |
                         qi::lit("overview=false")[set_false_type];
         uturns_rule = qi::lit("uturns=") >> -qi::bool_ % ";";
-        route_rule = steps_rule[set_steps] | alternative_rule[set_alternative] | geometries_rule |
+        route_rule = steps_rule[set_steps] | alternatives_rule[set_alternatives] | geometries_rule |
                      overview_rule | uturns_rule[set_uturns];
 
         root_rule =
@@ -87,7 +87,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
     qi::rule<Iterator> route_rule, geometries_rule, overview_rule;
     qi::rule<Iterator, UturnsT()> uturns_rule;
     qi::rule<Iterator, StepsT()> steps_rule;
-    qi::rule<Iterator, AlternativeT()> alternative_rule;
+    qi::rule<Iterator, AlternativeT()> alternatives_rule;
 };
 }
 }
