@@ -53,19 +53,42 @@ struct Localizer
 
 static Localizer localizer;
 
+TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
+                           const std::vector<QueryNode> &node_info_list,
+                           const RestrictionMap &restriction_map,
+                           const std::unordered_set<NodeID> &barrier_nodes,
+                           const CompressedEdgeContainer &compressed_edge_container)
+    : node_based_graph(node_based_graph), node_info_list(node_info_list),
+      restriction_map(restriction_map), barrier_nodes(barrier_nodes),
+      compressed_edge_container(compressed_edge_container)
+{
+}
+
+namespace detail
+{
+
+inline bool isMotorwayClass(FunctionalRoadClass road_class)
+{
+    return road_class == FunctionalRoadClass::MOTORWAY || road_class == FunctionalRoadClass::TRUNK;
+}
+
+inline bool isMotorwayClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
+{
+    return isMotorwayClass(node_based_graph.GetEdgeData(eid).road_classification.road_class);
+}
+
+inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
+{
+    return isRampClass(node_based_graph.GetEdgeData(eid).road_classification.road_class);
+}
+
+} // namespace detail
+
 #define PRINT_DEBUG_CANDIDATES 0
-std::vector<TurnCandidate> getTurns(const NodeID from,
-                                    const EdgeID via_edge,
-                                    const util::NodeBasedDynamicGraph &node_based_graph,
-                                    const std::vector<QueryNode> &node_info_list,
-                                    const RestrictionMap &restriction_map,
-                                    const std::unordered_set<NodeID> &barrier_nodes,
-                                    const CompressedEdgeContainer &compressed_edge_container)
+std::vector<TurnCandidate> TurnAnalysis::getTurns(const NodeID from, const EdgeID via_edge) const
 {
     localizer.node_info_list = &node_info_list;
-    auto turn_candidates =
-        detail::getTurnCandidates(from, via_edge, node_based_graph, node_info_list, restriction_map,
-                                  barrier_nodes, compressed_edge_container);
+    auto turn_candidates = getTurnCandidates(from, via_edge);
 
     const auto &in_edge_data = node_based_graph.GetEdgeData(via_edge);
 
@@ -91,51 +114,42 @@ std::vector<TurnCandidate> getTurns(const NodeID from,
     }
     if (on_roundabout || can_enter_roundabout)
     {
-        return detail::handleRoundabouts(from, via_edge, on_roundabout, can_enter_roundabout,
-                                         can_exit_roundabout, std::move(turn_candidates),
-                                         node_based_graph);
+        return handleRoundabouts(from, via_edge, on_roundabout, can_enter_roundabout,
+                                 can_exit_roundabout, std::move(turn_candidates));
     }
 
     // set initial defaults for normal turns and modifier based on angle
-    turn_candidates =
-        detail::setTurnTypes(from, via_edge, std::move(turn_candidates), node_based_graph);
+    turn_candidates = setTurnTypes(from, via_edge, std::move(turn_candidates));
 
-    if (detail::isMotorwayJunction(from, via_edge, turn_candidates, node_based_graph))
+    if (isMotorwayJunction(from, via_edge, turn_candidates))
     {
-        return detail::handleMotorwayJunction(from, via_edge, std::move(turn_candidates),
-                                              node_based_graph);
+        return handleMotorwayJunction(from, via_edge, std::move(turn_candidates));
     }
 
     if (turn_candidates.size() <= 4) // TODO change when larger junctions are handled
     {
         if (turn_candidates.size() == 1)
         {
-            turn_candidates = detail::handleOneWayTurn(from, via_edge, std::move(turn_candidates),
-                                                       node_based_graph);
+            turn_candidates = handleOneWayTurn(from, via_edge, std::move(turn_candidates));
         }
         else if (turn_candidates.size() == 2)
         {
-            turn_candidates = detail::handleTwoWayTurn(from, via_edge, std::move(turn_candidates),
-                                                       node_based_graph);
+            turn_candidates = handleTwoWayTurn(from, via_edge, std::move(turn_candidates));
         }
         else if (turn_candidates.size() == 3)
         {
-            turn_candidates = detail::handleThreeWayTurn(from, via_edge, std::move(turn_candidates),
-                                                         node_based_graph);
+            turn_candidates = handleThreeWayTurn(from, via_edge, std::move(turn_candidates));
         }
         else if (turn_candidates.size() == 4)
         {
-            turn_candidates = detail::handleFourWayTurn(from, via_edge, std::move(turn_candidates),
-                                                        node_based_graph);
+            turn_candidates = handleFourWayTurn(from, via_edge, std::move(turn_candidates));
         }
         else
         {
-            turn_candidates = detail::handleComplexTurn(from, via_edge, std::move(turn_candidates),
-                                                        node_based_graph);
+            turn_candidates = handleComplexTurn(from, via_edge, std::move(turn_candidates));
         }
         // complex intersection, potentially requires conflict resolution
-        return detail::handleConflicts(from, via_edge, std::move(turn_candidates),
-                                       node_based_graph);
+        return handleConflicts(from, via_edge, std::move(turn_candidates));
     }
 
 #if PRINT_DEBUG_CANDIDATES
@@ -145,8 +159,7 @@ std::vector<TurnCandidate> getTurns(const NodeID from,
                   << (int)node_based_graph.GetEdgeData(tc.eid).road_classification.road_class
                   << " name: " << node_based_graph.GetEdgeData(tc.eid).name_id << std::endl;
 #endif
-    turn_candidates = detail::optimizeCandidates(via_edge, std::move(turn_candidates),
-                                                 node_based_graph, node_info_list);
+    turn_candidates = optimizeCandidates(via_edge, std::move(turn_candidates));
 #if PRINT_DEBUG_CANDIDATES
     std::cout << "Optimized Candidates:\n";
     for (auto tc : turn_candidates)
@@ -154,7 +167,7 @@ std::vector<TurnCandidate> getTurns(const NodeID from,
                   << (int)node_based_graph.GetEdgeData(tc.eid).road_classification.road_class
                   << std::endl;
 #endif
-    turn_candidates = detail::suppressTurns(via_edge, std::move(turn_candidates), node_based_graph);
+    turn_candidates = suppressTurns(via_edge, std::move(turn_candidates));
 #if PRINT_DEBUG_CANDIDATES
     std::cout << "Suppressed Candidates:\n";
     for (auto tc : turn_candidates)
@@ -165,9 +178,6 @@ std::vector<TurnCandidate> getTurns(const NodeID from,
     return turn_candidates;
 }
 
-namespace detail
-{
-
 inline std::size_t countValid(const std::vector<TurnCandidate> &turn_candidates)
 {
     return std::count_if(turn_candidates.begin(), turn_candidates.end(),
@@ -177,13 +187,13 @@ inline std::size_t countValid(const std::vector<TurnCandidate> &turn_candidates)
                          });
 }
 
-std::vector<TurnCandidate> handleRoundabouts(const NodeID from,
-                                             const EdgeID via_edge,
-                                             const bool on_roundabout,
-                                             const bool can_enter_roundabout,
-                                             const bool can_exit_roundabout,
-                                             std::vector<TurnCandidate> turn_candidates,
-                                             const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate>
+TurnAnalysis::handleRoundabouts(const NodeID from,
+                                const EdgeID via_edge,
+                                const bool on_roundabout,
+                                const bool can_enter_roundabout,
+                                const bool can_exit_roundabout,
+                                std::vector<TurnCandidate> turn_candidates) const
 {
     (void)from;
     // TODO requires differentiation between roundabouts and rotaries
@@ -263,24 +273,8 @@ std::vector<TurnCandidate> handleRoundabouts(const NodeID from,
     }
 }
 
-inline bool isMotorwayClass(FunctionalRoadClass road_class)
-{
-    return road_class == FunctionalRoadClass::MOTORWAY || road_class == FunctionalRoadClass::TRUNK;
-}
-
-inline bool isMotorwayClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
-{
-    return isMotorwayClass(node_based_graph.GetEdgeData(eid).road_classification.road_class);
-}
-
-inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
-{
-    return isRampClass(node_based_graph.GetEdgeData(eid).road_classification.road_class);
-}
-
-inline std::vector<TurnCandidate>
-fallbackTurnAssignmentMotorway(std::vector<TurnCandidate> turn_candidates,
-                               const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate>
+TurnAnalysis::fallbackTurnAssignmentMotorway(std::vector<TurnCandidate> turn_candidates) const
 {
     for (auto &candidate : turn_candidates)
     {
@@ -294,8 +288,9 @@ fallbackTurnAssignmentMotorway(std::vector<TurnCandidate> turn_candidates,
         if (!candidate.valid)
             continue;
 
-        const auto type = isMotorwayClass(out_data.road_classification.road_class) ? TurnType::Merge
-                                                                                   : TurnType::Turn;
+        const auto type = detail::isMotorwayClass(out_data.road_classification.road_class)
+                              ? TurnType::Merge
+                              : TurnType::Turn;
         if (angularDeviation(candidate.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE)
             candidate.instruction = {type, DirectionModifier::Straight};
         else
@@ -309,50 +304,47 @@ fallbackTurnAssignmentMotorway(std::vector<TurnCandidate> turn_candidates,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
-                                              const EdgeID via_edge,
-                                              std::vector<TurnCandidate> turn_candidates,
-                                              const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleFromMotorway(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     (void)from;
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
-    BOOST_ASSERT(isMotorwayClass(in_data.road_classification.road_class));
+    BOOST_ASSERT(detail::isMotorwayClass(in_data.road_classification.road_class));
 
-    const auto countExitingMotorways =
-        [&node_based_graph](const std::vector<TurnCandidate> &turn_candidates)
+    const auto countExitingMotorways = [this](const std::vector<TurnCandidate> &turn_candidates)
     {
         unsigned count = 0;
         for (const auto &candidate : turn_candidates)
         {
-            if (candidate.valid && isMotorwayClass(candidate.eid, node_based_graph))
+            if (candidate.valid && detail::isMotorwayClass(candidate.eid, node_based_graph))
                 ++count;
         }
         return count;
     };
 
     // find the angle that continues on our current highway
-    const auto getContinueAngle =
-        [in_data, &node_based_graph](const std::vector<TurnCandidate> &turn_candidates)
+    const auto getContinueAngle = [this, in_data](const std::vector<TurnCandidate> &turn_candidates)
     {
         for (const auto &candidate : turn_candidates)
         {
             const auto &out_data = node_based_graph.GetEdgeData(candidate.eid);
             if (candidate.angle != 0 && in_data.name_id == out_data.name_id &&
-                in_data.name_id != 0 && isMotorwayClass(out_data.road_classification.road_class))
+                in_data.name_id != 0 &&
+                detail::isMotorwayClass(out_data.road_classification.road_class))
                 return candidate.angle;
         }
         return turn_candidates[0].angle;
     };
 
     const auto getMostLikelyContinue =
-        [in_data, &node_based_graph](const std::vector<TurnCandidate> &turn_candidates)
+        [this, in_data](const std::vector<TurnCandidate> &turn_candidates)
     {
         double angle = turn_candidates[0].angle;
         double best = 180;
         for (const auto &candidate : turn_candidates)
         {
             const auto &out_data = node_based_graph.GetEdgeData(candidate.eid);
-            if (isMotorwayClass(out_data.road_classification.road_class) &&
+            if (detail::isMotorwayClass(out_data.road_classification.road_class) &&
                 angularDeviation(candidate.angle, STRAIGHT_ANGLE) < best)
             {
                 best = angularDeviation(candidate.angle, STRAIGHT_ANGLE);
@@ -388,7 +380,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
             // splitting ramp at the end of a highway
             if (turn_candidates[1].valid && turn_candidates[2].valid)
             {
-                assignFork(via_edge, turn_candidates[2], turn_candidates[1], node_based_graph);
+                assignFork(via_edge, turn_candidates[2], turn_candidates[1]);
             }
             else
             {
@@ -410,7 +402,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
                 << toFloating(coord.lat) << " " << toFloating(coord.lon) << ", no continue angle, "
                 << turn_candidates.size() << " candidates, " << countValid(turn_candidates)
                 << " valid ones.";
-            fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
+            fallbackTurnAssignmentMotorway(turn_candidates);
         }
     }
     else
@@ -424,7 +416,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
             {
                 if (candidate.valid)
                 {
-                    BOOST_ASSERT(isRampClass(candidate.eid, node_based_graph));
+                    BOOST_ASSERT(detail::isRampClass(candidate.eid, node_based_graph));
                     candidate.instruction =
                         TurnInstruction::SUPPRESSED(getTurnDirection(candidate.angle));
                 }
@@ -435,10 +427,10 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
             // normal motorway passing some ramps or mering onto another motorway
             if (turn_candidates.size() == 2)
             {
-                BOOST_ASSERT(!isRampClass(turn_candidates[1].eid, node_based_graph));
+                BOOST_ASSERT(!detail::isRampClass(turn_candidates[1].eid, node_based_graph));
 
-                turn_candidates[1].instruction = getInstructionForObvious(
-                    turn_candidates.size(), via_edge, turn_candidates[1], node_based_graph);
+                turn_candidates[1].instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[1]);
             }
             else
             {
@@ -462,16 +454,16 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
                     else if (candidate.angle < continue_angle)
                     {
                         candidate.instruction = {
-                            isRampClass(candidate.eid, node_based_graph) ? TurnType::Ramp
-                                                                         : TurnType::Turn,
+                            detail::isRampClass(candidate.eid, node_based_graph) ? TurnType::Ramp
+                                                                                 : TurnType::Turn,
                             (candidate.angle < 145) ? DirectionModifier::Right
                                                     : DirectionModifier::SlightRight};
                     }
                     else if (candidate.angle > continue_angle)
                     {
                         candidate.instruction = {
-                            isRampClass(candidate.eid, node_based_graph) ? TurnType::Ramp
-                                                                         : TurnType::Turn,
+                            detail::isRampClass(candidate.eid, node_based_graph) ? TurnType::Ramp
+                                                                                 : TurnType::Turn,
                             (candidate.angle > 215) ? DirectionModifier::Left
                                                     : DirectionModifier::SlightLeft};
                     }
@@ -483,8 +475,8 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
         {
             if (exiting_motorways == 2 && turn_candidates.size() == 2)
             {
-                turn_candidates[1].instruction = getInstructionForObvious(
-                    turn_candidates.size(), via_edge, turn_candidates[1], node_based_graph);
+                turn_candidates[1].instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[1]);
                 util::SimpleLogger().Write(logWARNING)
                     << "Disabled U-Turn on a freeway at "
                     << localizer(node_based_graph.GetTarget(via_edge));
@@ -498,7 +490,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
                 for (std::size_t i = 0; i < turn_candidates.size(); ++i)
                 {
                     if (turn_candidates[i].valid &&
-                        isMotorwayClass(turn_candidates[i].eid, node_based_graph))
+                        detail::isMotorwayClass(turn_candidates[i].eid, node_based_graph))
                     {
                         if (first_valid < turn_candidates.size())
                         {
@@ -511,8 +503,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
                         }
                     }
                 }
-                assignFork(via_edge, turn_candidates[second_valid], turn_candidates[first_valid],
-                           node_based_graph);
+                assignFork(via_edge, turn_candidates[second_valid], turn_candidates[first_valid]);
             }
             else if (exiting_motorways == 3)
             {
@@ -523,7 +514,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
                 for (std::size_t i = 0; i < turn_candidates.size(); ++i)
                 {
                     if (turn_candidates[i].valid &&
-                        isMotorwayClass(turn_candidates[i].eid, node_based_graph))
+                        detail::isMotorwayClass(turn_candidates[i].eid, node_based_graph))
                     {
                         if (second_valid < turn_candidates.size())
                         {
@@ -541,7 +532,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
                     }
                 }
                 assignFork(via_edge, turn_candidates[third_valid], turn_candidates[second_valid],
-                           turn_candidates[first_valid], node_based_graph);
+                           turn_candidates[first_valid]);
             }
             else
             {
@@ -550,7 +541,7 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
                     << "Found motorway junction with more than "
                        "2 exiting motorways or additional ramps at " << std::setprecision(12)
                     << toFloating(coord.lat) << " " << toFloating(coord.lon);
-                fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
+                fallbackTurnAssignmentMotorway(turn_candidates);
             }
         } // done for more than one highway exit
     }
@@ -565,10 +556,8 @@ std::vector<TurnCandidate> handleFromMotorway(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
-                                              const EdgeID via_edge,
-                                              std::vector<TurnCandidate> turn_candidates,
-                                              const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleMotorwayRamp(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     (void)from;
     auto num_valid_turns = countValid(turn_candidates);
@@ -576,10 +565,10 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
     if (turn_candidates.size() == 2 && num_valid_turns == 1)
     {
         BOOST_ASSERT(!turn_candidates[0].valid);
-        BOOST_ASSERT(isMotorwayClass(turn_candidates[1].eid, node_based_graph));
+        BOOST_ASSERT(detail::isMotorwayClass(turn_candidates[1].eid, node_based_graph));
 
-        turn_candidates[1].instruction = getInstructionForObvious(
-            turn_candidates.size(), via_edge, turn_candidates[1], node_based_graph);
+        turn_candidates[1].instruction =
+            getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[1]);
     }
     else if (turn_candidates.size() == 3)
     {
@@ -597,7 +586,7 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
             //          0
             if (turn_candidates[1].valid)
             {
-                if (isMotorwayClass(turn_candidates[1].eid, node_based_graph))
+                if (detail::isMotorwayClass(turn_candidates[1].eid, node_based_graph))
                 {
                     // circular order indicates a merge to the left (0-3 onto 4
                     if (angularDeviation(turn_candidates[1].angle, STRAIGHT_ANGLE) <
@@ -610,12 +599,12 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
                 }
                 else // passing by the end of a motorway
                     turn_candidates[1].instruction = getInstructionForObvious(
-                        turn_candidates.size(), via_edge, turn_candidates[1], node_based_graph);
+                        turn_candidates.size(), via_edge, turn_candidates[1]);
             }
             else
             {
                 BOOST_ASSERT(turn_candidates[2].valid);
-                if (isMotorwayClass(turn_candidates[2].eid, node_based_graph))
+                if (detail::isMotorwayClass(turn_candidates[2].eid, node_based_graph))
                 {
                     // circular order (5-0) onto 4
                     if (angularDeviation(turn_candidates[2].angle, STRAIGHT_ANGLE) <
@@ -628,7 +617,7 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
                 }
                 else // passing the end of a highway
                     turn_candidates[1].instruction = getInstructionForObvious(
-                        turn_candidates.size(), via_edge, turn_candidates[1], node_based_graph);
+                        turn_candidates.size(), via_edge, turn_candidates[1]);
             }
         }
         else
@@ -643,10 +632,10 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
             //    \   /
             //      |
             //      R
-            if (isMotorwayClass(turn_candidates[1].eid, node_based_graph) &&
-                isMotorwayClass(turn_candidates[2].eid, node_based_graph))
+            if (detail::isMotorwayClass(turn_candidates[1].eid, node_based_graph) &&
+                detail::isMotorwayClass(turn_candidates[2].eid, node_based_graph))
             {
-                assignFork(via_edge, turn_candidates[2], turn_candidates[1], node_based_graph);
+                assignFork(via_edge, turn_candidates[2], turn_candidates[1]);
             }
             else
             {
@@ -655,8 +644,8 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
                 //      M  R
                 //      | /
                 //      R
-                if (isMotorwayClass(node_based_graph.GetEdgeData(turn_candidates[1].eid)
-                                        .road_classification.road_class))
+                if (detail::isMotorwayClass(node_based_graph.GetEdgeData(turn_candidates[1].eid)
+                                                .road_classification.road_class))
                 {
                     turn_candidates[1].instruction = {TurnType::Merge,
                                                       DirectionModifier::SlightRight};
@@ -680,11 +669,12 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
         for (auto &candidate : turn_candidates)
         {
             const auto &edge_data = node_based_graph.GetEdgeData(candidate.eid);
-            if (!candidate.valid && isMotorwayClass(edge_data.road_classification.road_class))
+            if (!candidate.valid &&
+                detail::isMotorwayClass(edge_data.road_classification.road_class))
             {
                 passed_highway_entry = true;
             }
-            else if (isMotorwayClass(edge_data.road_classification.road_class))
+            else if (detail::isMotorwayClass(edge_data.road_classification.road_class))
             {
                 candidate.instruction = {TurnType::Merge,
                                          passed_highway_entry ? DirectionModifier::SlightRight
@@ -702,7 +692,7 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
         util::SimpleLogger().Write(logWARNING) << "Reached fallback on motorway ramp with "
                                                << turn_candidates.size() << " candidates and "
                                                << countValid(turn_candidates) << " valid turns.";
-        fallbackTurnAssignmentMotorway(turn_candidates, node_based_graph);
+        fallbackTurnAssignmentMotorway(turn_candidates);
     }
 
 #if PRINT_DEBUG_CANDIDATES
@@ -715,11 +705,8 @@ std::vector<TurnCandidate> handleMotorwayRamp(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate>
-handleMotorwayJunction(const NodeID from,
-                       const EdgeID via_edge,
-                       std::vector<TurnCandidate> turn_candidates,
-                       const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleMotorwayJunction(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     (void)from;
     // BOOST_ASSERT(!turn_candidates[0].valid); //This fails due to @themarex handling of dead end
@@ -727,21 +714,20 @@ handleMotorwayJunction(const NodeID from,
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
 
     // coming from motorway
-    if (isMotorwayClass(in_data.road_classification.road_class))
+    if (detail::isMotorwayClass(in_data.road_classification.road_class))
     {
-        return handleFromMotorway(from, via_edge, std::move(turn_candidates), node_based_graph);
+        return handleFromMotorway(from, via_edge, std::move(turn_candidates));
     }
     else // coming from a ramp
     {
-        return handleMotorwayRamp(from, via_edge, std::move(turn_candidates), node_based_graph);
+        return handleMotorwayRamp(from, via_edge, std::move(turn_candidates));
         // ramp merging straight onto motorway
     }
 }
 
-bool isMotorwayJunction(const NodeID from,
-                        const EdgeID via_edge,
-                        const std::vector<TurnCandidate> &turn_candidates,
-                        const util::NodeBasedDynamicGraph &node_based_graph)
+bool TurnAnalysis::isMotorwayJunction(const NodeID from,
+                                      const EdgeID via_edge,
+                                      const std::vector<TurnCandidate> &turn_candidates) const
 {
     (void)from;
 
@@ -775,9 +761,8 @@ bool isMotorwayJunction(const NodeID from,
            in_data.road_classification.road_class == FunctionalRoadClass::TRUNK;
 }
 
-TurnType findBasicTurnType(const EdgeID via_edge,
-                           const TurnCandidate &candidate,
-                           const util::NodeBasedDynamicGraph &node_based_graph)
+TurnType TurnAnalysis::findBasicTurnType(const EdgeID via_edge,
+                                         const TurnCandidate &candidate) const
 {
 
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
@@ -798,12 +783,11 @@ TurnType findBasicTurnType(const EdgeID via_edge,
     return TurnType::Turn;
 }
 
-TurnInstruction getInstructionForObvious(const std::size_t num_candidates,
-                                         const EdgeID via_edge,
-                                         const TurnCandidate &candidate,
-                                         const util::NodeBasedDynamicGraph &node_based_graph)
+TurnInstruction TurnAnalysis::getInstructionForObvious(const std::size_t num_candidates,
+                                                       const EdgeID via_edge,
+                                                       const TurnCandidate &candidate) const
 {
-    const auto type = findBasicTurnType(via_edge, candidate, node_based_graph);
+    const auto type = findBasicTurnType(via_edge, candidate);
     if (type == TurnType::Ramp)
     {
         return {TurnType::Ramp, getTurnDirection(candidate.angle)};
@@ -828,13 +812,11 @@ TurnInstruction getInstructionForObvious(const std::size_t num_candidates,
     }
 }
 
-std::vector<TurnCandidate> handleOneWayTurn(const NodeID from,
-                                            const EdgeID via_edge,
-                                            std::vector<TurnCandidate> turn_candidates,
-                                            const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleOneWayTurn(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     BOOST_ASSERT(turn_candidates[0].angle < 0.001);
-    (void)from, (void)via_edge, (void)node_based_graph;
+    (void)from, (void)via_edge;
     if (!turn_candidates[0].valid)
     {
         util::SimpleLogger().Write(logWARNING)
@@ -851,15 +833,13 @@ std::vector<TurnCandidate> handleOneWayTurn(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> handleTwoWayTurn(const NodeID from,
-                                            const EdgeID via_edge,
-                                            std::vector<TurnCandidate> turn_candidates,
-                                            const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleTwoWayTurn(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     BOOST_ASSERT(turn_candidates[0].angle < 0.001);
     (void)from;
-    turn_candidates[1].instruction = getInstructionForObvious(turn_candidates.size(), via_edge,
-                                                              turn_candidates[1], node_based_graph);
+    turn_candidates[1].instruction =
+        getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[1]);
 
     if (turn_candidates[1].instruction.type == TurnType::Suppressed)
         turn_candidates[1].instruction.type = TurnType::NoTurn;
@@ -874,10 +854,8 @@ std::vector<TurnCandidate> handleTwoWayTurn(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
-                                              const EdgeID via_edge,
-                                              std::vector<TurnCandidate> turn_candidates,
-                                              const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleThreeWayTurn(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     BOOST_ASSERT(turn_candidates[0].angle < 0.001);
     (void)from;
@@ -901,16 +879,16 @@ std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
     {
         if (turn_candidates[1].valid && turn_candidates[2].valid)
         {
-            assignFork(via_edge, turn_candidates[2], turn_candidates[1], node_based_graph);
+            assignFork(via_edge, turn_candidates[2], turn_candidates[1]);
         }
         else
         {
             if (turn_candidates[1].valid)
-                turn_candidates[1].instruction = getInstructionForObvious(
-                    turn_candidates.size(), via_edge, turn_candidates[1], node_based_graph);
+                turn_candidates[1].instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[1]);
             if (turn_candidates[2].valid)
-                turn_candidates[2].instruction = getInstructionForObvious(
-                    turn_candidates.size(), via_edge, turn_candidates[2], node_based_graph);
+                turn_candidates[2].instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[2]);
         }
     }
     /*  T Intersection
@@ -927,14 +905,15 @@ std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
     {
         if (turn_candidates[1].valid)
         {
-            if (TurnType::Ramp != findBasicTurnType(via_edge, turn_candidates[1], node_based_graph))
+            if (TurnType::Ramp != findBasicTurnType(via_edge, turn_candidates[1]))
                 turn_candidates[1].instruction = {TurnType::EndOfRoad, DirectionModifier::Right};
             else
                 turn_candidates[1].instruction = {TurnType::Ramp, DirectionModifier::Right};
         }
         if (turn_candidates[2].valid)
         {
-            if (TurnType::Ramp != findBasicTurnType(via_edge, turn_candidates[2], node_based_graph))
+            if (TurnType::Ramp != findBasicTurnType(via_edge, turn_candidates[2]))
+
                 turn_candidates[2].instruction = {TurnType::EndOfRoad, DirectionModifier::Left};
             else
                 turn_candidates[2].instruction = {TurnType::Ramp, DirectionModifier::Left};
@@ -953,17 +932,16 @@ std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
     {
         if (turn_candidates[1].valid)
         {
-            if (TurnType::Ramp != findBasicTurnType(via_edge, turn_candidates[1], node_based_graph))
-                turn_candidates[1].instruction = getInstructionForObvious(
-                    turn_candidates.size(), via_edge, turn_candidates[1], node_based_graph);
+            if (TurnType::Ramp != findBasicTurnType(via_edge, turn_candidates[1]))
+                turn_candidates[1].instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[1]);
             else
                 turn_candidates[1].instruction = {TurnType::Ramp, DirectionModifier::Straight};
         }
         if (turn_candidates[2].valid)
         {
-            turn_candidates[2].instruction = {
-                findBasicTurnType(via_edge, turn_candidates[2], node_based_graph),
-                DirectionModifier::Left};
+            turn_candidates[2].instruction = {findBasicTurnType(via_edge, turn_candidates[2]),
+                                              DirectionModifier::Left};
         }
     }
     /* T Intersection, Cross right
@@ -979,12 +957,11 @@ std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
                  NARROW_TURN_ANGLE)
     {
         if (turn_candidates[2].valid)
-            turn_candidates[2].instruction = getInstructionForObvious(
-                turn_candidates.size(), via_edge, turn_candidates[2], node_based_graph);
+            turn_candidates[2].instruction =
+                getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[2]);
         if (turn_candidates[1].valid)
-            turn_candidates[1].instruction = {
-                findBasicTurnType(via_edge, turn_candidates[1], node_based_graph),
-                DirectionModifier::Right};
+            turn_candidates[1].instruction = {findBasicTurnType(via_edge, turn_candidates[1]),
+                                              DirectionModifier::Right};
     }
     // merge onto a through street
     else if (INVALID_NAME_ID != node_based_graph.GetEdgeData(turn_candidates[1].eid).name_id &&
@@ -1086,10 +1063,8 @@ std::vector<TurnCandidate> handleThreeWayTurn(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> handleFourWayTurn(const NodeID from,
-                                             const EdgeID via_edge,
-                                             std::vector<TurnCandidate> turn_candidates,
-                                             const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleFourWayTurn(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     (void)from;
     static int fallback_count = 0;
@@ -1101,15 +1076,15 @@ std::vector<TurnCandidate> handleFourWayTurn(const NodeID from,
         angularDeviation(turn_candidates[3].angle, turn_candidates[0].angle) > NARROW_TURN_ANGLE)
     {
         { // Right
-            const auto type = findBasicTurnType(via_edge, turn_candidates[1], node_based_graph);
+            const auto type = findBasicTurnType(via_edge, turn_candidates[1]);
             turn_candidates[1].instruction = {type, DirectionModifier::Right};
         }
         { // Straight
-            turn_candidates[2].instruction = getInstructionForObvious(
-                turn_candidates.size(), via_edge, turn_candidates[2], node_based_graph);
+            turn_candidates[2].instruction =
+                getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[2]);
         }
         { // Left
-            const auto type = findBasicTurnType(via_edge, turn_candidates[3], node_based_graph);
+            const auto type = findBasicTurnType(via_edge, turn_candidates[3]);
             turn_candidates[3].instruction = {type, DirectionModifier::Left};
         }
     }
@@ -1121,7 +1096,7 @@ std::vector<TurnCandidate> handleFourWayTurn(const NodeID from,
     {
         for (std::size_t i = 1; i < turn_candidates.size(); ++i)
         {
-            const auto type = findBasicTurnType(via_edge, turn_candidates[i], node_based_graph);
+            const auto type = findBasicTurnType(via_edge, turn_candidates[i]);
             turn_candidates[i].instruction = {type, getTurnDirection(turn_candidates[i].angle)};
         }
     }
@@ -1177,10 +1152,8 @@ std::vector<TurnCandidate> handleFourWayTurn(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> handleComplexTurn(const NodeID from,
-                                             const EdgeID via_edge,
-                                             std::vector<TurnCandidate> turn_candidates,
-                                             const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleComplexTurn(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     (void)from;             // FIXME unused
     (void)via_edge;         // FIXME unused
@@ -1195,10 +1168,8 @@ std::vector<TurnCandidate> handleComplexTurn(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> setTurnTypes(const NodeID from,
-                                        const EdgeID via_edge,
-                                        std::vector<TurnCandidate> turn_candidates,
-                                        const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::setTurnTypes(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     NodeID turn_node = node_based_graph.GetTarget(via_edge);
 
@@ -1209,8 +1180,7 @@ std::vector<TurnCandidate> setTurnTypes(const NodeID from,
         const EdgeID onto_edge = candidate.eid;
         const NodeID to_node = node_based_graph.GetTarget(onto_edge);
 
-        auto turn = AnalyzeTurn(from, via_edge, turn_node, onto_edge, to_node, candidate.angle,
-                                node_based_graph);
+        auto turn = AnalyzeTurn(from, via_edge, turn_node, onto_edge, to_node, candidate.angle);
 
         auto confidence = getTurnConfidence(candidate.angle, turn);
         candidate.instruction = turn;
@@ -1219,9 +1189,8 @@ std::vector<TurnCandidate> setTurnTypes(const NodeID from,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate> optimizeRamps(const EdgeID via_edge,
-                                         std::vector<TurnCandidate> turn_candidates,
-                                         const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate>
+TurnAnalysis::optimizeRamps(const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
     EdgeID continue_eid = SPECIAL_EDGEID;
     double continue_angle = 0;
@@ -1266,10 +1235,9 @@ std::vector<TurnCandidate> optimizeRamps(const EdgeID via_edge,
 }
 
 // requires sorted candidates
-std::vector<TurnCandidate> optimizeCandidates(const EdgeID via_eid,
-                                              std::vector<TurnCandidate> turn_candidates,
-                                              const util::NodeBasedDynamicGraph &node_based_graph,
-                                              const std::vector<QueryNode> &node_info_list)
+std::vector<TurnCandidate>
+TurnAnalysis::optimizeCandidates(const EdgeID via_eid,
+                                 std::vector<TurnCandidate> turn_candidates) const
 {
     BOOST_ASSERT_MSG(std::is_sorted(turn_candidates.begin(), turn_candidates.end(),
                                     [](const TurnCandidate &left, const TurnCandidate &right)
@@ -1280,7 +1248,7 @@ std::vector<TurnCandidate> optimizeCandidates(const EdgeID via_eid,
     if (turn_candidates.size() <= 1)
         return turn_candidates;
 
-    turn_candidates = optimizeRamps(via_eid, std::move(turn_candidates), node_based_graph);
+    turn_candidates = optimizeRamps(via_eid, std::move(turn_candidates));
 
     const auto getLeft = [&turn_candidates](std::size_t index)
     {
@@ -1466,10 +1434,9 @@ std::vector<TurnCandidate> optimizeCandidates(const EdgeID via_eid,
     return turn_candidates;
 }
 
-bool isObviousChoice(const EdgeID via_eid,
-                     const std::size_t turn_index,
-                     const std::vector<TurnCandidate> &turn_candidates,
-                     const util::NodeBasedDynamicGraph &node_based_graph)
+bool TurnAnalysis::isObviousChoice(const EdgeID via_eid,
+                                   const std::size_t turn_index,
+                                   const std::vector<TurnCandidate> &turn_candidates) const
 {
     const auto getLeft = [&turn_candidates](std::size_t index)
     {
@@ -1529,9 +1496,8 @@ bool isObviousChoice(const EdgeID via_eid,
             angularDeviation(candidate.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE / 2);
 }
 
-std::vector<TurnCandidate> suppressTurns(const EdgeID via_eid,
-                                         std::vector<TurnCandidate> turn_candidates,
-                                         const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate>
+TurnAnalysis::suppressTurns(const EdgeID via_eid, std::vector<TurnCandidate> turn_candidates) const
 {
     if (turn_candidates.size() == 3)
     {
@@ -1600,7 +1566,7 @@ std::vector<TurnCandidate> suppressTurns(const EdgeID via_eid,
     {
         if (node_based_graph.GetEdgeData(turn_candidates[turn_index].eid).name_id ==
                 in_data.name_id &&
-            isObviousChoice(via_eid, turn_index, turn_candidates, node_based_graph))
+            isObviousChoice(via_eid, turn_index, turn_candidates))
         {
             has_obvious_with_same_name = true;
             obvious_with_same_name_angle = turn_candidates[turn_index].angle;
@@ -1641,7 +1607,7 @@ std::vector<TurnCandidate> suppressTurns(const EdgeID via_eid,
             if (in_data.travel_mode ==
                 out_data.travel_mode) // make sure to always announce mode changes
             {
-                if (isObviousChoice(via_eid, turn_index, turn_candidates, node_based_graph))
+                if (isObviousChoice(via_eid, turn_index, turn_candidates))
                 {
 
                     if (in_data.name_id == out_data.name_id) // same road
@@ -1685,14 +1651,8 @@ std::vector<TurnCandidate> suppressTurns(const EdgeID via_eid,
     return turn_candidates;
 }
 
-std::vector<TurnCandidate>
-getTurnCandidates(const NodeID from_node,
-                  const EdgeID via_eid,
-                  const util::NodeBasedDynamicGraph &node_based_graph,
-                  const std::vector<QueryNode> &node_info_list,
-                  const RestrictionMap &restriction_map,
-                  const std::unordered_set<NodeID> &barrier_nodes,
-                  const CompressedEdgeContainer &compressed_edge_container)
+std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_node,
+                                                           const EdgeID via_eid) const
 {
     std::vector<TurnCandidate> turn_candidates;
     const NodeID turn_node = node_based_graph.GetTarget(via_eid);
@@ -1780,13 +1740,11 @@ getTurnCandidates(const NodeID from_node,
     };
     std::sort(std::begin(turn_candidates), std::end(turn_candidates), ByAngle);
 
-    return mergeSegregatedRoads(from_node, via_eid, std::move(turn_candidates), node_based_graph);
+    return mergeSegregatedRoads(from_node, via_eid, std::move(turn_candidates));
 }
 
-std::vector<TurnCandidate> mergeSegregatedRoads(const NodeID from_node,
-                                                const EdgeID via_eid,
-                                                std::vector<TurnCandidate> turn_candidates,
-                                                const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::mergeSegregatedRoads(
+    const NodeID from_node, const EdgeID via_eid, std::vector<TurnCandidate> turn_candidates) const
 {
     (void)from_node; // FIXME
     (void)via_eid;   // FIXME
@@ -1913,13 +1871,12 @@ std::vector<TurnCandidate> mergeSegregatedRoads(const NodeID from_node,
 }
 
 // node_u -- (edge_1) --> node_v -- (edge_2) --> node_w
-TurnInstruction AnalyzeTurn(const NodeID node_u,
-                            const EdgeID edge1,
-                            const NodeID node_v,
-                            const EdgeID edge2,
-                            const NodeID node_w,
-                            const double angle,
-                            const util::NodeBasedDynamicGraph &node_based_graph)
+TurnInstruction TurnAnalysis::AnalyzeTurn(const NodeID node_u,
+                                          const EdgeID edge1,
+                                          const NodeID node_v,
+                                          const EdgeID edge2,
+                                          const NodeID node_w,
+                                          const double angle) const
 {
     (void)node_v;
     const EdgeData &data1 = node_based_graph.GetEdgeData(edge1);
@@ -1940,14 +1897,11 @@ TurnInstruction AnalyzeTurn(const NodeID node_u,
     return {TurnType::Turn, getTurnDirection(angle)};
 }
 
-std::vector<TurnCandidate> handleConflicts(const NodeID from,
-                                           const EdgeID via_edge,
-                                           std::vector<TurnCandidate> turn_candidates,
-                                           const util::NodeBasedDynamicGraph &node_based_graph)
+std::vector<TurnCandidate> TurnAnalysis::handleConflicts(
+    const NodeID from, const EdgeID via_edge, std::vector<TurnCandidate> turn_candidates) const
 {
-    (void)from;             // FIXME
-    (void)via_edge;         // FIXME
-    (void)node_based_graph; // FIXME
+    (void)from;     // FIXME
+    (void)via_edge; // FIXME
     const auto isConflict = [](const TurnCandidate &left, const TurnCandidate &right)
     {
         // most obvious, same instructions conflict
@@ -1968,10 +1922,9 @@ std::vector<TurnCandidate> handleConflicts(const NodeID from,
     return turn_candidates;
 }
 
-void assignFork(const EdgeID via_edge,
-                TurnCandidate &left,
-                TurnCandidate &right,
-                const util::NodeBasedDynamicGraph &node_based_graph)
+void TurnAnalysis::assignFork(const EdgeID via_edge,
+                              TurnCandidate &left,
+                              TurnCandidate &right) const
 {
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
     const bool low_priority_left = isLowPriorityRoadClass(
@@ -1986,8 +1939,7 @@ void assignFork(const EdgeID via_edge,
             if (requiresAnnouncement(in_data, out_data))
             {
                 if (low_priority_right && !low_priority_left)
-                    left.instruction =
-                        getInstructionForObvious(3, via_edge, left, node_based_graph);
+                    left.instruction = getInstructionForObvious(3, via_edge, left);
                 else
                 {
                     if (low_priority_left && !low_priority_right)
@@ -2022,8 +1974,7 @@ void assignFork(const EdgeID via_edge,
             if (requiresAnnouncement(in_data, out_data))
             {
                 if (low_priority_left && !low_priority_right)
-                    right.instruction =
-                        getInstructionForObvious(3, via_edge, right, node_based_graph);
+                    right.instruction = getInstructionForObvious(3, via_edge, right);
                 else
                 {
                     if (low_priority_right && !low_priority_left)
@@ -2052,11 +2003,10 @@ void assignFork(const EdgeID via_edge,
     }
 }
 
-void assignFork(const EdgeID via_edge,
-                TurnCandidate &left,
-                TurnCandidate &center,
-                TurnCandidate &right,
-                const util::NodeBasedDynamicGraph &node_based_graph)
+void TurnAnalysis::assignFork(const EdgeID via_edge,
+                              TurnCandidate &left,
+                              TurnCandidate &center,
+                              TurnCandidate &right) const
 {
     left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
     if (angularDeviation(center.angle, 180) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION)
@@ -2079,7 +2029,6 @@ void assignFork(const EdgeID via_edge,
     right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
 }
 
-} // anemspace detail
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm
