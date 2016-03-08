@@ -51,7 +51,7 @@ engine::Status MatchService::RunQuery(std::string &query, ResultT &result)
     if (!parameters || query_iterator != query.end())
     {
         const auto position = std::distance(query.begin(), query_iterator);
-        json_result.values["code"] = "invalid-query";
+        json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
             "Query string malformed close to position " + std::to_string(position);
         return engine::Status::Error;
@@ -60,7 +60,7 @@ engine::Status MatchService::RunQuery(std::string &query, ResultT &result)
     BOOST_ASSERT(parameters);
     if (!parameters->IsValid())
     {
-        json_result.values["code"] = "invalid-options";
+        json_result.values["code"] = "InvalidOptions";
         json_result.values["message"] = getWrongOptionHelp(*parameters);
         return engine::Status::Error;
     }
