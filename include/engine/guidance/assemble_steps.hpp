@@ -40,6 +40,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                      const bool source_traversed_in_reverse,
                                      const bool target_traversed_in_reverse)
 {
+    const double constexpr ZERO_DURACTION = 0., ZERO_DISTANCE = 0., NO_BEARING = 0.;
     const EdgeWeight source_duration =
         source_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight;
     const auto source_mode = source_traversed_in_reverse ? source_node.backward_travel_mode
@@ -56,10 +57,19 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     steps.reserve(number_of_segments);
 
     std::size_t segment_index = 0;
+    BOOST_ASSERT(leg_geometry.locations.size() >= 2);
+
+    // We report the relative position of source/target to the road only within a range that is
+    // sufficiently different but not full of the path
+    const constexpr double MINIMAL_RELATIVE_DISTANCE = 5., MAXIMAL_RELATIVE_DISTANCE = 300.;
+    const auto distance_to_start = util::coordinate_calculation::haversineDistance(
+        source_node.input_location, leg_geometry.locations[0]);
     const auto initial_modifier =
-        leg_geometry.locations.size() >= 3
+        distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
+                distance_to_start <= MAXIMAL_RELATIVE_DISTANCE
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  leg_geometry.locations[0], leg_geometry.locations[1], leg_geometry.locations[2]))
+                  source_node.input_location, leg_geometry.locations[0],
+                  leg_geometry.locations[1]))
             : extractor::guidance::DirectionModifier::UTurn;
 
     if (leg_data.size() > 0)
@@ -84,8 +94,12 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                 BOOST_ASSERT(segment_duration >= 0);
                 const auto name = facade.get_name_for_id(path_point.name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
-                steps.push_back(RouteStep{path_point.name_id, name, segment_duration / 10.0,
-                                          distance, path_point.travel_mode, maneuver,
+                steps.push_back(RouteStep{path_point.name_id,
+                                          name,
+                                          segment_duration / 10.0,
+                                          distance,
+                                          path_point.travel_mode,
+                                          maneuver,
                                           leg_geometry.FrontIndex(segment_index),
                                           leg_geometry.BackIndex(segment_index) + 1});
                 maneuver = detail::stepManeuverFromGeometry(path_point.turn_instruction,
@@ -98,8 +112,12 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         const auto distance = leg_geometry.segment_distances[segment_index];
         const int duration = segment_duration + target_duration;
         BOOST_ASSERT(duration >= 0);
-        steps.push_back(RouteStep{target_node.name_id, facade.get_name_for_id(target_node.name_id),
-                                  duration / 10., distance, target_mode, maneuver,
+        steps.push_back(RouteStep{target_node.name_id,
+                                  facade.get_name_for_id(target_node.name_id),
+                                  duration / 10.,
+                                  distance,
+                                  target_mode,
+                                  maneuver,
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1});
     }
@@ -112,35 +130,53 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // |---| source_duration
         // |---------| target_duration
 
-        StepManeuver maneuver = {source_node.location, 0., 0.,
+        StepManeuver maneuver = {source_node.location,
+                                 NO_BEARING,
+                                 NO_BEARING,
                                  extractor::guidance::TurnInstruction{
                                      extractor::guidance::TurnType::NoTurn, initial_modifier},
-                                 WaypointType::Depart, INVALID_EXIT_NR};
+                                 WaypointType::Depart,
+                                 INVALID_EXIT_NR};
         int duration = target_duration - source_duration;
         BOOST_ASSERT(duration >= 0);
 
-        steps.push_back(RouteStep{source_node.name_id, facade.get_name_for_id(source_node.name_id),
-                                  duration / 10., leg_geometry.segment_distances[segment_index], source_mode,
-                                  std::move(maneuver), leg_geometry.FrontIndex(segment_index),
+        steps.push_back(RouteStep{source_node.name_id,
+                                  facade.get_name_for_id(source_node.name_id),
+                                  duration / 10.,
+                                  leg_geometry.segment_distances[segment_index],
+                                  source_mode,
+                                  std::move(maneuver),
+                                  leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1});
     }
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
+    const auto distance_from_end = util::coordinate_calculation::haversineDistance(
+        target_node.input_location, leg_geometry.locations.back());
     const auto final_modifier =
-        leg_geometry.locations.size() >= 3
+        distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&
+                distance_from_end <= MAXIMAL_RELATIVE_DISTANCE
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  leg_geometry.locations[leg_geometry.locations.size() - 3],
                   leg_geometry.locations[leg_geometry.locations.size() - 2],
-                  leg_geometry.locations[leg_geometry.locations.size() - 1]))
+                  leg_geometry.locations[leg_geometry.locations.size() - 1],
+                  target_node.input_location))
             : extractor::guidance::DirectionModifier::UTurn;
     // This step has length zero, the only reason we need it is the target location
-    steps.push_back(RouteStep{
-        target_node.name_id, facade.get_name_for_id(target_node.name_id), 0., 0., target_mode,
-        StepManeuver{target_node.location, 0., 0.,
-                     extractor::guidance::TurnInstruction{extractor::guidance::TurnType::NoTurn,
-                                                          final_modifier},
-                     WaypointType::Arrive, INVALID_EXIT_NR},
-        leg_geometry.locations.size(), leg_geometry.locations.size()});
+    steps.push_back(
+        RouteStep{target_node.name_id,
+                  facade.get_name_for_id(target_node.name_id),
+                  ZERO_DURACTION,
+                  ZERO_DISTANCE,
+                  target_mode,
+                  StepManeuver{target_node.location,
+                               NO_BEARING,
+                               NO_BEARING,
+                               extractor::guidance::TurnInstruction{
+                                   extractor::guidance::TurnType::NoTurn, final_modifier},
+                               WaypointType::Arrive,
+                               INVALID_EXIT_NR},
+                  leg_geometry.locations.size(),
+                  leg_geometry.locations.size()});
 
     return steps;
 }

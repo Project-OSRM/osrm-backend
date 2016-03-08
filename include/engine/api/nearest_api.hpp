@@ -38,8 +38,7 @@ class NearestAPI final : public BaseAPI
                        waypoints.values.begin(),
                        [this](const PhantomNodeWithDistance &phantom_with_distance)
                        {
-                           auto waypoint = MakeWaypoint(parameters.coordinates.front(),
-                                                        phantom_with_distance.phantom_node);
+                           auto waypoint = MakeWaypoint(phantom_with_distance.phantom_node);
                            waypoint.values["distance"] = phantom_with_distance.distance;
                            return waypoint;
                        });
