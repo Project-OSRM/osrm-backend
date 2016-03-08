@@ -5,6 +5,23 @@ Feature: Basic Map Matching
         Given the profile "testbot"
         Given a grid size of 10 meters
 
+    Scenario: Testbot - Map matching with outlier that has no candidate
+        Given a grid size of 100 meters
+        Given the node map
+            | a | b | c | d |
+            |   |   |   |   |
+            |   |   |   |   |
+            |   |   |   |   |
+            |   |   | 1 |   |
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings |
+            | ab1d  | 0 1 2 3    | abcd      |
+
     Scenario: Testbot - Map matching with trace splitting
         Given the node map
             | a | b | c | d |
