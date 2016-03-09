@@ -1,18 +1,15 @@
 #include "contractor/contractor.hpp"
+#include "contractor/crc32_processor.hpp"
 #include "contractor/graph_contractor.hpp"
 
-#include "extractor/edge_based_edge.hpp"
+#include "extractor/node_based_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
 
+#include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
-
-#include "util/deallocating_vector.hpp"
-
-#include "contractor/crc32_processor.hpp"
 #include "util/graph_loader.hpp"
 #include "util/io.hpp"
 #include "util/integer_range.hpp"
-#include "util/lua_util.hpp"
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 #include "util/string_util.hpp"
@@ -21,19 +18,16 @@
 
 #include <fast-cpp-csv-parser/csv.h>
 
+#include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/program_options.hpp>
 
 #include <tbb/parallel_sort.h>
 
-#include <cstddef>
 #include <cstdint>
 #include <bitset>
 #include <chrono>
 #include <memory>
-#include <string>
 #include <thread>
-#include <vector>
 #include <iterator>
 
 namespace std
@@ -70,8 +64,6 @@ int Contractor::Run()
     }
 
     TIMER_START(preparing);
-
-    // Create a new lua state
 
     util::SimpleLogger().Write() << "Loading edge-expanded graph representation";
 
