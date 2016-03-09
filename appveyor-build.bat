@@ -117,13 +117,13 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 SET PATH=%PROJECT_DIR%\osrm-deps\libs\bin;%PATH%
 
 ECHO running engine-tests.exe ...
-%Configuration%\engine-tests.exe
+%Configuration%\unit_tests\engine-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO running extractor-tests.exe ...
-%Configuration%\extractor-tests.exe
+%Configuration%\unit_tests\extractor-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO running util-tests.exe ...
-%Configuration%\util-tests.exe
+%Configuration%\unit_tests\util-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE

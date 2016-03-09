@@ -159,9 +159,9 @@ script:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
-  - ./extractor-tests
-  - ./engine-tests
-  - ./util-tests
+  - ./unit_tests/extractor-tests
+  - ./unit_tests/engine-tests
+  - ./unit_tests/util-tests
   - popd
   - npm test
   - make -C test/data benchmark
