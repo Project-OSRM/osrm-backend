@@ -1,30 +1,20 @@
 #ifndef CONTRACTOR_CONTRACTOR_HPP
 #define CONTRACTOR_CONTRACTOR_HPP
 
-#include "extractor/edge_based_edge.hpp"
-#include "extractor/node_based_edge.hpp"
-#include "contractor/contractor.hpp"
 #include "contractor/contractor_config.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node.hpp"
-#include "util/static_graph.hpp"
+#include "util/typedefs.hpp"
 #include "util/deallocating_vector.hpp"
-#include "util/node_based_graph.hpp"
-
-#include <boost/filesystem.hpp>
 
 #include <vector>
+#include <string>
 
-struct lua_State;
+#include <cstddef>
 
 namespace osrm
 {
-namespace extractor
-{
-struct SpeedProfileProperties;
-struct EdgeBasedEdge;
-}
 namespace contractor
 {
 
@@ -34,11 +24,10 @@ class Contractor
   public:
     using EdgeData = QueryEdge::EdgeData;
 
-    explicit Contractor(ContractorConfig contractor_config) : config(std::move(contractor_config))
-    {
-    }
+    explicit Contractor(const ContractorConfig &config_) : config{config_} {}
+
     Contractor(const Contractor &) = delete;
-    Contractor& operator=(const Contractor &) = delete;
+    Contractor &operator=(const Contractor &) = delete;
 
     int Run();
 
@@ -61,6 +50,7 @@ class Contractor
 
   private:
     ContractorConfig config;
+
     std::size_t
     LoadEdgeExpandedGraph(const std::string &edge_based_graph_path,
                           util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
