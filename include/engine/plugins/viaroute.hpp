@@ -119,7 +119,7 @@ template <class DataFacadeT> class ViaRoutePlugin final : public BasePlugin
 
         if (1 == raw_route.segment_end_coordinates.size())
         {
-            if (route_parameters.alternate_route)
+            if (route_parameters.alternate_route && facade->GetCoreSize() == 0)
             {
                 search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
                                                     raw_route);
