@@ -28,34 +28,47 @@ namespace json
 namespace detail
 {
 
-const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
-                                          "straight", "slight left", "left",  "sharp left"};
+const constexpr char *modifier_names[] = {"uturn",
+                                          "sharp right",
+                                          "right",
+                                          "slight right",
+                                          "straight",
+                                          "slight left",
+                                          "left",
+                                          "sharp left"};
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
 const constexpr char *turn_type_names[] = {
-    "invalid", "no turn",    "waypoint",    "invalid",        "new name",    "continue",
-    "turn",    "merge",      "ramp",        "fork",           "end of road", "roundabout",
-    "invalid", "roundabout", "invalid",     "traffic circle", "invalid",     "traffic circle",
-    "invalid", "invalid",    "restriction", "notification"};
+    "invalid",    "no turn",     "invalid",        "new name",    "continue",       "turn",
+    "merge",      "ramp",        "fork",           "end of road", "roundabout",     "invalid",
+    "roundabout", "invalid",     "traffic circle", "invalid",     "traffic circle", "invalid",
+    "invalid",    "restriction", "notification"};
+
+const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
 // Check whether to include a modifier in the result of the API
-inline bool isValidModifier(const TurnType type, const DirectionModifier modifier)
+inline bool isValidModifier(const guidance::StepManeuver maneuver)
 {
-    if (type == TurnType::Location && modifier != DirectionModifier::Left &&
-        modifier != DirectionModifier::Straight && modifier != DirectionModifier::Right)
+    if (maneuver.waypoint_type != guidance::WaypointType::None &&
+        maneuver.instruction.direction_modifier == DirectionModifier::UTurn)
         return false;
     return true;
 }
 
-std::string instructionTypeToString(TurnType type)
+std::string instructionTypeToString(const TurnType type)
 {
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
-std::string instructionModifierToString(DirectionModifier modifier)
+std::string instructionModifierToString(const DirectionModifier modifier)
 {
     return modifier_names[static_cast<std::size_t>(modifier)];
+}
+
+std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
+{
+    return waypoint_type_names[static_cast<std::size_t>(waypoint_type)];
 }
 
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
@@ -123,8 +136,12 @@ std::string modeToString(const extractor::TravelMode mode)
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
-    step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
-    if (detail::isValidModifier(maneuver.instruction.type, maneuver.instruction.direction_modifier))
+    if (maneuver.waypoint_type == guidance::WaypointType::None)
+        step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
+    else
+        step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
+
+    if (detail::isValidModifier(maneuver))
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
@@ -199,7 +216,6 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
             });
         json_legs.values.push_back(makeRouteLeg(std::move(leg), std::move(json_steps)));
     }
-
     return json_legs;
 }
 } // namespace json
