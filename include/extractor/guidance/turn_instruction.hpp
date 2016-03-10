@@ -37,8 +37,7 @@ enum DirectionModifier
 enum TurnType // at the moment we can support 32 turn types, without increasing memory consumption
 {
     Invalid,                // no valid turn instruction
-    NoTurn,                 // end of segment without turn
-    Location,               // start,end,via
+    NoTurn,                 // end of segment without turn/middle of a segment
     Suppressed,             // location that suppresses a turn
     NewName,                // no turn, but name changes
     Continue,               // remain on a street
