@@ -127,7 +127,7 @@ install:
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
 
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake boost libzip libstxxl libxml2 lua51 luabind tbb GDAL md5sha1sum
+      brew install cmake libzip libstxxl libxml2 lua51 luabind tbb GDAL md5sha1sum
     fi
 
 before_script:
