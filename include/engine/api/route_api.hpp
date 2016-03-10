@@ -36,8 +36,7 @@ class RouteAPI : public BaseAPI
     {
     }
 
-    void MakeResponse(const InternalRouteResult &raw_route,
-                      util::json::Object &response) const
+    void MakeResponse(const InternalRouteResult &raw_route, util::json::Object &response) const
     {
         auto number_of_routes = raw_route.has_alternative() ? 2UL : 1UL;
         util::json::Array routes;
@@ -102,7 +101,6 @@ class RouteAPI : public BaseAPI
                 leg.steps = guidance::assembleSteps(
                     BaseAPI::facade, path_data, leg_geometry, phantoms.source_phantom,
                     phantoms.target_phantom, reversed_source, reversed_target);
-                ;
             }
 
             leg_geometries.push_back(std::move(leg_geometry));
