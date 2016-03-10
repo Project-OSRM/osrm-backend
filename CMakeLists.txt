@@ -376,7 +376,7 @@ set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 file(GLOB VariantGlob third_party/variant/*.hpp)
 file(GLOB LibraryGlob include/osrm/*.hpp)
-file(GLOB ParametersGlob include/engine/api/*.hpp)
+file(GLOB ParametersGlob include/engine/api/*_parameters.hpp)
 set(EngineHeader include/engine/status.hpp include/engine/engine_config.hpp include/engine/hint.hpp include/engine/bearing.hpp include/engine/phantom_node.hpp)
 set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp include/util/typedefs.hpp include/util/strong_typedef.hpp)
 set(ExtractorHeader include/extractor/extractor.hpp include/extractor/extractor_config.hpp include/extractor/travel_mode.hpp)
