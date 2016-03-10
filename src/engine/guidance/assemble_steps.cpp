@@ -13,6 +13,7 @@ namespace guidance
 namespace detail
 {
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
+                                      const WaypointType waypoint_type,
                                       const LegGeometry &leg_geometry,
                                       const std::size_t segment_index,
                                       const unsigned exit)
@@ -31,7 +32,7 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
     const double post_turn_bearing =
         util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
 
-    return StepManeuver{turn_coordinate, pre_turn_bearing, post_turn_bearing, instruction, exit};
+    return StepManeuver{turn_coordinate, pre_turn_bearing, post_turn_bearing, instruction, waypoint_type, exit};
 }
 } // ns detail
 } // ns engine
