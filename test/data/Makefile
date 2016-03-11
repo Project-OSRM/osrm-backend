@@ -1,29 +1,29 @@
-BERLIN_URL:=https://s3.amazonaws.com/mapbox/node-osrm/testing/berlin-latest.osm.pbf
+MONACO_URL:=https://s3.amazonaws.com/mapbox/osrm/testing/monaco.osm.pbf
 TOOL_ROOT:=../../build
 PROFILE_ROOT:=../../profiles
 OSRM_EXTRACT:=$(TOOL_ROOT)/osrm-extract
 OSRM_CONTRACT:=$(TOOL_ROOT)/osrm-contract
 PROFILE:=$(PROFILE_ROOT)/car.lua
 
-all: berlin-latest.osrm.hsgr
+all: monaco.osrm.hsgr
 
 clean:
 	rm berlin-latest.*
 
-berlin-latest.osm.pbf:
-	wget $(BERLIN_URL) -O berlin-latest.osm.pbf
+monaco.osm.pbf:
+	wget $(MONACO_URL) -O monaco.osm.pbf
 
-berlin-latest.osrm: berlin-latest.osm.pbf $(PROFILE) $(OSRM_EXTRACT)
+monaco.osrm: monaco.osm.pbf $(PROFILE) $(OSRM_EXTRACT)
 	@echo "Verifiyng data file integrity..."
 	md5sum -c data.md5sum
 	@echo "Running osrm-extract..."
-	$(OSRM_EXTRACT) berlin-latest.osm.pbf -p $(PROFILE)
+	$(OSRM_EXTRACT) monaco.osm.pbf -p $(PROFILE)
 
-berlin-latest.osrm.hsgr: berlin-latest.osrm $(PROFILE) $(OSRM_CONTRACT)
+monaco.osrm.hsgr: monaco.osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
-	$(OSRM_CONTRACT) berlin-latest.osrm
+	$(OSRM_CONTRACT) monaco.osrm
 
 checksum:
-	md5sum berlin-latest.osm.pbf > data.md5sum
+	md5sum monaco.osm.pbf > data.md5sum
 
 .PHONY: clean checksum

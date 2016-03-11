@@ -163,7 +163,7 @@ script:
   - mkdir example/build && pushd example/build
   - cmake ..
   - make
-  - ./osrm-example ../../test/data/berlin-latest.osrm
+  - ./osrm-example ../../test/data/monaco.osrm
   - popd
   - |
     if [ -n "$RUN_CLANG_FORMAT" ]; then

@@ -34,10 +34,10 @@ int main(int argc, const char *argv[]) try
     osrm::OSRM routing_machine(engine_config);
 
     osrm::RouteParameters route_parameters;
-    // route is in Berlin
+    // route is in Monaco
     route_parameters.service = "viaroute";
-    route_parameters.AddCoordinate(52.519930, 13.438640);
-    route_parameters.AddCoordinate(52.513191, 13.415852);
+    route_parameters.AddCoordinate(43.731142, 7.419758);
+    route_parameters.AddCoordinate(43.736825, 7.419505);
 
     osrm::json::Object json_result;
     const int result_code = routing_machine.RunQuery(route_parameters, json_result);
