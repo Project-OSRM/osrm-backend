@@ -1,13 +1,15 @@
-#include "extractor/query_node.hpp"
-#include "util/static_rtree.hpp"
-#include "extractor/edge_based_node.hpp"
 #include "engine/geospatial_query.hpp"
+#include "extractor/query_node.hpp"
+#include "extractor/edge_based_node.hpp"
+#include "util/static_rtree.hpp"
 #include "util/timing_util.hpp"
-#include "mocks/mock_datafacade.hpp"
 #include "util/coordinate.hpp"
+#include "mocks/mock_datafacade.hpp"
 
 #include <iostream>
 #include <random>
+
+#include <boost/filesystem/fstream.hpp>
 
 namespace osrm
 {
@@ -77,7 +79,8 @@ void benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_quer
     std::vector<util::Coordinate> queries;
     for (unsigned i = 0; i < num_queries; i++)
     {
-        queries.emplace_back(lat_udist(mt_rand), lon_udist(mt_rand));
+        queries.emplace_back(util::FixedLongitude{lon_udist(mt_rand)},
+                             util::FixedLatitude{lat_udist(mt_rand)});
     }
 
     benchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const util::Coordinate &q)
@@ -126,9 +129,8 @@ int main(int argc, char **argv)
     auto coords = osrm::benchmarks::loadCoordinates(nodes_path);
 
     osrm::benchmarks::BenchStaticRTree rtree(ram_path, file_path, coords);
-    std::unique_ptr<osrm::benchmarks::MockDataFacade> mockfacade_ptr(
-        new osrm::benchmarks::MockDataFacade);
-    osrm::benchmarks::BenchQuery query(rtree, coords, *mockfacade_ptr);
+    osrm::test::MockDataFacade mockfacade;
+    osrm::benchmarks::BenchQuery query(rtree, coords, mockfacade);
 
     osrm::benchmarks::benchmark(rtree, query, 10000);
 
