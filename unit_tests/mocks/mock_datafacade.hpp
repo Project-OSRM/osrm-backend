@@ -3,6 +3,7 @@
 
 // implements all data storage when shared memory _IS_ used
 
+#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "contractor/query_edge.hpp"
 
@@ -11,18 +12,17 @@ namespace osrm
 namespace test
 {
 
-template <class EdgeDataT>
-class MockDataFacadeT final : public osrm::engine::datafacade::BaseDataFacade<EdgeDataT>
+class MockDataFacade final : public engine::datafacade::BaseDataFacade
 {
   private:
-    EdgeDataT foo;
+    EdgeData foo;
 
   public:
     unsigned GetNumberOfNodes() const { return 0; }
     unsigned GetNumberOfEdges() const { return 0; }
     unsigned GetOutDegree(const NodeID /* n */) const { return 0; }
     NodeID GetTarget(const EdgeID /* e */) const { return SPECIAL_NODEID; }
-    const EdgeDataT &GetEdgeData(const EdgeID /* e */) const { return foo; }
+    const EdgeData &GetEdgeData(const EdgeID /* e */) const { return foo; }
     EdgeID BeginEdges(const NodeID /* n */) const { return SPECIAL_EDGEID; }
     EdgeID EndEdges(const NodeID /* n */) const { return SPECIAL_EDGEID; }
     osrm::engine::datafacade::EdgeRange GetAdjacentEdgeRange(const NodeID /* node */) const
@@ -40,10 +40,9 @@ class MockDataFacadeT final : public osrm::engine::datafacade::BaseDataFacade<Ed
     {
         return SPECIAL_EDGEID;
     }
-    util::FixedPointCoordinate GetCoordinateOfNode(const unsigned /* id */) const
+    util::Coordinate GetCoordinateOfNode(const unsigned /* id */) const
     {
-        FixedPointCoordinate foo(0, 0);
-        return foo;
+        return {util::FixedLongitude{0}, util::FixedLatitude{0}};
     }
     bool EdgeIsCompressed(const unsigned /* id */) const { return false; }
     unsigned GetGeometryIndexForEdgeID(const unsigned /* id */) const { return SPECIAL_NODEID; }
@@ -55,48 +54,99 @@ class MockDataFacadeT final : public osrm::engine::datafacade::BaseDataFacade<Ed
                                 std::vector<EdgeWeight> & /* result_weights */) const
     {
     }
-    extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned /* id */) const
+    extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned /* id */) const
     {
-        return osrm::extractor::TurnInstruction::NoTurn;
+        return extractor::guidance::TurnInstruction::NO_TURN();
     }
     extractor::TravelMode GetTravelModeForEdgeID(const unsigned /* id */) const
     {
-        return TRAVEL_MODE_DEFAULT;
+        return TRAVEL_MODE_INACCESSIBLE;
     }
-    std::vector<typename osrm::engine::datafacade::BaseDataFacade<EdgeDataT>::RTreeLeaf>
-    GetEdgesInBox(const util::FixedPointCoordinate & /* south_west */,
-                  const util::FixedPointCoordinate & /*north_east */)
+    std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate /* south_west */,
+                                         const util::Coordinate /*north_east */)
     {
-        std::vector<typename osrm::engine::datafacade::BaseDataFacade<EdgeDataT>::RTreeLeaf> foo;
-        return foo;
+        return {};
     }
-    std::vector<osrm::engine::PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate /* input_coordinate */,
-                               const float /* max_distance */,
-                               const int /* bearing = 0 */,
-                               const int /* bearing_range = 180 */)
+
+    std::vector<engine::PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
+                               const float /*max_distance*/,
+                               const int /*bearing*/,
+                               const int /*bearing_range*/)
     {
-        std::vector<osrm::engine::PhantomNodeWithDistance> foo;
-        return foo;
+        return {};
     }
-    std::vector<osrm::engine::PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate /* input_coordinate */,
-                        const unsigned /* max_results */,
-                        const int /* bearing = 0 */,
-                        const int /* bearing_range = 180 */)
+
+    std::vector<engine::PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
+                               const float /*max_distance*/)
     {
-        std::vector<osrm::engine::PhantomNodeWithDistance> foo;
-        return foo;
+        return {};
     }
-    std::pair<osrm::engine::PhantomNode, osrm::engine::PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate /* input_coordinate */,
-        const int /* bearing = 0 */,
-        const int /* bearing_range = 180 */)
+
+    std::vector<engine::PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
+                        const unsigned /*max_results*/,
+                        const double /*max_distance*/,
+                        const int /*bearing*/,
+                        const int /*bearing_range*/)
     {
-        std::pair<osrm::engine::PhantomNode, osrm::engine::PhantomNode> foo;
-        return foo;
+        return {};
     }
+
+    std::vector<engine::PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
+                        const unsigned /*max_results*/,
+                        const int /*bearing*/,
+                        const int /*bearing_range*/)
+    {
+        return {};
+    }
+
+    std::vector<engine::PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/, const unsigned /*max_results*/)
+    {
+        return {};
+    }
+
+    std::vector<engine::PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
+                        const unsigned /*max_results*/,
+                        const double /*max_distance*/)
+    {
+        return {};
+    }
+
+    std::pair<engine::PhantomNode, engine::PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/)
+    {
+        return {};
+    }
+
+    std::pair<engine::PhantomNode, engine::PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
+                                                      const double /*max_distance*/)
+    {
+        return {};
+    }
+
+    std::pair<engine::PhantomNode, engine::PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
+                                                      const double /*max_distance*/,
+                                                      const int /*bearing*/,
+                                                      const int /*bearing_range*/)
+    {
+        return {};
+    }
+
+    std::pair<engine::PhantomNode, engine::PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
+                                                      const int /*bearing*/,
+                                                      const int /*bearing_range*/)
+    {
+        return {};
+    };
+
     unsigned GetCheckSum() const { return 0; }
     bool IsCoreNode(const NodeID /* id */) const { return false; }
     unsigned GetNameIndexFromEdgeID(const unsigned /* id */) const { return 0; }
@@ -105,9 +155,7 @@ class MockDataFacadeT final : public osrm::engine::datafacade::BaseDataFacade<Ed
     std::string GetTimestamp() const { return ""; }
     bool GetUTurnsDefault() const override { return true; }
 };
-
-using MockDataFacade = MockDataFacadeT<contractor::QueryEdge::EdgeData>;
-} // osrm::test::
-} // osrm::
+} // ns test
+} // ns osrm
 
 #endif // MOCK_DATAFACADE_HPP
