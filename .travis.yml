@@ -1,4 +1,9 @@
-language: cpp
+#language: cpp
+# This makes travis use the thin image which boots faster
+language: generic
+
+
+# sudo:required is needed for trusty images
 sudo: required
 dist: trusty
 
