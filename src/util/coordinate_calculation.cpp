@@ -1,6 +1,5 @@
+#include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-
-#include "util/string_util.hpp"
 #include "util/trigonometry_table.hpp"
 
 #include <boost/assert.hpp>
@@ -8,6 +7,7 @@
 #include <cmath>
 
 #include <limits>
+#include <utility>
 
 namespace osrm
 {
@@ -260,11 +260,13 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
 Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
 {
     BOOST_ASSERT(0 <= factor && factor <= 1.0);
-    return {
-        from.lon +
-            toFixed(FloatLongitude(factor * static_cast<double>(toFloating(to.lon - from.lon)))),
-        from.lat +
-            toFixed(FloatLatitude(factor * static_cast<double>(toFloating(to.lat - from.lat))))};
+
+    FloatLongitude interpolated_lon{((1. - factor) * static_cast<std::int32_t>(from.lon)) +
+                                  (factor * static_cast<std::int32_t>(to.lon))};
+    FloatLatitude interpolated_lat{((1. - factor) * static_cast<std::int32_t>(from.lat)) +
+                                  (factor * static_cast<std::int32_t>(to.lat))};
+
+    return {std::move(interpolated_lon), std::move(interpolated_lat)};
 }
 
 namespace mercator
