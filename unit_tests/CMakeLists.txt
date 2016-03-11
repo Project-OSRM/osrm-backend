@@ -1,26 +1,14 @@
-set(ExtractorTest_SOURCES
+file(GLOB ExtractorTest_SOURCES
 	extractor_tests.cpp
-	extractor/compressed_edge_container.cpp
-	extractor/graph_compressor.cpp
-	extractor/raster_source.cpp)
+	extractor/*.cpp)
 
-set(EngineTest_SOURCES
+file(GLOB EngineTest_SOURCES
 	engine_tests.cpp
-	engine/douglas_peucker.cpp
-	engine/geometry_string.cpp)
+	engine/*.cpp)
 
-set(UtilTest_SOURCES
+file(GLOB UtilTest_SOURCES
 	util_tests.cpp
-	util/bearing.cpp
-	util/binary_heap.cpp
-	util/coordinate.cpp
-	util/duration_parsing.cpp
-	util/dynamic_graph.cpp
-	util/io.cpp
-	util/range_table.cpp
-	util/static_graph.cpp
-	util/static_rtree.cpp
-	util/string_util.cpp)
+	util/*)
 
 
 add_executable(extractor-tests
