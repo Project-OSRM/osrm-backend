@@ -8,7 +8,7 @@ PROFILE:=$(PROFILE_ROOT)/car.lua
 all: monaco.osrm.hsgr
 
 clean:
-	rm berlin-latest.*
+	rm monaco.*
 
 monaco.osm.pbf:
 	wget $(MONACO_URL) -O monaco.osm.pbf
