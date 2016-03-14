@@ -151,9 +151,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
 
-    engine::api::RouteParameters reference_3{
-        false, false, engine::api::RouteParameters::GeometriesType::GeoJSON,
-        engine::api::RouteParameters::OverviewType::False, true};
+    engine::api::RouteParameters reference_3{false,
+                                             false,
+                                             engine::api::RouteParameters::GeometriesType::GeoJSON,
+                                             engine::api::RouteParameters::OverviewType::False,
+                                             true};
     reference_3.coordinates = coords_1;
     auto result_3 = api::parseParameters<engine::api::RouteParameters>(
         "1,2;3,4?steps=false&alternatives=false&geometries=geojson&overview=false&uturns=true"
