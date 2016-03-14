@@ -40,18 +40,20 @@ namespace osrm
 namespace engine
 {
 
+// Fwd. decls.
+namespace datafacade
+{
+struct BaseDataFacade;
+}
+
 // Is returned as a temporary identifier for snapped coodinates
 struct Hint
 {
     PhantomNode phantom;
     std::uint32_t data_checksum;
 
-    template <typename DataFacadeT>
-    bool IsValid(const util::Coordinate new_input_coordinates, DataFacadeT &facade) const
-    {
-        return phantom.IsValid(facade.GetNumberOfNodes(), new_input_coordinates) &&
-               facade.GetCheckSum() == data_checksum;
-    }
+    bool IsValid(const util::Coordinate new_input_coordinates,
+                 const datafacade::BaseDataFacade &facade) const;
 
     std::string ToBase64() const;
     static Hint FromBase64(const std::string &base64Hint);
