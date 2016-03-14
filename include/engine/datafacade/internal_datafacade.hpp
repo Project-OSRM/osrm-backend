@@ -314,7 +314,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
         return m_query_graph->GetAdjacentEdgeRange(node);
-    };
+    }
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID from, const NodeID to) const override final
@@ -337,7 +337,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     util::FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const override final
     {
         return m_coordinate_list->at(id);
-    };
+    }
 
     bool EdgeIsCompressed(const unsigned id) const override final
     {

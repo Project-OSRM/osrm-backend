@@ -76,7 +76,7 @@ namespace extractor
 class RestrictionMap
 {
   public:
-    RestrictionMap() : m_count(0){};
+    RestrictionMap() : m_count(0){}
     RestrictionMap(const std::vector<TurnRestriction> &restriction_list);
 
     // Replace end v with w in each turn restriction containing u as via node

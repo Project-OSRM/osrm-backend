@@ -353,7 +353,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
         return m_query_graph->GetAdjacentEdgeRange(node);
-    };
+    }
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID from, const NodeID to) const override final
@@ -376,7 +376,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     util::FixedPointCoordinate GetCoordinateOfNode(const NodeID id) const override final
     {
         return m_coordinate_list->at(id);
-    };
+    }
 
     virtual bool EdgeIsCompressed(const unsigned id) const override final
     {
@@ -487,7 +487,7 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     unsigned GetNameIndexFromEdgeID(const unsigned id) const override final
     {
         return m_name_ID_list.at(id);
-    };
+    }
 
     std::string get_name_for_id(const unsigned name_id) const override final
     {

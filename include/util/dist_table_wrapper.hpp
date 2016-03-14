@@ -25,7 +25,7 @@ template <typename T> class DistTableWrapper
         BOOST_ASSERT_MSG(table.size() == 0, "table is empty");
         BOOST_ASSERT_MSG(number_of_nodes_ * number_of_nodes_ <= table_.size(),
                          "number_of_nodes_ is invalid");
-    };
+    }
 
     std::size_t GetNumberOfNodes() const { return number_of_nodes_; }
 

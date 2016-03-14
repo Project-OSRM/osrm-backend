@@ -111,7 +111,7 @@ template <class DataFacadeT> class RoundTripPlugin final : public BasePlugin
                              "invalid scc component range");
             BOOST_ASSERT_MSG(std::is_sorted(std::begin(range), std::end(range)),
                              "invalid component ranges");
-        };
+        }
 
         std::size_t GetNumberOfComponents() const
         {
