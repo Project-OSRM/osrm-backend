@@ -1,7 +1,6 @@
 #include "engine/plugins/viaroute.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/api/route_api.hpp"
-#include "engine/object_encoder.hpp"
 #include "engine/status.hpp"
 
 #include "util/for_each_pair.hpp"
