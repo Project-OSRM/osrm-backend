@@ -5,7 +5,6 @@
 #include "engine/plugins/plugin_base.hpp"
 #include "engine/api/route_api.hpp"
 
-#include "engine/object_encoder.hpp"
 #include "engine/search_engine_data.hpp"
 #include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/alternative_path.hpp"

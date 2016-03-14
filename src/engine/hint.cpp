@@ -1,5 +1,5 @@
 #include "engine/hint.hpp"
-#include "engine/object_encoder.hpp"
+#include "engine/base64.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 
 #include <boost/assert.hpp>
