@@ -14,6 +14,9 @@
 #include <cstdint>
 #include <climits>
 
+// RFC 4648 "The Base16, Base32, and Base64 Data Encodings"
+// See: https://tools.ietf.org/html/rfc4648
+
 namespace osrm
 {
 namespace engine
