@@ -2,7 +2,6 @@
 
 #include "engine/api/table_parameters.hpp"
 #include "engine/api/table_api.hpp"
-#include "engine/object_encoder.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/search_engine_data.hpp"
 #include "util/string_util.hpp"

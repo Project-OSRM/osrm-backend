@@ -1,5 +1,5 @@
-#ifndef OBJECT_ENCODER_HPP
-#define OBJECT_ENCODER_HPP
+#ifndef OSRM_BASE64_HPP
+#define OSRM_BASE64_HPP
 
 #include <boost/assert.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
@@ -88,4 +88,4 @@ template <typename T> T decodeBase64(std::string encoded)
 } // ns engine
 } // ns osrm
 
-#endif /* OBJECT_ENCODER_HPP */
+#endif /* OSRM_BASE64_HPP */
