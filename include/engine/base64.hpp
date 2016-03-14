@@ -1,91 +1,123 @@
 #ifndef OSRM_BASE64_HPP
 #define OSRM_BASE64_HPP
 
-#include <boost/assert.hpp>
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-
-#include <algorithm>
-#include <iterator>
 #include <string>
-#include <vector>
+#include <iterator>
+#include <type_traits>
 
-#include <cstdint>
+#include <cstddef>
 #include <climits>
+
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/range/algorithm/copy.hpp>
 
 // RFC 4648 "The Base16, Base32, and Base64 Data Encodings"
 // See: https://tools.ietf.org/html/rfc4648
+// Implementation adapted from: http://stackoverflow.com/a/28471421
+
+// The C++ standard guarantees none of this by default, but we need it in the following.
+static_assert(CHAR_BIT == 8u, "we assume a byte holds 8 bits");
+static_assert(sizeof(char) == 1u, "we assume a char is one byte large");
 
 namespace osrm
 {
 namespace engine
 {
 
-namespace detail
+// Encoding Implementation
+
+// Encodes a chunk of memory to Base64.
+inline std::string encodeBase64(const unsigned char *first, std::size_t size)
 {
-static_assert(CHAR_BIT == 8u, "we assume a byte holds 8 bits");
-static_assert(sizeof(char) == 1u, "we assume a char is one byte large");
+    using namespace boost::archive::iterators;
 
-using Base64FromBinary = boost::archive::iterators::base64_from_binary<
-    boost::archive::iterators::transform_width<const char *, // sequence of chars
-                                               6,            // get view of 6 bit
-                                               8             // from sequence of 8 bit
-                                               >>;
+    const std::string bytes{first, first + size};
 
-using BinaryFromBase64 = boost::archive::iterators::transform_width<
-    boost::archive::iterators::binary_from_base64<std::string::const_iterator>,
-    8, // get a view of 8 bit
-    6  // from a sequence of 6 bit
-    >;
-} // ns detail
+    using Iter = base64_from_binary<transform_width<std::string::const_iterator, 6, 8>>;
 
-template <typename T> std::string encodeBase64(const T &x)
-{
-#if not defined __GNUC__ or __GNUC__ > 4
-    static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
-#endif
+    Iter view_first{begin(bytes)};
+    Iter view_last{end(bytes)};
 
-    std::vector<unsigned char> bytes{reinterpret_cast<const char *>(&x),
-                                     reinterpret_cast<const char *>(&x) + sizeof(T)};
-    BOOST_ASSERT(!bytes.empty());
+    std::string encoded{view_first, view_last};
 
-    std::size_t bytes_to_pad{0};
-
-    while (bytes.size() % 3 != 0)
-    {
-        bytes_to_pad += 1;
-        bytes.push_back(0);
-    }
-
-    BOOST_ASSERT(bytes_to_pad == 0 || bytes_to_pad == 1 || bytes_to_pad == 2);
-    BOOST_ASSERT_MSG(0 == bytes.size() % 3, "base64 input data size is not a multiple of 3");
-
-    std::string encoded{detail::Base64FromBinary{bytes.data()},
-                        detail::Base64FromBinary{bytes.data() + (bytes.size() - bytes_to_pad)}};
-
-    std::replace(begin(encoded), end(encoded), '+', '-');
-    std::replace(begin(encoded), end(encoded), '/', '_');
-
-    return encoded;
+    return encoded.append((3 - size % 3) % 3, '=');
 }
 
-template <typename T> T decodeBase64(std::string encoded)
+// C++11 standard 3.9.1/1: Plain char, signed char, and unsigned char are three distinct types
+
+// Overload for signed char catches (not only but also) C-string literals.
+inline std::string encodeBase64(const signed char *first, std::size_t size)
+{
+    return encodeBase64(reinterpret_cast<const unsigned char *>(first), size);
+}
+
+// Overload for char catches (not only but also) C-string literals.
+inline std::string encodeBase64(const char *first, std::size_t size)
+{
+    return encodeBase64(reinterpret_cast<const unsigned char *>(first), size);
+}
+
+// Convenience specialization, encoding from string instead of byte-dumping it.
+inline std::string encodeBase64(const std::string &x) { return encodeBase64(x.data(), x.size()); }
+
+// Encode any sufficiently trivial object to Base64.
+template <typename T> std::string encodeBase64Bytewise(const T &x)
 {
 #if not defined __GNUC__ or __GNUC__ > 4
     static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
 #endif
 
-    std::replace(begin(encoded), end(encoded), '-', '+');
-    std::replace(begin(encoded), end(encoded), '_', '/');
+    return encodeBase64(reinterpret_cast<const unsigned char *>(&x), sizeof(T));
+}
 
-    T rv;
+// Decoding Implementation
 
-    std::copy(detail::BinaryFromBase64{begin(encoded)},
-              detail::BinaryFromBase64{begin(encoded) + encoded.length()},
-              reinterpret_cast<char *>(&rv));
+// Decodes into a chunk of memory that is at least as large as the input.
+template <typename OutputIter> void decodeBase64(const std::string &encoded, OutputIter out)
+{
+    using namespace boost::archive::iterators;
+    using namespace boost::algorithm;
+
+    using Iter = transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>;
+
+    Iter view_first{begin(encoded)};
+    Iter view_last{end(encoded)};
+
+    const auto null = [](const unsigned char c)
+    {
+        return c == '\0';
+    };
+
+    const auto bytes = trim_right_copy_if(std::string{view_first, view_last}, null);
+
+    boost::copy(bytes, out);
+}
+
+// Convenience specialization, filling string instead of byte-dumping into it.
+inline std::string decodeBase64(const std::string &encoded)
+{
+    std::string rv;
+
+    decodeBase64(encoded, std::back_inserter(rv));
 
     return rv;
+}
+
+// Decodes from Base 64 to any sufficiently trivial object.
+template <typename T> T decodeBase64Bytewise(const std::string &encoded)
+{
+#if not defined __GNUC__ or __GNUC__ > 4
+    static_assert(std::is_trivially_copyable<T>::value, "requires a trivially copyable type");
+#endif
+
+    T x;
+
+    decodeBase64(encoded, reinterpret_cast<unsigned char *>(&x));
+
+    return x;
 }
 
 } // ns engine
