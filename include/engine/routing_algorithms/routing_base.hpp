@@ -630,7 +630,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         NodeID last_id = SPECIAL_NODEID;
         forward_core_heap.Clear();
         reverse_core_heap.Clear();
-        for (const auto p : forward_entry_points)
+        for (const auto& p : forward_entry_points)
         {
             if (p.first == last_id)
             {
@@ -640,7 +640,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             last_id = p.first;
         }
         last_id = SPECIAL_NODEID;
-        for (const auto p : reverse_entry_points)
+        for (const auto& p : reverse_entry_points)
         {
             if (p.first == last_id)
             {
