@@ -142,6 +142,8 @@ void RouteParameters::AddSource(const double latitude, const double longitude)
 void RouteParameters::SetCoordinatesFromGeometry(const std::string &geometry_string)
 {
     coordinates = polylineDecode(geometry_string);
+    uturns.clear();
+    uturns.resize(coordinates.size(), uturn_default);
 }
 
 bool RouteParameters::SetX(const int x_)
