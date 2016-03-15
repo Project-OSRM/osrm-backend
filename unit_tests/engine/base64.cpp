@@ -41,10 +41,13 @@ BOOST_AUTO_TEST_CASE(rfc4648_test_vectors_roundtrip)
 BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip)
 {
     using namespace osrm::engine;
+    using namespace osrm::util;
 
-    osrm::test::MockDataFacade facade;
+    const Coordinate coordinate;
+    const PhantomNode phantom;
+    const osrm::test::MockDataFacade facade;
 
-    Hint hint{{}, {}, facade.GetCheckSum()};
+    const Hint hint{coordinate, phantom, facade.GetCheckSum()};
 
     const auto base64 = hint.ToBase64();
 
@@ -59,10 +62,13 @@ BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip)
 BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip_bytewise)
 {
     using namespace osrm::engine;
+    using namespace osrm::util;
 
-    osrm::test::MockDataFacade facade;
+    const Coordinate coordinate;
+    const PhantomNode phantom;
+    const osrm::test::MockDataFacade facade;
 
-    Hint hint{{}, {}, facade.GetCheckSum()};
+    const Hint hint{coordinate, phantom, facade.GetCheckSum()};
 
     const auto decoded = Hint::FromBase64(hint.ToBase64());
 
