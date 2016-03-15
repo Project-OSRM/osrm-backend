@@ -94,6 +94,7 @@ add_executable(server-tests EXCLUDE_FROM_ALL unit_tests/server_tests.cpp ${Serve
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL>)
 
+target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
 target_include_directories(rtree-bench PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
 
