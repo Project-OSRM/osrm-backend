@@ -817,18 +817,22 @@ std::vector<TurnCandidate> TurnAnalysis::handleOneWayTurn(
 {
     BOOST_ASSERT(turn_candidates[0].angle < 0.001);
     (void)from, (void)via_edge;
-    if (!turn_candidates[0].valid)
-    {
-        util::SimpleLogger().Write(logWARNING)
-            << "Graph Broken. Dead end without exit found or missing reverse edge.";
-    }
 
 #if PRINT_DEBUG_CANDIDATES
     std::cout << "Basic (one) Turn Candidates:\n";
     for (auto tc : turn_candidates)
-        std::cout << "\t" << tc.toString() << " "
-                  << (int)node_based_graph.GetEdgeData(tc.eid).road_classification.road_class
-                  << " name: " << node_based_graph.GetEdgeData(tc.eid).name_id << std::endl;
+    {
+        std::cout << "\t" << tc.toString() << " ";
+        if (tc.eid != SPECIAL_EDGEID)
+        {
+            std::cout << (int)node_based_graph.GetEdgeData(tc.eid).road_classification.road_class <<
+                "name: " << node_based_graph.GetEdgeData(tc.eid).name_id << std::endl;
+        }
+        else
+        {
+            std::cout << " dead end" << std::endl;
+        }
+    }
 #endif
     return turn_candidates;
 }
@@ -1659,79 +1663,74 @@ std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_nod
     const NodeID only_restriction_to_node =
         restriction_map.CheckForEmanatingIsOnlyTurn(from_node, turn_node);
     const bool is_barrier_node = barrier_nodes.find(turn_node) != barrier_nodes.end();
+    bool has_uturn_edge = false;
 
     for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
     {
-        bool turn_is_valid = true;
+        // reverse edges are never valid turns because the resulting turn would look like this:
+        // from_node --via_edge--> turn_node <--onto_edge-- to_node
         if (node_based_graph.GetEdgeData(onto_edge).reversed)
         {
-            turn_is_valid = false;
+            continue;
         }
+
         const NodeID to_node = node_based_graph.GetTarget(onto_edge);
 
-        if (turn_is_valid && (only_restriction_to_node != SPECIAL_NODEID) &&
-            (to_node != only_restriction_to_node))
-        {
+        bool turn_is_valid =
+            // we are not turning over a barrier
+            (!is_barrier_node || from_node == to_node) &&
             // We are at an only_-restriction but not at the right turn.
-            //            ++restricted_turns_counter;
-            turn_is_valid = false;
-        }
+            (only_restriction_to_node == SPECIAL_NODEID || to_node == only_restriction_to_node) &&
+            // the turn is not restricted
+            !restriction_map.CheckIfTurnIsRestricted(from_node, turn_node, to_node);
 
-        if (turn_is_valid)
+        auto angle = 0.;
+        if (from_node == to_node)
         {
-            if (is_barrier_node)
+            has_uturn_edge = true;
+            if (turn_is_valid && !is_barrier_node)
             {
-                if (from_node != to_node)
-                {
-                    //                    ++skipped_barrier_turns_counter;
-                    turn_is_valid = false;
-                }
-            }
-            else
-            {
-                if (from_node == to_node && node_based_graph.GetOutDegree(turn_node) > 1)
+                // we only add u-turns for dead-end streets.
+                if (node_based_graph.GetOutDegree(turn_node) > 1)
                 {
                     auto number_of_emmiting_bidirectional_edges = 0;
                     for (auto edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
                     {
                         auto target = node_based_graph.GetTarget(edge);
                         auto reverse_edge = node_based_graph.FindEdge(target, turn_node);
+                        BOOST_ASSERT(reverse_edge != SPECIAL_EDGEID);
                         if (!node_based_graph.GetEdgeData(reverse_edge).reversed)
                         {
                             ++number_of_emmiting_bidirectional_edges;
                         }
                     }
-                    if (number_of_emmiting_bidirectional_edges > 1)
-                    {
-                        //                        ++skipped_uturns_counter;
-                        turn_is_valid = false;
-                    }
+                    // is a dead-end
+                    turn_is_valid = number_of_emmiting_bidirectional_edges <= 1;
                 }
             }
+            BOOST_ASSERT(angle >= 0. && angle < std::numeric_limits<double>::epsilon());
         }
-
-        // only add an edge if turn is not a U-turn except when it is
-        // at the end of a dead-end street
-        if (restriction_map.CheckIfTurnIsRestricted(from_node, turn_node, to_node) &&
-            (only_restriction_to_node == SPECIAL_NODEID) && (to_node != only_restriction_to_node))
+        else
         {
-            // We are at an only_-restriction but not at the right turn.
-            //            ++restricted_turns_counter;
-            turn_is_valid = false;
+            // unpack first node of second segment if packed
+            const auto first_coordinate = getRepresentativeCoordinate(
+                from_node, turn_node, via_eid, INVERT, compressed_edge_container, node_info_list);
+            const auto third_coordinate = getRepresentativeCoordinate(
+                turn_node, to_node, onto_edge, !INVERT, compressed_edge_container, node_info_list);
+            angle = util::coordinate_calculation::computeAngle(
+                first_coordinate, node_info_list[turn_node], third_coordinate);
         }
-
-        // unpack first node of second segment if packed
-
-        const auto first_coordinate = getRepresentativeCoordinate(
-            from_node, turn_node, via_eid, INVERT, compressed_edge_container, node_info_list);
-        const auto third_coordinate = getRepresentativeCoordinate(
-            turn_node, to_node, onto_edge, !INVERT, compressed_edge_container, node_info_list);
-
-        const auto angle = util::coordinate_calculation::computeAngle(
-            first_coordinate, node_info_list[turn_node], third_coordinate);
 
         turn_candidates.push_back(
             {onto_edge, turn_is_valid, angle, {TurnType::Invalid, DirectionModifier::UTurn}, 0});
+    }
+
+    // We hit the case of a street leading into nothing-ness. Since the code here assumes that this will
+    // never happen we add an artificial invalid uturn in this case.
+    if (!has_uturn_edge)
+    {
+        turn_candidates.push_back(
+            {SPECIAL_EDGEID, false, 0., {TurnType::Invalid, DirectionModifier::UTurn}, 0});
     }
 
     const auto ByAngle = [](const TurnCandidate &first, const TurnCandidate second)
@@ -1739,6 +1738,8 @@ std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_nod
         return first.angle < second.angle;
     };
     std::sort(std::begin(turn_candidates), std::end(turn_candidates), ByAngle);
+
+    BOOST_ASSERT(turn_candidates[0].angle >= 0. && turn_candidates[0].angle < std::numeric_limits<double>::epsilon());
 
     return mergeSegregatedRoads(from_node, via_eid, std::move(turn_candidates));
 }
