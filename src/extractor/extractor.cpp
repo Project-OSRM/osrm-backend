@@ -528,12 +528,7 @@ Extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
 
     edge_based_graph_factory.Run(config.edge_output_path, lua_state,
                                  config.edge_segment_lookup_path, config.edge_penalty_path,
-                                 config.generate_edge_lookup
-#ifdef DEBUG_GEOMETRY
-                                 ,
-                                 config.debug_turns_path
-#endif
-                                 );
+                                 config.generate_edge_lookup);
 
     lua_close(lua_state);
 

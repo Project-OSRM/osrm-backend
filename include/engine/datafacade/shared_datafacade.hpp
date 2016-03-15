@@ -80,6 +80,11 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<unsigned, true>::vector m_geometry_indices;
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector m_geometry_list;
     util::ShM<bool, true>::vector m_is_core_node;
+    util::ShM<uint8_t, true>::vector m_datasource_list;
+
+    util::ShM<char, true>::vector m_datasource_name_data;
+    util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
+    util::ShM<std::size_t, true>::vector m_datasource_name_lengths;
 
     boost::thread_specific_ptr<std::pair<unsigned, std::shared_ptr<SharedRTree>>> m_static_rtree;
     boost::thread_specific_ptr<SharedGeospatialQuery> m_geospatial_query;
@@ -231,6 +236,34 @@ class SharedDataFacade final : public BaseDataFacade
             geometry_list(geometries_list_ptr,
                           data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
         m_geometry_list = std::move(geometry_list);
+
+        auto datasources_list_ptr = data_layout->GetBlockPtr<uint8_t>(
+            shared_memory, storage::SharedDataLayout::DATASOURCES_LIST);
+        typename util::ShM<uint8_t, true>::vector datasources_list(
+            datasources_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::DATASOURCES_LIST]);
+        m_datasource_list = std::move(datasources_list);
+
+        auto datasource_name_data_ptr = data_layout->GetBlockPtr<char>(
+            shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_DATA);
+        typename util::ShM<char, true>::vector datasource_name_data(
+            datasource_name_data_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_DATA]);
+        m_datasource_name_data = std::move(datasource_name_data);
+
+        auto datasource_name_offsets_ptr = data_layout->GetBlockPtr<std::size_t>(
+            shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS);
+        typename util::ShM<std::size_t, true>::vector datasource_name_offsets(
+            datasource_name_offsets_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS]);
+        m_datasource_name_offsets = std::move(datasource_name_offsets);
+
+        auto datasource_name_lengths_ptr = data_layout->GetBlockPtr<std::size_t>(
+            shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS);
+        typename util::ShM<std::size_t, true>::vector datasource_name_lengths(
+            datasource_name_lengths_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS]);
+        m_datasource_name_lengths = std::move(datasource_name_lengths);
     }
 
   public:
@@ -631,6 +664,56 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     virtual std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
+
+    // Returns the data source ids that were used to supply the edge
+    // weights.
+    virtual void
+    GetUncompressedDatasources(const EdgeID id,
+                               std::vector<uint8_t> &result_datasources) const override final
+    {
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1);
+
+        result_datasources.clear();
+        result_datasources.reserve(end - begin);
+
+        // If there was no datasource info, return an array of 0's.
+        if (m_datasource_list.empty())
+        {
+            for (unsigned i = 0; i < end - begin; ++i)
+            {
+                result_datasources.push_back(0);
+            }
+        }
+        else
+        {
+            std::for_each(m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
+                          [&](const uint8_t &datasource_id)
+                          {
+                              result_datasources.push_back(datasource_id);
+                          });
+        }
+    }
+
+    virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const override final
+    {
+        std::string result;
+
+        if (m_datasource_name_offsets.empty() ||
+            datasource_name_id > m_datasource_name_offsets.size())
+        {
+            if (datasource_name_id == 0)
+                return "lua profile";
+            return "UNKNOWN";
+        }
+
+        std::copy(m_datasource_name_data.begin() + m_datasource_name_offsets[datasource_name_id],
+                  m_datasource_name_data.begin() + m_datasource_name_offsets[datasource_name_id] +
+                      m_datasource_name_lengths[datasource_name_id],
+                  std::back_inserter(result));
+
+        return result;
+    }
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 };

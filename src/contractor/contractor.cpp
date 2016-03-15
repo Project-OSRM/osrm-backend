@@ -71,8 +71,9 @@ int Contractor::Run()
 
     std::size_t max_edge_id = LoadEdgeExpandedGraph(
         config.edge_based_graph_path, edge_based_edge_list, config.edge_segment_lookup_path,
-        config.edge_penalty_path, config.segment_speed_lookup_path, config.node_based_graph_path,
-        config.geometry_path, config.rtree_leaf_path);
+        config.edge_penalty_path, config.segment_speed_lookup_paths, config.node_based_graph_path,
+        config.geometry_path, config.datasource_names_path, config.datasource_indexes_path,
+        config.rtree_leaf_path);
 
     // Contracting the edge-expanded graph
 
@@ -127,15 +128,17 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_penalty_filename,
-    const std::string &segment_speed_filename,
+    const std::vector<std::string> &segment_speed_filenames,
     const std::string &nodes_filename,
     const std::string &geometry_filename,
+    const std::string &datasource_names_filename,
+    const std::string &datasource_indexes_filename,
     const std::string &rtree_leaf_filename)
 {
     util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
 
-    const bool update_edge_weights = segment_speed_filename != "";
+    const bool update_edge_weights = !segment_speed_filenames.empty();
 
     boost::filesystem::ifstream edge_segment_input_stream;
     boost::filesystem::ifstream edge_fixed_penalties_input_stream;
@@ -167,22 +170,36 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     util::SimpleLogger().Write() << "Reading " << number_of_edges
                                  << " edges from the edge based graph";
 
-    std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, unsigned> segment_speed_lookup;
+    std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, std::pair<unsigned, uint8_t>>
+        segment_speed_lookup;
 
     if (update_edge_weights)
     {
-        util::SimpleLogger().Write()
-            << "Segment speed data supplied, will update edge weights from "
-            << segment_speed_filename;
-        io::CSVReader<3> csv_in(segment_speed_filename);
-        csv_in.set_header("from_node", "to_node", "speed");
-        uint64_t from_node_id{};
-        uint64_t to_node_id{};
-        unsigned speed{};
-        while (csv_in.read_row(from_node_id, to_node_id, speed))
+        uint8_t file_id = 1;
+        for (auto segment_speed_filename : segment_speed_filenames)
         {
-            segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] =
-                speed;
+            util::SimpleLogger().Write()
+                << "Segment speed data supplied, will update edge weights from "
+                << segment_speed_filename;
+            io::CSVReader<3> csv_in(segment_speed_filename);
+            csv_in.set_header("from_node", "to_node", "speed");
+            uint64_t from_node_id{};
+            uint64_t to_node_id{};
+            unsigned speed{};
+            while (csv_in.read_row(from_node_id, to_node_id, speed))
+            {
+                segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id),
+                                                    OSMNodeID(to_node_id))] =
+                    std::make_pair(speed, file_id);
+            }
+            ++file_id;
+
+            // Check for overflow
+            if (file_id == 0)
+            {
+                throw util::exception(
+                    "Sorry, there's a limit of 254 segment speed files, you supplied too many");
+            }
         }
 
         std::vector<extractor::QueryNode> internal_to_external_node_map;
@@ -241,6 +258,14 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             }
         }
 
+        // This is a list of the "data source id" for every segment in the compressed
+        // geometry container.  We assume that everything so far has come from the
+        // profile (data source 0).  Here, we replace the 0's with the index of the
+        // CSV file that supplied the value that gets used for that segment, then
+        // we write out this list so that it can be returned by the debugging
+        // vector tiles later on.
+        std::vector<uint8_t> m_geometry_datasource(m_geometry_list.size(), 0);
+
         // Now, we iterate over all the segments stored in the StaticRTree, updating
         // the packed geometry weights in the `.geometries` file (note: we do not
         // update the RTree itself, we just use the leaf nodes to iterate over all segments)
@@ -297,12 +322,16 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
                         if (forward_speed_iter != segment_speed_lookup.end())
                         {
-                            int new_segment_weight = std::max(
-                                1, static_cast<int>(std::floor(
-                                       (segment_length * 10.) / (forward_speed_iter->second / 3.6) +
-                                       .5)));
+                            int new_segment_weight =
+                                std::max(1, static_cast<int>(std::floor(
+                                                (segment_length * 10.) /
+                                                    (forward_speed_iter->second.first / 3.6) +
+                                                .5)));
                             m_geometry_list[forward_begin + leaf_object.fwd_segment_position]
                                 .weight = new_segment_weight;
+                            m_geometry_datasource[forward_begin +
+                                                  leaf_object.fwd_segment_position] =
+                                forward_speed_iter->second.second;
                         }
                     }
                     if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
@@ -338,12 +367,15 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
                         if (reverse_speed_iter != segment_speed_lookup.end())
                         {
-                            int new_segment_weight = std::max(
-                                1, static_cast<int>(std::floor(
-                                       (segment_length * 10.) / (reverse_speed_iter->second / 3.6) +
-                                       .5)));
+                            int new_segment_weight =
+                                std::max(1, static_cast<int>(std::floor(
+                                                (segment_length * 10.) /
+                                                    (reverse_speed_iter->second.first / 3.6) +
+                                                .5)));
                             m_geometry_list[reverse_begin + rev_segment_position].weight =
                                 new_segment_weight;
+                            m_geometry_datasource[reverse_begin + rev_segment_position] =
+                                reverse_speed_iter->second.second;
                         }
                     }
                 }
@@ -369,6 +401,34 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])),
                                   number_of_compressed_geometries *
                                       sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+        }
+
+        {
+            std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
+            if (!datasource_stream)
+            {
+                throw util::exception("Failed to open " + datasource_indexes_filename +
+                                      " for writing");
+            }
+            auto number_of_datasource_entries = m_geometry_datasource.size();
+            datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
+                                    sizeof(number_of_datasource_entries));
+            datasource_stream.write(reinterpret_cast<char *>(&(m_geometry_datasource[0])),
+                                    number_of_datasource_entries * sizeof(uint8_t));
+        }
+
+        {
+            std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
+            if (!datasource_stream)
+            {
+                throw util::exception("Failed to open " + datasource_names_filename +
+                                      " for writing");
+            }
+            datasource_stream << "lua profile" << std::endl;
+            for (auto const &name : segment_speed_filenames)
+            {
+                datasource_stream << name << std::endl;
+            }
         }
     }
 
@@ -413,9 +473,9 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     // This sets the segment weight using the same formula as the
                     // EdgeBasedGraphFactory for consistency.  The *why* of this formula
                     // is lost in the annals of time.
-                    int new_segment_weight =
-                        std::max(1, static_cast<int>(std::floor(
-                                        (segment_length * 10.) / (speed_iter->second / 3.6) + .5)));
+                    int new_segment_weight = std::max(
+                        1, static_cast<int>(std::floor(
+                               (segment_length * 10.) / (speed_iter->second.first / 3.6) + .5)));
                     new_weight += new_segment_weight;
                 }
                 else
