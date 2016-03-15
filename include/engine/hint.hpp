@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 #include <cstdint>
+#include <iosfwd>
 
 namespace osrm
 {
@@ -57,6 +58,9 @@ struct Hint
 
     std::string ToBase64() const;
     static Hint FromBase64(const std::string &base64Hint);
+
+    friend bool operator==(const Hint &, const Hint &);
+    friend std::ostream &operator<<(std::ostream &, const Hint &);
 };
 
 #ifndef _MSC_VER
