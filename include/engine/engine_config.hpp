@@ -52,6 +52,8 @@ struct EngineConfig
                        {"coredata", base.string() + ".core"},
                        {"geometries", base.string() + ".geometry"},
                        {"timestamp", base.string() + ".timestamp"},
+                       {"datasource_names", base.string() + ".datasource_names"},
+                       {"datasource_indexes", base.string() + ".datasource_indexes"},
                        {"namesdata", base.string() + ".names"}}
     {
     }
