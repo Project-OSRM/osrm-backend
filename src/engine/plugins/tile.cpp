@@ -191,6 +191,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     xyz2mercator(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
     const bbox tile_bbox{min_lon, min_lat, max_lon, max_lat};
 
+    uint8_t max_datasource_id = 0;
+
     // Protobuf serialized blocks when objects go out of scope, hence
     // the extra scoping below.
     protozero::pbf_writer tile_writer{pbf_buffer};
@@ -221,12 +223,20 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 int forward_weight = 0;
                 int reverse_weight = 0;
 
+                uint8_t forward_datasource = 0;
+                uint8_t reverse_datasource = 0;
+
                 if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
                 {
                     std::vector<EdgeWeight> forward_weight_vector;
                     facade.GetUncompressedWeights(edge.forward_packed_geometry_id,
                                                   forward_weight_vector);
                     forward_weight = forward_weight_vector[edge.fwd_segment_position];
+
+                    std::vector<uint8_t> forward_datasource_vector;
+                    facade.GetUncompressedDatasources(edge.forward_packed_geometry_id,
+                                                      forward_datasource_vector);
+                    forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
                 }
 
                 if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID)
@@ -239,7 +249,19 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
                     reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
                                                            edge.fwd_segment_position - 1];
+
+                    std::vector<uint8_t> reverse_datasource_vector;
+                    facade.GetUncompressedDatasources(edge.reverse_packed_geometry_id,
+                                                      reverse_datasource_vector);
+                    reverse_datasource =
+                        reverse_datasource_vector[reverse_datasource_vector.size() -
+                                                  edge.fwd_segment_position - 1];
                 }
+
+                // Keep track of the highest datasource seen so that we don't write unnecessary
+                // data to the layer attribute values
+                max_datasource_id = std::max(max_datasource_id, forward_datasource);
+                max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
                 // If this is a valid forward edge, go ahead and add it to the tile
                 if (forward_weight != 0 && edge.forward_edge_based_node_id != SPECIAL_NODEID)
@@ -296,7 +318,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         field.add_element(
                             std::min(speed, 127u)); // save the speed value, capped at 127
                         field.add_element(1);       // "is_small" tag key offset
-                        field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
+                        field.add_element(128 +
+                                          (edge.component.is_tiny ? 0 : 1)); // is_small feature
+                        field.add_element(2);                        // "datasource" tag key offset
+                        field.add_element(130 + forward_datasource); // datasource value offset
                     }
                     {
                         // Encode the geometry for the feature
@@ -346,7 +371,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         field.add_element(
                             std::min(speed, 127u)); // save the speed value, capped at 127
                         field.add_element(1);       // "is_small" tag key offset
-                        field.add_element(edge.component.is_tiny ? 0 : 1); // is_small feature
+                        field.add_element(128 +
+                                          (edge.component.is_tiny ? 0 : 1)); // is_small feature
+                        field.add_element(2);                        // "datasource" tag key offset
+                        field.add_element(130 + reverse_datasource); // datasource value offset
                     }
                     {
                         protozero::packed_field_uint32 geometry(feature_writer, 4);
@@ -361,6 +389,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         // earlier
         layer_writer.add_string(3, "speed");
         layer_writer.add_string(3, "is_small");
+        layer_writer.add_string(3, "datasource");
 
         // Now, we write out the possible speed value arrays and possible is_tiny
         // values.  Field type 4 is the "values" field.  It's a variable type field,
@@ -383,6 +412,15 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
             protozero::pbf_writer values_writer(layer_writer, 4);
             // Attribute value 7 == bool type
             values_writer.add_bool(7, false);
+        }
+        for (std::size_t i = 0; i <= max_datasource_id; i++)
+        {
+            {
+                // Writing field type 4 == variant type
+                protozero::pbf_writer values_writer(layer_writer, 4);
+                // Attribute value 1 == string type
+                values_writer.add_string(1, facade.GetDatasourceName(i));
+            }
         }
     }
 

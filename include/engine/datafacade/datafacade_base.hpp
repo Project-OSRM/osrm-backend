@@ -76,6 +76,14 @@ class BaseDataFacade
     virtual void GetUncompressedWeights(const EdgeID id,
                                         std::vector<EdgeWeight> &result_weights) const = 0;
 
+    // Returns the data source ids that were used to supply the edge
+    // weights.  Will return an empty array when only the base profile is used.
+    virtual void GetUncompressedDatasources(const EdgeID id,
+                                            std::vector<uint8_t> &data_sources) const = 0;
+
+    // Gets the name of a datasource
+    virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const = 0;
+
     virtual extractor::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const unsigned id) const = 0;
 

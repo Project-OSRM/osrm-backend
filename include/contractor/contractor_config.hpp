@@ -53,6 +53,8 @@ struct ContractorConfig
         node_based_graph_path = osrm_input_path.string() + ".nodes";
         geometry_path = osrm_input_path.string() + ".geometry";
         rtree_leaf_path = osrm_input_path.string() + ".fileIndex";
+        datasource_names_path = osrm_input_path.string() + ".datasource_names";
+        datasource_indexes_path = osrm_input_path.string() + ".datasource_indexes";
     }
 
     boost::filesystem::path config_file_path;
@@ -78,11 +80,9 @@ struct ContractorConfig
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
     double core_factor;
 
-    std::string segment_speed_lookup_path;
-
-#ifdef DEBUG_GEOMETRY
-    std::string debug_geometry_path;
-#endif
+    std::vector<std::string> segment_speed_lookup_paths;
+    std::string datasource_indexes_path;
+    std::string datasource_names_path;
 };
 }
 }

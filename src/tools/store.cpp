@@ -38,7 +38,13 @@ bool generateDataStoreOptions(const int argc, const char *argv[], storage::DataP
         "namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
         ".names file")("timestamp",
                        boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
-                       ".timestamp file");
+                       ".timestamp file")(
+        "datasource_names",
+        boost::program_options::value<boost::filesystem::path>(&paths["datasource_names"]),
+        ".datasource_names file")(
+        "datasource_indexes",
+        boost::program_options::value<boost::filesystem::path>(&paths["datasource_indexes"]),
+        ".datasource_indexes file");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -143,6 +149,18 @@ bool generateDataStoreOptions(const int argc, const char *argv[], storage::DataP
     if (path_iterator != paths.end())
     {
         path_iterator->second = base_string + ".timestamp";
+    }
+
+    path_iterator = paths.find("datasource_indexes");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".datasource_indexes";
+    }
+
+    path_iterator = paths.find("datasource_names");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".datasource_names";
     }
 
     path_iterator = paths.find("hsgrdata");
