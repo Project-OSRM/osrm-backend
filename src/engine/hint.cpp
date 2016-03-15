@@ -6,6 +6,8 @@
 
 #include <iterator>
 #include <algorithm>
+#include <ostream>
+#include <tuple>
 
 namespace osrm
 {
@@ -45,5 +47,14 @@ Hint Hint::FromBase64(const std::string &base64Hint)
 
     return decodeBase64Bytewise<Hint>(encoded);
 }
+
+bool operator==(const Hint &lhs, const Hint &rhs)
+{
+    return std::tie(lhs.phantom, lhs.data_checksum) ==
+           std::tie(rhs.phantom, rhs.data_checksum);
 }
-}
+
+std::ostream &operator<<(std::ostream &out, const Hint &hint) { return out << hint.ToBase64(); }
+
+} // ns engine
+} // ns osrm
