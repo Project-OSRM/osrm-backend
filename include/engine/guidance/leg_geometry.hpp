@@ -20,7 +20,7 @@ namespace guidance
 
 // locations 0---1---2-...-n-1---n
 // turns     s       x      y    t
-// segment   |   0   |  1   | 2  | senitel
+// segment   |   0   |  1   | 2  | sentinel
 // offsets       0      2    n-1     n
 struct LegGeometry
 {
