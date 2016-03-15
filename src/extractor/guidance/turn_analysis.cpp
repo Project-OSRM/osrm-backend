@@ -295,10 +295,9 @@ TurnAnalysis::fallbackTurnAssignmentMotorway(std::vector<TurnCandidate> turn_can
             candidate.instruction = {type, DirectionModifier::Straight};
         else
         {
-            candidate.instruction = {type,
-                                     candidate.angle > STRAIGHT_ANGLE
-                                         ? DirectionModifier::SlightLeft
-                                         : DirectionModifier::SlightRight};
+            candidate.instruction = {type, candidate.angle > STRAIGHT_ANGLE
+                                               ? DirectionModifier::SlightLeft
+                                               : DirectionModifier::SlightRight};
         }
     }
     return turn_candidates;
@@ -336,8 +335,8 @@ std::vector<TurnCandidate> TurnAnalysis::handleFromMotorway(
         return turn_candidates[0].angle;
     };
 
-    const auto getMostLikelyContinue =
-        [this, in_data](const std::vector<TurnCandidate> &turn_candidates)
+    const auto getMostLikelyContinue = [this,
+                                        in_data](const std::vector<TurnCandidate> &turn_candidates)
     {
         double angle = turn_candidates[0].angle;
         double best = 180;
@@ -539,8 +538,9 @@ std::vector<TurnCandidate> TurnAnalysis::handleFromMotorway(
                 auto coord = localizer(node_based_graph.GetTarget(via_edge));
                 util::SimpleLogger().Write(logWARNING)
                     << "Found motorway junction with more than "
-                       "2 exiting motorways or additional ramps at " << std::setprecision(12)
-                    << toFloating(coord.lat) << " " << toFloating(coord.lon);
+                       "2 exiting motorways or additional ramps at "
+                    << std::setprecision(12) << toFloating(coord.lat) << " "
+                    << toFloating(coord.lon);
                 fallbackTurnAssignmentMotorway(turn_candidates);
             }
         } // done for more than one highway exit
@@ -676,8 +676,8 @@ std::vector<TurnCandidate> TurnAnalysis::handleMotorwayRamp(
             }
             else if (detail::isMotorwayClass(edge_data.road_classification.road_class))
             {
-                candidate.instruction = {TurnType::Merge,
-                                         passed_highway_entry ? DirectionModifier::SlightRight
+                candidate.instruction = {TurnType::Merge, passed_highway_entry
+                                                              ? DirectionModifier::SlightRight
                                                               : DirectionModifier::SlightLeft};
             }
             else
@@ -972,8 +972,8 @@ std::vector<TurnCandidate> TurnAnalysis::handleThreeWayTurn(
              node_based_graph.GetEdgeData(turn_candidates[1].eid).name_id ==
                  node_based_graph.GetEdgeData(turn_candidates[2].eid).name_id)
     {
-        const auto findTurn = [isObviousOfTwo](const TurnCandidate turn, const TurnCandidate other)
-                                  -> TurnInstruction
+        const auto findTurn = [isObviousOfTwo](const TurnCandidate turn,
+                                               const TurnCandidate other) -> TurnInstruction
         {
             return {isObviousOfTwo(turn, other) ? TurnType::Merge : TurnType::Turn,
                     getTurnDirection(turn.angle)};
@@ -1133,13 +1133,13 @@ std::vector<TurnCandidate> TurnAnalysis::handleFourWayTurn(
         if (fallback_count++ < 10)
         {
             const auto coord = localizer(node_based_graph.GetTarget(via_edge));
-            util::SimpleLogger().Write(logWARNING)
+            util::SimpleLogger().Write(logDEBUG)
                 << "Resolved to keep fallback on four way turn assignment at "
                 << std::setprecision(12) << toFloating(coord.lat) << " " << toFloating(coord.lon);
             for (const auto &candidate : turn_candidates)
             {
                 const auto &out_data = node_based_graph.GetEdgeData(candidate.eid);
-                util::SimpleLogger().Write(logWARNING)
+                util::SimpleLogger().Write(logDEBUG)
                     << "Candidate: " << candidate.toString() << " Name: " << out_data.name_id
                     << " Road Class: " << (int)out_data.road_classification.road_class
                     << " At: " << localizer(node_based_graph.GetTarget(candidate.eid));
@@ -1288,7 +1288,7 @@ TurnAnalysis::optimizeCandidates(const EdgeID via_eid,
         if (turn.angle == left.angle)
         {
             util::SimpleLogger().Write(logWARNING)
-                << "[warning] conflicting turn angles, identical road duplicated? "
+                << "conflicting turn angles, identical road duplicated? "
                 << std::setprecision(12) << node_info_list[node_based_graph.GetTarget(via_eid)].lat
                 << " " << node_info_list[node_based_graph.GetTarget(via_eid)].lon << std::endl;
         }
@@ -1457,8 +1457,8 @@ bool TurnAnalysis::isObviousChoice(const EdgeID via_eid,
 
     const auto &candidate_to_the_right = turn_candidates[getRight(turn_index)];
 
-    const auto hasValidRatio =
-        [&](const TurnCandidate &left, const TurnCandidate &center, const TurnCandidate &right)
+    const auto hasValidRatio = [&](const TurnCandidate &left, const TurnCandidate &center,
+                                   const TurnCandidate &right)
     {
         auto angle_left = (left.angle > 180) ? angularDeviation(left.angle, STRAIGHT_ANGLE) : 180;
         auto angle_right =
@@ -1778,8 +1778,9 @@ std::vector<TurnCandidate> TurnAnalysis::mergeSegregatedRoads(
         std::cout << "Second: " << second_data.name_id << " " << second_data.travel_mode << " "
                   << second_data.road_classification.road_class << " "
                   << turn_candidates[second].angle << " " << second_data.reversed << std::endl;
-        std::cout << "Deviation: " << angularDeviation(turn_candidates[first].angle,
-                                                       turn_candidates[second].angle) << std::endl;
+        std::cout << "Deviation: "
+                  << angularDeviation(turn_candidates[first].angle, turn_candidates[second].angle)
+                  << std::endl;
 #endif
 
         return first_data.name_id != INVALID_NAME_ID && first_data.name_id == second_data.name_id &&
