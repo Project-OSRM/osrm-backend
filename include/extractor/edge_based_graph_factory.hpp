@@ -109,20 +109,11 @@ class EdgeBasedGraphFactory
     void CompressGeometry();
     unsigned RenumberEdges();
     void GenerateEdgeExpandedNodes();
-#ifdef DEBUG_GEOMETRY
-    void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
-                                   lua_State *lua_state,
-                                   const std::string &edge_segment_lookup_filename,
-                                   const std::string &edge_fixed_penalties_filename,
-                                   const bool generate_edge_lookup,
-                                   const std::string &debug_turns_path);
-#else
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    lua_State *lua_state,
                                    const std::string &edge_segment_lookup_filename,
                                    const std::string &edge_fixed_penalties_filename,
                                    const bool generate_edge_lookup);
-#endif
 
     void InsertEdgeBasedNode(const NodeID u, const NodeID v);
 

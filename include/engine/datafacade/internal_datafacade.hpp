@@ -77,6 +77,8 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, false>::vector m_geometry_list;
     util::ShM<bool, false>::vector m_is_core_node;
     util::ShM<unsigned, false>::vector m_segment_weights;
+    util::ShM<uint8_t, false>::vector m_datasource_list;
+    util::ShM<std::string, false>::vector m_datasource_names;
 
     boost::thread_specific_ptr<InternalRTree> m_static_rtree;
     boost::thread_specific_ptr<InternalGeospatialQuery> m_geospatial_query;
@@ -213,6 +215,34 @@ class InternalDataFacade final : public BaseDataFacade
         }
     }
 
+    void LoadDatasourceInfo(const boost::filesystem::path &datasource_names_file,
+                            const boost::filesystem::path &datasource_indexes_file)
+    {
+        std::ifstream datasources_stream(datasource_indexes_file.c_str(), std::ios::binary);
+        if (datasources_stream)
+        {
+            std::size_t number_of_datasources = 0;
+            datasources_stream.read(reinterpret_cast<char *>(&number_of_datasources),
+                                    sizeof(std::size_t));
+            if (number_of_datasources > 0)
+            {
+                m_datasource_list.resize(number_of_datasources);
+                datasources_stream.read(reinterpret_cast<char *>(&(m_datasource_list[0])),
+                                        number_of_datasources * sizeof(uint8_t));
+            }
+        }
+
+        std::ifstream datasourcenames_stream(datasource_names_file.c_str(), std::ios::binary);
+        if (datasourcenames_stream)
+        {
+            std::string name;
+            while (std::getline(datasourcenames_stream, name))
+            {
+                m_datasource_names.push_back(name);
+            }
+        }
+    }
+
     void LoadRTree()
     {
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
@@ -260,6 +290,14 @@ class InternalDataFacade final : public BaseDataFacade
             return it->second;
         };
 
+        const auto optional_file_for = [&server_paths, &end_it](const std::string &path)
+        {
+            const auto it = server_paths.find(path);
+            if (it == end_it)
+                throw util::exception("no valid " + path + " file given in ini file");
+            return it->second;
+        };
+
         ram_index_path = file_for("ramindex");
         file_index_path = file_for("fileindex");
 
@@ -274,6 +312,10 @@ class InternalDataFacade final : public BaseDataFacade
 
         util::SimpleLogger().Write() << "loading geometries";
         LoadGeometries(file_for("geometries"));
+
+        util::SimpleLogger().Write() << "loading datasource info";
+        LoadDatasourceInfo(optional_file_for("datasource_names"),
+                           optional_file_for("datasource_indexes"));
 
         util::SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(file_for("timestamp"));
@@ -576,6 +618,47 @@ class InternalDataFacade final : public BaseDataFacade
                       {
                           result_weights.emplace_back(edge.weight);
                       });
+    }
+
+    // Returns the data source ids that were used to supply the edge
+    // weights.
+    virtual void
+    GetUncompressedDatasources(const EdgeID id,
+                               std::vector<uint8_t> &result_datasources) const override final
+    {
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1);
+
+        result_datasources.clear();
+        result_datasources.reserve(end - begin);
+
+        // If there was no datasource info, return an array of 0's.
+        if (m_datasource_list.empty())
+        {
+            for (unsigned i = 0; i < end - begin; ++i)
+            {
+                result_datasources.push_back(0);
+            }
+        }
+        else
+        {
+            std::for_each(m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
+                          [&](const uint8_t &datasource_id)
+                          {
+                              result_datasources.push_back(datasource_id);
+                          });
+        }
+    }
+
+    virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const override final
+    {
+        if (m_datasource_names.empty() || datasource_name_id > m_datasource_names.size())
+        {
+            if (datasource_name_id == 0)
+                return "lua profile";
+            return "UNKNOWN";
+        }
+        return m_datasource_names[datasource_name_id];
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }
