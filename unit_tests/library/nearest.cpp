@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 
-#include "args.h"
+#include "args.hpp"
 
 #include "osrm/nearest_parameters.hpp"
 
