@@ -45,7 +45,7 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests server-tests)
+add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests server-tests library-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
@@ -64,6 +64,7 @@ file(GLOB ExtractorTestsGlob unit_tests/extractor/*.cpp)
 file(GLOB EngineTestsGlob unit_tests/engine/*.cpp)
 file(GLOB UtilTestsGlob unit_tests/util/*.cpp)
 file(GLOB ServerTestsGlob unit_tests/server/*.cpp)
+file(GLOB LibraryTestsGlob unit_tests/library/*.cpp)
 file(GLOB IOTestsGlob unit_tests/io/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
@@ -90,12 +91,14 @@ add_executable(engine-tests EXCLUDE_FROM_ALL unit_tests/engine_tests.cpp ${Engin
 add_executable(extractor-tests EXCLUDE_FROM_ALL unit_tests/extractor_tests.cpp ${ExtractorTestsGlob} $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTestsGlob} $<TARGET_OBJECTS:UTIL>)
 add_executable(server-tests EXCLUDE_FROM_ALL unit_tests/server_tests.cpp ${ServerTestsGlob} $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
+add_executable(library-tests EXCLUDE_FROM_ALL unit_tests/library_tests.cpp ${LibraryTestsGlob})
 
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL>)
 
 target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
+target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/)
 target_include_directories(rtree-bench PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
 
 # Check the release mode
@@ -334,6 +337,7 @@ target_link_libraries(server-tests osrm ${Boost_LIBRARIES})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES})
 target_link_libraries(rtree-bench ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES})
 target_link_libraries(util-tests ${UTIL_LIBRARIES})
+target_link_libraries(library-tests osrm)
 
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
