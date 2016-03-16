@@ -15,6 +15,7 @@
 #include "util/timing_util.hpp"
 #include "util/lua_util.hpp"
 #include "util/graph_loader.hpp"
+#include "util/name_table.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -521,10 +522,12 @@ Extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
 
     compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
 
+    util::NameTable name_table(config.names_file_name);
+
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph, compressed_edge_container, barrier_nodes, traffic_lights,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
-        internal_to_external_node_map, speed_profile);
+        internal_to_external_node_map, speed_profile, name_table);
 
     edge_based_graph_factory.Run(config.edge_output_path, lua_state,
                                  config.edge_segment_lookup_path, config.edge_penalty_path,

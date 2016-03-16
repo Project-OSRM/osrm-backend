@@ -6,6 +6,8 @@
 #include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
 
+#include "util/name_table.hpp"
+
 #include <cstdint>
 
 #include <string>
@@ -53,7 +55,8 @@ class TurnAnalysis
                  const std::vector<QueryNode> &node_info_list,
                  const RestrictionMap &restriction_map,
                  const std::unordered_set<NodeID> &barrier_nodes,
-                 const CompressedEdgeContainer &compressed_edge_container);
+                 const CompressedEdgeContainer &compressed_edge_container,
+                 const util::NameTable &name_table);
 
     // the entry into the turn analysis
     std::vector<TurnCandidate> getTurns(const NodeID from_node, const EdgeID via_eid) const;
@@ -64,6 +67,7 @@ class TurnAnalysis
     const RestrictionMap &restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
     const CompressedEdgeContainer &compressed_edge_container;
+    const util::NameTable &name_table;
 
     // Check for restrictions/barriers and generate a list of valid and invalid turns present at the
     // node reached
