@@ -27,28 +27,30 @@ struct CoordinatePairCalculator
     CoordinatePairCalculator(const util::Coordinate coordinate_a,
                              const util::Coordinate coordinate_b)
     {
+        using namespace util::coordinate_calculation;
         // initialize distance calculator with two fixed coordinates a, b
-        first_lon = static_cast<double>(toFloating(coordinate_a.lon)) * util::RAD;
-        first_lat = static_cast<double>(toFloating(coordinate_a.lat)) * util::RAD;
-        second_lon = static_cast<double>(toFloating(coordinate_b.lon)) * util::RAD;
-        second_lat = static_cast<double>(toFloating(coordinate_b.lat)) * util::RAD;
+        first_lon = static_cast<double>(toFloating(coordinate_a.lon)) * DEGREE_TO_RAD;
+        first_lat = static_cast<double>(toFloating(coordinate_a.lat)) * DEGREE_TO_RAD;
+        second_lon = static_cast<double>(toFloating(coordinate_b.lon)) * DEGREE_TO_RAD;
+        second_lat = static_cast<double>(toFloating(coordinate_b.lat)) * DEGREE_TO_RAD;
     }
 
     int operator()(const util::Coordinate other) const
     {
+        using namespace util::coordinate_calculation;
         // set third coordinate c
-        const float float_lon1 = static_cast<double>(toFloating(other.lon)) * util::RAD;
-        const float float_lat1 = static_cast<double>(toFloating(other.lat)) * util::RAD;
+        const float float_lon1 = static_cast<double>(toFloating(other.lon)) * DEGREE_TO_RAD;
+        const float float_lat1 = static_cast<double>(toFloating(other.lat)) * DEGREE_TO_RAD;
 
         // compute distance (a,c)
         const float x_value_1 = (first_lon - float_lon1) * cos((float_lat1 + first_lat) / 2.f);
         const float y_value_1 = first_lat - float_lat1;
-        const float dist1 = std::hypot(x_value_1, y_value_1) * util::EARTH_RADIUS;
+        const float dist1 = std::hypot(x_value_1, y_value_1) * EARTH_RADIUS;
 
         // compute distance (b,c)
         const float x_value_2 = (second_lon - float_lon1) * cos((float_lat1 + second_lat) / 2.f);
         const float y_value_2 = second_lat - float_lat1;
-        const float dist2 = std::hypot(x_value_2, y_value_2) * util::EARTH_RADIUS;
+        const float dist2 = std::hypot(x_value_2, y_value_2) * EARTH_RADIUS;
 
         // return the minimum
         return static_cast<int>(std::min(dist1, dist2));
