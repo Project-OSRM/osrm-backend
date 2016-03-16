@@ -1,7 +1,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 
-#include "args.h"
+#include "args.hpp"
+#include "fixture.hpp"
 
 #include "osrm/route_parameters.hpp"
 
@@ -16,14 +17,9 @@ BOOST_AUTO_TEST_SUITE(route)
 BOOST_AUTO_TEST_CASE(test_route)
 {
     const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
+    auto osrm = get_osrm(args.at(0));
 
     using namespace osrm;
-
-    EngineConfig config{args[0]};
-    config.use_shared_memory = false;
-
-    OSRM osrm{config};
 
     RouteParameters params;
 
