@@ -12,9 +12,12 @@
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
+#include <algorithm>
 #include <map>
 #include <cmath>
 #include <cstdint>
+#include <string>
+#include <iostream>
 
 namespace osrm
 {
@@ -329,6 +332,73 @@ inline bool isDistinct(const DirectionModifier first, const DirectionModifier se
         return false;
 
     return true;
+}
+
+inline bool requiresNameAnnounced(const std::string &from, const std::string &to)
+{
+    // FIXME, handle in profile to begin with?
+    // this uses the encoding of references in the profile, which is very BAD
+    // Input for this function should be a struct separating streetname, suffix (e.g. road,
+    // boulevard, North, West ...), and a list of references
+    std::string from_name = "", from_ref = "", to_name = "", to_ref = "";
+
+    auto split = [](const std::string &name, std::string &out_name, std::string &out_ref)
+    {
+        const auto ref_begin = name.find_first_of('(');
+        if (ref_begin != std::string::npos)
+        {
+            out_name = name.substr(0, ref_begin);
+            out_ref = name.substr(ref_begin + 1, name.find_first_of(')') - 1);
+        }
+        else
+        {
+            out_name = name;
+            out_ref = "";
+        }
+    };
+
+    split(from, from_name, from_ref);
+    split(to, to_name, to_ref);
+
+    // check similarity of names
+    if (from_name != "" && to_name != "")
+    {
+        if ((from_name.back() >= '0' && from_name.back() <= '9') ||
+            (to_name.back() >= '0' && to_name.back() <= '9'))
+            return from_name != to_name;
+        if (from.find("Weg ") == 0 && to_name.find("Weg ") == 0)
+            return from_name != to_name;
+        auto from_itr = from_name.begin();
+        auto to_itr = to_name.begin();
+        for (; from_itr != from_name.end() && to_itr != to_name.end() && *from_itr == *to_itr;
+             ++to_itr, ++from_itr)
+        {
+            /* do nothing */
+        }
+
+        const auto common_length = std::distance(from_name.begin(), from_itr);
+        return (100 * common_length / std::min(to_name.length(), from_name.length())) < 80;
+    }
+    else if (from_ref != "" && to_ref != "")
+    {
+        // references are contained in one another
+        if (from_ref.find(to_ref) != std::string::npos ||
+            to_ref.find(from_ref) != std::string::npos)
+            return false;
+    }
+    return true;
+}
+
+inline int getPriority( const FunctionalRoadClass road_class )
+{
+    const constexpr int road_priority[] = {10, 0, 10, 2, 10, 4, 10, 6, 10, 8, 10, 11, 10, 12, 10, 14};
+    return road_priority[static_cast<int>(road_class)];
+}
+
+inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoadClass second)
+{
+    // forks require similar road categories
+    return std::abs(getPriority(first) - getPriority(second)) <= 1;
 }
 
 } // namespace guidance
