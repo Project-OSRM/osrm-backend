@@ -55,10 +55,11 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                            const std::vector<QueryNode> &node_info_list,
                            const RestrictionMap &restriction_map,
                            const std::unordered_set<NodeID> &barrier_nodes,
-                           const CompressedEdgeContainer &compressed_edge_container)
+                           const CompressedEdgeContainer &compressed_edge_container,
+                           const util::NameTable &name_table)
     : node_based_graph(node_based_graph), node_info_list(node_info_list),
       restriction_map(restriction_map), barrier_nodes(barrier_nodes),
-      compressed_edge_container(compressed_edge_container)
+      compressed_edge_container(compressed_edge_container), name_table(name_table)
 {
 }
 
@@ -784,7 +785,9 @@ TurnInstruction TurnAnalysis::getInstructionForObvious(const std::size_t num_can
     {
         const auto &in_data = node_based_graph.GetEdgeData(via_edge);
         const auto &out_data = node_based_graph.GetEdgeData(candidate.eid);
-        if (in_data.name_id != out_data.name_id)
+        if (in_data.name_id != out_data.name_id &&
+            requiresNameAnnounced(name_table.get_name_for_id(in_data.name_id),
+                                  name_table.get_name_for_id(out_data.name_id)))
             return {TurnType::NewName, getTurnDirection(candidate.angle)};
         else
             return {TurnType::Suppressed, getTurnDirection(candidate.angle)};
@@ -859,6 +862,7 @@ std::vector<TurnCandidate> TurnAnalysis::handleThreeWayTurn(
                     angularDeviation(turn.angle, STRAIGHT_ANGLE) >
                 1.4);
     };
+
     /* Two nearly straight turns -> FORK
                 OOOOOOO
               /
@@ -871,7 +875,26 @@ std::vector<TurnCandidate> TurnAnalysis::handleThreeWayTurn(
     {
         if (turn_candidates[1].valid && turn_candidates[2].valid)
         {
-            assignFork(via_edge, turn_candidates[2], turn_candidates[1]);
+            const auto left_class =
+                node_based_graph.GetEdgeData(turn_candidates[2].eid).road_classification.road_class;
+            const auto right_class =
+                node_based_graph.GetEdgeData(turn_candidates[1].eid).road_classification.road_class;
+            if (canBeSeenAsFork(left_class, right_class))
+                assignFork(via_edge, turn_candidates[2], turn_candidates[1]);
+            else if (getPriority(left_class) > getPriority(right_class))
+            {
+                turn_candidates[1].instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[1]);
+                turn_candidates[2].instruction = {findBasicTurnType(via_edge, turn_candidates[2]),
+                                                  DirectionModifier::SlightLeft};
+            }
+            else
+            {
+                turn_candidates[2].instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, turn_candidates[2]);
+                turn_candidates[1].instruction = {findBasicTurnType(via_edge, turn_candidates[1]),
+                                                  DirectionModifier::SlightRight};
+            }
         }
         else
         {
@@ -1073,7 +1096,27 @@ void TurnAnalysis::handleDistinctConflict(const EdgeID via_edge,
     if (getTurnDirection(left.angle) == DirectionModifier::Straight ||
         getTurnDirection(left.angle) == DirectionModifier::SlightLeft ||
         getTurnDirection(right.angle) == DirectionModifier::SlightRight)
-        assignFork(via_edge, left, right);
+    {
+        const auto left_class =
+            node_based_graph.GetEdgeData(left.eid).road_classification.road_class;
+        const auto right_class =
+            node_based_graph.GetEdgeData(right.eid).road_classification.road_class;
+        if (canBeSeenAsFork(left_class, right_class))
+            assignFork(via_edge, left, right);
+        else if (getPriority(left_class) > getPriority(right_class))
+        {
+            // FIXME this should possibly know about the actual candidates?
+            right.instruction = getInstructionForObvious(4, via_edge, right);
+            left.instruction = {findBasicTurnType(via_edge, left), DirectionModifier::SlightLeft};
+        }
+        else
+        {
+            // FIXME this should possibly know about the actual candidates?
+            left.instruction = getInstructionForObvious(4, via_edge, left);
+            right.instruction = {findBasicTurnType(via_edge, right),
+                                 DirectionModifier::SlightRight};
+        }
+    }
 
     const auto left_type = findBasicTurnType(via_edge, left);
     const auto right_type = findBasicTurnType(via_edge, right);
@@ -1196,8 +1239,27 @@ std::vector<TurnCandidate> TurnAnalysis::handleComplexTurn(
     {
         if (fork_range.second - fork_range.first == 1)
         {
-            assignFork(via_edge, turn_candidates[fork_range.second],
-                       turn_candidates[fork_range.first]);
+            auto &left = turn_candidates[fork_range.second];
+            auto &right = turn_candidates[fork_range.first];
+            const auto left_class =
+                node_based_graph.GetEdgeData(left.eid).road_classification.road_class;
+            const auto right_class =
+                node_based_graph.GetEdgeData(right.eid).road_classification.road_class;
+            if (canBeSeenAsFork(left_class, right_class))
+                assignFork(via_edge, left, right);
+            else if (getPriority(left_class) > getPriority(right_class))
+            {
+                right.instruction =
+                    getInstructionForObvious(turn_candidates.size(), via_edge, right);
+                left.instruction = {findBasicTurnType(via_edge, left),
+                                    DirectionModifier::SlightLeft};
+            }
+            else
+            {
+                left.instruction = getInstructionForObvious(turn_candidates.size(), via_edge, left);
+                right.instruction = {findBasicTurnType(via_edge, right),
+                                     DirectionModifier::SlightRight};
+            }
         }
         else if (fork_range.second - fork_range.second == 2)
         {

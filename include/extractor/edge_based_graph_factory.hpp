@@ -17,6 +17,7 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 #include "util/deallocating_vector.hpp"
+#include "util/name_table.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -51,7 +52,8 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<QueryNode> &node_info_list,
-                                   SpeedProfileProperties speed_profile);
+                                   SpeedProfileProperties speed_profile,
+                                   const util::NameTable &name_table);
 
     void Run(const std::string &original_edge_data_filename,
              lua_State *lua_state,
@@ -105,6 +107,8 @@ class EdgeBasedGraphFactory
     const CompressedEdgeContainer &m_compressed_edge_container;
 
     SpeedProfileProperties speed_profile;
+
+    const util::NameTable &name_table;
 
     void CompressGeometry();
     unsigned RenumberEdges();
