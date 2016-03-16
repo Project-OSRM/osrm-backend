@@ -337,7 +337,7 @@ target_link_libraries(server-tests osrm ${Boost_LIBRARIES})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES})
 target_link_libraries(rtree-bench ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES})
 target_link_libraries(util-tests ${UTIL_LIBRARIES})
-target_link_libraries(library-tests osrm)
+target_link_libraries(library-tests osrm ${Boost_LIBRARIES})
 
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")

@@ -3,7 +3,7 @@
 
 #include "args.h"
 
-#include "osrm/route_parameters.hpp"
+#include "osrm/table_parameters.hpp"
 
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
@@ -11,9 +11,9 @@
 #include "osrm/status.hpp"
 #include "osrm/osrm.hpp"
 
-BOOST_AUTO_TEST_SUITE(route)
+BOOST_AUTO_TEST_SUITE(table)
 
-BOOST_AUTO_TEST_CASE(test_route)
+BOOST_AUTO_TEST_CASE(test_table)
 {
     const auto args = get_args();
     BOOST_REQUIRE_EQUAL(args.size(), 1);
@@ -25,16 +25,15 @@ BOOST_AUTO_TEST_CASE(test_route)
 
     OSRM osrm{config};
 
-    RouteParameters params;
-
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
+    /*
+    TableParameters params;
 
     json::Object result;
 
-    const auto rc = osrm.Route(params, result);
+    const auto rc = osrm.Table(params, result);
 
     BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
+    */
 }
 
 BOOST_AUTO_TEST_SUITE_END()
