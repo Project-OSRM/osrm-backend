@@ -80,6 +80,8 @@ const constexpr double TILE_SIZE = 256.0;
 // Converts projected mercator degrees to PX
 const constexpr double DEGREE_TO_PX = detail::MAXEXTENT / 180.0;
 
+double degreeToPixel(FloatLatitude lat, unsigned zoom);
+double degreeToPixel(FloatLongitude lon, unsigned zoom);
 FloatLatitude yToLat(const double value);
 double latToY(const FloatLatitude latitude);
 void xyzToMercator(const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy);
