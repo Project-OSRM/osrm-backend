@@ -86,12 +86,12 @@ int main(int argc, const char *argv[]) try
 
     if (config.use_shared_memory)
     {
-        util::SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
+        util::SimpleLogger().Write() << "Loading from shared memory";
     }
 
-    util::SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
-    util::SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
-    util::SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
+    util::SimpleLogger().Write() << "Threads: " << requested_thread_num;
+    util::SimpleLogger().Write() << "IP address: " << ip_address;
+    util::SimpleLogger().Write() << "IP port: " << ip_port;
 
 #ifndef _WIN32
     int sig = 0;
