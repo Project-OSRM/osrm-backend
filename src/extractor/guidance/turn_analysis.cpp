@@ -1655,6 +1655,19 @@ TurnAnalysis::suppressTurns(const EdgeID via_eid, std::vector<TurnCandidate> tur
     return turn_candidates;
 }
 
+//                                               a
+//                                               |
+//                                               |
+//                                               v
+// For an intersection from_node --via_edi--> turn_node ----> c
+//                                               ^
+//                                               |
+//                                               |
+//                                               b
+// This functions returns _all_ turns as if the graph was undirected.
+// That means we not only get (from_node, turn_node, c) in the above example
+// but also (from_node, turn_node, a), (from_node, turn_node, b). These turns are
+// marked as invalid and only needed for intersection classification.
 std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_node,
                                                            const EdgeID via_eid) const
 {
@@ -1663,20 +1676,17 @@ std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_nod
     const NodeID only_restriction_to_node =
         restriction_map.CheckForEmanatingIsOnlyTurn(from_node, turn_node);
     const bool is_barrier_node = barrier_nodes.find(turn_node) != barrier_nodes.end();
-    bool has_uturn_edge = false;
 
     for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
     {
-        // reverse edges are never valid turns because the resulting turn would look like this:
-        // from_node --via_edge--> turn_node <--onto_edge-- to_node
-        if (node_based_graph.GetEdgeData(onto_edge).reversed)
-        {
-            continue;
-        }
 
         const NodeID to_node = node_based_graph.GetTarget(onto_edge);
 
         bool turn_is_valid =
+            // reverse edges are never valid turns because the resulting turn would look like this:
+            // from_node --via_edge--> turn_node <--onto_edge-- to_node
+            // however we need this for capture intersection shape for incoming one-ways
+            !node_based_graph.GetEdgeData(onto_edge).reversed &&
             // we are not turning over a barrier
             (!is_barrier_node || from_node == to_node) &&
             // We are at an only_-restriction but not at the right turn.
@@ -1687,7 +1697,6 @@ std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_nod
         auto angle = 0.;
         if (from_node == to_node)
         {
-            has_uturn_edge = true;
             if (turn_is_valid && !is_barrier_node)
             {
                 // we only add u-turns for dead-end streets.
@@ -1723,14 +1732,6 @@ std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_nod
 
         turn_candidates.push_back(
             {onto_edge, turn_is_valid, angle, {TurnType::Invalid, DirectionModifier::UTurn}, 0});
-    }
-
-    // We hit the case of a street leading into nothing-ness. Since the code here assumes that this will
-    // never happen we add an artificial invalid uturn in this case.
-    if (!has_uturn_edge)
-    {
-        turn_candidates.push_back(
-            {SPECIAL_EDGEID, false, 0., {TurnType::Invalid, DirectionModifier::UTurn}, 0});
     }
 
     const auto ByAngle = [](const TurnCandidate &first, const TurnCandidate second)
