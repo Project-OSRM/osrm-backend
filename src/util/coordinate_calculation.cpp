@@ -301,7 +301,24 @@ inline void pixelToDegree(const double shift, double &x, double &y)
     x = (x - b) / shift * 360.0;
     // FIXME needs to be simplified
     const double g = (y - b) / -(shift / (2 * M_PI)) / DEGREE_TO_RAD;
+    static_assert(DEGREE_TO_RAD / (2 * M_PI) - 1/360. < 0.0001, "");
     y = static_cast<double>(util::coordinate_calculation::mercator::yToLat(g));
+}
+
+double degreeToPixel(FloatLongitude lon, unsigned zoom)
+{
+    const double shift = (1u << zoom) * TILE_SIZE;
+    const double b = shift / 2.0;
+    const double x = b * (1 + static_cast<double>(lon) / 180.0);
+    return x;
+}
+
+double degreeToPixel(FloatLatitude lat, unsigned zoom)
+{
+    const double shift = (1u << zoom) * TILE_SIZE;
+    const double b = shift / 2.0;
+    const double y = b * (1. - latToY(lat) / 180.);
+    return y;
 }
 
 // Converts a WMS tile coordinate (z,x,y) into a wsg84 bounding box
