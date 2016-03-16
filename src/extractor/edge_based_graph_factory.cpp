@@ -35,12 +35,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
     const std::vector<QueryNode> &node_info_list,
-    SpeedProfileProperties speed_profile)
+    SpeedProfileProperties speed_profile,
+    const util::NameTable &name_table)
     : m_max_edge_id(0), m_node_info_list(node_info_list),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
-      speed_profile(std::move(speed_profile))
+      speed_profile(std::move(speed_profile)), name_table(name_table)
 {
 }
 
@@ -124,10 +125,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     // traverse arrays from start and end respectively
     for (const auto i : util::irange(std::size_t{ 0 }, geometry_size))
     {
-        BOOST_ASSERT(
-            current_edge_source_coordinate_id ==
-            m_compressed_edge_container.GetBucketReference(edge_id_2)[geometry_size - 1 - i]
-                .node_id);
+        BOOST_ASSERT(current_edge_source_coordinate_id ==
+                     m_compressed_edge_container.GetBucketReference(
+                                                     edge_id_2)[geometry_size - 1 - i].node_id);
         const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
@@ -305,8 +305,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
-    guidance::TurnAnalysis turn_analysis( *m_node_based_graph, m_node_info_list,
-                                       *m_restriction_map, m_barrier_nodes, m_compressed_edge_container );
+    guidance::TurnAnalysis turn_analysis(*m_node_based_graph, m_node_info_list, *m_restriction_map,
+                                         m_barrier_nodes, m_compressed_edge_container, name_table);
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         // progress.printStatus(node_u);
