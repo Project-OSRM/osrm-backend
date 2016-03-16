@@ -29,20 +29,6 @@ Coordinate::Coordinate(const FloatLongitude lon_, const FloatLatitude lat_)
 
 Coordinate::Coordinate(const FixedLongitude lon_, const FixedLatitude lat_) : lon(lon_), lat(lat_)
 {
-#ifndef NDEBUG
-    if (0 != (std::abs(static_cast<int>(lon)) >> 30))
-    {
-        std::bitset<32> x_coordinate_vector(static_cast<int>(lon));
-        SimpleLogger().Write(logDEBUG) << "broken lon: " << lon
-                                       << ", bits: " << x_coordinate_vector;
-    }
-    if (0 != (std::abs(static_cast<int>(lat)) >> 30))
-    {
-        std::bitset<32> y_coordinate_vector(static_cast<int>(lat));
-        SimpleLogger().Write(logDEBUG) << "broken lat: " << lat
-                                       << ", bits: " << y_coordinate_vector;
-    }
-#endif
 }
 
 bool Coordinate::IsValid() const
