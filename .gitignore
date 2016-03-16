@@ -41,6 +41,7 @@ Thumbs.db
 #######################
 /build/
 /example/build/
+/test/data/monaco*
 /cmake/postinst
 
 # Eclipse related files #
