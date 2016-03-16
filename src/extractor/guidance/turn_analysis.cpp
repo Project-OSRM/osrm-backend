@@ -1679,7 +1679,7 @@ std::vector<TurnCandidate> TurnAnalysis::getTurnCandidates(const NodeID from_nod
 
     for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
     {
-
+        BOOST_ASSERT( onto_edge != SPECIAL_EDGEID );
         const NodeID to_node = node_based_graph.GetTarget(onto_edge);
 
         bool turn_is_valid =
@@ -1838,7 +1838,9 @@ std::vector<TurnCandidate> TurnAnalysis::mergeSegregatedRoads(
             (360 - turn_candidates[turn_candidates.size() - 1].angle) / 2;
         for (std::size_t i = 1; i + 1 < turn_candidates.size(); ++i)
             turn_candidates[i].angle += correction_factor;
-        turn_candidates[turn_candidates.size() - 1].angle = 0;
+        turn_candidates[0] = merge(turn_candidates.front(),turn_candidates.back());
+        turn_candidates[0].angle = 0;
+        turn_candidates.pop_back();
     }
     else if (mergable(0, 1))
     {
@@ -1846,10 +1848,12 @@ std::vector<TurnCandidate> TurnAnalysis::mergeSegregatedRoads(
         const double correction_factor = (turn_candidates[1].angle) / 2;
         for (std::size_t i = 2; i < turn_candidates.size(); ++i)
             turn_candidates[i].angle += correction_factor;
-        turn_candidates[1].angle = 0;
+        turn_candidates[0] = merge(turn_candidates[0],turn_candidates[1]);
+        turn_candidates[0].angle = 0;
+        turn_candidates.erase(turn_candidates.begin() + 1);
     }
 
-    for (std::size_t index = 0; index < turn_candidates.size(); ++index)
+    for (std::size_t index = 2; index < turn_candidates.size(); ++index)
     {
         if (mergable(index, getRight(index)))
         {
