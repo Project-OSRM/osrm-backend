@@ -3,7 +3,7 @@
 
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/douglas_peucker.hpp"
-#include "util/tiles.hpp"
+#include "util/viewport.hpp"
 
 #include <vector>
 #include <tuple>
@@ -23,25 +23,22 @@ namespace
 
 unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometries)
 {
-    util::FixedLongitude min_lon{std::numeric_limits<int>::max()};
-    util::FixedLongitude max_lon{std::numeric_limits<int>::min()};
-    util::FixedLatitude min_lat{std::numeric_limits<int>::max()};
-    util::FixedLatitude max_lat{std::numeric_limits<int>::min()};
+    util::Coordinate south_west{util::FixedLongitude{std::numeric_limits<int>::max()}, util::FixedLatitude{std::numeric_limits<int>::max()}};
+    util::Coordinate north_east{util::FixedLongitude{std::numeric_limits<int>::min()}, util::FixedLatitude{std::numeric_limits<int>::min()}};
 
     for (const auto &leg_geometry : leg_geometries)
     {
         for (const auto coord : leg_geometry.locations)
         {
-            min_lon = std::min(min_lon, coord.lon);
-            max_lon = std::max(max_lon, coord.lon);
-            min_lat = std::min(min_lat, coord.lat);
-            max_lat = std::max(max_lat, coord.lat);
+            south_west.lon = std::min(south_west.lon, coord.lon);
+            south_west.lat = std::min(south_west.lat, coord.lat);
+
+            north_east.lon = std::max(north_east.lon, coord.lon);
+            north_east.lat = std::max(north_east.lat, coord.lat);
         }
     }
 
-    return util::tiles::getBBMaxZoomTile(toFloating(min_lon), toFloating(min_lat),
-                                         toFloating(max_lon), toFloating(max_lat))
-        .z;
+    return util::viewport::getFittedZoom(south_west, north_east);
 }
 
 std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &leg_geometries,
