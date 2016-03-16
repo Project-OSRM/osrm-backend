@@ -1,6 +1,8 @@
 #include "engine/plugins/plugin_base.hpp"
 #include "engine/plugins/tile.hpp"
 
+#include "util/coordinate_calculation.hpp"
+
 #include <protozero/varint.hpp>
 #include <protozero/pbf_writer.hpp>
 
@@ -17,89 +19,29 @@ namespace engine
 {
 namespace plugins
 {
+namespace detail
+{
+// Vector tiles are 4096 virtual pixels on each side
+const constexpr double VECTOR_TILE_EXTENT = 4096.0;
 
-// from mapnik/well_known_srs.hpp
-const constexpr double EARTH_RADIUS = 6378137.0;
-const constexpr double EARTH_DIAMETER = EARTH_RADIUS * 2.0;
-const constexpr double EARTH_CIRCUMFERENCE = EARTH_DIAMETER * M_PI;
-const constexpr double MAXEXTENT = EARTH_CIRCUMFERENCE / 2.0;
-const constexpr double M_PI_by2 = M_PI / 2.0;
-const constexpr double D2R = M_PI / 180.0;
-const constexpr double R2D = 180.0 / M_PI;
-const constexpr double M_PIby360 = M_PI / 360.0;
-const constexpr double MAXEXTENTby180 = MAXEXTENT / 180.0;
-const double MAX_LATITUDE = R2D * (2.0 * std::atan(std::exp(180.0 * D2R)) - M_PI_by2);
-// ^ math functions are not constexpr since they have side-effects (setting errno) :(
+// Simple container class for WSG84 coordinates
+template <typename T> struct Point final
+{
+    Point(T _x, T _y) : x(_x), y(_y) {}
+
+    const T x;
+    const T y;
+};
 
 // from mapnik-vector-tile
-namespace detail_pbf
+namespace pbf
 {
-
 inline unsigned encode_length(const unsigned len) { return (len << 3u) | 2u; }
 }
 
-// Converts a regular WSG84 lon/lat pair into
-// a mercator coordinate
-inline void lonlat2merc(double &x, double &y)
+struct BBox final
 {
-    if (x > 180)
-        x = 180;
-    else if (x < -180)
-        x = -180;
-    if (y > MAX_LATITUDE)
-        y = MAX_LATITUDE;
-    else if (y < -MAX_LATITUDE)
-        y = -MAX_LATITUDE;
-    x = x * MAXEXTENTby180;
-    y = std::log(std::tan((90 + y) * M_PIby360)) * R2D;
-    y = y * MAXEXTENTby180;
-}
-
-// This is the global default tile size for all Mapbox Vector Tiles
-const constexpr double tile_size_ = 256.0;
-
-//
-inline void from_pixels(const double shift, double &x, double &y)
-{
-    const double b = shift / 2.0;
-    x = (x - b) / (shift / 360.0);
-    const double g = (y - b) / -(shift / (2 * M_PI));
-    y = R2D * (2.0 * std::atan(std::exp(g)) - M_PI_by2);
-}
-
-// Converts a WMS tile coordinate (z,x,y) into a mercator bounding box
-inline void xyz2mercator(
-    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
-{
-    minx = x * tile_size_;
-    miny = (y + 1.0) * tile_size_;
-    maxx = (x + 1.0) * tile_size_;
-    maxy = y * tile_size_;
-    const double shift = std::pow(2.0, z) * tile_size_;
-    from_pixels(shift, minx, miny);
-    from_pixels(shift, maxx, maxy);
-    lonlat2merc(minx, miny);
-    lonlat2merc(maxx, maxy);
-}
-
-// Converts a WMS tile coordinate (z,x,y) into a wsg84 bounding box
-inline void xyz2wsg84(
-    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
-{
-    minx = x * tile_size_;
-    miny = (y + 1.0) * tile_size_;
-    maxx = (x + 1.0) * tile_size_;
-    maxy = y * tile_size_;
-    const double shift = std::pow(2.0, z) * tile_size_;
-    from_pixels(shift, minx, miny);
-    from_pixels(shift, maxx, maxy);
-}
-
-// emulates mapbox::box2d, just a simple container for
-// a box
-struct bbox final
-{
-    bbox(const double _minx, const double _miny, const double _maxx, const double _maxy)
+    BBox(const double _minx, const double _miny, const double _maxx, const double _maxy)
         : minx(_minx), miny(_miny), maxx(_maxx), maxy(_maxy)
     {
     }
@@ -113,15 +55,6 @@ struct bbox final
     const double maxy;
 };
 
-// Simple container class for WSG84 coordinates
-struct point_type_d final
-{
-    point_type_d(double _x, double _y) : x(_x), y(_y) {}
-
-    const double x;
-    const double y;
-};
-
 // Simple container for integer coordinates (i.e. pixel coords)
 struct point_type_i final
 {
@@ -131,15 +64,15 @@ struct point_type_i final
     const std::int64_t y;
 };
 
-using line_type = std::vector<point_type_i>;
-using line_typed = std::vector<point_type_d>;
+using FixedLine = std::vector<detail::Point<std::int32_t>>;
+using FloatLine = std::vector<detail::Point<double>>;
 
 // from mapnik-vector-tile
 // Encodes a linestring using protobuf zigzag encoding
-inline bool encode_linestring(line_type line,
-                              protozero::packed_field_uint32 &geometry,
-                              std::int32_t &start_x,
-                              std::int32_t &start_y)
+inline bool encodeLinestring(const FixedLine& line,
+                             protozero::packed_field_uint32 &geometry,
+                             std::int32_t &start_x,
+                             std::int32_t &start_y)
 {
     const std::size_t line_size = line.size();
     if (line_size < 2)
@@ -155,7 +88,7 @@ inline bool encode_linestring(line_type line,
     geometry.add_element(protozero::encode_zigzag32(pt->y - start_y));
     start_x = pt->x;
     start_y = pt->y;
-    geometry.add_element(detail_pbf::encode_length(line_to_length));
+    geometry.add_element(detail::pbf::encode_length(line_to_length));
     for (++pt; pt != line.end(); ++pt)
     {
         const std::int32_t dx = pt->x - start_x;
@@ -168,15 +101,42 @@ inline bool encode_linestring(line_type line,
     return true;
 }
 
+FixedLine coordinatesToTileLine(const util::Coordinate start,
+                                const util::Coordinate target,
+                                const detail::BBox &tile_bbox)
+{
+    using namespace util::coordinate_calculation;
+    FloatLine geo_line;
+    geo_line.emplace_back(static_cast<double>(util::toFloating(start.lon)),
+                          static_cast<double>(util::toFloating(start.lat)));
+    geo_line.emplace_back(static_cast<double>(util::toFloating(target.lon)),
+                          static_cast<double>(util::toFloating(target.lat)));
+    FixedLine tile_line;
+    for (auto const &pt : geo_line)
+    {
+        double px_merc = pt.x * mercator::DEGREE_TO_PX;
+        double py_merc = mercator::latToY(util::FloatLatitude(pt.y)) * mercator::DEGREE_TO_PX;
+        // convert lon/lat to tile coordinates
+        const auto px = std::round(
+            ((px_merc - tile_bbox.minx) * mercator::TILE_SIZE / tile_bbox.width()) *
+            detail::VECTOR_TILE_EXTENT / util::coordinate_calculation::mercator::TILE_SIZE);
+        const auto py = std::round(
+            ((tile_bbox.maxy - py_merc) * mercator::TILE_SIZE / tile_bbox.height()) *
+            detail::VECTOR_TILE_EXTENT / util::coordinate_calculation::mercator::TILE_SIZE);
+        tile_line.emplace_back(px, py);
+    }
+    return tile_line;
+}
+}
+
 Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer)
 {
-
-    // Vector tiles are 4096 virtual pixels on each side
-    const double tile_extent = 4096.0;
+    using namespace util::coordinate_calculation;
     double min_lon, min_lat, max_lon, max_lat;
 
     // Convert the z,x,y mercator tile coordinates into WSG84 lon/lat values
-    xyz2wsg84(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
+    mercator::xyzToWSG84(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon,
+                         max_lat);
 
     util::Coordinate southwest{util::FloatLongitude(min_lon), util::FloatLatitude(min_lat)};
     util::Coordinate northeast{util::FloatLongitude(max_lon), util::FloatLatitude(max_lat)};
@@ -188,8 +148,9 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     // TODO: extract speed values for compressed and uncompressed geometries
 
     // Convert tile coordinates into mercator coordinates
-    xyz2mercator(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
-    const bbox tile_bbox{min_lon, min_lat, max_lon, max_lat};
+    mercator::xyzToMercator(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon,
+                            max_lat);
+    const detail::BBox tile_bbox{min_lon, min_lat, max_lon, max_lat};
 
     uint8_t max_datasource_id = 0;
 
@@ -263,38 +224,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 max_datasource_id = std::max(max_datasource_id, forward_datasource);
                 max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
-                // If this is a valid forward edge, go ahead and add it to the tile
-                if (forward_weight != 0 && edge.forward_edge_based_node_id != SPECIAL_NODEID)
+                const auto encode_tile_line = [&layer_writer, &edge, &id](
+                    const detail::FixedLine &tile_line, const std::uint32_t speed_kmh, const std::uint8_t datasource,
+                    std::int32_t &start_x, std::int32_t &start_y)
                 {
-                    std::int32_t start_x = 0;
-                    std::int32_t start_y = 0;
-
-                    line_typed geo_line;
-                    geo_line.emplace_back(static_cast<double>(util::toFloating(a.lon)),
-                                          static_cast<double>(util::toFloating(a.lat)));
-                    geo_line.emplace_back(static_cast<double>(util::toFloating(b.lon)),
-                                          static_cast<double>(util::toFloating(b.lat)));
-
-                    // Calculate the speed for this line
-                    std::uint32_t speed =
-                        static_cast<std::uint32_t>(round(length / forward_weight * 10 * 3.6));
-
-                    line_type tile_line;
-                    for (auto const &pt : geo_line)
-                    {
-                        double px_merc = pt.x;
-                        double py_merc = pt.y;
-                        lonlat2merc(px_merc, py_merc);
-                        // convert lon/lat to tile coordinates
-                        const auto px = std::round(
-                            ((px_merc - tile_bbox.minx) * tile_extent / 16.0 / tile_bbox.width()) *
-                            tile_extent / 256.0);
-                        const auto py = std::round(
-                            ((tile_bbox.maxy - py_merc) * tile_extent / 16.0 / tile_bbox.height()) *
-                            tile_extent / 256.0);
-                        tile_line.emplace_back(px, py);
-                    }
-
                     // Here, we save the two attributes for our feature: the speed and the
                     // is_small
                     // boolean.  We onl serve up speeds from 0-139, so all we do is save the
@@ -316,18 +249,32 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
                         field.add_element(0); // "speed" tag key offset
                         field.add_element(
-                            std::min(speed, 127u)); // save the speed value, capped at 127
+                            std::min(speed_kmh, 127u)); // save the speed value, capped at 127
                         field.add_element(1);       // "is_small" tag key offset
                         field.add_element(128 +
                                           (edge.component.is_tiny ? 0 : 1)); // is_small feature
                         field.add_element(2);                        // "datasource" tag key offset
-                        field.add_element(130 + forward_datasource); // datasource value offset
+                        field.add_element(130 + datasource); // datasource value offset
                     }
                     {
                         // Encode the geometry for the feature
                         protozero::packed_field_uint32 geometry(feature_writer, 4);
-                        encode_linestring(tile_line, geometry, start_x, start_y);
+                        encodeLinestring(tile_line, geometry, start_x, start_y);
                     }
+                };
+
+                // If this is a valid forward edge, go ahead and add it to the tile
+                if (forward_weight != 0 && edge.forward_edge_based_node_id != SPECIAL_NODEID)
+                {
+                    std::int32_t start_x = 0;
+                    std::int32_t start_y = 0;
+
+                    // Calculate the speed for this line
+                    std::uint32_t speed_kmh =
+                        static_cast<std::uint32_t>(round(length / forward_weight * 10 * 3.6));
+
+                    auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
+                    encode_tile_line(tile_line, speed_kmh, forward_datasource, start_x, start_y);
                 }
 
                 // Repeat the above for the coordinates reversed and using the `reverse`
@@ -337,49 +284,12 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     std::int32_t start_x = 0;
                     std::int32_t start_y = 0;
 
-                    line_typed geo_line;
-                    geo_line.emplace_back(static_cast<double>(util::toFloating(b.lon)),
-                                          static_cast<double>(util::toFloating(b.lat)));
-                    geo_line.emplace_back(static_cast<double>(util::toFloating(a.lon)),
-                                          static_cast<double>(util::toFloating(a.lat)));
+                    // Calculate the speed for this line
+                    std::uint32_t speed_kmh =
+                        static_cast<std::uint32_t>(round(length / reverse_weight * 10 * 3.6));
 
-                    const auto speed =
-                        static_cast<const std::uint32_t>(round(length / reverse_weight * 10 * 3.6));
-
-                    line_type tile_line;
-                    for (auto const &pt : geo_line)
-                    {
-                        double px_merc = pt.x;
-                        double py_merc = pt.y;
-                        lonlat2merc(px_merc, py_merc);
-                        // convert to integer tile coordinat
-                        const auto px = std::round(
-                            ((px_merc - tile_bbox.minx) * tile_extent / 16.0 / tile_bbox.width()) *
-                            tile_extent / 256.0);
-                        const auto py = std::round(
-                            ((tile_bbox.maxy - py_merc) * tile_extent / 16.0 / tile_bbox.height()) *
-                            tile_extent / 256.0);
-                        tile_line.emplace_back(px, py);
-                    }
-
-                    protozero::pbf_writer feature_writer(layer_writer, 2);
-                    feature_writer.add_enum(3, 2);      // geometry type
-                    feature_writer.add_uint64(1, id++); // id
-                    {
-                        protozero::packed_field_uint32 field(feature_writer, 2);
-                        field.add_element(0); // "speed" tag key offset
-                        field.add_element(
-                            std::min(speed, 127u)); // save the speed value, capped at 127
-                        field.add_element(1);       // "is_small" tag key offset
-                        field.add_element(128 +
-                                          (edge.component.is_tiny ? 0 : 1)); // is_small feature
-                        field.add_element(2);                        // "datasource" tag key offset
-                        field.add_element(130 + reverse_datasource); // datasource value offset
-                    }
-                    {
-                        protozero::packed_field_uint32 geometry(feature_writer, 4);
-                        encode_linestring(tile_line, geometry, start_x, start_y);
-                    }
+                    auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
+                    encode_tile_line(tile_line, speed_kmh, reverse_datasource, start_x, start_y);
                 }
             }
         }

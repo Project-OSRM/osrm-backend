@@ -4,7 +4,6 @@
 #include "util/trigonometry_table.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/math/constants/constants.hpp>
 
 #include <cmath>
 
@@ -14,6 +13,7 @@ namespace osrm
 {
 namespace util
 {
+
 namespace coordinate_calculation
 {
 
@@ -43,11 +43,11 @@ double haversineDistance(const Coordinate coordinate_1, const Coordinate coordin
     const double ln1 = lon1 / COORDINATE_PRECISION;
     const double lt2 = lat2 / COORDINATE_PRECISION;
     const double ln2 = lon2 / COORDINATE_PRECISION;
-    const double dlat1 = lt1 * (RAD);
+    const double dlat1 = lt1 * DEGREE_TO_RAD;
 
-    const double dlong1 = ln1 * (RAD);
-    const double dlat2 = lt2 * (RAD);
-    const double dlong2 = ln2 * (RAD);
+    const double dlong1 = ln1 * DEGREE_TO_RAD;
+    const double dlat2 = lt2 * DEGREE_TO_RAD;
+    const double dlong2 = ln2 * DEGREE_TO_RAD;
 
     const double dlong = dlong1 - dlong2;
     const double dlat = dlat1 - dlat2;
@@ -69,10 +69,10 @@ double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coord
     BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
 
-    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * RAD;
-    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * RAD;
-    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
-    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
+    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
+    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
+    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
+    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
 
     const double x_value = (float_lon2 - float_lon1) * std::cos((float_lat1 + float_lat2) / 2.0);
     const double y_value = float_lat2 - float_lat1;
@@ -269,22 +269,67 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
 
 namespace mercator
 {
-FloatLatitude yToLat(const double value)
+FloatLatitude yToLat(const double y)
 {
-    using namespace boost::math::constants;
+    const double normalized_lat = RAD_TO_DEGREE * 2. * std::atan(std::exp(y * DEGREE_TO_RAD));
 
-    return FloatLatitude(
-        180. * (1. / pi<long double>()) *
-        (2. * std::atan(std::exp(value * pi<double>() / 180.)) - half_pi<double>()));
+    return FloatLatitude(normalized_lat - 90.);
 }
 
 double latToY(const FloatLatitude latitude)
 {
-    using namespace boost::math::constants;
+    const double normalized_lat = 90. + static_cast<double>(latitude);
 
-    return 180. * (1. / pi<double>()) *
-           std::log(std::tan((pi<double>() / 4.) +
-                             static_cast<double>(latitude) * (pi<double>() / 180.) / 2.));
+    return RAD_TO_DEGREE * std::log(std::tan(normalized_lat * DEGREE_TO_RAD * 0.5));
+}
+
+FloatLatitude clamp(const FloatLatitude lat)
+{
+    return std::max(std::min(lat, FloatLatitude(detail::MAX_LATITUDE)),
+                    FloatLatitude(-detail::MAX_LATITUDE));
+}
+
+FloatLongitude clamp(const FloatLongitude lon)
+{
+    return std::max(std::min(lon, FloatLongitude(detail::MAX_LONGITUDE)),
+                    FloatLongitude(-detail::MAX_LONGITUDE));
+}
+
+inline void pixelToDegree(const double shift, double &x, double &y)
+{
+    const double b = shift / 2.0;
+    x = (x - b) / shift * 360.0;
+    // FIXME needs to be simplified
+    const double g = (y - b) / -(shift / (2 * M_PI)) / DEGREE_TO_RAD;
+    y = static_cast<double>(util::coordinate_calculation::mercator::yToLat(g));
+}
+
+// Converts a WMS tile coordinate (z,x,y) into a wsg84 bounding box
+void xyzToWSG84(const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
+{
+    using util::coordinate_calculation::mercator::TILE_SIZE;
+
+    minx = x * TILE_SIZE;
+    miny = (y + 1.0) * TILE_SIZE;
+    maxx = (x + 1.0) * TILE_SIZE;
+    maxy = y * TILE_SIZE;
+    // 2^z * TILE_SIZE
+    const double shift = (1u << static_cast<unsigned>(z)) * TILE_SIZE;
+    pixelToDegree(shift, minx, miny);
+    pixelToDegree(shift, maxx, maxy);
+}
+
+// Converts a WMS tile coordinate (z,x,y) into a mercator bounding box
+void xyzToMercator(const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
+{
+    using namespace util::coordinate_calculation::mercator;
+
+    xyzToWSG84(x, y, z, minx, miny, maxx, maxy);
+
+    minx = static_cast<double>(clamp(util::FloatLongitude(minx))) * DEGREE_TO_PX;
+    miny = latToY(clamp(util::FloatLatitude(miny))) * DEGREE_TO_PX;
+    maxx = static_cast<double>(clamp(util::FloatLongitude(maxx))) * DEGREE_TO_PX;
+    maxy = latToY(clamp(util::FloatLatitude(maxy))) * DEGREE_TO_PX;
 }
 
 } // ns mercato // ns mercatorr
