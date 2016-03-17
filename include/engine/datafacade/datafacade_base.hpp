@@ -65,8 +65,6 @@ template <class EdgeDataT> class BaseDataFacade
     // node and edge information access
     virtual util::FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const = 0;
 
-    virtual bool EdgeIsCompressed(const unsigned id) const = 0;
-
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const = 0;
 
     virtual void GetUncompressedGeometry(const EdgeID id,

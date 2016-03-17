@@ -33,7 +33,6 @@ struct SharedDataLayout
         R_SEARCH_TREE,
         GEOMETRIES_INDEX,
         GEOMETRIES_LIST,
-        GEOMETRIES_INDICATORS,
         HSGR_CHECKSUM,
         TIMESTAMP,
         FILE_INDEX_PATH,
@@ -55,7 +54,7 @@ struct SharedDataLayout
     inline uint64_t GetBlockSize(BlockID bid) const
     {
         // special bit encoding
-        if (bid == GEOMETRIES_INDICATORS || bid == CORE_MARKER)
+        if (bid == CORE_MARKER)
         {
             return (num_entries[bid] / 32 + 1) * entry_size[bid];
         }

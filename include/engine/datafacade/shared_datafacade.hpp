@@ -75,7 +75,6 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     util::ShM<extractor::TravelMode, true>::vector m_travel_mode_list;
     util::ShM<char, true>::vector m_names_char_list;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
-    util::ShM<bool, true>::vector m_edge_is_compressed;
     util::ShM<unsigned, true>::vector m_geometry_indices;
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector m_geometry_list;
     util::ShM<bool, true>::vector m_is_core_node;
@@ -207,13 +206,6 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
 
     void LoadGeometries()
     {
-        auto geometries_compressed_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, storage::SharedDataLayout::GEOMETRIES_INDICATORS);
-        typename util::ShM<bool, true>::vector edge_is_compressed(
-            geometries_compressed_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDICATORS]);
-        m_edge_is_compressed = std::move(edge_is_compressed);
-
         auto geometries_index_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::GEOMETRIES_INDEX);
         typename util::ShM<unsigned, true>::vector geometry_begin_indices(
@@ -376,11 +368,6 @@ template <class EdgeDataT> class SharedDataFacade final : public BaseDataFacade<
     util::FixedPointCoordinate GetCoordinateOfNode(const NodeID id) const override final
     {
         return m_coordinate_list->at(id);
-    }
-
-    virtual bool EdgeIsCompressed(const unsigned id) const override final
-    {
-        return m_edge_is_compressed.at(id);
     }
 
     virtual void GetUncompressedGeometry(const EdgeID id,
