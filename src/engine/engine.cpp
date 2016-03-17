@@ -9,6 +9,7 @@
 #include "engine/plugins/viaroute.hpp"
 #include "engine/plugins/tile.hpp"
 #include "engine/plugins/match.hpp"
+#include "engine/plugins/tile.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/internal_datafacade.hpp"
