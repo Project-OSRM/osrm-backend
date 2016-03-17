@@ -305,9 +305,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
                 // ed.distance should be total_weight + penalties (turn, stop, etc)
                 BOOST_ASSERT(ed.distance >= total_weight);
+                const bool is_first_segment = unpacked_path.empty();
 
                 const std::size_t start_index =
-                    (unpacked_path.empty()
+                    (is_first_segment
                          ? ((start_traversed_in_reverse)
                                 ? id_vector.size() -
                                       phantom_node_pair.source_phantom.fwd_segment_position - 1
@@ -327,18 +328,22 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
 
-                // Given this geometry:
-                // U---v---w---x---Z
-                //       s
-                // The above code will create segments for (v, w), (w,x) and (x, Z).
-                // However the first segment duration needs to be adjusted to the fact that the
-                // source phantom is in the middle of the segment.
-                // We do this by subtracting v--s from the duration.
-                BOOST_ASSERT(unpacked_path.front().duration_until_turn >=
-                             phantom_node_pair.source_phantom.forward_weight);
-                unpacked_path.front().duration_until_turn -=
-                    start_traversed_in_reverse ? phantom_node_pair.source_phantom.forward_weight :
-                    phantom_node_pair.source_phantom.reverse_weight;
+                if (is_first_segment)
+                {
+                    // Given this geometry:
+                    // U---v---w---x---Z
+                    //       s
+                    // The above code will create segments for (v, w), (w,x) and (x, Z).
+                    // However the first segment duration needs to be adjusted to the fact that the
+                    // source phantom is in the middle of the segment.
+                    // We do this by subtracting v--s from the duration.
+                    BOOST_ASSERT(unpacked_path.front().duration_until_turn >=
+                                 phantom_node_pair.source_phantom.forward_weight);
+                    unpacked_path.front().duration_until_turn -=
+                        start_traversed_in_reverse
+                            ? phantom_node_pair.source_phantom.forward_weight
+                            : phantom_node_pair.source_phantom.reverse_weight;
+                }
             }
         }
         std::vector<unsigned> id_vector;
