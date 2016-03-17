@@ -20,7 +20,7 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
 {
     auto turn_index = leg_geometry.BackIndex(segment_index);
     BOOST_ASSERT(turn_index > 0);
-    BOOST_ASSERT(turn_index < leg_geometry.locations.size() - 1);
+    BOOST_ASSERT(turn_index < leg_geometry.locations.size());
 
     // TODO chose a bigger look-a-head to smooth complex geometry
     const auto pre_turn_coordinate = leg_geometry.locations[turn_index - 1];
