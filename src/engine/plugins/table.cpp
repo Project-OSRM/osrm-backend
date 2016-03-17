@@ -44,17 +44,18 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
                      result);
     }
 
+    // Empty sources or destinations means the user wants all of them included, respectively
+    // The ManyToMany routing algorithm we dispatch to below already handles this perfectly.
+    const auto num_sources =
+        params.sources.empty() ? params.coordinates.size() : params.sources.size();
+    const auto num_destinations =
+        params.destinations.empty() ? params.coordinates.size() : params.destinations.size();
+
     if (max_locations_distance_table > 0 &&
-        (params.sources.size() * params.destinations.size() >
+        ((num_sources * num_destinations) >
          static_cast<std::size_t>(max_locations_distance_table * max_locations_distance_table)))
     {
-        return Error(
-            "InvalidOptions",
-            "Number of entries " +
-                std::to_string(params.sources.size() * params.destinations.size()) +
-                " is higher than current maximum (" +
-                std::to_string(max_locations_distance_table * max_locations_distance_table) + ")",
-            result);
+        return Error("TooBig", "Too many table coordinates", result);
     }
 
     auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(params));
