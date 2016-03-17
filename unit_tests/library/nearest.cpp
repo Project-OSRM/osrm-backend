@@ -2,6 +2,7 @@
 #include <boost/test/test_case_template.hpp>
 
 #include "args.hpp"
+#include "fixture.hpp"
 
 #include "osrm/nearest_parameters.hpp"
 
@@ -13,27 +14,68 @@
 
 BOOST_AUTO_TEST_SUITE(nearest)
 
-BOOST_AUTO_TEST_CASE(test_nearest)
+BOOST_AUTO_TEST_CASE(test_nearest_response)
 {
     const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
+    auto osrm = get_osrm(args.at(0));
 
     using namespace osrm;
 
-    EngineConfig config{args[0]};
-    config.use_shared_memory = false;
+    NearestParameters params;
+    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
 
-    OSRM osrm{config};
+    json::Object result;
+    const auto rc = osrm.Nearest(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
 
-    /*
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "ok");
+
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    BOOST_CHECK(!waypoints.empty()); // the dataset has at least one nearest coordinate
+
+    for (const auto &waypoint : waypoints)
+    {
+        const auto &waypoint_object = waypoint.get<json::Object>();
+        const auto distance = waypoint_object.values.at("distance").get<json::Number>().value;
+        BOOST_CHECK(distance >= 0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
+{
+    const auto args = get_args();
+    auto osrm = get_osrm(args.at(0));
+
+    using namespace osrm;
+
     NearestParameters params;
 
     json::Object result;
-
     const auto rc = osrm.Nearest(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
 
-    BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    */
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "InvalidOptions");
+}
+
+BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
+{
+    const auto args = get_args();
+    auto osrm = get_osrm(args.at(0));
+
+    using namespace osrm;
+
+    NearestParameters params;
+    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
+    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
+
+    json::Object result;
+    const auto rc = osrm.Nearest(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "TooBig");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
