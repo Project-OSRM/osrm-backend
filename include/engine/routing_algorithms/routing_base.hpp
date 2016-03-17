@@ -324,14 +324,29 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                  extractor::guidance::TurnInstruction::NO_TURN(), travel_mode,
                                  INVALID_EXIT_NR});
                 }
-                BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
+
+                // Given this geometry:
+                // U---v---w---x---Z
+                //       s
+                // The above code will create segments for (v, w), (w,x) and (x, Z).
+                // However the first segment duration needs to be adjusted to the fact that the
+                // source phantom is in the middle of the segment.
+                // We do this by subtracting v--s from the duration.
+                BOOST_ASSERT(unpacked_path.front().duration_until_turn >=
+                             phantom_node_pair.source_phantom.forward_weight);
+                unpacked_path.front().duration_until_turn -=
+                    start_traversed_in_reverse ? phantom_node_pair.source_phantom.forward_weight :
+                    phantom_node_pair.source_phantom.reverse_weight;
             }
         }
         std::vector<unsigned> id_vector;
         facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.forward_packed_geometry_id,
                                         id_vector);
+        std::vector<EdgeWeight> weight_vector;
+        facade->GetUncompressedWeights(phantom_node_pair.target_phantom.forward_packed_geometry_id,
+                                       weight_vector);
         const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
                                     phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
                                    unpacked_path.empty();
@@ -339,11 +354,14 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         std::size_t start_index = 0;
         if (is_local_path)
         {
-            start_index = phantom_node_pair.source_phantom.fwd_segment_position;
             if (target_traversed_in_reverse)
             {
                 start_index =
                     id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position;
+            }
+            else
+            {
+                start_index = phantom_node_pair.source_phantom.fwd_segment_position;
             }
         }
 
@@ -359,16 +377,35 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             start_index = std::min(start_index, id_vector.size() - 1);
         }
 
+        // Given the following compressed geometry:
+        // U---v---w---x---y---Z
+        //    s           t
+        // s: fwd_segment 0
+        // t: fwd_segment 3
+        // -> (U, v), (v, w), (w, x)
+        // note that (x, t) is _not_ included but needs to
         for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
             unpacked_path.emplace_back(PathData{
-                id_vector[i], phantom_node_pair.target_phantom.name_id, 0,
+                id_vector[i], phantom_node_pair.target_phantom.name_id, weight_vector[i],
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
                                             : phantom_node_pair.target_phantom.forward_travel_mode,
                 INVALID_EXIT_NR});
+        }
+
+        if (is_local_path && unpacked_path.size() > 0)
+        {
+            // The above code will create segments for (v, w), (w,x), (x, y) and (y, Z).
+            // However the first segment duration needs to be adjusted to the fact that the source
+            // phantom
+            // is in the middle of the segment. We do this by subtracting v--s from the duration.
+            BOOST_ASSERT(unpacked_path.front().duration_until_turn >=
+                         phantom_node_pair.source_phantom.forward_weight);
+            unpacked_path.front().duration_until_turn -=
+                phantom_node_pair.source_phantom.forward_weight;
         }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.
