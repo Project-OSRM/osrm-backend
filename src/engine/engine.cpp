@@ -4,6 +4,7 @@
 
 #include "engine/plugins/distance_table.hpp"
 #include "engine/plugins/hello_world.hpp"
+#include "engine/plugins/range_analysis.hpp"
 #include "engine/plugins/nearest.hpp"
 #include "engine/plugins/timestamp.hpp"
 #include "engine/plugins/trip.hpp"
@@ -65,6 +66,7 @@ Engine::Engine(EngineConfig &config)
     RegisterPlugin(
         new plugins::RoundTripPlugin<DataFacade>(query_data_facade, config.max_locations_trip));
     RegisterPlugin(new plugins::TilePlugin<DataFacade>(query_data_facade));
+    RegisterPlugin(new plugins::RangeAnalysis<DataFacade>(query_data_facade));
 }
 
 void Engine::RegisterPlugin(plugins::BasePlugin *raw_plugin_ptr)
