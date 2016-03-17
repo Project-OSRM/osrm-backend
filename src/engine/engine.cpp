@@ -7,8 +7,8 @@
 #include "engine/plugins/nearest.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
-#include "engine/plugins/tile.hpp"
 #include "engine/plugins/match.hpp"
+#include "engine/plugins/tile.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/internal_datafacade.hpp"
@@ -133,11 +133,7 @@ Engine::Engine(EngineConfig &config)
     }
     else
     {
-        if (!config.storage_config.IsValid())
-        {
-            throw util::exception("Invalid file paths given!");
-        }
-        query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.storage_config);
+        return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
     }
 
     // Register plugins
