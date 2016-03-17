@@ -318,15 +318,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }
 
             ++node_based_edge_counter;
-            auto turn_candidates = turn_analysis.getTurns(node_u, edge_from_u);
+            auto possible_turns = turn_analysis.getTurns(node_u, edge_from_u);
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
 
-            for (const auto turn : turn_candidates)
+            for (const auto turn : possible_turns)
             {
-                if (!turn.valid)
-                    continue;
-
                 const double turn_angle = turn.angle;
 
                 // only add an edge if turn is not prohibited
