@@ -160,7 +160,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
             m_travel_mode_list[i] = current_edge_data.travel_mode;
-            BOOST_ASSERT(current_edge_data.compressed_geometry);
         }
     }
 

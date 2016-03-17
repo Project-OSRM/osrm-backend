@@ -405,7 +405,6 @@ int Storage::Run()
         name_id_ptr[i] = current_edge_data.name_id;
         travel_mode_ptr[i] = current_edge_data.travel_mode;
         turn_instructions_ptr[i] = current_edge_data.turn_instruction;
-        BOOST_ASSERT(current_edge_data.compressed_geometry);
     }
     edges_input_stream.close();
 
