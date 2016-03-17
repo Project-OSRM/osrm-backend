@@ -198,6 +198,7 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
     // silence silent turns for good
     for (auto &path_data : leg_data)
     {
+        unsigned last = path_data.back().duration_until_turn;
         for (auto &data : path_data)
         {
             if (isSilent(data.turn_instruction) || (leavesRoundabout(data.turn_instruction) &&
@@ -208,6 +209,7 @@ std::vector<std::vector<PathData>> postProcess(std::vector<std::vector<PathData>
                 data.exit = 0;
             }
         }
+        path_data.back().duration_until_turn = last;
     }
 
     return leg_data;

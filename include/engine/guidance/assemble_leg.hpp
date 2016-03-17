@@ -142,7 +142,11 @@ RouteLeg assembleLeg(const DataFacadeT &facade,
     // a duration value since its the only point associated with a turn.
     // As such we want to slice of the duration for (a,s) and add the duration for
     // (c,d,t)
-    duration = duration - source_duration + target_duration;
+    // if there is an duration, it is already corrected for source offset
+    if (duration)
+        duration = duration + target_duration;
+    else
+        duration = target_duration - source_duration;
     auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(route_data);
 
     BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
