@@ -73,8 +73,12 @@ class OneToManyRouting final
         // explore search space
         while (!query_heap.Empty())
         {
+<<<<<<< HEAD
 //            ForwardRoutingStep(query_heap, distance, predecessorMap, distanceMap);
             ForwardRoutingStep(query_heap, backward_heap, )
+=======
+            ForwardRoutingStep(query_heap, distance, predecessorMap, distanceMap);
+>>>>>>> first implementation of routing algo with pretty json-print
         }
     }
 
