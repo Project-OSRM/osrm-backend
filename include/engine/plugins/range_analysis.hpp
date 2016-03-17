@@ -31,23 +31,16 @@ namespace plugins
 template <class DataFacadeT> class RangeAnalysis final : public BasePlugin
 {
 
-    struct NodeBucket
-    {
-        NodeID predecessor;
-        EdgeWeight distance;
-        NodeBucket(const NodeID predecessor, const EdgeWeight distance)
-            : predecessor(predecessor), distance(distance)
-        {
-        }
-    };
-    using ResultMap = std::unordered_map<NodeID, NodeBucket>;
+    using PredecessorMap = std::unordered_map<NodeID, NodeID>;
+    using DistanceMap = std::unordered_map<NodeID, EdgeWeight>;
 
   private:
     std::string temp_string;
     std::string descriptor_string;
     std::unique_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
     DataFacadeT *facade;
-    ResultMap resultMap;
+    PredecessorMap predecessorMap;
+    DistanceMap distanceMap;
 
   public:
     explicit RangeAnalysis(DataFacadeT *facade) : descriptor_string("range"), facade(facade)
@@ -102,31 +95,40 @@ template <class DataFacadeT> class RangeAnalysis final : public BasePlugin
 
         phantomNodeVector.push_back(phantomNodePair);
         auto snapped_source_phantoms = snapPhantomNodes(phantomNodeVector);
-        //        resultMap = search_engine_ptr->oneToMany(snapped_source_phantoms.front(), 10000);
-        search_engine_ptr->oneToMany(snapped_source_phantoms.front(), 10000);
+        search_engine_ptr->oneToMany(snapped_source_phantoms.front(), 10000, predecessorMap,
+                                     distanceMap);
+
+        BOOST_ASSERT(predecessorMap.size() == distanceMap.size());
 
         std::string temp_string;
-        json_result.values["title"] = "This is a Test-Plugin";
+        json_result.values["title"] = "Range Analysis";
 
-        temp_string = std::to_string(routeParameters.coordinates.size());
-        json_result.values["location_count"] = temp_string;
-        temp_string = std::to_string(resultMap.size());
-        json_result.values["Result-Map"] = temp_string;
-
-        for (auto it = resultMap.begin(); it != resultMap.end(); ++it)
+        util::json::Array data;
+        for (auto it = predecessorMap.begin(); it != predecessorMap.end(); ++it)
         {
+            util::json::Object object;
 
-            util::SimpleLogger().Write() << "Node-ID: " << it->first;
-            NodeBucket n = it->second;
-            util::SimpleLogger().Write() << "Predecessor:" << n.predecessor;
-            util::SimpleLogger().Write() << "Distance: " << n.distance;
+            util::json::Object source;
+            FixedPointCoordinate sourceCoordinate = facade->GetCoordinateOfNode(it->first);
+            source.values["lat"] = sourceCoordinate.lat / COORDINATE_PRECISION;
+            source.values["lon"] = sourceCoordinate.lon / COORDINATE_PRECISION;
+            object.values["Source"] = std::move(source);
+
+            util::json::Object predecessor;
+            FixedPointCoordinate destinationSource = facade->GetCoordinateOfNode(it->second);
+            predecessor.values["lat"] = destinationSource.lat / COORDINATE_PRECISION;
+            predecessor.values["lon"] = destinationSource.lon / COORDINATE_PRECISION;
+            object.values["Predecessor"] = std::move(predecessor);
+
+            util::json::Object distance;
+            object.values["distance_from_start"] = distanceMap[it->first];
+
+            data.values.push_back(object);
         }
-        //        util::json::Array json_coordinate;
-        //        util::json::Object result;
-        //        json_coordinate.values.push_back(node.location.lat / COORDINATE_PRECISION);
-        //        json_coordinate.values.push_back(node.location.lon / COORDINATE_PRECISION);
-        //        result.values["mapped coordinate"] = json_coordinate;
-        //        result.values["name"] = facade->get_name_for_id(node.name_id);
+        temp_string = std::to_string(distanceMap.size());
+        json_result.values["Nodes Found"] = temp_string;;
+        json_result.values["Range-Analysis"] = std::move(data);
+
         return Status::Ok;
     }
 };
