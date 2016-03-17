@@ -2,6 +2,7 @@
 #include <boost/test/test_case_template.hpp>
 
 #include "args.hpp"
+#include "fixture.hpp"
 
 #include "osrm/tile_parameters.hpp"
 
@@ -16,25 +17,15 @@ BOOST_AUTO_TEST_SUITE(tile)
 BOOST_AUTO_TEST_CASE(test_tile)
 {
     const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
+    auto osrm = get_osrm(args.at(0));
 
     using namespace osrm;
 
-    EngineConfig config{args[0]};
-    config.use_shared_memory = false;
+    TileParameters params{0, 0, 1};
 
-    OSRM osrm{config};
-
-    /*
-    TileParameters params{0, 0, 0};
-
-    // TODO(daniel-j-h): why does the API expect a string?
     std::string result;
-
     const auto rc = osrm.Tile(params, result);
-
-    BOOST_CHECK(rc == Status::Ok || rc == Status::Error);
-    */
+    BOOST_CHECK(rc == Status::Ok);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
