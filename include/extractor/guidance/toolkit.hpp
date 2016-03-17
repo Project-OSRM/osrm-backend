@@ -17,7 +17,6 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
-#include <iostream>
 
 namespace osrm
 {
@@ -391,6 +390,9 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
 
 inline int getPriority( const FunctionalRoadClass road_class )
 {
+    //The road priorities indicate which roads can bee seen as more or less equal.
+    //They are used in Fork-Discovery. Possibly should be moved to profiles post v5?
+    //A fork can happen between road types that are at most 1 priority apart from each other
     const constexpr int road_priority[] = {10, 0, 10, 2, 10, 4, 10, 6, 10, 8, 10, 11, 10, 12, 10, 14};
     return road_priority[static_cast<int>(road_class)];
 }
@@ -398,6 +400,9 @@ inline int getPriority( const FunctionalRoadClass road_class )
 inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoadClass second)
 {
     // forks require similar road categories
+    // Based on the priorities assigned above, we can set forks only if the road priorities match closely.
+    // Potentially we could include features like number of lanes here and others?
+    // Should also be moved to profiles
     return std::abs(getPriority(first) - getPriority(second)) <= 1;
 }
 
