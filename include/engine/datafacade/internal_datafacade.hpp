@@ -71,7 +71,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     util::ShM<extractor::TurnInstruction, false>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, false>::vector m_travel_mode_list;
     util::ShM<char, false>::vector m_names_char_list;
-    util::ShM<bool, false>::vector m_edge_is_compressed;
     util::ShM<unsigned, false>::vector m_geometry_indices;
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, false>::vector m_geometry_list;
     util::ShM<bool, false>::vector m_is_core_node;
@@ -151,9 +150,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         m_name_ID_list.resize(number_of_edges);
         m_turn_instruction_list.resize(number_of_edges);
         m_travel_mode_list.resize(number_of_edges);
-        m_edge_is_compressed.resize(number_of_edges);
-
-        unsigned compressed = 0;
 
         extractor::OriginalEdgeData current_edge_data;
         for (unsigned i = 0; i < number_of_edges; ++i)
@@ -164,11 +160,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
             m_travel_mode_list[i] = current_edge_data.travel_mode;
-            m_edge_is_compressed[i] = current_edge_data.compressed_geometry;
-            if (m_edge_is_compressed[i])
-            {
-                ++compressed;
-            }
+            BOOST_ASSERT(current_edge_data.compressed_geometry);
         }
     }
 
@@ -337,11 +329,6 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     util::FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const override final
     {
         return m_coordinate_list->at(id);
-    }
-
-    bool EdgeIsCompressed(const unsigned id) const override final
-    {
-        return m_edge_is_compressed.at(id);
     }
 
     extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final

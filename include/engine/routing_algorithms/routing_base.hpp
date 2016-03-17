@@ -243,8 +243,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             edge = recursion_stack.top();
             recursion_stack.pop();
 
-            // facade->FindEdge does not suffice here in case of shortcuts.
-            // The above explanation unclear? Think!
+            // Contraction might introduce double edges by inserting shortcuts
+            // this searching for the smallest upwards edge found by the forward search
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
             EdgeWeight edge_weight = std::numeric_limits<EdgeWeight>::max();
             for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
@@ -261,6 +261,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             // edge.first         edge.second
             //     *<------------------*
             //            edge_id
+            // if we don't find a forward edge, this edge must have been an downwards edge
+            // found by the reverse search.
             if (SPECIAL_EDGEID == smaller_edge_id)
             {
                 for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
@@ -295,48 +297,40 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                         ? phantom_node_pair.source_phantom.backward_travel_mode
                         : facade->GetTravelModeForEdgeID(ed.id);
 
-                if (!facade->EdgeIsCompressed(ed.id))
+                std::vector<NodeID> id_vector;
+                facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id),
+                                                id_vector);
+
+                std::vector<EdgeWeight> weight_vector;
+                facade->GetUncompressedWeights(facade->GetGeometryIndexForEdgeID(ed.id),
+                                               weight_vector);
+
+                int total_weight =
+                    std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
+
+                BOOST_ASSERT(weight_vector.size() == id_vector.size());
+                // ed.distance should be total_weight + penalties (turn, stop, etc)
+                BOOST_ASSERT(ed.distance >= total_weight);
+
+                const std::size_t start_index =
+                    (unpacked_path.empty()
+                         ? ((start_traversed_in_reverse)
+                                ? id_vector.size() -
+                                      phantom_node_pair.source_phantom.fwd_segment_position - 1
+                                : phantom_node_pair.source_phantom.fwd_segment_position)
+                         : 0);
+                const std::size_t end_index = id_vector.size();
+
+                BOOST_ASSERT(start_index >= 0);
+                BOOST_ASSERT(start_index <= end_index);
+                for (std::size_t i = start_index; i < end_index; ++i)
                 {
-                    BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));
-                    unpacked_path.emplace_back(facade->GetGeometryIndexForEdgeID(ed.id), name_index,
-                                               turn_instruction, ed.distance, travel_mode);
+                    unpacked_path.emplace_back(id_vector[i], name_index,
+                                               extractor::TurnInstruction::NoTurn, weight_vector[i],
+                                               travel_mode);
                 }
-                else
-                {
-                    std::vector<NodeID> id_vector;
-                    facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id),
-                                                    id_vector);
-
-                    std::vector<EdgeWeight> weight_vector;
-                    facade->GetUncompressedWeights(facade->GetGeometryIndexForEdgeID(ed.id),
-                                                   weight_vector);
-
-                    int total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
-
-                    BOOST_ASSERT(weight_vector.size() == id_vector.size());
-                    // ed.distance should be total_weight + penalties (turn, stop, etc)
-                    BOOST_ASSERT(ed.distance >= total_weight);
-
-                    const std::size_t start_index =
-                        (unpacked_path.empty()
-                             ? ((start_traversed_in_reverse)
-                                    ? id_vector.size() -
-                                          phantom_node_pair.source_phantom.fwd_segment_position - 1
-                                    : phantom_node_pair.source_phantom.fwd_segment_position)
-                             : 0);
-                    const std::size_t end_index = id_vector.size();
-
-                    BOOST_ASSERT(start_index >= 0);
-                    BOOST_ASSERT(start_index <= end_index);
-                    for (std::size_t i = start_index; i < end_index; ++i)
-                    {
-                        unpacked_path.emplace_back(id_vector[i], name_index,
-                                                   extractor::TurnInstruction::NoTurn, weight_vector[i],
-                                                   travel_mode);
-                    }
-                    unpacked_path.back().turn_instruction = turn_instruction;
-                    unpacked_path.back().segment_duration += (ed.distance - total_weight);
-                }
+                unpacked_path.back().turn_instruction = turn_instruction;
+                unpacked_path.back().segment_duration += (ed.distance - total_weight);
             }
         }
         std::vector<unsigned> id_vector;

@@ -230,9 +230,6 @@ int Storage::Run()
                                                            number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
                                                                 number_of_original_edges);
-    // note: there are 32 geometry indicators in one unsigned block
-    shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDICATORS,
-                                              number_of_original_edges);
 
     boost::filesystem::ifstream hsgr_input_stream(hsgr_path, std::ios::binary);
 
@@ -400,9 +397,6 @@ int Storage::Run()
         shared_layout_ptr->GetBlockPtr<extractor::TurnInstruction, true>(
             shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
 
-    unsigned *geometries_indicator_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
-        shared_memory_ptr, SharedDataLayout::GEOMETRIES_INDICATORS);
-
     extractor::OriginalEdgeData current_edge_data;
     for (unsigned i = 0; i < number_of_original_edges; ++i)
     {
@@ -411,22 +405,7 @@ int Storage::Run()
         name_id_ptr[i] = current_edge_data.name_id;
         travel_mode_ptr[i] = current_edge_data.travel_mode;
         turn_instructions_ptr[i] = current_edge_data.turn_instruction;
-
-        const unsigned bucket = i / 32;
-        const unsigned offset = i % 32;
-        const unsigned value = [&]
-        {
-            unsigned return_value = 0;
-            if (0 != offset)
-            {
-                return_value = geometries_indicator_ptr[bucket];
-            }
-            return return_value;
-        }();
-        if (current_edge_data.compressed_geometry)
-        {
-            geometries_indicator_ptr[bucket] = (value | (1u << offset));
-        }
+        BOOST_ASSERT(current_edge_data.compressed_geometry);
     }
     edges_input_stream.close();
 
