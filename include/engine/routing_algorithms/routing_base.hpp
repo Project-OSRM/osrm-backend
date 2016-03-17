@@ -300,12 +300,14 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 std::vector<NodeID> id_vector;
                 facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id),
                                                 id_vector);
+                BOOST_ASSERT(id_vector.size() > 0);
 
                 std::vector<EdgeWeight> weight_vector;
                 facade->GetUncompressedWeights(facade->GetGeometryIndexForEdgeID(ed.id),
                                                weight_vector);
+                BOOST_ASSERT(weight_vector.size() > 0);
 
-                int total_weight =
+                auto total_weight =
                     std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
@@ -322,13 +324,14 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 const std::size_t end_index = id_vector.size();
 
                 BOOST_ASSERT(start_index >= 0);
-                BOOST_ASSERT(start_index <= end_index);
+                BOOST_ASSERT(start_index < end_index);
                 for (std::size_t i = start_index; i < end_index; ++i)
                 {
                     unpacked_path.emplace_back(id_vector[i], name_index,
                                                extractor::TurnInstruction::NoTurn, weight_vector[i],
                                                travel_mode);
                 }
+                BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().segment_duration += (ed.distance - total_weight);
             }
