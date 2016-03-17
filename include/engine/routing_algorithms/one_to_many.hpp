@@ -34,7 +34,6 @@ class OneToManyRouting final
     using DistanceMap = std::unordered_map<NodeID, EdgeWeight>;
     SearchEngineData &engine_working_data;
 
-
   public:
     OneToManyRouting(DataFacadeT *facade, SearchEngineData &engine_working_data)
         : super(facade), engine_working_data(engine_working_data)
@@ -43,12 +42,12 @@ class OneToManyRouting final
 
     ~OneToManyRouting() {}
 
-
-    void operator()(PhantomNode &phantomSource, const int distance) const
+    void operator()(PhantomNode &phantomSource,
+                    const int distance,
+                    PredecessorMap &predecessorMap,
+                    DistanceMap &distanceMap) const
     {
 
-        PredecessorMap predecessorMap;
-        DistanceMap distanceMap;
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
 
@@ -73,14 +72,6 @@ class OneToManyRouting final
         while (!query_heap.Empty())
         {
             ForwardRoutingStep(query_heap, distance, predecessorMap, distanceMap);
-        }
-        for (auto it = predecessorMap.begin(); it != predecessorMap.end(); ++it)
-        {
-            util::SimpleLogger().Write() << "Node-ID: " << it->first;
-            util::SimpleLogger().Write() << "Predecessor:" << it->second;
-            util::SimpleLogger().Write() << "Distance: " << distanceMap[it->first];
-//            resultMap[it->first].insert(std::make_pair(it->second, distanceMap[it->first]));
-//            resultMap[it->first].emplace_back(it->second, distanceMap[it->first]);
         }
     }
 
