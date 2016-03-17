@@ -310,7 +310,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     }
 
     // writes a dummy value that is updated later
-    edge_data_file.write((char *)&original_edges_counter, sizeof(unsigned));
+    edge_data_file.write(reinterpret_cast<const char *>(&original_edges_counter),
+                         sizeof(original_edges_counter));
 
     std::vector<OriginalEdgeData> original_edge_data_vector;
     original_edge_data_vector.reserve(1024 * 1024);
@@ -475,7 +476,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
     edge_data_file.seekp(std::ios::beg);
-    edge_data_file.write((char *)&original_edges_counter, sizeof(unsigned));
+    edge_data_file.write(reinterpret_cast<char *>(&original_edges_counter),
+                         sizeof(original_edges_counter));
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                                  << " edge based nodes";
