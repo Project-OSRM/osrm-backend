@@ -60,10 +60,10 @@ struct RouteParameters : public BaseParameters
                     const bool alternatives_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    std::vector<boost::optional<bool>> uturns_,
+                    boost::optional<bool> uturns_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          geometries{geometries_}, overview{overview_}, uturns{std::move(uturns_)}
+          geometries{geometries_}, overview{overview_}, uturns{uturns_}
     {
     }
 
@@ -71,12 +71,11 @@ struct RouteParameters : public BaseParameters
     bool alternatives = true;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
-    std::vector<boost::optional<bool>> uturns;
+    boost::optional<bool> uturns;
 
     bool IsValid() const
     {
-        return coordinates.size() >= 2 && BaseParameters::IsValid() &&
-               (uturns.empty() || uturns.size() == coordinates.size());
+        return coordinates.size() >= 2 && BaseParameters::IsValid();
     }
 };
 }
