@@ -30,7 +30,6 @@ PathData forwardInto(PathData destination, const PathData &source)
 {
     // Merge a turn into a silent turn
     // Overwrites turn instruction and increases exit NR
-    destination.duration_until_turn += source.duration_until_turn;
     destination.exit = source.exit;
     return destination;
 }
@@ -40,7 +39,6 @@ PathData accumulateInto(PathData destination, const PathData &source)
     // Merge a turn into a silent turn
     // Overwrites turn instruction and increases exit NR
     BOOST_ASSERT(canMergeTrivially(destination, source));
-    destination.duration_until_turn += source.duration_until_turn;
     destination.exit = source.exit + 1;
     return destination;
 }
