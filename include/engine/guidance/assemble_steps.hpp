@@ -92,7 +92,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
             if (path_point.turn_instruction != extractor::guidance::TurnInstruction::NO_TURN())
             {
                 BOOST_ASSERT(segment_duration >= 0);
-                const auto name = facade.get_name_for_id(path_point.name_id);
+                const auto name = facade.GetNameForID(path_point.name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
                 steps.push_back(RouteStep{path_point.name_id,
                                           name,
@@ -113,7 +113,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         const int duration = segment_duration + target_duration;
         BOOST_ASSERT(duration >= 0);
         steps.push_back(RouteStep{target_node.name_id,
-                                  facade.get_name_for_id(target_node.name_id),
+                                  facade.GetNameForID(target_node.name_id),
                                   duration / 10.,
                                   distance,
                                   target_mode,
@@ -141,7 +141,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         BOOST_ASSERT(duration >= 0);
 
         steps.push_back(RouteStep{source_node.name_id,
-                                  facade.get_name_for_id(source_node.name_id),
+                                  facade.GetNameForID(source_node.name_id),
                                   duration / 10.,
                                   leg_geometry.segment_distances[segment_index],
                                   source_mode,
@@ -164,7 +164,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     // This step has length zero, the only reason we need it is the target location
     steps.push_back(
         RouteStep{target_node.name_id,
-                  facade.get_name_for_id(target_node.name_id),
+                  facade.GetNameForID(target_node.name_id),
                   ZERO_DURACTION,
                   ZERO_DISTANCE,
                   target_mode,

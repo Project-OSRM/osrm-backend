@@ -139,12 +139,12 @@ RouteLeg assembleLeg(const DataFacadeT &facade,
     BOOST_ASSERT(summary_array.begin() != summary_array.end());
     std::string summary =
         std::accumulate(std::next(summary_array.begin()), summary_array.end(),
-                        facade.get_name_for_id(summary_array.front()),
+                        facade.GetNameForID(summary_array.front()),
                         [&facade](std::string previous, const std::uint32_t name_id)
                         {
                             if (name_id != 0)
                             {
-                                previous += ", " + facade.get_name_for_id(name_id);
+                                previous += ", " + facade.GetNameForID(name_id);
                             }
                             return previous;
                         });

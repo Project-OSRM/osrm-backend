@@ -40,7 +40,7 @@ NameTable::NameTable(const std::string &filename)
     }
 }
 
-std::string NameTable::get_name_for_id(const unsigned name_id) const
+std::string NameTable::GetNameForID(const unsigned name_id) const
 {
     if (std::numeric_limits<unsigned>::max() == name_id)
     {
