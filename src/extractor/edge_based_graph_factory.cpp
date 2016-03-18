@@ -297,7 +297,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     restricted_turns_counter = 0;
     skipped_uturns_counter = 0;
     skipped_barrier_turns_counter = 0;
-    std::size_t compressed = 0;
 
     std::ofstream edge_data_file(original_edge_data_filename.c_str(), std::ios::binary);
     std::ofstream edge_segment_file;
@@ -369,19 +368,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 distance += turn_penalty;
 
-                const bool edge_is_compressed =
-                    m_compressed_edge_container.HasEntryForID(edge_form_u);
-
-                if (edge_is_compressed)
-                {
-                    ++compressed;
-                }
-
+                BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_form_u));
                 original_edge_data_vector.emplace_back(
-                    (edge_is_compressed ? m_compressed_edge_container.GetPositionForID(edge_form_u)
-                                        : node_v),
-                    edge_data1.name_id, turn_instruction, edge_is_compressed,
-                    edge_data1.travel_mode);
+                    m_compressed_edge_container.GetPositionForID(edge_form_u), edge_data1.name_id,
+                    turn_instruction, edge_data1.travel_mode);
 
                 ++original_edges_counter;
 
@@ -416,56 +406,32 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     unsigned fixed_penalty = distance - edge_data1.distance;
                     edge_penalty_file.write(reinterpret_cast<const char *>(&fixed_penalty),
                                             sizeof(fixed_penalty));
-                    if (edge_is_compressed)
+                    const auto node_based_edges =
+                        m_compressed_edge_container.GetBucketReference(edge_form_u);
+                    NodeID previous = node_u;
+
+                    const unsigned node_count = node_based_edges.size() + 1;
+                    edge_segment_file.write(reinterpret_cast<const char *>(&node_count),
+                                            sizeof(node_count));
+                    const QueryNode &first_node = m_node_info_list[previous];
+                    edge_segment_file.write(reinterpret_cast<const char *>(&first_node.node_id),
+                                            sizeof(first_node.node_id));
+
+                    for (auto target_node : node_based_edges)
                     {
-                        const auto node_based_edges =
-                            m_compressed_edge_container.GetBucketReference(edge_form_u);
-                        NodeID previous = node_u;
-
-                        const unsigned node_count = node_based_edges.size() + 1;
-                        edge_segment_file.write(reinterpret_cast<const char *>(&node_count),
-                                                sizeof(node_count));
-                        const QueryNode &first_node = m_node_info_list[previous];
-                        edge_segment_file.write(reinterpret_cast<const char *>(&first_node.node_id),
-                                                sizeof(first_node.node_id));
-
-                        for (auto target_node : node_based_edges)
-                        {
-                            const QueryNode &from = m_node_info_list[previous];
-                            const QueryNode &to = m_node_info_list[target_node.node_id];
-                            const double segment_length =
-                                util::coordinate_calculation::greatCircleDistance(
-                                    from.lat, from.lon, to.lat, to.lon);
-
-                            edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id),
-                                                    sizeof(to.node_id));
-                            edge_segment_file.write(reinterpret_cast<const char *>(&segment_length),
-                                                    sizeof(segment_length));
-                            edge_segment_file.write(
-                                reinterpret_cast<const char *>(&target_node.weight),
-                                sizeof(target_node.weight));
-                            previous = target_node.node_id;
-                        }
-                    }
-                    else
-                    {
-                        static const unsigned node_count = 2;
-                        const QueryNode from = m_node_info_list[node_u];
-                        const QueryNode to = m_node_info_list[node_v];
+                        const QueryNode &from = m_node_info_list[previous];
+                        const QueryNode &to = m_node_info_list[target_node.node_id];
                         const double segment_length =
                             util::coordinate_calculation::greatCircleDistance(from.lat, from.lon,
                                                                               to.lat, to.lon);
-                        edge_segment_file.write(reinterpret_cast<const char *>(&node_count),
-                                                sizeof(node_count));
-                        edge_segment_file.write(reinterpret_cast<const char *>(&from.node_id),
-                                                sizeof(from.node_id));
+
                         edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id),
                                                 sizeof(to.node_id));
                         edge_segment_file.write(reinterpret_cast<const char *>(&segment_length),
                                                 sizeof(segment_length));
-                        edge_segment_file.write(
-                            reinterpret_cast<const char *>(&edge_data1.distance),
-                            sizeof(edge_data1.distance));
+                        edge_segment_file.write(reinterpret_cast<const char *>(&target_node.weight),
+                                                sizeof(target_node.weight));
+                        previous = target_node.node_id;
                     }
                 }
             }
