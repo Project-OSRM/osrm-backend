@@ -51,6 +51,9 @@ class Server
         acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
         acceptor.bind(endpoint);
         acceptor.listen();
+
+        util::SimpleLogger().Write() << "Listening on: " << acceptor.local_endpoint();
+
         acceptor.async_accept(
             new_connection->socket(),
             boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
