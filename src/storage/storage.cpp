@@ -343,14 +343,14 @@ int Storage::Run()
     // exist.
     std::ifstream geometry_datasource_input_stream(datasource_indexes_path.c_str(),
                                                    std::ios::binary);
+    std::size_t number_of_compressed_datasources = 0;
     if (geometry_datasource_input_stream)
     {
-        std::size_t number_of_compressed_datasources = 0;
         geometry_datasource_input_stream.read(
             reinterpret_cast<char *>(&number_of_compressed_datasources), sizeof(std::size_t));
-        shared_layout_ptr->SetBlockSize<uint8_t>(SharedDataLayout::DATASOURCES_LIST,
-                                                 number_of_compressed_datasources);
     }
+    shared_layout_ptr->SetBlockSize<uint8_t>(SharedDataLayout::DATASOURCES_LIST,
+                                             number_of_compressed_datasources);
 
     // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist
@@ -368,14 +368,13 @@ int Storage::Run()
                       std::back_inserter(m_datasource_name_data));
             m_datasource_name_lengths.push_back(name.size());
         }
-
-        shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::DATASOURCE_NAME_DATA,
-                                              m_datasource_name_data.size());
-        shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_OFFSETS,
-                                                m_datasource_name_offsets.size());
-        shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
-                                                m_datasource_name_lengths.size());
     }
+    shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::DATASOURCE_NAME_DATA,
+            m_datasource_name_data.size());
+    shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_OFFSETS,
+            m_datasource_name_offsets.size());
+    shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
+            m_datasource_name_lengths.size());
 
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
@@ -491,47 +490,41 @@ int Storage::Run()
     }
 
     // load datasource information (if it exists)
-    if (geometry_datasource_input_stream)
+    uint8_t *datasources_list_ptr = shared_layout_ptr->GetBlockPtr<uint8_t, true>(
+        shared_memory_ptr, SharedDataLayout::DATASOURCES_LIST);
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCES_LIST) > 0)
     {
-        uint8_t *datasources_list_ptr = shared_layout_ptr->GetBlockPtr<uint8_t, true>(
-            shared_memory_ptr, SharedDataLayout::DATASOURCES_LIST);
-        if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCES_LIST) > 0)
-        {
-            geometry_datasource_input_stream.read(
-                reinterpret_cast<char *>(datasources_list_ptr),
-                shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCES_LIST));
-        }
+        geometry_datasource_input_stream.read(
+            reinterpret_cast<char *>(datasources_list_ptr),
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCES_LIST));
     }
 
     // load datasource name information (if it exists)
-    if (!m_datasource_name_data.empty())
+    char *datasource_name_data_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
+        shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_DATA);
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_DATA) > 0)
     {
-        char *datasource_name_data_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
-            shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_DATA);
-        if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_DATA) > 0)
-        {
-            std::cout << "Copying "
-                      << (m_datasource_name_data.end() - m_datasource_name_data.begin())
-                      << " chars into name data ptr\n";
-            std::copy(m_datasource_name_data.begin(), m_datasource_name_data.end(),
-                      datasource_name_data_ptr);
-        }
+        std::cout << "Copying "
+                  << (m_datasource_name_data.end() - m_datasource_name_data.begin())
+                  << " chars into name data ptr\n";
+        std::copy(m_datasource_name_data.begin(), m_datasource_name_data.end(),
+                  datasource_name_data_ptr);
+    }
 
-        auto datasource_name_offsets_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
-            shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_OFFSETS);
-        if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_OFFSETS) > 0)
-        {
-            std::copy(m_datasource_name_offsets.begin(), m_datasource_name_offsets.end(),
-                      datasource_name_offsets_ptr);
-        }
+    auto datasource_name_offsets_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
+        shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_OFFSETS);
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_OFFSETS) > 0)
+    {
+        std::copy(m_datasource_name_offsets.begin(), m_datasource_name_offsets.end(),
+                  datasource_name_offsets_ptr);
+    }
 
-        auto datasource_name_lengths_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
-            shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_LENGTHS);
-        if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_LENGTHS) > 0)
-        {
-            std::copy(m_datasource_name_lengths.begin(), m_datasource_name_lengths.end(),
-                      datasource_name_lengths_ptr);
-        }
+    auto datasource_name_lengths_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
+        shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_LENGTHS);
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_LENGTHS) > 0)
+    {
+        std::copy(m_datasource_name_lengths.begin(), m_datasource_name_lengths.end(),
+                  datasource_name_lengths_ptr);
     }
 
     // Loading list of coordinates
