@@ -93,8 +93,7 @@ class RouteAPI : public BaseAPI
             auto leg_geometry = guidance::assembleGeometry(
                 BaseAPI::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
             auto leg = guidance::assembleLeg(BaseAPI::facade, path_data, leg_geometry,
-                                             phantoms.source_phantom, phantoms.target_phantom,
-                                             reversed_source, reversed_target);
+                                             phantoms.target_phantom, reversed_target);
 
             if (parameters.steps)
             {
