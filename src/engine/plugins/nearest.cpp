@@ -28,7 +28,7 @@ Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
 
     if (params.coordinates.size() != 1)
     {
-        return Error("TooBig", "Only one input coordinate is supported", json_result);
+        return Error("InvalidOptions", "Only one input coordinate is supported", json_result);
     }
 
     auto phantom_nodes = GetPhantomNodes(params, params.number_of_results);
