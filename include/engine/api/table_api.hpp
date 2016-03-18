@@ -68,7 +68,8 @@ class TableAPI final : public BaseAPI
         response.values["code"] = "ok";
     }
 
-  protected:
+    // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
+    //  protected:
     virtual util::json::Array MakeWaypoints(const std::vector<PhantomNode> &phantoms) const
     {
         util::json::Array json_waypoints;
