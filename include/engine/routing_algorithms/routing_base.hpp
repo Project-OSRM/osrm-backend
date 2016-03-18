@@ -324,6 +324,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                  extractor::guidance::TurnInstruction::NO_TURN(), travel_mode,
                                  INVALID_EXIT_NR});
                 }
+                BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
 
