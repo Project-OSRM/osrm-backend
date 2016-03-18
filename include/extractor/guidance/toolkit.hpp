@@ -339,8 +339,12 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
     // this uses the encoding of references in the profile, which is very BAD
     // Input for this function should be a struct separating streetname, suffix (e.g. road,
     // boulevard, North, West ...), and a list of references
-    std::string from_name = "", from_ref = "", to_name = "", to_ref = "";
+    std::string from_name;
+    std::string from_ref;
+    std::string to_name;
+    std::string to_ref;
 
+    // Split from the format "{name} ({ref})" -> name, ref
     auto split = [](const std::string &name, std::string &out_name, std::string &out_ref)
     {
         const auto ref_begin = name.find_first_of('(');
@@ -352,7 +356,6 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
         else
         {
             out_name = name;
-            out_ref = "";
         }
     };
 
@@ -360,32 +363,20 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
     split(to, to_name, to_ref);
 
     // check similarity of names
-    if (from_name != "" && to_name != "")
-    {
-        if ((from_name.back() >= '0' && from_name.back() <= '9') ||
-            (to_name.back() >= '0' && to_name.back() <= '9'))
-            return from_name != to_name;
-        if (from.find("Weg ") == 0 && to_name.find("Weg ") == 0)
-            return from_name != to_name;
-        auto from_itr = from_name.begin();
-        auto to_itr = to_name.begin();
-        for (; from_itr != from_name.end() && to_itr != to_name.end() && *from_itr == *to_itr;
-             ++to_itr, ++from_itr)
-        {
-            /* do nothing */
-        }
+    auto names_are_empty = from_name.empty() && to_name.empty();
+    auto names_are_equal = from_name == to_name;
+    auto name_is_removed = !from_name.empty() && to_name.empty();
+    // references are contained in one another
+    auto refs_are_empty = from_ref.empty() && to_ref.empty();
+    auto ref_is_contained =
+        !from_ref.empty() && !to_ref.empty() &&
+        (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
+    auto ref_is_removed = !from_ref.empty() && to_ref.empty();
 
-        const auto common_length = std::distance(from_name.begin(), from_itr);
-        return (100 * common_length / std::min(to_name.length(), from_name.length())) < 80;
-    }
-    else if (from_ref != "" && to_ref != "")
-    {
-        // references are contained in one another
-        if (from_ref.find(to_ref) != std::string::npos ||
-            to_ref.find(from_ref) != std::string::npos)
-            return false;
-    }
-    return true;
+    auto obvious_change = ref_is_contained || names_are_equal ||
+                          (names_are_empty && refs_are_empty) || name_is_removed || ref_is_removed;
+
+    return !obvious_change;
 }
 
 inline int getPriority( const FunctionalRoadClass road_class )
