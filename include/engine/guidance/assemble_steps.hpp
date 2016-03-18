@@ -41,12 +41,12 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                      const bool target_traversed_in_reverse)
 {
     const EdgeWeight source_duration =
-        source_traversed_in_reverse ? source_node.forward_weight : source_node.reverse_weight;
+        source_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight;
     const auto source_mode = source_traversed_in_reverse ? source_node.backward_travel_mode
                                                          : source_node.forward_travel_mode;
 
     const EdgeWeight target_duration =
-        target_traversed_in_reverse ? target_node.forward_weight : target_node.reverse_weight;
+        target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
     const auto target_mode = target_traversed_in_reverse ? target_node.backward_travel_mode
                                                          : target_node.forward_travel_mode;
 
