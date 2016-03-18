@@ -299,8 +299,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                                weight_vector);
                 BOOST_ASSERT(weight_vector.size() > 0);
 
-                auto total_weight =
-                    std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
+                auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
                 // ed.distance should be total_weight + penalties (turn, stop, etc)
@@ -330,6 +329,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
                 if (is_first_segment)
                 {
+                    auto source_weight = start_traversed_in_reverse
+                                             ? phantom_node_pair.source_phantom.reverse_weight
+                                             : phantom_node_pair.source_phantom.forward_weight;
                     // Given this geometry:
                     // U---v---w---x---Z
                     //       s
@@ -337,12 +339,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     // However the first segment duration needs to be adjusted to the fact that the
                     // source phantom is in the middle of the segment.
                     // We do this by subtracting v--s from the duration.
-                    BOOST_ASSERT(unpacked_path.front().duration_until_turn >=
-                                 phantom_node_pair.source_phantom.forward_weight);
-                    unpacked_path.front().duration_until_turn -=
-                        start_traversed_in_reverse
-                            ? phantom_node_pair.source_phantom.forward_weight
-                            : phantom_node_pair.source_phantom.reverse_weight;
+                    BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
+                    unpacked_path.front().duration_until_turn -= source_weight;
                 }
             }
         }
@@ -388,7 +386,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         // s: fwd_segment 0
         // t: fwd_segment 3
         // -> (U, v), (v, w), (w, x)
-        // note that (x, t) is _not_ included but needs to
+        // note that (x, t) is _not_ included but needs to be added later.
         for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
         {
             BOOST_ASSERT(i < id_vector.size());
@@ -403,14 +401,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         if (is_local_path && unpacked_path.size() > 0)
         {
+            auto source_weight = start_traversed_in_reverse
+                                     ? phantom_node_pair.source_phantom.reverse_weight
+                                     : phantom_node_pair.source_phantom.forward_weight;
             // The above code will create segments for (v, w), (w,x), (x, y) and (y, Z).
             // However the first segment duration needs to be adjusted to the fact that the source
-            // phantom
-            // is in the middle of the segment. We do this by subtracting v--s from the duration.
-            BOOST_ASSERT(unpacked_path.front().duration_until_turn >=
-                         phantom_node_pair.source_phantom.forward_weight);
-            unpacked_path.front().duration_until_turn -=
-                phantom_node_pair.source_phantom.forward_weight;
+            // phantom is in the middle of the segment. We do this by subtracting v--s from the
+            // duration.
+            BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
+            unpacked_path.front().duration_until_turn -= source_weight;
         }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.
