@@ -57,7 +57,8 @@ class RouteAPI : public BaseAPI
         response.values["code"] = "ok";
     }
 
-  protected:
+    // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
+    //  protected:
     template <typename ForwardIter>
     util::json::Value MakeGeometry(ForwardIter begin, ForwardIter end) const
     {
