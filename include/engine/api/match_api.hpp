@@ -48,7 +48,9 @@ class MatchAPI final : public RouteAPI
         response.values["code"] = "ok";
     }
 
-  protected:
+    // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
+    //  protected:
+
     // FIXME this logic is a little backwards. We should change the output format of the
     // map_matching
     // routing algorithm to be easier to consume here.
