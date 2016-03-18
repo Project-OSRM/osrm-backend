@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
     BOOST_REQUIRE(rc == Status::Error);
 
     const auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "TooBig");
+    BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
