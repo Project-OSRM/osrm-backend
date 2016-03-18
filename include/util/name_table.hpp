@@ -23,7 +23,7 @@ class NameTable
 
   public:
     NameTable(const std::string &filename);
-    std::string get_name_for_id(const unsigned name_id) const;
+    std::string GetNameForID(const unsigned name_id) const;
 };
 } // namespace util
 } // namespace osrm
