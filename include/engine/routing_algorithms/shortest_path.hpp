@@ -240,11 +240,9 @@ class ShortestPathRouting final
     static const constexpr bool UTURN_DEFAULT = false;
 
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
-                    const std::vector<boost::optional<bool>> &uturn_indicators,
+                    const boost::optional<bool> uturns,
                     InternalRouteResult &raw_route_data) const
     {
-        BOOST_ASSERT(uturn_indicators.empty() ||
-                     uturn_indicators.size() == phantom_nodes_vector.size() + 1);
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
@@ -270,7 +268,7 @@ class ShortestPathRouting final
         std::vector<NodeID> total_packed_path_to_reverse;
         std::vector<std::size_t> packed_leg_to_reverse_begin;
 
-        const bool use_uturn_indicators = !uturn_indicators.empty();
+        const bool allow_u_turn_at_via = uturns ? *uturns : UTURN_DEFAULT;
 
         std::size_t current_leg = 0;
         // this implements a dynamic program that finds the shortest route through
@@ -285,12 +283,6 @@ class ShortestPathRouting final
 
             const auto &source_phantom = phantom_node_pair.source_phantom;
             const auto &target_phantom = phantom_node_pair.target_phantom;
-
-            const bool use_uturn_default =
-                !use_uturn_indicators || !uturn_indicators[current_leg + 1];
-            const bool allow_u_turn_at_via =
-                (use_uturn_default && UTURN_DEFAULT) ||
-                (!use_uturn_default && *uturn_indicators[current_leg + 1]);
 
             bool search_to_forward_node = target_phantom.forward_node_id != SPECIAL_NODEID;
             bool search_to_reverse_node = target_phantom.reverse_node_id != SPECIAL_NODEID;
