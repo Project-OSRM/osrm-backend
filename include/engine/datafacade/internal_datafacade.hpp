@@ -551,7 +551,7 @@ class InternalDataFacade final : public BaseDataFacade
         return m_name_ID_list.at(id);
     }
 
-    std::string get_name_for_id(const unsigned name_id) const override final
+    std::string GetNameForID(const unsigned name_id) const override final
     {
         if (std::numeric_limits<unsigned>::max() == name_id)
         {

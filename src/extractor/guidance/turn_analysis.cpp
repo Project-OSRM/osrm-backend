@@ -752,8 +752,8 @@ TurnInstruction TurnAnalysis::getInstructionForObvious(const std::size_t num_roa
         const auto &in_data = node_based_graph.GetEdgeData(via_edge);
         const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
         if (in_data.name_id != out_data.name_id &&
-            requiresNameAnnounced(name_table.get_name_for_id(in_data.name_id),
-                                  name_table.get_name_for_id(out_data.name_id)))
+            requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
+                                  name_table.GetNameForID(out_data.name_id)))
             return {TurnType::NewName, getTurnDirection(road.turn.angle)};
         else
             return {TurnType::Suppressed, getTurnDirection(road.turn.angle)};
