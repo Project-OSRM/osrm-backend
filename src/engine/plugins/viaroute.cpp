@@ -30,6 +30,8 @@ ViaRoutePlugin::ViaRoutePlugin(datafacade::BaseDataFacade &facade_, int max_loca
 Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameters,
                                      util::json::Object &json_result)
 {
+    BOOST_ASSERT(route_parameters.IsValid());
+
     if (max_locations_viaroute > 0 &&
         (static_cast<int>(route_parameters.coordinates.size()) > max_locations_viaroute))
     {
