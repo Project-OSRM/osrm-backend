@@ -10,6 +10,7 @@
 #include "util/exception.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -139,10 +140,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     // traverse arrays from start and end respectively
     for (const auto i : util::irange(0UL, geometry_size))
     {
-        BOOST_ASSERT(
-            current_edge_source_coordinate_id ==
-            m_compressed_edge_container.GetBucketReference(edge_id_2)[geometry_size - 1 - i]
-                .node_id);
+        BOOST_ASSERT(current_edge_source_coordinate_id ==
+                     m_compressed_edge_container.GetBucketReference(
+                                                     edge_id_2)[geometry_size - 1 - i].node_id);
         const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
@@ -309,9 +309,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         edge_penalty_file.open(edge_fixed_penalties_filename.c_str(), std::ios::binary);
     }
 
-    // writes a dummy value that is updated later
-    edge_data_file.write(reinterpret_cast<const char *>(&original_edges_counter),
-                         sizeof(original_edges_counter));
+    // Writes a dummy value at the front that is updated later with the total length
+    const unsigned length_prefix_empty_space{0};
+    edge_data_file.write(reinterpret_cast<const char *>(&length_prefix_empty_space),
+                         sizeof(length_prefix_empty_space));
 
     std::vector<OriginalEdgeData> original_edge_data_vector;
     original_edge_data_vector.reserve(1024 * 1024);
@@ -475,9 +476,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
+    // Finally jump back to the empty space at the beginning and write length prefix
     edge_data_file.seekp(std::ios::beg);
-    edge_data_file.write(reinterpret_cast<char *>(&original_edges_counter),
-                         sizeof(original_edges_counter));
+
+    const auto length_prefix = boost::numeric_cast<unsigned>(original_edges_counter);
+    static_assert(sizeof(length_prefix_empty_space) == sizeof(length_prefix), "type mismatch");
+
+    edge_data_file.write(reinterpret_cast<const char *>(&length_prefix), sizeof(length_prefix));
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                                  << " edge based nodes";
@@ -707,8 +712,8 @@ bool EdgeBasedGraphFactory::isObviousChoice(EdgeID via_eid,
 
     const auto &candidate_to_the_right = turn_candidates[getRight(turn_index)];
 
-    const auto hasValidRatio = [](const TurnCandidate &left, const TurnCandidate &center,
-                                  const TurnCandidate &right)
+    const auto hasValidRatio =
+        [](const TurnCandidate &left, const TurnCandidate &center, const TurnCandidate &right)
     {
         auto angle_left = (left.angle > 180) ? angularDeviation(left.angle, STRAIGHT_ANGLE) : 180;
         auto angle_right =
@@ -1042,9 +1047,9 @@ QueryNode EdgeBasedGraphFactory::getRepresentativeCoordinate(const NodeID src,
         double this_dist = 0;
         NodeID prev_id = INVERTED ? tgt : src;
 
-        const auto selectBestCandidate = [this](const NodeID current, const double current_distance,
-                                                const NodeID previous,
-                                                const double previous_distance)
+        const auto selectBestCandidate =
+            [this](const NodeID current, const double current_distance, const NodeID previous,
+                   const double previous_distance)
         {
             if (current_distance < DESIRED_SEGMENT_LENGTH ||
                 current_distance - DESIRED_SEGMENT_LENGTH <
