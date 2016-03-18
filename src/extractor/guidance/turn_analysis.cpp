@@ -794,12 +794,13 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
                                  std::vector<ConnectedRoad> intersection) const
 {
     BOOST_ASSERT(intersection[0].turn.angle < 0.001);
-    const auto isObviousOfTwo = [](const ConnectedRoad turn, const ConnectedRoad other)
+    const auto isObviousOfTwo = [](const ConnectedRoad road, const ConnectedRoad other)
     {
-        return (angularDeviation(turn.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
+        return (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
                 angularDeviation(other.turn.angle, STRAIGHT_ANGLE) > 85) ||
+               (angularDeviation(road.turn.angle,STRAIGHT_ANGLE) < std::numeric_limits<double>::epsilon()) ||
                (angularDeviation(other.turn.angle, STRAIGHT_ANGLE) /
-                    angularDeviation(turn.turn.angle, STRAIGHT_ANGLE) >
+                    angularDeviation(road.turn.angle, STRAIGHT_ANGLE) >
                 1.4);
     };
 
