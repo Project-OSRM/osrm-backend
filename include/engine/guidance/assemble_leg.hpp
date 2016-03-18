@@ -96,18 +96,12 @@ template <typename DataFacadeT>
 RouteLeg assembleLeg(const DataFacadeT &facade,
                      const std::vector<PathData> &route_data,
                      const LegGeometry &leg_geometry,
-                     const PhantomNode &source_node,
                      const PhantomNode &target_node,
-                     const bool source_traversed_in_reverse,
                      const bool target_traversed_in_reverse)
 {
-    const auto source_duration =
-        (source_traversed_in_reverse ? source_node.GetReverseWeightPlusOffset()
-                                     : source_node.GetForwardWeightPlusOffset()) /
-        10.;
     const auto target_duration =
-        (target_traversed_in_reverse ? target_node.GetReverseWeightPlusOffset()
-                                     : target_node.GetForwardWeightPlusOffset()) /
+        (target_traversed_in_reverse ? target_node.reverse_weight
+                                     : target_node.forward_weight) /
         10.;
 
     auto distance = std::accumulate(leg_geometry.segment_distances.begin(),
@@ -136,13 +130,9 @@ RouteLeg assembleLeg(const DataFacadeT &facade,
     // The phantom node of t will contain:
     // `forward_weight`: duration of (d,t)
     // `forward_offset`: duration of (c, d)
-    //
-    // TODO discuss, this should not be the case after danpats fixes
-    // The PathData will contain entries of b, c and d. But only c will contain
-    // a duration value since its the only point associated with a turn.
-    // As such we want to slice of the duration for (a,s) and add the duration for
-    // (c,d,t)
-    duration = duration - source_duration + target_duration;
+    // path_data will have entries for (s,b), (b, c), (c, d) but (d, t) is only
+    // caputed by the phantom node. So we need to add the target duration here.
+    duration = duration + target_duration;
     auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(route_data);
 
     BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
