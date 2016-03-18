@@ -70,7 +70,7 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
 {
     if (use_simplification)
     {
-        const auto zoom_level = calculateOverviewZoomLevel(leg_geometries);
+        const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(leg_geometries));
         return simplifyGeometry(leg_geometries, zoom_level);
     }
     BOOST_ASSERT(!use_simplification);
