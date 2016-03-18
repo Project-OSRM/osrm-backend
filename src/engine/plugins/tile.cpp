@@ -168,6 +168,8 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
 
 Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer)
 {
+    BOOST_ASSERT(parameters.IsValid());
+
     using namespace util::coordinate_calculation;
     double min_lon, min_lat, max_lon, max_lat;
 

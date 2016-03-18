@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_API_TILE_PARAMETERS_HPP
 #define ENGINE_API_TILE_PARAMETERS_HPP
 
+#include <cmath>
+
 namespace osrm
 {
 namespace engine
@@ -41,8 +43,16 @@ struct TileParameters final
     unsigned y;
     unsigned z;
 
-    // FIXME check if x and y work with z
-    bool IsValid() { return z < 20; };
+    bool IsValid() const
+    {
+        // https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels
+        // https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#X_and_Y
+        const auto valid_x = x <= static_cast<unsigned>(std::pow(2., z)) - 1;
+        const auto valid_y = y <= static_cast<unsigned>(std::pow(2., z)) - 1;
+        const auto valid_z = z < 20;
+
+        return valid_x && valid_y && valid_z;
+    };
 };
 }
 }
