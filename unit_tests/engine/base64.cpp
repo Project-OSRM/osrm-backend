@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip)
 
     const Coordinate coordinate;
     const PhantomNode phantom;
-    const osrm::test::MockDataFacade facade;
+    const osrm::test::MockDataFacade facade{};
 
     const Hint hint{coordinate, phantom, facade.GetCheckSum()};
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip_bytewise)
 
     const Coordinate coordinate;
     const PhantomNode phantom;
-    const osrm::test::MockDataFacade facade;
+    const osrm::test::MockDataFacade facade{};
 
     const Hint hint{coordinate, phantom, facade.GetCheckSum()};
 

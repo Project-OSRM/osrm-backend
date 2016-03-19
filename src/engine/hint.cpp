@@ -50,8 +50,7 @@ Hint Hint::FromBase64(const std::string &base64Hint)
 
 bool operator==(const Hint &lhs, const Hint &rhs)
 {
-    return std::tie(lhs.phantom, lhs.data_checksum) ==
-           std::tie(rhs.phantom, rhs.data_checksum);
+    return std::tie(lhs.phantom, lhs.data_checksum) == std::tie(rhs.phantom, rhs.data_checksum);
 }
 
 std::ostream &operator<<(std::ostream &out, const Hint &hint) { return out << hint.ToBase64(); }

@@ -11,6 +11,9 @@
 
 #include <vector>
 #include <array>
+#include <string>
+#include <utility>
+#include <numeric>
 #include <algorithm>
 
 namespace osrm
