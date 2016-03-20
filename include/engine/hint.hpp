@@ -44,7 +44,7 @@ namespace engine
 // Fwd. decls.
 namespace datafacade
 {
-struct BaseDataFacade;
+class BaseDataFacade;
 }
 
 // Is returned as a temporary identifier for snapped coodinates
