@@ -54,6 +54,10 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
                                 std::vector<EdgeWeight> & /* result_weights */) const
     {
     }
+    virtual void GetUncompressedDatasources(const EdgeID /*id*/,
+                                            std::vector<uint8_t> & /*data_sources*/) const
+    {
+    }
     extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned /* id */) const
     {
         return extractor::guidance::TurnInstruction::NO_TURN();
