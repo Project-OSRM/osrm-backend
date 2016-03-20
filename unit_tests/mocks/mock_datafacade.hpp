@@ -54,10 +54,11 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
                                 std::vector<EdgeWeight> & /* result_weights */) const
     {
     }
-    virtual void GetUncompressedDatasources(const EdgeID /*id*/,
-                                            std::vector<uint8_t> & /*data_sources*/) const
+    void GetUncompressedDatasources(const EdgeID /*id*/,
+                                    std::vector<uint8_t> & /*data_sources*/) const
     {
     }
+    std::string GetDatasourceName(const uint8_t /*datasource_name_id*/) const { return ""; }
     extractor::guidance::TurnInstruction GetTurnInstructionForEdgeID(const unsigned /* id */) const
     {
         return extractor::guidance::TurnInstruction::NO_TURN();
@@ -154,7 +155,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     unsigned GetCheckSum() const { return 0; }
     bool IsCoreNode(const NodeID /* id */) const { return false; }
     unsigned GetNameIndexFromEdgeID(const unsigned /* id */) const { return 0; }
-    std::string get_name_for_id(const unsigned /* name_id */) const { return ""; }
+    std::string GetNameForID(const unsigned /* name_id */) const { return ""; }
     std::size_t GetCoreSize() const { return 0; }
     std::string GetTimestamp() const { return ""; }
     bool GetUTurnsDefault() const override { return true; }
