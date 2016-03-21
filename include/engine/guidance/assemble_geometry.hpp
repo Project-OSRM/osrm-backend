@@ -51,7 +51,7 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
         current_distance +=
             util::coordinate_calculation::haversineDistance(prev_coordinate, coordinate);
 
-        if (!isSilent(path_point.turn_instruction))
+        if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
         {
             geometry.segment_distances.push_back(current_distance);
             geometry.segment_offsets.push_back(geometry.locations.size());
