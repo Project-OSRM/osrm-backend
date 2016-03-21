@@ -2,6 +2,7 @@
 #include "util/range_table.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/static_graph.hpp"
@@ -148,6 +149,10 @@ int Storage::Run()
     BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
     const boost::filesystem::path &timestamp_path = paths_iterator->second;
+    paths_iterator = paths.find("properties");
+    BOOST_ASSERT(paths.end() != paths_iterator);
+    BOOST_ASSERT(!paths_iterator->second.empty());
+    const boost::filesystem::path &properties_path = paths_iterator->second;
     paths_iterator = paths.find("ramindex");
     BOOST_ASSERT(paths.end() != paths_iterator);
     BOOST_ASSERT(!paths_iterator->second.empty());
@@ -284,6 +289,9 @@ int Storage::Run()
     uint32_t tree_size = 0;
     tree_node_file.read((char *)&tree_size, sizeof(uint32_t));
     shared_layout_ptr->SetBlockSize<RTreeNode>(SharedDataLayout::R_SEARCH_TREE, tree_size);
+
+    // load profile properties
+    shared_layout_ptr->SetBlockSize<extractor::ProfileProperties>(SharedDataLayout::PROPERTIES, 1);
 
     // load timestamp size
     std::string m_timestamp;
@@ -604,6 +612,15 @@ int Storage::Run()
                                shared_layout_ptr->GetBlockSize(SharedDataLayout::GRAPH_EDGE_LIST));
     }
     hsgr_input_stream.close();
+
+    // load profile properties
+    auto profile_properties_ptr = shared_layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(shared_memory_ptr, SharedDataLayout::PROPERTIES);
+    boost::filesystem::ifstream profile_properties_stream(properties_path);
+    if (!profile_properties_stream)
+    {
+        util::exception("Could not open " + properties_path.string() + " for reading!");
+    }
+    profile_properties_stream.read(reinterpret_cast<char*>(profile_properties_ptr), sizeof(extractor::ProfileProperties));
 
     // acquire lock
     SharedMemory *data_type_memory =

@@ -41,6 +41,7 @@ struct SharedDataLayout
         DATASOURCE_NAME_DATA,
         DATASOURCE_NAME_OFFSETS,
         DATASOURCE_NAME_LENGTHS,
+        PROPERTIES,
         NUM_BLOCKS
     };
 

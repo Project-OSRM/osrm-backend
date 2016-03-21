@@ -9,6 +9,7 @@
 
 #include "engine/geospatial_query.hpp"
 #include "extractor/original_edge_data.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "contractor/query_edge.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
@@ -79,12 +80,24 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<unsigned, false>::vector m_segment_weights;
     util::ShM<uint8_t, false>::vector m_datasource_list;
     util::ShM<std::string, false>::vector m_datasource_names;
+    extractor::ProfileProperties m_profile_properties;
 
     boost::thread_specific_ptr<InternalRTree> m_static_rtree;
     boost::thread_specific_ptr<InternalGeospatialQuery> m_geospatial_query;
     boost::filesystem::path ram_index_path;
     boost::filesystem::path file_index_path;
     util::RangeTable<16, false> m_name_table;
+
+    void LoadProfileProperties(const boost::filesystem::path &properties_path)
+    {
+        boost::filesystem::ifstream in_stream(properties_path);
+        if (!in_stream)
+        {
+            throw util::exception("Could not open " + properties_path.string() + " for reading.");
+        }
+
+        in_stream.read(reinterpret_cast<char*>(&m_profile_properties), sizeof(m_profile_properties));
+    }
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
     {
@@ -319,6 +332,9 @@ class InternalDataFacade final : public BaseDataFacade
 
         util::SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(file_for("timestamp"));
+
+        util::SimpleLogger().Write() << "loading profile properties";
+        LoadProfileProperties(file_for("properties"));
 
         util::SimpleLogger().Write() << "loading street names";
         LoadStreetNames(file_for("namesdata"));
@@ -662,6 +678,8 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }
+
+    bool GetUTurnsDefault() const override final { return m_profile_properties.allow_u_turn_at_via; }
 };
 }
 }
