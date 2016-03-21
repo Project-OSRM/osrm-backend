@@ -27,8 +27,7 @@ namespace detail
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                       const WaypointType waypoint_type,
                                       const LegGeometry &leg_geometry,
-                                      const std::size_t segment_index,
-                                      const unsigned exit);
+                                      const std::size_t segment_index);
 } // ns detail
 
 template <typename DataFacadeT>
@@ -78,7 +77,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         StepManeuver maneuver = detail::stepManeuverFromGeometry(
             extractor::guidance::TurnInstruction{extractor::guidance::TurnType::NoTurn,
                                                  initial_modifier},
-            WaypointType::Depart, leg_geometry, segment_index, INVALID_EXIT_NR);
+            WaypointType::Depart, leg_geometry, segment_index);
 
         // PathData saves the information we need of the segment _before_ the turn,
         // but a RouteStep is with regard to the segment after the turn.
@@ -89,7 +88,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         {
             segment_duration += path_point.duration_until_turn;
 
-            if (path_point.turn_instruction != extractor::guidance::TurnInstruction::NO_TURN())
+            if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
             {
                 BOOST_ASSERT(segment_duration >= 0);
                 const auto name = facade.GetNameForID(path_point.name_id);
@@ -104,7 +103,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                           leg_geometry.BackIndex(segment_index) + 1});
                 maneuver = detail::stepManeuverFromGeometry(path_point.turn_instruction,
                                                             WaypointType::None, leg_geometry,
-                                                            segment_index, path_point.exit);
+                                                            segment_index);
                 segment_index++;
                 segment_duration = 0;
             }
@@ -136,6 +135,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                  extractor::guidance::TurnInstruction{
                                      extractor::guidance::TurnType::NoTurn, initial_modifier},
                                  WaypointType::Depart,
+                                 INVALID_EXIT_NR,
                                  INVALID_EXIT_NR};
         int duration = target_duration - source_duration;
         BOOST_ASSERT(duration >= 0);
@@ -174,6 +174,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                extractor::guidance::TurnInstruction{
                                    extractor::guidance::TurnType::NoTurn, final_modifier},
                                WaypointType::Arrive,
+                               INVALID_EXIT_NR,
                                INVALID_EXIT_NR},
                   leg_geometry.locations.size(),
                   leg_geometry.locations.size()});

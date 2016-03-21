@@ -28,6 +28,7 @@ struct StepManeuver
     extractor::guidance::TurnInstruction instruction;
     WaypointType waypoint_type;
     unsigned exit;
+    unsigned intersection;
 };
 } // namespace guidance
 } // namespace engine

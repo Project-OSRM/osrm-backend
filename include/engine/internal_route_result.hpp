@@ -29,8 +29,6 @@ struct PathData
     extractor::guidance::TurnInstruction turn_instruction;
     // travel mode of the street that leads to the turn
     extractor::TravelMode travel_mode : 4;
-    // exit ID of highway exit, roundabout exit, intersection nr
-    unsigned exit;
 };
 
 struct InternalRouteResult

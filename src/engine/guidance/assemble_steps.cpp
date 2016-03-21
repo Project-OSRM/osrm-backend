@@ -15,12 +15,11 @@ namespace detail
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                       const WaypointType waypoint_type,
                                       const LegGeometry &leg_geometry,
-                                      const std::size_t segment_index,
-                                      const unsigned exit)
+                                      const std::size_t segment_index)
 {
     auto turn_index = leg_geometry.BackIndex(segment_index);
     BOOST_ASSERT(turn_index > 0);
-    BOOST_ASSERT(turn_index < leg_geometry.locations.size());
+    BOOST_ASSERT(turn_index + 1 < leg_geometry.locations.size());
 
     // TODO chose a bigger look-a-head to smooth complex geometry
     const auto pre_turn_coordinate = leg_geometry.locations[turn_index - 1];
@@ -32,7 +31,13 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
     const double post_turn_bearing =
         util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
 
-    return StepManeuver{turn_coordinate, pre_turn_bearing, post_turn_bearing, instruction, waypoint_type, exit};
+    return StepManeuver{turn_coordinate,
+                        pre_turn_bearing,
+                        post_turn_bearing,
+                        instruction,
+                        waypoint_type,
+                        INVALID_EXIT_NR,
+                        INVALID_EXIT_NR};
 }
 } // ns detail
 } // ns engine

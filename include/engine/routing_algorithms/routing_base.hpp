@@ -321,8 +321,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {
                     unpacked_path.push_back(
                         PathData{id_vector[i], name_index, weight_vector[i],
-                                 extractor::guidance::TurnInstruction::NO_TURN(), travel_mode,
-                                 INVALID_EXIT_NR});
+                                 extractor::guidance::TurnInstruction::NO_TURN(), travel_mode});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
@@ -396,8 +395,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 id_vector[i], phantom_node_pair.target_phantom.name_id, weight_vector[i],
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
-                                            : phantom_node_pair.target_phantom.forward_travel_mode,
-                INVALID_EXIT_NR});
+                                            : phantom_node_pair.target_phantom.forward_travel_mode});
         }
 
         if (is_local_path && unpacked_path.size() > 0)
