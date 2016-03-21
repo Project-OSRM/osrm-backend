@@ -19,6 +19,8 @@ namespace osrm
 namespace extractor
 {
 
+class ProfileProperties;
+
 /**
  * Parses the relations that represents turn restrictions.
  *
@@ -40,11 +42,10 @@ namespace extractor
 class RestrictionParser
 {
   public:
-    RestrictionParser(lua_State *lua_state);
+    RestrictionParser(lua_State *lua_state, const ProfileProperties& properties);
     boost::optional<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
 
   private:
-    void ReadUseRestrictionsSetting(lua_State *lua_state);
     void ReadRestrictionExceptions(lua_State *lua_state);
     bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
 

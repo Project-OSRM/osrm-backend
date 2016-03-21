@@ -1,6 +1,9 @@
 #ifndef SCRIPTING_ENVIRONMENT_HPP
 #define SCRIPTING_ENVIRONMENT_HPP
 
+#include "extractor/profile_properties.hpp"
+#include "extractor/raster_source.hpp"
+
 #include <string>
 #include <memory>
 #include <mutex>
@@ -23,18 +26,28 @@ namespace extractor
 class ScriptingEnvironment
 {
   public:
+    struct Context
+    {
+        Context();
+        ~Context();
+
+        ProfileProperties properties;
+        SourceContainer sources;
+        lua_State *state;
+    };
+
     explicit ScriptingEnvironment(const std::string &file_name);
 
     ScriptingEnvironment(const ScriptingEnvironment &) = delete;
     ScriptingEnvironment &operator=(const ScriptingEnvironment &) = delete;
 
-    lua_State *GetLuaState();
+    Context &GetContex();
 
   private:
-    void InitLuaState(lua_State *lua_state);
+    void InitContext(Context &context);
     std::mutex init_mutex;
     std::string file_name;
-    tbb::enumerable_thread_specific<std::shared_ptr<lua_State>> script_contexts;
+    tbb::enumerable_thread_specific<std::shared_ptr<Context>> script_contexts;
 };
 }
 }

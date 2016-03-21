@@ -1,5 +1,5 @@
 #include "extractor/restriction_parser.hpp"
-#include "extractor/extraction_way.hpp"
+#include "extractor/profile_properties.hpp"
 
 #include "extractor/external_memory_node.hpp"
 #include "util/lua_util.hpp"
@@ -33,31 +33,12 @@ int luaErrorCallback(lua_State *lua_state)
 }
 }
 
-RestrictionParser::RestrictionParser(lua_State *lua_state) : use_turn_restrictions(true)
+RestrictionParser::RestrictionParser(lua_State *lua_state, const ProfileProperties &properties)
+    : use_turn_restrictions(properties.use_turn_restrictions)
 {
-    ReadUseRestrictionsSetting(lua_state);
-
     if (use_turn_restrictions)
     {
         ReadRestrictionExceptions(lua_state);
-    }
-}
-
-void RestrictionParser::ReadUseRestrictionsSetting(lua_State *lua_state)
-{
-    if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n") &&
-        lua_isboolean(lua_state, -1))
-    {
-        use_turn_restrictions = lua_toboolean(lua_state, -1);
-    }
-
-    if (use_turn_restrictions)
-    {
-        util::SimpleLogger().Write() << "Using turn restrictions";
-    }
-    else
-    {
-        util::SimpleLogger().Write() << "Ignoring turn restrictions";
     }
 }
 

@@ -13,8 +13,7 @@ namespace osrm
 namespace extractor
 {
 
-GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
-    : speed_profile(std::move(speed_profile))
+GraphCompressor::GraphCompressor()
 {
 }
 

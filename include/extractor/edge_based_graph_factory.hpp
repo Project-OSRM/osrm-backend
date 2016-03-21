@@ -4,7 +4,7 @@
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/speed_profile.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_node.hpp"
@@ -52,7 +52,7 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<QueryNode> &node_info_list,
-                                   SpeedProfileProperties speed_profile,
+                                   ProfileProperties profile_properties,
                                    const util::NameTable &name_table);
 
     void Run(const std::string &original_edge_data_filename,
@@ -106,7 +106,7 @@ class EdgeBasedGraphFactory
     const std::unordered_set<NodeID> &m_traffic_lights;
     const CompressedEdgeContainer &m_compressed_edge_container;
 
-    SpeedProfileProperties speed_profile;
+    ProfileProperties profile_properties;
 
     const util::NameTable &name_table;
 
