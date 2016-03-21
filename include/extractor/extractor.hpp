@@ -40,6 +40,8 @@ namespace osrm
 namespace extractor
 {
 
+class ProfileProperties;
+
 class Extractor
 {
   public:
@@ -49,13 +51,15 @@ class Extractor
   private:
     ExtractorConfig config;
 
-    void SetupScriptingEnvironment(lua_State *myLuaState, SpeedProfileProperties &speed_profile);
     std::pair<std::size_t, std::size_t>
-    BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
+    BuildEdgeExpandedGraph(lua_State* lua_state,
+                           const ProfileProperties& profile_properties,
+                           std::vector<QueryNode> &internal_to_external_node_map,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
                            util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
+    void WriteProfileProperties(const std::string& output_path, const ProfileProperties& properties) const;
     void WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map);
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &edges,

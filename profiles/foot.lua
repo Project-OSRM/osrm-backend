@@ -64,9 +64,11 @@ leisure_speeds = {
   ["track"] = walking_speed
 }
 
-traffic_signal_penalty   = 2
-u_turn_penalty           = 2
-use_turn_restrictions    = false
+properties.traffic_signal_penalty   = 2
+properties.u_turn_penalty           = 2
+properties.use_turn_restrictions    = false
+properties.allow_u_turn_at_via      = true
+
 local fallback_names     = true
 
 function get_exceptions(vector)
