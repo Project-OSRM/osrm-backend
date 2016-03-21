@@ -53,10 +53,12 @@ populate_base_path(std::unordered_map<std::string, boost::filesystem::path> &ser
         BOOST_ASSERT(server_paths.find("namesdata") != server_paths.end());
         server_paths["timestamp"] = base_string + ".timestamp";
         BOOST_ASSERT(server_paths.find("timestamp") != server_paths.end());
+        server_paths["properties"] = base_string + ".properties";
+        BOOST_ASSERT(server_paths.find("properties") != server_paths.end());
         server_paths["datasource_indexes"] = base_string + ".datasource_indexes";
-        BOOST_ASSERT(server_paths.find("timestamp") != server_paths.end());
+        BOOST_ASSERT(server_paths.find("datasource_indexes") != server_paths.end());
         server_paths["datasource_names"] = base_string + ".datasource_names";
-        BOOST_ASSERT(server_paths.find("timestamp") != server_paths.end());
+        BOOST_ASSERT(server_paths.find("datasource_names") != server_paths.end());
     }
 
     // check if files are give and whether they exist at all

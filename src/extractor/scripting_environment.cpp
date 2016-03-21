@@ -157,8 +157,8 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
              .def_readonly("datum", &RasterDatum::datum)
              .def("invalid_data", &RasterDatum::get_invalid)];
 
-    luabind::globals(context.state)["properties"] = context.properties;
-    luabind::globals(context.state)["sources"] = context.sources;
+    luabind::globals(context.state)["properties"] = &context.properties;
+    luabind::globals(context.state)["sources"] = &context.sources;
 
     if (0 != luaL_dofile(context.state, file_name.c_str()))
     {
