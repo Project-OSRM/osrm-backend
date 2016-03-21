@@ -72,7 +72,7 @@ class RouteAPI : public BaseAPI
     }
 
     util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
-                                 std::vector<std::vector<PathData>> unpacked_path_segments,
+                                 const std::vector<std::vector<PathData>> &unpacked_path_segments,
                                  const std::vector<bool> &source_traversed_in_reverse,
                                  const std::vector<bool> &target_traversed_in_reverse) const
     {
@@ -82,7 +82,6 @@ class RouteAPI : public BaseAPI
         legs.reserve(number_of_legs);
         leg_geometries.reserve(number_of_legs);
 
-        unpacked_path_segments = guidance::postProcess(std::move(unpacked_path_segments));
         for (auto idx : util::irange(0UL, number_of_legs))
         {
             const auto &phantoms = segment_end_coordinates[idx];
@@ -98,14 +97,42 @@ class RouteAPI : public BaseAPI
 
             if (parameters.steps)
             {
-                leg.steps = guidance::assembleSteps(
+                auto steps = guidance::assembleSteps(
                     BaseAPI::facade, path_data, leg_geometry, phantoms.source_phantom,
                     phantoms.target_phantom, reversed_source, reversed_target);
+
+                /* Perform step-based post-processing.
+                 *
+                 * Using post-processing on basis of route-steps for a single leg at a time
+                 * comes at the cost that we cannot count the correct exit for roundabouts.
+                 * We can only emit the exit nr/intersections up to/starting at a part of the leg.
+                 * If a roundabout is not terminated in a leg, we will end up with a enter-roundabout
+                 * and exit-roundabout-nr where the exit nr is out of sync with the previous enter.
+                 *
+                 *         | S |
+                 *         *   *
+                 *  ----*        * ----
+                 *                  T
+                 *  ----*        * ----
+                 *       V *   *
+                 *         |   |
+                 *         |   |
+                 *
+                 * Coming from S via V to T, we end up with the legs S->V and V->T. V-T will say to take
+                 * the second exit, even though counting from S it would be the third.
+                 * For S, we only emit `roundabout` without an exit number, showing that we enter a roundabout
+                 * to find a via point.
+                 * The same exit will be emitted, though, if we should start routing at S, making
+                 * the overall response consistent.
+                 */
+
+                 leg.steps = guidance::postProcess(std::move(steps));
             }
 
             leg_geometries.push_back(std::move(leg_geometry));
             legs.push_back(std::move(leg));
         }
+
         auto route = guidance::assembleRoute(legs);
         boost::optional<util::json::Value> json_overview;
         if (parameters.overview != RouteParameters::OverviewType::False)
