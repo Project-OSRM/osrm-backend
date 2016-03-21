@@ -38,7 +38,10 @@ unsigned getFittedZoom(util::Coordinate south_west, util::Coordinate north_east)
     const double height_ratio = (max_y - min_y) / detail::VIEWPORT_HEIGHT;
     const auto zoom = detail::MAX_ZOOM - std::max(std::log(width_ratio), std::log(height_ratio)) * detail::INV_LOG_2;
 
-    return std::max<unsigned>(detail::MIN_ZOOM, zoom);
+    if (std::isfinite(zoom))
+        return std::max<unsigned>(detail::MIN_ZOOM, zoom);
+    else
+      return detail::MIN_ZOOM;
 }
 
 }
