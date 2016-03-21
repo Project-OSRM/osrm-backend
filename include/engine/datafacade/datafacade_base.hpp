@@ -143,6 +143,8 @@ class BaseDataFacade
     virtual std::size_t GetCoreSize() const = 0;
 
     virtual std::string GetTimestamp() const = 0;
+
+    virtual bool GetUTurnsDefault() const = 0;
 };
 }
 }

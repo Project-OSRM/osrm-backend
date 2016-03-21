@@ -44,7 +44,9 @@ bool generateDataStoreOptions(const int argc, const char *argv[], storage::DataP
         ".datasource_names file")(
         "datasource_indexes",
         boost::program_options::value<boost::filesystem::path>(&paths["datasource_indexes"]),
-        ".datasource_indexes file");
+        ".datasource_indexes file")(
+        "properties", boost::program_options::value<boost::filesystem::path>(&paths["properties"]),
+        ".properties file");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -151,6 +153,12 @@ bool generateDataStoreOptions(const int argc, const char *argv[], storage::DataP
         path_iterator->second = base_string + ".timestamp";
     }
 
+    path_iterator = paths.find("properties");
+    if (path_iterator != paths.end())
+    {
+        path_iterator->second = base_string + ".properties";
+    }
+
     path_iterator = paths.find("datasource_indexes");
     if (path_iterator != paths.end())
     {
@@ -217,6 +225,13 @@ bool generateDataStoreOptions(const int argc, const char *argv[], storage::DataP
         !boost::filesystem::is_regular_file(path_iterator->second))
     {
         throw util::exception("valid .timestamp file must be specified");
+    }
+
+    path_iterator = paths.find("properties");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty() ||
+        !boost::filesystem::is_regular_file(path_iterator->second))
+    {
+        throw util::exception("valid .properties file must be specified");
     }
 
     return true;
