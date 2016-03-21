@@ -59,7 +59,7 @@ Feature: Bike - Accessability of different way types
         Then routability should be
             | highway  | foot | forw | backw |
             | motorway |      |      |       |
-            | motorway | yes  | foot |       |
+            | motorway | yes  | foot | foot  |
             | runway   |      |      |       |
             | runway   | yes  | foot | foot  |
     

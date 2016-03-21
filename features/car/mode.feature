@@ -16,12 +16,12 @@ Feature: Car - Mode flag
 
         When I route I should get
             | from | to | route    | turns                       | modes |
-            | a    | d  | ab,bc,cd | head,right,left,destination | 1,2,1 |
-            | d    | a  | cd,bc,ab | head,right,left,destination | 1,2,1 |
-            | c    | a  | bc,ab    | head,left,destination       | 2,1   |
-            | d    | b  | cd,bc    | head,right,destination      | 1,2   |
-            | a    | c  | ab,bc    | head,right,destination      | 1,2   |
-            | b    | d  | bc,cd    | head,left,destination       | 2,1   |
+            | a    | d  | ab,bc,cd | head,right,left,destination | 2,5,2 |
+            | d    | a  | cd,bc,ab | head,right,left,destination | 2,5,2 |
+            | c    | a  | bc,ab    | head,left,destination       | 5,2   |
+            | d    | b  | cd,bc    | head,right,destination      | 2,5   |
+            | a    | c  | ab,bc    | head,right,destination      | 2,5   |
+            | b    | d  | bc,cd    | head,left,destination       | 5,2   |
 
     Scenario: Car - Snapping when using a ferry
         Given the node map
@@ -35,6 +35,6 @@ Feature: Car - Mode flag
 
         When I route I should get
             | from | to | route | turns            | modes   | time  |
-            | c    | d  | bcde  | head,destination | 2       | 600s  |
+            | c    | d  | bcde  | head,destination | 5       | 200s  |
 
 

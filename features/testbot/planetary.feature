@@ -1,6 +1,9 @@
 @routing @planetary @testbot
 Feature: Distance calculation
 
+		Background:
+    		Given the profile "testbot"
+
     Scenario: Approximated Longitudinal distances at equator
         Given the node locations
             | node | lat | lon |

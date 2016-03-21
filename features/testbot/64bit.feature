@@ -1,7 +1,10 @@
 @testbot
 Feature: Support 64bit node IDs
 
-    # Without 64bit support, this test should fail
+		Background:
+    		Given the profile "testbot"
+    
+		# Without 64bit support, this test should fail
     Scenario: 64bit overflow conflicts
         Given the node locations
             | node | lat       | lon       | id         |

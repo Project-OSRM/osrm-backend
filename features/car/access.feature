@@ -100,9 +100,6 @@ Feature: Car - Restricted access
     Scenario: Car - Access tags on nodes
         Then routability should be
             | node/access  | bothw |
-            | yes          | x     |
-            | permissive   | x     |
-            | designated   | x     |
             | no           |       |
             | private      |       |
             | agricultural |       |

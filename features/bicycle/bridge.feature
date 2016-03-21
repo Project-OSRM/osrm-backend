@@ -4,7 +4,7 @@ Feature: Bicycle - Handle movable bridge
     Background:
         Given the profile "bicycle"
 
-    Scenario: Car - Use a ferry route
+    Scenario: Car - Use a movable bridge route
         Given the node map
             | a | b | c |   |   |
             |   |   | d |   |   |
@@ -18,14 +18,14 @@ Feature: Bicycle - Handle movable bridge
 
         When I route I should get
             | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,5,1 |
-            | b    | f  | abc,cde,efg | 1,5,1 |
-            | e    | c  | cde         | 5     |
-            | e    | b  | cde,abc     | 5,1   |
-            | e    | a  | cde,abc     | 5,1   |
-            | c    | e  | cde         | 5     |
-            | c    | f  | cde,efg     | 5,1   |
-            | c    | g  | cde,efg     | 5,1   |
+            | a    | g  | abc,cde,efg | 3,7,3 |
+            | b    | f  | abc,cde,efg | 3,7,3 |
+            | e    | c  | cde         | 7     |
+            | e    | b  | cde,abc     | 7,3   |
+            | e    | a  | cde,abc     | 7,3   |
+            | c    | e  | cde         | 7     |
+            | c    | f  | cde,efg     | 7,3   |
+            | c    | g  | cde,efg     | 7,3   |
 
     Scenario: Car - Properly handle durations
         Given the node map
@@ -41,7 +41,7 @@ Feature: Bicycle - Handle movable bridge
 
         When I route I should get
             | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,5,1 | 5 km/h |
-            | b    | f  | abc,cde,efg | 1,5,1 | 4 km/h |
-            | c    | e  | cde         | 5     | 2 km/h |
-            | e    | c  | cde         | 5     | 2 km/h |
+            | a    | g  | abc,cde,efg | 3,7,3 | 5 km/h |
+            | b    | f  | abc,cde,efg | 3,7,3 | 4 km/h |
+            | c    | e  | cde         | 7     | 2 km/h |
+            | e    | c  | cde         | 7     | 2 km/h |
