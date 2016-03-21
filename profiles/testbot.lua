@@ -16,13 +16,10 @@ speed_profile = {
 
 -- these settings are read directly by osrm
 
-take_minimum_of_speeds  = true
-obey_oneway             = true
-obey_barriers           = true
-use_turn_restrictions   = true
-ignore_areas            = true  -- future feature
-traffic_signal_penalty  = 7     -- seconds
-u_turn_penalty          = 20
+properties.allow_u_turn_at_via     = false
+properties.use_turn_restrictions   = true
+properties.traffic_signal_penalty  = 7     -- seconds
+properties.u_turn_penalty          = 20
 
 function limit_speed(speed, limits)
   -- don't use ipairs(), since it stops at the first nil value

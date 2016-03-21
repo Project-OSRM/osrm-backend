@@ -128,20 +128,20 @@ maxspeed_table = {
   ["uk:motorway"] = (70*1609)/1000
 }
 
--- these need to be global because they are accesed externaly
-u_turn_penalty                  = 20
-traffic_signal_penalty          = 2
-use_turn_restrictions           = true
+-- set profile properties
+properties.u_turn_penalty                  = 20
+properties.traffic_signal_penalty          = 2
+properties.use_turn_restrictions           = true
 
-side_road_speed_multiplier      = 0.8
+local side_road_speed_multiplier = 0.8
 
-local turn_penalty              = 10
+local turn_penalty               = 10
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
-local turn_bias                 = 1.2
+local turn_bias                  = 1.2
 
-local obey_oneway               = true
-local ignore_areas              = true
+local obey_oneway                = true
+local ignore_areas               = true
 
 local abs = math.abs
 local min = math.min

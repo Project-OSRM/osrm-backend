@@ -34,13 +34,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
     const std::vector<QueryNode> &node_info_list,
-    SpeedProfileProperties speed_profile,
+    ProfileProperties profile_properties,
     const util::NameTable &name_table)
     : m_max_edge_id(0), m_node_info_list(node_info_list),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
-      speed_profile(std::move(speed_profile)), name_table(name_table)
+      profile_properties(std::move(profile_properties)), name_table(name_table)
 {
 }
 
@@ -207,7 +207,7 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
             // oneway streets always require this self-loop. Other streets only if a u-turn plus
             // traversal
             // of the street takes longer than the loop
-            m_edge_based_node_weights.push_back(edge_data.distance + speed_profile.u_turn_penalty);
+            m_edge_based_node_weights.push_back(edge_data.distance + profile_properties.u_turn_penalty);
 
             BOOST_ASSERT(numbered_edges_count < m_node_based_graph->GetNumberOfEdges());
             edge_data.edge_id = numbered_edges_count;
@@ -276,6 +276,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 {
     util::SimpleLogger().Write() << "generating edge-expanded edges";
 
+    BOOST_ASSERT(lua_state != nullptr);
+    const bool use_turn_function = util::lua_function_exists(lua_state, "turn_function");
+
     std::size_t node_based_edge_counter = 0;
     std::size_t original_edges_counter = 0;
     restricted_turns_counter = 0;
@@ -335,15 +338,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 unsigned distance = edge_data1.distance;
                 if (m_traffic_lights.find(node_v) != m_traffic_lights.end())
                 {
-                    distance += speed_profile.traffic_signal_penalty;
+                    distance += profile_properties.traffic_signal_penalty;
                 }
 
-                const int turn_penalty = GetTurnPenalty(turn_angle, lua_state);
+                const int turn_penalty = use_turn_function ? GetTurnPenalty(turn_angle, lua_state) : 0;
                 const auto turn_instruction = turn.instruction;
 
                 if (guidance::isUturn(turn_instruction))
                 {
-                    distance += speed_profile.u_turn_penalty;
+                    distance += profile_properties.u_turn_penalty;
                 }
 
                 distance += turn_penalty;
@@ -438,20 +441,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
 int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const
 {
-
-    if (speed_profile.has_turn_penalty_function)
+    BOOST_ASSERT(lua_state != nullptr);
+    try
     {
-        try
-        {
-            // call lua profile to compute turn penalty
-            double penalty =
-                luabind::call_function<double>(lua_state, "turn_function", 180. - angle);
-            return static_cast<int>(penalty);
-        }
-        catch (const luabind::error &er)
-        {
-            util::SimpleLogger().Write(logWARNING) << er.what();
-        }
+        // call lua profile to compute turn penalty
+        double penalty = luabind::call_function<double>(lua_state, "turn_function", 180. - angle);
+        return static_cast<int>(penalty);
+    }
+    catch (const luabind::error &er)
+    {
+        util::SimpleLogger().Write(logWARNING) << er.what();
     }
     return 0;
 }
