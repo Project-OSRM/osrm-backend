@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "util/strong_typedef.hpp"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include <iosfwd> //for std::ostream
 #include <string>
 #include <type_traits>
@@ -50,22 +52,30 @@ OSRM_STRONG_TYPEDEF(double, FloatLongitude)
 
 inline FixedLatitude toFixed(const FloatLatitude floating)
 {
-    return FixedLatitude(static_cast<double>(floating) * COORDINATE_PRECISION);
+    const auto latitude = static_cast<double>(floating);
+    const auto fixed = boost::numeric_cast<std::int32_t>(latitude * COORDINATE_PRECISION);
+    return FixedLatitude(fixed);
 }
 
 inline FixedLongitude toFixed(const FloatLongitude floating)
 {
-    return FixedLongitude(static_cast<double>(floating) * COORDINATE_PRECISION);
+    const auto longitude = static_cast<double>(floating);
+    const auto fixed = boost::numeric_cast<std::int32_t>(longitude * COORDINATE_PRECISION);
+    return FixedLongitude(fixed);
 }
 
 inline FloatLatitude toFloating(const FixedLatitude fixed)
 {
-    return FloatLatitude(static_cast<int32_t>(fixed) / COORDINATE_PRECISION);
+    const auto latitude = static_cast<std::int32_t>(fixed);
+    const auto floating = boost::numeric_cast<double>(latitude / COORDINATE_PRECISION);
+    return FloatLatitude(floating);
 }
 
 inline FloatLongitude toFloating(const FixedLongitude fixed)
 {
-    return FloatLongitude(static_cast<int32_t>(fixed) / COORDINATE_PRECISION);
+    const auto longitude = static_cast<std::int32_t>(fixed);
+    const auto floating = boost::numeric_cast<double>(longitude / COORDINATE_PRECISION);
+    return FloatLongitude(floating);
 }
 
 // Coordinate encoded as longitude, latitude
