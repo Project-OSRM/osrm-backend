@@ -237,8 +237,6 @@ class ShortestPathRouting final
         }
     }
 
-    static const constexpr bool UTURN_DEFAULT = false;
-
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
                     const boost::optional<bool> uturns,
                     InternalRouteResult &raw_route_data) const
@@ -268,7 +266,7 @@ class ShortestPathRouting final
         std::vector<NodeID> total_packed_path_to_reverse;
         std::vector<std::size_t> packed_leg_to_reverse_begin;
 
-        const bool allow_u_turn_at_via = uturns ? *uturns : UTURN_DEFAULT;
+        const bool allow_u_turn_at_via = uturns ? *uturns : super::facade->GetUTurnsDefault();
 
         std::size_t current_leg = 0;
         // this implements a dynamic program that finds the shortest route through
