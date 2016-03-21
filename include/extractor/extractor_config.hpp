@@ -71,6 +71,7 @@ struct ExtractorConfig
         edge_segment_lookup_path = basepath + ".osrm.edge_segment_lookup";
         edge_penalty_path = basepath + ".osrm.edge_penalties";
         edge_based_node_weights_output_path = basepath + ".osrm.enw";
+        profile_properties_output_path = basepath + ".osrm.properties";
     }
 
     boost::filesystem::path config_file_path;
@@ -88,6 +89,7 @@ struct ExtractorConfig
     std::string node_output_path;
     std::string rtree_nodes_output_path;
     std::string rtree_leafs_output_path;
+    std::string profile_properties_output_path;
 
     unsigned requested_num_threads;
     unsigned small_component_size;
