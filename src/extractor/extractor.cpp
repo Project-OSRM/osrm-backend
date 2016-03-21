@@ -48,6 +48,7 @@
 #include <unordered_map>
 #include <vector>
 #include <bitset>
+#include <chrono>
 
 namespace osrm
 {
@@ -75,6 +76,9 @@ namespace extractor
  */
 int Extractor::run()
 {
+    // setup scripting environment
+    ScriptingEnvironment scripting_environment(config.profile_path.string().c_str());
+
     try
     {
         util::LogPolicy::GetInstance().Unmute();
@@ -88,9 +92,6 @@ int Extractor::run()
         util::SimpleLogger().Write() << "Input file: " << config.input_path.filename().string();
         util::SimpleLogger().Write() << "Profile: " << config.profile_path.filename().string();
         util::SimpleLogger().Write() << "Threads: " << number_of_threads;
-
-        // setup scripting environment
-        ScriptingEnvironment scripting_environment(config.profile_path.string().c_str());
 
         ExtractionContainers extraction_containers;
         auto extractor_callbacks = util::make_unique<ExtractorCallbacks>(extraction_containers);
@@ -107,15 +108,12 @@ int Extractor::run()
         util::SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
-        lua_State *segment_state = scripting_environment.GetLuaState();
+        auto& main_context = scripting_environment.GetContex();
 
-        if (util::lua_function_exists(segment_state, "source_function"))
+        // setup raster sources
+        if (util::lua_function_exists(main_context.state, "source_function"))
         {
-            // bind a single instance of SourceContainer class to relevant lua state
-            SourceContainer sources;
-            luabind::globals(segment_state)["sources"] = sources;
-
-            luabind::call_function<void>(segment_state, "source_function");
+            luabind::call_function<void>(main_context.state, "source_function");
         }
 
         std::string generator = header.get("generator");
@@ -142,7 +140,7 @@ int Extractor::run()
         tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
         // setup restriction parser
-        const RestrictionParser restriction_parser(scripting_environment.GetLuaState());
+        const RestrictionParser restriction_parser(main_context.state, main_context.properties);
 
         while (const osmium::memory::Buffer buffer = reader.read())
         {
@@ -165,7 +163,7 @@ int Extractor::run()
                 {
                     ExtractionNode result_node;
                     ExtractionWay result_way;
-                    lua_State *local_state = scripting_environment.GetLuaState();
+                    auto& local_context = scripting_environment.GetContex();
 
                     for (auto x = range.begin(), end = range.end(); x != end; ++x)
                     {
@@ -177,7 +175,7 @@ int Extractor::run()
                             result_node.clear();
                             ++number_of_nodes;
                             luabind::call_function<void>(
-                                local_state, "node_function",
+                                local_context.state, "node_function",
                                 boost::cref(static_cast<const osmium::Node &>(*entity)),
                                 boost::ref(result_node));
                             resulting_nodes.push_back(std::make_pair(x, result_node));
@@ -186,7 +184,7 @@ int Extractor::run()
                             result_way.clear();
                             ++number_of_ways;
                             luabind::call_function<void>(
-                                local_state, "way_function",
+                                local_context.state, "way_function",
                                 boost::cref(static_cast<const osmium::Way &>(*entity)),
                                 boost::ref(result_way));
                             resulting_ways.push_back(std::make_pair(x, result_way));
@@ -238,26 +236,29 @@ int Extractor::run()
         }
 
         extraction_containers.PrepareData(config.output_file_name, config.restriction_file_name,
-                                          config.names_file_name, segment_state);
+                                          config.names_file_name, main_context.state);
+
+        WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
 
         TIMER_STOP(extracting);
         util::SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting)
                                      << "s";
     }
+    // we do this for scoping
+    // TODO move to own functions
     catch (const std::exception &e)
     {
         util::SimpleLogger().Write(logWARNING) << e.what();
         return 1;
     }
-
     try
     {
         // Transform the node-based graph that OSM is based on into an edge-based graph
         // that is better for routing.  Every edge becomes a node, and every valid
         // movement (e.g. turn from A->B, and B->A) becomes an edge
         //
-        //
-        //    // Create a new lua state
+
+        auto& main_context = scripting_environment.GetContex();
 
         util::SimpleLogger().Write() << "Generating edge-expanded graph representation";
 
@@ -268,7 +269,9 @@ int Extractor::run()
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
-        auto graph_size = BuildEdgeExpandedGraph(internal_to_external_node_map,
+        auto graph_size = BuildEdgeExpandedGraph(main_context.state,
+                                                 main_context.properties,
+                                                 internal_to_external_node_map,
                                                  edge_based_node_list, node_is_startpoint,
                                                  edge_based_node_weights, edge_based_edge_list);
 
@@ -314,46 +317,15 @@ int Extractor::run()
     return 0;
 }
 
-/**
-    \brief Setups scripting environment (lua-scripting)
-    Also initializes speed profile.
-*/
-void Extractor::SetupScriptingEnvironment(lua_State *lua_state,
-                                          SpeedProfileProperties &speed_profile)
+void Extractor::WriteProfileProperties(const std::string& output_path, const ProfileProperties& properties) const
 {
-    // open utility libraries string library;
-    luaL_openlibs(lua_state);
-
-    // adjust lua load path
-    util::luaAddScriptFolderToLoadPath(lua_state, config.profile_path.string().c_str());
-
-    // Now call our function in a lua script
-    if (0 != luaL_dofile(lua_state, config.profile_path.string().c_str()))
+    boost::filesystem::ofstream out_stream(output_path);
+    if (!out_stream)
     {
-        std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occurred in scripting block";
-        throw util::exception(msg.str());
+        throw util::exception("Could not open " + output_path + " for writing.");
     }
 
-    if (0 != luaL_dostring(lua_state, "return traffic_signal_penalty\n"))
-    {
-        std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occurred in scripting block";
-        throw util::exception(msg.str());
-    }
-    speed_profile.traffic_signal_penalty = 10 * lua_tointeger(lua_state, -1);
-    util::SimpleLogger().Write(logDEBUG) << "traffic_signal_penalty: "
-                                         << speed_profile.traffic_signal_penalty;
-
-    if (0 != luaL_dostring(lua_state, "return u_turn_penalty\n"))
-    {
-        std::stringstream msg;
-        msg << lua_tostring(lua_state, -1) << " occurred in scripting block";
-        throw util::exception(msg.str());
-    }
-
-    speed_profile.u_turn_penalty = 10 * lua_tointeger(lua_state, -1);
-    speed_profile.has_turn_penalty_function = util::lua_function_exists(lua_state, "turn_function");
+    out_stream.write(reinterpret_cast<const char*>(&properties), sizeof(properties));
 }
 
 void Extractor::FindComponents(unsigned max_edge_id,
@@ -496,18 +468,14 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
 std::pair<std::size_t, std::size_t>
-Extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_node_map,
+Extractor::BuildEdgeExpandedGraph(lua_State* lua_state,
+                                  const ProfileProperties& profile_properties,
+                                  std::vector<QueryNode> &internal_to_external_node_map,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
                                   util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
 {
-    lua_State *lua_state = luaL_newstate();
-    luabind::open(lua_state);
-
-    SpeedProfileProperties speed_profile;
-    SetupScriptingEnvironment(lua_state, speed_profile);
-
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
 
@@ -516,7 +484,7 @@ Extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
         LoadNodeBasedGraph(barrier_nodes, traffic_lights, internal_to_external_node_map);
 
     CompressedEdgeContainer compressed_edge_container;
-    GraphCompressor graph_compressor(speed_profile);
+    GraphCompressor graph_compressor;
     graph_compressor.Compress(barrier_nodes, traffic_lights, *restriction_map, *node_based_graph,
                               compressed_edge_container);
 
@@ -527,13 +495,11 @@ Extractor::BuildEdgeExpandedGraph(std::vector<QueryNode> &internal_to_external_n
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph, compressed_edge_container, barrier_nodes, traffic_lights,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
-        internal_to_external_node_map, speed_profile, name_table);
+        internal_to_external_node_map, profile_properties, name_table);
 
     edge_based_graph_factory.Run(config.edge_output_path, lua_state,
                                  config.edge_segment_lookup_path, config.edge_penalty_path,
                                  config.generate_edge_lookup);
-
-    lua_close(lua_state);
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
