@@ -8,6 +8,7 @@
 #include "storage/shared_memory.hpp"
 
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/profile_properties.hpp"
 
 #include "engine/geospatial_query.hpp"
 #include "util/range_table.hpp"
@@ -68,6 +69,7 @@ class SharedDataFacade final : public BaseDataFacade
     std::unique_ptr<storage::SharedMemory> m_layout_memory;
     std::unique_ptr<storage::SharedMemory> m_large_memory;
     std::string m_timestamp;
+    extractor::ProfileProperties* m_profile_properties;
 
     std::shared_ptr<util::ShM<util::Coordinate, true>::vector> m_coordinate_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
@@ -96,6 +98,12 @@ class SharedDataFacade final : public BaseDataFacade
         m_check_sum = *data_layout->GetBlockPtr<unsigned>(shared_memory,
                                                           storage::SharedDataLayout::HSGR_CHECKSUM);
         util::SimpleLogger().Write() << "set checksum: " << m_check_sum;
+    }
+
+    void LoadProfileProperties()
+    {
+        m_profile_properties =
+            data_layout->GetBlockPtr<extractor::ProfileProperties>(shared_memory, storage::SharedDataLayout::PROPERTIES);
     }
 
     void LoadTimestamp()
@@ -343,6 +351,7 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadViaNodeList();
                 LoadNames();
                 LoadCoreInformation();
+                LoadProfileProperties();
 
                 util::SimpleLogger().Write() << "number of geometries: "
                                              << m_coordinate_list->size();
@@ -703,6 +712,8 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }
+
+    bool GetUTurnsDefault() const override final { return m_profile_properties->allow_u_turn_at_via; }
 };
 }
 }
