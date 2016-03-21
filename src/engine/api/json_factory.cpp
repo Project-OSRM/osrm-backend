@@ -149,6 +149,12 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     step_maneuver.values["bearing_after"] = maneuver.bearing_after;
     if (maneuver.exit != 0)
         step_maneuver.values["exit"] = maneuver.exit;
+
+    //TODO currently we need this to comply with the api.
+    //We should move this to an additional entry, the moment we
+    //actually compute the correct locations of the intersections
+    if (maneuver.intersection != 0 && maneuver.exit == 0 )
+        step_maneuver.values["exit"] = maneuver.intersection;
     return step_maneuver;
 }
 
