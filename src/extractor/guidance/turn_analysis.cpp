@@ -268,8 +268,9 @@ TurnAnalysis::fallbackTurnAssignmentMotorway(std::vector<ConnectedRoad> intersec
     return intersection;
 }
 
-std::vector<ConnectedRoad> TurnAnalysis::handleFromMotorway(
-    const EdgeID via_edge, std::vector<ConnectedRoad> intersection) const
+std::vector<ConnectedRoad>
+TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
+                                 std::vector<ConnectedRoad> intersection) const
 {
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
     BOOST_ASSERT(detail::isMotorwayClass(in_data.road_classification.road_class));
@@ -519,8 +520,9 @@ std::vector<ConnectedRoad> TurnAnalysis::handleFromMotorway(
     return intersection;
 }
 
-std::vector<ConnectedRoad> TurnAnalysis::handleMotorwayRamp(
-    const EdgeID via_edge, std::vector<ConnectedRoad> intersection) const
+std::vector<ConnectedRoad>
+TurnAnalysis::handleMotorwayRamp(const EdgeID via_edge,
+                                 std::vector<ConnectedRoad> intersection) const
 {
     auto num_valid_turns = countValid(intersection);
     // ramp straight into a motorway/ramp
@@ -659,8 +661,9 @@ std::vector<ConnectedRoad> TurnAnalysis::handleMotorwayRamp(
     return intersection;
 }
 
-std::vector<ConnectedRoad> TurnAnalysis::handleMotorwayJunction(
-    const EdgeID via_edge, std::vector<ConnectedRoad> intersection) const
+std::vector<ConnectedRoad>
+TurnAnalysis::handleMotorwayJunction(const EdgeID via_edge,
+                                     std::vector<ConnectedRoad> intersection) const
 {
     // BOOST_ASSERT(!intersection[0].entry_allowed); //This fails due to @themarex handling of dead
     // end
@@ -798,7 +801,8 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
     {
         return (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
                 angularDeviation(other.turn.angle, STRAIGHT_ANGLE) > 85) ||
-               (angularDeviation(road.turn.angle,STRAIGHT_ANGLE) < std::numeric_limits<double>::epsilon()) ||
+               (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <
+                std::numeric_limits<double>::epsilon()) ||
                (angularDeviation(other.turn.angle, STRAIGHT_ANGLE) /
                     angularDeviation(road.turn.angle, STRAIGHT_ANGLE) >
                 1.4);
@@ -1004,10 +1008,10 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
                                                 getTurnDirection(intersection[2].turn.angle)};
         }
     }
-// unnamed intersections or basic three way turn
+    // unnamed intersections or basic three way turn
 
-// remain at basic turns
-// TODO handle obviousness, Handle Merges
+    // remain at basic turns
+    // TODO handle obviousness, Handle Merges
     return intersection;
 }
 
@@ -1505,43 +1509,47 @@ void TurnAnalysis::assignFork(const EdgeID via_edge,
         node_based_graph.GetEdgeData(left.turn.eid).road_classification.road_class);
     const bool low_priority_right = isLowPriorityRoadClass(
         node_based_graph.GetEdgeData(right.turn.eid).road_classification.road_class);
-    { // left fork
+    if ((angularDeviation(left.turn.angle, STRAIGHT_ANGLE) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
+         angularDeviation(right.turn.angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE))
+    {
+        // left side is actually straight
         const auto &out_data = node_based_graph.GetEdgeData(left.turn.eid);
-        if ((angularDeviation(left.turn.angle, STRAIGHT_ANGLE) <
-                 MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
-             angularDeviation(right.turn.angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE))
+        if (requiresAnnouncement(in_data, out_data))
         {
-            if (requiresAnnouncement(in_data, out_data))
+            if (low_priority_right && !low_priority_left)
             {
-                if (low_priority_right && !low_priority_left)
-                    left.turn.instruction = getInstructionForObvious(3, via_edge, left);
-                else
-                {
-                    if (low_priority_left && !low_priority_right)
-                        left.turn.instruction = {TurnType::Turn, DirectionModifier::SlightLeft};
-                    else
-                        left.turn.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
-                }
+                left.turn.instruction = getInstructionForObvious(3, via_edge, left);
+                right.turn.instruction = {findBasicTurnType(via_edge, right),
+                                          DirectionModifier::SlightRight};
             }
             else
             {
-                left.turn.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+                if (low_priority_left && !low_priority_right)
+                {
+                    left.turn.instruction = {findBasicTurnType(via_edge, left),
+                                             DirectionModifier::SlightLeft};
+                    right.turn.instruction = {findBasicTurnType(via_edge, right),
+                                              DirectionModifier::SlightRight};
+                }
+                else
+                {
+                    left.turn.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+                    right.turn.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
+                }
             }
         }
         else
         {
-            if (low_priority_right && !low_priority_left)
-                left.turn.instruction = {TurnType::Suppressed, DirectionModifier::SlightLeft};
-            else
-            {
-                if (low_priority_left && !low_priority_right)
-                    left.turn.instruction = {TurnType::Turn, DirectionModifier::SlightLeft};
-                else
-                    left.turn.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
-            }
+            left.turn.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+            right.turn.instruction = {findBasicTurnType(via_edge, right),
+                                      DirectionModifier::SlightRight};
         }
     }
-    { // right fork
+    else if (angularDeviation(right.turn.angle, STRAIGHT_ANGLE) <
+                 MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
+             angularDeviation(left.turn.angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE)
+    {
+        // right side is actually straight
         const auto &out_data = node_based_graph.GetEdgeData(right.turn.eid);
         if (angularDeviation(right.turn.angle, STRAIGHT_ANGLE) <
                 MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
@@ -1550,31 +1558,57 @@ void TurnAnalysis::assignFork(const EdgeID via_edge,
             if (requiresAnnouncement(in_data, out_data))
             {
                 if (low_priority_left && !low_priority_right)
+                {
+                    left.turn.instruction = {findBasicTurnType(via_edge, left),
+                                             DirectionModifier::SlightLeft};
                     right.turn.instruction = getInstructionForObvious(3, via_edge, right);
+                }
                 else
                 {
                     if (low_priority_right && !low_priority_left)
-                        right.turn.instruction = {TurnType::Turn, DirectionModifier::SlightRight};
+                    {
+                        left.turn.instruction = {findBasicTurnType(via_edge, left),
+                                                 DirectionModifier::SlightLeft};
+                        right.turn.instruction = {findBasicTurnType(via_edge, right),
+                                                  DirectionModifier::SlightRight};
+                    }
                     else
+                    {
                         right.turn.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
+                        left.turn.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+                    }
                 }
             }
             else
             {
                 right.turn.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+                left.turn.instruction = {findBasicTurnType(via_edge, left),
+                                         DirectionModifier::SlightLeft};
             }
         }
+    }
+    else
+    {
+        // left side of fork
+        if (low_priority_right && !low_priority_left)
+            left.turn.instruction = {TurnType::Suppressed, DirectionModifier::SlightLeft};
         else
         {
             if (low_priority_left && !low_priority_right)
-                right.turn.instruction = {TurnType::Suppressed, DirectionModifier::SlightLeft};
+                left.turn.instruction = {TurnType::Turn, DirectionModifier::SlightLeft};
             else
-            {
-                if (low_priority_right && !low_priority_left)
-                    right.turn.instruction = {TurnType::Turn, DirectionModifier::SlightRight};
-                else
-                    right.turn.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
-            }
+                left.turn.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+        }
+
+        // right side of fork
+        if (low_priority_left && !low_priority_right)
+            right.turn.instruction = {TurnType::Suppressed, DirectionModifier::SlightLeft};
+        else
+        {
+            if (low_priority_right && !low_priority_left)
+                right.turn.instruction = {TurnType::Turn, DirectionModifier::SlightRight};
+            else
+                right.turn.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
         }
     }
 }
