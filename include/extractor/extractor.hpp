@@ -40,7 +40,7 @@ namespace osrm
 namespace extractor
 {
 
-class ProfileProperties;
+struct ProfileProperties;
 
 class Extractor
 {
