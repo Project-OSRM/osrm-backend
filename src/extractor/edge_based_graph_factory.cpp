@@ -12,6 +12,7 @@
 #include "extractor/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -277,7 +278,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     util::SimpleLogger().Write() << "generating edge-expanded edges";
 
     BOOST_ASSERT(lua_state != nullptr);
-    const bool use_turn_function = util::lua_function_exists(lua_state, "turn_function");
+    const bool use_turn_function = util::luaFunctionExists(lua_state, "turn_function");
 
     std::size_t node_based_edge_counter = 0;
     std::size_t original_edges_counter = 0;
@@ -446,7 +447,7 @@ int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) co
     {
         // call lua profile to compute turn penalty
         double penalty = luabind::call_function<double>(lua_state, "turn_function", 180. - angle);
-        return static_cast<int>(penalty);
+        return boost::numeric_cast<int>(penalty);
     }
     catch (const luabind::error &er)
     {

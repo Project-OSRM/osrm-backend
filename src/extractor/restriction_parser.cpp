@@ -44,7 +44,7 @@ RestrictionParser::RestrictionParser(lua_State *lua_state, const ProfileProperti
 
 void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
 {
-    if (util::lua_function_exists(lua_state, "get_exceptions"))
+    if (util::luaFunctionExists(lua_state, "get_exceptions"))
     {
         luabind::set_pcall_callback(&luaErrorCallback);
         // get list of turn restriction exceptions

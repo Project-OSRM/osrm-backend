@@ -13,10 +13,6 @@ namespace osrm
 namespace extractor
 {
 
-GraphCompressor::GraphCompressor()
-{
-}
-
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                const std::unordered_set<NodeID> &traffic_lights,
                                RestrictionMap &restriction_map,

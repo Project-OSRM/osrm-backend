@@ -1,6 +1,8 @@
 #ifndef PROFILE_PROPERTIES_HPP
 #define PROFILE_PROPERTIES_HPP
 
+#include <boost/numeric/conversion/cast.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -20,7 +22,7 @@ struct ProfileProperties
 
     void SetUturnPenalty(const double u_turn_penalty_)
     {
-        u_turn_penalty = static_cast<int>(u_turn_penalty_ * 10.);
+        u_turn_penalty = boost::numeric_cast<int>(u_turn_penalty_ * 10.);
     }
 
     double GetTrafficSignalPenalty() const
@@ -30,7 +32,7 @@ struct ProfileProperties
 
     void SetTrafficSignalPenalty(const double traffic_signal_penalty_)
     {
-        traffic_signal_penalty = static_cast<int>(traffic_signal_penalty_ * 10.);
+        traffic_signal_penalty = boost::numeric_cast<int>(traffic_signal_penalty_ * 10.);
     }
 
     //! penalty to cross a traffic light in deci-seconds
