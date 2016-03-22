@@ -173,6 +173,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, std::pair<unsigned, uint8_t>>
         segment_speed_lookup;
 
+    // If we update the edge weights, this file will hold the datasource information
+    // for each segment
+    std::vector<uint8_t> m_geometry_datasource;
+
     if (update_edge_weights)
     {
         uint8_t file_id = 1;
@@ -264,7 +268,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         // CSV file that supplied the value that gets used for that segment, then
         // we write out this list so that it can be returned by the debugging
         // vector tiles later on.
-        std::vector<uint8_t> m_geometry_datasource(m_geometry_list.size(), 0);
+        m_geometry_datasource.resize(m_geometry_list.size(), 0);
 
         // Now, we iterate over all the segments stored in the StaticRTree, updating
         // the packed geometry weights in the `.geometries` file (note: we do not
@@ -402,33 +406,36 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                                   number_of_compressed_geometries *
                                       sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
         }
+    }
 
+    {
+        std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
+        if (!datasource_stream)
         {
-            std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
-            if (!datasource_stream)
-            {
-                throw util::exception("Failed to open " + datasource_indexes_filename +
-                                      " for writing");
-            }
-            auto number_of_datasource_entries = m_geometry_datasource.size();
-            datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
-                                    sizeof(number_of_datasource_entries));
+            throw util::exception("Failed to open " + datasource_indexes_filename +
+                                  " for writing");
+        }
+        auto number_of_datasource_entries = m_geometry_datasource.size();
+        datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
+                                sizeof(number_of_datasource_entries));
+        if (number_of_datasource_entries > 0)
+        {
             datasource_stream.write(reinterpret_cast<char *>(&(m_geometry_datasource[0])),
                                     number_of_datasource_entries * sizeof(uint8_t));
         }
+    }
 
+    {
+        std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
+        if (!datasource_stream)
         {
-            std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
-            if (!datasource_stream)
-            {
-                throw util::exception("Failed to open " + datasource_names_filename +
-                                      " for writing");
-            }
-            datasource_stream << "lua profile" << std::endl;
-            for (auto const &name : segment_speed_filenames)
-            {
-                datasource_stream << name << std::endl;
-            }
+            throw util::exception("Failed to open " + datasource_names_filename +
+                                  " for writing");
+        }
+        datasource_stream << "lua profile" << std::endl;
+        for (auto const &name : segment_speed_filenames)
+        {
+            datasource_stream << name << std::endl;
         }
     }
 

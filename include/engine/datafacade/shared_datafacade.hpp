@@ -693,16 +693,10 @@ class SharedDataFacade final : public BaseDataFacade
 
     virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const override final
     {
+        BOOST_ASSERT(m_datasource_name_offsets.size() >= 1);
+        BOOST_ASSERT(m_datasource_name_offsets.size() > datasource_name_id);
+
         std::string result;
-
-        if (m_datasource_name_offsets.empty() ||
-            datasource_name_id > m_datasource_name_offsets.size())
-        {
-            if (datasource_name_id == 0)
-                return "lua profile";
-            return "UNKNOWN";
-        }
-
         std::copy(m_datasource_name_data.begin() + m_datasource_name_offsets[datasource_name_id],
                   m_datasource_name_data.begin() + m_datasource_name_offsets[datasource_name_id] +
                       m_datasource_name_lengths[datasource_name_id],
