@@ -18,7 +18,6 @@
 
 #include "storage/shared_barriers.hpp"
 #include "util/make_unique.hpp"
-#include "util/routed_options.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
@@ -136,8 +135,11 @@ Engine::Engine(EngineConfig &config)
     }
     else
     {
-        util::populate_base_path(config.server_paths);
-        query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.server_paths);
+        if (!config.storage_config.IsValid())
+        {
+            throw util::exception("Invalid file paths given!");
+        }
+        query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.storage_config);
     }
 
     // Register plugins
