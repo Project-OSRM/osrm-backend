@@ -73,10 +73,12 @@ void deleteRegion(const SharedDataType region)
     }
 }
 
-Storage::Storage(const DataPaths &paths_) : paths(paths_) {}
+Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
 int Storage::Run()
 {
+    BOOST_ASSERT_MSG(config.IsValid(), "Invalid storage config");
+
     util::LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
 
@@ -99,98 +101,6 @@ int Storage::Run()
         // hard unlock in case of any exception.
         barrier.pending_update_mutex.unlock();
     }
-
-    if (paths.find("hsgrdata") == paths.end())
-    {
-        throw util::exception("no hsgr file found");
-    }
-    if (paths.find("ramindex") == paths.end())
-    {
-        throw util::exception("no ram index file found");
-    }
-    if (paths.find("fileindex") == paths.end())
-    {
-        throw util::exception("no leaf index file found");
-    }
-    if (paths.find("nodesdata") == paths.end())
-    {
-        throw util::exception("no nodes file found");
-    }
-    if (paths.find("edgesdata") == paths.end())
-    {
-        throw util::exception("no edges file found");
-    }
-    if (paths.find("namesdata") == paths.end())
-    {
-        throw util::exception("no names file found");
-    }
-    if (paths.find("geometry") == paths.end())
-    {
-        throw util::exception("no geometry file found");
-    }
-    if (paths.find("core") == paths.end())
-    {
-        throw util::exception("no core file found");
-    }
-    if (paths.find("datasource_indexes") == paths.end())
-    {
-        throw util::exception("no datasource_indexes file found");
-    }
-    if (paths.find("datasource_names") == paths.end())
-    {
-        throw util::exception("no datasource_names file found");
-    }
-
-    auto paths_iterator = paths.find("hsgrdata");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &hsgr_path = paths_iterator->second;
-    paths_iterator = paths.find("timestamp");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &timestamp_path = paths_iterator->second;
-    paths_iterator = paths.find("properties");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &properties_path = paths_iterator->second;
-    paths_iterator = paths.find("ramindex");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &ram_index_path = paths_iterator->second;
-    paths_iterator = paths.find("fileindex");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path index_file_path_absolute =
-        boost::filesystem::canonical(paths_iterator->second);
-    const std::string &file_index_path = index_file_path_absolute.string();
-    paths_iterator = paths.find("nodesdata");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &nodes_data_path = paths_iterator->second;
-    paths_iterator = paths.find("edgesdata");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &edges_data_path = paths_iterator->second;
-    paths_iterator = paths.find("namesdata");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &names_data_path = paths_iterator->second;
-    paths_iterator = paths.find("geometry");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &geometries_data_path = paths_iterator->second;
-    paths_iterator = paths.find("core");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &core_marker_path = paths_iterator->second;
-    paths_iterator = paths.find("datasource_indexes");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &datasource_indexes_path = paths_iterator->second;
-    paths_iterator = paths.find("datasource_names");
-    BOOST_ASSERT(paths.end() != paths_iterator);
-    BOOST_ASSERT(!paths_iterator->second.empty());
-    const boost::filesystem::path &datasource_names_path = paths_iterator->second;
 
     // determine segment to use
     bool segment2_in_use = SharedMemory::RegionExists(LAYOUT_2);
@@ -216,12 +126,12 @@ int Storage::Run()
     auto shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
 
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::FILE_INDEX_PATH,
-                                          file_index_path.length() + 1);
+                                          config.file_index_path.length() + 1);
 
     // collect number of elements to store in shared memory object
-    util::SimpleLogger().Write() << "load names from: " << names_data_path;
+    util::SimpleLogger().Write() << "load names from: " << config.names_data_path;
     // number of entries in name index
-    boost::filesystem::ifstream name_stream(names_data_path, std::ios::binary);
+    boost::filesystem::ifstream name_stream(config.names_data_path, std::ios::binary);
     unsigned name_blocks = 0;
     name_stream.read((char *)&name_blocks, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_OFFSETS, name_blocks);
@@ -235,7 +145,7 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::NAME_CHAR_LIST, number_of_chars);
 
     // Loading information for original edges
-    boost::filesystem::ifstream edges_input_stream(edges_data_path, std::ios::binary);
+    boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
     unsigned number_of_original_edges = 0;
     edges_input_stream.read((char *)&number_of_original_edges, sizeof(unsigned));
 
@@ -249,7 +159,7 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<extractor::guidance::TurnInstruction>(
         SharedDataLayout::TURN_INSTRUCTION, number_of_original_edges);
 
-    boost::filesystem::ifstream hsgr_input_stream(hsgr_path, std::ios::binary);
+    boost::filesystem::ifstream hsgr_input_stream(config.hsgr_data_path, std::ios::binary);
 
     util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
     util::FingerPrint fingerprint_loaded;
@@ -284,7 +194,7 @@ int Storage::Run()
                                                                 number_of_graph_edges);
 
     // load rsearch tree size
-    boost::filesystem::ifstream tree_node_file(ram_index_path, std::ios::binary);
+    boost::filesystem::ifstream tree_node_file(config.ram_index_path, std::ios::binary);
 
     uint32_t tree_size = 0;
     tree_node_file.read((char *)&tree_size, sizeof(uint32_t));
@@ -295,12 +205,12 @@ int Storage::Run()
 
     // load timestamp size
     std::string m_timestamp;
-    if (boost::filesystem::exists(timestamp_path))
+    if (boost::filesystem::exists(config.timestamp_path))
     {
-        boost::filesystem::ifstream timestamp_stream(timestamp_path);
+        boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
         if (!timestamp_stream)
         {
-            util::SimpleLogger().Write(logWARNING) << timestamp_path
+            util::SimpleLogger().Write(logWARNING) << config.timestamp_path
                                                    << " not found. setting to default";
         }
         else
@@ -319,7 +229,7 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TIMESTAMP, m_timestamp.length());
 
     // load core marker size
-    boost::filesystem::ifstream core_marker_file(core_marker_path, std::ios::binary);
+    boost::filesystem::ifstream core_marker_file(config.core_data_path, std::ios::binary);
 
     uint32_t number_of_core_markers = 0;
     core_marker_file.read((char *)&number_of_core_markers, sizeof(uint32_t));
@@ -327,14 +237,14 @@ int Storage::Run()
                                               number_of_core_markers);
 
     // load coordinate size
-    boost::filesystem::ifstream nodes_input_stream(nodes_data_path, std::ios::binary);
+    boost::filesystem::ifstream nodes_input_stream(config.nodes_data_path, std::ios::binary);
     unsigned coordinate_list_size = 0;
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
                                                       coordinate_list_size);
 
     // load geometries sizes
-    std::ifstream geometry_input_stream(geometries_data_path.string().c_str(), std::ios::binary);
+    boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
     unsigned number_of_geometries_indices = 0;
     unsigned number_of_compressed_geometries = 0;
 
@@ -349,8 +259,8 @@ int Storage::Run()
 
     // load datasource sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist.
-    std::ifstream geometry_datasource_input_stream(datasource_indexes_path.c_str(),
-                                                   std::ios::binary);
+    boost::filesystem::ifstream geometry_datasource_input_stream(config.datasource_indexes_path,
+                                                                 std::ios::binary);
     std::size_t number_of_compressed_datasources = 0;
     if (geometry_datasource_input_stream)
     {
@@ -362,7 +272,8 @@ int Storage::Run()
 
     // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist
-    std::ifstream datasource_names_input_stream(datasource_names_path.c_str(), std::ios::binary);
+    boost::filesystem::ifstream datasource_names_input_stream(config.datasource_names_path,
+                                                              std::ios::binary);
     std::vector<char> m_datasource_name_data;
     std::vector<std::size_t> m_datasource_name_offsets;
     std::vector<std::size_t> m_datasource_name_lengths;
@@ -378,11 +289,11 @@ int Storage::Run()
         }
     }
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::DATASOURCE_NAME_DATA,
-            m_datasource_name_data.size());
+                                          m_datasource_name_data.size());
     shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_OFFSETS,
-            m_datasource_name_offsets.size());
+                                                 m_datasource_name_offsets.size());
     shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
-            m_datasource_name_lengths.size());
+                                                 m_datasource_name_lengths.size());
 
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
@@ -405,7 +316,7 @@ int Storage::Run()
               file_index_path_ptr +
                   shared_layout_ptr->GetBlockSize(SharedDataLayout::FILE_INDEX_PATH),
               0);
-    std::copy(file_index_path.begin(), file_index_path.end(), file_index_path_ptr);
+    std::copy(config.file_index_path.begin(), config.file_index_path.end(), file_index_path_ptr);
 
     // Loading street names
     unsigned *name_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
@@ -512,8 +423,7 @@ int Storage::Run()
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_DATA);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_DATA) > 0)
     {
-        std::cout << "Copying "
-                  << (m_datasource_name_data.end() - m_datasource_name_data.begin())
+        std::cout << "Copying " << (m_datasource_name_data.end() - m_datasource_name_data.begin())
                   << " chars into name data ptr\n";
         std::copy(m_datasource_name_data.begin(), m_datasource_name_data.end(),
                   datasource_name_data_ptr);
@@ -615,10 +525,10 @@ int Storage::Run()
 
     // load profile properties
     auto profile_properties_ptr = shared_layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(shared_memory_ptr, SharedDataLayout::PROPERTIES);
-    boost::filesystem::ifstream profile_properties_stream(properties_path);
+    boost::filesystem::ifstream profile_properties_stream(config.properties_path);
     if (!profile_properties_stream)
     {
-        util::exception("Could not open " + properties_path.string() + " for reading!");
+        util::exception("Could not open " + config.properties_path + " for reading!");
     }
     profile_properties_stream.read(reinterpret_cast<char*>(profile_properties_ptr), sizeof(extractor::ProfileProperties));
 

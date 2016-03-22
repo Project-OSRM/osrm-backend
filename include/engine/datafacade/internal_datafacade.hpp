@@ -228,31 +228,36 @@ class InternalDataFacade final : public BaseDataFacade
         }
     }
 
-    void LoadDatasourceInfo(const boost::filesystem::path &datasource_names_file,
-                            const boost::filesystem::path &datasource_indexes_file)
+    void LoadDatasourceInfo(const std::string &datasource_names_file,
+                            const std::string &datasource_indexes_file)
     {
-        std::ifstream datasources_stream(datasource_indexes_file.c_str(), std::ios::binary);
-        if (datasources_stream)
+        boost::filesystem::ifstream datasources_stream(datasource_indexes_file, std::ios::binary);
+        if (!datasources_stream)
         {
-            std::size_t number_of_datasources = 0;
-            datasources_stream.read(reinterpret_cast<char *>(&number_of_datasources),
-                                    sizeof(std::size_t));
-            if (number_of_datasources > 0)
-            {
-                m_datasource_list.resize(number_of_datasources);
-                datasources_stream.read(reinterpret_cast<char *>(&(m_datasource_list[0])),
-                                        number_of_datasources * sizeof(uint8_t));
-            }
+            throw util::exception("Could not open " + datasource_indexes_file + " for reading!");
+        }
+        BOOST_ASSERT(datasources_stream);
+
+        std::size_t number_of_datasources = 0;
+        datasources_stream.read(reinterpret_cast<char *>(&number_of_datasources),
+                                sizeof(std::size_t));
+        if (number_of_datasources > 0)
+        {
+            m_datasource_list.resize(number_of_datasources);
+            datasources_stream.read(reinterpret_cast<char *>(&(m_datasource_list[0])),
+                                    number_of_datasources * sizeof(uint8_t));
         }
 
-        std::ifstream datasourcenames_stream(datasource_names_file.c_str(), std::ios::binary);
-        if (datasourcenames_stream)
+        boost::filesystem::ifstream datasourcenames_stream(datasource_names_file, std::ios::binary);
+        if (!datasourcenames_stream)
         {
-            std::string name;
-            while (std::getline(datasourcenames_stream, name))
-            {
-                m_datasource_names.push_back(name);
-            }
+            throw util::exception("Could not open " + datasource_names_file + " for reading!");
+        }
+        BOOST_ASSERT(datasourcenames_stream);
+        std::string name;
+        while (std::getline(datasourcenames_stream, name))
+        {
+            m_datasource_names.push_back(name);
         }
     }
 
@@ -289,55 +294,35 @@ class InternalDataFacade final : public BaseDataFacade
         m_geospatial_query.reset();
     }
 
-    explicit InternalDataFacade(
-        const std::unordered_map<std::string, boost::filesystem::path> &server_paths)
+    explicit InternalDataFacade(const storage::StorageConfig& config)
     {
-        // cache end iterator to quickly check .find against
-        const auto end_it = end(server_paths);
-
-        const auto file_for = [&server_paths, &end_it](const std::string &path)
-        {
-            const auto it = server_paths.find(path);
-            if (it == end_it || !boost::filesystem::is_regular_file(it->second))
-                throw util::exception("no valid " + path + " file given in ini file");
-            return it->second;
-        };
-
-        const auto optional_file_for = [&server_paths, &end_it](const std::string &path)
-        {
-            const auto it = server_paths.find(path);
-            if (it == end_it)
-                throw util::exception("no valid " + path + " file given in ini file");
-            return it->second;
-        };
-
-        ram_index_path = file_for("ramindex");
-        file_index_path = file_for("fileindex");
+        ram_index_path = config.ram_index_path;
+        file_index_path = config.file_index_path;
 
         util::SimpleLogger().Write() << "loading graph data";
-        LoadGraph(file_for("hsgrdata"));
+        LoadGraph(config.hsgr_data_path);
 
         util::SimpleLogger().Write() << "loading edge information";
-        LoadNodeAndEdgeInformation(file_for("nodesdata"), file_for("edgesdata"));
+        LoadNodeAndEdgeInformation(config.nodes_data_path, config.edges_data_path);
 
         util::SimpleLogger().Write() << "loading core information";
-        LoadCoreInformation(file_for("coredata"));
+        LoadCoreInformation(config.core_data_path);
 
         util::SimpleLogger().Write() << "loading geometries";
-        LoadGeometries(file_for("geometries"));
+        LoadGeometries(config.geometries_path);
 
         util::SimpleLogger().Write() << "loading datasource info";
-        LoadDatasourceInfo(optional_file_for("datasource_names"),
-                           optional_file_for("datasource_indexes"));
+        LoadDatasourceInfo(config.datasource_names_path,
+                           config.datasource_indexes_path);
 
         util::SimpleLogger().Write() << "loading timestamp";
-        LoadTimestamp(file_for("timestamp"));
+        LoadTimestamp(config.timestamp_path);
 
         util::SimpleLogger().Write() << "loading profile properties";
-        LoadProfileProperties(file_for("properties"));
+        LoadProfileProperties(config.properties_path);
 
         util::SimpleLogger().Write() << "loading street names";
-        LoadStreetNames(file_for("namesdata"));
+        LoadStreetNames(config.names_data_path);
     }
 
     // search graph access
@@ -668,12 +653,8 @@ class InternalDataFacade final : public BaseDataFacade
 
     virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const override final
     {
-        if (m_datasource_names.empty() || datasource_name_id > m_datasource_names.size())
-        {
-            if (datasource_name_id == 0)
-                return "lua profile";
-            return "UNKNOWN";
-        }
+        BOOST_ASSERT(m_datasource_names.size() >= 1);
+        BOOST_ASSERT(m_datasource_names.size() > datasource_name_id);
         return m_datasource_names[datasource_name_id];
     }
 
