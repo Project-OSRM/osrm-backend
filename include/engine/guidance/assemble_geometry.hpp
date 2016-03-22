@@ -51,6 +51,7 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
         current_distance +=
             util::coordinate_calculation::haversineDistance(prev_coordinate, coordinate);
 
+        //all changes to this check have to be matched with assemble_steps
         if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
         {
             geometry.segment_distances.push_back(current_distance);
