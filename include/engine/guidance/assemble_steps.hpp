@@ -43,7 +43,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                      const bool source_traversed_in_reverse,
                                      const bool target_traversed_in_reverse)
 {
-    const double constexpr ZERO_DURACTION = 0., ZERO_DISTANCE = 0.;
+    const double constexpr ZERO_DURATION = 0., ZERO_DISTANCE = 0.;
     const EdgeWeight source_duration =
         source_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight;
     const auto source_mode = source_traversed_in_reverse ? source_node.backward_travel_mode
@@ -167,7 +167,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         WaypointType::Arrive, leg_geometry);
     steps.push_back(RouteStep{target_node.name_id,
                               facade.GetNameForID(target_node.name_id),
-                              ZERO_DURACTION,
+                              ZERO_DURATION,
                               ZERO_DISTANCE,
                               target_mode,
                               final_maneuver,
