@@ -21,8 +21,6 @@ class GraphCompressor
     using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
   public:
-    GraphCompressor();
-
     void Compress(const std::unordered_set<NodeID> &barrier_nodes,
                   const std::unordered_set<NodeID> &traffic_lights,
                   RestrictionMap &restriction_map,

@@ -4,6 +4,8 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/raster_source.hpp"
 
+#include "util/lua_util.hpp"
+
 #include <string>
 #include <memory>
 #include <mutex>
@@ -28,12 +30,9 @@ class ScriptingEnvironment
   public:
     struct Context
     {
-        Context();
-        ~Context();
-
         ProfileProperties properties;
         SourceContainer sources;
-        lua_State *state;
+        util::LuaState state;
     };
 
     explicit ScriptingEnvironment(const std::string &file_name);
@@ -47,7 +46,7 @@ class ScriptingEnvironment
     void InitContext(Context &context);
     std::mutex init_mutex;
     std::string file_name;
-    tbb::enumerable_thread_specific<std::shared_ptr<Context>> script_contexts;
+    tbb::enumerable_thread_specific<std::unique_ptr<Context>> script_contexts;
 };
 }
 }
