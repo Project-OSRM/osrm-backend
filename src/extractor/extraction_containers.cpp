@@ -288,7 +288,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     const auto all_edges_list_end_ = all_edges_list.end();
     const auto all_nodes_list_end_ = all_nodes_list.end();
 
-    auto has_segment_function = util::lua_function_exists(segment_state, "segment_function");
+    const auto has_segment_function = util::luaFunctionExists(segment_state, "segment_function");
 
     while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
     {

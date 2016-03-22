@@ -111,7 +111,7 @@ int Extractor::run()
         auto& main_context = scripting_environment.GetContex();
 
         // setup raster sources
-        if (util::lua_function_exists(main_context.state, "source_function"))
+        if (util::luaFunctionExists(main_context.state, "source_function"))
         {
             luabind::call_function<void>(main_context.state, "source_function");
         }
