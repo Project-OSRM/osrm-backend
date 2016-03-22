@@ -37,13 +37,15 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
         pre_turn_bearing =
             util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate);
     }
-    return StepManeuver{turn_coordinate,
-                        pre_turn_bearing,
-                        post_turn_bearing,
-                        instruction,
-                        waypoint_type,
-                        INVALID_EXIT_NR,
-                        INVALID_EXIT_NR};
+    return StepManeuver{
+        std::move(turn_coordinate),
+        pre_turn_bearing,
+        post_turn_bearing,
+        std::move(instruction),
+        waypoint_type,
+        INVALID_EXIT_NR,
+        {} // no intermediate intersections
+    };
 }
 
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
@@ -64,13 +66,15 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
     const double post_turn_bearing =
         util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
 
-    return StepManeuver{turn_coordinate,
-                        pre_turn_bearing,
-                        post_turn_bearing,
-                        instruction,
-                        WaypointType::None,
-                        INVALID_EXIT_NR,
-                        INVALID_EXIT_NR};
+    return StepManeuver{
+        std::move(turn_coordinate),
+        pre_turn_bearing,
+        post_turn_bearing,
+        std::move(instruction),
+        WaypointType::None,
+        INVALID_EXIT_NR,
+        {} // no intermediate intersections
+    };
 }
 } // ns detail
 } // ns engine
