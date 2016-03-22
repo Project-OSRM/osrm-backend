@@ -18,10 +18,19 @@ namespace osrm
 namespace util
 {
 
-template <typename T> void LUA_print(T output) { std::cout << "[LUA] " << output << std::endl; }
+struct LuaState
+{
+    LuaState() : handle{::luaL_newstate(), &::lua_close} { luaL_openlibs(*this); }
+
+    operator lua_State *() { return handle.get(); }
+    operator lua_State const *() const { return handle.get(); }
+
+    using handle_type = std::unique_ptr<lua_State, decltype(&::lua_close)>;
+    handle_type handle;
+};
 
 // Check if the lua function <name> is defined
-inline bool lua_function_exists(lua_State *lua_state, const char *name)
+inline bool luaFunctionExists(lua_State *lua_state, const char *name)
 {
     luabind::object globals_table = luabind::globals(lua_state);
     luabind::object lua_function = globals_table[name];

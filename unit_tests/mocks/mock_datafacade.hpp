@@ -103,6 +103,7 @@ class MockDataFacadeT final : public osrm::engine::datafacade::BaseDataFacade<Ed
     std::string get_name_for_id(const unsigned /* name_id */) const { return ""; }
     std::size_t GetCoreSize() const { return 0; }
     std::string GetTimestamp() const { return ""; }
+    bool GetUTurnsDefault() const override { return true; }
 };
 
 using MockDataFacade = MockDataFacadeT<contractor::QueryEdge::EdgeData>;

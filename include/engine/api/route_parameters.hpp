@@ -60,7 +60,7 @@ struct RouteParameters : public BaseParameters
                     const bool alternatives_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    boost::optional<bool> uturns_,
+                    const boost::optional<bool> uturns_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           geometries{geometries_}, overview{overview_}, uturns{uturns_}

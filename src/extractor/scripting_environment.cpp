@@ -8,6 +8,7 @@
 #include "extractor/raster_source.hpp"
 #include "extractor/profile_properties.hpp"
 #include "util/lua_util.hpp"
+#include "util/make_unique.hpp"
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
@@ -52,10 +53,6 @@ int luaErrorCallback(lua_State *state)
 }
 }
 
-ScriptingEnvironment::Context::Context() : state(luaL_newstate()) {}
-
-ScriptingEnvironment::Context::~Context() { lua_close(state); }
-
 ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_name(file_name)
 {
     util::SimpleLogger().Write() << "Using script " << file_name;
@@ -73,8 +70,7 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
 
     // Add our function to the state's global scope
     luabind::module(context.state)
-        [luabind::def("print", util::LUA_print<std::string>),
-         luabind::def("durationIsValid", durationIsValid),
+        [luabind::def("durationIsValid", durationIsValid),
          luabind::def("parseDuration", parseDuration),
          luabind::class_<TravelMode>("mode")
              .enum_("enums")[luabind::value("inaccessible", TRAVEL_MODE_INACCESSIBLE),
@@ -176,8 +172,7 @@ ScriptingEnvironment::Context &ScriptingEnvironment::GetContex()
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        std::shared_ptr<Context> state = std::make_shared<Context>();
-        ref = state;
+        ref = util::make_unique<Context>();
         InitContext(*ref);
     }
     luabind::set_pcall_callback(&luaErrorCallback);
