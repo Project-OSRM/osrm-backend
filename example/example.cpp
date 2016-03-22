@@ -29,7 +29,8 @@ int main(int argc, const char *argv[]) try
     using namespace osrm;
 
     // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
-    EngineConfig config{argv[1]};
+    EngineConfig config;
+    config.storage_config = {argv[1]};
     config.use_shared_memory = false;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
