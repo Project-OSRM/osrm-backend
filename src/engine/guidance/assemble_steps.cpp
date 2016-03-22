@@ -12,8 +12,41 @@ namespace guidance
 {
 namespace detail
 {
+
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                       const WaypointType waypoint_type,
+                                      const LegGeometry &leg_geometry)
+{
+    BOOST_ASSERT(waypoint_type != WaypointType::None);
+    BOOST_ASSERT(leg_geometry.locations.size() >= 2);
+
+    double pre_turn_bearing = 0, post_turn_bearing = 0;
+    Coordinate turn_coordinate;
+    if (waypoint_type == WaypointType::Arrive)
+    {
+        turn_coordinate = leg_geometry.locations.front();
+        const auto post_turn_coordinate = *(leg_geometry.locations.begin() + 1);
+        post_turn_bearing =
+            util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
+    }
+    else
+    {
+        BOOST_ASSERT(waypoint_type == WaypointType::Depart);
+        turn_coordinate = leg_geometry.locations.back();
+        const auto pre_turn_coordinate = *(leg_geometry.locations.end() - 2);
+        pre_turn_bearing =
+            util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate);
+    }
+    return StepManeuver{turn_coordinate,
+                        pre_turn_bearing,
+                        post_turn_bearing,
+                        instruction,
+                        waypoint_type,
+                        INVALID_EXIT_NR,
+                        INVALID_EXIT_NR};
+}
+
+StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                       const LegGeometry &leg_geometry,
                                       const std::size_t segment_index)
 {
@@ -35,7 +68,7 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
                         pre_turn_bearing,
                         post_turn_bearing,
                         instruction,
-                        waypoint_type,
+                        WaypointType::None,
                         INVALID_EXIT_NR,
                         INVALID_EXIT_NR};
 }
