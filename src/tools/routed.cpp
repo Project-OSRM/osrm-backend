@@ -1,10 +1,14 @@
 #include "server/server.hpp"
-#include "util/routed_options.hpp"
 #include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
+#include "util/version.hpp"
 
 #include "osrm/osrm.hpp"
 #include "osrm/engine_config.hpp"
+#include "osrm/storage_config.hpp"
+
+#include <boost/any.hpp>
+#include <boost/program_options.hpp>
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -19,6 +23,7 @@
 #include <iostream>
 #include <new>
 #include <thread>
+#include <string>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
@@ -41,6 +46,111 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 
 using namespace osrm;
 
+const static unsigned INIT_OK_START_ENGINE = 0;
+const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
+const static unsigned INIT_FAILED = -1;
+
+// generate boost::program_options object for the routing part
+inline unsigned
+generateServerProgramOptions(const int argc,
+                             const char *argv[],
+                             boost::filesystem::path &base_path,
+                             std::string &ip_address,
+                             int &ip_port,
+                             int &requested_num_threads,
+                             bool &use_shared_memory,
+                             bool &trial,
+                             int &max_locations_trip,
+                             int &max_locations_viaroute,
+                             int &max_locations_distance_table,
+                             int &max_locations_map_matching)
+{
+    using boost::program_options::value;
+    using boost::filesystem::path;
+
+    // declare a group of options that will be allowed only on command line
+    boost::program_options::options_description generic_options("Options");
+    generic_options.add_options()                                         //
+        ("version,v", "Show version")("help,h", "Show this help message") //
+        ("trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
+
+    // declare a group of options that will be allowed on command line
+    boost::program_options::options_description config_options("Configuration");
+    config_options.add_options()                                                             //
+        ("ip,i", value<std::string>(&ip_address)->default_value("0.0.0.0"),
+         "IP address") //
+        ("port,p", value<int>(&ip_port)->default_value(5000),
+         "TCP/IP port") //
+        ("threads,t", value<int>(&requested_num_threads)->default_value(8),
+         "Number of threads to use") //
+        ("shared-memory,s",
+         value<bool>(&use_shared_memory)->implicit_value(true)->default_value(false),
+         "Load data from shared memory") //
+        ("max-viaroute-size", value<int>(&max_locations_viaroute)->default_value(500),
+         "Max. locations supported in viaroute query") //
+        ("max-trip-size", value<int>(&max_locations_trip)->default_value(100),
+         "Max. locations supported in trip query") //
+        ("max-table-size", value<int>(&max_locations_distance_table)->default_value(100),
+         "Max. locations supported in distance table query") //
+        ("max-matching-size", value<int>(&max_locations_map_matching)->default_value(100),
+         "Max. locations supported in map matching query");
+
+    // hidden options, will be allowed on command line, but will not be shown to the user
+    boost::program_options::options_description hidden_options("Hidden options");
+    hidden_options.add_options()("base,b", value<boost::filesystem::path>(&base_path),
+                                 "base path to .osrm file");
+
+    // positional option
+    boost::program_options::positional_options_description positional_options;
+    positional_options.add("base", 1);
+
+    // combine above options for parsing
+    boost::program_options::options_description cmdline_options;
+    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+
+    boost::program_options::options_description visible_options(
+        boost::filesystem::path(argv[0]).stem().string() + " <base.osrm> [<options>]");
+    visible_options.add(generic_options).add(config_options);
+
+    // parse command line options
+    boost::program_options::variables_map option_variables;
+    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                      .options(cmdline_options)
+                                      .positional(positional_options)
+                                      .run(),
+                                  option_variables);
+
+    if (option_variables.count("version"))
+    {
+        util::SimpleLogger().Write() << OSRM_VERSION;
+        return INIT_OK_DO_NOT_START_ENGINE;
+    }
+
+    if (option_variables.count("help"))
+    {
+        util::SimpleLogger().Write() << visible_options;
+        return INIT_OK_DO_NOT_START_ENGINE;
+    }
+
+    boost::program_options::notify(option_variables);
+
+    if (!use_shared_memory && option_variables.count("base"))
+    {
+        return INIT_OK_START_ENGINE;
+    }
+    else if (use_shared_memory && !option_variables.count("base"))
+    {
+        return INIT_OK_START_ENGINE;
+    }
+    else if (use_shared_memory && option_variables.count("base"))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Shared memory settings conflict with path settings.";
+    }
+
+    util::SimpleLogger().Write() << visible_options;
+    return INIT_OK_DO_NOT_START_ENGINE;
+}
+
 int main(int argc, const char *argv[]) try
 {
     util::LogPolicy::GetInstance().Unmute();
@@ -50,17 +160,34 @@ int main(int argc, const char *argv[]) try
     int ip_port, requested_thread_num;
 
     EngineConfig config;
-    const unsigned init_result = util::GenerateServerProgramOptions(
-        argc, argv, config.server_paths, ip_address, ip_port, requested_thread_num,
+    boost::filesystem::path base_path;
+    const unsigned init_result = generateServerProgramOptions(
+        argc, argv, base_path, ip_address, ip_port, requested_thread_num,
         config.use_shared_memory, trial_run, config.max_locations_trip,
         config.max_locations_viaroute, config.max_locations_distance_table,
         config.max_locations_map_matching);
-    if (init_result == util::INIT_OK_DO_NOT_START_ENGINE)
+    if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
     }
-    if (init_result == util::INIT_FAILED)
+    if (init_result == INIT_FAILED)
     {
+        return EXIT_FAILURE;
+    }
+    if (!base_path.empty())
+    {
+        config.storage_config = storage::StorageConfig(base_path);
+    }
+    if(!config.IsValid())
+    {
+        if (base_path.empty() != config.use_shared_memory)
+        {
+            util::SimpleLogger().Write(logWARNING) << "Path settings and shared memory conflicts.";
+        }
+        else
+        {
+            util::SimpleLogger().Write(logWARNING) << "Invalid config options.";
+        }
         return EXIT_FAILURE;
     }
 

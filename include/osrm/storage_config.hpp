@@ -25,33 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ENGINE_CONFIG_HPP
-#define ENGINE_CONFIG_HPP
+#ifndef GLOBAL_STORAGE_CONFIG_HPP
+#define GLOBAL_STORAGE_CONFIG_HPP
 
 #include "storage/storage_config.hpp"
 
-#include <boost/filesystem/path.hpp>
-
-#include <string>
-
 namespace osrm
 {
-
-namespace engine
-{
-
-struct EngineConfig
-{
-    bool IsValid() const;
-
-    storage::StorageConfig storage_config;
-    int max_locations_trip = -1;
-    int max_locations_viaroute = -1;
-    int max_locations_distance_table = -1;
-    int max_locations_map_matching = -1;
-    bool use_shared_memory = true;
-};
-}
+using storage::StorageConfig;
 }
 
-#endif // SERVER_CONFIG_HPP
+#endif
