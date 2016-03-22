@@ -3,6 +3,10 @@
 
 #include "util/coordinate_calculation.hpp"
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
+
 #include <protozero/varint.hpp>
 #include <protozero/pbf_writer.hpp>
 
@@ -23,6 +27,7 @@ namespace detail
 {
 // Vector tiles are 4096 virtual pixels on each side
 const constexpr double VECTOR_TILE_EXTENT = 4096.0;
+const constexpr double VECTOR_TILE_BUFFER = 128.0;
 
 // Simple container class for WSG84 coordinates
 template <typename T> struct Point final
@@ -66,6 +71,14 @@ struct point_type_i final
 
 using FixedLine = std::vector<detail::Point<std::int32_t>>;
 using FloatLine = std::vector<detail::Point<double>>;
+
+typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> point_t;
+typedef boost::geometry::model::linestring<point_t> linestring_t;
+typedef boost::geometry::model::box<point_t> box_t;
+typedef boost::geometry::model::multi_linestring<linestring_t> multi_linestring_t;
+const static box_t clip_box({-detail::VECTOR_TILE_BUFFER, -detail::VECTOR_TILE_BUFFER},
+                            {detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER,
+                             detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER});
 
 // from mapnik-vector-tile
 // Encodes a linestring using protobuf zigzag encoding
@@ -111,7 +124,9 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
                           static_cast<double>(util::toFloating(start.lat)));
     geo_line.emplace_back(static_cast<double>(util::toFloating(target.lon)),
                           static_cast<double>(util::toFloating(target.lat)));
-    FixedLine tile_line;
+
+    linestring_t unclipped_line;
+
     for (auto const &pt : geo_line)
     {
         double px_merc = pt.x * mercator::DEGREE_TO_PX;
@@ -123,8 +138,29 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
         const auto py = std::round(
             ((tile_bbox.maxy - py_merc) * mercator::TILE_SIZE / tile_bbox.height()) *
             detail::VECTOR_TILE_EXTENT / util::coordinate_calculation::mercator::TILE_SIZE);
-        tile_line.emplace_back(px, py);
+
+        boost::geometry::append(unclipped_line, point_t(px, py));
     }
+
+    multi_linestring_t clipped_line;
+
+    boost::geometry::intersection(clip_box, unclipped_line, clipped_line);
+
+    FixedLine tile_line;
+
+    // b::g::intersection might return a line with one point if the
+    // original line was very short and coords were dupes
+    if (!clipped_line.empty() && clipped_line[0].size() == 2)
+    {
+        if (clipped_line[0].size() == 2)
+        {
+            for (const auto &p : clipped_line[0])
+            {
+                tile_line.emplace_back(p.get<0>(), p.get<1>());
+            }
+        }
+    }
+
     return tile_line;
 }
 }
@@ -317,6 +353,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                                           duration); // duration value offset
                     }
                     {
+
                         // Encode the geometry for the feature
                         protozero::packed_field_uint32 geometry(feature_writer, 4);
                         encodeLinestring(tile_line, geometry, start_x, start_y);
@@ -334,8 +371,11 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         static_cast<std::uint32_t>(round(length / forward_weight * 10 * 3.6));
 
                     auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
-                    encode_tile_line(tile_line, speed_kmh, weight_offsets[forward_weight],
-                                     forward_datasource, start_x, start_y);
+                    if (!tile_line.empty())
+                    {
+                        encode_tile_line(tile_line, speed_kmh, weight_offsets[forward_weight],
+                                         forward_datasource, start_x, start_y);
+                    }
                 }
 
                 // Repeat the above for the coordinates reversed and using the `reverse`
@@ -350,8 +390,11 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         static_cast<std::uint32_t>(round(length / reverse_weight * 10 * 3.6));
 
                     auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
-                    encode_tile_line(tile_line, speed_kmh, weight_offsets[reverse_weight],
-                                     reverse_datasource, start_x, start_y);
+                    if (!tile_line.empty())
+                    {
+                        encode_tile_line(tile_line, speed_kmh, weight_offsets[reverse_weight],
+                                         reverse_datasource, start_x, start_y);
+                    }
                 }
             }
         }
