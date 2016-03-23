@@ -228,13 +228,13 @@ class InternalDataFacade final : public BaseDataFacade
         }
     }
 
-    void LoadDatasourceInfo(const std::string &datasource_names_file,
-                            const std::string &datasource_indexes_file)
+    void LoadDatasourceInfo(const boost::filesystem::path &datasource_names_file,
+                            const boost::filesystem::path &datasource_indexes_file)
     {
         boost::filesystem::ifstream datasources_stream(datasource_indexes_file, std::ios::binary);
         if (!datasources_stream)
         {
-            throw util::exception("Could not open " + datasource_indexes_file + " for reading!");
+            throw util::exception("Could not open " + datasource_indexes_file.string() + " for reading!");
         }
         BOOST_ASSERT(datasources_stream);
 
@@ -251,7 +251,7 @@ class InternalDataFacade final : public BaseDataFacade
         boost::filesystem::ifstream datasourcenames_stream(datasource_names_file, std::ios::binary);
         if (!datasourcenames_stream)
         {
-            throw util::exception("Could not open " + datasource_names_file + " for reading!");
+            throw util::exception("Could not open " + datasource_names_file.string() + " for reading!");
         }
         BOOST_ASSERT(datasourcenames_stream);
         std::string name;
