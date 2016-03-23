@@ -20,8 +20,7 @@ inline Location get_dummy_location()
 
 inline Locations get_locations_in_small_component()
 {
-    return {{Longitude{7.437246}, Latitude{43.747225}},
-            {Longitude{7.438023}, Latitude{43.746465}},
+    return {{Longitude{7.438023}, Latitude{43.746465}},
             {Longitude{7.439263}, Latitude{43.746543}},
             {Longitude{7.438190}, Latitude{43.747560}}};
 }
