@@ -1,16 +1,16 @@
 #include "engine/api/json_factory.hpp"
 
-#include "engine/polyline_compressor.hpp"
 #include "engine/hint.hpp"
+#include "engine/polyline_compressor.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/range/irange.hpp>
 #include <boost/optional.hpp>
+#include <boost/range/irange.hpp>
 
-#include <string>
-#include <utility>
 #include <algorithm>
 #include <iterator>
+#include <string>
+#include <utility>
 #include <vector>
 
 using TurnType = osrm::extractor::guidance::TurnType;
@@ -28,23 +28,17 @@ namespace json
 namespace detail
 {
 
-const constexpr char *modifier_names[] = {"uturn",
-                                          "sharp right",
-                                          "right",
-                                          "slight right",
-                                          "straight",
-                                          "slight left",
-                                          "left",
-                                          "sharp left"};
+const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
+                                          "straight", "slight left", "left",  "sharp left"};
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
 const constexpr char *turn_type_names[] = {
-    "invalid",        "no turn", "invalid",    "new name",    "continue",       "turn",
-    "turn",           "turn",    "turn",       "turn",        "merge",          "ramp",
-    "ramp",           "ramp",    "ramp",       "ramp",        "fork",           "end of road",
-    "roundabout",     "invalid", "roundabout", "invalid",     "traffic circle", "invalid",
-    "traffic circle", "invalid", "invalid",    "restriction", "notification"};
+    "invalid",    "no turn", "invalid",    "new name",    "continue",    "turn",
+    "turn",       "turn",    "turn",       "turn",        "merge",       "ramp",
+    "ramp",       "ramp",    "ramp",       "ramp",        "fork",        "end of road",
+    "roundabout", "invalid", "roundabout", "invalid",     "rotary",      "invalid",
+    "rotary",     "invalid", "invalid",    "restriction", "notification"};
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
 // Check whether to include a modifier in the result of the API
@@ -144,6 +138,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     if (detail::isValidModifier(maneuver))
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
+
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);
     step_maneuver.values["bearing_after"] = std::round(maneuver.bearing_after);
@@ -164,6 +159,9 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["distance"] = std::round(step.distance * 10) / 10.;
     route_step.values["duration"] = std::round(step.duration * 10) / 10.;
     route_step.values["name"] = std::move(step.name);
+    if (!step.rotary_name.empty())
+        route_step.values["rotary_name"] = std::move(step.rotary_name);
+
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
     route_step.values["geometry"] = std::move(geometry);
@@ -215,8 +213,7 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
         json_steps.values.reserve(leg.steps.size());
         std::transform(
             std::make_move_iterator(leg.steps.begin()), std::make_move_iterator(leg.steps.end()),
-            std::back_inserter(json_steps.values), [&step_geometry_iter](guidance::RouteStep step)
-            {
+            std::back_inserter(json_steps.values), [&step_geometry_iter](guidance::RouteStep step) {
                 return makeRouteStep(std::move(step), std::move(*step_geometry_iter++));
             });
         json_legs.values.push_back(makeRouteLeg(std::move(leg), std::move(json_steps)));
