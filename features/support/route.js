@@ -144,9 +144,14 @@ module.exports = function () {
                     return v.maneuver.type;
                 case 'roundabout':
                     return 'roundabout-exit-' + v.maneuver.exit;
+                case 'rotary':
+                    if( 'rotary_name' in v )
+                        return v.rotary_name + '-exit-' + v.maneuver.exit;
+                    else
+                        return 'rotary-exit-' + v.maneuver.exit;
                 // FIXME this is a little bit over-simplistic for merge/fork instructions
                 default:
-                    return v.maneuver.modifier;
+                    return v.maneuver.type + ' ' + v.maneuver.modifier;
                 }
             })
             .join(',');

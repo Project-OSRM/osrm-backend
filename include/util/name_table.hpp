@@ -1,8 +1,8 @@
 #ifndef OSRM_UTIL_NAME_TABLE_HPP
 #define OSRM_UTIL_NAME_TABLE_HPP
 
-#include "util/shared_memory_vector_wrapper.hpp"
 #include "util/range_table.hpp"
+#include "util/shared_memory_vector_wrapper.hpp"
 
 #include <string>
 

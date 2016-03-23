@@ -1,12 +1,13 @@
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 
-#include "util/simple_logger.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/simple_logger.hpp"
 
 #include <cstddef>
-#include <limits>
 #include <iomanip>
+#include <limits>
 #include <set>
 #include <unordered_set>
 
@@ -16,20 +17,6 @@ namespace extractor
 {
 namespace guidance
 {
-// configuration of turn classification
-const bool constexpr INVERT = true;
-
-// what angle is interpreted as going straight
-const double constexpr STRAIGHT_ANGLE = 180.;
-// if a turn deviates this much from going straight, it will be kept straight
-const double constexpr MAXIMAL_ALLOWED_NO_TURN_DEVIATION = 3.;
-// angle that lies between two nearly indistinguishable roads
-const double constexpr NARROW_TURN_ANGLE = 30.;
-const double constexpr GROUP_ANGLE = 90;
-// angle difference that can be classified as straight, if its the only narrow turn
-const double constexpr FUZZY_ANGLE_DIFFERENCE = 15.;
-const double constexpr DISTINCTION_RATIO = 2;
-const unsigned constexpr INVALID_NAME_ID = 0;
 
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
@@ -101,17 +88,15 @@ inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_base
 bool TurnAnalysis::isRotary(const NodeID nid) const
 {
     // translate a node ID into its respective coordinate stored in the node_info_list
-    const auto getCoordinate = [this](const NodeID node)
-    {
+    const auto getCoordinate = [this](const NodeID node) {
         return util::Coordinate(node_info_list[node].lon, node_info_list[node].lat);
     };
 
     unsigned roundabout_name_id = 0;
     std::unordered_set<unsigned> connected_names;
 
-    const auto getNextOnRoundabout =
-        [this, &roundabout_name_id, &connected_names](const NodeID node)
-    {
+    const auto getNextOnRoundabout = [this, &roundabout_name_id,
+                                      &connected_names](const NodeID node) {
         EdgeID continue_edge = SPECIAL_EDGEID;
         for (const auto edge : node_based_graph.GetAdjacentEdgeRange(node))
         {
@@ -183,15 +168,20 @@ bool TurnAnalysis::isRotary(const NodeID nid) const
     // circle
     // with both vertices right at the other side (so half their distance in meters).
     // Otherwise, we construct a circle through the first tree vertices.
-    auto node_itr = roundabout_nodes.begin();
-    const double radius = roundabout_nodes.size() >= 3
-                              ? util::coordinate_calculation::circleRadius(
-                                    getCoordinate(*node_itr++),
-                                    getCoordinate(*node_itr++),
-                                    getCoordinate(*node_itr))
-                              : 0.5 * util::coordinate_calculation::haversineDistance(
-                                          getCoordinate(*node_itr++),
-                                          getCoordinate(*node_itr));
+    const auto getRadius = [&roundabout_nodes,&getCoordinate](){
+        auto node_itr = roundabout_nodes.begin();
+        if( roundabout_nodes.size() == 2 )
+        {
+            const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++);
+            return 0.5 * util::coordinate_calculation::haversineDistance( first, second );
+        }
+        else
+        {
+            const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++), third = getCoordinate(*node_itr++);
+            return util::coordinate_calculation::circleRadius(first,second,third);
+        }
+    };
+    const double radius = getRadius();
 
     // check whether the circle computation has gone wrong
     // The radius computation can result in infinity, if the three coordinates are non-distinct.
@@ -199,7 +189,6 @@ bool TurnAnalysis::isRotary(const NodeID nid) const
     if (std::isinf(radius))
         return false;
 
-    const double constexpr MAX_ROUNDABOUT_RADIUS = 15; // 30 m diameter as final distinction
     return radius > MAX_ROUNDABOUT_RADIUS;
 }
 
@@ -240,10 +229,10 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from, const EdgeI
     }
     if (on_roundabout || can_enter_roundabout)
     {
-        bool is_rotary = isRotary(node_based_graph.GetTarget(via_edge));
+        const bool is_rotary = isRotary(node_based_graph.GetTarget(via_edge));
         // find the radius of the roundabout
-        intersection = handleRoundabouts(is_rotary, via_edge, on_roundabout, can_exit_roundabout_separately,
-                                         std::move(intersection));
+        intersection = handleRoundabouts(is_rotary, via_edge, on_roundabout,
+                                         can_exit_roundabout_separately, std::move(intersection));
     }
     else
     {
@@ -283,10 +272,8 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from, const EdgeI
 
 inline std::size_t countValid(const std::vector<ConnectedRoad> &intersection)
 {
-    return std::count_if(intersection.begin(), intersection.end(), [](const ConnectedRoad &road)
-                         {
-                             return road.entry_allowed;
-                         });
+    return std::count_if(intersection.begin(), intersection.end(),
+                         [](const ConnectedRoad &road) { return road.entry_allowed; });
 }
 
 std::vector<ConnectedRoad>
@@ -377,14 +364,23 @@ TurnAnalysis::fallbackTurnAssignmentMotorway(std::vector<ConnectedRoad> intersec
         const auto type = detail::isMotorwayClass(out_data.road_classification.road_class)
                               ? TurnType::Merge
                               : TurnType::Turn;
-        if (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE)
-            road.turn.instruction = {type, DirectionModifier::Straight};
+
+        if (type == TurnType::Turn)
+        {
+            if (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE)
+                road.turn.instruction = {type, DirectionModifier::Straight};
+            else
+            {
+                road.turn.instruction = {type, road.turn.angle > STRAIGHT_ANGLE
+                                                   ? DirectionModifier::SlightLeft
+                                                   : DirectionModifier::SlightRight};
+            }
+        }
         else
         {
-            road.turn.instruction = {type,
-                                     road.turn.angle > STRAIGHT_ANGLE
-                                         ? DirectionModifier::SlightLeft
-                                         : DirectionModifier::SlightRight};
+            road.turn.instruction = {type, road.turn.angle < STRAIGHT_ANGLE
+                                               ? DirectionModifier::SlightLeft
+                                               : DirectionModifier::SlightRight};
         }
     }
     return intersection;
@@ -397,8 +393,7 @@ TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
     BOOST_ASSERT(detail::isMotorwayClass(in_data.road_classification.road_class));
 
-    const auto countExitingMotorways = [this](const std::vector<ConnectedRoad> &intersection)
-    {
+    const auto countExitingMotorways = [this](const std::vector<ConnectedRoad> &intersection) {
         unsigned count = 0;
         for (const auto &road : intersection)
         {
@@ -409,22 +404,20 @@ TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
     };
 
     // find the angle that continues on our current highway
-    const auto getContinueAngle = [this, in_data](const std::vector<ConnectedRoad> &intersection)
-    {
+    const auto getContinueAngle = [this, in_data](const std::vector<ConnectedRoad> &intersection) {
         for (const auto &road : intersection)
         {
             const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
             if (road.turn.angle != 0 && in_data.name_id == out_data.name_id &&
-                in_data.name_id != 0 &&
+                in_data.name_id != INVALID_NAME_ID &&
                 detail::isMotorwayClass(out_data.road_classification.road_class))
                 return road.turn.angle;
         }
         return intersection[0].turn.angle;
     };
 
-    const auto getMostLikelyContinue =
-        [this, in_data](const std::vector<ConnectedRoad> &intersection)
-    {
+    const auto getMostLikelyContinue = [this,
+                                        in_data](const std::vector<ConnectedRoad> &intersection) {
         double angle = intersection[0].turn.angle;
         double best = 180;
         for (const auto &road : intersection)
@@ -440,18 +433,33 @@ TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
         return angle;
     };
 
-    const auto findBestContinue = [&]()
-    {
+    const auto findBestContinue = [&]() {
         const double continue_angle = getContinueAngle(intersection);
         if (continue_angle != intersection[0].turn.angle)
             return continue_angle;
         else
             return getMostLikelyContinue(intersection);
     };
+    // check whether the obvious choice is actually a through street
+    const auto isThroughStreet = [&intersection, this](const ConnectedRoad &connection) {
+        if (node_based_graph.GetEdgeData(connection.turn.eid).name_id == INVALID_NAME_ID)
+            return false;
+        for (const auto &road : intersection)
+        {
+            // a through street cannot start at our own position
+            if (road.turn.angle < std::numeric_limits<double>::epsilon())
+                continue;
+            if (angularDeviation(road.turn.angle, connection.turn.angle) >
+                    (STRAIGHT_ANGLE - NARROW_TURN_ANGLE) &&
+                node_based_graph.GetEdgeData(road.turn.eid).name_id ==
+                    node_based_graph.GetEdgeData(connection.turn.eid).name_id)
+                return true;
+        }
+        return false;
+    };
 
     // find continue angle
     const double continue_angle = findBestContinue();
-
     // highway does not continue and has no obvious choice
     if (continue_angle == intersection[0].turn.angle)
     {
@@ -524,12 +532,11 @@ TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
                 BOOST_ASSERT(!detail::isRampClass(intersection[1].turn.eid, node_based_graph));
 
                 intersection[1].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+                    getInstructionForObvious(intersection.size(), via_edge,
+                                             isThroughStreet(intersection[1]), intersection[1]);
             }
             else
             {
-                // continue on the same highway
-                bool continues = (getContinueAngle(intersection) != intersection[0].turn.angle);
                 // Normal Highway exit or merge
                 for (auto &road : intersection)
                 {
@@ -539,11 +546,8 @@ TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
 
                     if (road.turn.angle == continue_angle)
                     {
-                        if (continues)
-                            road.turn.instruction =
-                                TurnInstruction::SUPPRESSED(DirectionModifier::Straight);
-                        else // TODO handle turn direction correctly
-                            road.turn.instruction = {TurnType::Merge, DirectionModifier::Straight};
+                        road.turn.instruction = getInstructionForObvious(
+                            intersection.size(), via_edge, isThroughStreet(road), road);
                     }
                     else if (road.turn.angle < continue_angle)
                     {
@@ -570,7 +574,8 @@ TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
             if (exiting_motorways == 2 && intersection.size() == 2)
             {
                 intersection[1].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+                    getInstructionForObvious(intersection.size(), via_edge,
+                                             isThroughStreet(intersection[1]), intersection[1]);
                 util::SimpleLogger().Write(logWARNING)
                     << "Disabled U-Turn on a freeway at "
                     << localizer(node_based_graph.GetTarget(via_edge));
@@ -633,8 +638,9 @@ TurnAnalysis::handleFromMotorway(const EdgeID via_edge,
                 auto coord = localizer(node_based_graph.GetTarget(via_edge));
                 util::SimpleLogger().Write(logWARNING)
                     << "Found motorway junction with more than "
-                       "2 exiting motorways or additional ramps at " << std::setprecision(12)
-                    << toFloating(coord.lat) << " " << toFloating(coord.lon);
+                       "2 exiting motorways or additional ramps at "
+                    << std::setprecision(12) << toFloating(coord.lat) << " "
+                    << toFloating(coord.lon);
                 fallbackTurnAssignmentMotorway(intersection);
             }
         } // done for more than one highway exit
@@ -647,14 +653,30 @@ TurnAnalysis::handleMotorwayRamp(const EdgeID via_edge,
                                  std::vector<ConnectedRoad> intersection) const
 {
     auto num_valid_turns = countValid(intersection);
+    const auto isThroughStreet = [&intersection, this](const ConnectedRoad &connection) {
+        if (node_based_graph.GetEdgeData(connection.turn.eid).name_id == INVALID_NAME_ID)
+            return false;
+        for (const auto &road : intersection)
+        {
+            // a through street cannot start at our own position
+            if (road.turn.angle < std::numeric_limits<double>::epsilon())
+                continue;
+            if (angularDeviation(road.turn.angle, connection.turn.angle) >
+                    (STRAIGHT_ANGLE - NARROW_TURN_ANGLE) &&
+                node_based_graph.GetEdgeData(road.turn.eid).name_id ==
+                    node_based_graph.GetEdgeData(connection.turn.eid).name_id)
+                return true;
+        }
+        return false;
+    };
     // ramp straight into a motorway/ramp
     if (intersection.size() == 2 && num_valid_turns == 1)
     {
         BOOST_ASSERT(!intersection[0].entry_allowed);
         BOOST_ASSERT(detail::isMotorwayClass(intersection[1].turn.eid, node_based_graph));
 
-        intersection[1].turn.instruction =
-            getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+        intersection[1].turn.instruction = getInstructionForObvious(
+            intersection.size(), via_edge, isThroughStreet(intersection[1]), intersection[1]);
     }
     else if (intersection.size() == 3)
     {
@@ -672,7 +694,11 @@ TurnAnalysis::handleMotorwayRamp(const EdgeID via_edge,
             //          0
             if (intersection[1].entry_allowed)
             {
-                if (detail::isMotorwayClass(intersection[1].turn.eid, node_based_graph))
+                if (detail::isMotorwayClass(intersection[1].turn.eid, node_based_graph) &&
+                    node_based_graph.GetEdgeData(intersection[2].turn.eid).name_id !=
+                        INVALID_NAME_ID &&
+                    node_based_graph.GetEdgeData(intersection[2].turn.eid).name_id ==
+                        node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id)
                 {
                     // circular order indicates a merge to the left (0-3 onto 4
                     if (angularDeviation(intersection[1].turn.angle, STRAIGHT_ANGLE) <
@@ -684,13 +710,20 @@ TurnAnalysis::handleMotorwayRamp(const EdgeID via_edge,
                             TurnType::Merge, getTurnDirection(intersection[1].turn.angle)};
                 }
                 else // passing by the end of a motorway
+                {
                     intersection[1].turn.instruction =
-                        getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+                        getInstructionForObvious(intersection.size(), via_edge,
+                                                 isThroughStreet(intersection[1]), intersection[1]);
+                }
             }
             else
             {
                 BOOST_ASSERT(intersection[2].entry_allowed);
-                if (detail::isMotorwayClass(intersection[2].turn.eid, node_based_graph))
+                if (detail::isMotorwayClass(intersection[2].turn.eid, node_based_graph) &&
+                    node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id !=
+                        INVALID_NAME_ID &&
+                    node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id ==
+                        node_based_graph.GetEdgeData(intersection[0].turn.eid).name_id)
                 {
                     // circular order (5-0) onto 4
                     if (angularDeviation(intersection[2].turn.angle, STRAIGHT_ANGLE) <
@@ -702,8 +735,11 @@ TurnAnalysis::handleMotorwayRamp(const EdgeID via_edge,
                             TurnType::Merge, getTurnDirection(intersection[2].turn.angle)};
                 }
                 else // passing the end of a highway
-                    intersection[1].turn.instruction =
-                        getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+                {
+                    intersection[2].turn.instruction =
+                        getInstructionForObvious(intersection.size(), via_edge,
+                                                 isThroughStreet(intersection[2]), intersection[2]);
+                }
             }
         }
         else
@@ -733,17 +769,14 @@ TurnAnalysis::handleMotorwayRamp(const EdgeID via_edge,
                 if (detail::isMotorwayClass(node_based_graph.GetEdgeData(intersection[1].turn.eid)
                                                 .road_classification.road_class))
                 {
-                    intersection[1].turn.instruction = {TurnType::Merge,
+                    intersection[1].turn.instruction = {TurnType::Turn,
                                                         DirectionModifier::SlightRight};
-                    intersection[2].turn.instruction = {TurnType::Fork,
+                    intersection[2].turn.instruction = {TurnType::Continue,
                                                         DirectionModifier::SlightLeft};
                 }
                 else
                 {
-                    intersection[1].turn.instruction = {TurnType::Fork,
-                                                        DirectionModifier::SlightRight};
-                    intersection[2].turn.instruction = {TurnType::Merge,
-                                                        DirectionModifier::SlightLeft};
+                    assignFork(via_edge, intersection[2], intersection[1]);
                 }
             }
         }
@@ -762,8 +795,8 @@ TurnAnalysis::handleMotorwayRamp(const EdgeID via_edge,
             }
             else if (detail::isMotorwayClass(edge_data.road_classification.road_class))
             {
-                road.turn.instruction = {TurnType::Merge,
-                                         passed_highway_entry ? DirectionModifier::SlightRight
+                road.turn.instruction = {TurnType::Merge, passed_highway_entry
+                                                              ? DirectionModifier::SlightRight
                                                               : DirectionModifier::SlightLeft};
             }
             else
@@ -814,9 +847,7 @@ bool TurnAnalysis::isMotorwayJunction(const EdgeID via_edge,
     {
         const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
         // not merging or forking?
-        if ((angularDeviation(road.turn.angle, 0) > 35 &&
-             angularDeviation(road.turn.angle, 180) > 35) ||
-            (road.entry_allowed && angularDeviation(road.turn.angle, 0) < 35))
+        if (road.entry_allowed && angularDeviation(road.turn.angle, STRAIGHT_ANGLE) > 60)
             return false;
         else if (out_data.road_classification.road_class == FunctionalRoadClass::MOTORWAY ||
                  out_data.road_classification.road_class == FunctionalRoadClass::TRUNK)
@@ -860,6 +891,7 @@ TurnType TurnAnalysis::findBasicTurnType(const EdgeID via_edge, const ConnectedR
 
 TurnInstruction TurnAnalysis::getInstructionForObvious(const std::size_t num_roads,
                                                        const EdgeID via_edge,
+                                                       const bool through_street,
                                                        const ConnectedRoad &road) const
 {
     const auto type = findBasicTurnType(via_edge, road);
@@ -882,7 +914,19 @@ TurnInstruction TurnAnalysis::getInstructionForObvious(const std::size_t num_roa
         if (in_data.name_id != out_data.name_id &&
             requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
                                   name_table.GetNameForID(out_data.name_id)))
-            return {TurnType::NewName, getTurnDirection(road.turn.angle)};
+        {
+            // obvious turn onto a through street is a merge
+            if (through_street)
+            {
+                return {TurnType::Merge, road.turn.angle > STRAIGHT_ANGLE
+                                             ? DirectionModifier::SlightRight
+                                             : DirectionModifier::SlightLeft};
+            }
+            else
+            {
+                return {TurnType::NewName, getTurnDirection(road.turn.angle)};
+            }
+        }
         else
         {
             if (in_mode == out_mode)
@@ -918,7 +962,7 @@ TurnAnalysis::handleTwoWayTurn(const EdgeID via_edge, std::vector<ConnectedRoad>
 {
     BOOST_ASSERT(intersection[0].turn.angle < 0.001);
     intersection[1].turn.instruction =
-        getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+        getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
 
     if (intersection[1].turn.instruction.type == TurnType::Suppressed)
         intersection[1].turn.instruction.type = TurnType::NoTurn;
@@ -931,15 +975,28 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
                                  std::vector<ConnectedRoad> intersection) const
 {
     BOOST_ASSERT(intersection[0].turn.angle < 0.001);
-    const auto isObviousOfTwo = [](const ConnectedRoad road, const ConnectedRoad other)
-    {
-        return (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE &&
-                angularDeviation(other.turn.angle, STRAIGHT_ANGLE) > 85) ||
-               (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <
-                std::numeric_limits<double>::epsilon()) ||
-               (angularDeviation(other.turn.angle, STRAIGHT_ANGLE) /
-                    angularDeviation(road.turn.angle, STRAIGHT_ANGLE) >
-                1.4);
+    const auto isObviousOfTwo = [this](const ConnectedRoad road, const ConnectedRoad other) {
+        const auto first_class =
+            node_based_graph.GetEdgeData(road.turn.eid).road_classification.road_class;
+        const bool is_ramp = isRampClass(first_class);
+        const auto second_class =
+            node_based_graph.GetEdgeData(other.turn.eid).road_classification.road_class;
+        const bool is_narrow_turn =
+            angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE;
+        const bool other_turn_is_at_least_orthogonal =
+            angularDeviation(other.turn.angle, STRAIGHT_ANGLE) > 85;
+        const bool turn_is_perfectly_straight = angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <
+                                                std::numeric_limits<double>::epsilon();
+        const bool is_obvious_by_road_class =
+            (!is_ramp && (2 * getPriority(first_class) < getPriority(second_class))) ||
+            (!isLowPriorityRoadClass(first_class) && isLowPriorityRoadClass(second_class));
+        const bool is_much_narrower_than_other =
+            angularDeviation(other.turn.angle, STRAIGHT_ANGLE) /
+                angularDeviation(road.turn.angle, STRAIGHT_ANGLE) >
+            INCREASES_BY_FOURTY_PERCENT;
+        return (is_narrow_turn && other_turn_is_at_least_orthogonal) ||
+               turn_is_perfectly_straight || is_much_narrower_than_other ||
+               is_obvious_by_road_class;
     };
 
     /* Two nearly straight turns -> FORK
@@ -959,30 +1016,39 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
             const auto right_class = node_based_graph.GetEdgeData(intersection[1].turn.eid)
                                          .road_classification.road_class;
             if (canBeSeenAsFork(left_class, right_class))
+            {
                 assignFork(via_edge, intersection[2], intersection[1]);
-            else if (getPriority(left_class) > getPriority(right_class))
+            }
+            else if (isObviousOfTwo(intersection[1], intersection[2]))
             {
                 intersection[1].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+                    getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
                 intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
                                                     DirectionModifier::SlightLeft};
             }
-            else
+            else if (isObviousOfTwo(intersection[2], intersection[1]))
             {
                 intersection[2].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, intersection[2]);
+                    getInstructionForObvious(intersection.size(), via_edge, false, intersection[2]);
                 intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
                                                     DirectionModifier::SlightRight};
+            }
+            else
+            {
+                intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
+                                                    DirectionModifier::SlightRight};
+                intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
+                                                    DirectionModifier::SlightLeft};
             }
         }
         else
         {
             if (intersection[1].entry_allowed)
                 intersection[1].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+                    getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
             if (intersection[2].entry_allowed)
                 intersection[2].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, intersection[2]);
+                    getInstructionForObvious(intersection.size(), via_edge, false, intersection[2]);
         }
     }
     /*  T Intersection
@@ -1028,7 +1094,7 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
         {
             if (TurnType::Ramp != findBasicTurnType(via_edge, intersection[1]))
                 intersection[1].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, intersection[1]);
+                    getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
             else
                 intersection[1].turn.instruction = {TurnType::Ramp, DirectionModifier::Straight};
         }
@@ -1052,7 +1118,7 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
     {
         if (intersection[2].entry_allowed)
             intersection[2].turn.instruction =
-                getInstructionForObvious(intersection.size(), via_edge, intersection[2]);
+                getInstructionForObvious(intersection.size(), via_edge, false, intersection[2]);
         if (intersection[1].entry_allowed)
             intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
                                                 DirectionModifier::Right};
@@ -1062,11 +1128,18 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
              node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id ==
                  node_based_graph.GetEdgeData(intersection[2].turn.eid).name_id)
     {
-        const auto findTurn = [isObviousOfTwo](const ConnectedRoad turn, const ConnectedRoad other)
-                                  -> TurnInstruction
-        {
-            return {isObviousOfTwo(turn, other) ? TurnType::Merge : TurnType::Turn,
-                    getTurnDirection(turn.turn.angle)};
+        const auto findTurn = [isObviousOfTwo](const ConnectedRoad turn,
+                                               const ConnectedRoad other) -> TurnInstruction {
+            if (isObviousOfTwo(turn, other))
+            {
+                return {TurnType::Merge, turn.turn.angle < STRAIGHT_ANGLE
+                                             ? DirectionModifier::SlightLeft
+                                             : DirectionModifier::SlightRight};
+            }
+            else
+            {
+                return {TurnType::Turn, getTurnDirection(turn.turn.angle)};
+            }
         };
         intersection[1].turn.instruction = findTurn(intersection[1], intersection[2]);
         intersection[2].turn.instruction = findTurn(intersection[2], intersection[1]);
@@ -1087,7 +1160,7 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
             intersection[1].turn.instruction = {TurnType::Continue,
                                                 getTurnDirection(intersection[1].turn.angle)};
         }
-        intersection[2].turn.instruction = {TurnType::Turn,
+        intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
                                             getTurnDirection(intersection[2].turn.angle)};
     }
     // other street merges from the right
@@ -1105,28 +1178,30 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
             intersection[2].turn.instruction = {TurnType::Continue,
                                                 getTurnDirection(intersection[2].turn.angle)};
         }
-        intersection[1].turn.instruction = {TurnType::Turn,
+        intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
                                             getTurnDirection(intersection[1].turn.angle)};
     }
     else
     {
         if (isObviousOfTwo(intersection[1], intersection[2]))
         {
-            intersection[1].turn.instruction = getInstructionForObvious(3,via_edge,intersection[1]);
+            intersection[1].turn.instruction =
+                getInstructionForObvious(3, via_edge, false, intersection[1]);
         }
         else
         {
-            intersection[1].turn.instruction = {TurnType::Turn,
+            intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
                                                 getTurnDirection(intersection[1].turn.angle)};
         }
 
         if (isObviousOfTwo(intersection[2], intersection[1]))
         {
-            intersection[2].turn.instruction = getInstructionForObvious(3,via_edge,intersection[2]);
+            intersection[2].turn.instruction =
+                getInstructionForObvious(3, via_edge, false, intersection[2]);
         }
         else
         {
-            intersection[2].turn.instruction = {TurnType::Turn,
+            intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
                                                 getTurnDirection(intersection[2].turn.angle)};
         }
     }
@@ -1167,14 +1242,18 @@ void TurnAnalysis::handleDistinctConflict(const EdgeID via_edge,
         else if (getPriority(left_class) > getPriority(right_class))
         {
             // FIXME this should possibly know about the actual roads?
-            right.turn.instruction = getInstructionForObvious(4, via_edge, right);
+            // here we don't know about the intersection size. To be on the save side, we declare it
+            // as complex (at least size 4)
+            right.turn.instruction = getInstructionForObvious(4, via_edge, false, right);
             left.turn.instruction = {findBasicTurnType(via_edge, left),
                                      DirectionModifier::SlightLeft};
         }
         else
         {
-            // FIXME this should possibly know aboat the actual roads?
-            left.turn.instruction = getInstructionForObvious(4, via_edge, left);
+            // FIXME this should possibly know about the actual roads?
+            // here we don't know about the intersection size. To be on the save side, we declare it
+            // as complex (at least size 4)
+            left.turn.instruction = getInstructionForObvious(4, via_edge, false, left);
             right.turn.instruction = {findBasicTurnType(via_edge, right),
                                       DirectionModifier::SlightRight};
         }
@@ -1288,10 +1367,29 @@ TurnAnalysis::handleComplexTurn(const EdgeID via_edge,
         }
     }
 
+    // check whether the obvious choice is actually a through street
+    const auto isThroughStreet = [&intersection, this](const std::size_t index) {
+        if (node_based_graph.GetEdgeData(intersection[index].turn.eid).name_id == INVALID_NAME_ID)
+            return false;
+        for (const auto &road : intersection)
+        {
+            // a through street cannot start at our own position
+            if (road.turn.angle < std::numeric_limits<double>::epsilon())
+                continue;
+            if (angularDeviation(road.turn.angle, intersection[index].turn.angle) >
+                    (STRAIGHT_ANGLE - NARROW_TURN_ANGLE) &&
+                node_based_graph.GetEdgeData(road.turn.eid).name_id ==
+                    node_based_graph.GetEdgeData(intersection[index].turn.eid).name_id)
+                return true;
+        }
+        return false;
+    };
+
     if (obvious_index != 0)
     {
         intersection[obvious_index].turn.instruction =
-            getInstructionForObvious(intersection.size(), via_edge, intersection[obvious_index]);
+            getInstructionForObvious(intersection.size(), via_edge, isThroughStreet(obvious_index),
+                                     intersection[obvious_index]);
 
         // assign left/right turns
         intersection = assignLeftTurns(via_edge, std::move(intersection), obvious_index + 1);
@@ -1312,14 +1410,14 @@ TurnAnalysis::handleComplexTurn(const EdgeID via_edge,
             else if (getPriority(left_class) > getPriority(right_class))
             {
                 right.turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, right);
+                    getInstructionForObvious(intersection.size(), via_edge, false, right);
                 left.turn.instruction = {findBasicTurnType(via_edge, left),
                                          DirectionModifier::SlightLeft};
             }
             else
             {
                 left.turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_edge, left);
+                    getInstructionForObvious(intersection.size(), via_edge, false, left);
                 right.turn.instruction = {findBasicTurnType(via_edge, right),
                                           DirectionModifier::SlightRight};
             }
@@ -1489,8 +1587,7 @@ std::vector<ConnectedRoad> TurnAnalysis::getConnectedRoads(const NodeID from_nod
             {TurnOperation{via_eid, 0., {TurnType::Invalid, DirectionModifier::UTurn}}, false});
     }
 
-    const auto ByAngle = [](const ConnectedRoad &first, const ConnectedRoad second)
-    {
+    const auto ByAngle = [](const ConnectedRoad &first, const ConnectedRoad second) {
         return first.turn.angle < second.turn.angle;
     };
     std::sort(std::begin(intersection), std::end(intersection), ByAngle);
@@ -1527,13 +1624,11 @@ std::vector<ConnectedRoad> TurnAnalysis::getConnectedRoads(const NodeID from_nod
 std::vector<ConnectedRoad>
 TurnAnalysis::mergeSegregatedRoads(std::vector<ConnectedRoad> intersection) const
 {
-    const auto getRight = [&](std::size_t index)
-    {
+    const auto getRight = [&](std::size_t index) {
         return (index + intersection.size() - 1) % intersection.size();
     };
 
-    const auto mergable = [&](std::size_t first, std::size_t second) -> bool
-    {
+    const auto mergable = [&](std::size_t first, std::size_t second) -> bool {
         const auto &first_data = node_based_graph.GetEdgeData(intersection[first].turn.eid);
         const auto &second_data = node_based_graph.GetEdgeData(intersection[second].turn.eid);
 
@@ -1547,8 +1642,8 @@ TurnAnalysis::mergeSegregatedRoads(std::vector<ConnectedRoad> intersection) cons
                first_data.reversed != second_data.reversed;
     };
 
-    const auto merge = [](const ConnectedRoad &first, const ConnectedRoad &second) -> ConnectedRoad
-    {
+    const auto merge = [](const ConnectedRoad &first,
+                          const ConnectedRoad &second) -> ConnectedRoad {
         if (!first.entry_allowed)
         {
             ConnectedRoad result = second;
@@ -1581,7 +1676,6 @@ TurnAnalysis::mergeSegregatedRoads(std::vector<ConnectedRoad> intersection) cons
     // these result in an adjustment of all other angles
     if (mergable(0, intersection.size() - 1))
     {
-        // std::cout << "First merge" << std::endl;
         const double correction_factor =
             (360 - intersection[intersection.size() - 1].turn.angle) / 2;
         for (std::size_t i = 1; i + 1 < intersection.size(); ++i)
@@ -1592,7 +1686,6 @@ TurnAnalysis::mergeSegregatedRoads(std::vector<ConnectedRoad> intersection) cons
     }
     else if (mergable(0, 1))
     {
-        // std::cout << "First merge" << std::endl;
         const double correction_factor = (intersection[1].turn.angle) / 2;
         for (std::size_t i = 2; i < intersection.size(); ++i)
             intersection[i].turn.angle += correction_factor;
@@ -1614,8 +1707,7 @@ TurnAnalysis::mergeSegregatedRoads(std::vector<ConnectedRoad> intersection) cons
         }
     }
 
-    const auto ByAngle = [](const ConnectedRoad &first, const ConnectedRoad second)
-    {
+    const auto ByAngle = [](const ConnectedRoad &first, const ConnectedRoad second) {
         return first.turn.angle < second.turn.angle;
     };
     std::sort(std::begin(intersection), std::end(intersection), ByAngle);
@@ -1640,7 +1732,7 @@ void TurnAnalysis::assignFork(const EdgeID via_edge,
         {
             if (low_priority_right && !low_priority_left)
             {
-                left.turn.instruction = getInstructionForObvious(3, via_edge, left);
+                left.turn.instruction = getInstructionForObvious(3, via_edge, false, left);
                 right.turn.instruction = {findBasicTurnType(via_edge, right),
                                           DirectionModifier::SlightRight};
             }
@@ -1683,7 +1775,7 @@ void TurnAnalysis::assignFork(const EdgeID via_edge,
                 {
                     left.turn.instruction = {findBasicTurnType(via_edge, left),
                                              DirectionModifier::SlightLeft};
-                    right.turn.instruction = getInstructionForObvious(3, via_edge, right);
+                    right.turn.instruction = getInstructionForObvious(3, via_edge, false, right);
                 }
                 else
                 {
@@ -1887,10 +1979,24 @@ TurnAnalysis::findFork(const std::vector<ConnectedRoad> &intersection) const
             best = i;
         }
     }
-
     if (best_deviation <= NARROW_TURN_ANGLE)
     {
         std::size_t left = best, right = best;
+        if (intersection[left].turn.angle >= 180)
+        {
+            // due to best > 1, we can safely decrement right
+            --right;
+            if (angularDeviation(intersection[right].turn.angle, STRAIGHT_ANGLE) >
+                NARROW_TURN_ANGLE)
+                return std::make_pair(std::size_t{0}, std::size_t{0});
+        }
+        else
+        {
+            ++left;
+            if (left >= intersection.size() ||
+                angularDeviation(intersection[left].turn.angle, STRAIGHT_ANGLE) > NARROW_TURN_ANGLE)
+                return std::make_pair(std::size_t{0}, std::size_t{0});
+        }
         while (left + 1 < intersection.size() &&
                angularDeviation(intersection[left].turn.angle, intersection[left + 1].turn.angle) <
                    NARROW_TURN_ANGLE)
@@ -1909,7 +2015,7 @@ TurnAnalysis::findFork(const std::vector<ConnectedRoad> &intersection) const
                 2 * NARROW_TURN_ANGLE)
             return std::make_pair(right, left);
     }
-    return std::make_pair(0llu, 0llu);
+    return std::make_pair(std::size_t{0}, std::size_t{0});
 }
 
 // Can only assign three turns
@@ -1917,8 +2023,7 @@ std::vector<ConnectedRoad> TurnAnalysis::assignLeftTurns(const EdgeID via_edge,
                                                          std::vector<ConnectedRoad> intersection,
                                                          const std::size_t starting_at) const
 {
-    const auto count_valid = [&intersection, starting_at]()
-    {
+    const auto count_valid = [&intersection, starting_at]() {
         std::size_t count = 0;
         for (std::size_t i = starting_at; i < intersection.size(); ++i)
             if (intersection[i].entry_allowed)
@@ -1990,7 +2095,7 @@ std::vector<ConnectedRoad> TurnAnalysis::assignLeftTurns(const EdgeID via_edge,
                     findBasicTurnType(via_edge, intersection[starting_at + 1]), second_direction};
             if (intersection[starting_at + 2].entry_allowed)
                 intersection[starting_at + 2].turn.instruction = {
-                    findBasicTurnType(via_edge, intersection[starting_at + 2]), second_direction};
+                    findBasicTurnType(via_edge, intersection[starting_at + 2]), third_direction};
         }
         else if (2 >= (intersection[starting_at].entry_allowed +
                        intersection[starting_at + 1].entry_allowed +
@@ -2187,8 +2292,7 @@ std::vector<ConnectedRoad> TurnAnalysis::assignRightTurns(const EdgeID via_edge,
                                                           const std::size_t up_to) const
 {
     BOOST_ASSERT(up_to <= intersection.size());
-    const auto count_valid = [&intersection, up_to]()
-    {
+    const auto count_valid = [&intersection, up_to]() {
         std::size_t count = 0;
         for (std::size_t i = 1; i < up_to; ++i)
             if (intersection[i].entry_allowed)

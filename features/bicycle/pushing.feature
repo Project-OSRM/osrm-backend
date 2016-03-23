@@ -63,7 +63,6 @@ Feature: Bike - Accessability of different way types
             | runway   |      |      |       |
             | runway   | yes  | foot | foot  |
 
-    @todo
     Scenario: Bike - Pushing bikes on ways with foot=yes in one direction
         Then routability should be
             | highway  | foot:forward | foot:backward | forw | backw |
@@ -98,13 +97,12 @@ Feature: Bike - Accessability of different way types
             | cd    | primary |        |
 
         When I route I should get
-            | from | to | route       | turns                                   |
-            | a    | d  | ab,bc,cd,cd | depart,right,left,arrive                |
-            | d    | a  | cd,bc,ab,ab | depart,right,left,arrive                |
-            | c    | a  | bc,ab,ab    | depart,left,arrive                      |
-            | d    | b  | cd,bc,bc    | depart,right,arrive                     |
+            | from | to | route       | modes                                   |
+            | a    | d  | ab,bc,cd,cd | cycling,cycling,cycling,cycling         |
+            | d    | a  | cd,bc,ab,ab | cycling,pushing bike,cycling,cycling    |
+            | c    | a  | bc,ab,ab    | pushing bike,cycling,cycling            |
+            | d    | b  | cd,bc,bc    | cycling,pushing bike,pushing bike       |
 
-    @todo
     Scenario: Bike - Instructions when pushing bike on footway/pedestrian, etc.
         Given the node map
             | a | b |   |
@@ -117,8 +115,8 @@ Feature: Bike - Accessability of different way types
             | cd    | primary |
 
         When I route I should get
-            | from | to | route       | turns                    |
-            | a    | d  | ab,bc,cd,cd | depart,right,left,arrive |
-            | d    | a  | cd,bc,ab,ab | depart,right,left,arrive |
-            | c    | a  | bc,ab,ab    | depart,left,arrive       |
-            | d    | b  | cd,bc,bc    | depart,right,arrive      |
+            | from | to | route       | modes                                |
+            | a    | d  | ab,bc,cd,cd | cycling,pushing bike,cycling,cycling |
+            | d    | a  | cd,bc,ab,ab | cycling,pushing bike,cycling,cycling |
+            | c    | a  | bc,ab,ab    | pushing bike,cycling,cycling         |
+            | d    | b  | cd,bc,bc    | cycling,pushing bike,pushing bike    |

@@ -1,8 +1,8 @@
 @routing  @guidance
-Feature: Basic Roundabout
+Feature: Motorway Guidance
 
     Background:
-        Given the profile "testbot"
+        Given the profile "car"
         Given a grid size of 10 meters
 
     Scenario: Ramp Exit Right
@@ -16,9 +16,9 @@ Feature: Basic Roundabout
             | bfg    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                             |
-            | a,e       | abcde, abcde    | depart, arrive                    |
-            | a,g       | abcde, bfg, bfg | depart, ramp-slight-right, arrive |
+            | waypoints | route         | turns                           |
+            | a,e       | abcde,abcde   | depart,arrive                   |
+            | a,g       | abcde,bfg,bfg | depart,ramp slight right,arrive |
 
     Scenario: Ramp Exit Right Curved Right
         Given the node map
@@ -32,9 +32,9 @@ Feature: Basic Roundabout
             | bfg    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                             |
-            | a,e       | abcde, abcde    | depart, arrive                    |
-            | a,g       | abcde, bfg, bfg | depart, ramp-slight-right, arrive |
+            | waypoints | route         | turns                    |
+            | a,e       | abcde,abcde   | depart,arrive            |
+            | a,g       | abcde,bfg,bfg | depart,ramp right,arrive |
 
     Scenario: Ramp Exit Right Curved Left
         Given the node map
@@ -49,9 +49,9 @@ Feature: Basic Roundabout
             | cfg    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                             |
-            | a,e       | abcde, abcde    | depart, arrive                    |
-            | a,g       | abcde, cfg, cfg | depart, ramp-slight-right, arrive |
+            | waypoints | route         | turns                           |
+            | a,e       | abcde,abcde   | depart,arrive                   |
+            | a,g       | abcde,cfg,cfg | depart,ramp slight right,arrive |
 
 
     Scenario: Ramp Exit Left
@@ -65,9 +65,9 @@ Feature: Basic Roundabout
             | bfg    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                            |
-            | a,e       | abcde, abcde    | depart, arrive                   |
-            | a,g       | abcde, bfg, bfg | depart, ramp-slight-left, arrive |
+            | waypoints | route         | turns                          |
+            | a,e       | abcde,abcde   | depart,arrive                  |
+            | a,g       | abcde,bfg,bfg | depart,ramp slight left,arrive |
 
     Scenario: Ramp Exit Left Curved Left
         Given the node map
@@ -81,9 +81,9 @@ Feature: Basic Roundabout
             | bfg    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                            |
-            | a,e       | abcde, abcde    | depart, arrive                   |
-            | a,g       | abcde, bfg, bfg | depart, ramp-slight-left, arrive |
+            | waypoints | route         | turns                   |
+            | a,e       | abcde,abcde   | depart,arrive           |
+            | a,g       | abcde,bfg,bfg | depart,ramp left,arrive |
 
     Scenario: Ramp Exit Left Curved Right
         Given the node map
@@ -97,9 +97,9 @@ Feature: Basic Roundabout
             | cfg    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                            |
-            | a,e       | abcde, abcde    | depart, arrive                   |
-            | a,g       | abcde, cfg, cfg | depart, ramp-slight-left, arrive |
+            | waypoints | route         | turns                          |
+            | a,e       | abcde,abcde   | depart,arrive                  |
+            | a,g       | abcde,cfg,cfg | depart,ramp slight left,arrive |
 
     Scenario: On Ramp Right
         Given the node map
@@ -112,9 +112,9 @@ Feature: Basic Roundabout
             | fgd    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                             |
-            | a,e       | abcde, abcde    | depart, arrive                    |
-            | f,e       | abcde, fgd, fgd | depart, merge-slight-left, arrive |
+            | waypoints | route           | turns                           |
+            | a,e       | abcde,abcde     | depart,arrive                   |
+            | f,e       | fgd,abcde,abcde | depart,merge slight left,arrive |
 
     Scenario: On Ramp Left
         Given the node map
@@ -127,9 +127,9 @@ Feature: Basic Roundabout
             | fgd    | motorway_link |
 
        When I route I should get
-            | waypoints | route           | turns                              |
-            | a,e       | abcde, abcde    | depart, arrive                     |
-            | f,e       | abcde, fgd, fgd | depart, merge-slight-right, arrive |
+            | waypoints | route           | turns                            |
+            | a,e       | abcde,abcde     | depart,arrive                    |
+            | f,e       | fgd,abcde,abcde | depart,merge slight right,arrive |
 
     Scenario: Highway Fork
         Given the node map
@@ -143,9 +143,9 @@ Feature: Basic Roundabout
             | cfg    | motorway |
 
        When I route I should get
-            | waypoints | route               | turns                      |
-            | a,e       | abcde, abcde, abcde | depart, fork-left, arrive  |
-            | a,g       | abcde, cfg, cfg     | depart, fork-right, arrive |
+            | waypoints | route             | turns                           |
+            | a,e       | abcde,abcde,abcde | depart,fork slight left,arrive  |
+            | a,g       | abcde,cfg,cfg     | depart,fork slight right,arrive |
 
      Scenario: Fork After Ramp
        Given the node map
@@ -160,9 +160,9 @@ Feature: Basic Roundabout
             | cfg    | motorway      |
 
        When I route I should get
-            | waypoints | route         | turns                      |
-            | a,e       | abc, cde, cde | depart, fork-left, arrive  |
-            | a,g       | abc, cfg, cfg | depart, fork-right, arrive |
+            | waypoints | route       | turns                           |
+            | a,e       | abc,cde,cde | depart,fork slight left,arrive  |
+            | a,g       | abc,cfg,cfg | depart,fork slight right,arrive |
 
      Scenario: On And Off Ramp Right
        Given the node map
@@ -176,11 +176,11 @@ Feature: Basic Roundabout
             | chi    | motorway_link |
 
        When I route I should get
-            | waypoints | route             | turns                             |
-            | a,e       | abcde, abcde      | depart, arrive                    |
-            | f,e       | fgc, abcde, abcde | depart, merge-slight-left, arrive |
-            | a,i       | abcde, chi, chi   | depart, ramp-slight-right, arrive |
-            | f,i       | fgc, chi, chi     | depart, turn-slight-right, arrive |
+            | waypoints | route           | turns                           |
+            | a,e       | abcde,abcde     | depart,arrive                   |
+            | f,e       | fgc,abcde,abcde | depart,merge slight left,arrive |
+            | a,i       | abcde,chi,chi   | depart,ramp slight right,arrive |
+            | f,i       | fgc,chi,chi     | depart,ramp right,arrive        |
 
     Scenario: On And Off Ramp Left
        Given the node map
@@ -194,9 +194,25 @@ Feature: Basic Roundabout
             | chi    | motorway_link |
 
        When I route I should get
-            | waypoints | route             | turns                              |
-            | a,e       | abcde, abcde      | depart, arrive                     |
-            | f,e       | fgc, abcde, abcde | depart, merge-slight-right, arrive |
-            | a,i       | abcde, chi, chi   | depart, ramp-slight-left, arrive   |
-            | f,i       | fgc, chi, chi     | depart, turn-slight-left, arrive   |
+            | waypoints | route           | turns                            |
+            | a,e       | abcde,abcde     | depart,arrive                    |
+            | f,e       | fgc,abcde,abcde | depart,merge slight right,arrive |
+            | a,i       | abcde,chi,chi   | depart,ramp slight left,arrive   |
+            | f,i       | fgc,chi,chi     | depart,ramp left,arrive          |
 
+    Scenario: Merging Motorways
+        Given the node map
+            | e |   |   |
+            | a | b | c |
+            | d |   |   |
+
+        And the ways
+            | nodes | highway  |
+            | abc   | motorway |
+            | db    | motorway |
+            | eb    | motorway |
+
+        When I route I should get
+            | waypoints | route      | turns                            |
+            | d,c       | db,abc,abc | depart,merge slight left,arrive  |
+            | e,c       | eb,abc,abc | depart,merge slight right,arrive |

@@ -122,8 +122,9 @@ double perpendicularDistance(const Coordinate segment_source,
     BOOST_ASSERT(query_location.IsValid());
 
     FloatCoordinate projected_nearest;
-    std::tie(ratio, projected_nearest) =
-        projectPointOnSegment(mercator::fromWGS84(segment_source), mercator::fromWGS84(segment_target), mercator::fromWGS84(query_location));
+    std::tie(ratio, projected_nearest) = projectPointOnSegment(mercator::fromWGS84(segment_source),
+                                                               mercator::fromWGS84(segment_target),
+                                                               mercator::fromWGS84(query_location));
     nearest_location = mercator::toWGS84(projected_nearest);
 
     const double approximate_distance = greatCircleDistance(query_location, nearest_location);
@@ -215,7 +216,9 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
     // free after http://paulbourke.net/geometry/circlesphere/
     // require three distinct points
     if (C1 == C2 || C2 == C3 || C1 == C3)
+    {
         return boost::none;
+    }
 
     // define line through c1, c2 and c2,c3
     const double C2C1_lat = static_cast<double>(toFloating(C2.lat - C1.lat)); // yDelta_a
@@ -255,7 +258,7 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
         const double C2C1_slope = C2C1_lat / C2C1_lon;
         const double C3C2_slope = C3C2_lat / C3C2_lon;
 
-        //can this ever happen?
+        // can this ever happen?
         if (std::abs(C2C1_slope - C3C2_slope) < std::numeric_limits<double>::epsilon())
             return boost::none;
 
@@ -356,12 +359,14 @@ double degreeToPixel(FloatLatitude lat, unsigned zoom)
 
 FloatCoordinate fromWGS84(const FloatCoordinate &wgs84_coordinate)
 {
-    return {wgs84_coordinate.lon, FloatLatitude{coordinate_calculation::mercator::latToY(wgs84_coordinate.lat)}};
+    return {wgs84_coordinate.lon,
+            FloatLatitude{coordinate_calculation::mercator::latToY(wgs84_coordinate.lat)}};
 }
 
 FloatCoordinate toWGS84(const FloatCoordinate &mercator_coordinate)
 {
-    return {mercator_coordinate.lon, coordinate_calculation::mercator::yToLat(static_cast<double>(mercator_coordinate.lat))};
+    return {mercator_coordinate.lon,
+            coordinate_calculation::mercator::yToLat(static_cast<double>(mercator_coordinate.lat))};
 }
 
 // Converts a WMS tile coordinate (z,x,y) into a wgs bounding box

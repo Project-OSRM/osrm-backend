@@ -1,16 +1,16 @@
 #include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
-#include "engine/guidance/toolkit.hpp"
 #include "engine/guidance/assemble_steps.hpp"
+#include "engine/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
 #include <algorithm>
-#include <iostream>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <limits>
 #include <utility>
 
@@ -55,8 +55,8 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
             propagation_step.maneuver.exit = 0;
             propagation_step.geometry_end = steps.back().geometry_begin;
 
-            if( propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
-                propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit )
+            if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
+                propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
                 propagation_step.rotary_name = propagation_step.name;
 
             break;
@@ -130,7 +130,7 @@ void closeOffRoundabout(const bool on_roundabout,
         steps[1].maneuver.instruction.type = step.maneuver.instruction.type == TurnType::ExitRotary
                                                  ? TurnType::EnterRotary
                                                  : TurnType::EnterRoundabout;
-        if( steps[1].maneuver.instruction.type == TurnType::EnterRotary )
+        if (steps[1].maneuver.instruction.type == TurnType::EnterRotary)
             steps[1].rotary_name = steps[0].name;
     }
 
@@ -154,8 +154,8 @@ void closeOffRoundabout(const bool on_roundabout,
                 propagation_step.maneuver.exit = step.maneuver.exit;
                 propagation_step.geometry_end = step.geometry_end;
                 // remember rotary name
-                if( propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
-                    propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit )
+                if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
+                    propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
                     propagation_step.rotary_name = propagation_step.name;
 
                 propagation_step.name = step.name;
@@ -219,9 +219,8 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // adds an intersection to the initial route step
     // It includes the length of the last step, until the intersection
     // Also updates the length of the respective segment
-    auto addIntersection =
-        [](RouteStep into, const RouteStep &last_step, const RouteStep &intersection)
-    {
+    auto addIntersection = [](RouteStep into, const RouteStep &last_step,
+                              const RouteStep &intersection) {
         into.maneuver.intersections.push_back(
             {last_step.duration, last_step.distance, intersection.maneuver.location});
 
@@ -294,8 +293,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // Two valid NO_TURNs exist in each leg in the form of Depart/Arrive
 
     // keep valid instructions
-    const auto not_is_valid = [](const RouteStep &step)
-    {
+    const auto not_is_valid = [](const RouteStep &step) {
         return step.maneuver.instruction == TurnInstruction::NO_TURN() &&
                step.maneuver.waypoint_type == WaypointType::None;
     };
@@ -352,10 +350,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             // geometry offsets have to be adjusted. Move all offsets to the front and reduce by
             // one. (This is an inplace forward one and reduce by one)
             std::transform(geometry.segment_offsets.begin() + 1, geometry.segment_offsets.end(),
-                           geometry.segment_offsets.begin(), [](const std::size_t val)
-                           {
-                               return val - 1;
-                           });
+                           geometry.segment_offsets.begin(),
+                           [](const std::size_t val) { return val - 1; });
 
             geometry.segment_offsets.pop_back();
             const auto &current_depart = steps.front();
@@ -378,21 +374,18 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             steps.front().geometry_begin = 1;
             // reduce all offsets by one (inplace)
             std::transform(geometry.segment_offsets.begin(), geometry.segment_offsets.end(),
-                           geometry.segment_offsets.begin(), [](const std::size_t val)
-                           {
-                               return val - 1;
-                           });
+                           geometry.segment_offsets.begin(),
+                           [](const std::size_t val) { return val - 1; });
 
             steps.front().maneuver = detail::stepManeuverFromGeometry(
                 TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
         }
 
         // and update the leg geometry indices for the removed entry
-        std::for_each(steps.begin(), steps.end(), [](RouteStep &step)
-                      {
-                          --step.geometry_begin;
-                          --step.geometry_end;
-                      });
+        std::for_each(steps.begin(), steps.end(), [](RouteStep &step) {
+            --step.geometry_begin;
+            --step.geometry_end;
+        });
     }
 
     // make sure we still have enough segments

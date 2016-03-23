@@ -2,7 +2,7 @@
 Feature: Basic Roundabout
 
     Background:
-        Given the profile "car"
+        Given the profile "bicycle"
         Given a grid size of 10 meters
 
     Scenario: Enter and Exit

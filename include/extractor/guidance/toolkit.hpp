@@ -8,14 +8,14 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
 
-#include "extractor/guidance/discrete_angle.hpp"
 #include "extractor/guidance/classification_data.hpp"
+#include "extractor/guidance/discrete_angle.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
 #include <algorithm>
-#include <map>
 #include <cmath>
 #include <cstdint>
+#include <map>
 #include <string>
 
 namespace osrm
@@ -42,16 +42,15 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
                                  const util::Coordinate final_coordinate,
                                  const std::vector<extractor::QueryNode> &query_nodes)
 {
-    const auto extractCoordinateFromNode = [](const extractor::QueryNode &node) -> util::Coordinate
-    {
+    const auto extractCoordinateFromNode =
+        [](const extractor::QueryNode &node) -> util::Coordinate {
         return {node.lon, node.lat};
     };
     double distance_to_current_coordinate = 0;
     double distance_to_next_coordinate = 0;
 
     // get the length that is missing from the current segment to reach DESIRED_SEGMENT_LENGTH
-    const auto getFactor = [](const double first_distance, const double second_distance)
-    {
+    const auto getFactor = [](const double first_distance, const double second_distance) {
         BOOST_ASSERT(first_distance < detail::DESIRED_SEGMENT_LENGTH);
         double segment_length = second_distance - first_distance;
         BOOST_ASSERT(segment_length > 0);
@@ -104,8 +103,8 @@ getRepresentativeCoordinate(const NodeID from_node,
                             const extractor::CompressedEdgeContainer &compressed_geometries,
                             const std::vector<extractor::QueryNode> &query_nodes)
 {
-    const auto extractCoordinateFromNode = [](const extractor::QueryNode &node) -> util::Coordinate
-    {
+    const auto extractCoordinateFromNode =
+        [](const extractor::QueryNode &node) -> util::Coordinate {
         return {node.lon, node.lat};
     };
 
@@ -298,14 +297,10 @@ inline DirectionModifier getTurnDirection(const double angle)
 // swaps left <-> right modifier types
 inline DirectionModifier mirrorDirectionModifier(const DirectionModifier modifier)
 {
-    const constexpr DirectionModifier results[] = {DirectionModifier::UTurn,
-                                                   DirectionModifier::SharpLeft,
-                                                   DirectionModifier::Left,
-                                                   DirectionModifier::SlightLeft,
-                                                   DirectionModifier::Straight,
-                                                   DirectionModifier::SlightRight,
-                                                   DirectionModifier::Right,
-                                                   DirectionModifier::SharpRight};
+    const constexpr DirectionModifier results[] = {
+        DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
+        DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
+        DirectionModifier::Right,      DirectionModifier::SharpRight};
     return results[modifier];
 }
 
@@ -345,14 +340,14 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
     std::string to_ref;
 
     // Split from the format "{name} ({ref})" -> name, ref
-    auto split = [](const std::string &name, std::string &out_name, std::string &out_ref)
-    {
+    auto split = [](const std::string &name, std::string &out_name, std::string &out_ref) {
         const auto ref_begin = name.find_first_of('(');
         if (ref_begin != std::string::npos)
         {
-            //we might need to trim a space, if there is a reference
-            out_name = name.substr(0, ref_begin - (ref_begin > 0 && name[ref_begin-1] == ' '));
-            out_ref = name.substr(ref_begin + 1, name.find_first_of(')') - 1);
+            if (ref_begin != 0)
+                out_name = name.substr(0, ref_begin - 1);
+            const auto ref_end = name.find_first_of(')');
+            out_ref = name.substr(ref_begin + 1, ref_end - ref_begin - 1);
         }
         else
         {
@@ -364,35 +359,38 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
     split(to, to_name, to_ref);
 
     // check similarity of names
-    auto names_are_empty = from_name.empty() && to_name.empty();
-    auto names_are_equal = from_name == to_name;
-    auto name_is_removed = !from_name.empty() && to_name.empty();
+    const auto names_are_empty = from_name.empty() && to_name.empty();
+    const auto names_are_equal = from_name == to_name;
+    const auto name_is_removed = !from_name.empty() && to_name.empty();
     // references are contained in one another
-    auto refs_are_empty = from_ref.empty() && to_ref.empty();
-    auto ref_is_contained =
-        !from_ref.empty() && !to_ref.empty() &&
+    const auto refs_are_empty = from_ref.empty() && to_ref.empty();
+    const auto ref_is_contained =
+        from_ref.empty() || to_ref.empty() ||
         (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
-    auto ref_is_removed = !from_ref.empty() && to_ref.empty();
+    const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
 
-    auto obvious_change = ref_is_contained || names_are_equal ||
-                          (names_are_empty && refs_are_empty) || name_is_removed || ref_is_removed;
+    const auto obvious_change =
+        (names_are_empty && refs_are_empty) || (names_are_equal && ref_is_contained) ||
+        (names_are_equal && refs_are_empty) || name_is_removed || ref_is_removed;
 
     return !obvious_change;
 }
 
-inline int getPriority( const FunctionalRoadClass road_class )
+inline int getPriority(const FunctionalRoadClass road_class)
 {
-    //The road priorities indicate which roads can bee seen as more or less equal.
-    //They are used in Fork-Discovery. Possibly should be moved to profiles post v5?
-    //A fork can happen between road types that are at most 1 priority apart from each other
-    const constexpr int road_priority[] = {10, 0, 10, 2, 10, 4, 10, 6, 10, 8, 10, 11, 10, 12, 10, 14};
+    // The road priorities indicate which roads can bee seen as more or less equal.
+    // They are used in Fork-Discovery. Possibly should be moved to profiles post v5?
+    // A fork can happen between road types that are at most 1 priority apart from each other
+    const constexpr int road_priority[] = {10, 0, 10, 2,  10, 4,  10, 6,
+                                           10, 8, 10, 11, 10, 12, 10, 14};
     return road_priority[static_cast<int>(road_class)];
 }
 
 inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoadClass second)
 {
     // forks require similar road categories
-    // Based on the priorities assigned above, we can set forks only if the road priorities match closely.
+    // Based on the priorities assigned above, we can set forks only if the road priorities match
+    // closely.
     // Potentially we could include features like number of lanes here and others?
     // Should also be moved to profiles
     return std::abs(getPriority(first) - getPriority(second)) <= 1;

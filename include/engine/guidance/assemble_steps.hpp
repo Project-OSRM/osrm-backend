@@ -1,20 +1,20 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_STEPS_HPP_
 #define ENGINE_GUIDANCE_ASSEMBLE_STEPS_HPP_
 
+#include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
-#include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/toolkit.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
-#include "util/coordinate_calculation.hpp"
-#include "util/coordinate.hpp"
-#include "util/bearing.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "util/bearing.hpp"
+#include "util/coordinate.hpp"
+#include "util/coordinate_calculation.hpp"
 
-#include <vector>
 #include <boost/optional.hpp>
+#include <vector>
 
 namespace osrm
 {
@@ -44,7 +44,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                      const bool target_traversed_in_reverse)
 {
     const double constexpr ZERO_DURATION = 0., ZERO_DISTANCE = 0.;
-    const constexpr char* NO_ROTARY_NAME = "";
+    const constexpr char *NO_ROTARY_NAME = "";
     const EdgeWeight source_duration =
         source_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight;
     const auto source_mode = source_traversed_in_reverse ? source_node.backward_travel_mode
@@ -85,14 +85,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                 BOOST_ASSERT(segment_duration >= 0);
                 const auto name = facade.GetNameForID(path_point.name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
-                steps.push_back(RouteStep{path_point.name_id,
-                                          name,
-                                          NO_ROTARY_NAME,
-                                          segment_duration / 10.0,
-                                          distance,
-                                          path_point.travel_mode,
-                                          maneuver,
-                                          leg_geometry.FrontIndex(segment_index),
+                steps.push_back(RouteStep{path_point.name_id, name, NO_ROTARY_NAME,
+                                          segment_duration / 10.0, distance, path_point.travel_mode,
+                                          maneuver, leg_geometry.FrontIndex(segment_index),
                                           leg_geometry.BackIndex(segment_index) + 1});
                 maneuver = detail::stepManeuverFromGeometry(path_point.turn_instruction,
                                                             leg_geometry, segment_index);
@@ -103,13 +98,8 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         const auto distance = leg_geometry.segment_distances[segment_index];
         const int duration = segment_duration + target_duration;
         BOOST_ASSERT(duration >= 0);
-        steps.push_back(RouteStep{target_node.name_id,
-                                  facade.GetNameForID(target_node.name_id),
-                                  NO_ROTARY_NAME,
-                                  duration / 10.,
-                                  distance,
-                                  target_mode,
-                                  maneuver,
+        steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
+                                  NO_ROTARY_NAME, duration / 10., distance, target_mode, maneuver,
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1});
     }
@@ -127,14 +117,10 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         int duration = target_duration - source_duration;
         BOOST_ASSERT(duration >= 0);
 
-        steps.push_back(RouteStep{source_node.name_id,
-                                  facade.GetNameForID(source_node.name_id),
-                                  NO_ROTARY_NAME,
-                                  duration / 10.,
-                                  leg_geometry.segment_distances[segment_index],
-                                  source_mode,
-                                  std::move(maneuver),
-                                  leg_geometry.FrontIndex(segment_index),
+        steps.push_back(RouteStep{source_node.name_id, facade.GetNameForID(source_node.name_id),
+                                  NO_ROTARY_NAME, duration / 10.,
+                                  leg_geometry.segment_distances[segment_index], source_mode,
+                                  std::move(maneuver), leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1});
     }
 
@@ -142,14 +128,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     // This step has length zero, the only reason we need it is the target location
     auto final_maneuver = detail::stepManeuverFromGeometry(
         extractor::guidance::TurnInstruction::NO_TURN(), WaypointType::Arrive, leg_geometry);
-    steps.push_back(RouteStep{target_node.name_id,
-                              facade.GetNameForID(target_node.name_id),
-                              NO_ROTARY_NAME,
-                              ZERO_DURATION,
-                              ZERO_DISTANCE,
-                              target_mode,
-                              final_maneuver,
-                              leg_geometry.locations.size(),
+    steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
+                              NO_ROTARY_NAME, ZERO_DURATION, ZERO_DISTANCE, target_mode,
+                              final_maneuver, leg_geometry.locations.size(),
                               leg_geometry.locations.size()});
 
     return steps;

@@ -1,8 +1,8 @@
 #ifndef ROUTE_STEP_HPP
 #define ROUTE_STEP_HPP
 
-#include "extractor/travel_mode.hpp"
 #include "engine/guidance/step_maneuver.hpp"
+#include "extractor/travel_mode.hpp"
 
 #include <cstddef>
 

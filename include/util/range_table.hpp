@@ -4,8 +4,8 @@
 #include "util/integer_range.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 
-#include <fstream>
 #include <array>
+#include <fstream>
 #include <utility>
 
 namespace osrm
@@ -61,8 +61,7 @@ template <unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY> class RangeTable
     // construct table from length vector
     template <typename VectorT> explicit RangeTable(const VectorT &lengths)
     {
-        const unsigned number_of_blocks = [&lengths]()
-        {
+        const unsigned number_of_blocks = [&lengths]() {
             unsigned num = (lengths.size() + 1) / (BLOCK_SIZE + 1);
             if ((lengths.size() + 1) % (BLOCK_SIZE + 1) != 0)
             {
@@ -169,7 +168,7 @@ template <unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY> class RangeTable
             end_idx = block_offsets[block_idx + 1];
         }
 
-        BOOST_ASSERT(begin_idx < sum_lengths && end_idx <= sum_lengths);
+        BOOST_ASSERT(end_idx <= sum_lengths);
         BOOST_ASSERT(begin_idx <= end_idx);
 
         return irange(begin_idx, end_idx);

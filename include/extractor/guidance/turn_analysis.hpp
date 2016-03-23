@@ -1,20 +1,20 @@
 #ifndef OSRM_EXTRACTOR_TURN_ANALYSIS
 #define OSRM_EXTRACTOR_TURN_ANALYSIS
 
-#include "extractor/guidance/turn_classification.hpp"
-#include "extractor/guidance/toolkit.hpp"
-#include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_classification.hpp"
+#include "extractor/restriction_map.hpp"
 
 #include "util/name_table.hpp"
 
 #include <cstdint>
 
-#include <string>
-#include <vector>
 #include <memory>
-#include <utility>
+#include <string>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace osrm
 {
@@ -129,6 +129,7 @@ class TurnAnalysis
     // Instruction will be a silent instruction
     TurnInstruction getInstructionForObvious(const std::size_t number_of_candidates,
                                              const EdgeID via_edge,
+                                             const bool through_street,
                                              const ConnectedRoad &candidate) const;
 
     // Helper Function that decides between NoTurn or NewName
