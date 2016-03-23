@@ -2,7 +2,6 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/restriction_map.hpp"
 #include "util/node_based_graph.hpp"
-#include "extractor/speed_profile.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/test/unit_test.hpp>
@@ -22,8 +21,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     //
     // 0---1---2---3---4
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -62,8 +60,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
     // |       |
     // 5---4---3
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -118,8 +115,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     //     |
     //     3
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -155,8 +151,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     //
     // 0---1---2
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -186,8 +181,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     //
     // 0-->1---2
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
