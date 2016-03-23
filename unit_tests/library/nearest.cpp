@@ -3,6 +3,7 @@
 
 #include "args.hpp"
 #include "fixture.hpp"
+#include "coordinates.hpp"
 
 #include "osrm/nearest_parameters.hpp"
 
@@ -22,7 +23,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
     using namespace osrm;
 
     NearestParameters params;
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
+    params.coordinates.push_back(get_dummy_location());
 
     json::Object result;
     const auto rc = osrm.Nearest(params, result);
@@ -67,8 +68,8 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
     using namespace osrm;
 
     NearestParameters params;
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
 
     json::Object result;
     const auto rc = osrm.Nearest(params, result);
