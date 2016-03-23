@@ -124,9 +124,10 @@ int Storage::Run()
     // Allocate a memory layout in shared memory, deallocate previous
     auto *layout_memory = makeSharedMemory(layout_region, sizeof(SharedDataLayout));
     auto shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
+    auto absolute_file_index_path = boost::filesystem::absolute(config.file_index_path);
 
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::FILE_INDEX_PATH,
-                                          config.file_index_path.string().length() + 1);
+                                          absolute_file_index_path.string().length() + 1);
 
     // collect number of elements to store in shared memory object
     util::SimpleLogger().Write() << "load names from: " << config.names_data_path;
@@ -329,7 +330,7 @@ int Storage::Run()
               file_index_path_ptr +
                   shared_layout_ptr->GetBlockSize(SharedDataLayout::FILE_INDEX_PATH),
               0);
-    std::copy(config.file_index_path.string().begin(), config.file_index_path.string().end(), file_index_path_ptr);
+    std::copy(absolute_file_index_path.string().begin(), absolute_file_index_path.string().end(), file_index_path_ptr);
 
     // Loading street names
     unsigned *name_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
