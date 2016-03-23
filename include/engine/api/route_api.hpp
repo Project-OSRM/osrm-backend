@@ -127,6 +127,7 @@ class RouteAPI : public BaseAPI
                  */
 
                  leg.steps = guidance::postProcess(std::move(steps));
+                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry),leg.steps);
             }
 
             leg_geometries.push_back(std::move(leg_geometry));
