@@ -187,6 +187,8 @@ struct PhantomNode
 
 #ifndef _MSC_VER
 static_assert(sizeof(PhantomNode) == 60, "PhantomNode has more padding then expected");
+#else
+static_assert(sizeof(PhantomNode) == 64, "PhantomNode has more padding then expected");
 #endif
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
