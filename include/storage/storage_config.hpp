@@ -3,8 +3,6 @@
 
 #include <boost/filesystem/path.hpp>
 
-#include <string>
-
 namespace osrm
 {
 namespace storage
@@ -15,18 +13,18 @@ struct StorageConfig
     StorageConfig(const boost::filesystem::path &base);
     bool IsValid() const;
 
-    std::string ram_index_path;
-    std::string file_index_path;
-    std::string hsgr_data_path;
-    std::string nodes_data_path;
-    std::string edges_data_path;
-    std::string core_data_path;
-    std::string geometries_path;
-    std::string timestamp_path;
-    std::string datasource_names_path;
-    std::string datasource_indexes_path;
-    std::string names_data_path;
-    std::string properties_path;
+    boost::filesystem::path ram_index_path;
+    boost::filesystem::path file_index_path;
+    boost::filesystem::path hsgr_data_path;
+    boost::filesystem::path nodes_data_path;
+    boost::filesystem::path edges_data_path;
+    boost::filesystem::path core_data_path;
+    boost::filesystem::path geometries_path;
+    boost::filesystem::path timestamp_path;
+    boost::filesystem::path datasource_names_path;
+    boost::filesystem::path datasource_indexes_path;
+    boost::filesystem::path names_data_path;
+    boost::filesystem::path properties_path;
 };
 }
 }
