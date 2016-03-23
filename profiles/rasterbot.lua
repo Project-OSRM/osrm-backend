@@ -32,15 +32,15 @@ end
 function segment_function (source, target, distance, weight)
   local sourceData = sources:query(raster_source, source.lon, source.lat)
   local targetData = sources:query(raster_source, target.lon, target.lat)
-  print ("evaluating segment: " .. sourceData.datum .. " " .. targetData.datum)
+  io.write("evaluating segment: " .. sourceData.datum .. " " .. targetData.datum .. "\n")
   local invalid = sourceData.invalid_data()
 
   if sourceData.datum ~= invalid and targetData.datum ~= invalid then
     local slope = math.abs(sourceData.datum - targetData.datum) / distance
-    print ("   slope: " .. slope)
-    print ("   was speed: " .. weight.speed)
+    io.write("   slope: " .. slope .. "\n")
+    io.write("   was speed: " .. weight.speed .. "\n")
 
     weight.speed = weight.speed * (1 - (slope * 5))
-    print ("   new speed: " .. weight.speed)
+    io.write("   new speed: " .. weight.speed .. "\n")
   end
 end
