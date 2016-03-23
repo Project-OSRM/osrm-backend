@@ -101,24 +101,13 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
     {
-        if (boost::filesystem::exists(timestamp_path))
+        util::SimpleLogger().Write() << "Loading Timestamp";
+        boost::filesystem::ifstream timestamp_stream(timestamp_path);
+        if (!timestamp_stream)
         {
-            util::SimpleLogger().Write() << "Loading Timestamp";
-            boost::filesystem::ifstream timestamp_stream(timestamp_path);
-            if (!timestamp_stream)
-            {
-                util::SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
-            }
-            getline(timestamp_stream, m_timestamp);
+            throw util::exception("Could not open " + timestamp_path.string() + " for reading.");
         }
-        if (m_timestamp.empty())
-        {
-            m_timestamp = "n/a";
-        }
-        if (25 < m_timestamp.length())
-        {
-            m_timestamp.resize(25);
-        }
+        getline(timestamp_stream, m_timestamp);
     }
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
