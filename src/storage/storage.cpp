@@ -132,6 +132,10 @@ int Storage::Run()
     util::SimpleLogger().Write() << "load names from: " << config.names_data_path;
     // number of entries in name index
     boost::filesystem::ifstream name_stream(config.names_data_path, std::ios::binary);
+    if (!name_stream)
+    {
+        throw util::exception("Could not open " + config.names_data_path.string() + " for reading.");
+    }
     unsigned name_blocks = 0;
     name_stream.read((char *)&name_blocks, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_OFFSETS, name_blocks);
@@ -146,6 +150,10 @@ int Storage::Run()
 
     // Loading information for original edges
     boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
+    if (!edges_input_stream)
+    {
+        throw util::exception("Could not open " + config.edges_data_path.string() + " for reading.");
+    }
     unsigned number_of_original_edges = 0;
     edges_input_stream.read((char *)&number_of_original_edges, sizeof(unsigned));
 
@@ -160,6 +168,10 @@ int Storage::Run()
         SharedDataLayout::TURN_INSTRUCTION, number_of_original_edges);
 
     boost::filesystem::ifstream hsgr_input_stream(config.hsgr_data_path, std::ios::binary);
+    if (!hsgr_input_stream)
+    {
+        throw util::exception("Could not open " + config.hsgr_data_path.string() + " for reading.");
+    }
 
     util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
     util::FingerPrint fingerprint_loaded;
@@ -230,6 +242,10 @@ int Storage::Run()
 
     // load core marker size
     boost::filesystem::ifstream core_marker_file(config.core_data_path, std::ios::binary);
+    if (!core_marker_file)
+    {
+        throw util::exception("Could not open " + config.core_data_path.string() + " for reading.");
+    }
 
     uint32_t number_of_core_markers = 0;
     core_marker_file.read((char *)&number_of_core_markers, sizeof(uint32_t));
@@ -238,6 +254,10 @@ int Storage::Run()
 
     // load coordinate size
     boost::filesystem::ifstream nodes_input_stream(config.nodes_data_path, std::ios::binary);
+    if (!nodes_input_stream)
+    {
+        throw util::exception("Could not open " + config.core_data_path.string() + " for reading.");
+    }
     unsigned coordinate_list_size = 0;
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
@@ -245,6 +265,10 @@ int Storage::Run()
 
     // load geometries sizes
     boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
+    if (!geometry_input_stream)
+    {
+        throw util::exception("Could not open " + config.geometries_path.string() + " for reading.");
+    }
     unsigned number_of_geometries_indices = 0;
     unsigned number_of_compressed_geometries = 0;
 
@@ -261,6 +285,10 @@ int Storage::Run()
     // exist.
     boost::filesystem::ifstream geometry_datasource_input_stream(config.datasource_indexes_path,
                                                                  std::ios::binary);
+    if (!geometry_datasource_input_stream)
+    {
+        throw util::exception("Could not open " + config.datasource_indexes_path.string() + " for reading.");
+    }
     std::size_t number_of_compressed_datasources = 0;
     if (geometry_datasource_input_stream)
     {
@@ -274,6 +302,10 @@ int Storage::Run()
     // exist
     boost::filesystem::ifstream datasource_names_input_stream(config.datasource_names_path,
                                                               std::ios::binary);
+    if (!datasource_names_input_stream)
+    {
+        throw util::exception("Could not open " + config.datasource_names_path.string() + " for reading.");
+    }
     std::vector<char> m_datasource_name_data;
     std::vector<std::size_t> m_datasource_name_offsets;
     std::vector<std::size_t> m_datasource_name_lengths;

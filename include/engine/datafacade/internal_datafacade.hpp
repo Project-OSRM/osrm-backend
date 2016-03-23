@@ -257,7 +257,7 @@ class InternalDataFacade final : public BaseDataFacade
         std::string name;
         while (std::getline(datasourcenames_stream, name))
         {
-            m_datasource_names.push_back(name);
+            m_datasource_names.push_back(std::move(name));
         }
     }
 
