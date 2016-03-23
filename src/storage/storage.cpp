@@ -216,28 +216,9 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<extractor::ProfileProperties>(SharedDataLayout::PROPERTIES, 1);
 
     // load timestamp size
+    boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
     std::string m_timestamp;
-    if (boost::filesystem::exists(config.timestamp_path))
-    {
-        boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
-        if (!timestamp_stream)
-        {
-            util::SimpleLogger().Write(logWARNING) << config.timestamp_path
-                                                   << " not found. setting to default";
-        }
-        else
-        {
-            getline(timestamp_stream, m_timestamp);
-        }
-    }
-    if (m_timestamp.empty())
-    {
-        m_timestamp = "n/a";
-    }
-    if (25 < m_timestamp.length())
-    {
-        m_timestamp.resize(25);
-    }
+    getline(timestamp_stream, m_timestamp);
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TIMESTAMP, m_timestamp.length());
 
     // load core marker size
