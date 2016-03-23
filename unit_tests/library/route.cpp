@@ -3,6 +3,7 @@
 
 #include "args.hpp"
 #include "fixture.hpp"
+#include "coordinates.hpp"
 
 #include "osrm/route_parameters.hpp"
 
@@ -22,9 +23,9 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     using namespace osrm;
 
     RouteParameters params;
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
-    params.coordinates.emplace_back(util::FloatLongitude{}, util::FloatLatitude{});
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
 
     json::Object result;
     const auto rc = osrm.Route(params, result);
@@ -47,7 +48,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
         const auto location = waypoint_object.values.at("location").get<json::Array>().values;
         const auto longitude = location[0].get<json::Number>().value;
         const auto latitude = location[1].get<json::Number>().value;
-        BOOST_CHECK(longitude >= 180. && longitude <= -180.);
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
         const auto hint = waypoint_object.values.at("hint").get<json::String>().value;
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
                 const auto location = maneuver.at("location").get<json::Array>().values;
                 const auto longitude = location[0].get<json::Number>().value;
                 const auto latitude = location[1].get<json::Number>().value;
-                BOOST_CHECK(longitude >= 180. && longitude <= -180.);
+                BOOST_CHECK(longitude >= -180. && longitude <= 180.);
                 BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
                 const auto bearing_before = maneuver.at("bearing_before").get<json::Number>().value;
