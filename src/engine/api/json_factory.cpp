@@ -150,10 +150,10 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     if (maneuver.exit != 0)
         step_maneuver.values["exit"] = maneuver.exit;
 
-    //TODO currently we need this to comply with the api.
-    //We should move this to an additional entry, the moment we
-    //actually compute the correct locations of the intersections
-    if (!maneuver.intersections.empty() && maneuver.exit == 0 )
+    // TODO currently we need this to comply with the api.
+    // We should move this to an additional entry, the moment we
+    // actually compute the correct locations of the intersections
+    if (!maneuver.intersections.empty() && maneuver.exit == 0)
         step_maneuver.values["exit"] = maneuver.intersections.size();
     return step_maneuver;
 }
