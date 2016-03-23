@@ -76,9 +76,9 @@ typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>
 typedef boost::geometry::model::linestring<point_t> linestring_t;
 typedef boost::geometry::model::box<point_t> box_t;
 typedef boost::geometry::model::multi_linestring<linestring_t> multi_linestring_t;
-const static box_t clip_box({-detail::VECTOR_TILE_BUFFER, -detail::VECTOR_TILE_BUFFER},
-                            {detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER,
-                             detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER});
+const static box_t clip_box(point_t(-detail::VECTOR_TILE_BUFFER, -detail::VECTOR_TILE_BUFFER),
+                            point_t(detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER,
+                                    detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER));
 
 // from mapnik-vector-tile
 // Encodes a linestring using protobuf zigzag encoding
