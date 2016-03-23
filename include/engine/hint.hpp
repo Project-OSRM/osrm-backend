@@ -58,12 +58,14 @@ struct Hint
 };
 
 #ifndef _MSC_VER
+static_assert(sizeof(Hint) == 60 + 4, "Hint is bigger than expected");
 constexpr std::size_t ENCODED_HINT_SIZE = 88;
 static_assert(ENCODED_HINT_SIZE / 4 * 3 >= sizeof(Hint),
               "ENCODED_HINT_SIZE does not match size of Hint");
 #else
 // PhantomNode is bigger under windows because MSVC does not support bit packing
-constexpr std::size_t ENCODED_HINT_SIZE = 84;
+static_assert(sizeof(Hint) == 64 + 4, "Hint is bigger than expected");
+constexpr std::size_t ENCODED_HINT_SIZE = 92;
 static_assert(ENCODED_HINT_SIZE / 4 * 3 >= sizeof(Hint),
               "ENCODED_HINT_SIZE does not match size of Hint");
 #endif
