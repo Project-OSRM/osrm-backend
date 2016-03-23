@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     BOOST_CHECK_EQUAL(code, "ok");
 
     const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
-    BOOST_CHECK(!waypoints.empty());
+    BOOST_CHECK(waypoints.size() == params.coordinates.size());
 
     for (const auto &waypoint : waypoints)
     {
@@ -140,6 +140,45 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
                 // TODO(daniel-j-h):
             }
         }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
+{
+    const auto args = get_args();
+    auto osrm = get_osrm(args.at(0));
+
+    using namespace osrm;
+
+    const auto locations = get_locations_in_small_component();
+
+    RouteParameters params;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    json::Object result;
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "ok");
+
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
+
+    for (const auto &waypoint : waypoints)
+    {
+        const auto &waypoint_object = waypoint.get<json::Object>();
+
+        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
+        const auto longitude = location[0].get<json::Number>().value;
+        const auto latitude = location[1].get<json::Number>().value;
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+        // TODO(daniel-j-h): we could do a Nearest request for each waypoint, verifying
+        // that we did indeed not snap to the input locations inside the small component.
     }
 }
 
