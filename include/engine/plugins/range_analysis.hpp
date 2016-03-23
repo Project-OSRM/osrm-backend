@@ -105,6 +105,7 @@ template <class DataFacadeT> class RangeAnalysis final : public BasePlugin
         json_result.values["title"] = "Range Analysis";
 
         json_result.values["start"] = routeParameters.coordinates[0].lat;
+<<<<<<< HEAD
 =======
 
         BOOST_ASSERT(predecessorMap.size() == distanceMap.size());
@@ -112,6 +113,8 @@ template <class DataFacadeT> class RangeAnalysis final : public BasePlugin
         std::string temp_string;
         json_result.values["title"] = "Range Analysis";
 >>>>>>> first implementation of routing algo with pretty json-print
+=======
+>>>>>>> added testing
 
         util::json::Array data;
         for (auto it = predecessorMap.begin(); it != predecessorMap.end(); ++it)
@@ -123,20 +126,28 @@ template <class DataFacadeT> class RangeAnalysis final : public BasePlugin
             source.values["lat"] = sourceCoordinate.lat / COORDINATE_PRECISION;
             source.values["lon"] = sourceCoordinate.lon / COORDINATE_PRECISION;
 <<<<<<< HEAD
+<<<<<<< HEAD
             object.values["p1"] = std::move(source);
 =======
             object.values["Source"] = std::move(source);
 >>>>>>> first implementation of routing algo with pretty json-print
+=======
+            object.values["p1"] = std::move(source);
+>>>>>>> added testing
 
             util::json::Object predecessor;
             FixedPointCoordinate destinationSource = facade->GetCoordinateOfNode(it->second);
             predecessor.values["lat"] = destinationSource.lat / COORDINATE_PRECISION;
             predecessor.values["lon"] = destinationSource.lon / COORDINATE_PRECISION;
 <<<<<<< HEAD
+<<<<<<< HEAD
             object.values["p2"] = std::move(predecessor);
 =======
             object.values["Predecessor"] = std::move(predecessor);
 >>>>>>> first implementation of routing algo with pretty json-print
+=======
+            object.values["p2"] = std::move(predecessor);
+>>>>>>> added testing
 
             util::json::Object distance;
             object.values["distance_from_start"] = distanceMap[it->first];
