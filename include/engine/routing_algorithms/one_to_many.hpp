@@ -52,6 +52,7 @@ class OneToManyRouting final
             super::facade->GetNumberOfNodes());
 
         QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
+        QueryHeap &backward_heap = *(engine_working_data.reverse_heap_1);
 
         query_heap.Clear();
         // insert target(s) at distance 0
@@ -68,10 +69,12 @@ class OneToManyRouting final
                               phantomSource.reverse_node_id);
         }
 
+        util::SimpleLogger().Write() << phantomSource;
         // explore search space
         while (!query_heap.Empty())
         {
-            ForwardRoutingStep(query_heap, distance, predecessorMap, distanceMap);
+//            ForwardRoutingStep(query_heap, distance, predecessorMap, distanceMap);
+            ForwardRoutingStep(query_heap, backward_heap, )
         }
     }
 

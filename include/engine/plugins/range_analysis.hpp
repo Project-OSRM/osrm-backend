@@ -103,6 +103,8 @@ template <class DataFacadeT> class RangeAnalysis final : public BasePlugin
         std::string temp_string;
         json_result.values["title"] = "Range Analysis";
 
+        json_result.values["start"] = routeParameters.coordinates[0].lat;
+
         util::json::Array data;
         for (auto it = predecessorMap.begin(); it != predecessorMap.end(); ++it)
         {
@@ -112,13 +114,13 @@ template <class DataFacadeT> class RangeAnalysis final : public BasePlugin
             FixedPointCoordinate sourceCoordinate = facade->GetCoordinateOfNode(it->first);
             source.values["lat"] = sourceCoordinate.lat / COORDINATE_PRECISION;
             source.values["lon"] = sourceCoordinate.lon / COORDINATE_PRECISION;
-            object.values["Source"] = std::move(source);
+            object.values["p1"] = std::move(source);
 
             util::json::Object predecessor;
             FixedPointCoordinate destinationSource = facade->GetCoordinateOfNode(it->second);
             predecessor.values["lat"] = destinationSource.lat / COORDINATE_PRECISION;
             predecessor.values["lon"] = destinationSource.lon / COORDINATE_PRECISION;
-            object.values["Predecessor"] = std::move(predecessor);
+            object.values["p2"] = std::move(predecessor);
 
             util::json::Object distance;
             object.values["distance_from_start"] = distanceMap[it->first];
