@@ -209,6 +209,81 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     return angle;
 }
 
+boost::optional<Coordinate>
+circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
+{
+    // free after http://paulbourke.net/geometry/circlesphere/
+    // require three distinct points
+    if (C1 == C2 || C2 == C3 || C1 == C3)
+        return boost::none;
+
+    // define line through c1, c2 and c2,c3
+    const double C2C1_lat = static_cast<double>(toFloating(C2.lat - C1.lat)); // yDelta_a
+    const double C2C1_lon = static_cast<double>(toFloating(C2.lon - C1.lon)); // xDelta_a
+    const double C3C2_lat = static_cast<double>(toFloating(C3.lat - C2.lat)); // yDelta_b
+    const double C3C2_lon = static_cast<double>(toFloating(C3.lon - C2.lon)); // xDelta_b
+
+    // check for collinear points in X-Direction
+    if (std::abs(C2C1_lon) < std::numeric_limits<double>::epsilon() &&
+        std::abs(C3C2_lon) < std::numeric_limits<double>::epsilon())
+    {
+        return boost::none;
+    }
+    else if (std::abs(C2C1_lon) < std::numeric_limits<double>::epsilon())
+    {
+        // vertical line C2C1
+        // due to c1.lon == c2.lon && c1.lon != c3.lon we can rearrange this way
+        BOOST_ASSERT(std::abs(static_cast<double>(toFloating(C3.lon - C1.lon))) >=
+                         std::numeric_limits<double>::epsilon() &&
+                     std::abs(static_cast<double>(toFloating(C2.lon - C3.lon))) >=
+                         std::numeric_limits<double>::epsilon());
+        return circleCenter(C1, C3, C2);
+    }
+    else if (std::abs(C3C2_lon) < std::numeric_limits<double>::epsilon())
+    {
+        // vertical line C3C2
+        // due to c2.lon == c3.lon && c1.lon != c3.lon we can rearrange this way
+        // after rearrangement both deltas will be zero
+        BOOST_ASSERT(std::abs(static_cast<double>(toFloating(C1.lon - C2.lon))) >=
+                         std::numeric_limits<double>::epsilon() &&
+                     std::abs(static_cast<double>(toFloating(C3.lon - C1.lon))) >=
+                         std::numeric_limits<double>::epsilon());
+        return circleCenter(C2, C1, C3);
+    }
+    else
+    { // valid slope values for both lines, calculate the center as intersection of the lines
+        const double C2C1_slope = C2C1_lat / C2C1_lon;
+        const double C3C2_slope = C3C2_lat / C3C2_lon;
+
+        //can this ever happen?
+        if (std::abs(C2C1_slope - C3C2_slope) < std::numeric_limits<double>::epsilon())
+            return boost::none;
+
+        const double C1_y = static_cast<double>(toFloating(C1.lat));
+        const double C1_x = static_cast<double>(toFloating(C1.lon));
+        const double C2_y = static_cast<double>(toFloating(C2.lat));
+        const double C2_x = static_cast<double>(toFloating(C2.lon));
+        const double C3_y = static_cast<double>(toFloating(C3.lat));
+        const double C3_x = static_cast<double>(toFloating(C3.lon));
+
+        const double lon = (C2C1_slope * C3C2_slope * (C1_y - C3_y) + C3C2_slope * (C1_x + C2_x) -
+                            C2C1_slope * (C2_x + C3_x)) /
+                           (2 * (C3C2_slope - C2C1_slope));
+        const double lat = (0.5 * (C1_x + C2_x) - lon) / C2C1_slope + 0.5 * (C1_y + C2_y);
+        return Coordinate(FloatLongitude(lon), FloatLatitude(lat));
+    }
+}
+
+double circleRadius(const Coordinate C1, const Coordinate C2, const Coordinate C3)
+{
+    // a circle by three points requires thee distinct points
+    auto center = circleCenter(C1, C2, C3);
+    if (center)
+        return haversineDistance(C1, *center);
+    else
+        return std::numeric_limits<double>::infinity();
+}
+
 Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
 {
     BOOST_ASSERT(0 <= factor && factor <= 1.0);

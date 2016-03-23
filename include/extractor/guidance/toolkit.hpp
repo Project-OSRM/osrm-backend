@@ -350,7 +350,8 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
         const auto ref_begin = name.find_first_of('(');
         if (ref_begin != std::string::npos)
         {
-            out_name = name.substr(0, ref_begin);
+            //we might need to trim a space, if there is a reference
+            out_name = name.substr(0, ref_begin - (ref_begin > 0 && name[ref_begin-1] == ' '));
             out_ref = name.substr(ref_begin + 1, name.find_first_of(')') - 1);
         }
         else

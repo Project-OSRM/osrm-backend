@@ -112,7 +112,8 @@ class TurnAnalysis
     // Processing of roundabouts
     // Produces instructions to enter/exit a roundabout or to stay on it.
     // Performs the distinction between roundabout and rotaries.
-    std::vector<ConnectedRoad> handleRoundabouts(const EdgeID via_edge,
+    std::vector<ConnectedRoad> handleRoundabouts(const bool is_rotary,
+                                                 const EdgeID via_edge,
                                                  const bool on_roundabout,
                                                  const bool can_exit_roundabout,
                                                  std::vector<ConnectedRoad> intersection) const;
@@ -152,8 +153,8 @@ class TurnAnalysis
                                                  std::vector<ConnectedRoad> intersection) const;
 
     // Any Junction containing motorways
-    std::vector<ConnectedRoad> handleMotorwayJunction(
-        const EdgeID via_edge, std::vector<ConnectedRoad> intersection) const;
+    std::vector<ConnectedRoad>
+    handleMotorwayJunction(const EdgeID via_edge, std::vector<ConnectedRoad> intersection) const;
 
     std::vector<ConnectedRoad> handleFromMotorway(const EdgeID via_edge,
                                                   std::vector<ConnectedRoad> intersection) const;
@@ -193,6 +194,7 @@ class TurnAnalysis
                                                 std::vector<ConnectedRoad> intersection,
                                                 const std::size_t up_to) const;
 
+    bool isRotary(const NodeID nid) const;
 }; // class TurnAnalysis
 
 } // namespace guidance

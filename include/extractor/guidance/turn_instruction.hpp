@@ -89,24 +89,32 @@ struct TurnInstruction
         return TurnInstruction(TurnType::NoTurn, DirectionModifier::UTurn);
     }
 
-    static TurnInstruction REMAIN_ROUNDABOUT(const DirectionModifier modifier)
+    static TurnInstruction REMAIN_ROUNDABOUT(bool is_rotary, const DirectionModifier modifier)
     {
+        (void)is_rotary; // staying does not require a different instruction at the moment
         return TurnInstruction(TurnType::StayOnRoundabout, modifier);
     }
 
-    static TurnInstruction ENTER_ROUNDABOUT(const DirectionModifier modifier)
+    static TurnInstruction ENTER_ROUNDABOUT(bool is_rotary, const DirectionModifier modifier)
     {
-        return TurnInstruction(TurnType::EnterRoundabout, modifier);
+        return {is_rotary ? TurnType::EnterRotary : TurnType::EnterRoundabout, modifier};
     }
 
-    static TurnInstruction EXIT_ROUNDABOUT(const DirectionModifier modifier)
+    static TurnInstruction EXIT_ROUNDABOUT(bool is_rotary, const DirectionModifier modifier)
     {
-        return TurnInstruction(TurnType::ExitRoundabout, modifier);
+        return {is_rotary ? TurnType::ExitRotary : TurnType::ExitRoundabout, modifier};
+    }
+
+    static TurnInstruction ENTER_AND_EXIT_ROUNDABOUT(bool is_rotary,
+                                                     const DirectionModifier modifier)
+    {
+        return {is_rotary ? TurnType::EnterAndExitRotary : TurnType::EnterAndExitRoundabout,
+                modifier};
     }
 
     static TurnInstruction SUPPRESSED(const DirectionModifier modifier)
     {
-        return TurnInstruction{TurnType::Suppressed, modifier};
+        return {TurnType::Suppressed, modifier};
     }
 };
 
