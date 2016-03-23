@@ -65,10 +65,10 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
         const auto &route_object = route.get<json::Object>();
 
         const auto distance = route_object.values.at("distance").get<json::Number>().value;
-        BOOST_CHECK(distance == 0);
+        BOOST_CHECK_EQUAL(distance, 0);
 
         const auto duration = route_object.values.at("duration").get<json::Number>().value;
-        BOOST_CHECK(duration == 0);
+        BOOST_CHECK_EQUAL(duration, 0);
 
         // geometries=polyline by default
         const auto geometry = route_object.values.at("geometry").get<json::String>().value;
@@ -82,10 +82,10 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
             const auto &leg_object = leg.get<json::Object>();
 
             const auto distance = leg_object.values.at("distance").get<json::Number>().value;
-            BOOST_CHECK(distance == 0);
+            BOOST_CHECK_EQUAL(distance, 0);
 
             const auto duration = leg_object.values.at("duration").get<json::Number>().value;
-            BOOST_CHECK(duration == 0);
+            BOOST_CHECK_EQUAL(duration, 0);
 
             // nothing can be said about summary, empty or contains human readable summary
             const auto summary = leg_object.values.at("summary").get<json::String>().value;
@@ -100,10 +100,10 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
                 const auto &step_object = step.get<json::Object>();
 
                 const auto distance = step_object.values.at("distance").get<json::Number>().value;
-                BOOST_CHECK(distance == 0);
+                BOOST_CHECK_EQUAL(distance, 0);
 
                 const auto duration = step_object.values.at("duration").get<json::Number>().value;
-                BOOST_CHECK(duration == 0);
+                BOOST_CHECK_EQUAL(duration, 0);
 
                 // geometries=polyline by default
                 const auto geometry = step_object.values.at("geometry").get<json::String>().value;
