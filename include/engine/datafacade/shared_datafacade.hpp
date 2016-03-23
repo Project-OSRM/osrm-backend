@@ -697,6 +697,7 @@ class SharedDataFacade final : public BaseDataFacade
         BOOST_ASSERT(m_datasource_name_offsets.size() > datasource_name_id);
 
         std::string result;
+        result.reserve(m_datasource_name_lengths[datasource_name_id]);
         std::copy(m_datasource_name_data.begin() + m_datasource_name_offsets[datasource_name_id],
                   m_datasource_name_data.begin() + m_datasource_name_offsets[datasource_name_id] +
                       m_datasource_name_lengths[datasource_name_id],
