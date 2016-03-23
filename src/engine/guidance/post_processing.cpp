@@ -54,9 +54,9 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
         }
         else if (propagation_step.maneuver.instruction.type == TurnType::StayOnRoundabout)
         {
-            //TODO this operates on the data that is in the instructions.
-            //We are missing out on the final segment after the last stay-on-roundabout
-            //instruction though. it is not contained somewhere until now
+            // TODO this operates on the data that is in the instructions.
+            // We are missing out on the final segment after the last stay-on-roundabout
+            // instruction though. it is not contained somewhere until now
             steps[propagation_index - 1] =
                 forwardInto(std::move(steps[propagation_index - 1]), propagation_step);
             propagation_step.maneuver.instruction =
@@ -290,6 +290,29 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     print(steps);
 #endif
     return steps;
+}
+
+LegGeometry resyncGeometry(LegGeometry leg_geometry, const std::vector<RouteStep> &steps)
+{
+    // The geometry uses an adjacency array-like structure for representation.
+    // To sync it back up with the steps, we cann add a segment for every step.
+    leg_geometry.segment_offsets.clear();
+    leg_geometry.segment_distances.clear();
+    leg_geometry.segment_offsets.push_back(0);
+
+    for (const auto &step : steps)
+    {
+        leg_geometry.segment_distances.push_back(step.distance);
+        // the leg geometry does not follow the begin/end-convetion. So we have to subtract one
+        // to get the back-index.
+        leg_geometry.segment_offsets.push_back(step.geometry_end - 1);
+    }
+
+    //remove the data fromt the reached-target step again
+    leg_geometry.segment_offsets.pop_back();
+    leg_geometry.segment_distances.pop_back();
+
+    return leg_geometry;
 }
 
 } // namespace guidance
