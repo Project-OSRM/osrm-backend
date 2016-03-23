@@ -6,6 +6,7 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
+#include <boost/geometry/multi/geometries/multi_linestring.hpp>
 
 #include <protozero/varint.hpp>
 #include <protozero/pbf_writer.hpp>
