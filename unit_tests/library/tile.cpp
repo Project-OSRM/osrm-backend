@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(tile)
 BOOST_AUTO_TEST_CASE(test_tile)
 {
     const auto args = get_args();
-    auto osrm = get_osrm(args.at(0));
+    auto osrm = getOSRM(args.at(0));
 
     using namespace osrm;
 

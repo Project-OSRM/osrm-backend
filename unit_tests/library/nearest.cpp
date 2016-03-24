@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(nearest)
 BOOST_AUTO_TEST_CASE(test_nearest_response)
 {
     const auto args = get_args();
-    auto osrm = get_osrm(args.at(0));
+    auto osrm = getOSRM(args.at(0));
 
     using namespace osrm;
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 {
     const auto args = get_args();
-    auto osrm = get_osrm(args.at(0));
+    auto osrm = getOSRM(args.at(0));
 
     using namespace osrm;
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
 {
     const auto args = get_args();
-    auto osrm = get_osrm(args.at(0));
+    auto osrm = getOSRM(args.at(0));
 
     using namespace osrm;
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
 {
     const auto args = get_args();
-    auto osrm = get_osrm(args.at(0));
+    auto osrm = getOSRM(args.at(0));
 
     using namespace osrm;
 

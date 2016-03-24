@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(route)
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 {
     const auto args = get_args();
-    auto osrm = get_osrm(args.at(0));
+    auto osrm = getOSRM(args.at(0));
 
     using namespace osrm;
 
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
 {
     const auto args = get_args();
-    auto osrm = get_osrm(args.at(0));
+    auto osrm = getOSRM(args.at(0));
 
     using namespace osrm;
 
