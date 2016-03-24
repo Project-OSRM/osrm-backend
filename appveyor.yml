@@ -1,0 +1,17 @@
+
+platform:
+  - x64
+  - x86
+
+configuration:
+  - Debug
+  - Release
+
+os: Visual Studio 2015
+
+install:
+  - CALL scripts\build-appveyor.bat
+
+build: off
+test: off
+deploy: off
