@@ -87,7 +87,7 @@ add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
 # Unit tests
-add_executable(engine-tests unit_tests/engine_tests.cpp ${EngineTestsGlob} $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
+add_executable(engine-tests unit_tests/engine_tests.cpp ${EngineTestsGlob} $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 add_executable(extractor-tests unit_tests/extractor_tests.cpp ${ExtractorTestsGlob} $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_executable(util-tests unit_tests/util_tests.cpp ${UtilTestsGlob} $<TARGET_OBJECTS:UTIL>)
 add_executable(server-tests unit_tests/server_tests.cpp ${ServerTestsGlob} $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
