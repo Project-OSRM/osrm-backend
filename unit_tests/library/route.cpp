@@ -3,6 +3,7 @@
 
 #include "args.hpp"
 #include "fixture.hpp"
+#include "equal_json.hpp"
 #include "coordinates.hpp"
 
 #include "osrm/route_parameters.hpp"
@@ -14,6 +15,52 @@
 #include "osrm/osrm.hpp"
 
 BOOST_AUTO_TEST_SUITE(route)
+
+BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
+{
+    const auto args = get_args();
+    auto osrm = getOSRM(args.at(0));
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    json::Object result;
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    json::Object reference{
+        {{"code", "ok"},
+         {"waypoints",
+          json::Array{{json::Object{{{"name", ""}, {"location", json::Array{}}, {"hint", ""}}},
+                       json::Object{{{"name", ""}, {"location", json::Array{}}, {"hint", ""}}}}}},
+         {"routes", json::Array{{json::Object{
+                        {{"distance", 0.},
+                         {"duration", 0.},
+                         {"geometry", ""},
+                         {"legs", json::Array{{json::Object{
+                                      {{"distance", 0.},
+                                       {"duration", 0.},
+                                       {"summary", ""},
+                                       {"steps", json::Array{{json::Object{
+                                                     {{"duration", 0.},
+                                                      {"distance", 0.},
+                                                      {"geometry", ""},
+                                                      {"name", ""},
+                                                      {"mode", "driving"},
+                                                      {"maneuver", json::Object{{
+                                                                       {"type", "depart"},
+                                                                       {"location", json::Array{}},
+                                                                       {"modifier", ""},
+                                                                       {"bearing_before", 0.},
+                                                                       {"bearing_after", 0.},
+                                                                       {"exit", 0},
+                                                                   }}}}}}}}}}}}}}}}}}}};
+
+    CHECK_EQUAL_JSON(reference, result);
+}
 
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 {

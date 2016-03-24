@@ -2,6 +2,7 @@
 #include <boost/test/test_case_template.hpp>
 
 #include "args.hpp"
+#include "fixture.hpp"
 
 #include "osrm/table_parameters.hpp"
 
@@ -20,10 +21,7 @@ BOOST_AUTO_TEST_CASE(test_table)
 
     using namespace osrm;
 
-    EngineConfig config{args[0]};
-    config.use_shared_memory = false;
-
-    OSRM osrm{config};
+    auto osrm = getOSRM(args[0]);
 
     /*
     TableParameters params;
