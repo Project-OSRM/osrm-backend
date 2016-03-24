@@ -4,7 +4,7 @@ OSMIUM_REPO=https://github.com/osmcode/libosmium.git
 OSMIUM_TAG=v2.6.1
 
 VARIANT_REPO=https://github.com/mapbox/variant.git
-VARIANT_TAG=v1.0
+VARIANT_TAG=v1.1.0
 
 VARIANT_LATEST=$(curl https://api.github.com/repos/mapbox/variant/releases/latest | jq ".tag_name")
 OSMIUM_LATEST=$(curl https://api.github.com/repos/osmcode/libosmium/releases/latest | jq ".tag_name")
