@@ -10,6 +10,9 @@
     "request": "^2.69.0",
     "xmlbuilder": "^4.2.1"
   },
+  "bin": {
+    "cucumber": "./node_modules/cucumber/bin/cucumber.js"
+  },
   "scripts": {
     "lint": "eslint -c ./.eslintrc features/step_definitions/ features/support/",
     "test": "npm run lint && ./node_modules/cucumber/bin/cucumber.js features/ -p verify",
