@@ -84,6 +84,12 @@ class ShortestPathRouting final
         BOOST_ASSERT(forward_heap.Size() > 0);
         BOOST_ASSERT(reverse_heap.Size() > 0);
 
+        // this is only relevent if source and target are on the same compressed edge
+        auto is_oneway_source = !(search_from_forward_node && search_from_reverse_node);
+        auto is_oneway_target = !(search_to_forward_node && search_to_reverse_node);
+        // we only enable loops here if we can't search from forward to backward node
+        auto needs_loop_forwad = is_oneway_source && super::NeedsLoopForward(source_phantom, target_phantom);
+        auto needs_loop_backwards = is_oneway_target && super::NeedsLoopBackwards(source_phantom, target_phantom);
         if (super::facade->GetCoreSize() > 0)
         {
             forward_core_heap.Clear();
@@ -91,15 +97,12 @@ class ShortestPathRouting final
             BOOST_ASSERT(forward_core_heap.Size() == 0);
             BOOST_ASSERT(reverse_core_heap.Size() == 0);
             super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
-                                  new_total_distance, leg_packed_path,
-                                  super::NeedsLoopForward(source_phantom, target_phantom),
-                                  super::NeedsLoopBackwards(source_phantom, target_phantom));
+                                  new_total_distance, leg_packed_path, needs_loop_forwad, needs_loop_backwards);
         }
         else
         {
             super::Search(forward_heap, reverse_heap, new_total_distance, leg_packed_path,
-                          super::NeedsLoopForward(source_phantom, target_phantom),
-                          super::NeedsLoopBackwards(source_phantom, target_phantom));
+                          needs_loop_forwad, needs_loop_backwards);
         }
     }
 
@@ -154,17 +157,18 @@ class ShortestPathRouting final
                 reverse_core_heap.Clear();
                 BOOST_ASSERT(forward_core_heap.Size() == 0);
                 BOOST_ASSERT(reverse_core_heap.Size() == 0);
-                super::SearchWithCore(
-                    forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
-                    new_total_distance_to_forward, leg_packed_path_forward,
-                    super::NeedsLoopForward(source_phantom, target_phantom), DO_NOT_FORCE_LOOP);
+                super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap,
+                                      reverse_core_heap, new_total_distance_to_forward,
+                                      leg_packed_path_forward,
+                                      super::NeedsLoopForward(source_phantom, target_phantom),
+                                      super::NeedsLoopBackwards(source_phantom, target_phantom));
             }
             else
             {
                 super::Search(forward_heap, reverse_heap, new_total_distance_to_forward,
                               leg_packed_path_forward,
                               super::NeedsLoopForward(source_phantom, target_phantom),
-                              DO_NOT_FORCE_LOOP);
+                              super::NeedsLoopBackwards(source_phantom, target_phantom));
             }
         }
 
