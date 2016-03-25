@@ -111,7 +111,7 @@ var OSRMDatastoreLoader = class extends OSRMBaseLoader {
 
     loadData (callback) {
         this.scope.runBin('osrm-datastore', this.inputFile, (err) => {
-            if (err) return callback(new this.LaunchError(this.exitCode, 'datastore', err));
+            if (err) return callback(this.scope.LaunchError(this.exitCode, 'datastore', err));
             callback();
         });
     }
