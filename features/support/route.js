@@ -3,7 +3,7 @@ var request = require('request');
 
 module.exports = function () {
     this.requestPath = (service, params, callback) => {
-        var uri = [this.HOST, service].join('/');
+        var uri = [this.HOST, service, 'v1', this.profile].join('/');
         return this.sendRequest(uri, params, callback);
     };
 
@@ -28,70 +28,81 @@ module.exports = function () {
     // Overwrites the default values in defaults
     // e.g. [[a, 1], [b, 2]], [[a, 5], [d, 10]] => [[a, 5], [b, 2], [d, 10]]
     this.overwriteParams = (defaults, other) => {
-        var merged = {};
-        var overwrite = (o) => {
-            merged[o[0]] = o[1];
-        };
-
-        defaults.forEach(overwrite);
-        other.forEach(overwrite);
-
-        return Object.keys(merged).map((key) => [key, merged[key]]);
+        var otherMap = {};
+        for (var key in other) otherMap[key] = other[key];
+        return Object.assign({}, defaults, otherMap);
     };
 
     var encodeWaypoints = (waypoints) => {
-        return waypoints.map(w => ['loc', [w.lat, w.lon].join(',')]);
+        return waypoints.map(w => [w.lon, w.lat].join(','));
     };
 
     this.requestRoute = (waypoints, bearings, userParams, callback) => {
         if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
 
-        var defaults = [['output','json'], ['instructions','true'], ['alt',false]],
+        var defaults = {
+            output: 'json',
+            steps: 'true',
+            alternative: 'false'
+        },
             params = this.overwriteParams(defaults, userParams),
             encodedWaypoints = encodeWaypoints(waypoints);
+
+        params.coordinates = encodedWaypoints;
+
         if (bearings.length) {
+            // TODOTODO
             var encodedBearings = bearings.map(b => ['b', b.toString()]);
             params = Array.prototype.concat.apply(params, encodedWaypoints.map((o, i) => [o, encodedBearings[i]]));
-        } else {
-            params = params.concat(encodedWaypoints);
         }
 
-        return this.requestPath('viaroute', params, callback);
+        return this.requestPath('route', params, callback);
     };
 
     this.requestNearest = (node, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+            output: 'json'
+        },
             params = this.overwriteParams(defaults, userParams);
-        params.push(['loc', [node.lat, node.lon].join(',')]);
+        params.coordinates = [[node.lon, node.lat].join(',')];
 
         return this.requestPath('nearest', params, callback);
     };
 
     this.requestTable = (waypoints, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+            output: 'json'
+        },
             params = this.overwriteParams(defaults, userParams);
-        params = params.concat(waypoints.map(w => [w.type, [w.coord.lat, w.coord.lon].join(',')]));
+
+        params.coordinates = waypoints.map(w => [w.coord.lon, w.coord.lat].join(','));
+        // TODO what was 'type' here?
+        // params = params.concat(waypoints.map(w => [w.type, [w.coord.lat, w.coord.lon].join(',')]));
 
         return this.requestPath('table', params, callback);
     };
 
     this.requestTrip = (waypoints, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+            output: 'json'
+        },
             params = this.overwriteParams(defaults, userParams);
-        params = params.concat(encodeWaypoints(waypoints));
+
+        params.coordinates = encodeWaypoints(waypoints);
 
         return this.requestPath('trip', params, callback);
     };
 
     this.requestMatching = (waypoints, timestamps, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+            output: 'json'
+        },
             params = this.overwriteParams(defaults, userParams);
-        var encodedWaypoints = encodeWaypoints(waypoints);
+
+        params.coordinates = encodeWaypoints(waypoints);
+
         if (timestamps.length) {
-            var encodedTimestamps = timestamps.map(t => ['t', t.toString()]);
-            params = Array.prototype.concat.apply(params, encodedWaypoints.map((o, i) => [o, encodedTimestamps[i]]));
-        } else {
-            params = params.concat(encodedWaypoints);
+            params.timestamps = timestamps.join(',');
         }
 
         return this.requestPath('match', params, callback);
