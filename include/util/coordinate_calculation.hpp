@@ -64,6 +64,8 @@ double perpendicularDistanceFromProjectedCoordinate(
     Coordinate &nearest_location,
     double &ratio);
 
+Coordinate centroid(const Coordinate lhs, const Coordinate rhs);
+
 double bearing(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 // Get angle of line segment (A,C)->(C,B)

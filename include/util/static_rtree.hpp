@@ -137,11 +137,8 @@ class StaticRTree
                     BOOST_ASSERT(current_element.u < coordinate_list.size());
                     BOOST_ASSERT(current_element.v < coordinate_list.size());
 
-                    Coordinate current_centroid =
-                        EdgeDataT::Centroid(Coordinate(coordinate_list[current_element.u].lon,
-                                                       coordinate_list[current_element.u].lat),
-                                            Coordinate(coordinate_list[current_element.v].lon,
-                                                       coordinate_list[current_element.v].lat));
+                    Coordinate current_centroid = coordinate_calculation::centroid(
+                        coordinate_list[current_element.u], coordinate_list[current_element.v]);
                     current_centroid.lat = FixedLatitude(
                         COORDINATE_PRECISION *
                         coordinate_calculation::mercator::latToY(toFloating(current_centroid.lat)));
