@@ -53,15 +53,6 @@ struct EdgeBasedNode
                      (reverse_edge_based_node_id != SPECIAL_NODEID));
     }
 
-    static inline util::Coordinate Centroid(const util::Coordinate a, const util::Coordinate b)
-    {
-        util::Coordinate centroid;
-        // The coordinates of the midpoint are given by:
-        centroid.lon = (a.lon + b.lon) / util::FixedLongitude(2);
-        centroid.lat = (a.lat + b.lat) / util::FixedLatitude(2);
-        return centroid;
-    }
-
     NodeID forward_edge_based_node_id; // needed for edge-expanded graph
     NodeID reverse_edge_based_node_id; // needed for edge-expanded graph
     NodeID u;                          // indices into the coordinates array
