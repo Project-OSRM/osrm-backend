@@ -50,20 +50,33 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     auto phantom_node_pairs = GetPhantomNodes(route_parameters);
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
-        return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_node_pairs.size()),
+        return Error("NoSegment", std::string("Could not find a matching segment for coordinate ") +
+                                      std::to_string(phantom_node_pairs.size()),
                      json_result);
     }
     BOOST_ASSERT(phantom_node_pairs.size() == route_parameters.coordinates.size());
 
     auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
 
+    const bool allow_u_turn_at_via =
+        route_parameters.uturns ? *route_parameters.uturns : facade.GetUTurnsDefault();
+
     InternalRouteResult raw_route;
-    auto build_phantom_pairs = [&raw_route](const PhantomNode &first_node,
-                                            const PhantomNode &second_node)
+    auto build_phantom_pairs = [&raw_route, allow_u_turn_at_via](const PhantomNode &first_node,
+                                                                 const PhantomNode &second_node)
     {
         raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
+        auto &last_inserted = raw_route.segment_end_coordinates.back();
+        // enable forward direction if possible
+        if (last_inserted.source_phantom.forward_segment_id.id != SPECIAL_SEGMENTID)
+        {
+            last_inserted.source_phantom.forward_segment_id.enabled |= allow_u_turn_at_via;
+        }
+        // enable reverse direction if possible
+        if (last_inserted.source_phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
+        {
+            last_inserted.source_phantom.reverse_segment_id.enabled |= allow_u_turn_at_via;
+        }
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 

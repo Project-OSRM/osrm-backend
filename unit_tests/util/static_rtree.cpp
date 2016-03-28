@@ -160,8 +160,8 @@ struct GraphFixture
             // so we have something to test against.  Because this isn't a real
             // graph, the actual values aren't important, we just need something
             // to examine during tests.
-            d.forward_edge_based_node_id = pair.second;
-            d.reverse_edge_based_node_id = pair.first;
+            d.forward_segment_id = {pair.second, true};
+            d.reverse_segment_id = {pair.first, true};
             edges.emplace_back(d);
         }
     }
@@ -416,8 +416,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodes(input, 5);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results.back().phantom_node.forward_node_id, 0);
-        BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_node_id, 1);
+        BOOST_CHECK_EQUAL(results.back().phantom_node.forward_segment_id.id, 0);
+        BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_segment_id.id, 1);
     }
 
     {
@@ -428,10 +428,10 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodes(input, 5, 45, 10);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_node_id, 1);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_node_id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_segment_id.id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_segment_id.id, SPECIAL_SEGMENTID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_segment_id.id, SPECIAL_SEGMENTID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_segment_id.id, 1);
     }
 
     {
@@ -447,10 +447,10 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodesInRange(input, 11000, 45, 10);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_node_id, 1);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_node_id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_segment_id.id, 1);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_segment_id.id, SPECIAL_SEGMENTID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_segment_id.id, SPECIAL_SEGMENTID);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_segment_id.id, 1);
     }
 }
 

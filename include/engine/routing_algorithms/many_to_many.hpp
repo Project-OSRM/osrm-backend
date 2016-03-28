@@ -71,15 +71,17 @@ class ManyToManyRouting final
             query_heap.Clear();
             // insert target(s) at distance 0
 
-            if (SPECIAL_NODEID != phantom.forward_node_id)
+            if (phantom.forward_segment_id.enabled)
             {
-                query_heap.Insert(phantom.forward_node_id, phantom.GetForwardWeightPlusOffset(),
-                                  phantom.forward_node_id);
+                query_heap.Insert(phantom.forward_segment_id.id,
+                                  phantom.GetForwardWeightPlusOffset(),
+                                  phantom.forward_segment_id.id);
             }
-            if (SPECIAL_NODEID != phantom.reverse_node_id)
+            if (phantom.reverse_segment_id.enabled)
             {
-                query_heap.Insert(phantom.reverse_node_id, phantom.GetReverseWeightPlusOffset(),
-                                  phantom.reverse_node_id);
+                query_heap.Insert(phantom.reverse_segment_id.id,
+                                  phantom.GetReverseWeightPlusOffset(),
+                                  phantom.reverse_segment_id.id);
             }
 
             // explore search space
@@ -97,15 +99,17 @@ class ManyToManyRouting final
             query_heap.Clear();
             // insert target(s) at distance 0
 
-            if (SPECIAL_NODEID != phantom.forward_node_id)
+            if (phantom.forward_segment_id.enabled)
             {
-                query_heap.Insert(phantom.forward_node_id, -phantom.GetForwardWeightPlusOffset(),
-                                  phantom.forward_node_id);
+                query_heap.Insert(phantom.forward_segment_id.id,
+                                  -phantom.GetForwardWeightPlusOffset(),
+                                  phantom.forward_segment_id.id);
             }
-            if (SPECIAL_NODEID != phantom.reverse_node_id)
+            if (phantom.reverse_segment_id.enabled)
             {
-                query_heap.Insert(phantom.reverse_node_id, -phantom.GetReverseWeightPlusOffset(),
-                                  phantom.reverse_node_id);
+                query_heap.Insert(phantom.reverse_segment_id.id,
+                                  -phantom.GetReverseWeightPlusOffset(),
+                                  phantom.reverse_segment_id.id);
             }
 
             // explore search space
