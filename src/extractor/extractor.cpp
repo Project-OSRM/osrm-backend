@@ -108,7 +108,7 @@ int Extractor::run()
         util::SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
-        auto& main_context = scripting_environment.GetContex();
+        auto &main_context = scripting_environment.GetContex();
 
         // setup raster sources
         if (util::luaFunctionExists(main_context.state, "source_function"))
@@ -163,7 +163,7 @@ int Extractor::run()
                 {
                     ExtractionNode result_node;
                     ExtractionWay result_way;
-                    auto& local_context = scripting_environment.GetContex();
+                    auto &local_context = scripting_environment.GetContex();
 
                     for (auto x = range.begin(), end = range.end(); x != end; ++x)
                     {
@@ -258,7 +258,7 @@ int Extractor::run()
         // movement (e.g. turn from A->B, and B->A) becomes an edge
         //
 
-        auto& main_context = scripting_environment.GetContex();
+        auto &main_context = scripting_environment.GetContex();
 
         util::SimpleLogger().Write() << "Generating edge-expanded graph representation";
 
@@ -269,8 +269,7 @@ int Extractor::run()
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
-        auto graph_size = BuildEdgeExpandedGraph(main_context.state,
-                                                 main_context.properties,
+        auto graph_size = BuildEdgeExpandedGraph(main_context.state, main_context.properties,
                                                  internal_to_external_node_map,
                                                  edge_based_node_list, node_is_startpoint,
                                                  edge_based_node_weights, edge_based_edge_list);
@@ -317,7 +316,8 @@ int Extractor::run()
     return 0;
 }
 
-void Extractor::WriteProfileProperties(const std::string& output_path, const ProfileProperties& properties) const
+void Extractor::WriteProfileProperties(const std::string &output_path,
+                                       const ProfileProperties &properties) const
 {
     boost::filesystem::ofstream out_stream(output_path);
     if (!out_stream)
@@ -325,7 +325,7 @@ void Extractor::WriteProfileProperties(const std::string& output_path, const Pro
         throw util::exception("Could not open " + output_path + " for writing.");
     }
 
-    out_stream.write(reinterpret_cast<const char*>(&properties), sizeof(properties));
+    out_stream.write(reinterpret_cast<const char *>(&properties), sizeof(properties));
 }
 
 void Extractor::FindComponents(unsigned max_edge_id,
@@ -375,12 +375,12 @@ void Extractor::FindComponents(unsigned max_edge_id,
     // connect forward and backward nodes of each edge
     for (const auto &node : input_nodes)
     {
-        if (node.reverse_edge_based_node_id != SPECIAL_NODEID)
+        if (node.reverse_segment_id.enabled)
         {
-            BOOST_ASSERT(node.forward_edge_based_node_id <= max_edge_id);
-            BOOST_ASSERT(node.reverse_edge_based_node_id <= max_edge_id);
-            edges.push_back({node.forward_edge_based_node_id, node.reverse_edge_based_node_id, {}});
-            edges.push_back({node.reverse_edge_based_node_id, node.forward_edge_based_node_id, {}});
+            BOOST_ASSERT(node.forward_segment_id.id <= max_edge_id);
+            BOOST_ASSERT(node.reverse_segment_id.id <= max_edge_id);
+            edges.push_back({node.forward_segment_id.id, node.reverse_segment_id.id, {}});
+            edges.push_back({node.reverse_segment_id.id, node.forward_segment_id.id, {}});
         }
     }
 
@@ -396,10 +396,10 @@ void Extractor::FindComponents(unsigned max_edge_id,
 
     for (auto &node : input_nodes)
     {
-        auto forward_component = component_search.get_component_id(node.forward_edge_based_node_id);
-        BOOST_ASSERT(node.reverse_edge_based_node_id == SPECIAL_EDGEID ||
+        auto forward_component = component_search.get_component_id(node.forward_segment_id.id);
+        BOOST_ASSERT(!node.reverse_segment_id.enabled ||
                      forward_component ==
-                         component_search.get_component_id(node.reverse_edge_based_node_id));
+                         component_search.get_component_id(node.reverse_segment_id.id));
 
         const unsigned component_size = component_search.get_component_size(forward_component);
         node.component.is_tiny = component_size < config.small_component_size;
@@ -468,8 +468,8 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
 std::pair<std::size_t, std::size_t>
-Extractor::BuildEdgeExpandedGraph(lua_State* lua_state,
-                                  const ProfileProperties& profile_properties,
+Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
+                                  const ProfileProperties &profile_properties,
                                   std::vector<QueryNode> &internal_to_external_node_map,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,

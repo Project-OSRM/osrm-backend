@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "util/strong_typedef.hpp"
 
+#include <boost/assert.hpp>
+
 #include <limits>
 #include <cstddef>
 
@@ -56,9 +58,26 @@ using EdgeID = unsigned int;
 using EdgeWeight = int;
 
 static const NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
+static const NodeID SPECIAL_SEGMENTID = std::numeric_limits<int>::max();
 static const EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();
 static const unsigned INVALID_NAMEID = std::numeric_limits<unsigned>::max();
 static const unsigned INVALID_COMPONENTID = 0;
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
+
+struct SegmentID
+{
+    SegmentID(const NodeID id_, const bool enabled_) : id{id_}, enabled{enabled_}
+    {
+        BOOST_ASSERT(!enabled || id != SPECIAL_SEGMENTID);
+    }
+
+    NodeID id : 31;
+    bool enabled : 1;
+};
+
+// bit-fields are broken on Windows
+#ifndef _MSC_VER
+static_assert(sizeof(SegmentID) == 4, "SegmentID needs to be 4 bytes big");
+#endif
 
 #endif /* TYPEDEFS_H */

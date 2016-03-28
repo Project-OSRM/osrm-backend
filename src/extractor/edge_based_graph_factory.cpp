@@ -122,18 +122,30 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
     NodeID current_edge_source_coordinate_id = node_u;
 
+    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id)
+    {
+        if (edge_based_node_id == SPECIAL_NODEID)
+        {
+            return SegmentID{SPECIAL_SEGMENTID, false};
+        }
+
+        return SegmentID{edge_based_node_id, true};
+    };
+
     // traverse arrays from start and end respectively
     for (const auto i : util::irange(0UL, geometry_size))
     {
-        BOOST_ASSERT(current_edge_source_coordinate_id ==
-                     m_compressed_edge_container.GetBucketReference(
-                                                     edge_id_2)[geometry_size - 1 - i].node_id);
+        BOOST_ASSERT(
+            current_edge_source_coordinate_id ==
+            m_compressed_edge_container.GetBucketReference(edge_id_2)[geometry_size - 1 - i]
+                .node_id);
         const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
         // build edges
         m_edge_based_node_list.emplace_back(
-            forward_data.edge_id, reverse_data.edge_id, current_edge_source_coordinate_id,
+            edge_id_to_segment_id(forward_data.edge_id),
+            edge_id_to_segment_id(reverse_data.edge_id), current_edge_source_coordinate_id,
             current_edge_target_coordinate_id, forward_data.name_id,
             m_compressed_edge_container.GetPositionForID(edge_id_1),
             m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID, i,
@@ -208,7 +220,8 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
             // oneway streets always require this self-loop. Other streets only if a u-turn plus
             // traversal
             // of the street takes longer than the loop
-            m_edge_based_node_weights.push_back(edge_data.distance + profile_properties.u_turn_penalty);
+            m_edge_based_node_weights.push_back(edge_data.distance +
+                                                profile_properties.u_turn_penalty);
 
             BOOST_ASSERT(numbered_edges_count < m_node_based_graph->GetNumberOfEdges());
             edge_data.edge_id = numbered_edges_count;
@@ -344,7 +357,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.traffic_signal_penalty;
                 }
 
-                const int turn_penalty = use_turn_function ? GetTurnPenalty(turn_angle, lua_state) : 0;
+                const int turn_penalty =
+                    use_turn_function ? GetTurnPenalty(turn_angle, lua_state) : 0;
                 const auto turn_instruction = turn.instruction;
 
                 if (guidance::isUturn(turn_instruction))

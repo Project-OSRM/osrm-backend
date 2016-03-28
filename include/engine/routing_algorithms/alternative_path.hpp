@@ -84,45 +84,37 @@ class AlternativeRouting final
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
         const EdgeWeight min_edge_offset =
-            std::min(-phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
-                     -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+            std::min(phantom_node_pair.source_phantom.forward_segment_id.enabled ? -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset() : 0,
+                     phantom_node_pair.source_phantom.reverse_segment_id.enabled ? -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset() : 0);
 
-        if (phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
+        if (phantom_node_pair.source_phantom.forward_segment_id.enabled)
         {
-            // util::SimpleLogger().Write(logDEBUG) << "fwd-a insert: " <<
-            // phantom_node_pair.source_phantom.forward_node_id << ", w: " <<
-            // -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
-            forward_heap1.Insert(phantom_node_pair.source_phantom.forward_node_id,
+            BOOST_ASSERT(phantom_node_pair.source_phantom.forward_segment_id.id != SPECIAL_SEGMENTID);
+            forward_heap1.Insert(phantom_node_pair.source_phantom.forward_segment_id.id,
                                  -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
-                                 phantom_node_pair.source_phantom.forward_node_id);
+                                 phantom_node_pair.source_phantom.forward_segment_id.id);
         }
-        if (phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (phantom_node_pair.source_phantom.reverse_segment_id.enabled)
         {
-            //     util::SimpleLogger().Write(logDEBUG) << "fwd-b insert: " <<
-            //     phantom_node_pair.source_phantom.reverse_node_id << ", w: " <<
-            // -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
-            forward_heap1.Insert(phantom_node_pair.source_phantom.reverse_node_id,
+            BOOST_ASSERT(phantom_node_pair.source_phantom.reverse_segment_id.id != SPECIAL_SEGMENTID);
+            forward_heap1.Insert(phantom_node_pair.source_phantom.reverse_segment_id.id,
                                  -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
-                                 phantom_node_pair.source_phantom.reverse_node_id);
+                                 phantom_node_pair.source_phantom.reverse_segment_id.id);
         }
 
-        if (phantom_node_pair.target_phantom.forward_node_id != SPECIAL_NODEID)
+        if (phantom_node_pair.target_phantom.forward_segment_id.enabled)
         {
-            // util::SimpleLogger().Write(logDEBUG) << "rev-a insert: " <<
-            // phantom_node_pair.target_phantom.forward_node_id << ", w: " <<
-            // phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
-            reverse_heap1.Insert(phantom_node_pair.target_phantom.forward_node_id,
+            BOOST_ASSERT(phantom_node_pair.target_phantom.forward_segment_id.id != SPECIAL_SEGMENTID);
+            reverse_heap1.Insert(phantom_node_pair.target_phantom.forward_segment_id.id,
                                  phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
-                                 phantom_node_pair.target_phantom.forward_node_id);
+                                 phantom_node_pair.target_phantom.forward_segment_id.id);
         }
-        if (phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (phantom_node_pair.target_phantom.reverse_segment_id.enabled)
         {
-            // util::SimpleLogger().Write(logDEBUG) << "rev-b insert: " <<
-            // phantom_node_pair.target_phantom.reverse_node_id << ", w: " <<
-            // phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
-            reverse_heap1.Insert(phantom_node_pair.target_phantom.reverse_node_id,
+            BOOST_ASSERT(phantom_node_pair.target_phantom.reverse_segment_id.id != SPECIAL_SEGMENTID);
+            reverse_heap1.Insert(phantom_node_pair.target_phantom.reverse_segment_id.id,
                                  phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),
-                                 phantom_node_pair.target_phantom.reverse_node_id);
+                                 phantom_node_pair.target_phantom.reverse_segment_id.id);
         }
 
         // search from s and t till new_min/(1+epsilon) > length_of_shortest_path
@@ -316,9 +308,9 @@ class AlternativeRouting final
             BOOST_ASSERT(!packed_shortest_path.empty());
             raw_route_data.unpacked_path_segments.resize(1);
             raw_route_data.source_traversed_in_reverse.push_back(
-                (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id));
+                (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_segment_id.id));
             raw_route_data.target_traversed_in_reverse.push_back(
-                (packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_node_id));
+                (packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_segment_id.id));
 
             super::UnpackPath(
                 // -- packed input
@@ -338,9 +330,9 @@ class AlternativeRouting final
                                         s_v_middle, v_t_middle, packed_alternate_path);
 
             raw_route_data.alt_source_traversed_in_reverse.push_back((
-                packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id));
+                packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_segment_id.id));
             raw_route_data.alt_target_traversed_in_reverse.push_back(
-                (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id));
+                (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_segment_id.id));
 
             // unpack the alternate path
             super::UnpackPath(packed_alternate_path.begin(), packed_alternate_path.end(),

@@ -244,8 +244,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, bearing, bearing_range, &has_big_component, &has_small_component](
-                const EdgeData &data)
+            [this, bearing, bearing_range, &has_big_component,
+             &has_small_component](const EdgeData &data)
             {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !data.component.is_tiny));
@@ -290,8 +290,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool has_big_component = false;
         auto results = rtree.Nearest(
             input_coordinate,
-            [this, bearing, bearing_range, &has_big_component, &has_small_component](
-                const EdgeData &data)
+            [this, bearing, bearing_range, &has_big_component,
+             &has_small_component](const EdgeData &data)
             {
                 auto use_segment =
                     (!has_small_component || (!has_big_component && !data.component.is_tiny));
@@ -384,22 +384,18 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         }
 
         ratio = std::min(1.0, std::max(0.0, ratio));
-        if (SPECIAL_NODEID != data.forward_edge_based_node_id)
+        if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
             forward_weight *= ratio;
         }
-        if (SPECIAL_NODEID != data.reverse_edge_based_node_id)
+        if (data.reverse_segment_id.id != SPECIAL_SEGMENTID)
         {
             reverse_weight *= 1.0 - ratio;
         }
 
-        auto transformed = PhantomNodeWithDistance{PhantomNode{data,
-                                                               forward_weight,
-                                                               forward_offset,
-                                                               reverse_weight,
-                                                               reverse_offset,
-                                                               point_on_segment,
-                                                               input_coordinate},
+        auto transformed = PhantomNodeWithDistance{PhantomNode{data, forward_weight, forward_offset,
+                                                               reverse_weight, reverse_offset,
+                                                               point_on_segment, input_coordinate},
                                                    current_perpendicular_distance};
 
         return transformed;
@@ -409,6 +405,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                               const int filter_bearing,
                                               const int filter_bearing_range)
     {
+        BOOST_ASSERT(segment.forward_segment_id.id != SPECIAL_SEGMENTID || !segment.forward_segment_id.enabled);
+        BOOST_ASSERT(segment.reverse_segment_id.id != SPECIAL_SEGMENTID || !segment.reverse_segment_id.enabled);
+
         const double forward_edge_bearing = util::coordinate_calculation::bearing(
             coordinates->at(segment.u), coordinates->at(segment.v));
 
@@ -419,11 +418,11 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         const bool forward_bearing_valid =
             util::bearing::CheckInBounds(std::round(forward_edge_bearing), filter_bearing,
                                          filter_bearing_range) &&
-            segment.forward_edge_based_node_id != SPECIAL_NODEID;
+            segment.forward_segment_id.enabled;
         const bool backward_bearing_valid =
             util::bearing::CheckInBounds(std::round(backward_edge_bearing), filter_bearing,
                                          filter_bearing_range) &&
-            segment.reverse_edge_based_node_id != SPECIAL_NODEID;
+            segment.reverse_segment_id.enabled;
         return std::make_pair(forward_bearing_valid, backward_bearing_valid);
     }
 

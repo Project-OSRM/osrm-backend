@@ -213,9 +213,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     std::vector<PathData> &unpacked_path) const
     {
         const bool start_traversed_in_reverse =
-            (*packed_path_begin != phantom_node_pair.source_phantom.forward_node_id);
+            (*packed_path_begin != phantom_node_pair.source_phantom.forward_segment_id.id);
         const bool target_traversed_in_reverse =
-            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_node_id);
+            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_segment_id.id);
 
         BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
@@ -391,11 +391,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
-            unpacked_path.emplace_back(PathData{
-                id_vector[i], phantom_node_pair.target_phantom.name_id, weight_vector[i],
-                extractor::guidance::TurnInstruction::NO_TURN(),
-                target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
-                                            : phantom_node_pair.target_phantom.forward_travel_mode});
+            unpacked_path.emplace_back(
+                PathData{id_vector[i], phantom_node_pair.target_phantom.name_id, weight_vector[i],
+                         extractor::guidance::TurnInstruction::NO_TURN(),
+                         target_traversed_in_reverse
+                             ? phantom_node_pair.target_phantom.backward_travel_mode
+                             : phantom_node_pair.target_phantom.forward_travel_mode});
         }
 
         if (is_local_path && unpacked_path.size() > 0)
@@ -520,8 +521,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     // A forced loop might be necessary, if source and target are on the same segment.
     // If this is the case and the offsets of the respective direction are larger for the source
     // than the target
-    // then a force loop is required (e.g. source_phantom.forward_node_id ==
-    // target_phantom.forward_node_id
+    // then a force loop is required (e.g. source_phantom.forward_segment_id ==
+    // target_phantom.forward_segment_id
     // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
     // requires
     // a force loop, if the heaps have been initialized with positive offsets.
@@ -588,8 +589,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     // A forced loop might be necessary, if source and target are on the same segment.
     // If this is the case and the offsets of the respective direction are larger for the source
     // than the target
-    // then a force loop is required (e.g. source_phantom.forward_node_id ==
-    // target_phantom.forward_node_id
+    // then a force loop is required (e.g. source_phantom.forward_segment_id ==
+    // target_phantom.forward_segment_id
     // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
     // requires
     // a force loop, if the heaps have been initialized with positive offsets.
@@ -760,7 +761,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     bool NeedsLoopForward(const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom) const
     {
-        return source_phantom.forward_node_id == target_phantom.forward_node_id &&
+        return source_phantom.forward_segment_id.enabled &&
+               target_phantom.forward_segment_id.enabled &&
+               source_phantom.forward_segment_id.id == target_phantom.forward_segment_id.id &&
                source_phantom.GetForwardWeightPlusOffset() >
                    target_phantom.GetForwardWeightPlusOffset();
     }
@@ -768,7 +771,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     bool NeedsLoopBackwards(const PhantomNode &source_phantom,
                             const PhantomNode &target_phantom) const
     {
-        return source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
+        return source_phantom.reverse_segment_id.enabled &&
+               target_phantom.reverse_segment_id.enabled &&
+               source_phantom.reverse_segment_id.id == target_phantom.reverse_segment_id.id &&
                source_phantom.GetReverseWeightPlusOffset() >
                    target_phantom.GetReverseWeightPlusOffset();
     }
@@ -812,30 +817,30 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
 
-        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        if (source_phantom.forward_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.forward_node_id,
+            forward_heap.Insert(source_phantom.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_node_id);
+                                source_phantom.forward_segment_id.id);
         }
-        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (source_phantom.reverse_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.reverse_node_id,
+            forward_heap.Insert(source_phantom.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_node_id);
+                                source_phantom.reverse_segment_id.id);
         }
 
-        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        if (target_phantom.forward_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.forward_node_id,
+            reverse_heap.Insert(target_phantom.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_node_id);
+                                target_phantom.forward_segment_id.id);
         }
-        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (target_phantom.reverse_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.reverse_node_id,
+            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_node_id);
+                                target_phantom.reverse_segment_id.id);
         }
 
         const bool constexpr DO_NOT_FORCE_LOOPS =
@@ -866,30 +871,30 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
 
-        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        if (source_phantom.forward_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.forward_node_id,
+            forward_heap.Insert(source_phantom.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_node_id);
+                                source_phantom.forward_segment_id.id);
         }
-        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (source_phantom.reverse_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.reverse_node_id,
+            forward_heap.Insert(source_phantom.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_node_id);
+                                source_phantom.reverse_segment_id.id);
         }
 
-        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        if (target_phantom.forward_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.forward_node_id,
+            reverse_heap.Insert(target_phantom.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_node_id);
+                                target_phantom.forward_segment_id.id);
         }
-        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (target_phantom.reverse_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.reverse_node_id,
+            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_node_id);
+                                target_phantom.reverse_segment_id.id);
         }
 
         const bool constexpr DO_NOT_FORCE_LOOPS =
