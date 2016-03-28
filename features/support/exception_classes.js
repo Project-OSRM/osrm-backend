@@ -1,6 +1,7 @@
 'use strict';
 
 var util = require('util');
+var path = require('path');
 var fs = require('fs');
 
 var OSRMError = class extends Error {
@@ -23,8 +24,8 @@ var OSRMError = class extends Error {
         });
     }
 
-    logTail (path, n, callback) {
-        var expanded = path.resolve(this.TEST_FOLDER, path);
+    logTail (logPath, n, callback) {
+        var expanded = path.resolve(this.TEST_FOLDER, logPath);
         fs.exists(expanded, (exists) => {
             if (exists) {
                 fs.readFile(expanded, (err, data) => {
