@@ -31,7 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
-#include "osrm/coordinate.hpp"
+#include "util/coordinate.hpp"
+
+#include <boost/assert.hpp>
 
 #include <iostream>
 #include <utility>
@@ -44,8 +46,8 @@ namespace engine
 
 struct PhantomNode
 {
-    PhantomNode(NodeID forward_node_id,
-                NodeID reverse_node_id,
+    PhantomNode(SegmentID forward_segment_id,
+                SegmentID reverse_segment_id,
                 unsigned name_id,
                 int forward_weight,
                 int reverse_weight,
@@ -60,8 +62,8 @@ struct PhantomNode
                 unsigned short fwd_segment_position,
                 extractor::TravelMode forward_travel_mode,
                 extractor::TravelMode backward_travel_mode)
-        : forward_node_id(forward_node_id), reverse_node_id(reverse_node_id), name_id(name_id),
-          forward_weight(forward_weight), reverse_weight(reverse_weight),
+        : forward_segment_id(forward_segment_id), reverse_segment_id(reverse_segment_id),
+          name_id(name_id), forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
           forward_packed_geometry_id(forward_packed_geometry_id_),
           reverse_packed_geometry_id(reverse_packed_geometry_id_),
@@ -72,7 +74,8 @@ struct PhantomNode
     }
 
     PhantomNode()
-        : forward_node_id(SPECIAL_NODEID), reverse_node_id(SPECIAL_NODEID),
+        : forward_segment_id{SPECIAL_SEGMENTID, false},
+          reverse_segment_id{SPECIAL_SEGMENTID, false},
           name_id(std::numeric_limits<unsigned>::max()), forward_weight(INVALID_EDGE_WEIGHT),
           reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0), reverse_offset(0),
           forward_packed_geometry_id(SPECIAL_EDGEID), reverse_packed_geometry_id(SPECIAL_EDGEID),
@@ -84,33 +87,22 @@ struct PhantomNode
 
     int GetForwardWeightPlusOffset() const
     {
-        if (SPECIAL_NODEID == forward_node_id)
-        {
-            return 0;
-        }
+        BOOST_ASSERT(forward_segment_id.enabled);
         return forward_offset + forward_weight;
     }
 
     int GetReverseWeightPlusOffset() const
     {
-        if (SPECIAL_NODEID == reverse_node_id)
-        {
-            return 0;
-        }
+        BOOST_ASSERT(reverse_segment_id.enabled);
         return reverse_offset + reverse_weight;
     }
 
-    bool IsBidirected() const
-    {
-        return (forward_node_id != SPECIAL_NODEID) && (reverse_node_id != SPECIAL_NODEID);
-    }
-
-    bool IsCompressed() const { return (forward_offset != 0) || (reverse_offset != 0); }
+    bool IsBidirected() const { return forward_segment_id.enabled && reverse_segment_id.enabled; }
 
     bool IsValid(const unsigned number_of_nodes) const
     {
-        return location.IsValid() &&
-               ((forward_node_id < number_of_nodes) || (reverse_node_id < number_of_nodes)) &&
+        return location.IsValid() && ((forward_segment_id.id < number_of_nodes) ||
+                                      (reverse_segment_id.id < number_of_nodes)) &&
                ((forward_weight != INVALID_EDGE_WEIGHT) ||
                 (reverse_weight != INVALID_EDGE_WEIGHT)) &&
                (component.id != INVALID_COMPONENTID) && (name_id != INVALID_NAMEID);
@@ -133,33 +125,21 @@ struct PhantomNode
                          int reverse_offset_,
                          const util::Coordinate location_,
                          const util::Coordinate input_location_)
+        : forward_segment_id{other.forward_segment_id},
+          reverse_segment_id{other.reverse_segment_id}, name_id{other.name_id},
+          forward_weight{forward_weight_}, reverse_weight{reverse_weight_},
+          forward_offset{forward_offset_}, reverse_offset{reverse_offset_},
+          forward_packed_geometry_id{other.forward_packed_geometry_id},
+          reverse_packed_geometry_id{other.reverse_packed_geometry_id},
+          component{other.component.id, other.component.is_tiny}, location{location_},
+          input_location{input_location_}, fwd_segment_position{other.fwd_segment_position},
+          forward_travel_mode{other.forward_travel_mode},
+          backward_travel_mode{other.backward_travel_mode}
     {
-        forward_node_id = other.forward_edge_based_node_id;
-        reverse_node_id = other.reverse_edge_based_node_id;
-        name_id = other.name_id;
-
-        forward_weight = forward_weight_;
-        reverse_weight = reverse_weight_;
-
-        forward_offset = forward_offset_;
-        reverse_offset = reverse_offset_;
-
-        forward_packed_geometry_id = other.forward_packed_geometry_id;
-        reverse_packed_geometry_id = other.reverse_packed_geometry_id;
-
-        component.id = other.component.id;
-        component.is_tiny = other.component.is_tiny;
-
-        location = location_;
-        input_location = input_location_;
-        fwd_segment_position = other.fwd_segment_position;
-
-        forward_travel_mode = other.forward_travel_mode;
-        backward_travel_mode = other.backward_travel_mode;
     }
 
-    NodeID forward_node_id;
-    NodeID reverse_node_id;
+    SegmentID forward_segment_id;
+    SegmentID reverse_segment_id;
     unsigned name_id;
     int forward_weight;
     int reverse_weight;
@@ -174,7 +154,7 @@ struct PhantomNode
     } component;
 // bit-fields are broken on Windows
 #ifndef _MSC_VER
-    static_assert(sizeof(ComponentType) == 4, "ComponentType needs to 4 bytes big");
+    static_assert(sizeof(ComponentType) == 4, "ComponentType needs to be 4 bytes big");
 #endif
     util::Coordinate location;
     util::Coordinate input_location;
@@ -214,8 +194,8 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNodes &pn)
 
 inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
 {
-    out << "node1: " << pn.forward_node_id << ", "
-        << "node2: " << pn.reverse_node_id << ", "
+    out << "node1: " << pn.forward_segment_id.id << ", "
+        << "node2: " << pn.reverse_segment_id.id << ", "
         << "name: " << pn.name_id << ", "
         << "fwd-w: " << pn.forward_weight << ", "
         << "rev-w: " << pn.reverse_weight << ", "

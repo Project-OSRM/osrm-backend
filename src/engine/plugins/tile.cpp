@@ -364,7 +364,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 };
 
                 // If this is a valid forward edge, go ahead and add it to the tile
-                if (forward_weight != 0 && edge.forward_edge_based_node_id != SPECIAL_NODEID)
+                if (forward_weight != 0 && edge.forward_segment_id.enabled)
                 {
                     std::int32_t start_x = 0;
                     std::int32_t start_y = 0;
@@ -383,7 +383,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
                 // Repeat the above for the coordinates reversed and using the `reverse`
                 // properties
-                if (reverse_weight != 0 && edge.reverse_edge_based_node_id != SPECIAL_NODEID)
+                if (reverse_weight != 0 && edge.reverse_segment_id.enabled)
                 {
                     std::int32_t start_x = 0;
                     std::int32_t start_y = 0;

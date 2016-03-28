@@ -60,31 +60,31 @@ class DirectShortestPathRouting final
         BOOST_ASSERT(source_phantom.IsValid());
         BOOST_ASSERT(target_phantom.IsValid());
 
-        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        if (source_phantom.forward_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.forward_node_id,
+            forward_heap.Insert(source_phantom.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_node_id);
+                                source_phantom.forward_segment_id.id);
         }
-        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (source_phantom.reverse_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.reverse_node_id,
+            forward_heap.Insert(source_phantom.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_node_id);
+                                source_phantom.reverse_segment_id.id);
         }
 
-        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        if (target_phantom.forward_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.forward_node_id,
+            reverse_heap.Insert(target_phantom.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_node_id);
+                                target_phantom.forward_segment_id.id);
         }
 
-        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (target_phantom.reverse_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.reverse_node_id,
+            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_node_id);
+                                target_phantom.reverse_segment_id.id);
         }
 
         int distance = INVALID_EDGE_WEIGHT;
@@ -124,9 +124,9 @@ class DirectShortestPathRouting final
         raw_route_data.shortest_path_length = distance;
         raw_route_data.unpacked_path_segments.resize(1);
         raw_route_data.source_traversed_in_reverse.push_back(
-            (packed_leg.front() != phantom_node_pair.source_phantom.forward_node_id));
+            (packed_leg.front() != phantom_node_pair.source_phantom.forward_segment_id.id));
         raw_route_data.target_traversed_in_reverse.push_back(
-            (packed_leg.back() != phantom_node_pair.target_phantom.forward_node_id));
+            (packed_leg.back() != phantom_node_pair.target_phantom.forward_segment_id.id));
 
         super::UnpackPath(packed_leg.begin(), packed_leg.end(), phantom_node_pair,
                           raw_route_data.unpacked_path_segments.front());

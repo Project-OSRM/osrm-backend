@@ -440,14 +440,8 @@ class StaticRTree
                 // store phantom node in result vector
                 results.push_back(std::move(current_segment));
 
-                if (!use_segment.first)
-                {
-                    results.back().forward_edge_based_node_id = SPECIAL_NODEID;
-                }
-                else if (!use_segment.second)
-                {
-                    results.back().reverse_edge_based_node_id = SPECIAL_NODEID;
-                }
+                results.back().forward_segment_id.enabled &= use_segment.first;
+                results.back().reverse_segment_id.enabled &= use_segment.second;
             }
         }
 
