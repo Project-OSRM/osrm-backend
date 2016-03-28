@@ -20,7 +20,7 @@ var OSRMBaseLoader = class {
             });
         };
 
-        runLaunch(limit((e) => { if (e) callback(e); callback(); }));
+        runLaunch(limit((e) => { if (e) callback(e); else callback(); }));
     }
 
     shutdown (callback) {
@@ -30,7 +30,7 @@ var OSRMBaseLoader = class {
             this.osrmDown(cb);
         };
 
-        runShutdown(limit((e) => { if (e) callback(e); callback(); }));
+        runShutdown(limit((e) => { if (e) callback(e); else callback(); }));
     }
 
     osrmIsRunning () {
@@ -62,7 +62,7 @@ var OSRMBaseLoader = class {
 
     waitForShutdown (callback) {
         var check = () => {
-            if (!this.osrmIsRunning()) callback();
+            if (!this.osrmIsRunning()) return callback();
         };
         setTimeout(check, 100);
     }

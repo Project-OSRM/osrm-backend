@@ -151,7 +151,6 @@ module.exports = function () {
     };
 
     this.writeOSM = (callback) => {
-
         fs.exists(this.DATA_FOLDER, (exists) => {
             var mkDirFn = exists ? (cb) => { cb(); } : fs.mkdir.bind(fs.mkdir, this.DATA_FOLDER);
             mkDirFn((err) => {
@@ -329,7 +328,7 @@ module.exports = function () {
     this.processRowsAndDiff = (table, fn, callback) => {
         var q = d3.queue(1);
 
-        table.hashes().forEach((row, i) => q.defer(fn, row, i));
+        table.hashes().forEach((row, i) => { q.defer(fn, row, i); });
 
         q.awaitAll((err, actual) => {
             if (err) return callback(err);
