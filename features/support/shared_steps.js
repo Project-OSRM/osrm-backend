@@ -26,17 +26,16 @@ module.exports = function () {
             var headers = new Set(table.raw()[0]);
 
             var requestRow = (row, ri, cb) => {
-                var got,
-                    json;
+                var got;
 
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
                         var instructions, bearings, compasses, turns, modes, times, distances;
 
-                        json = JSON.parse(body);
+                        var json = JSON.parse(body);
 
-                        var hasRoute = json.status === 200;
+                        var hasRoute = json.code === 'ok';
 
                         if (hasRoute) {
                             instructions = this.wayList(json.routes[0]);
