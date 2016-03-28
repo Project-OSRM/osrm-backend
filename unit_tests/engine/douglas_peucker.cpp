@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(removed_middle_test)
     */
     std::vector<util::Coordinate> coordinates = {
         util::Coordinate(util::FloatLongitude(5), util::FloatLatitude(5)),
-        util::Coordinate(util::FloatLongitude(7.4999999999999725), util::FloatLatitude(7.50718628974349)),
+        util::Coordinate(util::FloatLongitude(5.995715), util::FloatLatitude(6)),
         util::Coordinate(util::FloatLongitude(10), util::FloatLatitude(10)),
         util::Coordinate(util::FloatLongitude(15), util::FloatLatitude(5))};
 
