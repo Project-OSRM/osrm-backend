@@ -44,8 +44,8 @@ class DB {
                 uid: n.OSM_UID,
                 user: n.OSM_USER,
                 timestamp: n.OSM_TIMESTAMP,
-                lon: n.lon,
-                lat: n.lat
+                lon: ensureDecimal(n.lon),
+                lat: ensureDecimal(n.lat)
             });
 
             for (var k in n.tags) {
@@ -109,8 +109,8 @@ class Node {
         this.OSM_USER = OSM_USER;
         this.OSM_TIMESTAMP = OSM_TIMESTAMP;
         this.OSM_UID = OSM_UID;
-        this.lon = ensureDecimal(lon);
-        this.lat = ensureDecimal(lat);
+        this.lon = lon;
+        this.lat = lat;
         this.tags = tags;
     }
 
