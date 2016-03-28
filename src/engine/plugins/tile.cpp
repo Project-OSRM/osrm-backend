@@ -30,7 +30,7 @@ namespace detail
 const constexpr double VECTOR_TILE_EXTENT = 4096.0;
 const constexpr double VECTOR_TILE_BUFFER = 128.0;
 
-// Simple container class for WSG84 coordinates
+// Simple container class for WGS84 coordinates
 template <typename T> struct Point final
 {
     Point(T _x, T _y) : x(_x), y(_y) {}
@@ -173,8 +173,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     using namespace util::coordinate_calculation;
     double min_lon, min_lat, max_lon, max_lat;
 
-    // Convert the z,x,y mercator tile coordinates into WSG84 lon/lat values
-    mercator::xyzToWSG84(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon,
+    // Convert the z,x,y mercator tile coordinates into WGS84 lon/lat values
+    mercator::xyzToWGS84(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon,
                          max_lat);
 
     util::Coordinate southwest{util::FloatLongitude(min_lon), util::FloatLatitude(min_lat)};

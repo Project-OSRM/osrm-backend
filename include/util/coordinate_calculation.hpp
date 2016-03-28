@@ -24,21 +24,25 @@ const constexpr double EARTH_RADIUS_WGS84 = 6378137.0;
 
 namespace detail
 {
-    // earth circumference devided by 2
-    const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * boost::math::constants::pi<double>();
-    // ^ math functions are not constexpr since they have side-effects (setting errno) :(
-    const double MAX_LATITUDE = RAD_TO_DEGREE * (2.0 * std::atan(std::exp(180.0 * DEGREE_TO_RAD)) - boost::math::constants::half_pi<double>());
-    const constexpr double MAX_LONGITUDE = 180.0;
+// earth circumference devided by 2
+const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * boost::math::constants::pi<double>();
+// ^ math functions are not constexpr since they have side-effects (setting errno) :(
+const double MAX_LATITUDE = RAD_TO_DEGREE * (2.0 * std::atan(std::exp(180.0 * DEGREE_TO_RAD)) -
+                                             boost::math::constants::half_pi<double>());
+const constexpr double MAX_LONGITUDE = 180.0;
 }
 
-
-//! Projects both coordinates and takes the euclidean distance of the projected points
-// Does not return meters!
-double euclideanDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
+//! Takes the squared euclidean distance of the input coordinates. Does not return meters!
+double squaredEuclideanDistance(const FloatCoordinate &lhs, const FloatCoordinate &rhs);
 
 double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
+
+std::pair<double, FloatCoordinate>
+projectPointOnSegment(const FloatCoordinate &projected_xy_source,
+                      const FloatCoordinate &projected_xy_target,
+                      const FloatCoordinate &projected_xy_coordinate);
 
 double perpendicularDistance(const Coordinate segment_source,
                              const Coordinate segment_target,
@@ -49,20 +53,6 @@ double perpendicularDistance(const Coordinate segment_source,
                              const Coordinate query_location,
                              Coordinate &nearest_location,
                              double &ratio);
-
-double perpendicularDistanceFromProjectedCoordinate(
-    const Coordinate segment_source,
-    const Coordinate segment_target,
-    const Coordinate query_location,
-    const std::pair<double, double> projected_xy_coordinate);
-
-double perpendicularDistanceFromProjectedCoordinate(
-    const Coordinate segment_source,
-    const Coordinate segment_target,
-    const Coordinate query_location,
-    const std::pair<double, double> projected_xy_coordinate,
-    Coordinate &nearest_location,
-    double &ratio);
 
 Coordinate centroid(const Coordinate lhs, const Coordinate rhs);
 
@@ -86,8 +76,14 @@ double degreeToPixel(FloatLatitude lat, unsigned zoom);
 double degreeToPixel(FloatLongitude lon, unsigned zoom);
 FloatLatitude yToLat(const double value);
 double latToY(const FloatLatitude latitude);
-void xyzToMercator(const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy);
-void xyzToWSG84(const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy);
+
+FloatCoordinate fromWGS84(const FloatCoordinate &wgs84_coordinate);
+FloatCoordinate toWGS84(const FloatCoordinate &mercator_coordinate);
+
+void xyzToMercator(
+    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy);
+void xyzToWGS84(
+    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy);
 } // ns mercator
 } // ns coordinate_calculation
 } // ns util

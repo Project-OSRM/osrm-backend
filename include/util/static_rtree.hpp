@@ -36,6 +36,8 @@ namespace util
 {
 
 // Static RTree for serving nearest neighbour queries
+// All coordinates are pojected first to Web Mercator before the bounding boxes
+// are computed, this means the internal distance metric doesn not represent meters!
 template <class EdgeDataT,
           class CoordinateListT = std::vector<Coordinate>,
           bool UseSharedMemory = false,
@@ -48,7 +50,11 @@ class StaticRTree
     using EdgeData = EdgeDataT;
     using CoordinateList = CoordinateListT;
 
-    static constexpr std::size_t MAX_CHECKED_ELEMENTS = 4 * LEAF_NODE_SIZE;
+    struct CandidateSegment
+    {
+        Coordinate fixed_projected_coordinate;
+        EdgeDataT data;
+    };
 
     struct TreeNode
     {
@@ -86,16 +92,16 @@ class StaticRTree
         }
     };
 
-    using QueryNodeType = mapbox::util::variant<TreeNode, EdgeDataT>;
+    using QueryNodeType = mapbox::util::variant<TreeNode, CandidateSegment>;
     struct QueryCandidate
     {
         inline bool operator<(const QueryCandidate &other) const
         {
             // Attn: this is reversed order. std::pq is a max pq!
-            return other.min_dist < min_dist;
+            return other.squared_min_dist < squared_min_dist;
         }
 
-        float min_dist;
+        double squared_min_dist;
         QueryNodeType node;
     };
 
@@ -315,9 +321,16 @@ class StaticRTree
         leaves_stream.read((char *)&m_element_count, sizeof(uint64_t));
     }
 
-    /* Returns all features inside the bounding box */
+    /* Returns all features inside the bounding box.
+       Rectangle needs to be projected!*/
     std::vector<EdgeDataT> SearchInBox(const Rectangle &search_rectangle)
     {
+        const Rectangle projected_rectangle{
+            search_rectangle.min_lon, search_rectangle.max_lon,
+            toFixed(FloatLatitude{coordinate_calculation::mercator::latToY(
+                toFloating(FixedLatitude(search_rectangle.min_lat)))}),
+            toFixed(FloatLatitude{coordinate_calculation::mercator::latToY(
+                toFloating(FixedLatitude(search_rectangle.max_lat)))})};
         std::vector<EdgeDataT> results;
 
         std::queue<TreeNode> traversal_queue;
@@ -377,11 +390,11 @@ class StaticRTree
     std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate, const std::size_t max_results)
     {
         return Nearest(input_coordinate,
-                       [](const EdgeDataT &)
+                       [](const CandidateSegment &)
                        {
                            return std::make_pair(true, true);
                        },
-                       [max_results](const std::size_t num_results, const float)
+                       [max_results](const std::size_t num_results, const CandidateSegment &)
                        {
                            return num_results >= max_results;
                        });
@@ -393,9 +406,8 @@ class StaticRTree
     Nearest(const Coordinate input_coordinate, const FilterT filter, const TerminationT terminate)
     {
         std::vector<EdgeDataT> results;
-        std::pair<double, double> projected_coordinate = {
-            static_cast<double>(toFloating(input_coordinate.lon)),
-            coordinate_calculation::mercator::latToY(toFloating(input_coordinate.lat))};
+        auto projected_coordinate = coordinate_calculation::mercator::fromWGS84(input_coordinate);
+        Coordinate fixed_projected_coordinate{projected_coordinate};
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
@@ -403,13 +415,7 @@ class StaticRTree
 
         while (!traversal_queue.empty())
         {
-            const QueryCandidate current_query_node = traversal_queue.top();
-            if (terminate(results.size(), current_query_node.min_dist))
-            {
-                traversal_queue = std::priority_queue<QueryCandidate>{};
-                break;
-            }
-
+            QueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
 
             if (current_query_node.node.template is<TreeNode>())
@@ -418,30 +424,34 @@ class StaticRTree
                     current_query_node.node.template get<TreeNode>();
                 if (current_tree_node.child_is_on_disk)
                 {
-                    ExploreLeafNode(current_tree_node.children[0], input_coordinate,
-                                    projected_coordinate, traversal_queue);
+                    ExploreLeafNode(current_tree_node.children[0], projected_coordinate,
+                                    traversal_queue);
                 }
                 else
                 {
-                    ExploreTreeNode(current_tree_node, input_coordinate, traversal_queue);
+                    ExploreTreeNode(current_tree_node, fixed_projected_coordinate, traversal_queue);
                 }
             }
             else
             {
                 // inspecting an actual road segment
-                const auto &current_segment = current_query_node.node.template get<EdgeDataT>();
+                auto &current_candidate = current_query_node.node.template get<CandidateSegment>();
+                if (terminate(results.size(), current_candidate))
+                {
+                    traversal_queue = std::priority_queue<QueryCandidate>{};
+                    break;
+                }
 
-                auto use_segment = filter(current_segment);
+                auto use_segment = filter(current_candidate);
                 if (!use_segment.first && !use_segment.second)
                 {
                     continue;
                 }
+                current_candidate.data.forward_segment_id.enabled &= use_segment.first;
+                current_candidate.data.reverse_segment_id.enabled &= use_segment.second;
 
                 // store phantom node in result vector
-                results.push_back(std::move(current_segment));
-
-                results.back().forward_segment_id.enabled &= use_segment.first;
-                results.back().reverse_segment_id.enabled &= use_segment.second;
+                results.push_back(std::move(current_candidate.data));
             }
         }
 
@@ -451,8 +461,7 @@ class StaticRTree
   private:
     template <typename QueueT>
     void ExploreLeafNode(const std::uint32_t leaf_id,
-                         const Coordinate input_coordinate,
-                         const std::pair<double, double> &projected_coordinate,
+                         const FloatCoordinate &projected_input_coordinate,
                          QueueT &traversal_queue)
     {
         LeafNode current_leaf_node;
@@ -462,21 +471,30 @@ class StaticRTree
         for (const auto i : irange(0u, current_leaf_node.object_count))
         {
             auto &current_edge = current_leaf_node.objects[i];
-            const float current_perpendicular_distance =
-                coordinate_calculation::perpendicularDistanceFromProjectedCoordinate(
-                    m_coordinate_list->at(current_edge.u), m_coordinate_list->at(current_edge.v),
-                    input_coordinate, projected_coordinate);
+            auto projected_u =
+                coordinate_calculation::mercator::fromWGS84((*m_coordinate_list)[current_edge.u]);
+            auto projected_v =
+                coordinate_calculation::mercator::fromWGS84((*m_coordinate_list)[current_edge.v]);
+
+            FloatCoordinate projected_nearest;
+            std::tie(std::ignore, projected_nearest) =
+                coordinate_calculation::projectPointOnSegment(projected_u, projected_v,
+                                                              projected_input_coordinate);
+
+            auto squared_distance = coordinate_calculation::squaredEuclideanDistance(
+                projected_input_coordinate, projected_nearest);
             // distance must be non-negative
-            BOOST_ASSERT(0.f <= current_perpendicular_distance);
+            BOOST_ASSERT(0. <= squared_distance);
 
             traversal_queue.push(
-                QueryCandidate{current_perpendicular_distance, std::move(current_edge)});
+                QueryCandidate{squared_distance, CandidateSegment{Coordinate{projected_nearest},
+                                                                  std::move(current_edge)}});
         }
     }
 
     template <class QueueT>
     void ExploreTreeNode(const TreeNode &parent,
-                         const Coordinate input_coordinate,
+                         const Coordinate fixed_projected_input_coordinate,
                          QueueT &traversal_queue)
     {
         for (std::uint32_t i = 0; i < parent.child_count; ++i)
@@ -484,8 +502,10 @@ class StaticRTree
             const std::int32_t child_id = parent.children[i];
             const auto &child_tree_node = m_search_tree[child_id];
             const auto &child_rectangle = child_tree_node.minimum_bounding_rectangle;
-            const float lower_bound_to_element = child_rectangle.GetMinDist(input_coordinate);
-            traversal_queue.push(QueryCandidate{lower_bound_to_element, m_search_tree[child_id]});
+            const auto squared_lower_bound_to_element =
+                child_rectangle.GetMinSquaredDist(fixed_projected_input_coordinate);
+            traversal_queue.push(
+                QueryCandidate{squared_lower_bound_to_element, m_search_tree[child_id]});
         }
     }
 
@@ -517,19 +537,29 @@ class StaticRTree
             BOOST_ASSERT(objects[i].u < coordinate_list.size());
             BOOST_ASSERT(objects[i].v < coordinate_list.size());
 
+            Coordinate projected_u{coordinate_calculation::mercator::fromWGS84(
+                Coordinate{coordinate_list[objects[i].u]})};
+            Coordinate projected_v{coordinate_calculation::mercator::fromWGS84(
+                Coordinate{coordinate_list[objects[i].v]})};
+
+            BOOST_ASSERT(toFloating(projected_u.lon) <= FloatLongitude(180.));
+            BOOST_ASSERT(toFloating(projected_u.lon) >= FloatLongitude(-180.));
+            BOOST_ASSERT(toFloating(projected_u.lat) <= FloatLatitude(180.));
+            BOOST_ASSERT(toFloating(projected_u.lat) >= FloatLatitude(-180.));
+            BOOST_ASSERT(toFloating(projected_v.lon) <= FloatLongitude(180.));
+            BOOST_ASSERT(toFloating(projected_v.lon) >= FloatLongitude(-180.));
+            BOOST_ASSERT(toFloating(projected_v.lat) <= FloatLatitude(180.));
+            BOOST_ASSERT(toFloating(projected_v.lat) >= FloatLatitude(-180.));
+
             rectangle.min_lon =
-                std::min(rectangle.min_lon, std::min(coordinate_list[objects[i].u].lon,
-                                                     coordinate_list[objects[i].v].lon));
+                std::min(rectangle.min_lon, std::min(projected_u.lon, projected_v.lon));
             rectangle.max_lon =
-                std::max(rectangle.max_lon, std::max(coordinate_list[objects[i].u].lon,
-                                                     coordinate_list[objects[i].v].lon));
+                std::max(rectangle.max_lon, std::max(projected_u.lon, projected_v.lon));
 
             rectangle.min_lat =
-                std::min(rectangle.min_lat, std::min(coordinate_list[objects[i].u].lat,
-                                                     coordinate_list[objects[i].v].lat));
+                std::min(rectangle.min_lat, std::min(projected_u.lat, projected_v.lat));
             rectangle.max_lat =
-                std::max(rectangle.max_lat, std::max(coordinate_list[objects[i].u].lat,
-                                                     coordinate_list[objects[i].v].lat));
+                std::max(rectangle.max_lat, std::max(projected_u.lat, projected_v.lat));
         }
         BOOST_ASSERT(rectangle.min_lon != FixedLongitude(std::numeric_limits<int>::min()));
         BOOST_ASSERT(rectangle.min_lat != FixedLatitude(std::numeric_limits<int>::min()));

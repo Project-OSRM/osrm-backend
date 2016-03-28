@@ -80,7 +80,10 @@ struct RectangleInt2D
                  min_lat > other.max_lat);
     }
 
-    double GetMinDist(const Coordinate location) const
+    // This code assumes that we are operating in euclidean space!
+    // That means if you just put unprojected lat/lon in here you will
+    // get invalid results.
+    double GetMinSquaredDist(const Coordinate location) const
     {
         const bool is_contained = Contains(location);
         if (is_contained)
@@ -117,36 +120,36 @@ struct RectangleInt2D
         switch (d)
         {
         case NORTH:
-            min_dist = coordinate_calculation::greatCircleDistance(
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
                 location, Coordinate(location.lon, max_lat));
             break;
         case SOUTH:
-            min_dist = coordinate_calculation::greatCircleDistance(
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
                 location, Coordinate(location.lon, min_lat));
             break;
         case WEST:
-            min_dist = coordinate_calculation::greatCircleDistance(
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
                 location, Coordinate(min_lon, location.lat));
             break;
         case EAST:
-            min_dist = coordinate_calculation::greatCircleDistance(
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
                 location, Coordinate(max_lon, location.lat));
             break;
         case NORTH_EAST:
             min_dist =
-                coordinate_calculation::greatCircleDistance(location, Coordinate(max_lon, max_lat));
+                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(max_lon, max_lat));
             break;
         case NORTH_WEST:
             min_dist =
-                coordinate_calculation::greatCircleDistance(location, Coordinate(min_lon, max_lat));
+                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(min_lon, max_lat));
             break;
         case SOUTH_EAST:
             min_dist =
-                coordinate_calculation::greatCircleDistance(location, Coordinate(max_lon, min_lat));
+                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(max_lon, min_lat));
             break;
         case SOUTH_WEST:
             min_dist =
-                coordinate_calculation::greatCircleDistance(location, Coordinate(min_lon, min_lat));
+                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(min_lon, min_lat));
             break;
         default:
             break;
@@ -155,37 +158,6 @@ struct RectangleInt2D
         BOOST_ASSERT(min_dist < std::numeric_limits<double>::max());
 
         return min_dist;
-    }
-
-    double GetMinMaxDist(const Coordinate location) const
-    {
-        double min_max_dist = std::numeric_limits<double>::max();
-        // Get minmax distance to each of the four sides
-        const Coordinate upper_left(min_lon, max_lat);
-        const Coordinate upper_right(max_lon, max_lat);
-        const Coordinate lower_right(max_lon, min_lat);
-        const Coordinate lower_left(min_lon, min_lat);
-
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::greatCircleDistance(location, upper_left),
-                              coordinate_calculation::greatCircleDistance(location, upper_right)));
-
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::greatCircleDistance(location, upper_right),
-                              coordinate_calculation::greatCircleDistance(location, lower_right)));
-
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::greatCircleDistance(location, lower_right),
-                              coordinate_calculation::greatCircleDistance(location, lower_left)));
-
-        min_max_dist =
-            std::min(min_max_dist,
-                     std::max(coordinate_calculation::greatCircleDistance(location, lower_left),
-                              coordinate_calculation::greatCircleDistance(location, upper_left)));
-        return min_max_dist;
     }
 
     bool Contains(const Coordinate location) const
