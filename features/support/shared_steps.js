@@ -39,13 +39,13 @@ module.exports = function () {
                         var hasRoute = json.status === 200;
 
                         if (hasRoute) {
-                            instructions = this.wayList(json.route_instructions);
-                            bearings = this.bearingList(json.route_instructions);
-                            compasses = this.compassList(json.route_instructions);
-                            turns = this.turnList(json.route_instructions);
-                            modes = this.modeList(json.route_instructions);
-                            times = this.timeList(json.route_instructions);
-                            distances = this.distanceList(json.route_instructions);
+                            instructions = this.wayList(json.routes[0]);
+                            bearings = this.bearingList(json.routes[0]);
+                            compasses = this.compassList(json.routes[0]);
+                            turns = this.turnList(json.routes[0]);
+                            modes = this.modeList(json.routes[0]);
+                            times = this.timeList(json.routes[0]);
+                            distances = this.distanceList(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
@@ -81,8 +81,8 @@ module.exports = function () {
                                     this.wayList(json.alternative_instructions[0]) : '';
                             }
 
-                            var distance = hasRoute && json.route_summary.total_distance,
-                                time = hasRoute && json.route_summary.total_time;
+                            var distance = hasRoute && json.routes[0].distance,
+                                time = hasRoute && json.routes[0].duration;
 
                             if (headers.has('distance')) {
                                 if (row.distance.length) {
