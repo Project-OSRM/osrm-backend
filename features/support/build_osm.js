@@ -2,6 +2,11 @@
 
 var builder = require('xmlbuilder');
 
+var ensureDecimal = (i) => {
+    if (parseInt(i) === i) return i.toFixed(1);
+    else return i;
+};
+
 class DB {
     constructor () {
         this.nodes = new Array();
@@ -104,8 +109,8 @@ class Node {
         this.OSM_USER = OSM_USER;
         this.OSM_TIMESTAMP = OSM_TIMESTAMP;
         this.OSM_UID = OSM_UID;
-        this.lon = lon;
-        this.lat = lat;
+        this.lon = ensureDecimal(lon);
+        this.lat = ensureDecimal(lat);
         this.tags = tags;
     }
 
