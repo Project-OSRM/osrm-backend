@@ -94,13 +94,13 @@ module.exports = function () {
         q.awaitAll(callback);
     };
 
-    var ensureDecimal = (i) => {
+    this.ensureDecimal = (i) => {
         if (parseInt(i) === i) return i.toFixed(1);
         else return i;
     };
 
     this.tableCoordToLonLat = (ci, ri) => {
-        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(ensureDecimal);
+        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(this.ensureDecimal);
     };
 
     this.addOSMNode = (name, lon, lat, id) => {

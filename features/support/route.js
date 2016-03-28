@@ -34,7 +34,7 @@ module.exports = function () {
     };
 
     var encodeWaypoints = (waypoints) => {
-        return waypoints.map(w => [w.lon, w.lat].join(','));
+        return waypoints.map(w => [w.lon, w.lat].map(this.ensureDecimal).join(','));
     };
 
     this.requestRoute = (waypoints, bearings, userParams, callback) => {
@@ -43,7 +43,7 @@ module.exports = function () {
         var defaults = {
             output: 'json',
             steps: 'true',
-            alternative: 'false'
+            alternatives: 'false'
         },
             params = this.overwriteParams(defaults, userParams),
             encodedWaypoints = encodeWaypoints(waypoints);
@@ -108,18 +108,19 @@ module.exports = function () {
         return this.requestPath('match', params, callback);
     };
 
-    this.extractInstructionList = (instructions, index, postfix) => {
+    this.extractInstructionList = (instructions, keyFinder, postfix) => {
         postfix = postfix || null;
         if (instructions) {
-            return instructions.filter(r => r[0].toString() !== this.DESTINATION_REACHED.toString())
-                .map(r => r[index])
-                .map(r => (isNaN(parseInt(r)) && (!r || r == '')) ? '""' : '' + r + (postfix || ''))
+            return Array.prototype.concat.apply([],
+                instructions.legs.map(l => l.steps))
+                    .filter(s => s.maneuver.type !== 'arrive')
+                    .map(keyFinder)
                 .join(',');
         }
     };
 
     this.wayList = (instructions) => {
-        return this.extractInstructionList(instructions, 1);
+        return this.extractInstructionList(instructions, s => s.name);
     };
 
     this.compassList = (instructions) => {
