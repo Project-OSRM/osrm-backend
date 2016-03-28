@@ -78,6 +78,8 @@ inline FloatLongitude toFloating(const FixedLongitude fixed)
     return FloatLongitude(floating);
 }
 
+struct FloatCoordinate;
+
 // Coordinate encoded as longitude, latitude
 struct Coordinate
 {
@@ -85,6 +87,7 @@ struct Coordinate
     FixedLatitude lat;
 
     Coordinate();
+    Coordinate(const FloatCoordinate &other);
     Coordinate(const FixedLongitude lon_, const FixedLatitude lat_);
     Coordinate(const FloatLongitude lon_, const FloatLatitude lat_);
 
@@ -104,8 +107,27 @@ struct Coordinate
     friend std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
 };
 
+// Coordinate encoded as longitude, latitude
+struct FloatCoordinate
+{
+    FloatLongitude lon;
+    FloatLatitude lat;
+
+    FloatCoordinate();
+    FloatCoordinate(const FixedLongitude lon_, const FixedLatitude lat_);
+    FloatCoordinate(const FloatLongitude lon_, const FloatLatitude lat_);
+    FloatCoordinate(const Coordinate other);
+
+    bool IsValid() const;
+    friend bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
+    friend bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs);
+    friend std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
+};
+
 bool operator==(const Coordinate lhs, const Coordinate rhs);
+bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
 std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
+std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
 }
 }
 
