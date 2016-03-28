@@ -23,14 +23,11 @@ BOOST_AUTO_TEST_CASE(removed_middle_test)
     */
     std::vector<util::Coordinate> coordinates = {
         util::Coordinate(util::FloatLongitude(5), util::FloatLatitude(5)),
-        util::Coordinate(util::FloatLongitude(6), util::FloatLatitude(6)),
+        util::Coordinate(util::FloatLongitude(7.4999999999999725), util::FloatLatitude(7.50718628974349)),
         util::Coordinate(util::FloatLongitude(10), util::FloatLatitude(10)),
         util::Coordinate(util::FloatLongitude(15), util::FloatLatitude(5))};
 
-    // FIXME this test fails for everything below z4 because the DP algorithms
-    // only used a naive distance measurement
-    // for (unsigned z = 0; z < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE; z++)
-    for (unsigned z = 0; z < 2; z++)
+    for (unsigned z = 0; z < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE; z++)
     {
         auto result = douglasPeucker(coordinates, z);
         BOOST_CHECK_EQUAL(result.size(), 3);
@@ -39,6 +36,38 @@ BOOST_AUTO_TEST_CASE(removed_middle_test)
         BOOST_CHECK_EQUAL(result[2], coordinates[3]);
     }
 }
+
+BOOST_AUTO_TEST_CASE(removed_middle_test_zoom_sensitive)
+{
+    /*
+            x
+           / \
+          x   \
+         /     \
+        x       x
+    */
+    std::vector<util::Coordinate> coordinates = {
+        util::Coordinate(util::FloatLongitude(5), util::FloatLatitude(5)),
+        util::Coordinate(util::FloatLongitude(6), util::FloatLatitude(6)),
+        util::Coordinate(util::FloatLongitude(10), util::FloatLatitude(10)),
+        util::Coordinate(util::FloatLongitude(15), util::FloatLatitude(5))};
+
+    // Coordinate 6,6 should start getting included at Z12 and higher
+    // Note that 5,5->6,6->10,10 is *not* a straight line on the surface
+    // of the earth
+    for (unsigned z = 0; z < 11; z++)
+    {
+        auto result = douglasPeucker(coordinates, z);
+        BOOST_CHECK_EQUAL(result.size(), 3);
+    }
+    // From 12 to max zoom, we should get all coordinates
+    for (unsigned z = 12; z < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE; z++)
+    {
+        auto result = douglasPeucker(coordinates, z);
+        BOOST_CHECK_EQUAL(result.size(), 4);
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(remove_second_node_test)
 {
