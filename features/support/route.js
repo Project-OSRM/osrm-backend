@@ -111,10 +111,9 @@ module.exports = function () {
     this.extractInstructionList = (instructions, keyFinder, postfix) => {
         postfix = postfix || null;
         if (instructions) {
-            return Array.prototype.concat.apply([],
-                instructions.legs.map(l => l.steps))
-                    .filter(s => s.maneuver.type !== 'arrive')
-                    .map(keyFinder)
+            return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
+                .filter(v => v.maneuver.type !== 'arrive')
+                .map(keyFinder)
                 .join(',');
         }
     };
@@ -124,49 +123,29 @@ module.exports = function () {
     };
 
     this.compassList = (instructions) => {
-        return this.extractInstructionList(instructions, 6);
+        return this.extractInstructionList(instructions, s => 'n'); // TODO fixme
     };
 
     this.bearingList = (instructions) => {
-        return this.extractInstructionList(instructions, 7);
+        return this.extractInstructionList(instructions, s => s.bearing_after);
     };
 
     this.turnList = (instructions) => {
-        var types = {
-            '0': 'none',
-            '1': 'straight',
-            '2': 'slight_right',
-            '3': 'right',
-            '4': 'sharp_right',
-            '5': 'u_turn',
-            '6': 'sharp_left',
-            '7': 'left',
-            '8': 'slight_left',
-            '9': 'via',
-            '10': 'head',
-            '11': 'enter_roundabout',
-            '12': 'leave_roundabout',
-            '13': 'stay_roundabout',
-            '14': 'start_end_of_street',
-            '15': 'destination',
-            '16': 'name_changes',
-            '17': 'enter_contraflow',
-            '18': 'leave_contraflow'
-        };
-
-        // replace instructions codes with strings, e.g. '11-3' gets converted to 'enter_roundabout-3'
-        return instructions ? instructions.map(r => r[0].toString().replace(/^(\d*)/, (match, num) => types[num])).join(',') : instructions;
+        return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
+            .filter(v => v.maneuver.modifier)
+            .map(v => v.maneuver.modifier)
+            .join(',');
     };
 
     this.modeList = (instructions) => {
-        return this.extractInstructionList(instructions, 8);
+        return this.extractInstructionList(instructions, s => s.mode);
     };
 
     this.timeList = (instructions) => {
-        return this.extractInstructionList(instructions, 4, 's');
+        return this.extractInstructionList(instructions, s => s.duration + 's');
     };
 
     this.distanceList = (instructions) => {
-        return this.extractInstructionList(instructions, 2, 'm');
+        return this.extractInstructionList(instructions, s => s.distance + 'm');
     };
 };
