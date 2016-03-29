@@ -4,7 +4,7 @@ Feature: Bike - Squares and other areas
     Background:
         Given the profile "bicycle"
 
-    @square
+    @square @mokob @2154
     Scenario: Bike - Route along edge of a squares
         Given the node map
             | x |   |
@@ -50,7 +50,7 @@ Feature: Bike - Squares and other areas
             | d    | a  | xa    |
             | a    | d  | xa    |
 
-    @parking
+    @parking @mokob @2154
     Scenario: Bike - parking areas
         Given the node map
             | e |   |   | f |
@@ -77,7 +77,7 @@ Feature: Bike - Squares and other areas
             | d    | a  | abcda       |
             | a    | d  | abcda       |
 
-    @train @platform
+    @train @platform @mokob @2154
     Scenario: Bike - railway platforms
         Given the node map
             | x | a | b | y |

@@ -131,9 +131,9 @@ module.exports = function () {
     };
 
     this.turnList = (instructions) => {
+        // console.log(instructions.legs[0].steps)
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
-            .filter(v => v.maneuver.modifier)
-            .map(v => v.maneuver.modifier)
+            .map(v => v.maneuver.type === 'depart' ? 'head' : v.maneuver.type === 'arrive' ? 'destination' : v.maneuver.modifier)
             .join(',');
     };
 
