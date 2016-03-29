@@ -1,6 +1,7 @@
 #ifndef ENGINE_GUIDANCE_POST_PROCESSING_HPP
 #define ENGINE_GUIDANCE_POST_PROCESSING_HPP
 
+#include "engine/phantom_node.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 
@@ -15,6 +16,19 @@ namespace guidance
 
 // passed as none-reference to modify in-place and move out again
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps);
+
+// trim initial/final segment of very short length.
+// This function uses in/out parameter passing to modify both steps and geometry in place.
+// We use this method since both steps and geometry are closely coupled logically but
+// are not coupled in the same way in the background. To avoid the additional overhead
+// of introducing intermediate structions, we resolve to the in/out scheme at this point.
+void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry);
+
+// assign relative locations to depart/arrive instructions
+std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
+                                               const LegGeometry &geometry,
+                                               const PhantomNode &source_node,
+                                               const PhantomNode &target_node);
 
 // postProcess will break the connection between the leg geometry
 // for which a segment is supposed to represent exactly the coordinates
