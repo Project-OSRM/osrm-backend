@@ -3,7 +3,13 @@ var request = require('request');
 
 module.exports = function () {
     this.requestPath = (service, params, callback) => {
-        var uri = [this.HOST, service, 'v1', this.profile].join('/');
+        var uri;
+        if (service == 'timestamp') {
+            uri = [this.HOST, service].join('/');
+        } else {
+            uri = [this.HOST, service, 'v1', this.profile].join('/');
+        }
+
         return this.sendRequest(uri, params, callback);
     };
 
