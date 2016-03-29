@@ -14,12 +14,12 @@ Feature: Basic Roundabout
             |   |   | f |   |   |
 
        And the ways
-            | nodes  | roundabout |
-            | ab     | no         |
-            | cd     | no         |
-            | ef     | no         |
-            | gh     | no         |
-            | bcegb  | yes        |
+            | nodes  | junction   |
+            | ab     |            |
+            | cd     |            |
+            | ef     |            |
+            | gh     |            |
+            | bcegb  | roundabout |
 
        When I route I should get
            | waypoints | route    | turns                             |
@@ -45,12 +45,12 @@ Feature: Basic Roundabout
             |   |   | f |   |   |
 
        And the ways
-            | nodes  | roundabout |
-            | ab     | no         |
-            | cd     | no         |
-            | ef     | no         |
-            | gh     | no         |
-            | bcegb  | yes        |
+            | nodes  | junction   |
+            | ab     |            |
+            | cd     |            |
+            | ef     |            |
+            | gh     |            |
+            | bcegb  | roundabout |
 
        When I route I should get
            | waypoints | route    | turns                            |
@@ -80,12 +80,12 @@ Feature: Basic Roundabout
             |   |   | f |   |   |
 
        And the ways
-            | nodes  | roundabout |
-            | ab     | no         |
-            | cd     | no         |
-            | ef     | no         |
-            | gh     | no         |
-            | bcegb  | yes        |
+            | nodes  | junction   |
+            | ab     |            |
+            | cd     |            |
+            | ef     |            |
+            | gh     |            |
+            | bcegb  | roundabout |
 
        When I route I should get
            | waypoints | route       | turns                             |
@@ -115,12 +115,12 @@ Feature: Basic Roundabout
             |   |   | f |   |   |
 
        And the ways
-            | nodes  | roundabout |
-            | ab     | no         |
-            | cd     | no         |
-            | ef     | no         |
-            | gh     | no         |
-            | bcegb  | yes        |
+            | nodes  | junction   |
+            | ab     |            |
+            | cd     |            |
+            | ef     |            |
+            | gh     |            |
+            | bcegb  | roundabout |
 
        When I route I should get
            | waypoints | route       | turns          |
@@ -146,12 +146,12 @@ Feature: Basic Roundabout
            |   | i |   | g |   |
 
         And the ways
-           | nodes | roundabout | oneway |
-           | abc   | no         | yes    |
-           | def   | no         | yes    |
-           | ghi   | no         | yes    |
-           | jkl   | no         | yes    |
-           | behkb | yes        | yes    |
+           | nodes | junction   | oneway |
+           | abc   |            | yes    |
+           | def   |            | yes    |
+           | ghi   |            | yes    |
+           | jkl   |            | yes    |
+           | behkb | roundabout | yes    |
 
         When I route I should get
            | waypoints | route       | turns                             |
