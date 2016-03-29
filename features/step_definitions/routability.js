@@ -108,7 +108,7 @@ module.exports = function () {
                         result.bothw[key] = 'diff';
                     }
                     scb();
-                }
+                };
 
                 ['status', 'time', 'distance', 'speed'].forEach((key) => {
                     sq.defer(parseRes, key);
