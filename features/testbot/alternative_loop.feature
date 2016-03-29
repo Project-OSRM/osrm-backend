@@ -19,7 +19,7 @@ Feature: Alternative route
             | ca    | yes    |
 
         And the query options
-            | alt | true |
+            | alternative | true |
 
         When I route I should get
             | from | to | route          | alternative |
