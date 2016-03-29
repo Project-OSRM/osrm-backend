@@ -3,9 +3,12 @@ var request = require('request');
 
 module.exports = function () {
     this.paramsToString = (params) => {
-        var paramString = params.coordinates.join(';') + '.' + params.output;
-        delete params.coordinates;
-        delete params.output;
+        var paramString = '';
+        if (params.coordinates !== undefined && params.output !== undefined) {
+            paramString = params.coordinates.join(';') + '.' + params.output;
+            delete params.coordinates;
+            delete params.output;
+        }
         if (Object.keys(params).length) {
             paramString += '?' + Object.keys(params).map(k => k + '=' + params[k]).join('&');
         }
