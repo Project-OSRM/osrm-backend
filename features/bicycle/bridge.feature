@@ -4,7 +4,6 @@ Feature: Bicycle - Handle movable bridge
     Background:
         Given the profile "bicycle"
 
-    @mokob @2155
     Scenario: Bicycle - Use a ferry route
         Given the node map
             | a | b | c |   |   |
@@ -28,7 +27,6 @@ Feature: Bicycle - Handle movable bridge
             | c    | f  | cde,efg     | movable bridge,cycling         |
             | c    | g  | cde,efg     | movable bridge,cycling         |
 
-    @mokob @2155
     Scenario: Bicycle - Properly handle durations
         Given the node map
             | a | b | c |   |   |

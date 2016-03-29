@@ -3,7 +3,6 @@ Feature: Car - Mode flag
     Background:
         Given the profile "car"
 
-    @mokob @2155
     Scenario: Car - Mode when using a ferry
         Given the node map
             | a | b |   |
@@ -24,7 +23,6 @@ Feature: Car - Mode flag
             | a    | c  | ab,bc    | head,right,destination      | driving,ferry         |
             | b    | d  | bc,cd    | head,left,destination       | ferry,driving         |
 
-    @mokob @2155
     Scenario: Car - Snapping when using a ferry
         Given the node map
             | a | b |   | c | d |   | e | f |
