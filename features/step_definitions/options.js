@@ -61,7 +61,7 @@ module.exports = function () {
 
     this.Given(/^the query options$/, (table, callback) => {
         table.raw().forEach(tuple => {
-            this.queryParams[tuple[0]] = tuple[1]
+            this.queryParams[tuple[0]] = tuple[1];
         });
 
         callback();

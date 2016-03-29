@@ -47,10 +47,10 @@ module.exports = function () {
         if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
 
         var defaults = {
-            output: 'json',
-            steps: 'true',
-            alternatives: 'false'
-        },
+                output: 'json',
+                steps: 'true',
+                alternatives: 'false'
+            },
             params = this.overwriteParams(defaults, userParams),
             encodedWaypoints = encodeWaypoints(waypoints);
 
@@ -67,8 +67,8 @@ module.exports = function () {
 
     this.requestNearest = (node, userParams, callback) => {
         var defaults = {
-            output: 'json'
-        },
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
         params.coordinates = [[node.lon, node.lat].join(',')];
 
@@ -77,8 +77,8 @@ module.exports = function () {
 
     this.requestTable = (waypoints, userParams, callback) => {
         var defaults = {
-            output: 'json'
-        },
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
 
         params.coordinates = waypoints.map(w => [w.coord.lon, w.coord.lat].join(','));
@@ -90,8 +90,8 @@ module.exports = function () {
 
     this.requestTrip = (waypoints, userParams, callback) => {
         var defaults = {
-            output: 'json'
-        },
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
 
         params.coordinates = encodeWaypoints(waypoints);
@@ -101,8 +101,8 @@ module.exports = function () {
 
     this.requestMatching = (waypoints, timestamps, userParams, callback) => {
         var defaults = {
-            output: 'json'
-        },
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
 
         params.coordinates = encodeWaypoints(waypoints);
@@ -129,7 +129,7 @@ module.exports = function () {
     };
 
     this.compassList = (instructions) => {
-        return this.extractInstructionList(instructions, s => 'n'); // TODO fixme
+        return this.extractInstructionList(instructions, () => 'n'); // TODO fixme
     };
 
     this.bearingList = (instructions) => {
