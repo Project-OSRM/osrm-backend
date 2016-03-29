@@ -36,7 +36,6 @@ module.exports = function () {
                         var json = JSON.parse(body);
 
                         var hasRoute = json.code === 'ok';
-                        //console.log(json.routes[0].legs[0].steps);
 
                         if (hasRoute) {
                             instructions = this.wayList(json.routes[0]);
