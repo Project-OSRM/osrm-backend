@@ -106,7 +106,8 @@ class RouteAPI : public BaseAPI
                  * Using post-processing on basis of route-steps for a single leg at a time
                  * comes at the cost that we cannot count the correct exit for roundabouts.
                  * We can only emit the exit nr/intersections up to/starting at a part of the leg.
-                 * If a roundabout is not terminated in a leg, we will end up with a enter-roundabout
+                 * If a roundabout is not terminated in a leg, we will end up with a
+                 *enter-roundabout
                  * and exit-roundabout-nr where the exit nr is out of sync with the previous enter.
                  *
                  *         | S |
@@ -118,16 +119,22 @@ class RouteAPI : public BaseAPI
                  *         |   |
                  *         |   |
                  *
-                 * Coming from S via V to T, we end up with the legs S->V and V->T. V-T will say to take
+                 * Coming from S via V to T, we end up with the legs S->V and V->T. V-T will say to
+                 *take
                  * the second exit, even though counting from S it would be the third.
-                 * For S, we only emit `roundabout` without an exit number, showing that we enter a roundabout
+                 * For S, we only emit `roundabout` without an exit number, showing that we enter a
+                 *roundabout
                  * to find a via point.
                  * The same exit will be emitted, though, if we should start routing at S, making
                  * the overall response consistent.
                  */
 
-                 leg.steps = guidance::postProcess(std::move(steps));
-                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry),leg.steps);
+                leg.steps = guidance::postProcess(std::move(steps));
+                guidance::trimShortSegments(leg.steps, leg_geometry);
+                leg.steps = guidance::assignRelativeLocations(std::move(leg.steps), leg_geometry,
+                                                              phantoms.source_phantom,
+                                                              phantoms.target_phantom);
+                leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
             }
 
             leg_geometries.push_back(std::move(leg_geometry));

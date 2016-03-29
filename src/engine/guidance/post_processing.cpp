@@ -2,12 +2,16 @@
 #include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/toolkit.hpp"
+#include "engine/guidance/assemble_steps.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
+#include <algorithm>
 #include <iostream>
+#include <cmath>
 #include <cstddef>
+#include <limits>
 #include <utility>
 
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
@@ -292,6 +296,131 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     return steps;
 }
 
+void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
+{
+    // Doing this step in post-processing provides a few challenges we cannot overcome.
+    // The removal of an initial step imposes some copy overhead in the steps, moving all later
+    // steps to the front.
+    // In addition, we cannot reduce the travel time that is accumulated at a different location.
+    // As a direct implication, we have to keep the time of the initial/final turns (which adds a
+    // few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
+    // usually not be as relevant.
+
+    if (steps.size() <= 2)
+        return;
+
+    // if phantom node is located at the connection of two segments, either one can be selected as
+    // turn
+    //
+    // a --- b
+    //       |
+    //       c
+    //
+    // If a route from b to c is requested, both a--b and b--c could be selected as start segment.
+    // In case of a--b, we end up with an unwanted turn saying turn-right onto b-c.
+    // These cases start off with an initial segment which is of zero length.
+    // We have to be careful though, since routing that starts in a roundabout has a valid
+    // initial segment of length zero and we cannot delete the upcoming segment.
+
+    if (steps.front().distance <= std::numeric_limits<double>::epsilon() &&
+        !entersRoundabout((steps.begin() + 1)->maneuver.instruction))
+    {
+        // We have to adjust the first step both for its name and the bearings
+        const auto &current_depart = steps.front();
+        auto &designated_depart = *(steps.begin() + 1);
+
+        // FIXME this is required to be consistent with the route durations. The initial turn is not
+        // actually part of the route, though
+        designated_depart.duration += current_depart.duration;
+
+        geometry.locations.erase(geometry.locations.begin());
+
+        BOOST_ASSERT(geometry.segment_offsets[1] == 1);
+        // geometry offsets have to be adjusted. Move all offsets to the front and reduce by one.
+        std::transform(geometry.segment_offsets.begin() + 1, geometry.segment_offsets.end(),
+                       geometry.segment_offsets.begin(), [](const std::size_t val)
+                       {
+                           return val - 1;
+                       });
+        geometry.segment_offsets.pop_back();
+
+        // remove the initial distance value
+        geometry.segment_distances.erase(geometry.segment_distances.begin());
+
+        // update initial turn direction/bearings. Due to the duplicated first coordinate, the
+        // initial bearing is invalid
+        designated_depart.maneuver = detail::stepManeuverFromGeometry(
+            TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
+
+        // finally remove the initial (now duplicated move)
+        steps.erase(steps.begin());
+
+        // and update the leg geometry indices for the removed entry
+        std::for_each(steps.begin(), steps.end(), [](RouteStep &step)
+                      {
+                          --step.geometry_begin;
+                          --step.geometry_end;
+                      });
+    }
+
+    // make sure we still have enough segments
+    if (steps.size() <= 2)
+        return;
+
+    auto &next_to_last_step = *(steps.end() - 2);
+    // in the end, the situation with the roundabout cannot occur. As a result, we can remove all
+    // zero-length instructions
+    if (next_to_last_step.distance <= std::numeric_limits<double>::epsilon())
+    {
+        geometry.locations.pop_back();
+        geometry.segment_offsets.pop_back();
+        BOOST_ASSERT(geometry.segment_distances.back() < std::numeric_limits<double>::epsilon());
+        geometry.segment_distances.pop_back();
+
+        next_to_last_step.maneuver = detail::stepManeuverFromGeometry(
+            TurnInstruction::NO_TURN(), WaypointType::Arrive, geometry);
+        steps.pop_back();
+        // the geometry indices of the last step are already correct;
+    }
+}
+
+// assign relative locations to depart/arrive instructions
+std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
+                                               const LegGeometry &leg_geometry,
+                                               const PhantomNode &source_node,
+                                               const PhantomNode &target_node)
+{
+    // We report the relative position of source/target to the road only within a range that is
+    // sufficiently different but not full of the path
+    BOOST_ASSERT(steps.size() >= 2 );
+    BOOST_ASSERT(leg_geometry.locations.size() >= 2 );
+    const constexpr double MINIMAL_RELATIVE_DISTANCE = 5., MAXIMAL_RELATIVE_DISTANCE = 300.;
+    const auto distance_to_start = util::coordinate_calculation::haversineDistance(
+        source_node.input_location, leg_geometry.locations[0]);
+    const auto initial_modifier =
+        distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
+                distance_to_start <= MAXIMAL_RELATIVE_DISTANCE
+            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
+                  source_node.input_location, leg_geometry.locations.at(0), leg_geometry.locations.at(1)))
+            : extractor::guidance::DirectionModifier::UTurn;
+
+    steps.front().maneuver.instruction.direction_modifier = initial_modifier;
+
+    const auto distance_from_end = util::coordinate_calculation::haversineDistance(
+        target_node.input_location, leg_geometry.locations.back());
+    const auto final_modifier =
+        distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&
+                distance_from_end <= MAXIMAL_RELATIVE_DISTANCE
+            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
+                  leg_geometry.locations.at(leg_geometry.locations.size() - 2),
+                  leg_geometry.locations.at(leg_geometry.locations.size() - 1),
+                  target_node.input_location))
+            : extractor::guidance::DirectionModifier::UTurn;
+
+    steps.back().maneuver.instruction.direction_modifier = final_modifier;
+    return steps;
+}
+
 LegGeometry resyncGeometry(LegGeometry leg_geometry, const std::vector<RouteStep> &steps)
 {
     // The geometry uses an adjacency array-like structure for representation.
@@ -308,7 +437,7 @@ LegGeometry resyncGeometry(LegGeometry leg_geometry, const std::vector<RouteStep
         leg_geometry.segment_offsets.push_back(step.geometry_end - 1);
     }
 
-    //remove the data fromt the reached-target step again
+    // remove the data fromt the reached-target step again
     leg_geometry.segment_offsets.pop_back();
     leg_geometry.segment_distances.pop_back();
 
