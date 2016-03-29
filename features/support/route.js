@@ -112,7 +112,10 @@ module.exports = function () {
         postfix = postfix || null;
         if (instructions) {
             return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
-                .filter(v => v.maneuver.type !== 'arrive')
+                .filter(v => {
+                    // TODO distance check is stopgap for https://github.com/Project-OSRM/osrm-backend/pull/2159
+                    return v.maneuver.type !== 'arrive' && v.distance > 0
+                })
                 .map(keyFinder)
                 .join(',');
         }
@@ -131,7 +134,6 @@ module.exports = function () {
     };
 
     this.turnList = (instructions) => {
-        // console.log(instructions.legs[0].steps)
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map(v => v.maneuver.type === 'depart' ? 'head' : v.maneuver.type === 'arrive' ? 'destination' : v.maneuver.modifier)
             .join(',');
