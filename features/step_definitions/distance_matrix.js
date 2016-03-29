@@ -43,14 +43,13 @@ module.exports = function () {
                 if (err) return callback(err);
                 if (!response.body.length) return callback(new Error('Invalid response body'));
 
-                var jsonResult = JSON.parse(response.body),
-                    result = jsonResult['distance_table'].map((row) => {
-                        var hashes = {};
-                        row.forEach((c, j) => {
-                            hashes[tableRows[0][j+1]] = c;
-                        });
-                        return hashes;
-                    });
+                var json = JSON.parse(response.body);
+
+                var result = json['durations'].map(row => {
+                    var hashes = {};
+                    row.forEach((v, i) => hashes[tableRows[0][i+1]] = v);
+                    return hashes;
+                });
 
                 var testRow = (row, ri, cb) => {
                     var ok = true;

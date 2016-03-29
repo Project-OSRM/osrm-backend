@@ -21,16 +21,9 @@ module.exports = function () {
 
         var runRequest = (cb) => {
             var params = this.paramsToString(parameters);
-
             this.query = baseUri + (params.length ? '/' + params : '');
 
-            var options = this.httpMethod === 'POST' ? {
-                method: 'POST',
-                body: params,
-                url: baseUri
-            } : this.query;
-
-            request(options, (err, res, body) => {
+            request(this.query, (err, res, body) => {
                 if (err && err.code === 'ECONNREFUSED') {
                     throw new Error('*** osrm-routed is not running.');
                 } else if (err && err.statusCode === 408) {
