@@ -21,12 +21,12 @@ OSRM will use 4/5 of the projected free-flow speed.
 
         When I route I should get
             | from | to | route | speed         |
-            | a    | b  | ab    |  78 km/h      |
+            | a    | b  | ab    |  79 km/h      |
             | b    | c  | bc    |  59 km/h +- 1 |
             | c    | d  | cd    |  51 km/h      |
             | d    | e  | de    |  75 km/h      |
-            | e    | f  | ef    |  90 km/h      |
-            | f    | g  | fg    | 106 km/h      |
+            | e    | f  | ef    |  91 km/h      |
+            | f    | g  | fg    | 107 km/h      |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
