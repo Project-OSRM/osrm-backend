@@ -360,7 +360,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             if (target_traversed_in_reverse)
             {
                 start_index =
-                    id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position;
+                    id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
             }
             else
             {
@@ -372,6 +372,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         if (target_traversed_in_reverse)
         {
             std::reverse(id_vector.begin(), id_vector.end());
+            std::reverse(weight_vector.begin(), weight_vector.end());
             end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
         }
 
