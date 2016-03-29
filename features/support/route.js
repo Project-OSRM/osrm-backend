@@ -128,12 +128,8 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.name);
     };
 
-    this.compassList = (instructions) => {
-        return this.extractInstructionList(instructions, () => 'n'); // TODO fixme
-    };
-
     this.bearingList = (instructions) => {
-        return this.extractInstructionList(instructions, s => s.bearing_after);
+        return this.extractInstructionList(instructions, s => s.maneuver.bearing_after);
     };
 
     this.turnList = (instructions) => {
