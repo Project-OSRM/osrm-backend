@@ -100,6 +100,7 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                        &ProfileProperties::SetTrafficSignalPenalty)
              .property("u_turn_penalty", &ProfileProperties::GetUturnPenalty,
                        &ProfileProperties::SetUturnPenalty)
+             .def_readwrite("use_turn_restrictions", &ProfileProperties::use_turn_restrictions)
              .def_readwrite("allow_u_turn_at_via", &ProfileProperties::allow_u_turn_at_via),
 
          luabind::class_<std::vector<std::string>>("vector")
