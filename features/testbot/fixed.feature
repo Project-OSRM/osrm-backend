@@ -22,5 +22,5 @@ Feature: Fixed bugs, kept to check for regressions
             | cdec  |
 
         When I route I should get
-            | from | to | route | turns            |
-            | x    | y  | abc   | head,destination |
+            | from | to | route | turns         |
+            | x    | y  | abc   | depart,arrive |

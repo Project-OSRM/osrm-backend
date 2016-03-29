@@ -23,11 +23,11 @@ Feature: POST request
             | yz    |
 
         When I route I should get
-            | from | to | route | turns                     |
-            | a    | c  | ab,bc | head,straight,destination |
-            | c    | a  | bc,ab | head,straight,destination |
-            | x    | z  | xy,yz | head,straight,destination |
-            | z    | x  | yz,xy | head,straight,destination |
+            | from | to | route | turns                  |
+            | a    | c  | ab,bc | depart,straight,arrive |
+            | c    | a  | bc,ab | depart,straight,arrive |
+            | x    | z  | xy,yz | depart,straight,arrive |
+            | z    | x  | yz,xy | depart,straight,arrive |
 
     Scenario: Testbot - match POST request
         Given a grid size of 10 meters
@@ -43,7 +43,7 @@ Feature: POST request
         When I match I should get
             | trace | matchings |
             | dcba  | hgfe      |
-            
+
     Scenario: Testbot - table POST request
         Given the node map
             | x | a | b | y |
@@ -54,7 +54,7 @@ Feature: POST request
             | abeda | yes    |
             | xa    |        |
             | by    |        |
-            
+
         When I request a travel time matrix I should get
             |   | x   | y   | d   | e   |
             | x | 0   | 300 | 400 | 300 |

@@ -16,13 +16,13 @@ Feature: Bike - Mode flag
     	 | cd    | primary |       |          |
 
     	When I route I should get
-    	 | from | to | route    | turns                       | modes                 |
-    	 | a    | d  | ab,bc,cd | head,right,left,destination | cycling,ferry,cycling |
-    	 | d    | a  | cd,bc,ab | head,right,left,destination | cycling,ferry,cycling |
-    	 | c    | a  | bc,ab    | head,left,destination       | ferry,cycling         |
-    	 | d    | b  | cd,bc    | head,right,destination      | cycling,ferry         |
-    	 | a    | c  | ab,bc    | head,right,destination      | cycling,ferry         |
-    	 | b    | d  | bc,cd    | head,left,destination       | ferry,cycling         |
+    	 | from | to | route    | turns                    | modes                 |
+    	 | a    | d  | ab,bc,cd | depart,right,left,arrive | cycling,ferry,cycling |
+    	 | d    | a  | cd,bc,ab | depart,right,left,arrive | cycling,ferry,cycling |
+    	 | c    | a  | bc,ab    | depart,left,arrive       | ferry,cycling         |
+    	 | d    | b  | cd,bc    | depart,right,arrive      | cycling,ferry         |
+    	 | a    | c  | ab,bc    | depart,right,arrive      | cycling,ferry         |
+    	 | b    | d  | bc,cd    | depart,left,arrive       | ferry,cycling         |
 
      Scenario: Bike - Mode when using a train
      	Given the node map
@@ -36,13 +36,13 @@ Feature: Bike - Mode flag
      	 | cd    | primary |         |         |
 
      	When I route I should get
-     	 | from | to | route    | turns                       | modes                 |
-     	 | a    | d  | ab,bc,cd | head,right,left,destination | cycling,train,cycling |
-     	 | d    | a  | cd,bc,ab | head,right,left,destination | cycling,train,cycling |
-     	 | c    | a  | bc,ab    | head,left,destination       | train,cycling         |
-     	 | d    | b  | cd,bc    | head,right,destination      | cycling,train         |
-     	 | a    | c  | ab,bc    | head,right,destination      | cycling,train         |
-     	 | b    | d  | bc,cd    | head,left,destination       | train,cycling         |
+     	 | from | to | route    | turns                    | modes                 |
+     	 | a    | d  | ab,bc,cd | depart,right,left,arrive | cycling,train,cycling |
+     	 | d    | a  | cd,bc,ab | depart,right,left,arrive | cycling,train,cycling |
+     	 | c    | a  | bc,ab    | depart,left,arrive       | train,cycling         |
+     	 | d    | b  | cd,bc    | depart,right,arrive      | cycling,train         |
+     	 | a    | c  | ab,bc    | depart,right,arrive      | cycling,train         |
+     	 | b    | d  | bc,cd    | depart,left,arrive       | train,cycling         |
 
      @mokobreview
      Scenario: Bike - Mode when pushing bike against oneways
@@ -57,13 +57,13 @@ Feature: Bike - Mode flag
      	 | cd    | primary |        |
 
      	When I route I should get
-     	 | from | to | route    | turns                                      | modes                        |
-     	 | a    | d  | ab,bc,cd | head,right,left,destination                | cycling,cycling,cycling      |
-     	 | d    | a  | cd,bc,ab | head,right,left,destination                | cycling,pushing bike,cycling |
-     	 | c    | a  | bc,ab    | head,left,destination                      | pushing bike,cycling         |
-     	 | d    | b  | cd,bc    | head,right,destination                     | cycling,pushing bike         |
-     	 | a    | c  | ab,bc    | head,right,destination                     | cycling,cycling              |
-     	 | b    | d  | bc,cd    | head,left,destination                      | cycling,cycling              |
+     	 | from | to | route    | turns                                   | modes                        |
+     	 | a    | d  | ab,bc,cd | depart,right,left,arrive                | cycling,cycling,cycling      |
+     	 | d    | a  | cd,bc,ab | depart,right,left,arrive                | cycling,pushing bike,cycling |
+     	 | c    | a  | bc,ab    | depart,left,arrive                      | pushing bike,cycling         |
+     	 | d    | b  | cd,bc    | depart,right,arrive                     | cycling,pushing bike         |
+     	 | a    | c  | ab,bc    | depart,right,arrive                     | cycling,cycling              |
+     	 | b    | d  | bc,cd    | depart,left,arrive                      | cycling,cycling              |
 
      Scenario: Bike - Mode when pushing on pedestrain streets
      	Given the node map
@@ -77,13 +77,13 @@ Feature: Bike - Mode flag
      	 | cd    | primary    |
 
      	When I route I should get
-     	 | from | to | route    | turns                       | modes                        |
-     	 | a    | d  | ab,bc,cd | head,right,left,destination | cycling,pushing bike,cycling |
-     	 | d    | a  | cd,bc,ab | head,right,left,destination | cycling,pushing bike,cycling |
-     	 | c    | a  | bc,ab    | head,left,destination       | pushing bike,cycling         |
-     	 | d    | b  | cd,bc    | head,right,destination      | cycling,pushing bike         |
-     	 | a    | c  | ab,bc    | head,right,destination      | cycling,pushing bike         |
-     	 | b    | d  | bc,cd    | head,left,destination       | pushing bike,cycling         |
+     	 | from | to | route    | turns                    | modes                        |
+     	 | a    | d  | ab,bc,cd | depart,right,left,arrive | cycling,pushing bike,cycling |
+     	 | d    | a  | cd,bc,ab | depart,right,left,arrive | cycling,pushing bike,cycling |
+     	 | c    | a  | bc,ab    | depart,left,arrive       | pushing bike,cycling         |
+     	 | d    | b  | cd,bc    | depart,right,arrive      | cycling,pushing bike         |
+     	 | a    | c  | ab,bc    | depart,right,arrive      | cycling,pushing bike         |
+     	 | b    | d  | bc,cd    | depart,left,arrive       | pushing bike,cycling         |
 
      Scenario: Bike - Mode when pushing on pedestrain areas
      	Given the node map
@@ -117,13 +117,13 @@ Feature: Bike - Mode flag
     	 | cd    | primary |
 
      	When I route I should get
-    	 | from | to | route    | turns                       | modes                        |
-    	 | a    | d  | ab,bc,cd | head,right,left,destination | cycling,pushing bike,cycling |
-    	 | d    | a  | cd,bc,ab | head,right,left,destination | cycling,pushing bike,cycling |
-    	 | c    | a  | bc,ab    | head,left,destination       | pushing bike,cycling         |
-    	 | d    | b  | cd,bc    | head,right,destination      | cycling,pushing bike         |
-    	 | a    | c  | ab,bc    | head,right,destination      | cycling,pushing bike         |
-    	 | b    | d  | bc,cd    | head,left,destination       | pushing bike,cycling         |
+    	 | from | to | route    | turns                    | modes                        |
+    	 | a    | d  | ab,bc,cd | depart,right,left,arrive | cycling,pushing bike,cycling |
+    	 | d    | a  | cd,bc,ab | depart,right,left,arrive | cycling,pushing bike,cycling |
+    	 | c    | a  | bc,ab    | depart,left,arrive       | pushing bike,cycling         |
+    	 | d    | b  | cd,bc    | depart,right,arrive      | cycling,pushing bike         |
+    	 | a    | c  | ab,bc    | depart,right,arrive      | cycling,pushing bike         |
+    	 | b    | d  | bc,cd    | depart,left,arrive       | pushing bike,cycling         |
 
      Scenario: Bike - Mode when bicycle=dismount
      	Given the node map
@@ -137,13 +137,13 @@ Feature: Bike - Mode flag
     	 | cd    | primary |          |
 
      	When I route I should get
-    	 | from | to | route    | turns                       | modes                        |
-    	 | a    | d  | ab,bc,cd | head,right,left,destination | cycling,pushing bike,cycling |
-    	 | d    | a  | cd,bc,ab | head,right,left,destination | cycling,pushing bike,cycling |
-    	 | c    | a  | bc,ab    | head,left,destination       | pushing bike,cycling         |
-    	 | d    | b  | cd,bc    | head,right,destination      | cycling,pushing bike         |
-    	 | a    | c  | ab,bc    | head,right,destination      | cycling,pushing bike         |
-         | b    | d  | bc,cd    | head,left,destination       | pushing bike,cycling         |
+    	 | from | to | route    | turns                    | modes                        |
+    	 | a    | d  | ab,bc,cd | depart,right,left,arrive | cycling,pushing bike,cycling |
+    	 | d    | a  | cd,bc,ab | depart,right,left,arrive | cycling,pushing bike,cycling |
+    	 | c    | a  | bc,ab    | depart,left,arrive       | pushing bike,cycling         |
+    	 | d    | b  | cd,bc    | depart,right,arrive      | cycling,pushing bike         |
+    	 | a    | c  | ab,bc    | depart,right,arrive      | cycling,pushing bike         |
+         | b    | d  | bc,cd    | depart,left,arrive       | pushing bike,cycling         |
 
     Scenario: Bicycle - Modes when starting on forward oneway
         Given the node map
