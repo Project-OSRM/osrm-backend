@@ -75,8 +75,10 @@ module.exports = function () {
                             got.route = (instructions || '').trim();
 
                             if (headers.has('alternative')) {
-                                got.alternative = json.found_alternative ?
-                                    this.wayList(json.alternative_instructions[0]) : '';
+                                // TODO examine more than first alternative?
+                                got.alternative ='';
+                                if (json.routes && json.routes.length > 1)
+                                    got.alternative = this.wayList(json.routes[1]);
                             }
 
                             var distance = hasRoute && json.routes[0].distance,
