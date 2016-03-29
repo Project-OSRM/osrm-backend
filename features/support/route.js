@@ -112,10 +112,7 @@ module.exports = function () {
         postfix = postfix || null;
         if (instructions) {
             return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
-                .filter(v => {
-                    // TODO distance check is stopgap for https://github.com/Project-OSRM/osrm-backend/pull/2159
-                    return v.maneuver.type !== 'arrive' && v.distance > 0
-                })
+                .filter(v => v.maneuver.type !== 'arrive')
                 .map(keyFinder)
                 .join(',');
         }
