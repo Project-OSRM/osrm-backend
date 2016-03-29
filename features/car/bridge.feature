@@ -4,7 +4,6 @@ Feature: Car - Handle movable bridge
     Background:
         Given the profile "car"
 
-    @mokob @2155
     Scenario: Car - Use a ferry route
         Given the node map
             | a | b | c |   |   |
@@ -28,7 +27,6 @@ Feature: Car - Handle movable bridge
             | c    | f  | cde,efg     | movable bridge,driving         |
             | c    | g  | cde,efg     | movable bridge,driving         |
 
-    @mokob @2155
     Scenario: Car - Properly handle durations
         Given the node map
             | a | b | c |   |   |
