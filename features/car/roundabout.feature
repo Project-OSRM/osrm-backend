@@ -22,9 +22,9 @@ Feature: Roundabout Instructions
 
         When I route I should get
             | from | to | route | turns                            |
-            | s    | t  | sa,tb | depart,enter_roundabout-1,arrive |
-            | s    | u  | sa,uc | depart,enter_roundabout-2,arrive |
-            | s    | v  | sa,vd | depart,enter_roundabout-3,arrive |
-            | u    | v  | uc,vd | depart,enter_roundabout-1,arrive |
-            | u    | s  | uc,sa | depart,enter_roundabout-2,arrive |
-            | u    | t  | uc,tb | depart,enter_roundabout-3,arrive |
+            | s    | t  | sa,tb | depart,roundabout-exit-1,arrive |
+            | s    | u  | sa,uc | depart,roundabout-exit-2,arrive |
+            | s    | v  | sa,vd | depart,roundabout-exit-3,arrive |
+            | u    | v  | uc,vd | depart,roundabout-exit-1,arrive |
+            | u    | s  | uc,sa | depart,roundabout-exit-2,arrive |
+            | u    | t  | uc,tb | depart,roundabout-exit-3,arrive |
