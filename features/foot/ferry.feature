@@ -4,7 +4,6 @@ Feature: Foot - Handle ferry routes
     Background:
         Given the profile "foot"
 
-    @mokob @2155
     Scenario: Foot - Ferry route
         Given the node map
             | a | b | c |   |   |
@@ -47,7 +46,6 @@ Feature: Foot - Handle ferry routes
             | bg    |         | ferry | yes  | 1:00     |
             | bi    |         | ferry | yes  | 10:00    |
 
-    @mokob @2155
     Scenario: Foot - Ferry duration, multiple nodes
         Given the node map
             | x |   |   |   |   | y |
