@@ -62,25 +62,11 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     std::size_t segment_index = 0;
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
 
-    // We report the relative position of source/target to the road only within a range that is
-    // sufficiently different but not full of the path
-    const constexpr double MINIMAL_RELATIVE_DISTANCE = 5., MAXIMAL_RELATIVE_DISTANCE = 300.;
-    const auto distance_to_start = util::coordinate_calculation::haversineDistance(
-        source_node.input_location, leg_geometry.locations[0]);
-    const auto initial_modifier =
-        distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
-                distance_to_start <= MAXIMAL_RELATIVE_DISTANCE
-            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  source_node.input_location, leg_geometry.locations[0], leg_geometry.locations[1]))
-            : extractor::guidance::DirectionModifier::UTurn;
-
     if (leg_data.size() > 0)
     {
 
         StepManeuver maneuver = detail::stepManeuverFromGeometry(
-            extractor::guidance::TurnInstruction{extractor::guidance::TurnType::NoTurn,
-                                                 initial_modifier},
-            WaypointType::Depart, leg_geometry);
+            extractor::guidance::TurnInstruction::NO_TURN(), WaypointType::Depart, leg_geometry);
         maneuver.location = source_node.location;
 
         // PathData saves the information we need of the segment _before_ the turn,
@@ -134,9 +120,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // |---------| target_duration
 
         StepManeuver maneuver = detail::stepManeuverFromGeometry(
-            extractor::guidance::TurnInstruction{extractor::guidance::TurnType::NoTurn,
-                                                 initial_modifier},
-            WaypointType::Depart, leg_geometry);
+            extractor::guidance::TurnInstruction::NO_TURN(), WaypointType::Depart, leg_geometry);
         int duration = target_duration - source_duration;
         BOOST_ASSERT(duration >= 0);
 
@@ -151,20 +135,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     }
 
     BOOST_ASSERT(segment_index == number_of_segments - 1);
-    const auto distance_from_end = util::coordinate_calculation::haversineDistance(
-        target_node.input_location, leg_geometry.locations.back());
-    const auto final_modifier =
-        distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&
-                distance_from_end <= MAXIMAL_RELATIVE_DISTANCE
-            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  leg_geometry.locations[leg_geometry.locations.size() - 2],
-                  leg_geometry.locations[leg_geometry.locations.size() - 1],
-                  target_node.input_location))
-            : extractor::guidance::DirectionModifier::UTurn;
     // This step has length zero, the only reason we need it is the target location
     auto final_maneuver = detail::stepManeuverFromGeometry(
-        extractor::guidance::TurnInstruction{extractor::guidance::TurnType::NoTurn, final_modifier},
-        WaypointType::Arrive, leg_geometry);
+        extractor::guidance::TurnInstruction::NO_TURN(), WaypointType::Arrive, leg_geometry);
     steps.push_back(RouteStep{target_node.name_id,
                               facade.GetNameForID(target_node.name_id),
                               ZERO_DURATION,

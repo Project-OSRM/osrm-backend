@@ -22,7 +22,7 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
 
     double pre_turn_bearing = 0, post_turn_bearing = 0;
     Coordinate turn_coordinate;
-    if (waypoint_type == WaypointType::Arrive)
+    if (waypoint_type == WaypointType::Depart)
     {
         turn_coordinate = leg_geometry.locations.front();
         const auto post_turn_coordinate = *(leg_geometry.locations.begin() + 1);
@@ -31,7 +31,7 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
     }
     else
     {
-        BOOST_ASSERT(waypoint_type == WaypointType::Depart);
+        BOOST_ASSERT(waypoint_type == WaypointType::Arrive);
         turn_coordinate = leg_geometry.locations.back();
         const auto pre_turn_coordinate = *(leg_geometry.locations.end() - 2);
         pre_turn_bearing =
