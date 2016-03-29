@@ -4,6 +4,7 @@ Feature: Car - Handle movable bridge
     Background:
         Given the profile "car"
 
+    @mokob @2155
     Scenario: Car - Use a ferry route
         Given the node map
             | a | b | c |   |   |
@@ -18,15 +19,16 @@ Feature: Car - Handle movable bridge
 
         When I route I should get
             | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,3,1 |
-            | b    | f  | abc,cde,efg | 1,3,1 |
-            | e    | c  | cde         | 3     |
-            | e    | b  | cde,abc     | 3,1   |
-            | e    | a  | cde,abc     | 3,1   |
-            | c    | e  | cde         | 3     |
-            | c    | f  | cde,efg     | 3,1   |
-            | c    | g  | cde,efg     | 3,1   |
+            | a    | g  | abc,cde,efg | driving,movable bridge,driving |
+            | b    | f  | abc,cde,efg | driving,movable bridge,driving |
+            | e    | c  | cde         | movable bridge                 |
+            | e    | b  | cde,abc     | movable bridge,driving         |
+            | e    | a  | cde,abc     | movable bridge,driving         |
+            | c    | e  | cde         | movable bridge                 |
+            | c    | f  | cde,efg     | movable bridge,driving         |
+            | c    | g  | cde,efg     | movable bridge,driving         |
 
+    @mokob @2155
     Scenario: Car - Properly handle durations
         Given the node map
             | a | b | c |   |   |
@@ -40,8 +42,8 @@ Feature: Car - Handle movable bridge
             | efg   | primary |         |          |
 
         When I route I should get
-            | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,3,1 | 7 km/h |
-            | b    | f  | abc,cde,efg | 1,3,1 | 5 km/h |
-            | c    | e  | cde         | 3     | 2 km/h |
-            | e    | c  | cde         | 3     | 2 km/h |
+            | from | to | route       | modes                          | speed  |
+            | a    | g  | abc,cde,efg | driving,movable bridge,driving | 7 km/h |
+            | b    | f  | abc,cde,efg | driving,movable bridge,driving | 5 km/h |
+            | c    | e  | cde         | movable bridge                 | 2 km/h |
+            | e    | c  | cde         | movable bridge                 | 2 km/h |

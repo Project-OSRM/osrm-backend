@@ -4,6 +4,7 @@ Feature: Foot - Handle ferry routes
     Background:
         Given the profile "foot"
 
+    @mokob @2155
     Scenario: Foot - Ferry route
         Given the node map
             | a | b | c |   |   |
@@ -17,15 +18,15 @@ Feature: Foot - Handle ferry routes
             | efg   | primary |       |      |
 
         When I route I should get
-            | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,2,1 |
-            | b    | f  | abc,cde,efg | 1,2,1 |
-            | e    | c  | cde         | 2     |
-            | e    | b  | cde,abc     | 2,1   |
-            | e    | a  | cde,abc     | 2,1   |
-            | c    | e  | cde         | 2     |
-            | c    | f  | cde,efg     | 2,1   |
-            | c    | g  | cde,efg     | 2,1   |
+            | from | to | route       | modes                 |
+            | a    | g  | abc,cde,efg | walking,ferry,walking |
+            | b    | f  | abc,cde,efg | walking,ferry,walking |
+            | e    | c  | cde         | ferry                 |
+            | e    | b  | cde,abc     | ferry,walking         |
+            | e    | a  | cde,abc     | ferry,walking         |
+            | c    | e  | cde         | ferry                 |
+            | c    | f  | cde,efg     | ferry,walking         |
+            | c    | g  | cde,efg     | ferry,walking         |
 
     Scenario: Foot - Ferry duration, single node
         Given the node map
@@ -46,6 +47,7 @@ Feature: Foot - Handle ferry routes
             | bg    |         | ferry | yes  | 1:00     |
             | bi    |         | ferry | yes  | 10:00    |
 
+    @mokob @2155
     Scenario: Foot - Ferry duration, multiple nodes
         Given the node map
             | x |   |   |   |   | y |
