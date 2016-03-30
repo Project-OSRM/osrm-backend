@@ -89,11 +89,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             const std::int32_t new_distance = reverse_heap.GetKey(node) + distance;
             if (new_distance < upper_bound)
             {
+                // if loops are forced, they are so at the source
                 if (new_distance >= 0 &&
-                    (!force_loop_forward ||
-                     forward_heap.GetData(node).parent !=
-                         node) // if loops are forced, they are so at the source
-                    && (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
+                    (!force_loop_forward || forward_heap.GetData(node).parent != node) &&
+                    (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
                 {
                     middle_node_id = node;
                     upper_bound = new_distance;
@@ -320,8 +319,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 for (std::size_t i = start_index; i < end_index; ++i)
                 {
                     unpacked_path.push_back(
-                        PathData{id_vector[i], name_index, weight_vector[i],
-                                 extractor::guidance::TurnInstruction::NO_TURN(), travel_mode});
+                        PathData{id_vector[i],
+                                 name_index,
+                                 weight_vector[i],
+                                 extractor::guidance::TurnInstruction::NO_TURN(),
+                                 travel_mode});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
@@ -339,6 +341,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     // However the first segment duration needs to be adjusted to the fact that the
                     // source phantom is in the middle of the segment.
                     // We do this by subtracting v--s from the duration.
+
                     BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
                     unpacked_path.front().duration_until_turn -= source_weight;
                 }
@@ -369,8 +372,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
 
         std::size_t end_index = phantom_node_pair.target_phantom.fwd_segment_position;
+        const std::size_t delta = target_traversed_in_reverse ? 1 : 0;
         if (target_traversed_in_reverse)
         {
+            start_index += 1;
             std::reverse(id_vector.begin(), id_vector.end());
             std::reverse(weight_vector.begin(), weight_vector.end());
             end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
@@ -392,8 +397,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
-            unpacked_path.emplace_back(
-                PathData{id_vector[i], phantom_node_pair.target_phantom.name_id, weight_vector[i],
+            unpacked_path.push_back(
+                PathData{id_vector[i],
+                         phantom_node_pair.target_phantom.name_id,
+                         weight_vector[i - delta],
                          extractor::guidance::TurnInstruction::NO_TURN(),
                          target_traversed_in_reverse
                              ? phantom_node_pair.target_phantom.backward_travel_mode
@@ -402,9 +409,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         if (is_local_path && unpacked_path.size() > 0)
         {
-            auto source_weight = start_traversed_in_reverse
-                                     ? phantom_node_pair.source_phantom.reverse_weight
-                                     : phantom_node_pair.source_phantom.forward_weight;
+            const auto source_weight = start_traversed_in_reverse
+                                           ? phantom_node_pair.source_phantom.reverse_weight
+                                           : phantom_node_pair.source_phantom.forward_weight;
             // The above code will create segments for (v, w), (w,x), (x, y) and (y, Z).
             // However the first segment duration needs to be adjusted to the fact that the source
             // phantom is in the middle of the segment. We do this by subtracting v--s from the
@@ -422,9 +429,6 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         {
             const std::size_t last_index = unpacked_path.size() - 1;
             const std::size_t second_to_last_index = last_index - 1;
-
-            // looks like a trivially true check but tests for underflow
-            BOOST_ASSERT(last_index > second_to_last_index);
 
             if (unpacked_path[last_index].turn_via_node ==
                 unpacked_path[second_to_last_index].turn_via_node)
@@ -651,8 +655,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
         // TODO check if unordered_set might be faster
         // sort by id and increasing by distance
-        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
-                                         const std::pair<NodeID, EdgeWeight> &rhs)
+        auto entry_point_comparator =
+            [](const std::pair<NodeID, EdgeWeight> &lhs, const std::pair<NodeID, EdgeWeight> &rhs)
         {
             return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
         };
