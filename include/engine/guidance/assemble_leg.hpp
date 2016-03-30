@@ -118,7 +118,7 @@ RouteLeg assembleLeg(const DataFacadeT &facade,
 
     //                 s
     //                 |
-    // Given a route a---b---c  where there is a right turn at b.
+    // Given a route a---b---c  where there is a right turn at c.
     //                       |
     //                       d
     //                       |--t
