@@ -293,10 +293,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 
 void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 {
-#if OSRM_POST_PROCESSING_PRINT_DEBUG
-    std::cout << "[Pre-Trimming]" << std::endl;
-    print(steps);
-#endif
     // Doing this step in post-processing provides a few challenges we cannot overcome.
     // The removal of an initial step imposes some copy overhead in the steps, moving all later
     // steps to the front.
@@ -305,7 +301,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
     // usually not be as relevant.
 
-    if (steps.size() <= 2)
+    if (steps.size() < 2)
         return;
 
     // if phantom node is located at the connection of two segments, either one can be selected as
@@ -321,37 +317,59 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // We have to be careful though, since routing that starts in a roundabout has a valid.
     // To catch these cases correctly, we have to perform trimming prior to the post-processing
 
-    if (steps.front().distance <= std::numeric_limits<double>::epsilon())
+    BOOST_ASSERT(geometry.locations.size() >= steps.size());
+    const bool zero_length_step = steps.front().distance <= std::numeric_limits<double>::epsilon();
+    const bool duplicated_coordinate = geometry.locations[0] == geometry.locations[1];
+    if (zero_length_step || duplicated_coordinate)
     {
-        // We have to adjust the first step both for its name and the bearings
-        const auto &current_depart = steps.front();
-        auto &designated_depart = *(steps.begin() + 1);
-
-        // FIXME this is required to be consistent with the route durations. The initial turn is not
-        // actually part of the route, though
-        designated_depart.duration += current_depart.duration;
-
+        // fixup the coordinate
         geometry.locations.erase(geometry.locations.begin());
-
-        BOOST_ASSERT(geometry.segment_offsets[1] == 1);
-        // geometry offsets have to be adjusted. Move all offsets to the front and reduce by one.
-        std::transform(geometry.segment_offsets.begin() + 1, geometry.segment_offsets.end(),
-                       geometry.segment_offsets.begin(), [](const std::size_t val)
-                       {
-                           return val - 1;
-                       });
-        geometry.segment_offsets.pop_back();
 
         // remove the initial distance value
         geometry.segment_distances.erase(geometry.segment_distances.begin());
 
-        // update initial turn direction/bearings. Due to the duplicated first coordinate, the
-        // initial bearing is invalid
-        designated_depart.maneuver = detail::stepManeuverFromGeometry(
-            TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
+        // We have to adjust the first step both for its name and the bearings
+        if (zero_length_step)
+        {
+            // move offsets to front
+            BOOST_ASSERT(geometry.segment_offsets[1] == 1);
+            // geometry offsets have to be adjusted. Move all offsets to the front and reduce by
+            // one. (This is an inplace forward one and reduce by one)
+            std::transform(geometry.segment_offsets.begin() + 1, geometry.segment_offsets.end(),
+                           geometry.segment_offsets.begin(), [](const std::size_t val)
+                           {
+                               return val - 1;
+                           });
 
-        // finally remove the initial (now duplicated move)
-        steps.erase(steps.begin());
+            geometry.segment_offsets.pop_back();
+            const auto &current_depart = steps.front();
+            auto &designated_depart = *(steps.begin() + 1);
+
+            // FIXME this is required to be consistent with the route durations. The initial turn is
+            // not actually part of the route, though
+            designated_depart.duration += current_depart.duration;
+
+            // update initial turn direction/bearings. Due to the duplicated first coordinate, the
+            // initial bearing is invalid
+            designated_depart.maneuver = detail::stepManeuverFromGeometry(
+                TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
+
+            // finally remove the initial (now duplicated move)
+            steps.erase(steps.begin());
+        }
+        else
+        {
+            steps.front().geometry_begin = 1;
+            // reduce all offsets by one (inplace)
+            std::transform(geometry.segment_offsets.begin(), geometry.segment_offsets.end(),
+                           geometry.segment_offsets.begin(), [](const std::size_t val)
+                           {
+                               return val - 1;
+                           });
+
+            steps.front().maneuver = detail::stepManeuverFromGeometry(
+                TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
+        }
 
         // and update the leg geometry indices for the removed entry
         std::for_each(steps.begin(), steps.end(), [](RouteStep &step)
@@ -362,9 +380,10 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     }
 
     // make sure we still have enough segments
-    if (steps.size() <= 2)
+    if (steps.size() < 2)
         return;
 
+    BOOST_ASSERT(geometry.locations.size() >= steps.size());
     auto &next_to_last_step = *(steps.end() - 2);
     // in the end, the situation with the roundabout cannot occur. As a result, we can remove all
     // zero-length instructions
@@ -379,6 +398,21 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             TurnInstruction::NO_TURN(), WaypointType::Arrive, geometry);
         steps.pop_back();
         // the geometry indices of the last step are already correct;
+    }
+    else if (geometry.locations[geometry.locations.size() - 2] ==
+             geometry.locations[geometry.locations.size() - 1])
+    {
+        // correct steps but duplicated coordinate in the end.
+        // This can happen if the last coordinate snaps to a node in the unpacked geometry
+        geometry.locations.pop_back();
+        geometry.segment_offsets.back()--;
+        BOOST_ASSERT(next_to_last_step.geometry_end == steps.back().geometry_begin);
+        BOOST_ASSERT(next_to_last_step.geometry_begin < next_to_last_step.geometry_end);
+        next_to_last_step.geometry_end--;
+        steps.back().geometry_begin--;
+        steps.back().geometry_end--;
+        steps.back().maneuver = detail::stepManeuverFromGeometry(TurnInstruction::NO_TURN(),
+                                                                 WaypointType::Arrive, geometry);
     }
 }
 
@@ -399,8 +433,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
         distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
                 distance_to_start <= MAXIMAL_RELATIVE_DISTANCE
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  source_node.input_location, leg_geometry.locations.at(0),
-                  leg_geometry.locations.at(1)))
+                  source_node.input_location, leg_geometry.locations[0], leg_geometry.locations[1]))
             : extractor::guidance::DirectionModifier::UTurn;
 
     steps.front().maneuver.instruction.direction_modifier = initial_modifier;
@@ -411,8 +444,8 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
         distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&
                 distance_from_end <= MAXIMAL_RELATIVE_DISTANCE
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  leg_geometry.locations.at(leg_geometry.locations.size() - 2),
-                  leg_geometry.locations.at(leg_geometry.locations.size() - 1),
+                  leg_geometry.locations[leg_geometry.locations.size() - 2],
+                  leg_geometry.locations[leg_geometry.locations.size() - 1],
                   target_node.input_location))
             : extractor::guidance::DirectionModifier::UTurn;
 
