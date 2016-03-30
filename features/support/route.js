@@ -138,13 +138,13 @@ module.exports = function () {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map(v => {
                 switch (v.maneuver.type) {
-                    case 'depart':
-                    case 'arrive':
-                        return v.maneuver.type;
-                    case 'roundabout':
-                        return 'roundabout-exit-' + v.maneuver.exit;
-                    default:
-                        return v.maneuver.modifier
+                case 'depart':
+                case 'arrive':
+                    return v.maneuver.type;
+                case 'roundabout':
+                    return 'roundabout-exit-' + v.maneuver.exit;
+                default:
+                    return v.maneuver.modifier;
                 }
             })
             .join(',');
