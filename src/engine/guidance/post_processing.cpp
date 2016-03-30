@@ -50,7 +50,7 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
          --propagation_index)
     {
         auto &propagation_step = steps[propagation_index];
-        if (entersRoundabout(propagation_step.maneuver.instruction))
+        if (propagation_index == 0 || entersRoundabout(propagation_step.maneuver.instruction))
         {
             propagation_step.maneuver.exit = 0;
             propagation_step.geometry_end = steps.back().geometry_begin;
@@ -141,6 +141,7 @@ void closeOffRoundabout(const bool on_roundabout,
             {
                 // TODO at this point, we can remember the additional name for a rotary
                 // This requires some initial thought on the data format, though
+
                 propagation_step.maneuver.exit = step.maneuver.exit;
                 propagation_step.geometry_end = step.geometry_end;
                 propagation_step.name = step.name;
@@ -205,6 +206,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 #endif
     // Count Street Exits forward
     bool on_roundabout = false;
+    bool has_entered_roundabout = false;
 
     // adds an intersection to the initial route step
     // It includes the length of the last step, until the intersection
@@ -230,12 +232,14 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         if (entersRoundabout(instruction))
         {
             last_valid_instruction = step_index;
-            on_roundabout = detail::setUpRoundabout(step);
-            if (on_roundabout && step_index + 1 < steps.size())
+            has_entered_roundabout = detail::setUpRoundabout(step);
+
+            if (has_entered_roundabout && step_index + 1 < steps.size())
                 steps[step_index + 1].maneuver.exit = step.maneuver.exit;
         }
         else if (instruction.type == TurnType::StayOnRoundabout)
         {
+            on_roundabout = true;
             // increase the exit number we require passing the exit
             step.maneuver.exit += 1;
             if (step_index + 1 < steps.size())
@@ -243,14 +247,15 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         }
         else if (leavesRoundabout(instruction))
         {
-            if (!on_roundabout)
+            if (!has_entered_roundabout)
             {
                 // in case the we are not on a roundabout, the very first instruction
                 // after the depart will be transformed into a roundabout and become
                 // the first valid instruction
                 last_valid_instruction = 1;
             }
-            detail::closeOffRoundabout(on_roundabout, steps, step_index);
+            detail::closeOffRoundabout(has_entered_roundabout, steps, step_index);
+            has_entered_roundabout = false;
             on_roundabout = false;
         }
         else if (instruction.type == TurnType::Suppressed)
@@ -270,7 +275,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // unterminated roundabout
     // Move backwards through the instructions until the start and remove the exit number
     // A roundabout without exit translates to enter-roundabout.
-    if (on_roundabout)
+    if (has_entered_roundabout || on_roundabout)
     {
         detail::fixFinalRoundabout(steps);
     }
@@ -298,6 +303,11 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 
 void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 {
+#define OSRM_POST_PROCESSING_PRINT_DEBUG 1
+#if OSRM_POST_PROCESSING_PRINT_DEBUG
+    std::cout << "[Pre-Trimming]" << std::endl;
+    print(steps);
+#endif
     // Doing this step in post-processing provides a few challenges we cannot overcome.
     // The removal of an initial step imposes some copy overhead in the steps, moving all later
     // steps to the front.
@@ -319,11 +329,10 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // If a route from b to c is requested, both a--b and b--c could be selected as start segment.
     // In case of a--b, we end up with an unwanted turn saying turn-right onto b-c.
     // These cases start off with an initial segment which is of zero length.
-    // We have to be careful though, since routing that starts in a roundabout has a valid
-    // initial segment of length zero and we cannot delete the upcoming segment.
+    // We have to be careful though, since routing that starts in a roundabout has a valid.
+    // To catch these cases correctly, we have to perform trimming prior to the post-processing
 
-    if (steps.front().distance <= std::numeric_limits<double>::epsilon() &&
-        !entersRoundabout((steps.begin() + 1)->maneuver.instruction))
+    if (steps.front().distance <= std::numeric_limits<double>::epsilon())
     {
         // We have to adjust the first step both for its name and the bearings
         const auto &current_depart = steps.front();
@@ -392,8 +401,8 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
 {
     // We report the relative position of source/target to the road only within a range that is
     // sufficiently different but not full of the path
-    BOOST_ASSERT(steps.size() >= 2 );
-    BOOST_ASSERT(leg_geometry.locations.size() >= 2 );
+    BOOST_ASSERT(steps.size() >= 2);
+    BOOST_ASSERT(leg_geometry.locations.size() >= 2);
     const constexpr double MINIMAL_RELATIVE_DISTANCE = 5., MAXIMAL_RELATIVE_DISTANCE = 300.;
     const auto distance_to_start = util::coordinate_calculation::haversineDistance(
         source_node.input_location, leg_geometry.locations[0]);
@@ -401,7 +410,8 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
         distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
                 distance_to_start <= MAXIMAL_RELATIVE_DISTANCE
             ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
-                  source_node.input_location, leg_geometry.locations.at(0), leg_geometry.locations.at(1)))
+                  source_node.input_location, leg_geometry.locations.at(0),
+                  leg_geometry.locations.at(1)))
             : extractor::guidance::DirectionModifier::UTurn;
 
     steps.front().maneuver.instruction.direction_modifier = initial_modifier;
