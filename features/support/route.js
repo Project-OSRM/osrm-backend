@@ -82,8 +82,10 @@ module.exports = function () {
             params = this.overwriteParams(defaults, userParams);
 
         params.coordinates = waypoints.map(w => [w.coord.lon, w.coord.lat].join(','));
-        // TODO what was 'type' here?
-        // params = params.concat(waypoints.map(w => [w.type, [w.coord.lat, w.coord.lon].join(',')]));
+        var srcs = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'src').map(w => w[1]),
+            dsts = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'dst').map(w => w[1]);
+        if (srcs.length) params.sources = srcs.join(';');
+        if (dsts.length) params.destinations = dsts.join(';');
 
         return this.requestPath('table', params, callback);
     };
