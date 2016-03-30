@@ -13,6 +13,9 @@ function way_function (way, result)
     result.name = name
   end
 
+  result.forward_mode = mode.cycling
+  result.backward_mode = mode.cycling
+
   result.forward_speed = 15
   result.backward_speed = 15
 end

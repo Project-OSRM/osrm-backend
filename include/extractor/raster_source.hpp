@@ -2,6 +2,7 @@
 #define RASTER_SOURCE_HPP
 
 #include "util/exception.hpp"
+#include "util/coordinate.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -141,9 +142,9 @@ class SourceContainer
                          std::size_t nrows,
                          std::size_t ncols);
 
-    RasterDatum getRasterDataFromSource(unsigned int source_id, int lon, int lat);
+    RasterDatum getRasterDataFromSource(unsigned int source_id, double lon, double lat);
 
-    RasterDatum getRasterInterpolateFromSource(unsigned int source_id, int lon, int lat);
+    RasterDatum getRasterInterpolateFromSource(unsigned int source_id, double lon, double lat);
 
   private:
     std::vector<RasterSource> LoadedSources;

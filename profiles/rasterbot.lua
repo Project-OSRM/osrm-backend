@@ -13,6 +13,9 @@ function way_function (way, result)
     result.name = name
   end
 
+  result.forward_mode = mode.cycling
+  result.backward_mode = mode.cycling
+
   result.forward_speed = 15
   result.backward_speed = 15
 end
@@ -30,6 +33,7 @@ function source_function ()
 end
 
 function segment_function (source, target, distance, weight)
+  io.write("lookup for " .. source.lon .. "," .. source.lat .. "  " .. target.lon .. "," .. target.lat .. "\n")
   local sourceData = sources:query(raster_source, source.lon, source.lat)
   local targetData = sources:query(raster_source, target.lon, target.lat)
   io.write("evaluating segment: " .. sourceData.datum .. " " .. targetData.datum .. "\n")
