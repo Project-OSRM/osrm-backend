@@ -101,8 +101,8 @@ module.exports = {
 
                 if (rowError) {
                     bad++;
-                    this.diff.push(Object.assign({}, row, {status: 'undefined'}));
-                    this.diff.push(Object.assign({}, actual[i], {status: 'comment'}));
+                    this.diff.push(Object.assign({}, row, {c_status: 'undefined'}));
+                    this.diff.push(Object.assign({}, actual[i], {c_status: 'comment'}));
                 } else {
                     good++;
                     this.diff.push(row);
@@ -118,8 +118,8 @@ module.exports = {
             this.diff.forEach((row) => {
                 var rowString = '| ';
                 this.headers.forEach((header) => {
-                    if (!row.status) rowString += '    ' + row[header] + ' | ';
-                    else if (row.status === 'undefined') rowString += '(-) ' + row[header] + ' | ';
+                    if (!row.c_status) rowString += '    ' + row[header] + ' | ';
+                    else if (row.c_status === 'undefined') rowString += '(-) ' + row[header] + ' | ';
                     else rowString += '(+) ' + row[header] + ' | ';
                 });
                 s.push(rowString);
