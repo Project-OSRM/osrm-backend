@@ -44,7 +44,12 @@ module.exports = function () {
                     var subTrips;
                     if (res.statusCode === 200) {
                         if (headers.has('trips')) {
-                            subTrips = json.trips.filter(t => !!t).map(sub => sub.via_points);
+                            subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
+                                var toAdd = [];
+                                if (i === 0) toAdd.push(sl.steps[0].maneuver.location);
+                                toAdd.push(sl.steps[sl.steps.length-1].maneuver.location);
+                                return toAdd;
+                            })));
                         }
                     }
 
