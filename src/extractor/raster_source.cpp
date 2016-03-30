@@ -3,8 +3,6 @@
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 
-#include "osrm/coordinate.hpp"
-
 #include <cmath>
 
 namespace osrm
@@ -84,10 +82,10 @@ int SourceContainer::loadRasterSource(const std::string &path_string,
                                       std::size_t nrows,
                                       std::size_t ncols)
 {
-    const auto _xmin = static_cast<int>(xmin * COORDINATE_PRECISION);
-    const auto _xmax = static_cast<int>(xmax * COORDINATE_PRECISION);
-    const auto _ymin = static_cast<int>(ymin * COORDINATE_PRECISION);
-    const auto _ymax = static_cast<int>(ymax * COORDINATE_PRECISION);
+    const auto _xmin = static_cast<int>(util::toFixed(util::FloatLongitude(xmin)));
+    const auto _xmax = static_cast<int>(util::toFixed(util::FloatLongitude(xmax)));
+    const auto _ymin = static_cast<int>(util::toFixed(util::FloatLatitude(ymin)));
+    const auto _ymax = static_cast<int>(util::toFixed(util::FloatLatitude(ymax)));
 
     const auto itr = LoadedSourcePaths.find(path_string);
     if (itr != LoadedSourcePaths.end())
@@ -122,38 +120,40 @@ int SourceContainer::loadRasterSource(const std::string &path_string,
 }
 
 // External function for looking up nearest data point from a specified source
-RasterDatum SourceContainer::getRasterDataFromSource(unsigned int source_id, int lon, int lat)
+RasterDatum SourceContainer::getRasterDataFromSource(unsigned int source_id, double lon, double lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
         throw util::exception("error reading: no such loaded source");
     }
 
-    BOOST_ASSERT(lat < (90 * COORDINATE_PRECISION));
-    BOOST_ASSERT(lat > (-90 * COORDINATE_PRECISION));
-    BOOST_ASSERT(lon < (180 * COORDINATE_PRECISION));
-    BOOST_ASSERT(lon > (-180 * COORDINATE_PRECISION));
+    BOOST_ASSERT(lat < 90);
+    BOOST_ASSERT(lat > -90);
+    BOOST_ASSERT(lon < 180);
+    BOOST_ASSERT(lon > -180);
 
     const auto &found = LoadedSources[source_id];
-    return found.getRasterData(lon, lat);
+    return found.getRasterData(static_cast<int>(util::toFixed(util::FloatLongitude(lon))),
+                               static_cast<int>(util::toFixed(util::FloatLatitude(lat))));
 }
 
 // External function for looking up interpolated data from a specified source
 RasterDatum
-SourceContainer::getRasterInterpolateFromSource(unsigned int source_id, int lon, int lat)
+SourceContainer::getRasterInterpolateFromSource(unsigned int source_id, double lon, double lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
         throw util::exception("error reading: no such loaded source");
     }
 
-    BOOST_ASSERT(lat < (90 * COORDINATE_PRECISION));
-    BOOST_ASSERT(lat > (-90 * COORDINATE_PRECISION));
-    BOOST_ASSERT(lon < (180 * COORDINATE_PRECISION));
-    BOOST_ASSERT(lon > (-180 * COORDINATE_PRECISION));
+    BOOST_ASSERT(lat < 90);
+    BOOST_ASSERT(lat > -90);
+    BOOST_ASSERT(lon < 180);
+    BOOST_ASSERT(lon > -180);
 
     const auto &found = LoadedSources[source_id];
-    return found.getRasterInterpolate(lon, lat);
+    return found.getRasterInterpolate(static_cast<int>(util::toFixed(util::FloatLongitude(lon))),
+                                      static_cast<int>(util::toFixed(util::FloatLatitude(lat))));
 }
 }
 }

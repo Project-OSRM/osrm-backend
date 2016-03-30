@@ -16,12 +16,12 @@ int normalize(double coord) { return static_cast<int>(coord * COORDINATE_PRECISI
 
 #define CHECK_QUERY(source_id, lon, lat, expected)                                                 \
     BOOST_CHECK_EQUAL(                                                                             \
-        sources.getRasterDataFromSource(source_id, normalize(lon), normalize(lat)).datum,          \
+        sources.getRasterDataFromSource(source_id, lon, lat).datum,          \
         expected)
 
 #define CHECK_INTERPOLATE(source_id, lon, lat, expected)                                           \
     BOOST_CHECK_EQUAL(                                                                             \
-        sources.getRasterInterpolateFromSource(source_id, normalize(lon), normalize(lat)).datum,   \
+        sources.getRasterInterpolateFromSource(source_id, lon, lat).datum,   \
         expected)
 
 BOOST_AUTO_TEST_CASE(raster_test)
