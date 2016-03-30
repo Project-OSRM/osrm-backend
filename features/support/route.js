@@ -110,7 +110,7 @@ module.exports = function () {
         params.coordinates = encodeWaypoints(waypoints);
 
         if (timestamps.length) {
-            params.timestamps = timestamps.join(',');
+            params.timestamps = timestamps.join(';');
         }
 
         return this.requestPath('match', params, callback);
