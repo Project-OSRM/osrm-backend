@@ -29,7 +29,6 @@ using RTreeLeaf = extractor::EdgeBasedNode;
 using CoordinateListPtr = std::shared_ptr<std::vector<util::Coordinate>>;
 using BenchStaticRTree =
     util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, false>::vector, false>;
-using BenchQuery = engine::GeospatialQuery<BenchStaticRTree, MockDataFacade>;
 
 CoordinateListPtr loadCoordinates(const boost::filesystem::path &nodes_file)
 {
@@ -43,8 +42,6 @@ CoordinateListPtr loadCoordinates(const boost::filesystem::path &nodes_file)
     {
         nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
         coords->at(i) = util::Coordinate(current_node.lon, current_node.lat);
-        BOOST_ASSERT((std::abs(coords->at(i).lat) >> 30) == 0);
-        BOOST_ASSERT((std::abs(coords->at(i).lon) >> 30) == 0);
     }
     return coords;
 }
@@ -71,7 +68,7 @@ void benchmarkQuery(const std::vector<util::Coordinate> &queries,
               << ")" << std::endl;
 }
 
-void benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_queries)
+void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
 {
     std::mt19937 mt_rand(RANDOM_SEED);
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
@@ -90,24 +87,6 @@ void benchmark(BenchStaticRTree &rtree, BenchQuery &geo_query, unsigned num_quer
     benchmarkQuery(queries, "raw RTree queries (10 results)", [&rtree](const util::Coordinate &q)
                    {
                        return rtree.Nearest(q, 10);
-                   });
-
-    benchmarkQuery(queries, "big component alternative queries",
-                   [&geo_query](const util::Coordinate &q)
-                   {
-                       return geo_query.NearestPhantomNodeWithAlternativeFromBigComponent(q);
-                   });
-    benchmarkQuery(queries, "max distance 1000", [&geo_query](const util::Coordinate &q)
-                   {
-                       return geo_query.NearestPhantomNodesInRange(q, 1000);
-                   });
-    benchmarkQuery(queries, "PhantomNode query (1 result)", [&geo_query](const util::Coordinate &q)
-                   {
-                       return geo_query.NearestPhantomNodes(q, 1);
-                   });
-    benchmarkQuery(queries, "PhantomNode query (10 result)", [&geo_query](const util::Coordinate &q)
-                   {
-                       return geo_query.NearestPhantomNodes(q, 10);
                    });
 }
 }
@@ -129,10 +108,8 @@ int main(int argc, char **argv)
     auto coords = osrm::benchmarks::loadCoordinates(nodes_path);
 
     osrm::benchmarks::BenchStaticRTree rtree(ram_path, file_path, coords);
-    osrm::test::MockDataFacade mockfacade;
-    osrm::benchmarks::BenchQuery query(rtree, coords, mockfacade);
 
-    osrm::benchmarks::benchmark(rtree, query, 10000);
+    osrm::benchmarks::benchmark(rtree, 10000);
 
     return 0;
 }
