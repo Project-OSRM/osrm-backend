@@ -4,7 +4,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -23,13 +23,6 @@ namespace osrm
 {
 namespace engine
 {
-
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_1;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_1;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
 
 namespace routing_algorithms
 {
@@ -100,7 +93,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     (!force_loop_forward ||
                      forward_heap.GetData(node).parent !=
                          node) // if loops are forced, they are so at the source
-                    && (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
+                    &&
+                    (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
                 {
                     middle_node_id = node;
                     upper_bound = new_distance;
@@ -220,9 +214,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     std::vector<PathData> &unpacked_path) const
     {
         const bool start_traversed_in_reverse =
-            (*packed_path_begin != phantom_node_pair.source_phantom.forward_node_id);
+            (*packed_path_begin != phantom_node_pair.source_phantom.forward_segment_id.id);
         const bool target_traversed_in_reverse =
-            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_node_id);
+            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_segment_id.id);
 
         BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
@@ -290,8 +284,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             {
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const extractor::TurnInstruction turn_instruction =
-                    facade->GetTurnInstructionForEdgeID(ed.id);
+                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
                         ? phantom_node_pair.source_phantom.backward_travel_mode
@@ -307,15 +300,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                                weight_vector);
                 BOOST_ASSERT(weight_vector.size() > 0);
 
-                auto total_weight =
-                    std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
+                auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
                 // ed.distance should be total_weight + penalties (turn, stop, etc)
                 BOOST_ASSERT(ed.distance >= total_weight);
+                const bool is_first_segment = unpacked_path.empty();
 
                 const std::size_t start_index =
-                    (unpacked_path.empty()
+                    (is_first_segment
                          ? ((start_traversed_in_reverse)
                                 ? id_vector.size() -
                                       phantom_node_pair.source_phantom.fwd_segment_position - 1
@@ -327,30 +320,56 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(start_index < end_index);
                 for (std::size_t i = start_index; i < end_index; ++i)
                 {
-                    unpacked_path.emplace_back(id_vector[i], name_index,
-                                               extractor::TurnInstruction::NoTurn, weight_vector[i],
-                                               travel_mode);
+                    unpacked_path.push_back(
+                        PathData{id_vector[i],
+                                 name_index,
+                                 weight_vector[i],
+                                 extractor::guidance::TurnInstruction::NO_TURN(),
+                                 travel_mode});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
-                unpacked_path.back().segment_duration += (ed.distance - total_weight);
+                unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
+
+                if (is_first_segment)
+                {
+                    auto source_weight = start_traversed_in_reverse
+                                             ? phantom_node_pair.source_phantom.reverse_weight
+                                             : phantom_node_pair.source_phantom.forward_weight;
+                    // Given this geometry:
+                    // U---v---w---x---Z
+                    //       s
+                    // The above code will create segments for (v, w), (w,x) and (x, Z).
+                    // However the first segment duration needs to be adjusted to the fact that the
+                    // source phantom is in the middle of the segment.
+                    // We do this by subtracting v--s from the duration.
+
+                    BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
+                    unpacked_path.front().duration_until_turn -= source_weight;
+                }
             }
         }
         std::vector<unsigned> id_vector;
         facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.forward_packed_geometry_id,
                                         id_vector);
+        std::vector<EdgeWeight> weight_vector;
+        facade->GetUncompressedWeights(phantom_node_pair.target_phantom.forward_packed_geometry_id,
+                                       weight_vector);
         const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
                                     phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
-                                    unpacked_path.empty();
+                                   unpacked_path.empty();
 
         std::size_t start_index = 0;
         if (is_local_path)
         {
-            start_index = phantom_node_pair.source_phantom.fwd_segment_position;
             if (target_traversed_in_reverse)
             {
                 start_index =
-                    id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position;
+                    id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
+            }
+            else
+            {
+                start_index = phantom_node_pair.source_phantom.fwd_segment_position;
             }
         }
 
@@ -358,8 +377,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         if (target_traversed_in_reverse)
         {
             std::reverse(id_vector.begin(), id_vector.end());
-            end_index =
-                id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
+            std::reverse(weight_vector.begin(), weight_vector.end());
+            end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
         }
 
         if (start_index > end_index)
@@ -367,16 +386,49 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             start_index = std::min(start_index, id_vector.size() - 1);
         }
 
+        // Given the following compressed geometry:
+        // U---v---w---x---y---Z
+        //    s           t
+        // s: fwd_segment 0
+        // t: fwd_segment 3
+        // -> (U, v), (v, w), (w, x)
+        // note that (x, t) is _not_ included but needs to be added later.
         for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
             unpacked_path.emplace_back(
-                PathData{id_vector[i], phantom_node_pair.target_phantom.name_id,
-                         extractor::TurnInstruction::NoTurn, 0,
+                PathData{id_vector[i],
+                         phantom_node_pair.target_phantom.name_id,
+                         weight_vector[i],
+                         extractor::guidance::TurnInstruction::NO_TURN(),
                          target_traversed_in_reverse
                              ? phantom_node_pair.target_phantom.backward_travel_mode
                              : phantom_node_pair.target_phantom.forward_travel_mode});
+        }
+
+        if (is_local_path && unpacked_path.size() > 0)
+        {
+            const auto source_weight = start_traversed_in_reverse
+                                           ? phantom_node_pair.source_phantom.reverse_weight
+                                           : phantom_node_pair.source_phantom.forward_weight;
+            // The above code will create segments for (v, w), (w,x), (x, y) and (y, Z).
+            // However the first segment duration needs to be adjusted to the fact that the source
+            // phantom is in the middle of the segment. We do this by subtracting v--s from the
+            // duration.
+            BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
+            unpacked_path.front().duration_until_turn -= source_weight;
+
+            //make sure to not include the target weight, since it will be added later on
+            if (unpacked_path.size() == 1)
+            {
+                const auto target_weight = target_traversed_in_reverse
+                                               ? phantom_node_pair.target_phantom.reverse_weight
+                                               : phantom_node_pair.target_phantom.forward_weight;
+
+                BOOST_ASSERT(unpacked_path.front().duration_until_turn >= target_weight);
+                unpacked_path.front().duration_until_turn -= target_weight;
+            }
         }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.
@@ -389,10 +441,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             const std::size_t last_index = unpacked_path.size() - 1;
             const std::size_t second_to_last_index = last_index - 1;
 
-            // looks like a trivially true check but tests for underflow
-            BOOST_ASSERT(last_index > second_to_last_index);
-
-            if (unpacked_path[last_index].node == unpacked_path[second_to_last_index].node)
+            if (unpacked_path[last_index].turn_via_node ==
+                unpacked_path[second_to_last_index].turn_via_node)
             {
                 unpacked_path.pop_back();
             }
@@ -487,8 +537,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     // A forced loop might be necessary, if source and target are on the same segment.
     // If this is the case and the offsets of the respective direction are larger for the source
     // than the target
-    // then a force loop is required (e.g. source_phantom.forward_node_id ==
-    // target_phantom.forward_node_id
+    // then a force loop is required (e.g. source_phantom.forward_segment_id ==
+    // target_phantom.forward_segment_id
     // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
     // requires
     // a force loop, if the heaps have been initialized with positive offsets.
@@ -555,8 +605,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     // A forced loop might be necessary, if source and target are on the same segment.
     // If this is the case and the offsets of the respective direction are larger for the source
     // than the target
-    // then a force loop is required (e.g. source_phantom.forward_node_id ==
-    // target_phantom.forward_node_id
+    // then a force loop is required (e.g. source_phantom.forward_segment_id ==
+    // target_phantom.forward_segment_id
     // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
     // requires
     // a force loop, if the heaps have been initialized with positive offsets.
@@ -616,8 +666,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
         // TODO check if unordered_set might be faster
         // sort by id and increasing by distance
-        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
-                                         const std::pair<NodeID, EdgeWeight> &rhs)
+        auto entry_point_comparator =
+            [](const std::pair<NodeID, EdgeWeight> &lhs, const std::pair<NodeID, EdgeWeight> &rhs)
         {
             return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
         };
@@ -727,7 +777,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     bool NeedsLoopForward(const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom) const
     {
-        return source_phantom.forward_node_id == target_phantom.forward_node_id &&
+        return source_phantom.forward_segment_id.enabled &&
+               target_phantom.forward_segment_id.enabled &&
+               source_phantom.forward_segment_id.id == target_phantom.forward_segment_id.id &&
                source_phantom.GetForwardWeightPlusOffset() >
                    target_phantom.GetForwardWeightPlusOffset();
     }
@@ -735,7 +787,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     bool NeedsLoopBackwards(const PhantomNode &source_phantom,
                             const PhantomNode &target_phantom) const
     {
-        return source_phantom.reverse_node_id == target_phantom.reverse_node_id &&
+        return source_phantom.reverse_segment_id.enabled &&
+               target_phantom.reverse_segment_id.enabled &&
+               source_phantom.reverse_segment_id.id == target_phantom.reverse_segment_id.id &&
                source_phantom.GetReverseWeightPlusOffset() >
                    target_phantom.GetReverseWeightPlusOffset();
     }
@@ -750,12 +804,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         nodes.target_phantom = target_phantom;
         UnpackPath(packed_path.begin(), packed_path.end(), nodes, unpacked_path);
 
-        util::FixedPointCoordinate previous_coordinate = source_phantom.location;
-        util::FixedPointCoordinate current_coordinate;
+        util::Coordinate previous_coordinate = source_phantom.location;
+        util::Coordinate current_coordinate;
         double distance = 0;
         for (const auto &p : unpacked_path)
         {
-            current_coordinate = facade->GetCoordinateOfNode(p.node);
+            current_coordinate = facade->GetCoordinateOfNode(p.turn_via_node);
             distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
                                                                         current_coordinate);
             previous_coordinate = current_coordinate;
@@ -774,35 +828,35 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                       SearchEngineData::QueryHeap &reverse_core_heap,
                                       const PhantomNode &source_phantom,
                                       const PhantomNode &target_phantom,
-                                      int duration_upper_bound=INVALID_EDGE_WEIGHT) const
+                                      int duration_upper_bound = INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
 
-        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        if (source_phantom.forward_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.forward_node_id,
+            forward_heap.Insert(source_phantom.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_node_id);
+                                source_phantom.forward_segment_id.id);
         }
-        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (source_phantom.reverse_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.reverse_node_id,
+            forward_heap.Insert(source_phantom.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_node_id);
+                                source_phantom.reverse_segment_id.id);
         }
 
-        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        if (target_phantom.forward_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.forward_node_id,
+            reverse_heap.Insert(target_phantom.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_node_id);
+                                target_phantom.forward_segment_id.id);
         }
-        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (target_phantom.reverse_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.reverse_node_id,
+            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_node_id);
+                                target_phantom.reverse_segment_id.id);
         }
 
         const bool constexpr DO_NOT_FORCE_LOOPS =
@@ -828,35 +882,35 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                               SearchEngineData::QueryHeap &reverse_heap,
                               const PhantomNode &source_phantom,
                               const PhantomNode &target_phantom,
-                              int duration_upper_bound=INVALID_EDGE_WEIGHT) const
+                              int duration_upper_bound = INVALID_EDGE_WEIGHT) const
     {
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
 
-        if (source_phantom.forward_node_id != SPECIAL_NODEID)
+        if (source_phantom.forward_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.forward_node_id,
+            forward_heap.Insert(source_phantom.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_node_id);
+                                source_phantom.forward_segment_id.id);
         }
-        if (source_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (source_phantom.reverse_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.reverse_node_id,
+            forward_heap.Insert(source_phantom.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_node_id);
+                                source_phantom.reverse_segment_id.id);
         }
 
-        if (target_phantom.forward_node_id != SPECIAL_NODEID)
+        if (target_phantom.forward_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.forward_node_id,
+            reverse_heap.Insert(target_phantom.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_node_id);
+                                target_phantom.forward_segment_id.id);
         }
-        if (target_phantom.reverse_node_id != SPECIAL_NODEID)
+        if (target_phantom.reverse_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.reverse_node_id,
+            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_node_id);
+                                target_phantom.reverse_segment_id.id);
         }
 
         const bool constexpr DO_NOT_FORCE_LOOPS =

@@ -25,7 +25,7 @@ Feature: Alternative route
 
     Scenario: Enabled alternative
         Given the query options
-            | alt | true |
+            | alternatives | true |
 
         When I route I should get
             | from | to | route       | alternative    |
@@ -33,7 +33,7 @@ Feature: Alternative route
 
     Scenario: Disabled alternative
         Given the query options
-            | alt | false |
+            | alternatives | false |
 
         When I route I should get
             | from | to | route       | alternative |

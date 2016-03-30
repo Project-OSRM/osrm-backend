@@ -9,6 +9,7 @@
 
 #include "osrm/coordinate.hpp"
 #include <utility>
+#include "extractor/guidance/classification_data.hpp"
 
 namespace osrm
 {
@@ -50,7 +51,8 @@ struct InternalExtractorEdge
                  false,
                  true,
                  TRAVEL_MODE_INACCESSIBLE,
-                 false)
+                 false,
+                 guidance::RoadClassificationData())
     {
     }
 
@@ -64,7 +66,8 @@ struct InternalExtractorEdge
                                    bool access_restricted,
                                    bool startpoint,
                                    TravelMode travel_mode,
-                                   bool is_split)
+                                   bool is_split,
+                                   guidance::RoadClassificationData road_classification)
         : result(OSMNodeID(source),
                  OSMNodeID(target),
                  name_id,
@@ -75,7 +78,8 @@ struct InternalExtractorEdge
                  access_restricted,
                  startpoint,
                  travel_mode,
-                 is_split),
+                 is_split,
+                 std::move(road_classification)),
           weight_data(std::move(weight_data))
     {
     }
@@ -85,18 +89,20 @@ struct InternalExtractorEdge
     // intermediate edge weight
     WeightData weight_data;
     // coordinate of the source node
-    util::FixedPointCoordinate source_coordinate;
+    util::Coordinate source_coordinate;
 
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_osm_value()
     {
         return InternalExtractorEdge(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, WeightData(), false, false,
-                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false);
+                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false,
+                                     guidance::RoadClassificationData());
     }
     static InternalExtractorEdge max_osm_value()
     {
         return InternalExtractorEdge(MAX_OSM_NODEID, MAX_OSM_NODEID, 0, WeightData(), false, false,
-                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false);
+                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false,
+                                     guidance::RoadClassificationData());
     }
 
     static InternalExtractorEdge min_internal_value()

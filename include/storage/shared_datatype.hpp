@@ -37,6 +37,11 @@ struct SharedDataLayout
         TIMESTAMP,
         FILE_INDEX_PATH,
         CORE_MARKER,
+        DATASOURCES_LIST,
+        DATASOURCE_NAME_DATA,
+        DATASOURCE_NAME_OFFSETS,
+        DATASOURCE_NAME_LENGTHS,
+        PROPERTIES,
         NUM_BLOCKS
     };
 

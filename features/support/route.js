@@ -3,7 +3,13 @@ var request = require('request');
 
 module.exports = function () {
     this.requestPath = (service, params, callback) => {
-        var uri = [this.HOST, service].join('/');
+        var uri;
+        if (service == 'timestamp') {
+            uri = [this.HOST, service].join('/');
+        } else {
+            uri = [this.HOST, service, 'v1', this.profile].join('/');
+        }
+
         return this.sendRequest(uri, params, callback);
     };
 
@@ -28,133 +34,131 @@ module.exports = function () {
     // Overwrites the default values in defaults
     // e.g. [[a, 1], [b, 2]], [[a, 5], [d, 10]] => [[a, 5], [b, 2], [d, 10]]
     this.overwriteParams = (defaults, other) => {
-        var merged = {};
-        var overwrite = (o) => {
-            merged[o[0]] = o[1];
-        };
-
-        defaults.forEach(overwrite);
-        other.forEach(overwrite);
-
-        return Object.keys(merged).map((key) => [key, merged[key]]);
+        var otherMap = {};
+        for (var key in other) otherMap[key] = other[key];
+        return Object.assign({}, defaults, otherMap);
     };
 
     var encodeWaypoints = (waypoints) => {
-        return waypoints.map(w => ['loc', [w.lat, w.lon].join(',')]);
+        return waypoints.map(w => [w.lon, w.lat].map(this.ensureDecimal).join(','));
     };
 
     this.requestRoute = (waypoints, bearings, userParams, callback) => {
         if (bearings.length && bearings.length !== waypoints.length) throw new Error('*** number of bearings does not equal the number of waypoints');
 
-        var defaults = [['output','json'], ['instructions','true'], ['alt',false]],
+        var defaults = {
+                output: 'json',
+                steps: 'true',
+                alternatives: 'false'
+            },
             params = this.overwriteParams(defaults, userParams),
             encodedWaypoints = encodeWaypoints(waypoints);
+
+        params.coordinates = encodedWaypoints;
+
         if (bearings.length) {
+            // TODOTODO
             var encodedBearings = bearings.map(b => ['b', b.toString()]);
             params = Array.prototype.concat.apply(params, encodedWaypoints.map((o, i) => [o, encodedBearings[i]]));
-        } else {
-            params = params.concat(encodedWaypoints);
         }
 
-        return this.requestPath('viaroute', params, callback);
+        return this.requestPath('route', params, callback);
     };
 
     this.requestNearest = (node, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
-        params.push(['loc', [node.lat, node.lon].join(',')]);
+        params.coordinates = [[node.lon, node.lat].join(',')];
 
         return this.requestPath('nearest', params, callback);
     };
 
     this.requestTable = (waypoints, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
-        params = params.concat(waypoints.map(w => [w.type, [w.coord.lat, w.coord.lon].join(',')]));
+
+        params.coordinates = waypoints.map(w => [w.coord.lon, w.coord.lat].join(','));
+        var srcs = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'src').map(w => w[1]),
+            dsts = waypoints.map((w, i) => [w.type, i]).filter(w => w[0] === 'dst').map(w => w[1]);
+        if (srcs.length) params.sources = srcs.join(';');
+        if (dsts.length) params.destinations = dsts.join(';');
 
         return this.requestPath('table', params, callback);
     };
 
     this.requestTrip = (waypoints, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
-        params = params.concat(encodeWaypoints(waypoints));
+
+        params.coordinates = encodeWaypoints(waypoints);
 
         return this.requestPath('trip', params, callback);
     };
 
     this.requestMatching = (waypoints, timestamps, userParams, callback) => {
-        var defaults = [['output', 'json']],
+        var defaults = {
+                output: 'json'
+            },
             params = this.overwriteParams(defaults, userParams);
-        var encodedWaypoints = encodeWaypoints(waypoints);
+
+        params.coordinates = encodeWaypoints(waypoints);
+
         if (timestamps.length) {
-            var encodedTimestamps = timestamps.map(t => ['t', t.toString()]);
-            params = Array.prototype.concat.apply(params, encodedWaypoints.map((o, i) => [o, encodedTimestamps[i]]));
-        } else {
-            params = params.concat(encodedWaypoints);
+            params.timestamps = timestamps.join(',');
         }
 
         return this.requestPath('match', params, callback);
     };
 
-    this.extractInstructionList = (instructions, index, postfix) => {
+    this.extractInstructionList = (instructions, keyFinder, postfix) => {
         postfix = postfix || null;
         if (instructions) {
-            return instructions.filter(r => r[0].toString() !== this.DESTINATION_REACHED.toString())
-                .map(r => r[index])
-                .map(r => (isNaN(parseInt(r)) && (!r || r == '')) ? '""' : '' + r + (postfix || ''))
+            return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
+                .filter(v => v.maneuver.type !== 'arrive')
+                .map(keyFinder)
                 .join(',');
         }
     };
 
     this.wayList = (instructions) => {
-        return this.extractInstructionList(instructions, 1);
-    };
-
-    this.compassList = (instructions) => {
-        return this.extractInstructionList(instructions, 6);
+        return this.extractInstructionList(instructions, s => s.name);
     };
 
     this.bearingList = (instructions) => {
-        return this.extractInstructionList(instructions, 7);
+        return this.extractInstructionList(instructions, s => s.maneuver.bearing_after);
     };
 
     this.turnList = (instructions) => {
-        var types = {
-            '0': 'none',
-            '1': 'straight',
-            '2': 'slight_right',
-            '3': 'right',
-            '4': 'sharp_right',
-            '5': 'u_turn',
-            '6': 'sharp_left',
-            '7': 'left',
-            '8': 'slight_left',
-            '9': 'via',
-            '10': 'head',
-            '11': 'enter_roundabout',
-            '12': 'leave_roundabout',
-            '13': 'stay_roundabout',
-            '14': 'start_end_of_street',
-            '15': 'destination',
-            '16': 'name_changes',
-            '17': 'enter_contraflow',
-            '18': 'leave_contraflow'
-        };
-
-        // replace instructions codes with strings, e.g. '11-3' gets converted to 'enter_roundabout-3'
-        return instructions ? instructions.map(r => r[0].toString().replace(/^(\d*)/, (match, num) => types[num])).join(',') : instructions;
+        return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
+            .map(v => {
+                switch (v.maneuver.type) {
+                    case 'depart':
+                    case 'arrive':
+                        return v.maneuver.type;
+                    case 'roundabout':
+                        return 'roundabout-exit-' + v.maneuver.exit;
+                    default:
+                        return v.maneuver.modifier
+                }
+            })
+            .join(',');
     };
 
     this.modeList = (instructions) => {
-        return this.extractInstructionList(instructions, 8);
+        return this.extractInstructionList(instructions, s => s.mode);
     };
 
     this.timeList = (instructions) => {
-        return this.extractInstructionList(instructions, 4, 's');
+        return this.extractInstructionList(instructions, s => s.duration + 's');
     };
 
     this.distanceList = (instructions) => {
-        return this.extractInstructionList(instructions, 2, 'm');
+        return this.extractInstructionList(instructions, s => s.distance + 'm');
     };
 };

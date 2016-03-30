@@ -2,11 +2,18 @@ var Timeout = require('node-timeout');
 var request = require('request');
 
 module.exports = function () {
-    // Converts an array [["param","val1"], ["param","val2"]] into param=val1&param=val2
     this.paramsToString = (params) => {
-        var kvPairs = params.map((kv) => kv[0].toString() + '=' + kv[1].toString());
-        var url = kvPairs.length ? kvPairs.join('&') : '';
-        return url.trim();
+        var paramString = '';
+        if (params.coordinates !== undefined && params.output !== undefined) {
+            paramString = params.coordinates.join(';') + '.' + params.output;
+            delete params.coordinates;
+            delete params.output;
+        }
+        if (Object.keys(params).length) {
+            paramString += '?' + Object.keys(params).map(k => k + '=' + params[k]).join('&');
+        }
+
+        return paramString;
     };
 
     this.sendRequest = (baseUri, parameters, callback) => {
@@ -14,16 +21,9 @@ module.exports = function () {
 
         var runRequest = (cb) => {
             var params = this.paramsToString(parameters);
+            this.query = baseUri + (params.length ? '/' + params : '');
 
-            this.query = baseUri + (params.length ? '?' + params : '');
-
-            var options = this.httpMethod === 'POST' ? {
-                method: 'POST',
-                body: params,
-                url: baseUri
-            } : this.query;
-
-            request(options, (err, res, body) => {
+            request(this.query, (err, res, body) => {
                 if (err && err.code === 'ECONNREFUSED') {
                     throw new Error('*** osrm-routed is not running.');
                 } else if (err && err.statusCode === 408) {

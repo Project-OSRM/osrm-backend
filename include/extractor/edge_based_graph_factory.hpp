@@ -4,16 +4,20 @@
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/speed_profile.hpp"
-#include "util/typedefs.hpp"
+#include "extractor/profile_properties.hpp"
+#include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
-#include "util/deallocating_vector.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/turn_instructions.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
+
+#include "extractor/guidance/turn_instruction.hpp"
+
 #include "util/node_based_graph.hpp"
-#include "extractor/restriction_map.hpp"
+#include "util/typedefs.hpp"
+#include "util/deallocating_vector.hpp"
+#include "util/name_table.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -48,7 +52,8 @@ class EdgeBasedGraphFactory
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<QueryNode> &node_info_list,
-                                   SpeedProfileProperties speed_profile);
+                                   ProfileProperties profile_properties,
+                                   const util::NameTable &name_table);
 
     void Run(const std::string &original_edge_data_filename,
              lua_State *lua_state,
@@ -68,12 +73,12 @@ class EdgeBasedGraphFactory
     // with known angle.
     // Handles special cases like u-turns and roundabouts
     // For basic turns, the turn based on the angle-classification is returned
-    TurnInstruction AnalyzeTurn(const NodeID u,
-                                const EdgeID e1,
-                                const NodeID v,
-                                const EdgeID e2,
-                                const NodeID w,
-                                const double angle) const;
+    guidance::TurnInstruction AnalyzeTurn(const NodeID u,
+                                          const EdgeID e1,
+                                          const NodeID v,
+                                          const EdgeID e2,
+                                          const NodeID w,
+                                          const double angle) const;
 
     std::int32_t GetTurnPenalty(double angle, lua_State *lua_state) const;
 
@@ -101,72 +106,23 @@ class EdgeBasedGraphFactory
     const std::unordered_set<NodeID> &m_traffic_lights;
     const CompressedEdgeContainer &m_compressed_edge_container;
 
-    SpeedProfileProperties speed_profile;
+    ProfileProperties profile_properties;
+
+    const util::NameTable &name_table;
 
     void CompressGeometry();
     unsigned RenumberEdges();
     void GenerateEdgeExpandedNodes();
-#ifdef DEBUG_GEOMETRY
-    void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
-                                   lua_State *lua_state,
-                                   const std::string &edge_segment_lookup_filename,
-                                   const std::string &edge_fixed_penalties_filename,
-                                   const bool generate_edge_lookup,
-                                   const std::string &debug_turns_path);
-#else
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    lua_State *lua_state,
                                    const std::string &edge_segment_lookup_filename,
                                    const std::string &edge_fixed_penalties_filename,
                                    const bool generate_edge_lookup);
-#endif
 
     void InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
-
-    struct TurnCandidate
-    {
-        EdgeID eid; // the id of the arc
-        bool valid; // a turn may be relevant to good instructions, even if we cannot take the road
-        double angle;                // the approximated angle of the turn
-        TurnInstruction instruction; // a proposed instruction
-        double confidence;           // how close to the border is the turn?
-
-        std::string toString() const
-        {
-            std::string result = "[turn] ";
-            result += std::to_string(eid);
-            result += " valid: ";
-            result += std::to_string(valid);
-            result += " angle: ";
-            result += std::to_string(angle);
-            result += " instruction: ";
-            result += std::to_string(static_cast<std::int32_t>(instruction));
-            result += " confidence: ";
-            result += std::to_string(confidence);
-            return result;
-        }
-    };
-
-    // Use In Order to generate base turns
-
-    // cannot be const due to the counters...
-    std::vector<TurnCandidate> getTurnCandidates(NodeID from, EdgeID via_edge);
-    std::vector<TurnCandidate> optimizeCandidates(NodeID via_edge,
-                                                  std::vector<TurnCandidate> turn_candidates) const;
-    std::vector<TurnCandidate> suppressTurns(EdgeID via_edge,
-                                             std::vector<TurnCandidate> turn_candidates) const;
-
-    QueryNode getRepresentativeCoordinate(const NodeID src,
-                                          const NodeID tgt,
-                                          const EdgeID via_eid,
-                                          bool INVERTED) const;
-
-    bool isObviousChoice(EdgeID coming_from_eid,
-                         std::size_t turn_index,
-                         const std::vector<TurnCandidate> &turn_candidates) const;
 
     std::size_t restricted_turns_counter;
     std::size_t skipped_uturns_counter;

@@ -64,8 +64,7 @@ int main(int argc, char *argv[]) try
     osrm::util::LogPolicy::GetInstance().Unmute();
     if (1 == argc)
     {
-        osrm::util::SimpleLogger().Write(logWARNING) << "usage: " << argv[0]
-                                                     << " /path/on/device";
+        osrm::util::SimpleLogger().Write(logWARNING) << "usage: " << argv[0] << " /path/on/device";
         return -1;
     }
 
@@ -89,8 +88,7 @@ int main(int argc, char *argv[]) try
         fcntl(fileno(fd), F_NOCACHE, 1);
         fcntl(fileno(fd), F_RDAHEAD, 0);
         TIMER_START(write_1gb);
-        write(fileno(fd), (char *)random_array,
-              osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
+        write(fileno(fd), (char *)random_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
         TIMER_STOP(write_1gb);
         fclose(fd);
 #endif
@@ -148,8 +146,7 @@ int main(int argc, char *argv[]) try
             osrm::util::SimpleLogger().Write(logDEBUG) << "opened, error: " << strerror(errno);
             return -1;
         }
-        char *raw_array =
-            (char *)memalign(512, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
+        char *raw_array = (char *)memalign(512, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
 #endif
         TIMER_START(read_1gb);
 #ifdef __APPLE__
@@ -158,8 +155,7 @@ int main(int argc, char *argv[]) try
         fd = fopen(test_path.string().c_str(), "r");
 #endif
 #ifdef __linux__
-        int ret =
-            read(file_desc, raw_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
+        int ret = read(file_desc, raw_array, osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned));
         osrm::util::SimpleLogger().Write(logDEBUG) << "read " << ret
                                                    << " bytes, error: " << strerror(errno);
         close(file_desc);
@@ -168,8 +164,8 @@ int main(int argc, char *argv[]) try
 #endif
         TIMER_STOP(read_1gb);
 
-        osrm::util::SimpleLogger().Write(logDEBUG) << "reading raw 1GB took "
-                                                   << TIMER_SEC(read_1gb) << "s";
+        osrm::util::SimpleLogger().Write(logDEBUG) << "reading raw 1GB took " << TIMER_SEC(read_1gb)
+                                                   << "s";
         osrm::util::SimpleLogger().Write() << "raw read performance: " << std::setprecision(5)
                                            << std::fixed << 1024 * 1024 / TIMER_SEC(read_1gb)
                                            << "MB/sec";
@@ -184,8 +180,7 @@ int main(int argc, char *argv[]) try
         lseek(file_desc, 0, SEEK_SET);
 #endif
         // make 1000 random access, time each I/O seperately
-        unsigned number_of_blocks =
-            (osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned) - 1) / 4096;
+        unsigned number_of_blocks = (osrm::tools::NUMBER_OF_ELEMENTS * sizeof(unsigned) - 1) / 4096;
         std::random_device rd;
         std::default_random_engine e1(rd());
         std::uniform_int_distribution<unsigned> uniform_dist(0, number_of_blocks - 1);
@@ -212,15 +207,13 @@ int main(int argc, char *argv[]) try
             if (((off_t)-1) == ret1)
             {
                 osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                osrm::util::SimpleLogger().Write(logWARNING) << "seek error "
-                                                             << strerror(errno);
+                osrm::util::SimpleLogger().Write(logWARNING) << "seek error " << strerror(errno);
                 throw osrm::util::exception("seek error");
             }
             if (-1 == ret2)
             {
                 osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                osrm::util::SimpleLogger().Write(logWARNING) << "read error "
-                                                             << strerror(errno);
+                osrm::util::SimpleLogger().Write(logWARNING) << "read error " << strerror(errno);
                 throw osrm::util::exception("read error");
             }
             timing_results_raw_random.push_back(TIMER_SEC(random_access));
@@ -274,15 +267,13 @@ int main(int argc, char *argv[]) try
             if (((off_t)-1) == ret1)
             {
                 osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                osrm::util::SimpleLogger().Write(logWARNING) << "seek error "
-                                                             << strerror(errno);
+                osrm::util::SimpleLogger().Write(logWARNING) << "seek error " << strerror(errno);
                 throw osrm::util::exception("seek error");
             }
             if (-1 == ret2)
             {
                 osrm::util::SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
-                osrm::util::SimpleLogger().Write(logWARNING) << "read error "
-                                                             << strerror(errno);
+                osrm::util::SimpleLogger().Write(logWARNING) << "read error " << strerror(errno);
                 throw osrm::util::exception("read error");
             }
             timing_results_raw_seq.push_back(TIMER_SEC(read_every_100));

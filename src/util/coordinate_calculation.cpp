@@ -1,37 +1,53 @@
+#include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-
-#include "util/string_util.hpp"
 #include "util/trigonometry_table.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/math/constants/constants.hpp>
 
 #include <cmath>
 
 #include <limits>
+#include <utility>
 
 namespace osrm
 {
 namespace util
 {
+
 namespace coordinate_calculation
 {
 
-double haversineDistance(const int lat1, const int lon1, const int lat2, const int lon2)
+double euclideanDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
-    BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
+    const double x1 = static_cast<double>(toFloating(coordinate_1.lon));
+    const double y1 = mercator::latToY(toFloating(coordinate_1.lat));
+    const double x2 = static_cast<double>(toFloating(coordinate_2.lon));
+    const double y2 = mercator::latToY(toFloating(coordinate_2.lat));
+    const double dx = x1 - x2;
+    const double dy = y1 - y2;
+
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
+{
+    auto lon1 = static_cast<int>(coordinate_1.lon);
+    auto lat1 = static_cast<int>(coordinate_1.lat);
+    auto lon2 = static_cast<int>(coordinate_2.lon);
+    auto lat2 = static_cast<int>(coordinate_2.lat);
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
-    BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
     const double lt1 = lat1 / COORDINATE_PRECISION;
     const double ln1 = lon1 / COORDINATE_PRECISION;
     const double lt2 = lat2 / COORDINATE_PRECISION;
     const double ln2 = lon2 / COORDINATE_PRECISION;
-    const double dlat1 = lt1 * (RAD);
+    const double dlat1 = lt1 * DEGREE_TO_RAD;
 
-    const double dlong1 = ln1 * (RAD);
-    const double dlat2 = lt2 * (RAD);
-    const double dlong2 = ln2 * (RAD);
+    const double dlong1 = ln1 * DEGREE_TO_RAD;
+    const double dlat2 = lt2 * DEGREE_TO_RAD;
+    const double dlong2 = ln2 * DEGREE_TO_RAD;
 
     const double dlong = dlong1 - dlong2;
     const double dlat = dlat1 - dlat2;
@@ -42,96 +58,86 @@ double haversineDistance(const int lat1, const int lon1, const int lat2, const i
     return EARTH_RADIUS * charv;
 }
 
-double haversineDistance(const FixedPointCoordinate coordinate_1,
-                         const FixedPointCoordinate coordinate_2)
+double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
 {
-    return haversineDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
-                             coordinate_2.lon);
-}
-
-double greatCircleDistance(const FixedPointCoordinate coordinate_1,
-                           const FixedPointCoordinate coordinate_2)
-{
-    return greatCircleDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat,
-                               coordinate_2.lon);
-}
-
-double greatCircleDistance(const int lat1, const int lon1, const int lat2, const int lon2)
-{
+    auto lon1 = static_cast<int>(coordinate_1.lon);
+    auto lat1 = static_cast<int>(coordinate_1.lat);
+    auto lon2 = static_cast<int>(coordinate_2.lon);
+    auto lat2 = static_cast<int>(coordinate_2.lat);
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
 
-    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * RAD;
-    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * RAD;
-    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
-    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
+    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
+    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
+    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
+    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
 
     const double x_value = (float_lon2 - float_lon1) * std::cos((float_lat1 + float_lat2) / 2.0);
     const double y_value = float_lat2 - float_lat1;
     return std::hypot(x_value, y_value) * EARTH_RADIUS;
 }
 
-double perpendicularDistance(const FixedPointCoordinate source_coordinate,
-                             const FixedPointCoordinate target_coordinate,
-                             const FixedPointCoordinate query_location)
+double perpendicularDistance(const Coordinate source_coordinate,
+                             const Coordinate target_coordinate,
+                             const Coordinate query_location)
 {
     double ratio;
-    FixedPointCoordinate nearest_location;
+    Coordinate nearest_location;
 
     return perpendicularDistance(source_coordinate, target_coordinate, query_location,
                                  nearest_location, ratio);
 }
 
-double perpendicularDistance(const FixedPointCoordinate segment_source,
-                             const FixedPointCoordinate segment_target,
-                             const FixedPointCoordinate query_location,
-                             FixedPointCoordinate &nearest_location,
+double perpendicularDistance(const Coordinate segment_source,
+                             const Coordinate segment_target,
+                             const Coordinate query_location,
+                             Coordinate &nearest_location,
                              double &ratio)
 {
     using namespace coordinate_calculation;
 
     return perpendicularDistanceFromProjectedCoordinate(
         segment_source, segment_target, query_location,
-        {mercator::latToY(query_location.lat / COORDINATE_PRECISION),
-         query_location.lon / COORDINATE_PRECISION},
+        {static_cast<double>(toFloating(query_location.lon)),
+         mercator::latToY(toFloating(query_location.lat))},
         nearest_location, ratio);
 }
 
-double
-perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate source_coordinate,
-                                             const FixedPointCoordinate target_coordinate,
-                                             const FixedPointCoordinate query_location,
-                                             const std::pair<double, double> projected_coordinate)
+double perpendicularDistanceFromProjectedCoordinate(
+    const Coordinate source_coordinate,
+    const Coordinate target_coordinate,
+    const Coordinate query_location,
+    const std::pair<double, double> projected_xy_coordinate)
 {
     double ratio;
-    FixedPointCoordinate nearest_location;
+    Coordinate nearest_location;
 
     return perpendicularDistanceFromProjectedCoordinate(source_coordinate, target_coordinate,
-                                                        query_location, projected_coordinate,
+                                                        query_location, projected_xy_coordinate,
                                                         nearest_location, ratio);
 }
 
-double
-perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate segment_source,
-                                             const FixedPointCoordinate segment_target,
-                                             const FixedPointCoordinate query_location,
-                                             const std::pair<double, double> projected_coordinate,
-                                             FixedPointCoordinate &nearest_location,
-                                             double &ratio)
+double perpendicularDistanceFromProjectedCoordinate(
+    const Coordinate segment_source,
+    const Coordinate segment_target,
+    const Coordinate query_location,
+    const std::pair<double, double> projected_xy_coordinate,
+    Coordinate &nearest_location,
+    double &ratio)
 {
     using namespace coordinate_calculation;
 
     BOOST_ASSERT(query_location.IsValid());
 
     // initialize values
-    const double x = projected_coordinate.first;
-    const double y = projected_coordinate.second;
-    const double a = mercator::latToY(segment_source.lat / COORDINATE_PRECISION);
-    const double b = segment_source.lon / COORDINATE_PRECISION;
-    const double c = mercator::latToY(segment_target.lat / COORDINATE_PRECISION);
-    const double d = segment_target.lon / COORDINATE_PRECISION;
+    const double x = projected_xy_coordinate.second;
+    const double y = projected_xy_coordinate.first;
+    const double a = mercator::latToY(toFloating(segment_source.lat));
+    const double b = static_cast<double>(toFloating(segment_source.lon));
+    const double c = mercator::latToY(toFloating(segment_target.lat));
+    const double d = static_cast<double>(toFloating(segment_target.lon));
     double p, q /*,mX*/, new_y;
     if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
     {
@@ -184,14 +190,24 @@ perpendicularDistanceFromProjectedCoordinate(const FixedPointCoordinate segment_
     else
     {
         // point lies in between
-        nearest_location.lat = static_cast<int>(mercator::yToLat(p) * COORDINATE_PRECISION);
-        nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
+        nearest_location.lon = toFixed(FloatLongitude(q));
+        nearest_location.lat = toFixed(FloatLatitude(mercator::yToLat(p)));
     }
     BOOST_ASSERT(nearest_location.IsValid());
 
     const double approximate_distance = greatCircleDistance(query_location, nearest_location);
     BOOST_ASSERT(0.0 <= approximate_distance);
     return approximate_distance;
+}
+
+Coordinate centroid(const Coordinate lhs, const Coordinate rhs)
+{
+    Coordinate centroid;
+    // The coordinates of the midpoints are given by:
+    // x = (x1 + x2) /2 and y = (y1 + y2) /2.
+    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude(2);
+    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude(2);
+    return centroid;
 }
 
 double degToRad(const double degree)
@@ -206,14 +222,13 @@ double radToDeg(const double radian)
     return radian * (180.0 * (1. / pi<double>()));
 }
 
-double bearing(const FixedPointCoordinate first_coordinate,
-               const FixedPointCoordinate second_coordinate)
+double bearing(const Coordinate first_coordinate, const Coordinate second_coordinate)
 {
     const double lon_diff =
-        second_coordinate.lon / COORDINATE_PRECISION - first_coordinate.lon / COORDINATE_PRECISION;
+        static_cast<double>(toFloating(second_coordinate.lon - first_coordinate.lon));
     const double lon_delta = degToRad(lon_diff);
-    const double lat1 = degToRad(first_coordinate.lat / COORDINATE_PRECISION);
-    const double lat2 = degToRad(second_coordinate.lat / COORDINATE_PRECISION);
+    const double lat1 = degToRad(static_cast<double>(toFloating(first_coordinate.lat)));
+    const double lat2 = degToRad(static_cast<double>(toFloating(second_coordinate.lat)));
     const double y = std::sin(lon_delta) * std::cos(lat2);
     const double x =
         std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
@@ -230,19 +245,17 @@ double bearing(const FixedPointCoordinate first_coordinate,
     return result;
 }
 
-double computeAngle(const FixedPointCoordinate first,
-                    const FixedPointCoordinate second,
-                    const FixedPointCoordinate third)
+double computeAngle(const Coordinate first, const Coordinate second, const Coordinate third)
 {
     using namespace boost::math::constants;
     using namespace coordinate_calculation;
 
-    const double v1x = (first.lon - second.lon) / COORDINATE_PRECISION;
-    const double v1y = mercator::latToY(first.lat / COORDINATE_PRECISION) -
-                       mercator::latToY(second.lat / COORDINATE_PRECISION);
-    const double v2x = (third.lon - second.lon) / COORDINATE_PRECISION;
-    const double v2y = mercator::latToY(third.lat / COORDINATE_PRECISION) -
-                       mercator::latToY(second.lat / COORDINATE_PRECISION);
+    const double v1x = static_cast<double>(toFloating(first.lon - second.lon));
+    const double v1y =
+        mercator::latToY(toFloating(first.lat)) - mercator::latToY(toFloating(second.lat));
+    const double v2x = static_cast<double>(toFloating(third.lon - second.lon));
+    const double v2y =
+        mercator::latToY(toFloating(third.lat)) - mercator::latToY(toFloating(second.lat));
 
     double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / pi<double>();
 
@@ -254,23 +267,100 @@ double computeAngle(const FixedPointCoordinate first,
     return angle;
 }
 
+Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
+{
+    BOOST_ASSERT(0 <= factor && factor <= 1.0);
+
+    FixedLongitude interpolated_lon(((1. - factor) * static_cast<std::int32_t>(from.lon)) +
+                                    (factor * static_cast<std::int32_t>(to.lon)));
+    FixedLatitude interpolated_lat(((1. - factor) * static_cast<std::int32_t>(from.lat)) +
+                                   (factor * static_cast<std::int32_t>(to.lat)));
+
+    return {std::move(interpolated_lon), std::move(interpolated_lat)};
+}
+
 namespace mercator
 {
-double yToLat(const double value)
+FloatLatitude yToLat(const double y)
 {
-    using namespace boost::math::constants;
+    const double normalized_lat = RAD_TO_DEGREE * 2. * std::atan(std::exp(y * DEGREE_TO_RAD));
 
-    return 180. * (1. / pi<long double>()) *
-           (2. * std::atan(std::exp(value * pi<double>() / 180.)) - half_pi<double>());
+    return FloatLatitude(normalized_lat - 90.);
 }
 
-double latToY(const double latitude)
+double latToY(const FloatLatitude latitude)
 {
-    using namespace boost::math::constants;
+    const double normalized_lat = 90. + static_cast<double>(latitude);
 
-    return 180. * (1. / pi<double>()) *
-           std::log(std::tan((pi<double>() / 4.) + latitude * (pi<double>() / 180.) / 2.));
+    return RAD_TO_DEGREE * std::log(std::tan(normalized_lat * DEGREE_TO_RAD * 0.5));
 }
+
+FloatLatitude clamp(const FloatLatitude lat)
+{
+    return std::max(std::min(lat, FloatLatitude(detail::MAX_LATITUDE)),
+                    FloatLatitude(-detail::MAX_LATITUDE));
+}
+
+FloatLongitude clamp(const FloatLongitude lon)
+{
+    return std::max(std::min(lon, FloatLongitude(detail::MAX_LONGITUDE)),
+                    FloatLongitude(-detail::MAX_LONGITUDE));
+}
+
+inline void pixelToDegree(const double shift, double &x, double &y)
+{
+    const double b = shift / 2.0;
+    x = (x - b) / shift * 360.0;
+    // FIXME needs to be simplified
+    const double g = (y - b) / -(shift / (2 * M_PI)) / DEGREE_TO_RAD;
+    static_assert(DEGREE_TO_RAD / (2 * M_PI) - 1/360. < 0.0001, "");
+    y = static_cast<double>(util::coordinate_calculation::mercator::yToLat(g));
+}
+
+double degreeToPixel(FloatLongitude lon, unsigned zoom)
+{
+    const double shift = (1u << zoom) * TILE_SIZE;
+    const double b = shift / 2.0;
+    const double x = b * (1 + static_cast<double>(lon) / 180.0);
+    return x;
+}
+
+double degreeToPixel(FloatLatitude lat, unsigned zoom)
+{
+    const double shift = (1u << zoom) * TILE_SIZE;
+    const double b = shift / 2.0;
+    const double y = b * (1. - latToY(lat) / 180.);
+    return y;
+}
+
+// Converts a WMS tile coordinate (z,x,y) into a wsg84 bounding box
+void xyzToWSG84(const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
+{
+    using util::coordinate_calculation::mercator::TILE_SIZE;
+
+    minx = x * TILE_SIZE;
+    miny = (y + 1.0) * TILE_SIZE;
+    maxx = (x + 1.0) * TILE_SIZE;
+    maxy = y * TILE_SIZE;
+    // 2^z * TILE_SIZE
+    const double shift = (1u << static_cast<unsigned>(z)) * TILE_SIZE;
+    pixelToDegree(shift, minx, miny);
+    pixelToDegree(shift, maxx, maxy);
+}
+
+// Converts a WMS tile coordinate (z,x,y) into a mercator bounding box
+void xyzToMercator(const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
+{
+    using namespace util::coordinate_calculation::mercator;
+
+    xyzToWSG84(x, y, z, minx, miny, maxx, maxy);
+
+    minx = static_cast<double>(clamp(util::FloatLongitude(minx))) * DEGREE_TO_PX;
+    miny = latToY(clamp(util::FloatLatitude(miny))) * DEGREE_TO_PX;
+    maxx = static_cast<double>(clamp(util::FloatLongitude(maxx))) * DEGREE_TO_PX;
+    maxy = latToY(clamp(util::FloatLatitude(maxy))) * DEGREE_TO_PX;
+}
+
 } // ns mercato // ns mercatorr
 } // ns coordinate_calculation
 } // ns util

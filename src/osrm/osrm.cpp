@@ -1,22 +1,54 @@
 #include "osrm/osrm.hpp"
+#include "engine/api/route_parameters.hpp"
+#include "engine/api/table_parameters.hpp"
+#include "engine/api/nearest_parameters.hpp"
+#include "engine/api/trip_parameters.hpp"
+#include "engine/api/match_parameters.hpp"
 #include "engine/engine.hpp"
+#include "engine/status.hpp"
 #include "engine/engine_config.hpp"
-#include "engine/plugins/plugin_base.hpp"
-#include "storage/shared_barriers.hpp"
 #include "util/make_unique.hpp"
 
 namespace osrm
 {
 
-// proxy code for compilation firewall
-OSRM::OSRM(engine::EngineConfig &config_) : engine_(util::make_unique<engine::Engine>(config_)) {}
+// Pimpl idiom
 
-// needed because unique_ptr needs the size of OSRM_impl for delete
-OSRM::~OSRM() {}
+OSRM::OSRM(engine::EngineConfig &config) : engine_(util::make_unique<engine::Engine>(config)) {}
+OSRM::~OSRM() = default;
+OSRM::OSRM(OSRM &&) noexcept = default;
+OSRM &OSRM::operator=(OSRM &&) noexcept = default;
 
-int OSRM::RunQuery(const RouteParameters &route_parameters, util::json::Object &json_result)
+// Forward to implementation
+
+engine::Status OSRM::Route(const engine::api::RouteParameters &params, util::json::Object &result)
 {
-    return engine_->RunQuery(route_parameters, json_result);
+    return engine_->Route(params, result);
 }
 
+engine::Status OSRM::Table(const engine::api::TableParameters &params, json::Object &result)
+{
+    return engine_->Table(params, result);
 }
+
+engine::Status OSRM::Nearest(const engine::api::NearestParameters &params, json::Object &result)
+{
+    return engine_->Nearest(params, result);
+}
+
+engine::Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &result)
+{
+    return engine_->Trip(params, result);
+}
+
+engine::Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &result)
+{
+    return engine_->Match(params, result);
+}
+
+engine::Status OSRM::Tile(const engine::api::TileParameters &params, std::string &result)
+{
+    return engine_->Tile(params, result);
+}
+
+} // ns osrm

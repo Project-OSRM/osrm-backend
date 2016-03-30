@@ -21,19 +21,19 @@ Feature: Roundabout Instructions
             | abcda | roundabout |
 
         When I route I should get
-            | from | to | route | turns                               |
-            | s    | t  | sa,tb | head,enter_roundabout-1,destination |
-            | s    | u  | sa,uc | head,enter_roundabout-2,destination |
-            | s    | v  | sa,vd | head,enter_roundabout-3,destination |
-            | t    | u  | tb,uc | head,enter_roundabout-1,destination |
-            | t    | v  | tb,vd | head,enter_roundabout-2,destination |
-            | t    | s  | tb,sa | head,enter_roundabout-3,destination |
-            | u    | v  | uc,vd | head,enter_roundabout-1,destination |
-            | u    | s  | uc,sa | head,enter_roundabout-2,destination |
-            | u    | t  | uc,tb | head,enter_roundabout-3,destination |
-            | v    | s  | vd,sa | head,enter_roundabout-1,destination |
-            | v    | t  | vd,tb | head,enter_roundabout-2,destination |
-            | v    | u  | vd,uc | head,enter_roundabout-3,destination |
+            | from | to | route | turns                            |
+            | s    | t  | sa,tb | depart,roundabout-exit-1,arrive |
+            | s    | u  | sa,uc | depart,roundabout-exit-2,arrive |
+            | s    | v  | sa,vd | depart,roundabout-exit-3,arrive |
+            | t    | u  | tb,uc | depart,roundabout-exit-1,arrive |
+            | t    | v  | tb,vd | depart,roundabout-exit-2,arrive |
+            | t    | s  | tb,sa | depart,roundabout-exit-3,arrive |
+            | u    | v  | uc,vd | depart,roundabout-exit-1,arrive |
+            | u    | s  | uc,sa | depart,roundabout-exit-2,arrive |
+            | u    | t  | uc,tb | depart,roundabout-exit-3,arrive |
+            | v    | s  | vd,sa | depart,roundabout-exit-1,arrive |
+            | v    | t  | vd,tb | depart,roundabout-exit-2,arrive |
+            | v    | u  | vd,uc | depart,roundabout-exit-3,arrive |
 
     Scenario: Testbot - Roundabout with oneway links
         Given the node map
@@ -57,20 +57,20 @@ Feature: Roundabout Instructions
             | abcdefgha | roundabout |        |
 
         When I route I should get
-            | from | to | route | turns                               |
-            | j    | k  | jb,ck | head,enter_roundabout-1,destination |
-            | j    | m  | jb,em | head,enter_roundabout-2,destination |
-            | j    | o  | jb,go | head,enter_roundabout-3,destination |
-            | j    | i  | jb,ai | head,enter_roundabout-4,destination |
-            | l    | m  | ld,em | head,enter_roundabout-1,destination |
-            | l    | o  | ld,go | head,enter_roundabout-2,destination |
-            | l    | i  | ld,ai | head,enter_roundabout-3,destination |
-            | l    | k  | ld,ck | head,enter_roundabout-4,destination |
-            | n    | o  | nf,go | head,enter_roundabout-1,destination |
-            | n    | i  | nf,ai | head,enter_roundabout-2,destination |
-            | n    | k  | nf,ck | head,enter_roundabout-3,destination |
-            | n    | m  | nf,em | head,enter_roundabout-4,destination |
-            | p    | i  | ph,ai | head,enter_roundabout-1,destination |
-            | p    | k  | ph,ck | head,enter_roundabout-2,destination |
-            | p    | m  | ph,em | head,enter_roundabout-3,destination |
-            | p    | o  | ph,go | head,enter_roundabout-4,destination |
+            | from | to | route | turns                            |
+            | j    | k  | jb,ck | depart,roundabout-exit-1,arrive |
+            | j    | m  | jb,em | depart,roundabout-exit-2,arrive |
+            | j    | o  | jb,go | depart,roundabout-exit-3,arrive |
+            | j    | i  | jb,ai | depart,roundabout-exit-4,arrive |
+            | l    | m  | ld,em | depart,roundabout-exit-1,arrive |
+            | l    | o  | ld,go | depart,roundabout-exit-2,arrive |
+            | l    | i  | ld,ai | depart,roundabout-exit-3,arrive |
+            | l    | k  | ld,ck | depart,roundabout-exit-4,arrive |
+            | n    | o  | nf,go | depart,roundabout-exit-1,arrive |
+            | n    | i  | nf,ai | depart,roundabout-exit-2,arrive |
+            | n    | k  | nf,ck | depart,roundabout-exit-3,arrive |
+            | n    | m  | nf,em | depart,roundabout-exit-4,arrive |
+            | p    | i  | ph,ai | depart,roundabout-exit-1,arrive |
+            | p    | k  | ph,ck | depart,roundabout-exit-2,arrive |
+            | p    | m  | ph,em | depart,roundabout-exit-3,arrive |
+            | p    | o  | ph,go | depart,roundabout-exit-4,arrive |

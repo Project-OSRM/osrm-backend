@@ -37,7 +37,7 @@ namespace util
 
 // Static RTree for serving nearest neighbour queries
 template <class EdgeDataT,
-          class CoordinateListT = std::vector<FixedPointCoordinate>,
+          class CoordinateListT = std::vector<Coordinate>,
           bool UseSharedMemory = false,
           std::uint32_t BRANCHING_FACTOR = 64,
           std::uint32_t LEAF_NODE_SIZE = 1024>
@@ -122,8 +122,8 @@ class StaticRTree
         // generate auxiliary vector of hilbert-values
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, m_element_count),
-            [&input_data_vector, &input_wrapper_vector, &coordinate_list](
-                const tbb::blocked_range<uint64_t> &range)
+            [&input_data_vector, &input_wrapper_vector,
+             &coordinate_list](const tbb::blocked_range<uint64_t> &range)
             {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end; ++element_counter)
@@ -137,14 +137,11 @@ class StaticRTree
                     BOOST_ASSERT(current_element.u < coordinate_list.size());
                     BOOST_ASSERT(current_element.v < coordinate_list.size());
 
-                    FixedPointCoordinate current_centroid = EdgeDataT::Centroid(
-                        FixedPointCoordinate(coordinate_list[current_element.u].lat,
-                                             coordinate_list[current_element.u].lon),
-                        FixedPointCoordinate(coordinate_list[current_element.v].lat,
-                                             coordinate_list[current_element.v].lon));
-                    current_centroid.lat =
-                        COORDINATE_PRECISION * coordinate_calculation::mercator::latToY(
-                                                   current_centroid.lat / COORDINATE_PRECISION);
+                    Coordinate current_centroid = coordinate_calculation::centroid(
+                        coordinate_list[current_element.u], coordinate_list[current_element.v]);
+                    current_centroid.lat = FixedLatitude(
+                        COORDINATE_PRECISION *
+                        coordinate_calculation::mercator::latToY(toFloating(current_centroid.lat)));
 
                     current_wrapper.m_hilbert_value = hilbertCode(current_centroid);
                 }
@@ -377,8 +374,7 @@ class StaticRTree
     }
 
     // Override filter and terminator for the desired behaviour.
-    std::vector<EdgeDataT> Nearest(const FixedPointCoordinate input_coordinate,
-                                   const std::size_t max_results)
+    std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate, const std::size_t max_results)
     {
         return Nearest(input_coordinate,
                        [](const EdgeDataT &)
@@ -393,14 +389,13 @@ class StaticRTree
 
     // Override filter and terminator for the desired behaviour.
     template <typename FilterT, typename TerminationT>
-    std::vector<EdgeDataT> Nearest(const FixedPointCoordinate input_coordinate,
-                                   const FilterT filter,
-                                   const TerminationT terminate)
+    std::vector<EdgeDataT>
+    Nearest(const Coordinate input_coordinate, const FilterT filter, const TerminationT terminate)
     {
         std::vector<EdgeDataT> results;
         std::pair<double, double> projected_coordinate = {
-            coordinate_calculation::mercator::latToY(input_coordinate.lat / COORDINATE_PRECISION),
-            input_coordinate.lon / COORDINATE_PRECISION};
+            static_cast<double>(toFloating(input_coordinate.lon)),
+            coordinate_calculation::mercator::latToY(toFloating(input_coordinate.lat))};
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
@@ -445,14 +440,8 @@ class StaticRTree
                 // store phantom node in result vector
                 results.push_back(std::move(current_segment));
 
-                if (!use_segment.first)
-                {
-                    results.back().forward_edge_based_node_id = SPECIAL_NODEID;
-                }
-                else if (!use_segment.second)
-                {
-                    results.back().reverse_edge_based_node_id = SPECIAL_NODEID;
-                }
+                results.back().forward_segment_id.enabled &= use_segment.first;
+                results.back().reverse_segment_id.enabled &= use_segment.second;
             }
         }
 
@@ -462,7 +451,7 @@ class StaticRTree
   private:
     template <typename QueueT>
     void ExploreLeafNode(const std::uint32_t leaf_id,
-                         const FixedPointCoordinate input_coordinate,
+                         const Coordinate input_coordinate,
                          const std::pair<double, double> &projected_coordinate,
                          QueueT &traversal_queue)
     {
@@ -487,7 +476,7 @@ class StaticRTree
 
     template <class QueueT>
     void ExploreTreeNode(const TreeNode &parent,
-                         const FixedPointCoordinate input_coordinate,
+                         const Coordinate input_coordinate,
                          QueueT &traversal_queue)
     {
         for (std::uint32_t i = 0; i < parent.child_count; ++i)
@@ -542,10 +531,10 @@ class StaticRTree
                 std::max(rectangle.max_lat, std::max(coordinate_list[objects[i].u].lat,
                                                      coordinate_list[objects[i].v].lat));
         }
-        BOOST_ASSERT(rectangle.min_lat != std::numeric_limits<int>::min());
-        BOOST_ASSERT(rectangle.min_lon != std::numeric_limits<int>::min());
-        BOOST_ASSERT(rectangle.max_lat != std::numeric_limits<int>::min());
-        BOOST_ASSERT(rectangle.max_lon != std::numeric_limits<int>::min());
+        BOOST_ASSERT(rectangle.min_lon != FixedLongitude(std::numeric_limits<int>::min()));
+        BOOST_ASSERT(rectangle.min_lat != FixedLatitude(std::numeric_limits<int>::min()));
+        BOOST_ASSERT(rectangle.max_lon != FixedLongitude(std::numeric_limits<int>::min()));
+        BOOST_ASSERT(rectangle.max_lat != FixedLatitude(std::numeric_limits<int>::min()));
     }
 };
 

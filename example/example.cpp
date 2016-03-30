@@ -1,61 +1,85 @@
-#include "osrm/json_container.hpp"
-#include "osrm/engine_config.hpp"
 #include "osrm/route_parameters.hpp"
+#include "osrm/table_parameters.hpp"
+#include "osrm/nearest_parameters.hpp"
+#include "osrm/trip_parameters.hpp"
+#include "osrm/match_parameters.hpp"
+
+#include "osrm/coordinate.hpp"
+#include "osrm/engine_config.hpp"
+#include "osrm/json_container.hpp"
+
+#include "osrm/status.hpp"
 #include "osrm/osrm.hpp"
 
 #include <string>
 #include <utility>
 #include <iostream>
 #include <exception>
+
 #include <cstdlib>
 
 int main(int argc, const char *argv[]) try
 {
     if (argc < 2)
     {
-        std::cerr << "Error: Not enough arguments." << std::endl
-                  << "Run " << argv[0] << " data.osrm" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " data.osrm\n";
         return EXIT_FAILURE;
     }
 
-    osrm::EngineConfig engine_config;
-    std::string base_path(argv[1]);
-    engine_config.server_paths["ramindex"] = base_path + ".ramIndex";
-    engine_config.server_paths["fileindex"] = base_path + ".fileIndex";
-    engine_config.server_paths["hsgrdata"] = base_path + ".hsgr";
-    engine_config.server_paths["nodesdata"] = base_path + ".nodes";
-    engine_config.server_paths["edgesdata"] = base_path + ".edges";
-    engine_config.server_paths["coredata"] = base_path + ".core";
-    engine_config.server_paths["geometries"] = base_path + ".geometry";
-    engine_config.server_paths["timestamp"] = base_path + ".timestamp";
-    engine_config.server_paths["namesdata"] = base_path + ".names";
-    engine_config.use_shared_memory = false;
+    using namespace osrm;
 
-    osrm::OSRM routing_machine(engine_config);
+    // Configure based on a .osrm base path, and no datasets in shared mem from osrm-datastore
+    EngineConfig config;
+    config.storage_config = {argv[1]};
+    config.use_shared_memory = false;
 
-    osrm::RouteParameters route_parameters;
-    // route is in Monaco
-    route_parameters.service = "viaroute";
-    route_parameters.AddCoordinate(43.731142, 7.419758);
-    route_parameters.AddCoordinate(43.736825, 7.419505);
+    // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
+    OSRM osrm{config};
 
-    osrm::json::Object json_result;
-    const int result_code = routing_machine.RunQuery(route_parameters, json_result);
-    std::cout << "result code: " << result_code << std::endl;
-    // 2xx code
-    if (result_code / 100 == 2)
+    // The following shows how to use the Route service; configure this service
+    RouteParameters params;
+
+    // Route in monaco
+    params.coordinates.push_back({util::FloatLongitude(7.419758), util::FloatLatitude(43.731142)});
+    params.coordinates.push_back({util::FloatLongitude(7.419505), util::FloatLatitude(43.736825)});
+
+    // Response is in JSON format
+    json::Object result;
+
+    // Execute routing request, this does the heavy lifting
+    const auto status = osrm.Route(params, result);
+
+    if (status == Status::Ok)
     {
-        // Extract data out of JSON structure
-        auto& summary = json_result.values["route_summary"].get<osrm::json::Object>();
-        auto duration = summary.values["total_time"].get<osrm::json::Number>().value;
-        auto distance = summary.values["total_distance"].get<osrm::json::Number>().value;
-        std::cout << "duration: " << duration << std::endl;
-        std::cout << "distance: " << distance << std::endl;
+        auto &routes = result.values["routes"].get<json::Array>();
+
+        // Let's just use the first route
+        auto &route = routes.values.at(0).get<json::Object>();
+        const auto distance = route.values["distance"].get<json::Number>().value;
+        const auto duration = route.values["duration"].get<json::Number>().value;
+
+        // Warn users if extract does not contain the default Berlin coordinates from above
+        if (distance == 0 or duration == 0)
+        {
+            std::cout << "Note: distance or duration is zero. ";
+            std::cout << "You are probably doing a query outside of the OSM extract.\n\n";
+        }
+
+        std::cout << "Distance: " << distance << " meter\n";
+        std::cout << "Duration: " << duration << " seconds\n";
     }
-    return EXIT_SUCCESS;
+    else if (status == Status::Error)
+    {
+        const auto code = result.values["code"].get<json::String>().value;
+        const auto message = result.values["message"].get<json::String>().value;
+
+        std::cout << "Code: " << code << "\n";
+        std::cout << "Message: " << code << "\n";
+        return EXIT_FAILURE;
+    }
 }
-catch (const std::exception &current_exception)
+catch (const std::exception &e)
 {
-    std::cout << "exception: " << current_exception.what();
+    std::cerr << "Error: " << e.what() << std::endl;
     return EXIT_FAILURE;
 }

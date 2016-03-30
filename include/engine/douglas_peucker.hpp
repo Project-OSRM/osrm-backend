@@ -1,7 +1,7 @@
 #ifndef DOUGLAS_PEUCKER_HPP_
 #define DOUGLAS_PEUCKER_HPP_
 
-#include "engine/segment_information.hpp"
+#include "util/coordinate.hpp"
 
 #include <vector>
 #include <iterator>
@@ -44,14 +44,15 @@ const constexpr auto DOUGLAS_PEUCKER_THRESHOLDS_SIZE =
 // Input is vector of pairs. Each pair consists of the point information and a
 // bit indicating if the points is present in the generalization.
 // Note: points may also be pre-selected*/
-void douglasPeucker(std::vector<SegmentInformation>::iterator begin,
-                    std::vector<SegmentInformation>::iterator end,
-                    const unsigned zoom_level);
+std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::const_iterator begin,
+                                             std::vector<util::Coordinate>::const_iterator end,
+                                             const unsigned zoom_level);
 
 // Convenience range-based function
-inline void douglasPeucker(std::vector<SegmentInformation> &geometry, const unsigned zoom_level)
+inline std::vector<util::Coordinate> douglasPeucker(const std::vector<util::Coordinate> &geometry,
+                                                    const unsigned zoom_level)
 {
-    douglasPeucker(begin(geometry), end(geometry), zoom_level);
+    return douglasPeucker(begin(geometry), end(geometry), zoom_level);
 }
 }
 }

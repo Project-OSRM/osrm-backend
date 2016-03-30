@@ -3,7 +3,6 @@
 
 #include "util/typedefs.hpp"
 
-#include "extractor/speed_profile.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <memory>
@@ -22,8 +21,6 @@ class GraphCompressor
     using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
   public:
-    GraphCompressor(SpeedProfileProperties speed_profile);
-
     void Compress(const std::unordered_set<NodeID> &barrier_nodes,
                   const std::unordered_set<NodeID> &traffic_lights,
                   RestrictionMap &restriction_map,
@@ -34,8 +31,6 @@ class GraphCompressor
     void PrintStatistics(unsigned original_number_of_nodes,
                          unsigned original_number_of_edges,
                          const util::NodeBasedDynamicGraph &graph) const;
-
-    SpeedProfileProperties speed_profile;
 };
 }
 }

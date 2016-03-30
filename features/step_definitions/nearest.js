@@ -17,7 +17,7 @@ module.exports = function () {
                     if (response.statusCode === 200 && response.body.length) {
                         var json = JSON.parse(response.body);
 
-                        coord = json.mapped_coordinate;
+                        coord = json.waypoints[0].location;
 
                         var got = { in: row.in, out: row.out };
 
