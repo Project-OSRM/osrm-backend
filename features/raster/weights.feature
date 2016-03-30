@@ -61,7 +61,7 @@ Feature: Raster - weights
             | d    | b  | de,eb | 10 km/h |
 
     Scenario: Weighting based on raster sources
-        Given the profile "rasterbot-interp"
+        Given the profile "rasterbotinterp"
         When I run "osrm-extract {osm_base}.osm -p {profile}"
         Then stdout should contain "evaluating segment"
         And I run "osrm-contract {osm_base}.osm"
