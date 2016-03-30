@@ -158,7 +158,7 @@ module.exports = function () {
                             trace.push(node);
                         }
                         if (row.timestamps) {
-                            timestamps = row.timestamps.split(' ').filter(s => !!s).map(t => parseInt(t));
+                            timestamps = row.timestamps.split(' ').filter(s => !!s).map(t => parseInt(t, 10));
                         }
                         got.trace = row.trace;
                         this.requestMatching(trace, timestamps, params, afterRequest);
