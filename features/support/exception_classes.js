@@ -18,18 +18,18 @@ var OSRMError = class extends Error {
         this.logTail(this.log, this.lines, callback);
     }
 
-    toString (callback) {
-        this.extract((tail) => {
-            callback(util.format('*** %s\nLast %s from %s:\n%s\n', this.msg, this.lines, this.log, tail));
-        });
-    }
+    // toString (callback) {
+    //     this.extract((tail) => {
+    //         callback(util.format('*** %s\nLast %s from %s:\n%s\n', this.msg, this.lines, this.log, tail));
+    //     });
+    // }
 
     logTail (logPath, n, callback) {
         var expanded = path.resolve(this.TEST_FOLDER, logPath);
         fs.exists(expanded, (exists) => {
             if (exists) {
                 fs.readFile(expanded, (err, data) => {
-                    var lines = data.trim().split('\n');
+                    var lines = data.toString().trim().split('\n');
                     callback(lines
                         .slice(lines.length - n)
                         .map(line => util.format('    %s', line))

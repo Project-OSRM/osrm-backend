@@ -47,7 +47,7 @@ module.exports = function () {
 
                 var result = json['durations'].map(row => {
                     var hashes = {};
-                    row.forEach((v, i) => hashes[tableRows[0][i+1]] = v);
+                    row.forEach((v, i) => { hashes[tableRows[0][i+1]] = isNaN(parseInt(v)) ? '' : v; });
                     return hashes;
                 });
 
