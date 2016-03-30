@@ -47,12 +47,12 @@ module.exports = function () {
 
                         if (headers.has('route')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking route only supported for matchings with one subtrace');
-                            route = this.wayList(json.matchings[0].instructions);
+                            route = this.wayList(json.matchings[0]);
                         }
 
                         if (headers.has('duration')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking duration only supported for matchings with one subtrace');
-                            duration = json.matchings[0].route_summary.total_time;
+                            duration = json.matchings[0].duration;
                         }
                     }
 

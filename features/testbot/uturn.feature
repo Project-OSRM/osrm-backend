@@ -20,8 +20,8 @@ Feature: U-turns at via points
             | fg    |
 
         When I route I should get
-            | waypoints | route                | turns                                                          |
-            | a,e,c     | ab,be,be,ef,fg,dg,cd | head,right,via,straight,straight,straight,straight,destination |
+            | waypoints | route                | turns                                                       |
+            | a,e,c     | ab,be,be,ef,fg,dg,cd | depart,right,via,straight,straight,straight,straight,arrive |
 
     Scenario: Query param to allow U-turns at all via points
         Given the node map
@@ -65,8 +65,8 @@ Feature: U-turns at via points
             | fg    |
 
         When I route I should get
-            | waypoints | route       | turns                              |
-            | a,e,c     | ab,be,be,bc | head,right,uturn,right,destination |
+            | waypoints | route       | turns                           |
+            | a,e,c     | ab,be,be,bc | depart,right,uturn,right,arrive |
 
     Scenario: u-turn mixed with non-uturn vias
         Given the node map

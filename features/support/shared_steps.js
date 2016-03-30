@@ -26,34 +26,32 @@ module.exports = function () {
             var headers = new Set(table.raw()[0]);
 
             var requestRow = (row, ri, cb) => {
-                var got,
-                    json;
+                var got;
 
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        var instructions, bearings, compasses, turns, modes, times, distances;
+                        var instructions, bearings, turns, modes, times, distances;
 
-                        json = JSON.parse(body);
+                        var json = JSON.parse(body);
 
-                        var hasRoute = json.status === 200;
+                        var hasRoute = json.code === 'ok';
 
                         if (hasRoute) {
-                            instructions = this.wayList(json.route_instructions);
-                            bearings = this.bearingList(json.route_instructions);
-                            compasses = this.compassList(json.route_instructions);
-                            turns = this.turnList(json.route_instructions);
-                            modes = this.modeList(json.route_instructions);
-                            times = this.timeList(json.route_instructions);
-                            distances = this.distanceList(json.route_instructions);
+                            instructions = this.wayList(json.routes[0]);
+                            bearings = this.bearingList(json.routes[0]);
+                            turns = this.turnList(json.routes[0]);
+                            modes = this.modeList(json.routes[0]);
+                            times = this.timeList(json.routes[0]);
+                            distances = this.distanceList(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
-                            got.status = json.status.toString();
+                            got.status = res.statusCode.toString();
                         }
 
                         if (headers.has('message')) {
-                            got.message = json.status_message;
+                            got.message = json.message || '';
                         }
 
                         if (headers.has('#')) {
@@ -77,12 +75,14 @@ module.exports = function () {
                             got.route = (instructions || '').trim();
 
                             if (headers.has('alternative')) {
-                                got.alternative = json.found_alternative ?
-                                    this.wayList(json.alternative_instructions[0]) : '';
+                                // TODO examine more than first alternative?
+                                got.alternative ='';
+                                if (json.routes && json.routes.length > 1)
+                                    got.alternative = this.wayList(json.routes[1]);
                             }
 
-                            var distance = hasRoute && json.route_summary.total_distance,
-                                time = hasRoute && json.route_summary.total_time;
+                            var distance = hasRoute && json.routes[0].distance,
+                                time = hasRoute && json.routes[0].duration;
 
                             if (headers.has('distance')) {
                                 if (row.distance.length) {
@@ -116,7 +116,6 @@ module.exports = function () {
                             };
 
                             putValue('bearing', bearings);
-                            putValue('compass', compasses);
                             putValue('turns', turns);
                             putValue('modes', modes);
                             putValue('times', times);

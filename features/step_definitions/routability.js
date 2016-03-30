@@ -5,18 +5,20 @@ var classes = require('../support/data_classes');
 module.exports = function () {
     this.Then(/^routability should be$/, (table, callback) => {
         this.buildWaysFromTable(table, () => {
-            var directions = ['forw','backw','bothw'];
+            var directions = ['forw','backw','bothw'],
+                headers = new Set(Object.keys(table.hashes()[0]));
 
-            if (!directions.some(k => !!table.hashes()[0].hasOwnProperty(k))) {
+            if (!directions.some(k => !!headers.has(k))) {
                 throw new Error('*** routability table must contain either "forw", "backw" or "bothw" column');
             }
+
             this.reprocessAndLoadData(() => {
                 var testRow = (row, i, cb) => {
                     var outputRow = row;
 
                     testRoutabilityRow(i, (err, result) => {
                         if (err) return cb(err);
-                        directions.filter(d => !!table.hashes()[0][d]).forEach((direction) => {
+                        directions.filter(d => headers.has(d)).forEach((direction) => {
                             var want = this.shortcutsHash[row[direction]] || row[direction];
 
                             switch (true) {
@@ -66,13 +68,13 @@ module.exports = function () {
 
                 r.query = this.query;
                 r.json = JSON.parse(body);
-                r.status = r.json.status === 200 ? 'x' : null;
+                r.status = res.statusCode === 200 ? 'x' : null;
                 if (r.status) {
-                    r.route = this.wayList(r.json.route_instructions);
+                    r.route = this.wayList(r.json.routes[0]);
 
                     if (r.route === util.format('w%d', i)) {
-                        r.time = r.json.route_summary.total_time;
-                        r.distance = r.json.route_summary.total_distance;
+                        r.time = r.json.routes[0].duration;
+                        r.distance = r.json.routes[0].distance;
                         r.speed = r.time > 0 ? parseInt(3.6 * r.distance / r.time) : null;
                     } else {
                         r.status = null;
@@ -83,7 +85,7 @@ module.exports = function () {
             });
         };
 
-        d3.queue()
+        d3.queue(1)
             .defer(testDirection, 'forw')
             .defer(testDirection, 'backw')
             .awaitAll((err, res) => {
@@ -96,15 +98,23 @@ module.exports = function () {
                 });
 
                 result.bothw = {};
-                ['status', 'time', 'distance', 'speed'].forEach((key) => {
+
+                var sq = d3.queue();
+
+                var parseRes = (key, scb) => {
                     if (result.forw[key] === result.backw[key]) {
                         result.bothw[key] = result.forw[key];
                     } else {
                         result.bothw[key] = 'diff';
                     }
+                    scb();
+                };
+
+                ['status', 'time', 'distance', 'speed'].forEach((key) => {
+                    sq.defer(parseRes, key);
                 });
 
-                cb(null, result);
+                sq.awaitAll(() => { cb(null, result); });
             });
     };
 };

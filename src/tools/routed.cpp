@@ -8,6 +8,7 @@
 #include "osrm/storage_config.hpp"
 
 #include <boost/any.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #ifdef __linux__
@@ -186,7 +187,54 @@ int main(int argc, const char *argv[]) try
         }
         else
         {
-            util::SimpleLogger().Write(logWARNING) << "Invalid config options.";
+            if(!boost::filesystem::is_regular_file(config.storage_config.ram_index_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.ram_index_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.file_index_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.file_index_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.hsgr_data_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.hsgr_data_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.nodes_data_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.nodes_data_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.edges_data_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.edges_data_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.core_data_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.core_data_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.geometries_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.geometries_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.timestamp_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.timestamp_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.datasource_names_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.datasource_names_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.datasource_indexes_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.datasource_indexes_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.names_data_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.names_data_path << " is not found";
+            }
+            if(!boost::filesystem::is_regular_file(config.storage_config.properties_path))
+            {
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.properties_path << " is not found";
+            }
         }
         return EXIT_FAILURE;
     }
