@@ -105,7 +105,7 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from, const EdgeI
     // main priority: roundabouts
     bool on_roundabout = in_edge_data.roundabout;
     bool can_enter_roundabout = false;
-    bool can_exit_roundabout = false;
+    bool can_exit_roundabout_separately = false;
     for (const auto &road : intersection)
     {
         const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
@@ -117,14 +117,22 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from, const EdgeI
         {
             can_enter_roundabout = true;
         }
-        else
+        // Exiting roundabouts at an entry point is technically a data-modelling issue.
+        // This workaround handles cases in which an exit follows the entry.
+        // To correctly represent perceived exits, we only count exits leading to a
+        // separate vertex than the one we are coming from that are in the direction of
+        // the roundabout.
+        // The sorting of the angles represents a problem for left-sided driving, though.
+        // FIXME in case of left-sided driving, we have to check whether we can enter the
+        // roundabout later in the cycle, rather than prior.
+        else if (node_based_graph.GetTarget(road.turn.eid) != from && !can_enter_roundabout)
         {
-            can_exit_roundabout = true;
+            can_exit_roundabout_separately = true;
         }
     }
     if (on_roundabout || can_enter_roundabout)
     {
-        intersection = handleRoundabouts(via_edge, on_roundabout, can_exit_roundabout,
+        intersection = handleRoundabouts(via_edge, on_roundabout, can_exit_roundabout_separately,
                                          std::move(intersection));
     }
     else
@@ -174,7 +182,7 @@ inline std::size_t countValid(const std::vector<ConnectedRoad> &intersection)
 std::vector<ConnectedRoad>
 TurnAnalysis::handleRoundabouts(const EdgeID via_edge,
                                 const bool on_roundabout,
-                                const bool can_exit_roundabout,
+                                const bool can_exit_roundabout_separately,
                                 std::vector<ConnectedRoad> intersection) const
 {
     // TODO requires differentiation between roundabouts and rotaries
@@ -220,7 +228,7 @@ TurnAnalysis::handleRoundabouts(const EdgeID via_edge,
             if (out_data.roundabout)
             {
                 turn.instruction = TurnInstruction::ENTER_ROUNDABOUT(getTurnDirection(turn.angle));
-                if (can_exit_roundabout)
+                if (can_exit_roundabout_separately)
                 {
                     if (turn.instruction.type == TurnType::EnterRotary)
                         turn.instruction.type = TurnType::EnterRotaryAtExit;
