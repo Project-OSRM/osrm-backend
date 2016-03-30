@@ -129,8 +129,8 @@ class RouteAPI : public BaseAPI
                  * the overall response consistent.
                  */
 
+                guidance::trimShortSegments(steps, leg_geometry);
                 leg.steps = guidance::postProcess(std::move(steps));
-                guidance::trimShortSegments(leg.steps, leg_geometry);
                 leg.steps = guidance::assignRelativeLocations(std::move(leg.steps), leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
