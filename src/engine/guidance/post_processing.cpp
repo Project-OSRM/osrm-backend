@@ -303,7 +303,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 
 void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 {
-#define OSRM_POST_PROCESSING_PRINT_DEBUG 1
 #if OSRM_POST_PROCESSING_PRINT_DEBUG
     std::cout << "[Pre-Trimming]" << std::endl;
     print(steps);
