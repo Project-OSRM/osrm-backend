@@ -83,6 +83,8 @@ class RouteAPI : public BaseAPI
         legs.reserve(number_of_legs);
         leg_geometries.reserve(number_of_legs);
 
+        util::json::Array route_nodes;
+
         for (auto idx : util::irange<std::size_t>(0UL, number_of_legs))
         {
             const auto &phantoms = segment_end_coordinates[idx];
@@ -95,6 +97,12 @@ class RouteAPI : public BaseAPI
                 BaseAPI::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
             auto leg = guidance::assembleLeg(facade, path_data, leg_geometry, phantoms.source_phantom,
                                              phantoms.target_phantom, reversed_target, parameters.steps);
+
+            std::transform(leg_geometry.osm_node_ids.begin(), leg_geometry.osm_node_ids.end(),
+                    std::back_inserter(route_nodes.values),
+                    [](const OSMNodeID &osm_node) {
+                        return static_cast<util::json::Value>(static_cast<uint64_t>(osm_node));
+                    });
 
             if (parameters.steps)
             {
@@ -178,7 +186,8 @@ class RouteAPI : public BaseAPI
 
         return json::makeRoute(route,
                                json::makeRouteLegs(std::move(legs), std::move(step_geometries)),
-                               std::move(json_overview));
+                               std::move(json_overview),
+                               route_nodes);
     }
 
     const RouteParameters &parameters;

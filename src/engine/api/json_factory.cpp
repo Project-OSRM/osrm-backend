@@ -167,7 +167,8 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
 
 util::json::Object makeRoute(const guidance::Route &route,
                              util::json::Array legs,
-                             boost::optional<util::json::Value> geometry)
+                             boost::optional<util::json::Value> geometry,
+                             util::json::Array nodes)
 {
     util::json::Object json_route;
     json_route.values["distance"] = std::round(route.distance * 10) / 10.;
@@ -176,6 +177,10 @@ util::json::Object makeRoute(const guidance::Route &route,
     if (geometry)
     {
         json_route.values["geometry"] = *std::move(geometry);
+    }
+    if (nodes.values.size() > 0)
+    {
+        json_route.values["nodes"] = std::move(nodes);
     }
     return json_route;
 }

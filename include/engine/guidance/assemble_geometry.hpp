@@ -61,6 +61,9 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
 
         prev_coordinate = coordinate;
         geometry.locations.push_back(std::move(coordinate));
+        // We will only have OSM nodes for the intermediate points, not the start and
+        // end, which are phantom nodes.
+        geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(path_point.turn_via_node));
     }
     current_distance +=
         util::coordinate_calculation::haversineDistance(prev_coordinate, target_node.location);
