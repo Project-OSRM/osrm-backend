@@ -78,8 +78,8 @@ module.exports = {
         }
 
         matchLocation (got, want) {
-            return this.match(got[0], util.format('%d ~0.0025%', want.lat)) &&
-                this.match(got[1], util.format('%d ~0.0025%', want.lon));
+            return this.match(got[0], util.format('%d ~0.0025%', want.lon)) &&
+                this.match(got[1], util.format('%d ~0.0025%', want.lat));
         }
     }
 };
