@@ -198,12 +198,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     if (steps.size() == 2)
         return steps;
 
-#define OSRM_POST_PROCESSING_PRINT_DEBUG 0
-#if OSRM_POST_PROCESSING_PRINT_DEBUG
-    std::cout << "[POSTPROCESSING ITERATION]" << std::endl;
-    std::cout << "Input\n";
-    print(steps);
-#endif
     // Count Street Exits forward
     bool on_roundabout = false;
     bool has_entered_roundabout = false;
@@ -294,10 +288,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 
     boost::remove_erase_if(steps, not_is_valid);
 
-#if OSRM_POST_PROCESSING_PRINT_DEBUG
-    std::cout << "Merged\n";
-    print(steps);
-#endif
     return steps;
 }
 
