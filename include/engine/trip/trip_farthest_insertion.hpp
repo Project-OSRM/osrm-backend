@@ -3,6 +3,7 @@
 
 #include "engine/search_engine.hpp"
 #include "util/dist_table_wrapper.hpp"
+#include "util/typedefs.hpp"
 
 #include "osrm/json_container.hpp"
 #include <boost/assert.hpp>
@@ -152,6 +153,13 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+    // Guard against division-by-zero in the code path below.
+    BOOST_ASSERT(number_of_locations > 0);
+
+    // Guard against dist_table being empty therefore max_element returning the end iterator.
+    BOOST_ASSERT(dist_table.size() > 0);
+
     const auto component_size = std::distance(start, end);
     BOOST_ASSERT(component_size >= 0);
 
@@ -169,12 +177,16 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     }
     else
     {
-        auto max_dist = 0;
+        auto max_dist = std::numeric_limits<EdgeWeight>::min();
+
         for (auto x = start; x != end; ++x)
         {
             for (auto y = start; y != end; ++y)
             {
                 const auto xy_dist = dist_table(*x, *y);
+                // SCC decomposition done correctly?
+                BOOST_ASSERT(xy_dist != INVALID_EDGE_WEIGHT);
+
                 if (xy_dist > max_dist)
                 {
                     max_dist = xy_dist;
@@ -184,6 +196,7 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
             }
         }
     }
+
     BOOST_ASSERT(max_from >= 0);
     BOOST_ASSERT(max_to >= 0);
     BOOST_ASSERT_MSG(static_cast<std::size_t>(max_from) < number_of_locations, "start node");
