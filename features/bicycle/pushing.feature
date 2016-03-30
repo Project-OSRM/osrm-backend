@@ -99,7 +99,7 @@ Feature: Bike - Accessability of different way types
 
         When I route I should get
             | from | to | route    | turns                                   |
-            | a    | d  | ab,bc,cd | depart,straight,straight,arrive         |
+            | a    | d  | ab,bc,cd | depart,right,left,arrive                |
             | d    | a  | cd,bc,ab | depart,right,left,arrive                |
             | c    | a  | bc,ab    | depart,left,arrive                      |
             | d    | b  | cd,bc    | depart,right,arrive                     |
