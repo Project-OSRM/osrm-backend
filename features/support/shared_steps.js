@@ -47,11 +47,11 @@ module.exports = function () {
                         }
 
                         if (headers.has('status')) {
-                            got.status = json.status.toString();
+                            got.status = res.statusCode.toString();
                         }
 
                         if (headers.has('message')) {
-                            got.message = json.status_message;
+                            got.message = json.message || '';
                         }
 
                         if (headers.has('#')) {
