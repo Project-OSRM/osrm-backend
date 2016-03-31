@@ -122,7 +122,6 @@ module.exports = function () {
         postfix = postfix || null;
         if (instructions) {
             return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
-                .filter(v => v.maneuver.type !== 'arrive')
                 .map(keyFinder)
                 .join(',');
         }
@@ -145,6 +144,7 @@ module.exports = function () {
                     return v.maneuver.type;
                 case 'roundabout':
                     return 'roundabout-exit-' + v.maneuver.exit;
+                // FIXME this is a little bit over-simplistic for merge/fork instructions
                 default:
                     return v.maneuver.modifier;
                 }
