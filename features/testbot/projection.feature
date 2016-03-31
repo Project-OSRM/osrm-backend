@@ -23,13 +23,13 @@ Feature: Projection to nearest point on road
 
     Scenario: Projection onto way at high latitudes, 1km distance
         When I route I should get
-            | from | to | route | compass | bearing | distance  |
-            | b    | a  | abc   | SW      | 225     | 1000m +-7 |
-            | b    | c  | abc   | NE      | 45      | 1000m +-7 |
-            | a    | d  | abc   | NE      | 45      | 1000m +-7 |
-            | d    | a  | abc   | SW      | 225     | 1000m +-7 |
-            | c    | d  | abc   | SW      | 225     | 1000m +-8 |
-            | d    | c  | abc   | NE      | 45  +-5 | 1000m +-8 |
+            | from | to | route | bearing | distance  |
+            | b    | a  | abc   | 225     | 1000m +-7 |
+            | b    | c  | abc   | 45      | 1000m +-7 |
+            | a    | d  | abc   | 45      | 1000m +-7 |
+            | d    | a  | abc   | 225     | 1000m +-7 |
+            | c    | d  | abc   | 225     | 1000m +-8 |
+            | d    | c  | abc   | 45  +-5 | 1000m +-8 |
 
     Scenario: Projection onto way at high latitudes, no distance
         When I route I should get
