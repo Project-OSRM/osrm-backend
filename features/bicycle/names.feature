@@ -15,8 +15,8 @@ Feature: Bike - Street names in instructions
             | bc    | Your Way |
 
         When I route I should get
-            | from | to | route           |
-            | a    | c  | My Way,Your Way |
+            | from | to | route                    |
+            | a    | c  | My Way,Your Way,Your Way |
 
     @unnamed
     Scenario: Bike - Use way type to describe unnamed ways
@@ -29,5 +29,5 @@ Feature: Bike - Street names in instructions
             | bcd   | track    |      |
 
         When I route I should get
-            | from | to | route                              |
-            | a    | d  | {highway:cycleway},{highway:track} |
+            | from | to | route                                              |
+            | a    | d  | {highway:cycleway},{highway:track},{highway:track} |

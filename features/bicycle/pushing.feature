@@ -46,14 +46,14 @@ Feature: Bike - Accessability of different way types
 
         When I route I should get
             | from | to | route |
-            | a    | b  | abcda |
-            | a    | d  | abcda |
-            | b    | c  | abcda |
-            | c    | b  | abcda |
-            | c    | d  | abcda |
-            | d    | c  | abcda |
-            | d    | a  | abcda |
-            | a    | d  | abcda |
+            | a    | b  | abcda,abcda |
+            | a    | d  | abcda,abcda |
+            | b    | c  | abcda,abcda |
+            | c    | b  | abcda,abcda |
+            | c    | d  | abcda,abcda |
+            | d    | c  | abcda,abcda |
+            | d    | a  | abcda,abcda |
+            | a    | d  | abcda,abcda |
 
     Scenario: Bike - Pushing bikes on ways with foot=yes
         Then routability should be
@@ -98,11 +98,11 @@ Feature: Bike - Accessability of different way types
             | cd    | primary |        |
 
         When I route I should get
-            | from | to | route    | turns                                   |
-            | a    | d  | ab,bc,cd | depart,right,left,arrive                |
-            | d    | a  | cd,bc,ab | depart,right,left,arrive                |
-            | c    | a  | bc,ab    | depart,left,arrive                      |
-            | d    | b  | cd,bc    | depart,right,arrive                     |
+            | from | to | route       | turns                                   |
+            | a    | d  | ab,bc,cd,cd | depart,right,left,arrive                |
+            | d    | a  | cd,bc,ab,ab | depart,right,left,arrive                |
+            | c    | a  | bc,ab,ab    | depart,left,arrive                      |
+            | d    | b  | cd,bc,bc    | depart,right,arrive                     |
 
     @todo
     Scenario: Bike - Instructions when pushing bike on footway/pedestrian, etc.
@@ -117,8 +117,8 @@ Feature: Bike - Accessability of different way types
             | cd    | primary |
 
         When I route I should get
-            | from | to | route    | turns                    |
-            | a    | d  | ab,bc,cd | depart,right,left,arrive |
-            | d    | a  | cd,bc,ab | depart,right,left,arrive |
-            | c    | a  | bc,ab    | depart,left,arrive       |
-            | d    | b  | cd,bc    | depart,right,arrive      |
+            | from | to | route       | turns                    |
+            | a    | d  | ab,bc,cd,cd | depart,right,left,arrive |
+            | d    | a  | cd,bc,ab,ab | depart,right,left,arrive |
+            | c    | a  | bc,ab,ab    | depart,left,arrive       |
+            | d    | b  | cd,bc,bc    | depart,right,arrive      |
