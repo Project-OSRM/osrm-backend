@@ -4,8 +4,11 @@ var request = require('request');
 module.exports = function () {
     this.paramsToString = (params) => {
         var paramString = '';
-        if (params.coordinates !== undefined && params.output !== undefined) {
-            paramString = params.coordinates.join(';') + '.' + params.output;
+        if (params.coordinates !== undefined) {
+            // FIXME this disables passing the output if its a default
+            // Remove after #2173 is fixed.
+            var outputString = (params.output && params.output !== 'json') ? ('.' + params.output) : '';
+            paramString = params.coordinates.join(';') + outputString;
             delete params.coordinates;
             delete params.output;
         }
