@@ -98,12 +98,6 @@ class RouteAPI : public BaseAPI
             auto leg = guidance::assembleLeg(facade, path_data, leg_geometry, phantoms.source_phantom,
                                              phantoms.target_phantom, reversed_target, parameters.steps);
 
-            std::transform(leg_geometry.osm_node_ids.begin(), leg_geometry.osm_node_ids.end(),
-                    std::back_inserter(route_nodes.values),
-                    [](const OSMNodeID &osm_node) {
-                        return static_cast<util::json::Value>(static_cast<uint64_t>(osm_node));
-                    });
-
             if (parameters.steps)
             {
                 auto steps = guidance::assembleSteps(
@@ -165,6 +159,7 @@ class RouteAPI : public BaseAPI
         }
 
         std::vector<util::json::Value> step_geometries;
+        std::vector<util::json::Value> step_nodes;
         for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
         {
             auto &leg_geometry = leg_geometries[idx];
@@ -182,12 +177,27 @@ class RouteAPI : public BaseAPI
                         leg_geometry.locations.begin() + step.geometry_begin,
                         leg_geometry.locations.begin() + step.geometry_end));
                 });
+            std::transform(
+                legs[idx].steps.begin(), legs[idx].steps.end(), std::back_inserter(step_nodes),
+                [this, &leg_geometry](const guidance::RouteStep &step)
+                {
+                    util::json::Array nodelist;
+
+                    std::transform(
+                            leg_geometry.osm_node_ids.begin() + step.geometry_begin, 
+                            leg_geometry.osm_node_ids.begin() + step.geometry_end,
+                            std::back_inserter(nodelist.values),
+                            [](const OSMNodeID &osm_node) {
+                                return static_cast<util::json::Value>(static_cast<uint64_t>(osm_node));
+                            });
+
+                    return nodelist;
+                });
         }
 
         return json::makeRoute(route,
-                               json::makeRouteLegs(std::move(legs), std::move(step_geometries)),
-                               std::move(json_overview),
-                               route_nodes);
+                               json::makeRouteLegs(std::move(legs), std::move(step_geometries), std::move(step_nodes)),
+                               std::move(json_overview));
     }
 
     const RouteParameters &parameters;
