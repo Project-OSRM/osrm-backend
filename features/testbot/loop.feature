@@ -4,7 +4,7 @@ Feature: Avoid weird loops caused by rounding errors
     Background:
         Given the profile "testbot"
 
-    Scenario: Weired sidestreet loops
+    Scenario: Weird sidestreet loops
         Given the node map
             | a | 1 | b | 2 | c | 3 | d |
             |   |   |   |   |   |   |   |
