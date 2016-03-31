@@ -57,9 +57,11 @@ module.exports = function () {
         params.coordinates = encodedWaypoints;
 
         if (bearings.length) {
-            // TODOTODO
-            var encodedBearings = bearings.map(b => ['b', b.toString()]);
-            params = Array.prototype.concat.apply(params, encodedWaypoints.map((o, i) => [o, encodedBearings[i]]));
+            params.bearings = bearings.map(b => {
+                var bs = b.split(',');
+                if (bs.length === 2) return b;
+                else return b += ',10';
+            }).join(';');
         }
 
         return this.requestPath('route', params, callback);
