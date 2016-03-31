@@ -13,8 +13,8 @@ Feature: Via points
             | abc   |
 
         When I route I should get
-            | waypoints | route   |
-            | a,b,c     | abc,abc |
+            | waypoints | route           |
+            | a,b,c     | abc,abc,abc,abc |
 
     Scenario: Simple via point with core factor
         Given the contract extra arguments "--core 0.8"
@@ -26,10 +26,10 @@ Feature: Via points
             | abc   |
 
         When I route I should get
-            | waypoints | route   |
-            | a,b,c     | abc,abc |
-            | c,b,a     | abc,abc |
-            | c,b,a     | abc,abc |
+            | waypoints | route           |
+            | a,b,c     | abc,abc,abc,abc |
+            | c,b,a     | abc,abc,abc,abc |
+            | c,b,a     | abc,abc,abc,abc |
 
     Scenario: Via point at a dead end
         Given the node map
@@ -42,10 +42,11 @@ Feature: Via points
             | bd    |
 
         When I route I should get
-            | waypoints | route            |
-            | a,d,c     | abc,bd,bd,bd,abc |
-            | c,d,a     | abc,bd,bd,bd,abc |
+            | waypoints | route                   |
+            | a,d,c     | abc,bd,bd,bd,bd,abc,abc |
+            | c,d,a     | abc,bd,bd,bd,bd,abc,abc |
 
+    @mokob
     Scenario: Multiple via points
         Given the node map
             | a |   |   |   | e | f | g |   |
@@ -63,8 +64,8 @@ Feature: Via points
 
         When I route I should get
             | waypoints | route                    |
-            | a,c,f     | ab,bcd,bcd,de,efg        |
-            | a,c,f,h   | ab,bcd,bcd,de,efg,efg,gh |
+            | a,c,f     | ab,bcd,bcd,bcd,de,efg,efg|
+            | a,c,f,h   | ab,bcd,bcd,bcd,de,efg,efg,efg,gh,gh|
 
 
     Scenario: Duplicate via point
