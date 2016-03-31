@@ -3,6 +3,7 @@
 var util = require('util');
 var path = require('path');
 var fs = require('fs');
+var chalk = require('chalk');
 
 var OSRMError = class extends Error {
     constructor (process, code, msg, log, lines) {
@@ -118,9 +119,9 @@ module.exports = {
             this.diff.forEach((row) => {
                 var rowString = '| ';
                 this.headers.forEach((header) => {
-                    if (!row.c_status) rowString += '    ' + row[header] + ' | ';
-                    else if (row.c_status === 'undefined') rowString += '(-) ' + row[header] + ' | ';
-                    else rowString += '(+) ' + row[header] + ' | ';
+                    if (!row.c_status) rowString += chalk.green('    ' + row[header] + ' | ');
+                    else if (row.c_status === 'undefined') rowString += chalk.yellow('(-) ' + row[header] + ' | ');
+                    else rowString += chalk.red('(+) ' + row[header] + ' | ');
                 });
                 s.push(rowString);
             });
