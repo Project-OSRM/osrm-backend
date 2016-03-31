@@ -15,13 +15,13 @@ Feature: Car - Mode flag
             | cd    | primary |       |          |
 
         When I route I should get
-            | from | to | route    | turns                    | modes                 |
-            | a    | d  | ab,bc,cd | depart,right,left,arrive | driving,ferry,driving |
-            | d    | a  | cd,bc,ab | depart,right,left,arrive | driving,ferry,driving |
-            | c    | a  | bc,ab    | depart,left,arrive       | ferry,driving         |
-            | d    | b  | cd,bc    | depart,right,arrive      | driving,ferry         |
-            | a    | c  | ab,bc    | depart,right,arrive      | driving,ferry         |
-            | b    | d  | bc,cd    | depart,left,arrive       | ferry,driving         |
+            | from | to | route       | turns                    | modes                         |
+            | a    | d  | ab,bc,cd,cd | depart,right,left,arrive | driving,ferry,driving,driving |
+            | d    | a  | cd,bc,ab,ab | depart,right,left,arrive | driving,ferry,driving,driving |
+            | c    | a  | bc,ab,ab    | depart,left,arrive       | ferry,driving,driving         |
+            | d    | b  | cd,bc,bc    | depart,right,arrive      | driving,ferry,ferry           |
+            | a    | c  | ab,bc,bc    | depart,right,arrive      | driving,ferry,ferry           |
+            | b    | d  | bc,cd,cd    | depart,left,arrive       | ferry,driving,driving         |
 
     Scenario: Car - Snapping when using a ferry
         Given the node map
@@ -34,7 +34,7 @@ Feature: Car - Mode flag
             | ef    | primary |       |          |
 
         When I route I should get
-            | from | to | route | turns         | modes       | time  |
-            | c    | d  | bcde  | depart,arrive | ferry       | 600s  |
+            | from | to | route     | turns         | modes       | time  |
+            | c    | d  | bcde,bcde | depart,arrive | ferry,ferry | 600s  |
 
 

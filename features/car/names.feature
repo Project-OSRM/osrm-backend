@@ -15,8 +15,8 @@ Feature: Car - Street names in instructions
             | bc    | Your Way | A1  |
 
         When I route I should get
-            | from | to | route                |
-            | a    | c  | My Way,Your Way (A1) |
+            | from | to | route                              |
+            | a    | c  | My Way,Your Way (A1),Your Way (A1) |
 
     @todo
     Scenario: Car - Use way type to describe unnamed ways
@@ -29,5 +29,5 @@ Feature: Car - Street names in instructions
             | bcd   | residential |      |
 
         When I route I should get
-            | from | to | route                |
-            | a    | c  | tertiary,residential |
+            | from | to | route                            |
+            | a    | c  | tertiary,residential,residential |
