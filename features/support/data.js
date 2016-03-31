@@ -201,6 +201,7 @@ module.exports = function () {
         exec(cmd, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
+                process.chdir('../');
                 return callback(this.ExtractError(err.code, util.format('osrm-extract exited with code %d', err.code)));
             }
 
@@ -247,6 +248,7 @@ module.exports = function () {
         exec(cmd, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
+                process.chdir('../');
                 return callback(this.ContractError(err.code, util.format('osrm-contract exited with code %d', err.code)));
             }
 
