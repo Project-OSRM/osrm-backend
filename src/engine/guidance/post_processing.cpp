@@ -318,7 +318,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // To catch these cases correctly, we have to perform trimming prior to the post-processing
 
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
-    const bool zero_length_step = steps.front().distance <= std::numeric_limits<double>::epsilon();
+    // Look for distances under 1m
+    const bool zero_length_step = steps.front().distance <= 1;
     const bool duplicated_coordinate = geometry.locations[0] == geometry.locations[1];
     if (zero_length_step || duplicated_coordinate)
     {
@@ -387,16 +388,26 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     auto &next_to_last_step = *(steps.end() - 2);
     // in the end, the situation with the roundabout cannot occur. As a result, we can remove all
     // zero-length instructions
-    if (next_to_last_step.distance <= std::numeric_limits<double>::epsilon())
+    if (next_to_last_step.distance <= 1)
     {
         geometry.locations.pop_back();
         geometry.segment_offsets.pop_back();
-        BOOST_ASSERT(geometry.segment_distances.back() < std::numeric_limits<double>::epsilon());
+        BOOST_ASSERT(geometry.segment_distances.back() < 1);
         geometry.segment_distances.pop_back();
 
         next_to_last_step.maneuver = detail::stepManeuverFromGeometry(
             TurnInstruction::NO_TURN(), WaypointType::Arrive, geometry);
         steps.pop_back();
+
+        // Because we eliminated a really short segment, it was probably
+        // near an intersection.  The convention is *not* to make the
+        // turn, so the `arrive` instruction should be on the same road
+        // as the segment before it.  Thus, we have to copy the names
+        // and travel modes from the new next_to_last step.
+        auto &new_next_to_last = *(steps.end() - 2);
+        next_to_last_step.name = new_next_to_last.name;
+        next_to_last_step.name_id = new_next_to_last.name_id;
+        next_to_last_step.mode = new_next_to_last.mode;
         // the geometry indices of the last step are already correct;
     }
     else if (geometry.locations[geometry.locations.size() - 2] ==
