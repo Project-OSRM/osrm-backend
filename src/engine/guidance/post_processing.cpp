@@ -334,6 +334,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         designated_depart.duration += current_depart.duration;
 
         geometry.locations.erase(geometry.locations.begin());
+        geometry.osm_node_ids.erase(geometry.osm_node_ids.begin());
 
         BOOST_ASSERT(geometry.segment_offsets[1] == 1);
         // geometry offsets have to be adjusted. Move all offsets to the front and reduce by one.
@@ -373,6 +374,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     if (next_to_last_step.distance <= std::numeric_limits<double>::epsilon())
     {
         geometry.locations.pop_back();
+        geometry.osm_node_ids.pop_back();
         geometry.segment_offsets.pop_back();
         BOOST_ASSERT(geometry.segment_distances.back() < std::numeric_limits<double>::epsilon());
         geometry.segment_distances.pop_back();

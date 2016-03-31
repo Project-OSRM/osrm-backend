@@ -43,6 +43,12 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
     geometry.segment_offsets.push_back(0);
     geometry.locations.push_back(source_node.location);
 
+    // Need to get the node ID preceeding the source phantom node
+    // TODO: check if this was traversed in reverse???
+    std::vector<NodeID> reverse_geometry;
+    facade.GetUncompressedGeometry(source_node.reverse_packed_geometry_id, reverse_geometry);
+    geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(reverse_geometry[reverse_geometry.size() - source_node.fwd_segment_position - 1]));
+
     auto current_distance = 0.;
     auto prev_coordinate = geometry.locations.front();
     for (const auto &path_point : leg_data)
@@ -61,6 +67,9 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
 
         prev_coordinate = coordinate;
         geometry.locations.push_back(std::move(coordinate));
+        // We will only have OSM nodes for the intermediate points, not the start and
+        // end, which are phantom nodes.
+        geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(path_point.turn_via_node));
     }
     current_distance +=
         util::coordinate_calculation::haversineDistance(prev_coordinate, target_node.location);
@@ -68,6 +77,13 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
     geometry.segment_distances.push_back(current_distance);
     geometry.segment_offsets.push_back(geometry.locations.size());
     geometry.locations.push_back(target_node.location);
+
+
+    // Need to get the node ID *after* the target phantom node
+    // TODO: check if this was traversed in reverse???
+    std::vector<NodeID> forward_geometry;
+    facade.GetUncompressedGeometry(target_node.forward_packed_geometry_id, forward_geometry);
+    geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(forward_geometry[target_node.fwd_segment_position]));
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());
