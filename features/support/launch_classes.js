@@ -38,7 +38,7 @@ var OSRMBaseLoader = class {
     }
 
     osrmDown (callback) {
-        if (this.scope.pid && this.child && !this.child.exitCode) {
+        if (this.scope.pid) {
             process.kill(this.scope.pid, this.scope.TERMSIGNAL);
             this.waitForShutdown(callback);
             this.scope.pid = null;
