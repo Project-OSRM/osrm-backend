@@ -22,8 +22,8 @@ Feature: Alternative route
             | alternatives | true |
 
         When I route I should get
-            | from | to | route          | alternative |
-            | 1    | 2  | ab,bd,dc,ca,ab |             |
-            | 3    | 4  | bd,dc,ca,ab,bd |             |
-            | 5    | 6  | dc,ca,ab,bd,dc |             |
-            | 7    | 8  | ca,ab,bd,dc,ca |             |
+            | from | to | route             | alternative |
+            | 1    | 2  | ab,bd,dc,ca,ab,ab |             |
+            | 3    | 4  | bd,dc,ca,ab,bd,bd |             |
+            | 5    | 6  | dc,ca,ab,bd,dc,dc |             |
+            | 7    | 8  | ca,ab,bd,dc,ca,ca |             |
