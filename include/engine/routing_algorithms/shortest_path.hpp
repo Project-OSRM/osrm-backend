@@ -160,18 +160,17 @@ class ShortestPathRouting final
                 reverse_core_heap.Clear();
                 BOOST_ASSERT(forward_core_heap.Size() == 0);
                 BOOST_ASSERT(reverse_core_heap.Size() == 0);
-                super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap,
-                                      reverse_core_heap, new_total_distance_to_forward,
-                                      leg_packed_path_forward,
-                                      super::NeedsLoopForward(source_phantom, target_phantom),
-                                      super::NeedsLoopBackwards(source_phantom, target_phantom));
+                super::SearchWithCore(
+                    forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
+                    new_total_distance_to_forward, leg_packed_path_forward,
+                    super::NeedsLoopForward(source_phantom, target_phantom), DO_NOT_FORCE_LOOP);
             }
             else
             {
                 super::Search(forward_heap, reverse_heap, new_total_distance_to_forward,
                               leg_packed_path_forward,
                               super::NeedsLoopForward(source_phantom, target_phantom),
-                              super::NeedsLoopBackwards(source_phantom, target_phantom));
+                              DO_NOT_FORCE_LOOP);
             }
         }
 
