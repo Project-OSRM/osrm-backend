@@ -4,9 +4,7 @@
 #include "engine/status.hpp"
 
 #include "engine/plugins/table.hpp"
-//#include "engine/plugins/hello_world.hpp"
 #include "engine/plugins/nearest.hpp"
-//#include "engine/plugins/timestamp.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/plugins/tile.hpp"
