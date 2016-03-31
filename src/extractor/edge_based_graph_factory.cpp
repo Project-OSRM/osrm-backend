@@ -138,7 +138,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     NodeID current_edge_source_coordinate_id = node_u;
 
     // traverse arrays from start and end respectively
-    for (const auto i : util::irange(0UL, geometry_size))
+    for (const auto i : util::irange(std::size_t{ 0 }, geometry_size))
     {
         BOOST_ASSERT(current_edge_source_coordinate_id ==
                      m_compressed_edge_container.GetBucketReference(

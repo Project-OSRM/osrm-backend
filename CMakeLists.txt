@@ -175,8 +175,10 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   # using Visual Studio C++
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} date_time chrono zlib)
+  add_definitions(-DBOOST_LIB_DIAGNOSTIC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
+  add_definitions(-D_USE_MATH_DEFINES) #needed for M_PI with cmath.h
   add_definitions(-D_WIN32_WINNT=0x0501)
   add_definitions(-DXML_STATIC)
   find_library(ws2_32_LIBRARY_PATH ws2_32)
@@ -234,7 +236,10 @@ include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 
 find_package(Boost 1.49.0 COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-add_definitions(-DBOOST_TEST_DYN_LINK -DBOOST_SPIRIT_USE_PHOENIX_V3 -DBOOST_RESULT_OF_USE_DECLTYPE)
+if(NOT WIN32)
+  add_definitions(-DBOOST_TEST_DYN_LINK)
+endif()
+add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3 -DBOOST_RESULT_OF_USE_DECLTYPE)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)

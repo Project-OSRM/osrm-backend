@@ -20,6 +20,10 @@ build_script:
 test: off
 
 artifacts:
+  - path: build\build_errors.txt
+    name: build_errors.txt
+  - path: build\build_warnings.txt
+    name: build_warnings.txt
   - path: osrm_Release.zip
     name: osrm_Release.zip
 #  - path: osrm_Debug.zip
@@ -41,9 +45,3 @@ deploy:
   folder: /
   enable_ssl: true
   active_mode: false
-
-# notifications:
-#   - provider: HipChat
-#     auth_token:
-#       secure: boLE7BjcahdIUxv9jkN7U3F8iOASF+MkhtctlVoWJoo=
-#     room: Directions
