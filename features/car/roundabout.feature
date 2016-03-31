@@ -21,10 +21,10 @@ Feature: Roundabout Instructions
             | abcda | roundabout |
 
         When I route I should get
-            | from | to | route | turns                            |
-            | s    | t  | sa,tb | depart,roundabout-exit-1,arrive |
-            | s    | u  | sa,uc | depart,roundabout-exit-2,arrive |
-            | s    | v  | sa,vd | depart,roundabout-exit-3,arrive |
-            | u    | v  | uc,vd | depart,roundabout-exit-1,arrive |
-            | u    | s  | uc,sa | depart,roundabout-exit-2,arrive |
-            | u    | t  | uc,tb | depart,roundabout-exit-3,arrive |
+            | from | to | route    | turns                            |
+            | s    | t  | sa,tb,tb | depart,roundabout-exit-1,arrive |
+            | s    | u  | sa,uc,uc | depart,roundabout-exit-2,arrive |
+            | s    | v  | sa,vd,vd | depart,roundabout-exit-3,arrive |
+            | u    | v  | uc,vd,vd | depart,roundabout-exit-1,arrive |
+            | u    | s  | uc,sa,sa | depart,roundabout-exit-2,arrive |
+            | u    | t  | uc,tb,tb | depart,roundabout-exit-3,arrive |
