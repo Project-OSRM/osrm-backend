@@ -20,10 +20,6 @@ build_script:
 test: off
 
 artifacts:
-  - path: build\build_errors.txt
-    name: build_errors.txt
-  - path: build\build_warnings.txt
-    name: build_warnings.txt
   - path: osrm_Release.zip
     name: osrm_Release.zip
 #  - path: osrm_Debug.zip
