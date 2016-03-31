@@ -68,7 +68,7 @@ module.exports = function () {
                         }
 
                         if (headers.has('geometry')) {
-                            got.geometry = json.route_geometry;
+                            got.geometry = json.routes[0].geometry;
                         }
 
                         if (headers.has('route')) {
