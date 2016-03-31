@@ -15,7 +15,7 @@ namespace server
 
 RequestParser::RequestParser()
     : state(internal_state::method_start), current_header({"", ""}),
-      selected_compression(http::no_compression), is_post_header(false), content_length(0)
+      selected_compression(http::no_compression)
 {
 }
 
@@ -32,10 +32,6 @@ RequestParser::parse(http::request &current_request, char *begin, char *end)
     }
     RequestStatus result = RequestStatus::indeterminate;
 
-    if (state == internal_state::post_request && content_length <= 0)
-    {
-        result = RequestStatus::valid;
-    }
     return std::make_tuple(result, selected_compression);
 }
 
@@ -49,38 +45,7 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
         {
             return RequestStatus::invalid;
         }
-        if (input == 'P')
-        {
-            state = internal_state::post_O;
-            return RequestStatus::indeterminate;
-        }
         state = internal_state::method;
-        return RequestStatus::indeterminate;
-    case internal_state::post_O:
-        if (input == 'O')
-        {
-            state = internal_state::post_S;
-            return RequestStatus::indeterminate;
-        }
-        return RequestStatus::invalid;
-    case internal_state::post_S:
-        if (input == 'S')
-        {
-            state = internal_state::post_T;
-            return RequestStatus::indeterminate;
-        }
-        return RequestStatus::invalid;
-    case internal_state::post_T:
-        if (input == 'T')
-        {
-            is_post_header = true;
-            state = internal_state::method;
-            return RequestStatus::indeterminate;
-        }
-        return RequestStatus::invalid;
-    case internal_state::post_request:
-        current_request.uri.push_back(input);
-        --content_length;
         return RequestStatus::indeterminate;
     case internal_state::method:
         if (input == ' ')
@@ -214,24 +179,6 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
         {
             current_request.agent = current_header.value;
         }
-        if (boost::iequals(current_header.name, "Content-Length"))
-        {
-            try
-            {
-                content_length = std::stoi(current_header.value);
-            }
-            catch (const std::exception &e)
-            {
-                // Ignore the header if the parameter isn't an int
-            }
-        }
-        if (boost::iequals(current_header.name, "Content-Type"))
-        {
-            if (!boost::icontains(current_header.value, "application/x-www-form-urlencoded"))
-            {
-                return RequestStatus::invalid;
-            }
-        }
 
         if (input == '\r')
         {
@@ -300,22 +247,7 @@ RequestParser::RequestStatus RequestParser::consume(http::request &current_reque
             return RequestStatus::indeterminate;
         }
         return RequestStatus::invalid;
-    case internal_state::expecting_newline_3:
-        if (input == '\n')
-        {
-            if (is_post_header)
-            {
-                if (content_length > 0)
-                {
-                    current_request.uri.push_back('?');
-                }
-                state = internal_state::post_request;
-                return RequestStatus::indeterminate;
-            }
-            return RequestStatus::valid;
-        }
-        return RequestStatus::invalid;
-    default: // should never be reached
+    default: // expecting_newline_3
         return input == '\n' ? RequestStatus::valid : RequestStatus::invalid;
     }
 }
