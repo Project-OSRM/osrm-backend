@@ -72,7 +72,7 @@ module.exports = function () {
                 if (r.status) {
                     r.route = this.wayList(r.json.routes[0]);
 
-                    if (r.route === util.format('w%d', i)) {
+                    if (r.route.split(',')[0] === util.format('w%d', i)) {
                         r.time = r.json.routes[0].duration;
                         r.distance = r.json.routes[0].distance;
                         r.speed = r.time > 0 ? parseInt(3.6 * r.distance / r.time) : null;
