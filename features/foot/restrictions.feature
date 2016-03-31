@@ -24,10 +24,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | wj     | j        | no_left_turn |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @no_turning
     Scenario: Foot - No right turn
@@ -48,10 +48,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | ej     | j        | no_right_turn |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @no_turning
     Scenario: Foot - No u-turn
@@ -72,10 +72,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | wj     | j        | no_u_turn   |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @no_turning
     Scenario: Foot - Handle any no_* relation
@@ -96,10 +96,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | wj     | j        | no_weird_zigzags |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @only_turning
     Scenario: Foot - Only left turn
@@ -120,10 +120,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | wj     | j        | only_left_turn |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @only_turning
     Scenario: Foot - Only right turn
@@ -144,10 +144,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | ej     | j        | only_right_turn |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @only_turning
     Scenario: Foot - Only straight on
@@ -168,10 +168,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | nj     | j        | only_straight_on |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @no_turning
     Scenario: Foot - Handle any only_* restriction
@@ -192,10 +192,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | nj     | j        | only_weird_zigzags |
 
         When I route I should get
-            | from | to | route |
-            | s    | w  | sj,wj |
-            | s    | n  | sj,nj |
-            | s    | e  | sj,ej |
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 
     @except
     Scenario: Foot - Except tag and on no_ restrictions
@@ -221,11 +221,11 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | dj     | j        | no_right_turn | foot   |
 
         When I route I should get
-            | from | to | route |
-            | s    | a  | sj,aj |
-            | s    | b  | sj,bj |
-            | s    | c  | sj,cj |
-            | s    | d  | sj,dj |
+            | from | to | route    |
+            | s    | a  | sj,aj,aj |
+            | s    | b  | sj,bj,bj |
+            | s    | c  | sj,cj,cj |
+            | s    | d  | sj,dj,dj |
 
     @except
     Scenario: Foot - Except tag and on only_ restrictions
@@ -245,9 +245,9 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | aj     | j        | only_straight_on | foot   |
 
         When I route I should get
-            | from | to | route |
-            | s    | a  | sj,aj |
-            | s    | b  | sj,bj |
+            | from | to | route    |
+            | s    | a  | sj,aj,aj |
+            | s    | b  | sj,bj,bj |
 
     @except
     Scenario: Foot - Multiple except tag values
@@ -279,10 +279,10 @@ Feature: Foot - Turn restrictions
             | restriction | sj       | jf     | j        | no_straight_on | foot, bus     |
 
         When I route I should get
-            | from | to | route |
-            | s    | a  | sj,ja |
-            | s    | b  | sj,jb |
-            | s    | c  | sj,jc |
-            | s    | d  | sj,jd |
-            | s    | e  | sj,je |
-            | s    | f  | sj,jf |
+            | from | to | route    |
+            | s    | a  | sj,ja,ja |
+            | s    | b  | sj,jb,jb |
+            | s    | c  | sj,jc,jc |
+            | s    | d  | sj,jd,jd |
+            | s    | e  | sj,je,je |
+            | s    | f  | sj,jf,jf |
