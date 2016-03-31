@@ -44,6 +44,7 @@ module.exports = function () {
                 else if (err.code === 'ECONNREFUSED')
                     return callback(this.RoutedError('*** osrm-routed is not running'));
             }
+            //console.log(body+"\n");
             return callback(err, res, body);
         }));
     };
