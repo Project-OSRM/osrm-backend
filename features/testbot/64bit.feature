@@ -19,5 +19,5 @@ Feature: Support 64bit node IDs
             | cdec  |
 
         When I route I should get
-            | from | to | route | turns         |
-            | x    | y  | abc   | depart,arrive |
+            | from | to | route   | turns         |
+            | x    | y  | abc,abc | depart,arrive |
