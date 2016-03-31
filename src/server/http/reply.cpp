@@ -12,7 +12,7 @@ namespace http
 const char ok_html[] = "";
 const char bad_request_html[] = "";
 const char internal_server_error_html[] =
-    "{\"code\": \"internal-error\",\"message\":\"Internal Server Error\"}";
+    "{\"code\": \"InternalError\",\"message\":\"Internal Server Error\"}";
 const char seperators[] = {':', ' '};
 const char crlf[] = {'\r', '\n'};
 const std::string http_ok_string = "HTTP/1.0 200 OK\r\n";
