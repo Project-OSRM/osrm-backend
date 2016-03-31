@@ -176,6 +176,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     // If we update the edge weights, this file will hold the datasource information
     // for each segment
     std::vector<uint8_t> m_geometry_datasource;
+    std::vector<std::size_t> datasource_usage_counters;
 
     if (update_edge_weights)
     {
@@ -205,6 +206,9 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     "Sorry, there's a limit of 254 segment speed files, you supplied too many");
             }
         }
+
+        // Initialize usage counters to 0 for all datasources
+        datasource_usage_counters.resize(file_id, 0);
 
         std::vector<extractor::QueryNode> internal_to_external_node_map;
 
@@ -412,8 +416,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_indexes_filename +
-                                  " for writing");
+            throw util::exception("Failed to open " + datasource_indexes_filename + " for writing");
         }
         auto number_of_datasource_entries = m_geometry_datasource.size();
         datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
@@ -429,8 +432,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_names_filename +
-                                  " for writing");
+            throw util::exception("Failed to open " + datasource_names_filename + " for writing");
         }
         datasource_stream << "lua profile" << std::endl;
         for (auto const &name : segment_speed_filenames)
@@ -441,6 +443,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
     // TODO: can we read this in bulk?  util::DeallocatingVector isn't necessarily
     // all stored contiguously
+    std::size_t total_segment_count = 0;
     for (; number_of_edges > 0; --number_of_edges)
     {
         extractor::EdgeBasedEdge inbuffer;
@@ -464,6 +467,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             double segment_length;
             int segment_weight;
             --num_osm_nodes;
+            total_segment_count += num_osm_nodes;
             for (; num_osm_nodes != 0; --num_osm_nodes)
             {
                 edge_segment_input_stream.read(reinterpret_cast<char *>(&this_osm_node_id),
@@ -484,11 +488,14 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                         1, static_cast<int>(std::floor(
                                (segment_length * 10.) / (speed_iter->second.first / 3.6) + .5)));
                     new_weight += new_segment_weight;
+
+                    datasource_usage_counters[speed_iter->second.second]++;
                 }
                 else
                 {
                     // If no lookup found, use the original weight value for this segment
                     new_weight += segment_weight;
+                    datasource_usage_counters[0]++;
                 }
 
                 previous_osm_node_id = this_osm_node_id;
@@ -501,6 +508,18 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     }
 
     util::SimpleLogger().Write() << "Done reading edges";
+
+    if (update_edge_weights)
+    {
+        for (std::size_t i = 0; i < datasource_usage_counters.size(); i++)
+        {
+            util::SimpleLogger().Write()
+                << "Updated " << datasource_usage_counters[i] << " segments ("
+                << (static_cast<double>(datasource_usage_counters[i]) / total_segment_count * 100.0)
+                << "%) from " << (i == 0 ? "lua profile" : segment_speed_filenames[i - 1]);
+        }
+    }
+
     return max_edge_id;
 }
 
