@@ -99,9 +99,12 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         else
         {
             const auto position = std::distance(request_string.begin(), api_iterator);
-            const auto context_begin = request_string.begin() + std::max(position - 3UL, 0UL);
+            BOOST_ASSERT(position >= 0);
+            const auto context_begin = request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
+            BOOST_ASSERT(context_begin >= request_string.begin());
             const auto context_end =
                 request_string.begin() + std::min(position + 3UL, request_string.size());
+            BOOST_ASSERT(context_end <= request_string.end());
             std::string context(context_begin, context_end);
 
             current_reply.status = http::reply::bad_request;
