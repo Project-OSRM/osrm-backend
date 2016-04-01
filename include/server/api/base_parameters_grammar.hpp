@@ -48,7 +48,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
             }
             base_parameters.bearings.push_back(std::move(bearing));
         };
-        const auto set_radiuses = [this](RadiusesT &radiuses)
+        const auto set_radiuses = [this](RadiusesT radiuses)
         {
             base_parameters.radiuses = std::move(radiuses);
         };

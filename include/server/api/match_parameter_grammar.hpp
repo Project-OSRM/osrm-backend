@@ -56,7 +56,7 @@ struct MatchParametersGrammar final : public BaseParametersGrammar
         {
             parameters.steps = steps;
         };
-        const auto set_timestamps = [this](TimestampsT &timestamps)
+        const auto set_timestamps = [this](TimestampsT timestamps)
         {
             parameters.timestamps = std::move(timestamps);
         };
