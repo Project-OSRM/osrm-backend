@@ -352,7 +352,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 // the following is the core of the loop.
                 unsigned distance = edge_data1.distance;
-                std::cout << "Distance: " << distance << std::endl;
                 if (m_traffic_lights.find(node_v) != m_traffic_lights.end())
                 {
                     distance += profile_properties.traffic_signal_penalty;
