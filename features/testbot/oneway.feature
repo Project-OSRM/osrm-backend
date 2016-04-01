@@ -29,23 +29,23 @@ Feature: Testbot - oneways
             | xe    | yes    |
 
         When I route I should get
-            | from | to | route                |
-            | a    | b  | ab                   |
-            | b    | c  | bc                   |
-            | c    | d  | cd                   |
-            | d    | e  | de                   |
-            | e    | f  | ef                   |
-            | f    | g  | fg                   |
-            | g    | h  | gh                   |
-            | h    | a  | ha                   |
-            | b    | a  | bc,cd,de,ef,fg,gh,ha |
-            | c    | b  | cd,de,ef,fg,gh,ha,ab |
-            | d    | c  | de,ef,fg,gh,ha,ab,bc |
-            | e    | d  | ef,fg,gh,ha,ab,bc,cd |
-            | f    | e  | fg,gh,ha,ab,bc,cd,de |
-            | g    | f  | gh,ha,ab,bc,cd,de,ef |
-            | h    | g  | ha,ab,bc,cd,de,ef,fg |
-            | a    | h  | ab,bc,cd,de,ef,fg,gh |
+            | from | to | route                   |
+            | a    | b  | ab,ab                   |
+            | b    | c  | bc,bc                   |
+            | c    | d  | cd,cd                   |
+            | d    | e  | de,de                   |
+            | e    | f  | ef,ef                   |
+            | f    | g  | fg,fg                   |
+            | g    | h  | gh,gh                   |
+            | h    | a  | ha,ha                   |
+            | b    | a  | bc,cd,de,ef,fg,gh,ha,ha |
+            | c    | b  | cd,de,ef,fg,gh,ha,ab,ab |
+            | d    | c  | de,ef,fg,gh,ha,ab,bc,bc |
+            | e    | d  | ef,fg,gh,ha,ab,bc,cd,cd |
+            | f    | e  | fg,gh,ha,ab,bc,cd,de,de |
+            | g    | f  | gh,ha,ab,bc,cd,de,ef,ef |
+            | h    | g  | ha,ab,bc,cd,de,ef,fg,fg |
+            | a    | h  | ab,bc,cd,de,ef,fg,gh,gh |
 
     Scenario: Testbot - Simple oneway
         Then routability should be
@@ -70,9 +70,9 @@ Feature: Testbot - oneways
             | da    |        | no   |
 
         When I route I should get
-            | from | to | route    |
-            | a    | b  | ab       |
-            | b    | a  | bc,cd,da |
+            | from | to | route       |
+            | a    | b  | ab,ab       |
+            | b    | a  | bc,cd,da,da |
 
     Scenario: Testbot - Handle various oneway tag values
         Then routability should be
@@ -98,5 +98,5 @@ Feature: Testbot - oneways
 
 
         When I route I should get
-            | from | to | route |
-            | a    | c  | ab,bc |
+            | from | to | route    |
+            | a    | c  | ab,bc,bc |
