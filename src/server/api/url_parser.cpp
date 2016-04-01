@@ -29,7 +29,7 @@ struct URLGrammar : boost::spirit::qi::grammar<Iterator>
 {
     URLGrammar() : URLGrammar::base_type(url_rule)
     {
-        const auto set_service = [this](std::string &service)
+        const auto set_service = [this](std::string service)
         {
             parsed_url.service = std::move(service);
         };
@@ -37,11 +37,11 @@ struct URLGrammar : boost::spirit::qi::grammar<Iterator>
         {
             parsed_url.version = version;
         };
-        const auto set_profile = [this](std::string &profile)
+        const auto set_profile = [this](std::string profile)
         {
             parsed_url.profile = std::move(profile);
         };
-        const auto set_query = [this](std::string &query)
+        const auto set_query = [this](std::string query)
         {
             parsed_url.query = std::move(query);
         };
