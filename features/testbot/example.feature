@@ -20,18 +20,18 @@ Feature: Testbot - Walkthrough
             | de    | primary |        |
 
         When I route I should get
-            | from | to | route     |
-            | a    | b  | abc       |
-            | a    | c  | abc       |
-            | a    | d  | abc,cd    |
-            | a    | e  | abc,ce    |
-            | b    | a  | abc       |
-            | b    | c  | abc       |
-            | b    | d  | abc,cd    |
-            | b    | e  | abc,ce    |
-            | d    | a  | de,ce,abc |
-            | d    | b  | de,ce,abc |
-            | d    | e  | de        |
-            | e    | a  | ce,abc    |
-            | e    | b  | ce,abc    |
-            | e    | c  | ce        |
+            | from | to | route         |
+            | a    | b  | abc,abc       |
+            | a    | c  | abc,abc       |
+            | a    | d  | abc,cd,cd     |
+            | a    | e  | abc,ce,ce     |
+            | b    | a  | abc,abc       |
+            | b    | c  | abc,abc       |
+            | b    | d  | abc,cd,cd     |
+            | b    | e  | abc,ce,ce     |
+            | d    | a  | de,ce,abc,abc |
+            | d    | b  | de,ce,abc,abc |
+            | d    | e  | de,de         |
+            | e    | a  | ce,abc,abc    |
+            | e    | b  | ce,abc,abc    |
+            | e    | c  | ce,ce         |

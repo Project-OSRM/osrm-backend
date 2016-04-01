@@ -37,7 +37,7 @@ Feature: Via points
 
         When I route I should get
             | from | to | route               | distance  | turns                      |
-            | a    | k  | abcdefg,ehijk,ehijk |  34m +-1  | depart,slight_right,arrive |
+            | a    | k  | abcdefg,ehijk,ehijk |  35m +-1  | depart,slight right,arrive |
 
     Scenario: Nearly Slight Turn
         Given the node map
