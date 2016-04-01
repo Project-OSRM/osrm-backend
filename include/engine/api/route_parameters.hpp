@@ -39,6 +39,20 @@ namespace engine
 namespace api
 {
 
+/**
+ * Parameters specific to the OSRM Route service.
+ *
+ * Holds member attributes:
+ *  - steps: return route step for each route leg
+ *  - alternatives: tries to find alternative routes
+ *  - geometries: route geometry encoded in Polyline or GeoJSON
+ *  - overview: adds overview geometry either Full, Simplified (according to highest zoom level) or
+ *              False (not at all)
+ *  - uturns: enable or disable uturns (disabled by default)
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
 struct RouteParameters : public BaseParameters
 {
     enum class GeometriesType
@@ -73,10 +87,7 @@ struct RouteParameters : public BaseParameters
     OverviewType overview = OverviewType::Simplified;
     boost::optional<bool> uturns;
 
-    bool IsValid() const
-    {
-        return coordinates.size() >= 2 && BaseParameters::IsValid();
-    }
+    bool IsValid() const { return coordinates.size() >= 2 && BaseParameters::IsValid(); }
 };
 }
 }

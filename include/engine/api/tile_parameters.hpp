@@ -37,6 +37,21 @@ namespace engine
 namespace api
 {
 
+/**
+ * Parameters specific to the OSRM Tile service.
+ *
+ * Holds member attributes:
+ *  - x: the x location for the tile
+ *  - y: the y location for the tile
+ *  - z: the zoom level for the tile
+ *
+ * The parameters x,y and z have to conform to the Slippy Map Tilenames specification:
+ *  - https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels
+ *  - https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#X_and_Y
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
 struct TileParameters final
 {
     unsigned x;

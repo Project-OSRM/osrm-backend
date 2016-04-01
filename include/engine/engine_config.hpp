@@ -40,7 +40,23 @@ namespace osrm
 namespace engine
 {
 
-struct EngineConfig
+/**
+ * Configures an OSRM instance.
+ *
+ * You can customize the storage OSRM uses for auxiliary files specifying a storage config.
+ *
+ * You can further set service constraints.
+ * These are the maximum number of allowed locations (-1 for unlimited) for the services:
+ *  - Trip
+ *  - Route
+ *  - Table
+ *  - Match
+ *
+ * In addition, shared memory can be used for datasets loaded with osrm-datastore.
+ *
+ * \see OSRM, StorageConfig
+ */
+struct EngineConfig final
 {
     bool IsValid() const;
 

@@ -44,12 +44,35 @@ namespace osrm
 namespace util
 {
 
+/**
+ * JSON types representing OSRM responses.
+ *
+ * The json::Value type represents the basic sum-type, implemented as a variant.
+ *
+ * There are two ways for destructuring such types:
+ *  - Either provide a visitor and use the apply_visitor function or
+ *  - use the get function and explicitely specify the type
+ *
+ * See the following documentations on variants:
+ *  - https://github.com/mapbox/variant
+ *  - http://www.boost.org/doc/libs/1_55_0/doc/html/variant.html
+ *
+ * And take a look at the example we provide.
+ *
+ * \see OSRM
+ */
 namespace json
 {
 
+// fwd. decls.
 struct Object;
 struct Array;
 
+/**
+ * Typed string wrapper.
+ *
+ * Unwrap the type via its value member attribute.
+ */
 struct String
 {
     String() = default;
@@ -58,6 +81,11 @@ struct String
     std::string value;
 };
 
+/**
+ * Typed floating point number.
+ *
+ * Unwrap the type via its value member attribute.
+ */
 struct Number
 {
     Number() = default;
@@ -65,18 +93,32 @@ struct Number
     double value;
 };
 
+/**
+ * Typed True.
+ */
 struct True
 {
 };
 
+/**
+ * Typed False.
+ */
 struct False
 {
 };
 
+/**
+ * Typed Null.
+ */
 struct Null
 {
 };
 
+/**
+ * Typed Value sum-type implemented as a variant able to represent tree-like JSON structures.
+ *
+ * Dispatch on its type by either by using apply_visitor or its get function.
+ */
 using Value = mapbox::util::variant<String,
                                     Number,
                                     mapbox::util::recursive_wrapper<Object>,
@@ -85,17 +127,27 @@ using Value = mapbox::util::variant<String,
                                     False,
                                     Null>;
 
+/**
+ * Typed Object.
+ *
+ * Unwrap the key-value pairs holding type via its values member attribute.
+ */
 struct Object
 {
     std::unordered_map<std::string, Value> values;
 };
 
+/**
+ * Typed Array.
+ *
+ * Unwrap the Value holding type via its values member attribute.
+ */
 struct Array
 {
     std::vector<Value> values;
 };
 
-} // namespace JSON
+} // namespace json
 } // namespace util
 } // namespace osrm
 

@@ -43,6 +43,22 @@ namespace engine
 {
 namespace api
 {
+
+/**
+ * General parameters for OSRM service queries.
+ *
+ * Holds member attributes:
+ *  - coordinates: for specifying location(s) to services
+ *  - hints: hint for the service to derive the position(s) in the road network more efficiently,
+ *           optional per coordinate
+ *  - radiuses: limits the search for segments in the road network to given radius(es) in meter,
+ *              optional per coordinate
+ *  - bearings: limits the search for segments in the road network to given bearing(s) in degree
+ *              towards true north in clockwise direction, optional per coordinate
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
 struct BaseParameters
 {
     std::vector<util::Coordinate> coordinates;

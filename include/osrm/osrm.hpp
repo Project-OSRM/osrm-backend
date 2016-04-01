@@ -45,20 +45,89 @@ using engine::api::TripParameters;
 using engine::api::MatchParameters;
 using engine::api::TileParameters;
 
+/**
+ * Represents a Open Source Routing Machine with access to its services.
+ *
+ * This represents an Open Source Routing Machine (OSRM) instance, with the services:
+ *
+ *  - Route: shortest path queries for coordinates
+ *  - Table: distance tables for coordinates
+ *  - Nearest: nearest street segment for coordinate
+ *  - Trip: shortest round trip between coordinates
+ *  - Match: snaps noisy coordinate traces to the road network
+ *  - Tile: vector tiles with internal graph representation
+ *
+ *  All services take service-specific parameters, fill a JSON object, and return a status code.
+ */
 class OSRM final
 {
   public:
+    /**
+     * Constructs an OSRM instance with user-configurable settings.
+     *
+     * \param config The user-provided OSRM configuration.
+     * \see EngineConfig
+     */
     explicit OSRM(EngineConfig &config);
+
     ~OSRM();
 
+    // Moveable but not copyable
     OSRM(OSRM &&) noexcept;
     OSRM &operator=(OSRM &&) noexcept;
 
+    /**
+     * Shortest path queries for coordinates.
+     *
+     * \param parameters route query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, RouteParameters and json::Object
+     */
     Status Route(const RouteParameters &parameters, json::Object &result);
+
+    /**
+     * Distance tables for coordinates.
+     *
+     * \param parameters table query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, TableParameters and json::Object
+     */
     Status Table(const TableParameters &parameters, json::Object &result);
+
+    /**
+     * Nearest street segment for coordinate.
+     *
+     * \param parameters nearest query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, NearestParameters and json::Object
+     */
     Status Nearest(const NearestParameters &parameters, json::Object &result);
+
+    /**
+     * Trip: shortest round trip between coordinates.
+     *
+     * \param parameters trip query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, TripParameters and json::Object
+     */
     Status Trip(const TripParameters &parameters, json::Object &result);
+
+    /**
+     * Match: snaps noisy coordinate traces to the road network
+     *
+     * \param parameters match query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, MatchParameters and json::Object
+     */
     Status Match(const MatchParameters &parameters, json::Object &result);
+
+    /**
+     * Tile: vector tiles with internal graph representation
+     *
+     * \param parameters tile query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, TileParameters and json::Object
+     */
     Status Tile(const TileParameters &parameters, std::string &result);
 
   private:

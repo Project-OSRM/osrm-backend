@@ -37,6 +37,15 @@ namespace engine
 namespace api
 {
 
+/**
+ * Parameters specific to the OSRM Nearest service.
+ *
+ * Holds member attributes:
+ *  - number of results: number of nearest segments that should be returned
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
 struct NearestParameters : public BaseParameters
 {
     unsigned number_of_results = 1;

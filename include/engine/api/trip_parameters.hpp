@@ -39,6 +39,12 @@ namespace engine
 namespace api
 {
 
+/**
+ * Parameters specific to the OSRM Trip service.
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
 struct TripParameters : public RouteParameters
 {
     // bool IsValid() const; Falls back to base class
