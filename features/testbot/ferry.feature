@@ -32,11 +32,11 @@ Feature: Testbot - Handle ferry routes
 
         When I route I should get
             | from | to | route | time        |
-            | b    | c  | bc    | 60s +-1     |
-            | f    | g  | fg    | 600s +-1    |
-            | j    | k  | jk    | 3600s +-1   |
-            | n    | o  | no    | 86400s +-1  |
-            | r    | s  | rs    | 345600s +-1 |
+            | b    | c  | bc,bc | 60s +-1     |
+            | f    | g  | fg,fg | 600s +-1    |
+            | j    | k  | jk,jk | 3600s +-1   |
+            | n    | o  | no,no | 86400s +-1  |
+            | r    | s  | rs,rs | 345600s +-1 |
 
     @todo
     Scenario: Testbot - Week long ferry routes
@@ -59,9 +59,9 @@ Feature: Testbot - Handle ferry routes
 
         When I route I should get
             | from | to | route | time        |
-            | b    | c  | bc    | 86400s +-1  |
-            | f    | g  | fg    | 604800s +-1 |
-            | j    | k  | jk    | 259200s +-1 |
+            | b    | c  | bc,bc | 86400s +-1  |
+            | f    | g  | fg,fg | 604800s +-1 |
+            | j    | k  | jk,jk | 259200s +-1 |
 
     Scenario: Testbot - Ferry duration, multiple nodes
         Given the node map
@@ -76,8 +76,8 @@ Feature: Testbot - Handle ferry routes
 
         When I route I should get
             | from | to | route | time      |
-            | a    | d  | ad    | 3600s +-1 |
-            | d    | a  | ad    | 3600s +-1 |
+            | a    | d  | ad,ad | 3600s +-1 |
+            | d    | a  | ad,ad | 3600s +-1 |
 
     @todo
     Scenario: Testbot - Ferry duration, individual parts, fast
@@ -95,11 +95,11 @@ Feature: Testbot - Handle ferry routes
             | abcd  |         | ferry | 0:06     |
 
         When I route I should get
-            | from | to | route | time     |
-            | a    | d  | abcd  | 360s +-1 |
-            | a    | b  | abcd  | 60s +-1  |
-            | b    | c  | abcd  | 120s +-1 |
-            | c    | d  | abcd  | 180s +-1 |
+            | from | to | route     | time     |
+            | a    | d  | abcd,abcd | 360s +-1 |
+            | a    | b  | abcd,abcd | 60s +-1  |
+            | b    | c  | abcd,abcd | 120s +-1 |
+            | c    | d  | abcd,abcd | 180s +-1 |
 
     @todo
     Scenario: Testbot - Ferry duration, individual parts, slow
@@ -116,11 +116,11 @@ Feature: Testbot - Handle ferry routes
             | abcd  |         | ferry | 1:00     |
 
         When I route I should get
-            | from | to | route | time      |
-            | a    | d  | abcd  | 3600s ~1% |
-            | a    | b  | abcd  | 600s ~1%  |
-            | b    | c  | abcd  | 1200s ~1% |
-            | c    | d  | abcd  | 1800s ~1% |
+            | from | to | route     | time      |
+            | a    | d  | abcd,abcd | 3600s ~1% |
+            | a    | b  | abcd,abcd | 600s ~1%  |
+            | b    | c  | abcd,abcd | 1200s ~1% |
+            | c    | d  | abcd,abcd | 1800s ~1% |
 
     Scenario: Testbot - Ferry duration, connected routes
         Given the node map
@@ -135,9 +135,9 @@ Feature: Testbot - Handle ferry routes
             | defg  |         | ferry | 0:30     |
 
         When I route I should get
-            | from | to | route     | time      |
-            | a    | g  | abcd,defg | 3600s +-1 |
-            | g    | a  | defg,abcd | 3600s +-1 |
+            | from | to | route          | time      |
+            | a    | g  | abcd,defg,defg | 3600s +-1 |
+            | g    | a  | defg,abcd,abcd | 3600s +-1 |
 
     Scenario: Testbot - Prefer road when faster than ferry
         Given the node map
@@ -154,9 +154,9 @@ Feature: Testbot - Handle ferry routes
             | defg  |         | ferry | 0:01     |
 
         When I route I should get
-            | from | to | route    | time      |
-            | a    | g  | xa,xy,yg | 60s +-25% |
-            | g    | a  | yg,xy,xa | 60s +-25% |
+            | from | to | route       | time      |
+            | a    | g  | xa,xy,yg,yg | 60s +-25% |
+            | g    | a  | yg,xy,xa,xa | 60s +-25% |
 
     Scenario: Testbot - Long winding ferry route
         Given the node map
@@ -170,9 +170,9 @@ Feature: Testbot - Handle ferry routes
             | abcdefg |         | ferry | 6:30     |
 
         When I route I should get
-            | from | to | route   | time       |
-            | a    | g  | abcdefg | 23400s +-2 |
-            | g    | a  | abcdefg | 23400s +-2 |
+            | from | to | route           | time       |
+            | a    | g  | abcdefg,abcdefg | 23400s +-2 |
+            | g    | a  | abcdefg,abcdefg | 23400s +-2 |
 
     @todo
     Scenario: Testbot - Ferry duration formats
@@ -194,12 +194,12 @@ Feature: Testbot - Handle ferry routes
 
         When I route I should get
             | from | to | route | time          |
-            | a    | b  | ab    | 60s +-1       |
-            | c    | d  | cd    | 60s +-1       |
-            | e    | f  | ef    | 3600s +-1     |
-            | g    | h  | gh    | 3600s +-1     |
-            | i    | j  | ij    | 8400s +-1     |
-            | k    | l  | kl    | 36000s +-1    |
-            | m    | n  | mn    | 360000s +-1   |
-            | o    | p  | mn    | 3600000s +-1  |
-            | q    | r  | mn    | 36000000s +-1 |
+            | a    | b  | ab,ab | 60s +-1       |
+            | c    | d  | cd,cd | 60s +-1       |
+            | e    | f  | ef,ef | 3600s +-1     |
+            | g    | h  | gh,gh | 3600s +-1     |
+            | i    | j  | ij,ij | 8400s +-1     |
+            | k    | l  | kl,kl | 36000s +-1    |
+            | m    | n  | mn,mn | 360000s +-1   |
+            | o    | p  | mn,mn | 3600000s +-1  |
+            | q    | r  | mn,mn | 36000000s +-1 |
