@@ -99,12 +99,12 @@ template <typename DataFacadeT>
 RouteLeg assembleLeg(const DataFacadeT &facade,
                      const std::vector<PathData> &route_data,
                      const LegGeometry &leg_geometry,
+                     const PhantomNode &source_node,
                      const PhantomNode &target_node,
                      const bool target_traversed_in_reverse)
 {
     const auto target_duration =
-        (target_traversed_in_reverse ? target_node.reverse_weight
-                                     : target_node.forward_weight) /
+        (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight) /
         10.;
 
     auto distance = std::accumulate(leg_geometry.segment_distances.begin(),
@@ -135,7 +135,14 @@ RouteLeg assembleLeg(const DataFacadeT &facade,
     // `forward_offset`: duration of (c, d)
     // path_data will have entries for (s,b), (b, c), (c, d) but (d, t) is only
     // caputed by the phantom node. So we need to add the target duration here.
+    // On local segments, the target duration is already part of the duration, however.
+
     duration = duration + target_duration;
+    if (route_data.empty())
+    {
+        duration -=
+            (target_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight) / 10;
+    }
     auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(route_data);
 
     BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
