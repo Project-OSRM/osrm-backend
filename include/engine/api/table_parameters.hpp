@@ -43,6 +43,18 @@ namespace engine
 namespace api
 {
 
+/**
+ * Parameters specific to the OSRM Table service.
+ *
+ * Holds member attributes:
+ *  - sources: indices into coordinates indicating sources for the Table service, no sources means
+ *             use all coordinates as sources
+ *  - destinations: indices into coordinates indicating destinations for the Table service, no
+ *                  destinations means use all coordinates as destinations
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
 struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;

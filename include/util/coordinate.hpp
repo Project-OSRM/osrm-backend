@@ -50,6 +50,13 @@ OSRM_STRONG_TYPEDEF(int32_t, FixedLongitude)
 OSRM_STRONG_TYPEDEF(double, FloatLatitude)
 OSRM_STRONG_TYPEDEF(double, FloatLongitude)
 
+/**
+ * Converts a typed latitude from floating to fixed representation.
+ *
+ * \param floating typed latitude in floating representation.
+ * \return typed latitude in fixed representation
+ * \see Coordinate, toFloating
+ */
 inline FixedLatitude toFixed(const FloatLatitude floating)
 {
     const auto latitude = static_cast<double>(floating);
@@ -57,6 +64,13 @@ inline FixedLatitude toFixed(const FloatLatitude floating)
     return FixedLatitude(fixed);
 }
 
+/**
+ * Converts a typed longitude from floating to fixed representation.
+ *
+ * \param floating typed longitude in floating representation.
+ * \return typed latitude in fixed representation
+ * \see Coordinate, toFloating
+ */
 inline FixedLongitude toFixed(const FloatLongitude floating)
 {
     const auto longitude = static_cast<double>(floating);
@@ -64,6 +78,13 @@ inline FixedLongitude toFixed(const FloatLongitude floating)
     return FixedLongitude(fixed);
 }
 
+/**
+ * Converts a typed latitude from fixed to floating representation.
+ *
+ * \param fixed typed latitude in fixed representation.
+ * \return typed latitude in floating representation
+ * \see Coordinate, toFixed
+ */
 inline FloatLatitude toFloating(const FixedLatitude fixed)
 {
     const auto latitude = static_cast<std::int32_t>(fixed);
@@ -71,6 +92,13 @@ inline FloatLatitude toFloating(const FixedLatitude fixed)
     return FloatLatitude(floating);
 }
 
+/**
+ * Converts a typed longitude from fixed to floating representation.
+ *
+ * \param fixed typed longitude in fixed representation.
+ * \return typed longitude in floating representation
+ * \see Coordinate, toFixed
+ */
 inline FloatLongitude toFloating(const FixedLongitude fixed)
 {
     const auto longitude = static_cast<std::int32_t>(fixed);
@@ -78,9 +106,22 @@ inline FloatLongitude toFloating(const FixedLongitude fixed)
     return FloatLongitude(floating);
 }
 
+// fwd. decl.
 struct FloatCoordinate;
 
-// Coordinate encoded as longitude, latitude
+/**
+ * Represents a coordinate based on longitude and latitude in fixed representation.
+ *
+ * To prevent accidental longitude and latitude flips, we provide typed longitude and latitude
+ * wrappers. You can cast these wrappers back to their underlying representation or convert them
+ * from one representation to the other.
+ *
+ * The two representation we provide are:
+ *  - Fixed point
+ *  - Floating point
+ *
+ * \see FloatCoordinate, toFixed, toFloating
+ */
 struct Coordinate
 {
     FixedLongitude lon;
@@ -107,7 +148,19 @@ struct Coordinate
     friend std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
 };
 
-// Coordinate encoded as longitude, latitude
+/**
+ * Represents a coordinate based on longitude and latitude in floating representation.
+ *
+ * To prevent accidental longitude and latitude flips, we provide typed longitude and latitude
+ * wrappers. You can cast these wrappers back to their underlying representation or convert them
+ * from one representation to the other.
+ *
+ * The two representation we provide are:
+ *  - Fixed point
+ *  - Floating point
+ *
+ * \see Coordinate, toFixed, toFloating
+ */
 struct FloatCoordinate
 {
     FloatLongitude lon;

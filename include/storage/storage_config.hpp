@@ -7,9 +7,21 @@ namespace osrm
 {
 namespace storage
 {
-struct StorageConfig
+
+/**
+ * Configures OSRM's file storage paths.
+ *
+ * \see OSRM, EngineConfig
+ */
+struct StorageConfig final
 {
     StorageConfig() = default;
+
+    /**
+     * Constructs a storage configuration setting paths based on a base path.
+     *
+     * \param base The base path (e.g. france.pbf.osrm) to derive auxiliary file suffixes from.
+     */
     StorageConfig(const boost::filesystem::path &base);
     bool IsValid() const;
 

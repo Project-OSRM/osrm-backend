@@ -33,6 +33,10 @@ namespace osrm
 namespace engine
 {
 
+/**
+ * Status for indicating query success or failure.
+ * \see OSRM
+ */
 enum class Status
 {
     Ok,

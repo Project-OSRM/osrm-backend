@@ -39,6 +39,15 @@ namespace engine
 namespace api
 {
 
+/**
+ * Parameters specific to the OSRM Match service.
+ *
+ * Holds member attributes:
+ *  - timestamps: timestamp(s) for the corresponding input coordinate(s)
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
 struct MatchParameters : public RouteParameters
 {
     MatchParameters()
