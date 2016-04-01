@@ -301,7 +301,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
     // usually not be as relevant.
 
-    if (steps.size() < 2)
+    if (steps.size() <= 2)
         return;
 
     // if phantom node is located at the connection of two segments, either one can be selected as
