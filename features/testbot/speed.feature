@@ -27,5 +27,5 @@ Feature: Testbot - speeds
 
         When I route I should get
             | from | to | route | speed        | time | distance |
-            | a    | b  | ab    | 36 km/h      | 10s  | 100m     |
-            | b    | a  | ab    | 16 km/h +- 1 | 23s  | 100m     |
+            | a    | b  | ab,ab | 36 km/h      | 10s  | 100m     |
+            | b    | a  | ab,ab | 16 km/h +- 1 | 23s  | 100m     |
