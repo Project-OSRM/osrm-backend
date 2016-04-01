@@ -28,11 +28,11 @@ struct TableParametersGrammar final : public BaseParametersGrammar
 
     TableParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
     {
-        const auto set_destiantions = [this](DestinationsT &dests)
+        const auto set_destiantions = [this](DestinationsT dests)
         {
             parameters.destinations = std::move(dests);
         };
-        const auto set_sources = [this](SourcesT &sources)
+        const auto set_sources = [this](SourcesT sources)
         {
             parameters.sources = std::move(sources);
         };
