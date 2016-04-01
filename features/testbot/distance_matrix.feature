@@ -47,8 +47,8 @@ Feature: Basic Distance Matrix
 
         When I request a travel time matrix I should get
             |   | a       | b        |
-            | a | 0       | 95 +- 10 |
-            | b | 95 ~10% | 0        |
+            | a | 0       | 9 +- 2   |
+            | b | 9  ~15% | 0        |
 
     Scenario: Testbot - Travel time matrix of small grid
         Given the node map

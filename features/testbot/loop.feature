@@ -18,10 +18,10 @@ Feature: Avoid weird loops caused by rounding errors
             | cg     |
 
        When I route I should get
-           | waypoints | route     | turns             |
-           | a,1,d     | abcd,abcd | depart,via,arrive |
-           | a,2,d     | abcd,abcd | depart,via,arrive |
-           | a,3,d     | abcd,abcd | depart,via,arrive |
+           | waypoints | route               |
+           | a,1,d     | abcd,abcd,abcd,abcd |
+           | a,2,d     | abcd,abcd,abcd,abcd |
+           | a,3,d     | abcd,abcd,abcd,abcd |
 
     Scenario: Avoid weird loops 1
         Given the node locations
@@ -47,8 +47,8 @@ Feature: Avoid weird loops caused by rounding errors
             | ie    |
 
         When I route I should get
-            | from | to | route | turns         |
-            | x    | y  | hfgd  | depart,arrive |
+            | from | to | route     |
+            | x    | y  | hfgd,hfgd |
 
     Scenario: Avoid weird loops 2
         Given the node locations
@@ -67,8 +67,8 @@ Feature: Avoid weird loops caused by rounding errors
             | cdec  |
 
         When I route I should get
-            | from | to | route | turns         |
-            | x    | y  | abc   | depart,arrive |
+            | from | to | route   |
+            | x    | y  | abc,abc |
 
     @412
     Scenario: Avoid weird loops 3
@@ -92,6 +92,6 @@ Feature: Avoid weird loops caused by rounding errors
             | cf    | primary     |
 
         When I route I should get
-            | waypoints | route             | turns                                         |
-            | a,2,d     | ab,be,ef,ef,cf,cd | depart,left,straight,via,straight,left,arrive |
-            | a,1,d     | ab,be,ef,ef,cf,cd | depart,left,straight,via,straight,left,arrive |
+            | waypoints | route                   |
+            | a,2,d     | ab,be,ef,ef,ef,cf,cd,cd |
+            | a,1,d     | ab,be,ef,ef,ef,cf,cd,cd |

@@ -40,9 +40,9 @@ Feature: Testbot - Travel mode
             | efg   | residential | solid  |
 
         When I route I should get
-            | from | to | route                    | modes                                    | turns                           |
-            | a    | g  | road,liquid,solid,solid  | driving,river downstream,driving,driving | depart,straight,straight,arrive |
-            | c    | g  | liquid,solid,solid       | river downstream,driving,driving         | depart,straight,arrive          |
+            | from | to | route                    | modes                                    |
+            | a    | g  | road,liquid,solid,solid  | driving,river downstream,driving,driving |
+            | c    | g  | liquid,solid,solid       | river downstream,driving,driving         |
 
     @mokob @2166
     Scenario: Testbot - Modes in each direction, different forward/backward speeds
@@ -145,9 +145,9 @@ Feature: Testbot - Travel mode
             | ab    | river   |
 
         When I route I should get
-            | waypoints | routes   | modes                                              | turns             |
-            | a,1,b     | ab,ab,ab | river downstream,river downstream,river downstream | depart,via,arrive |
-            | b,1,a     | ab,ab,ab | river upstream,river upstream,river upstream       | depart,via,arrive |
+            | waypoints | route       | modes                                                               |
+            | a,1,b     | ab,ab,ab,ab | river downstream,river downstream,river downstream,river downstream |
+            | b,1,a     | ab,ab,ab,ab | river upstream,river upstream,river upstream,river upstream         |
 
     @mokob @2166
     Scenario: Testbot - Starting at a tricky node
@@ -175,11 +175,11 @@ Feature: Testbot - Travel mode
             | bc    | river   | Avenue |
 
        When I route I should get
-            | from | to | route                | modes                                     | turns                  |
-            | a    | c  | Avenue,Avenue,Avenue | driving,river downstream,river downstream | depart,straight,arrive |
-            | c    | a  | Avenue,Avenue,Avenue | river upstream,driving,driving            | depart,straight,arrive |
-            | 1    | 2  | Avenue,Avenue,Avenue | driving,river downstream,river downstream | depart,straight,arrive |
-            | 2    | 1  | Avenue,Avenue,Avenue | river upstream,driving,driving            | depart,straight,arrive |
+            | from | to | route                | modes                                     |
+            | a    | c  | Avenue,Avenue,Avenue | driving,river downstream,river downstream |
+            | c    | a  | Avenue,Avenue,Avenue | river upstream,driving,driving            |
+            | 1    | 2  | Avenue,Avenue,Avenue | driving,river downstream,river downstream |
+            | 2    | 1  | Avenue,Avenue,Avenue | river upstream,driving,driving            |
 
     Scenario: Testbot - Mode for routes
        Given the node map
@@ -195,14 +195,14 @@ Feature: Testbot - Travel mode
             | ef    | primary |       |          |
 
        When I route I should get
-            | from | to | route             | turns                                              | modes                                         |
-            | a    | d  | ab,bc,cd,cd       | depart,right,left,arrive                           | driving,route,driving,driving                 |
-            | d    | a  | cd,bc,ab,ab       | depart,right,left,arrive                           | driving,route,driving,driving                 |
-            | c    | a  | bc,ab,ab          | depart,left,arrive                                 | route,driving,driving                         |
-            | d    | b  | cd,bc,bc          | depart,right,arrive                                | driving,route,route                           |
-            | a    | c  | ab,bc,bc          | depart,right,arrive                                | driving,route,route                           |
-            | b    | d  | bc,cd,cd          | depart,left,arrive                                 | route,driving,driving                         |
-            | a    | f  | ab,bc,cd,de,ef,ef | depart,right,left,straight,straight,arrive         | driving,route,driving,driving,driving,driving |
+            | from | to | route             | modes                                         |
+            | a    | d  | ab,bc,cd,cd       | driving,route,driving,driving                 |
+            | d    | a  | cd,bc,ab,ab       | driving,route,driving,driving                 |
+            | c    | a  | bc,ab,ab          | route,driving,driving                         |
+            | d    | b  | cd,bc,bc          | driving,route,route                           |
+            | a    | c  | ab,bc,bc          | driving,route,route                           |
+            | b    | d  | bc,cd,cd          | route,driving,driving                         |
+            | a    | f  | ab,bc,cd,de,ef,ef | driving,route,driving,driving,driving,driving |
 
     @mokob @2166
     Scenario: Testbot - Modes, triangle map

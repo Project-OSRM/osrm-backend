@@ -108,8 +108,8 @@ Feature: Turn directions/codes
             | yz    |
 
         When I route I should get
-            | from | to | route    | turns                  |
-            | a    | c  | ab,bc,bc | depart,straight,arrive |
-            | c    | a  | bc,ab,ab | depart,straight,arrive |
-            | x    | z  | xy,yz,yz | depart,straight,arrive |
-            | z    | x  | yz,xy,xy | depart,straight,arrive |
+            | from | to | route    | turns               |
+            | a    | c  | ab,bc,bc | depart,left,arrive  |
+            | c    | a  | bc,ab,ab | depart,right,arrive |
+            | x    | z  | xy,yz,yz | depart,right,arrive |
+            | z    | x  | yz,xy,xy | depart,left,arrive  |

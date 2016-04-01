@@ -301,7 +301,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
     // usually not be as relevant.
 
-    if (steps.size() < 2)
+    if (steps.size() < 2 || geometry.locations.size() <= 2)
         return;
 
     // if phantom node is located at the connection of two segments, either one can be selected as
@@ -320,7 +320,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     // Look for distances under 1m
     const bool zero_length_step = steps.front().distance <= 1;
-    const bool duplicated_coordinate = geometry.locations[0] == geometry.locations[1];
+    const bool duplicated_coordinate = util::coordinate_calculation::haversineDistance(
+                                           geometry.locations[0], geometry.locations[1]) <= 1;
     if (zero_length_step || duplicated_coordinate)
     {
         // fixup the coordinate
@@ -381,7 +382,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     }
 
     // make sure we still have enough segments
-    if (steps.size() < 2)
+    if (steps.size() < 2 || geometry.locations.size() == 2)
         return;
 
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
@@ -410,8 +411,9 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.mode = new_next_to_last.mode;
         // the geometry indices of the last step are already correct;
     }
-    else if (geometry.locations[geometry.locations.size() - 2] ==
-             geometry.locations[geometry.locations.size() - 1])
+    else if (util::coordinate_calculation::haversineDistance(
+                 geometry.locations[geometry.locations.size() - 2],
+                 geometry.locations[geometry.locations.size() - 1]) <= 1)
     {
         // correct steps but duplicated coordinate in the end.
         // This can happen if the last coordinate snaps to a node in the unpacked geometry

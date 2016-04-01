@@ -70,13 +70,13 @@ function way_function (way, result)
 
     if highway == "river" then
       local temp_speed = speed_forw
-      result.forward_mode = mode.river_up
-      result.backward_mode = mode.river_down
+      result.forward_mode = mode.river_down
+      result.backward_mode = mode.river_up
       speed_forw = temp_speed*1.5
       speed_back = temp_speed/1.5
     elseif highway == "steps" then
-      result.forward_mode = mode.steps_up
-      result.backward_mode = mode.steps_down
+      result.forward_mode = mode.steps_down
+      result.backward_mode = mode.steps_up
     end
 
     if maxspeed_forward ~= nil and maxspeed_forward > 0 then

@@ -328,62 +328,42 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 BOOST_ASSERT(unpacked_path.size() > 0);
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
-
-                if (is_first_segment)
-                {
-                    auto source_weight = start_traversed_in_reverse
-                                             ? phantom_node_pair.source_phantom.reverse_weight
-                                             : phantom_node_pair.source_phantom.forward_weight;
-                    // Given this geometry:
-                    // U---v---w---x---Z
-                    //       s
-                    // The above code will create segments for (v, w), (w,x) and (x, Z).
-                    // However the first segment duration needs to be adjusted to the fact that the
-                    // source phantom is in the middle of the segment.
-                    // We do this by subtracting v--s from the duration.
-
-                    BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
-                    unpacked_path.front().duration_until_turn -= source_weight;
-                }
             }
         }
+        std::size_t start_index = 0, end_index = 0;
         std::vector<unsigned> id_vector;
-        facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.forward_packed_geometry_id,
-                                        id_vector);
         std::vector<EdgeWeight> weight_vector;
-        facade->GetUncompressedWeights(phantom_node_pair.target_phantom.forward_packed_geometry_id,
-                                       weight_vector);
         const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
                                     phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
                                    unpacked_path.empty();
 
-        std::size_t start_index = 0;
-        if (is_local_path)
+        if (target_traversed_in_reverse)
         {
-            if (target_traversed_in_reverse)
+            facade->GetUncompressedGeometry(
+                phantom_node_pair.target_phantom.reverse_packed_geometry_id, id_vector);
+
+            facade->GetUncompressedWeights(
+                phantom_node_pair.target_phantom.reverse_packed_geometry_id, weight_vector);
+
+            if (is_local_path)
             {
                 start_index =
                     id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
             }
-            else
+            end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
+        }
+        else
+        {
+            if (is_local_path)
             {
                 start_index = phantom_node_pair.source_phantom.fwd_segment_position;
             }
-        }
+            end_index = phantom_node_pair.target_phantom.fwd_segment_position;
+            facade->GetUncompressedGeometry(
+                phantom_node_pair.target_phantom.forward_packed_geometry_id, id_vector);
 
-        std::size_t end_index = phantom_node_pair.target_phantom.fwd_segment_position;
-        const std::size_t delta = target_traversed_in_reverse ? 1 : 0;
-        if (target_traversed_in_reverse)
-        {
-            start_index += 1;
-            std::reverse(id_vector.begin(), id_vector.end());
-            std::reverse(weight_vector.begin(), weight_vector.end());
-            end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
-        }
-
-        if (start_index > end_index)
-        {
-            start_index = std::min(start_index, id_vector.size() - 1);
+            facade->GetUncompressedWeights(
+                phantom_node_pair.target_phantom.forward_packed_geometry_id, weight_vector);
         }
 
         // Given the following compressed geometry:
@@ -393,21 +373,22 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         // t: fwd_segment 3
         // -> (U, v), (v, w), (w, x)
         // note that (x, t) is _not_ included but needs to be added later.
-        for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
+        BOOST_ASSERT(start_index <= end_index);
+        for (std::size_t i = start_index; i != end_index; ++i)
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
             unpacked_path.push_back(
                 PathData{id_vector[i],
                          phantom_node_pair.target_phantom.name_id,
-                         weight_vector[i - delta],
+                         weight_vector[i],
                          extractor::guidance::TurnInstruction::NO_TURN(),
                          target_traversed_in_reverse
                              ? phantom_node_pair.target_phantom.backward_travel_mode
                              : phantom_node_pair.target_phantom.forward_travel_mode});
         }
 
-        if (is_local_path && unpacked_path.size() > 0)
+        if (unpacked_path.size() > 0)
         {
             const auto source_weight = start_traversed_in_reverse
                                            ? phantom_node_pair.source_phantom.reverse_weight

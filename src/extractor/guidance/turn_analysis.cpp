@@ -749,6 +749,9 @@ TurnInstruction TurnAnalysis::getInstructionForObvious(const std::size_t num_roa
                                                        const ConnectedRoad &road) const
 {
     const auto type = findBasicTurnType(via_edge, road);
+    // handle travel modes:
+    const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
+    const auto out_mode = node_based_graph.GetEdgeData(road.turn.eid).travel_mode;
     if (type == TurnType::Ramp)
     {
         return {TurnType::Ramp, getTurnDirection(road.turn.angle)};
@@ -767,9 +770,18 @@ TurnInstruction TurnAnalysis::getInstructionForObvious(const std::size_t num_roa
                                   name_table.GetNameForID(out_data.name_id)))
             return {TurnType::NewName, getTurnDirection(road.turn.angle)};
         else
-            return {TurnType::Suppressed, getTurnDirection(road.turn.angle)};
+        {
+            if (in_mode == out_mode)
+                return {TurnType::Suppressed, getTurnDirection(road.turn.angle)};
+            else
+                return {TurnType::Notification, getTurnDirection(road.turn.angle)};
+        }
     }
     BOOST_ASSERT(type == TurnType::Continue);
+    if (in_mode != out_mode)
+    {
+        return {TurnType::Notification, getTurnDirection(road.turn.angle)};
+    }
     if (num_roads > 2)
     {
         return {TurnType::Suppressed, getTurnDirection(road.turn.angle)};
@@ -984,17 +996,9 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
     }
     else
     {
-        const unsigned in_name_id = node_based_graph.GetEdgeData(via_edge).name_id;
-        const unsigned out_names[2] = {
-            node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id,
-            node_based_graph.GetEdgeData(intersection[2].turn.eid).name_id};
         if (isObviousOfTwo(intersection[1], intersection[2]))
         {
-            intersection[1].turn.instruction = {
-                (in_name_id != INVALID_NAME_ID || out_names[0] != INVALID_NAME_ID)
-                    ? TurnType::NewName
-                    : TurnType::NoTurn,
-                getTurnDirection(intersection[1].turn.angle)};
+            intersection[1].turn.instruction = getInstructionForObvious(3,via_edge,intersection[1]);
         }
         else
         {
@@ -1004,11 +1008,7 @@ TurnAnalysis::handleThreeWayTurn(const EdgeID via_edge,
 
         if (isObviousOfTwo(intersection[2], intersection[1]))
         {
-            intersection[2].turn.instruction = {
-                (in_name_id != INVALID_NAME_ID || out_names[1] != INVALID_NAME_ID)
-                    ? TurnType::NewName
-                    : TurnType::NoTurn,
-                getTurnDirection(intersection[2].turn.angle)};
+            intersection[2].turn.instruction = getInstructionForObvious(3,via_edge,intersection[2]);
         }
         else
         {

@@ -347,7 +347,7 @@ function way_function (way, result)
     if impliedOneway then
       result.forward_mode = mode.cycling
       result.backward_speed = bicycle_speeds["cycleway"]
-      result.backward_mode = mode.cycling
+      result.backward_mode = mode.inaccessible
     end
   elseif oneway == "-1" then
     result.forward_mode = mode.inaccessible
