@@ -55,9 +55,10 @@ struct URLGrammar : boost::spirit::qi::grammar<Iterator>
         profile_rule = +alpha_numeral;
         query_rule = +all_chars;
 
-        url_rule = qi::lit('/') >> service_rule[set_service] >> qi::lit('/') >> qi::lit('v') >>
-                   version_rule[set_version] >> qi::lit('/') >> profile_rule[set_profile] >>
-                   qi::lit('/') >> query_rule[set_query];
+        url_rule = qi::lit('/') >> service_rule[set_service]                    //
+                   >> qi::lit('/') >> qi::lit('v') >> version_rule[set_version] //
+                   >> qi::lit('/') >> profile_rule[set_profile]                 //
+                   >> qi::lit('/') >> query_rule[set_query];
     }
 
     ParsedURL parsed_url;
