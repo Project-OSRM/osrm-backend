@@ -14,8 +14,8 @@ Feature: Status messages
 
         When I route I should get
             | from | to | route | status | message                    |
-            | a    | b  | ab    | 200    |                            |
-            | b    | a  | ab    | 200    |                            |
+            | a    | b  | ab,ab | 200    |                            |
+            | b    | a  | ab,ab | 200    |                            |
 
     Scenario: No route found
         Given the node map
@@ -30,8 +30,8 @@ Feature: Status messages
 
         When I route I should get
             | from | to | route | status | message                          |
-            | a    | b  | ab    | 200    |                                  |
-            | c    | d  | cd    | 200    |                                  |
+            | a    | b  | ab,ab | 200    |                                  |
+            | c    | d  | cd,cd | 200    |                                  |
             | a    | c  |       | 400    | Impossible route between points  |
             | b    | d  |       | 400    | Impossible route between points  |
 
