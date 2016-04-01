@@ -60,13 +60,11 @@ int main() try
     osrm::util::SimpleLogger().Write() << "Releasing all locks";
     osrm::util::SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
     osrm::util::SimpleLogger().Write() << "----------------------";
-    osrm::util::SimpleLogger().Write()
-        << "This tool may put osrm-routed into an undefined state!";
+    osrm::util::SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
     osrm::util::SimpleLogger().Write()
         << "Type 'Y' to acknowledge that you know what your are doing.";
-    osrm::util::SimpleLogger().Write()
-        << "\n\nDo you want to purge all shared memory allocated "
-        << "by osrm-datastore? [type 'Y' to confirm]";
+    osrm::util::SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated "
+                                       << "by osrm-datastore? [type 'Y' to confirm]";
 
     const auto letter = getchar();
     if (letter != 'Y')

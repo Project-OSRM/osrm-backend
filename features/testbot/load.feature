@@ -17,8 +17,8 @@ Feature: Ways of loading data
 
         When I route I should get
             | from | to | route |
-            | a    | b  | ab    |
-            | b    | a  | ab    |
+            | a    | b  | ab,ab |
+            | b    | a  | ab,ab |
 
     Scenario: Load data directly - st
         Given data is loaded directly
@@ -31,8 +31,8 @@ Feature: Ways of loading data
 
         When I route I should get
             | from | to | route |
-            | s    | t  | st    |
-            | t    | s  | st    |
+            | s    | t  | st,st |
+            | t    | s  | st,st |
 
     Scenario: Load data datastore - xy
         Given data is loaded with datastore
@@ -45,8 +45,8 @@ Feature: Ways of loading data
 
         When I route I should get
             | from | to | route |
-            | x    | y  | xy    |
-            | y    | x  | xy    |
+            | x    | y  | xy,xy |
+            | y    | x  | xy,xy |
 
     Scenario: Load data directly - cd
         Given data is loaded directly
@@ -59,5 +59,5 @@ Feature: Ways of loading data
 
         When I route I should get
             | from | to | route |
-            | c    | d  | cd    |
-            | d    | c  | cd    |
+            | c    | d  | cd,cd |
+            | d    | c  | cd,cd |

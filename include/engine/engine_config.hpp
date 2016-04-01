@@ -28,9 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_CONFIG_HPP
 #define ENGINE_CONFIG_HPP
 
+#include "storage/storage_config.hpp"
+
 #include <boost/filesystem/path.hpp>
 
-#include <unordered_map>
 #include <string>
 
 namespace osrm
@@ -41,14 +42,15 @@ namespace engine
 
 struct EngineConfig
 {
-    std::unordered_map<std::string, boost::filesystem::path> server_paths;
+    bool IsValid() const;
+
+    storage::StorageConfig storage_config;
     int max_locations_trip = -1;
     int max_locations_viaroute = -1;
     int max_locations_distance_table = -1;
     int max_locations_map_matching = -1;
     bool use_shared_memory = true;
 };
-
 }
 }
 

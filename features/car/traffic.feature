@@ -36,12 +36,12 @@ Feature: Traffic - speeds
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file speeds.csv"
         And I route I should get
-            | from | to | route | speed   |
-            | a    | b  | ab    | 27 km/h |
-            | a    | c  | ab,bc | 27 km/h |
-            | b    | c  | bc    | 27 km/h |
-            | a    | d  | ad    | 27 km/h |
-            | d    | c  | dc    | 36 km/h |
-            | g    | b  | ab    | 27 km/h |
-            | a    | g  | ab    | 27 km/h |
+            | from | to | route    | speed   |
+            | a    | b  | ab,ab    | 27 km/h |
+            | a    | c  | ab,bc,bc | 27 km/h |
+            | b    | c  | bc,bc    | 27 km/h |
+            | a    | d  | ad,ad    | 27 km/h |
+            | d    | c  | dc,dc    | 36 km/h |
+            | g    | b  | ab,ab    | 27 km/h |
+            | a    | g  | ab,ab    | 27 km/h |
 

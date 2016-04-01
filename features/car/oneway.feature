@@ -44,9 +44,9 @@ Feature: Car - Oneway streets
             | da    |        |
 
         When I route I should get
-            | from | to | route    |
-            | a    | b  | ab       |
-            | b    | a  | bc,cd,da |
+            | from | to | route       |
+            | a    | b  | ab,ab       |
+            | b    | a  | bc,cd,da,da |
 
     Scenario: Car - Cars should not be affected by bicycle tags
         Then routability should be
@@ -75,5 +75,5 @@ Feature: Car - Oneway streets
 
 
         When I route I should get
-            | from | to | route |
-            | a    | c  | ab,bc |
+            | from | to | route    |
+            | a    | c  | ab,bc,bc |

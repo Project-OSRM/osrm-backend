@@ -28,43 +28,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_HPP
 #define OSRM_HPP
 
+#include "osrm/osrm_fwd.hpp"
+#include "osrm/status.hpp"
+
 #include <memory>
+#include <string>
 
 namespace osrm
 {
-
-struct LibOSRMConfig;
-
-namespace util
-{
-namespace json
-{
-struct Object;
-}
-}
-
-namespace engine
-{
-class Engine;
-struct EngineConfig;
-struct RouteParameters;
-}
-
-using engine::EngineConfig;
-using engine::RouteParameters;
 namespace json = util::json;
+using engine::EngineConfig;
+using engine::api::RouteParameters;
+using engine::api::TableParameters;
+using engine::api::NearestParameters;
+using engine::api::TripParameters;
+using engine::api::MatchParameters;
+using engine::api::TileParameters;
 
-class OSRM
+class OSRM final
 {
+  public:
+    explicit OSRM(EngineConfig &config);
+    ~OSRM();
+
+    OSRM(OSRM &&) noexcept;
+    OSRM &operator=(OSRM &&) noexcept;
+
+    Status Route(const RouteParameters &parameters, json::Object &result);
+    Status Table(const TableParameters &parameters, json::Object &result);
+    Status Nearest(const NearestParameters &parameters, json::Object &result);
+    Status Trip(const TripParameters &parameters, json::Object &result);
+    Status Match(const MatchParameters &parameters, json::Object &result);
+    Status Tile(const TileParameters &parameters, std::string &result);
+
   private:
     std::unique_ptr<engine::Engine> engine_;
-
-  public:
-    OSRM(EngineConfig &lib_config);
-    ~OSRM(); // needed because we need to define it with the implementation of OSRM_impl
-    int RunQuery(const RouteParameters &route_parameters, json::Object &json_result);
 };
-
 }
 
 #endif // OSRM_HPP

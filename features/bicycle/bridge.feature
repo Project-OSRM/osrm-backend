@@ -17,15 +17,15 @@ Feature: Bicycle - Handle movable bridge
             | efg   | primary |         |         |
 
         When I route I should get
-            | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,5,1 |
-            | b    | f  | abc,cde,efg | 1,5,1 |
-            | e    | c  | cde         | 5     |
-            | e    | b  | cde,abc     | 5,1   |
-            | e    | a  | cde,abc     | 5,1   |
-            | c    | e  | cde         | 5     |
-            | c    | f  | cde,efg     | 5,1   |
-            | c    | g  | cde,efg     | 5,1   |
+            | from | to | route           | modes                                  |
+            | a    | g  | abc,cde,efg,efg | cycling,movable bridge,cycling,cycling |
+            | b    | f  | abc,cde,efg,efg | cycling,movable bridge,cycling,cycling |
+            | e    | c  | cde,cde         | movable bridge,movable bridge          |
+            | e    | b  | cde,abc,abc     | movable bridge,cycling,cycling         |
+            | e    | a  | cde,abc,abc     | movable bridge,cycling,cycling         |
+            | c    | e  | cde,cde         | movable bridge,movable bridge          |
+            | c    | f  | cde,efg,efg     | movable bridge,cycling,cycling         |
+            | c    | g  | cde,efg,efg     | movable bridge,cycling,cycling         |
 
     Scenario: Bicycle - Properly handle durations
         Given the node map
@@ -40,8 +40,8 @@ Feature: Bicycle - Handle movable bridge
             | efg   | primary |         |          |
 
         When I route I should get
-            | from | to | route       | modes | speed   |
-            | a    | g  | abc,cde,efg | 1,5,1 | 5 km/h |
-            | b    | f  | abc,cde,efg | 1,5,1 | 4 km/h |
-            | c    | e  | cde         | 5     | 2 km/h |
-            | e    | c  | cde         | 5     | 2 km/h |
+            | from | to | route           | modes                                  | speed  |
+            | a    | g  | abc,cde,efg,efg | cycling,movable bridge,cycling,cycling | 5 km/h |
+            | b    | f  | abc,cde,efg,efg | cycling,movable bridge,cycling,cycling | 4 km/h |
+            | c    | e  | cde,cde         | movable bridge,movable bridge          | 2 km/h |
+            | e    | c  | cde,cde         | movable bridge,movable bridge          | 2 km/h |

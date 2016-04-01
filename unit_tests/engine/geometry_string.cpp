@@ -17,36 +17,28 @@ using namespace osrm::engine;
 BOOST_AUTO_TEST_CASE(decode)
 {
     // Polyline string for the 5 coordinates
-    const std::string polyline = "_gjaR_gjaR_pR_ibE_pR_ibE_pR_ibE_pR_ibE";
-    const auto coords = polylineDecode(polyline);
+    const std::string polyline = "_c`|@_c`|@o}@_pRo}@_pRo}@_pRo}@_pR";
+    const auto coords = decodePolyline(polyline);
 
     // Test coordinates; these would be the coordinates we give the loc parameter,
     // e.g. loc=10.00,10.0&loc=10.01,10.1...
-    util::FixedPointCoordinate coord1(10.00 * COORDINATE_PRECISION, 10.0 * COORDINATE_PRECISION);
-    util::FixedPointCoordinate coord2(10.01 * COORDINATE_PRECISION, 10.1 * COORDINATE_PRECISION);
-    util::FixedPointCoordinate coord3(10.02 * COORDINATE_PRECISION, 10.2 * COORDINATE_PRECISION);
-    util::FixedPointCoordinate coord4(10.03 * COORDINATE_PRECISION, 10.3 * COORDINATE_PRECISION);
-    util::FixedPointCoordinate coord5(10.04 * COORDINATE_PRECISION, 10.4 * COORDINATE_PRECISION);
+    util::Coordinate coord1(util::FloatLongitude(10.0), util::FloatLatitude(10.00));
+    util::Coordinate coord2(util::FloatLongitude(10.1), util::FloatLatitude(10.01));
+    util::Coordinate coord3(util::FloatLongitude(10.2), util::FloatLatitude(10.02));
+    util::Coordinate coord4(util::FloatLongitude(10.3), util::FloatLatitude(10.03));
+    util::Coordinate coord5(util::FloatLongitude(10.4), util::FloatLatitude(10.04));
 
     // Put the test coordinates into the vector for comparison
-    std::vector<util::FixedPointCoordinate> cmp_coords;
-    cmp_coords.emplace_back(coord1);
-    cmp_coords.emplace_back(coord2);
-    cmp_coords.emplace_back(coord3);
-    cmp_coords.emplace_back(coord4);
-    cmp_coords.emplace_back(coord5);
+    std::vector<util::Coordinate> cmp_coords = {coord1, coord2, coord3, coord4, coord5};
 
     BOOST_CHECK_EQUAL(cmp_coords.size(), coords.size());
 
     for (unsigned i = 0; i < cmp_coords.size(); ++i)
     {
-        const double cmp1_lat = coords.at(i).lat;
-        const double cmp2_lat = cmp_coords.at(i).lat;
-        BOOST_CHECK_CLOSE(cmp1_lat, cmp2_lat, 0.0001);
-
-        const double cmp1_lon = coords.at(i).lon;
-        const double cmp2_lon = cmp_coords.at(i).lon;
-        BOOST_CHECK_CLOSE(cmp1_lon, cmp2_lon, 0.0001);
+        BOOST_CHECK_CLOSE(static_cast<double>(util::toFloating(coords[i].lat)),
+                          static_cast<double>(util::toFloating(cmp_coords[i].lat)), 0.0001);
+        BOOST_CHECK_CLOSE(static_cast<double>(util::toFloating(coords[i].lon)),
+                          static_cast<double>(util::toFloating(cmp_coords[i].lon)), 0.0001);
     }
 }
 

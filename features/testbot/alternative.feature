@@ -25,16 +25,16 @@ Feature: Alternative route
 
     Scenario: Enabled alternative
         Given the query options
-            | alt | true |
+            | alternatives | true |
 
         When I route I should get
-            | from | to | route       | alternative    |
-            | a    | z  | ab,bc,cd,dz | ag,gh,hi,ij,jz |
+            | from | to | route          | alternative       |
+            | a    | z  | ab,bc,cd,dz,dz | ag,gh,hi,ij,jz,jz |
 
     Scenario: Disabled alternative
         Given the query options
-            | alt | false |
+            | alternatives | false |
 
         When I route I should get
-            | from | to | route       | alternative |
-            | a    | z  | ab,bc,cd,dz |             |
+            | from | to | route          | alternative |
+            | a    | z  | ab,bc,cd,dz,dz |             |

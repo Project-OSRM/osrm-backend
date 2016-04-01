@@ -1,19 +1,18 @@
-#include "util/coordinate_calculation.hpp"
-#include "engine/geospatial_query.hpp"
-#include "util/static_rtree.hpp"
-#include "extractor/query_node.hpp"
 #include "extractor/edge_based_node.hpp"
+#include "engine/geospatial_query.hpp"
 #include "util/typedefs.hpp"
 #include "util/rectangle.hpp"
 #include "util/exception.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/coordinate.hpp"
+#include "util/static_rtree.hpp"
 
 #include "mocks/mock_datafacade.hpp"
 
-#include <boost/functional/hash.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
-
-#include <osrm/coordinate.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <cstdint>
 #include <cmath>
@@ -26,7 +25,6 @@
 #include <unordered_set>
 #include <vector>
 
-
 BOOST_AUTO_TEST_SUITE(static_rtree)
 
 using namespace osrm;
@@ -38,52 +36,56 @@ constexpr uint32_t TEST_LEAF_NODE_SIZE = 64;
 
 using TestData = extractor::EdgeBasedNode;
 using TestStaticRTree = StaticRTree<TestData,
-                                    std::vector<FixedPointCoordinate>,
+                                    std::vector<Coordinate>,
                                     false,
                                     TEST_BRANCHING_FACTOR,
                                     TEST_LEAF_NODE_SIZE>;
-using MiniStaticRTree = StaticRTree<TestData, std::vector<FixedPointCoordinate>, false, 2, 3>;
+using MiniStaticRTree = StaticRTree<TestData, std::vector<Coordinate>, false, 2, 3>;
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
 constexpr unsigned RANDOM_SEED = 42;
-static const int32_t WORLD_MIN_LAT = -90 * COORDINATE_PRECISION;
-static const int32_t WORLD_MAX_LAT = 90 * COORDINATE_PRECISION;
+static const int32_t WORLD_MIN_LAT = -85 * COORDINATE_PRECISION;
+static const int32_t WORLD_MAX_LAT = 85 * COORDINATE_PRECISION;
 static const int32_t WORLD_MIN_LON = -180 * COORDINATE_PRECISION;
 static const int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 
 template <typename DataT> class LinearSearchNN
 {
   public:
-    LinearSearchNN(const std::shared_ptr<std::vector<FixedPointCoordinate>> &coords,
+    LinearSearchNN(const std::shared_ptr<std::vector<Coordinate>> &coords,
                    const std::vector<DataT> &edges)
         : coords(coords), edges(edges)
     {
     }
 
-    std::vector<DataT> Nearest(const FixedPointCoordinate &input_coordinate,
-                               const unsigned num_results)
+    std::vector<DataT> Nearest(const Coordinate &input_coordinate, const unsigned num_results)
     {
         std::vector<DataT> local_edges(edges);
 
-        std::nth_element(
-            local_edges.begin(), local_edges.begin() + num_results, local_edges.end(),
-            [this, &input_coordinate](const DataT &lhs, const DataT &rhs)
-            {
-                double current_ratio = 0.;
-                FixedPointCoordinate nearest;
-                const double lhs_dist = coordinate_calculation::perpendicularDistance(
-                    coords->at(lhs.u), coords->at(lhs.v), input_coordinate, nearest, current_ratio);
-                const double rhs_dist = coordinate_calculation::perpendicularDistance(
-                    coords->at(rhs.u), coords->at(rhs.v), input_coordinate, nearest, current_ratio);
-                return lhs_dist < rhs_dist;
-            });
+        auto projected_input = coordinate_calculation::mercator::fromWGS84(input_coordinate);
+        const auto segment_comparator = [this, &projected_input](const DataT &lhs, const DataT &rhs)
+        {
+            using coordinate_calculation::mercator::fromWGS84;
+            const auto lhs_result = coordinate_calculation::projectPointOnSegment(
+                fromWGS84(coords->at(lhs.u)), fromWGS84(coords->at(lhs.v)), projected_input);
+            const auto rhs_result = coordinate_calculation::projectPointOnSegment(
+                fromWGS84(coords->at(rhs.u)), fromWGS84(coords->at(rhs.v)), projected_input);
+            const auto lhs_squared_dist = coordinate_calculation::squaredEuclideanDistance(
+                lhs_result.second, projected_input);
+            const auto rhs_squared_dist = coordinate_calculation::squaredEuclideanDistance(
+                rhs_result.second, projected_input);
+            return lhs_squared_dist < rhs_squared_dist;
+        };
+
+        std::nth_element(local_edges.begin(), local_edges.begin() + num_results, local_edges.end(),
+                         segment_comparator);
         local_edges.resize(num_results);
 
         return local_edges;
     }
 
   private:
-    const std::shared_ptr<std::vector<FixedPointCoordinate>> &coords;
+    const std::shared_ptr<std::vector<Coordinate>> &coords;
     const std::vector<TestData> &edges;
 };
 
@@ -103,10 +105,8 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         }
     };
 
-    RandomGraphFixture() : coords(std::make_shared<std::vector<FixedPointCoordinate>>())
+    RandomGraphFixture() : coords(std::make_shared<std::vector<Coordinate>>())
     {
-        BOOST_TEST_MESSAGE("Constructing " << NUM_NODES << " nodes and " << NUM_EDGES << " edges.");
-
         std::mt19937 g(RANDOM_SEED);
 
         std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
@@ -114,13 +114,12 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 
         for (unsigned i = 0; i < NUM_NODES; i++)
         {
-            int lat = lat_udist(g);
             int lon = lon_udist(g);
-            nodes.emplace_back(extractor::QueryNode(lat, lon, OSMNodeID(i)));
-            coords->emplace_back(FixedPointCoordinate(lat, lon));
+            int lat = lat_udist(g);
+            coords->emplace_back(Coordinate(FixedLongitude(lon), FixedLatitude(lat)));
         }
 
-        std::uniform_int_distribution<> edge_udist(0, nodes.size() - 1);
+        std::uniform_int_distribution<> edge_udist(0, coords->size() - 1);
 
         std::unordered_set<std::pair<unsigned, unsigned>, TupleHash> used_edges;
 
@@ -139,24 +138,20 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         }
     }
 
-    std::vector<extractor::QueryNode> nodes;
-    std::shared_ptr<std::vector<FixedPointCoordinate>> coords;
+    std::shared_ptr<std::vector<Coordinate>> coords;
     std::vector<TestData> edges;
 };
 
 struct GraphFixture
 {
-    GraphFixture(const std::vector<std::pair<double, double>> &input_coords,
+    GraphFixture(const std::vector<std::pair<FloatLongitude, FloatLatitude>> &input_coords,
                  const std::vector<std::pair<unsigned, unsigned>> &input_edges)
-        : coords(std::make_shared<std::vector<FixedPointCoordinate>>())
+        : coords(std::make_shared<std::vector<Coordinate>>())
     {
 
         for (unsigned i = 0; i < input_coords.size(); i++)
         {
-            FixedPointCoordinate c(input_coords[i].first * COORDINATE_PRECISION,
-                                   input_coords[i].second * COORDINATE_PRECISION);
-            coords->emplace_back(c);
-            nodes.emplace_back(extractor::QueryNode(c.lat, c.lon, OSMNodeID(i)));
+            coords->emplace_back(input_coords[i].first, input_coords[i].second);
         }
 
         for (const auto &pair : input_edges)
@@ -168,14 +163,13 @@ struct GraphFixture
             // so we have something to test against.  Because this isn't a real
             // graph, the actual values aren't important, we just need something
             // to examine during tests.
-            d.forward_edge_based_node_id = pair.second;
-            d.reverse_edge_based_node_id = pair.first;
+            d.forward_segment_id = {pair.second, true};
+            d.reverse_segment_id = {pair.first, true};
             edges.emplace_back(d);
         }
     }
 
-    std::vector<extractor::QueryNode> nodes;
-    std::shared_ptr<std::vector<FixedPointCoordinate>> coords;
+    std::shared_ptr<std::vector<Coordinate>> coords;
     std::vector<TestData> edges;
 };
 
@@ -191,17 +185,17 @@ typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 3,
                            TEST_LEAF_NODE_SIZE * TEST_BRANCHING_FACTOR * 2>
     TestRandomGraphFixture_MultipleLevels;
+typedef RandomGraphFixture<10, 30> TestRandomGraphFixture_10_30;
 
 template <typename RTreeT>
 void simple_verify_rtree(RTreeT &rtree,
-                         const std::shared_ptr<std::vector<FixedPointCoordinate>> &coords,
+                         const std::shared_ptr<std::vector<Coordinate>> &coords,
                          const std::vector<TestData> &edges)
 {
-    BOOST_TEST_MESSAGE("Verify end points");
     for (const auto &e : edges)
     {
-        const FixedPointCoordinate &pu = coords->at(e.u);
-        const FixedPointCoordinate &pv = coords->at(e.v);
+        const Coordinate &pu = coords->at(e.u);
+        const Coordinate &pv = coords->at(e.v);
         auto result_u = rtree.Nearest(pu, 1);
         auto result_v = rtree.Nearest(pv, 1);
         BOOST_CHECK(result_u.size() == 1 && result_v.size() == 1);
@@ -213,19 +207,18 @@ void simple_verify_rtree(RTreeT &rtree,
 template <typename RTreeT>
 void sampling_verify_rtree(RTreeT &rtree,
                            LinearSearchNN<TestData> &lsnn,
-                           const std::vector<FixedPointCoordinate> &coords,
+                           const std::vector<Coordinate> &coords,
                            unsigned num_samples)
 {
     std::mt19937 g(RANDOM_SEED);
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
     std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
-    std::vector<FixedPointCoordinate> queries;
+    std::vector<Coordinate> queries;
     for (unsigned i = 0; i < num_samples; i++)
     {
-        queries.emplace_back(FixedPointCoordinate(lat_udist(g), lon_udist(g)));
+        queries.emplace_back(FixedLongitude(lon_udist(g)), FixedLatitude(lat_udist(g)));
     }
 
-    BOOST_TEST_MESSAGE("Sampling queries");
     for (const auto &q : queries)
     {
         auto result_rtree = rtree.Nearest(q, 1);
@@ -237,13 +230,15 @@ void sampling_verify_rtree(RTreeT &rtree,
         auto lsnn_u = result_lsnn.back().u;
         auto lsnn_v = result_lsnn.back().v;
 
-        double current_ratio = 0.;
-        FixedPointCoordinate nearest;
+        Coordinate rtree_nearest;
+        Coordinate lsnn_nearest;
+        double ratio;
         const double rtree_dist = coordinate_calculation::perpendicularDistance(
-            coords[rtree_u], coords[rtree_v], q, nearest, current_ratio);
+            coords[rtree_u], coords[rtree_v], q, rtree_nearest, ratio);
         const double lsnn_dist = coordinate_calculation::perpendicularDistance(
-            coords[lsnn_u], coords[lsnn_v], q, nearest, current_ratio);
-        BOOST_CHECK_LE(std::abs(rtree_dist - lsnn_dist), std::numeric_limits<double>::epsilon());
+            coords[lsnn_u], coords[lsnn_v], q, lsnn_nearest, ratio);
+
+        BOOST_CHECK_CLOSE(rtree_dist, lsnn_dist, 0.0001);
     }
 }
 
@@ -255,17 +250,11 @@ void build_rtree(const std::string &prefix,
 {
     nodes_path = prefix + ".ramIndex";
     leaves_path = prefix + ".fileIndex";
-    const std::string coords_path = prefix + ".nodes";
 
-    boost::filesystem::ofstream node_stream(coords_path, std::ios::binary);
-    const auto num_nodes = static_cast<unsigned>(fixture->nodes.size());
-    node_stream.write((char *)&num_nodes, sizeof(unsigned));
-    node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(extractor::QueryNode));
-
-    RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->nodes);
+    RTreeT r(fixture->edges, nodes_path, leaves_path, *fixture->coords);
 }
 
-template <typename FixtureT, typename RTreeT = TestStaticRTree>
+template <typename RTreeT = TestStaticRTree, typename FixtureT>
 void construction_test(const std::string &prefix, FixtureT *fixture)
 {
     std::string leaves_path;
@@ -276,6 +265,12 @@ void construction_test(const std::string &prefix, FixtureT *fixture)
 
     simple_verify_rtree(rtree, fixture->coords, fixture->edges);
     sampling_verify_rtree(rtree, lsnn, *fixture->coords, 100);
+}
+
+BOOST_FIXTURE_TEST_CASE(construct_tiny, TestRandomGraphFixture_10_30)
+{
+    using TinyTestTree = StaticRTree<TestData, std::vector<Coordinate>, false, 2, 1>;
+    construction_test<TinyTestTree>("test_tiny", this);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_half_leaf_test, TestRandomGraphFixture_LeafHalfFull)
@@ -307,24 +302,20 @@ BOOST_FIXTURE_TEST_CASE(construct_multiple_levels_test, TestRandomGraphFixture_M
 // one BB will be pruned, even if it could contain a nearer match.
 BOOST_AUTO_TEST_CASE(regression_test)
 {
-    using Coord = std::pair<double, double>;
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-         Coord(40.0, 0.0),
-         Coord(35.0, 5.0),
-
-         Coord(5.0, 5.0),
-         Coord(0.0, 10.0),
-
-         Coord(20.0, 10.0),
-         Coord(20.0, 5.0),
-
-         Coord(40.0, 100.0),
-         Coord(35.0, 105.0),
-
-         Coord(5.0, 105.0),
-         Coord(0.0, 110.0),
+            Coord{FloatLongitude{0.0}, FloatLatitude{40.0}},   //
+            Coord{FloatLongitude{5.0}, FloatLatitude{35.0}},   //
+            Coord{FloatLongitude{5.0}, FloatLatitude{5.0}},    //
+            Coord{FloatLongitude{10.0}, FloatLatitude{0.0}},   //
+            Coord{FloatLongitude{10.0}, FloatLatitude{20.0}},  //
+            Coord{FloatLongitude{5.0}, FloatLatitude{20.0}},   //
+            Coord{FloatLongitude{100.0}, FloatLatitude{40.0}}, //
+            Coord{FloatLongitude{105.0}, FloatLatitude{35.0}}, //
+            Coord{FloatLongitude{105.0}, FloatLatitude{5.0}},  //
+            Coord{FloatLongitude{110.0}, FloatLatitude{0.0}},  //
         },
         {Edge(0, 1), Edge(2, 3), Edge(4, 5), Edge(6, 7), Edge(8, 9)});
 
@@ -336,9 +327,16 @@ BOOST_AUTO_TEST_CASE(regression_test)
     LinearSearchNN<TestData> lsnn(fixture.coords, fixture.edges);
 
     // query a node just right of the center of the gap
-    FixedPointCoordinate input(20.0 * COORDINATE_PRECISION, 55.1 * COORDINATE_PRECISION);
+    Coordinate input(FloatLongitude(55.1), FloatLatitude(20.0));
     auto result_rtree = rtree.Nearest(input, 1);
     auto result_ls = lsnn.Nearest(input, 1);
+
+    auto distance_rtree = coordinate_calculation::perpendicularDistance(
+        fixture.coords->at(result_rtree.front().u), fixture.coords->at(result_rtree.front().v),
+        input);
+
+    auto distance_lsnn = coordinate_calculation::perpendicularDistance(
+        fixture.coords->at(result_ls.front().u), fixture.coords->at(result_ls.front().v), input);
 
     BOOST_CHECK(result_rtree.size() == 1);
     BOOST_CHECK(result_ls.size() == 1);
@@ -347,72 +345,14 @@ BOOST_AUTO_TEST_CASE(regression_test)
     BOOST_CHECK_EQUAL(result_ls.front().v, result_rtree.front().v);
 }
 
-void TestRectangle(double width, double height, double center_lat, double center_lon)
-{
-    FixedPointCoordinate center(center_lat * COORDINATE_PRECISION,
-                                center_lon * COORDINATE_PRECISION);
-
-    TestStaticRTree::Rectangle rect;
-    rect.min_lat = center.lat - height / 2.0 * COORDINATE_PRECISION;
-    rect.max_lat = center.lat + height / 2.0 * COORDINATE_PRECISION;
-    rect.min_lon = center.lon - width / 2.0 * COORDINATE_PRECISION;
-    rect.max_lon = center.lon + width / 2.0 * COORDINATE_PRECISION;
-
-    unsigned offset = 5 * COORDINATE_PRECISION;
-    FixedPointCoordinate north(rect.max_lat + offset, center.lon);
-    FixedPointCoordinate south(rect.min_lat - offset, center.lon);
-    FixedPointCoordinate west(center.lat, rect.min_lon - offset);
-    FixedPointCoordinate east(center.lat, rect.max_lon + offset);
-    FixedPointCoordinate north_east(rect.max_lat + offset, rect.max_lon + offset);
-    FixedPointCoordinate north_west(rect.max_lat + offset, rect.min_lon - offset);
-    FixedPointCoordinate south_east(rect.min_lat - offset, rect.max_lon + offset);
-    FixedPointCoordinate south_west(rect.min_lat - offset, rect.min_lon - offset);
-
-    /* Distance to line segments of rectangle */
-    BOOST_CHECK_EQUAL(rect.GetMinDist(north),
-                      coordinate_calculation::greatCircleDistance(
-                          north, FixedPointCoordinate(rect.max_lat, north.lon)));
-    BOOST_CHECK_EQUAL(rect.GetMinDist(south),
-                      coordinate_calculation::greatCircleDistance(
-                          south, FixedPointCoordinate(rect.min_lat, south.lon)));
-    BOOST_CHECK_EQUAL(rect.GetMinDist(west),
-                      coordinate_calculation::greatCircleDistance(
-                          west, FixedPointCoordinate(west.lat, rect.min_lon)));
-    BOOST_CHECK_EQUAL(rect.GetMinDist(east),
-                      coordinate_calculation::greatCircleDistance(
-                          east, FixedPointCoordinate(east.lat, rect.max_lon)));
-
-    /* Distance to corner points */
-    BOOST_CHECK_EQUAL(rect.GetMinDist(north_east),
-                      coordinate_calculation::greatCircleDistance(
-                          north_east, FixedPointCoordinate(rect.max_lat, rect.max_lon)));
-    BOOST_CHECK_EQUAL(rect.GetMinDist(north_west),
-                      coordinate_calculation::greatCircleDistance(
-                          north_west, FixedPointCoordinate(rect.max_lat, rect.min_lon)));
-    BOOST_CHECK_EQUAL(rect.GetMinDist(south_east),
-                      coordinate_calculation::greatCircleDistance(
-                          south_east, FixedPointCoordinate(rect.min_lat, rect.max_lon)));
-    BOOST_CHECK_EQUAL(rect.GetMinDist(south_west),
-                      coordinate_calculation::greatCircleDistance(
-                          south_west, FixedPointCoordinate(rect.min_lat, rect.min_lon)));
-}
-
-BOOST_AUTO_TEST_CASE(rectangle_test)
-{
-    TestRectangle(10, 10, 5, 5);
-    TestRectangle(10, 10, -5, 5);
-    TestRectangle(10, 10, 5, -5);
-    TestRectangle(10, 10, -5, -5);
-    TestRectangle(10, 10, 0, 0);
-}
-
 BOOST_AUTO_TEST_CASE(bearing_tests)
 {
-    using Coord = std::pair<double, double>;
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-         Coord(0.0, 0.0), Coord(10.0, 10.0),
+            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
+            Coord(FloatLongitude(10.0), FloatLatitude(10.0)),
         },
         {Edge(0, 1), Edge(1, 0)});
 
@@ -420,16 +360,17 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     std::string nodes_path;
     build_rtree<GraphFixture, MiniStaticRTree>("test_bearing", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
-    std::unique_ptr<MockDataFacade> mockfacade_ptr(new MockDataFacade);
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords, *mockfacade_ptr);
+    MockDataFacade mockfacade;
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
+                                                                   mockfacade);
 
-    FixedPointCoordinate input(5.0 * COORDINATE_PRECISION, 5.1 * COORDINATE_PRECISION);
+    Coordinate input(FloatLongitude(5.1), FloatLatitude(5.0));
 
     {
         auto results = query.NearestPhantomNodes(input, 5);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results.back().phantom_node.forward_node_id, 0);
-        BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_node_id, 1);
+        BOOST_CHECK_EQUAL(results.back().phantom_node.forward_segment_id.id, 0);
+        BOOST_CHECK_EQUAL(results.back().phantom_node.reverse_segment_id.id, 1);
     }
 
     {
@@ -440,10 +381,14 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodes(input, 5, 45, 10);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_node_id, 1);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_node_id, 1);
+
+        BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);
+        BOOST_CHECK(!results[0].phantom_node.reverse_segment_id.enabled);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_segment_id.id, 1);
+
+        BOOST_CHECK(!results[1].phantom_node.forward_segment_id.enabled);
+        BOOST_CHECK(results[1].phantom_node.reverse_segment_id.enabled);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_segment_id.id, 1);
     }
 
     {
@@ -459,21 +404,29 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     {
         auto results = query.NearestPhantomNodesInRange(input, 11000, 45, 10);
         BOOST_CHECK_EQUAL(results.size(), 2);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_node_id, 1);
-        BOOST_CHECK_EQUAL(results[0].phantom_node.reverse_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.forward_node_id, SPECIAL_NODEID);
-        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_node_id, 1);
+
+        BOOST_CHECK(results[0].phantom_node.forward_segment_id.enabled);
+        BOOST_CHECK(!results[0].phantom_node.reverse_segment_id.enabled);
+        BOOST_CHECK_EQUAL(results[0].phantom_node.forward_segment_id.id, 1);
+
+        BOOST_CHECK(!results[1].phantom_node.forward_segment_id.enabled);
+        BOOST_CHECK(results[1].phantom_node.reverse_segment_id.enabled);
+        BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_segment_id.id, 1);
     }
 }
 
 BOOST_AUTO_TEST_CASE(bbox_search_tests)
 {
-    using Coord = std::pair<double, double>;
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
     using Edge = std::pair<unsigned, unsigned>;
 
     GraphFixture fixture(
         {
-         Coord(0.0, 0.0), Coord(1.0, 1.0), Coord(2.0, 2.0), Coord(3.0, 3.0), Coord(4.0, 4.0),
+            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
+            Coord(FloatLongitude(1.0), FloatLatitude(1.0)),
+            Coord(FloatLongitude(2.0), FloatLatitude(2.0)),
+            Coord(FloatLongitude(3.0), FloatLatitude(3.0)),
+            Coord(FloatLongitude(4.0), FloatLatitude(4.0)),
         },
         {Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4)});
 
@@ -481,23 +434,20 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
     std::string nodes_path;
     build_rtree<GraphFixture, MiniStaticRTree>("test_bbox", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
-    std::unique_ptr<MockDataFacade> mockfacade_ptr(new MockDataFacade);
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords, *mockfacade_ptr);
+    MockDataFacade mockfacade;
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
+                                                                   mockfacade);
 
     {
-        RectangleInt2D bbox = {static_cast<uint32_t>(0.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(0.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION)};
+        RectangleInt2D bbox = {FloatLongitude(0.5), FloatLongitude(1.5), FloatLatitude(0.5),
+                               FloatLatitude(1.5)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
-        RectangleInt2D bbox = {static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(3.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(1.5 * COORDINATE_PRECISION),
-                               static_cast<uint32_t>(3.5 * COORDINATE_PRECISION)};
+        RectangleInt2D bbox = {FloatLongitude(1.5), FloatLongitude(3.5), FloatLatitude(1.5),
+                               FloatLatitude(3.5)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 3);
     }

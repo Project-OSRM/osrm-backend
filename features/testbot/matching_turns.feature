@@ -26,54 +26,54 @@ Feature: Turn directions/codes
             | xo    |
 
         When I match I should get
-            | trace | route | turns                         | matchings |
-            | im    | xi,xm | head,left,destination         | im        |
-            | io    | xi,xo | head,slight_left,destination  | io        |
-            | ia    | xi,xa | head,straight,destination     | ia        |
-            | ic    | xi,xc | head,slight_right,destination | ic        |
-            | ie    | xi,xe | head,right,destination        | ie        |
+            | trace | route    | turns                      | matchings |
+            | im    | xi,xm,xm | depart,left,arrive         | im        |
+            | io    | xi,xo,xo | depart,slight_left,arrive  | io        |
+            | ia    | xi,xa,xa | depart,straight,arrive     | ia        |
+            | ic    | xi,xc,xc | depart,slight_right,arrive | ic        |
+            | ie    | xi,xe,xe | depart,right,arrive        | ie        |
 
-            | ko    | xk,xo | head,left,destination         | ko        |
-            | ka    | xk,xa | head,slight_left,destination  | ka        |
-            | kc    | xk,xc | head,straight,destination     | kc        |
-            | ke    | xk,xe | head,slight_right,destination | ke        |
-            | kg    | xk,xg | head,right,destination        | kg        |
+            | ko    | xk,xo,xo | depart,left,arrive         | ko        |
+            | ka    | xk,xa,xa | depart,slight_left,arrive  | ka        |
+            | kc    | xk,xc,xc | depart,straight,arrive     | kc        |
+            | ke    | xk,xe,xe | depart,slight_right,arrive | ke        |
+            | kg    | xk,xg,xg | depart,right,arrive        | kg        |
 
-            | ma    | xm,xa | head,left,destination         | ma        |
-            | mc    | xm,xc | head,slight_left,destination  | mc        |
-            | me    | xm,xe | head,straight,destination     | me        |
-            | mg    | xm,xg | head,slight_right,destination | mg        |
-            | mi    | xm,xi | head,right,destination        | mi        |
+            | ma    | xm,xa,xa | depart,left,arrive         | ma        |
+            | mc    | xm,xc,xc | depart,slight_left,arrive  | mc        |
+            | me    | xm,xe,xe | depart,straight,arrive     | me        |
+            | mg    | xm,xg,xg | depart,slight_right,arrive | mg        |
+            | mi    | xm,xi,xi | depart,right,arrive        | mi        |
 
-            | oc    | xo,xc | head,left,destination         | oc        |
-            | oe    | xo,xe | head,slight_left,destination  | oe        |
-            | og    | xo,xg | head,straight,destination     | og        |
-            | oi    | xo,xi | head,slight_right,destination | oi        |
-            | ok    | xo,xk | head,right,destination        | ok        |
+            | oc    | xo,xc,xc | depart,left,arrive         | oc        |
+            | oe    | xo,xe,xe | depart,slight_left,arrive  | oe        |
+            | og    | xo,xg,xg | depart,straight,arrive     | og        |
+            | oi    | xo,xi,xi | depart,slight_right,arrive | oi        |
+            | ok    | xo,xk,xk | depart,right,arrive        | ok        |
 
-            | ae    | xa,xe | head,left,destination         | ae        |
-            | ag    | xa,xg | head,slight_left,destination  | ag        |
-            | ai    | xa,xi | head,straight,destination     | ai        |
-            | ak    | xa,xk | head,slight_right,destination | ak        |
-            | am    | xa,xm | head,right,destination        | am        |
+            | ae    | xa,xe,xe | depart,left,arrive         | ae        |
+            | ag    | xa,xg,xg | depart,slight_left,arrive  | ag        |
+            | ai    | xa,xi,xi | depart,straight,arrive     | ai        |
+            | ak    | xa,xk,xk | depart,slight_right,arrive | ak        |
+            | am    | xa,xm,xm | depart,right,arrive        | am        |
 
-            | cg    | xc,xg | head,left,destination         | cg        |
-            | ci    | xc,xi | head,slight_left,destination  | ci        |
-            | ck    | xc,xk | head,straight,destination     | ck        |
-            | cm    | xc,xm | head,slight_right,destination | cm        |
-            | co    | xc,xo | head,right,destination        | co        |
+            | cg    | xc,xg,xg | depart,left,arrive         | cg        |
+            | ci    | xc,xi,xi | depart,slight_left,arrive  | ci        |
+            | ck    | xc,xk,xk | depart,straight,arrive     | ck        |
+            | cm    | xc,xm,xm | depart,slight_right,arrive | cm        |
+            | co    | xc,xo,xo | depart,right,arrive        | co        |
 
-            | ei    | xe,xi | head,left,destination         | ei        |
-            | ek    | xe,xk | head,slight_left,destination  | ek        |
-            | em    | xe,xm | head,straight,destination     | em        |
-            | eo    | xe,xo | head,slight_right,destination | eo        |
-            | ea    | xe,xa | head,right,destination        | ea        |
+            | ei    | xe,xi,xi | depart,left,arrive         | ei        |
+            | ek    | xe,xk,xk | depart,slight_left,arrive  | ek        |
+            | em    | xe,xm,xm | depart,straight,arrive     | em        |
+            | eo    | xe,xo,xo | depart,slight_right,arrive | eo        |
+            | ea    | xe,xa,xa | depart,right,arrive        | ea        |
 
-            | gk    | xg,xk | head,left,destination         | gk        |
-            | gm    | xg,xm | head,slight_left,destination  | gm        |
-            | go    | xg,xo | head,straight,destination     | go        |
-            | ga    | xg,xa | head,slight_right,destination | ga        |
-            | gc    | xg,xc | head,right,destination        | gc        |
+            | gk    | xg,xk,xk | depart,left,arrive         | gk        |
+            | gm    | xg,xm,xm | depart,slight_left,arrive  | gm        |
+            | go    | xg,xo,xo | depart,straight,arrive     | go        |
+            | ga    | xg,xa,xa | depart,slight_right,arrive | ga        |
+            | gc    | xg,xc,xc | depart,right,arrive        | gc        |
 
     Scenario: Turn directions
         Given the query options
@@ -97,9 +97,9 @@ Feature: Turn directions/codes
             | xo    |
 
         When I match I should get
-            | trace | route | turns                         | matchings | duration |
-            | im    | xi,xm | head,left,destination         | im        | 80       |
-            | io    | xi,xo | head,slight_left,destination  | io        | 88       |
-            | ia    | xi,xa | head,straight,destination     | ia        | 80       |
-            | ic    | xi,xc | head,slight_right,destination | ic        | 88       |
-            | ie    | xi,xe | head,right,destination        | ie        | 60       |
+            | trace | route    | turns                      | matchings | duration |
+            | im    | xi,xm,xm | depart,left,arrive         | im        | 80       |
+            | io    | xi,xo,xo | depart,slight_left,arrive  | io        | 88       |
+            | ia    | xi,xa,xa | depart,straight,arrive     | ia        | 80       |
+            | ic    | xi,xc,xc | depart,slight_right,arrive | ic        | 88       |
+            | ie    | xi,xe,xe | depart,right,arrive        | ie        | 60       |

@@ -114,8 +114,7 @@ int main(int argc, char *argv[]) try
     auto number_of_nodes = osrm::tools::loadGraph(argv[1], coordinate_list, graph_edge_list);
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
-    const auto graph =
-        std::make_shared<osrm::tools::TarjanGraph>(number_of_nodes, graph_edge_list);
+    const auto graph = std::make_shared<osrm::tools::TarjanGraph>(number_of_nodes, graph_edge_list);
     graph_edge_list.clear();
     graph_edge_list.shrink_to_fit();
 
@@ -181,8 +180,7 @@ int main(int argc, char *argv[]) try
             {
                 total_network_length +=
                     100 * osrm::util::coordinate_calculation::greatCircleDistance(
-                              coordinate_list[source].lat, coordinate_list[source].lon,
-                              coordinate_list[target].lat, coordinate_list[target].lon);
+                              coordinate_list[source], coordinate_list[target]);
 
                 BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
                 BOOST_ASSERT(source != SPECIAL_NODEID);
@@ -197,14 +195,13 @@ int main(int argc, char *argv[]) try
                 {
                     OGRLineString line_string;
                     line_string.addPoint(
-                        coordinate_list[source].lon / osrm::COORDINATE_PRECISION,
-                        coordinate_list[source].lat / osrm::COORDINATE_PRECISION);
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[source].lon)),
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[source].lat)));
                     line_string.addPoint(
-                        coordinate_list[target].lon / osrm::COORDINATE_PRECISION,
-                        coordinate_list[target].lat / osrm::COORDINATE_PRECISION);
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[target].lon)),
+                        static_cast<double>(osrm::util::toFloating(coordinate_list[target].lat)));
 
-                    OGRFeature *po_feature =
-                        OGRFeature::CreateFeature(po_layer->GetLayerDefn());
+                    OGRFeature *po_feature = OGRFeature::CreateFeature(po_layer->GetLayerDefn());
 
                     po_feature->SetGeometry(&line_string);
                     if (OGRERR_NONE != po_layer->CreateFeature(po_feature))
@@ -223,8 +220,8 @@ int main(int argc, char *argv[]) try
         << "generating output took: " << TIMER_MSEC(SCC_OUTPUT) / 1000. << "s";
 
     osrm::util::SimpleLogger().Write()
-        << "total network distance: "
-        << static_cast<uint64_t>(total_network_length / 100 / 1000.) << " km";
+        << "total network distance: " << static_cast<uint64_t>(total_network_length / 100 / 1000.)
+        << " km";
 
     osrm::util::SimpleLogger().Write() << "finished component analysis";
     return EXIT_SUCCESS;

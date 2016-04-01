@@ -17,9 +17,9 @@ Feature: Routing close to the [0,0] origin
             | abcd  | yes    |
 
         When I route I should get
-            | from | to | route | distance |
-            | b    | c  | abcd  | 100m +-1 |
-            | c    | b  |       |          |
+            | from | to | route     | distance |
+            | b    | c  | abcd,abcd | 100m +-1 |
+            | c    | b  |           |          |
 
     Scenario: North-south oneways close to the origin
         Given the node locations
@@ -34,9 +34,9 @@ Feature: Routing close to the [0,0] origin
             | abcd  | yes    |
 
         When I route I should get
-            | from | to | route | distance |
-            | b    | c  | abcd  | 100m +-1 |
-            | c    | b  |       |          |
+            | from | to | route     | distance |
+            | b    | c  | abcd,abcd | 100m +-1 |
+            | c    | b  |           |          |
 
     Scenario: East-west oneways crossing the origin
         Given the node locations
@@ -52,9 +52,9 @@ Feature: Routing close to the [0,0] origin
             | abcde | yes    |
 
         When I route I should get
-            | from | to | route | distance |
-            | b    | d  | abcde | 200m +-2 |
-            | d    | b  |       |          |
+            | from | to | route       | distance |
+            | b    | d  | abcde,abcde | 200m +-2 |
+            | d    | b  |             |          |
 
     Scenario: North-south oneways crossing the origin
         Given the node locations
@@ -70,6 +70,6 @@ Feature: Routing close to the [0,0] origin
             | abcde | yes    |
 
         When I route I should get
-            | from | to | route | distance |
-            | b    | d  | abcde | 200m +-2 |
-            | d    | b  |       |          |
+            | from | to | route       | distance |
+            | b    | d  | abcde,abcde | 200m +-2 |
+            | d    | b  |             |          |

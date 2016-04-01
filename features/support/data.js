@@ -94,13 +94,13 @@ module.exports = function () {
         q.awaitAll(callback);
     };
 
-    var ensureDecimal = (i) => {
+    this.ensureDecimal = (i) => {
         if (parseInt(i) === i) return i.toFixed(1);
         else return i;
     };
 
     this.tableCoordToLonLat = (ci, ri) => {
-        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(ensureDecimal);
+        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(this.ensureDecimal);
     };
 
     this.addOSMNode = (name, lon, lat, id) => {
@@ -151,7 +151,6 @@ module.exports = function () {
     };
 
     this.writeOSM = (callback) => {
-
         fs.exists(this.DATA_FOLDER, (exists) => {
             var mkDirFn = exists ? (cb) => { cb(); } : fs.mkdir.bind(fs.mkdir, this.DATA_FOLDER);
             mkDirFn((err) => {
@@ -202,6 +201,7 @@ module.exports = function () {
         exec(cmd, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
+                process.chdir('../');
                 return callback(this.ExtractError(err.code, util.format('osrm-extract exited with code %d', err.code)));
             }
 
@@ -222,7 +222,7 @@ module.exports = function () {
                 });
             };
 
-            ['osrm','osrm.names','osrm.restrictions','osrm.ebg','osrm.enw','osrm.edges','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex'].forEach(file => {
+            ['osrm','osrm.names','osrm.restrictions','osrm.ebg','osrm.enw','osrm.edges','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.properties'].forEach(file => {
                 q.defer(rename, file);
             });
 
@@ -248,6 +248,7 @@ module.exports = function () {
         exec(cmd, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
+                process.chdir('../');
                 return callback(this.ContractError(err.code, util.format('osrm-contract exited with code %d', err.code)));
             }
 
@@ -272,11 +273,11 @@ module.exports = function () {
 
             var q = d3.queue();
 
-            ['osrm.hsgr','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.core','osrm.edges'].forEach((file) => {
+            ['osrm.hsgr','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.core','osrm.edges','osrm.datasource_indexes','osrm.datasource_names','osrm.level'].forEach((file) => {
                 q.defer(rename, file);
             });
 
-            ['osrm.names','osrm.restrictions','osrm'].forEach((file) => {
+            ['osrm.names','osrm.restrictions','osrm.properties','osrm'].forEach((file) => {
                 q.defer(copy, file);
             });
 
@@ -329,7 +330,7 @@ module.exports = function () {
     this.processRowsAndDiff = (table, fn, callback) => {
         var q = d3.queue(1);
 
-        table.hashes().forEach((row, i) => q.defer(fn, row, i));
+        table.hashes().forEach((row, i) => { q.defer(fn, row, i); });
 
         q.awaitAll((err, actual) => {
             if (err) return callback(err);

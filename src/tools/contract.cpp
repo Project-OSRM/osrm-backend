@@ -39,9 +39,10 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
         "core,k",
         boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
         "Percentage of the graph (in vertices) to contract [0..1]")(
-        "segment-speed-file",
-        boost::program_options::value<std::string>(&contractor_config.segment_speed_lookup_path),
-        "Lookup file containing nodeA,nodeB,speed data to adjust edge weights")(
+        "segment-speed-file", boost::program_options::value<std::vector<std::string>>(
+                                  &contractor_config.segment_speed_lookup_paths)
+                                  ->composing(),
+        "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
         "level-cache,o", boost::program_options::value<bool>(&contractor_config.use_cached_priority)
                              ->default_value(false),
         "Use .level file to retain the contaction level for each node from the last run.");

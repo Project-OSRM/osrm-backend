@@ -23,8 +23,8 @@ Feature: Handle bad data in a graceful manner
             | abcde | yes    |
 
         When I route I should get
-            | from | to | route |
-            | b    | d  | abcde |
+            | from | to | route       |
+            | b    | d  | abcde,abcde |
 
     @todo
     Scenario: Start/end point at the same location
@@ -78,7 +78,7 @@ Feature: Handle bad data in a graceful manner
         # | b    | c  | cd    |
         # | a    | d  | cd    |
         # | c    | d  | cd    |
-            | d    | e  | de    |
+            | d    | e  | de,de |
         # | k    | l  | kl    |
         # | l    | m  | lm    |
         # | o    | l  | lm    |

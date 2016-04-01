@@ -165,6 +165,7 @@ script:
   - popd
   - npm test
   - make -C test/data
+  - ./build/library-tests test/data/monaco.osrm
   - mkdir example/build && pushd example/build
   - cmake ..
   - make

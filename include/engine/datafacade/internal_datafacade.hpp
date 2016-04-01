@@ -5,8 +5,11 @@
 
 #include "engine/datafacade/datafacade_base.hpp"
 
+#include "extractor/guidance/turn_instruction.hpp"
+
 #include "engine/geospatial_query.hpp"
 #include "extractor/original_edge_data.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "contractor/query_edge.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
@@ -46,17 +49,17 @@ namespace engine
 namespace datafacade
 {
 
-template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacade<EdgeDataT>
+class InternalDataFacade final : public BaseDataFacade
 {
 
   private:
-    using super = BaseDataFacade<EdgeDataT>;
+    using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<typename super::EdgeData>;
     using InputEdge = typename QueryGraph::InputEdge;
     using RTreeLeaf = typename super::RTreeLeaf;
     using InternalRTree =
-        util::StaticRTree<RTreeLeaf, util::ShM<util::FixedPointCoordinate, false>::vector, false>;
-    using InternalGeospatialQuery = GeospatialQuery<InternalRTree, BaseDataFacade<EdgeDataT>>;
+        util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, false>::vector, false>;
+    using InternalGeospatialQuery = GeospatialQuery<InternalRTree, BaseDataFacade>;
 
     InternalDataFacade() {}
 
@@ -65,16 +68,19 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     std::unique_ptr<QueryGraph> m_query_graph;
     std::string m_timestamp;
 
-    std::shared_ptr<util::ShM<util::FixedPointCoordinate, false>::vector> m_coordinate_list;
+    std::shared_ptr<util::ShM<util::Coordinate, false>::vector> m_coordinate_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
-    util::ShM<extractor::TurnInstruction, false>::vector m_turn_instruction_list;
+    util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, false>::vector m_travel_mode_list;
     util::ShM<char, false>::vector m_names_char_list;
     util::ShM<unsigned, false>::vector m_geometry_indices;
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, false>::vector m_geometry_list;
     util::ShM<bool, false>::vector m_is_core_node;
     util::ShM<unsigned, false>::vector m_segment_weights;
+    util::ShM<uint8_t, false>::vector m_datasource_list;
+    util::ShM<std::string, false>::vector m_datasource_names;
+    extractor::ProfileProperties m_profile_properties;
 
     boost::thread_specific_ptr<InternalRTree> m_static_rtree;
     boost::thread_specific_ptr<InternalGeospatialQuery> m_geospatial_query;
@@ -82,26 +88,26 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     boost::filesystem::path file_index_path;
     util::RangeTable<16, false> m_name_table;
 
+    void LoadProfileProperties(const boost::filesystem::path &properties_path)
+    {
+        boost::filesystem::ifstream in_stream(properties_path);
+        if (!in_stream)
+        {
+            throw util::exception("Could not open " + properties_path.string() + " for reading.");
+        }
+
+        in_stream.read(reinterpret_cast<char*>(&m_profile_properties), sizeof(m_profile_properties));
+    }
+
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
     {
-        if (boost::filesystem::exists(timestamp_path))
+        util::SimpleLogger().Write() << "Loading Timestamp";
+        boost::filesystem::ifstream timestamp_stream(timestamp_path);
+        if (!timestamp_stream)
         {
-            util::SimpleLogger().Write() << "Loading Timestamp";
-            boost::filesystem::ifstream timestamp_stream(timestamp_path);
-            if (!timestamp_stream)
-            {
-                util::SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
-            }
-            getline(timestamp_stream, m_timestamp);
+            throw util::exception("Could not open " + timestamp_path.string() + " for reading.");
         }
-        if (m_timestamp.empty())
-        {
-            m_timestamp = "n/a";
-        }
-        if (25 < m_timestamp.length())
-        {
-            m_timestamp.resize(25);
-        }
+        getline(timestamp_stream, m_timestamp);
     }
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
@@ -132,15 +138,12 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         extractor::QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
-        m_coordinate_list =
-            std::make_shared<std::vector<util::FixedPointCoordinate>>(number_of_coordinates);
+        m_coordinate_list = std::make_shared<std::vector<util::Coordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-            m_coordinate_list->at(i) =
-                util::FixedPointCoordinate(current_node.lat, current_node.lon);
-            BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
-            BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
+            m_coordinate_list->at(i) = util::Coordinate(current_node.lon, current_node.lat);
+            BOOST_ASSERT(m_coordinate_list->at(i).IsValid());
         }
 
         boost::filesystem::ifstream edges_input_stream(edges_file, std::ios::binary);
@@ -209,7 +212,41 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         if (number_of_compressed_geometries > 0)
         {
             geometry_stream.read((char *)&(m_geometry_list[0]),
-                                 number_of_compressed_geometries * sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+                                 number_of_compressed_geometries *
+                                     sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+        }
+    }
+
+    void LoadDatasourceInfo(const boost::filesystem::path &datasource_names_file,
+                            const boost::filesystem::path &datasource_indexes_file)
+    {
+        boost::filesystem::ifstream datasources_stream(datasource_indexes_file, std::ios::binary);
+        if (!datasources_stream)
+        {
+            throw util::exception("Could not open " + datasource_indexes_file.string() + " for reading!");
+        }
+        BOOST_ASSERT(datasources_stream);
+
+        std::size_t number_of_datasources = 0;
+        datasources_stream.read(reinterpret_cast<char *>(&number_of_datasources),
+                                sizeof(std::size_t));
+        if (number_of_datasources > 0)
+        {
+            m_datasource_list.resize(number_of_datasources);
+            datasources_stream.read(reinterpret_cast<char *>(&(m_datasource_list[0])),
+                                    number_of_datasources * sizeof(uint8_t));
+        }
+
+        boost::filesystem::ifstream datasourcenames_stream(datasource_names_file, std::ios::binary);
+        if (!datasourcenames_stream)
+        {
+            throw util::exception("Could not open " + datasource_names_file.string() + " for reading!");
+        }
+        BOOST_ASSERT(datasourcenames_stream);
+        std::string name;
+        while (std::getline(datasourcenames_stream, name))
+        {
+            m_datasource_names.push_back(std::move(name));
         }
     }
 
@@ -218,7 +255,8 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
         m_static_rtree.reset(new InternalRTree(ram_index_path, file_index_path, m_coordinate_list));
-        m_geospatial_query.reset(new InternalGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
+        m_geospatial_query.reset(
+            new InternalGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
     void LoadStreetNames(const boost::filesystem::path &names_file)
@@ -245,40 +283,35 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         m_geospatial_query.reset();
     }
 
-    explicit InternalDataFacade(
-        const std::unordered_map<std::string, boost::filesystem::path> &server_paths)
+    explicit InternalDataFacade(const storage::StorageConfig& config)
     {
-        // cache end iterator to quickly check .find against
-        const auto end_it = end(server_paths);
-
-        const auto file_for = [&server_paths, &end_it](const std::string &path)
-        {
-            const auto it = server_paths.find(path);
-            if (it == end_it || !boost::filesystem::is_regular_file(it->second))
-                throw util::exception("no valid " + path + " file given in ini file");
-            return it->second;
-        };
-
-        ram_index_path = file_for("ramindex");
-        file_index_path = file_for("fileindex");
+        ram_index_path = config.ram_index_path;
+        file_index_path = config.file_index_path;
 
         util::SimpleLogger().Write() << "loading graph data";
-        LoadGraph(file_for("hsgrdata"));
+        LoadGraph(config.hsgr_data_path);
 
         util::SimpleLogger().Write() << "loading edge information";
-        LoadNodeAndEdgeInformation(file_for("nodesdata"), file_for("edgesdata"));
+        LoadNodeAndEdgeInformation(config.nodes_data_path, config.edges_data_path);
 
         util::SimpleLogger().Write() << "loading core information";
-        LoadCoreInformation(file_for("coredata"));
+        LoadCoreInformation(config.core_data_path);
 
         util::SimpleLogger().Write() << "loading geometries";
-        LoadGeometries(file_for("geometries"));
+        LoadGeometries(config.geometries_path);
+
+        util::SimpleLogger().Write() << "loading datasource info";
+        LoadDatasourceInfo(config.datasource_names_path,
+                           config.datasource_indexes_path);
 
         util::SimpleLogger().Write() << "loading timestamp";
-        LoadTimestamp(file_for("timestamp"));
+        LoadTimestamp(config.timestamp_path);
+
+        util::SimpleLogger().Write() << "loading profile properties";
+        LoadProfileProperties(config.properties_path);
 
         util::SimpleLogger().Write() << "loading street names";
-        LoadStreetNames(file_for("namesdata"));
+        LoadStreetNames(config.names_data_path);
     }
 
     // search graph access
@@ -293,7 +326,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
     NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
 
-    EdgeDataT &GetEdgeData(const EdgeID e) const override final
+    EdgeData &GetEdgeData(const EdgeID e) const override final
     {
         return m_query_graph->GetEdgeData(e);
     }
@@ -325,12 +358,13 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     // node and edge information access
-    util::FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const override final
+    util::Coordinate GetCoordinateOfNode(const unsigned id) const override final
     {
         return m_coordinate_list->at(id);
     }
 
-    extractor::TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const override final
+    extractor::guidance::TurnInstruction
+    GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
         return m_turn_instruction_list.at(id);
     }
@@ -340,25 +374,37 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_travel_mode_list.at(id);
     }
 
-    std::vector<RTreeLeaf>
-    GetEdgesInBox(const util::FixedPointCoordinate &south_west,
-                  const util::FixedPointCoordinate &north_east) override final
+    std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
+                                         const util::Coordinate north_east) override final
     {
         if (!m_static_rtree.get())
         {
             LoadRTree();
             BOOST_ASSERT(m_geospatial_query.get());
         }
-        const util::RectangleInt2D bbox{
-            south_west.lon, north_east.lon, south_west.lat, north_east.lat};
+        const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
+                                        north_east.lat};
         return m_geospatial_query->Search(bbox);
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodesInRange(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
+                               const float max_distance) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance);
+    }
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
-                               const int bearing = 0,
-                               const int bearing_range = 180) override final
+                               const int bearing,
+                               const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {
@@ -371,10 +417,37 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
     }
 
     std::vector<PhantomNodeWithDistance>
-    NearestPhantomNodes(const util::FixedPointCoordinate input_coordinate,
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
+                        const unsigned max_results) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results);
+    }
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
-                        const int bearing = 0,
-                        const int bearing_range = 180) override final
+                        const double max_distance) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance);
+    }
+
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
+                        const unsigned max_results,
+                        const int bearing,
+                        const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {
@@ -386,10 +459,70 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
                                                        bearing_range);
     }
 
+    std::vector<PhantomNodeWithDistance>
+    NearestPhantomNodes(const util::Coordinate input_coordinate,
+                        const unsigned max_results,
+                        const double max_distance,
+                        const int bearing,
+                        const int bearing_range) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance,
+                                                       bearing, bearing_range);
+    }
+
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate, max_distance);
+    }
+
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::FixedPointCoordinate input_coordinate,
-        const int bearing = 0,
-        const int bearing_range = 180) override final
+        const util::Coordinate input_coordinate) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate);
+    }
+
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const double max_distance,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
+    {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+            BOOST_ASSERT(m_geospatial_query.get());
+        }
+
+        return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
+            input_coordinate, max_distance, bearing, bearing_range);
+    }
+
+    std::pair<PhantomNode, PhantomNode>
+    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
+                                                      const int bearing,
+                                                      const int bearing_range) override final
     {
         if (!m_static_rtree.get())
         {
@@ -408,7 +541,7 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
         return m_name_ID_list.at(id);
     }
 
-    std::string get_name_for_id(const unsigned name_id) const override final
+    std::string GetNameForID(const unsigned name_id) const override final
     {
         if (std::numeric_limits<unsigned>::max() == name_id)
         {
@@ -454,22 +587,69 @@ template <class EdgeDataT> class InternalDataFacade final : public BaseDataFacad
 
         result_nodes.clear();
         result_nodes.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end, [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge){ result_nodes.emplace_back(edge.node_id); });
+        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
+                      {
+                          result_nodes.emplace_back(edge.node_id);
+                      });
     }
 
-    virtual void GetUncompressedWeights(const EdgeID id,
-                                        std::vector<EdgeWeight> &result_weights) const override final
+    virtual void
+    GetUncompressedWeights(const EdgeID id,
+                           std::vector<EdgeWeight> &result_weights) const override final
     {
         const unsigned begin = m_geometry_indices.at(id);
         const unsigned end = m_geometry_indices.at(id + 1);
 
         result_weights.clear();
         result_weights.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end, [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge){ result_weights.emplace_back(edge.weight); });
+        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
+                      {
+                          result_weights.emplace_back(edge.weight);
+                      });
+    }
 
+    // Returns the data source ids that were used to supply the edge
+    // weights.
+    virtual void
+    GetUncompressedDatasources(const EdgeID id,
+                               std::vector<uint8_t> &result_datasources) const override final
+    {
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1);
+
+        result_datasources.clear();
+        result_datasources.reserve(end - begin);
+
+        // If there was no datasource info, return an array of 0's.
+        if (m_datasource_list.empty())
+        {
+            for (unsigned i = 0; i < end - begin; ++i)
+            {
+                result_datasources.push_back(0);
+            }
+        }
+        else
+        {
+            std::for_each(m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
+                          [&](const uint8_t &datasource_id)
+                          {
+                              result_datasources.push_back(datasource_id);
+                          });
+        }
+    }
+
+    virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const override final
+    {
+        BOOST_ASSERT(m_datasource_names.size() >= 1);
+        BOOST_ASSERT(m_datasource_names.size() > datasource_name_id);
+        return m_datasource_names[datasource_name_id];
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }
+
+    bool GetUTurnsDefault() const override final { return m_profile_properties.allow_u_turn_at_via; }
 };
 }
 }

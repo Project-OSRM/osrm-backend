@@ -1,7 +1,9 @@
 'use strict';
 
 var util = require('util');
+var path = require('path');
 var fs = require('fs');
+var chalk = require('chalk');
 
 var OSRMError = class extends Error {
     constructor (process, code, msg, log, lines) {
@@ -17,18 +19,18 @@ var OSRMError = class extends Error {
         this.logTail(this.log, this.lines, callback);
     }
 
-    toString (callback) {
-        this.extract((tail) => {
-            callback(util.format('*** %s\nLast %s from %s:\n%s\n', this.msg, this.lines, this.log, tail));
-        });
-    }
+    // toString (callback) {
+    //     this.extract((tail) => {
+    //         callback(util.format('*** %s\nLast %s from %s:\n%s\n', this.msg, this.lines, this.log, tail));
+    //     });
+    // }
 
-    logTail (path, n, callback) {
-        var expanded = path.resolve(this.TEST_FOLDER, path);
+    logTail (logPath, n, callback) {
+        var expanded = path.resolve(this.TEST_FOLDER, logPath);
         fs.exists(expanded, (exists) => {
             if (exists) {
                 fs.readFile(expanded, (err, data) => {
-                    var lines = data.trim().split('\n');
+                    var lines = data.toString().trim().split('\n');
                     callback(lines
                         .slice(lines.length - n)
                         .map(line => util.format('    %s', line))
@@ -100,8 +102,8 @@ module.exports = {
 
                 if (rowError) {
                     bad++;
-                    this.diff.push(Object.assign({}, row, {status: 'undefined'}));
-                    this.diff.push(Object.assign({}, actual[i], {status: 'comment'}));
+                    this.diff.push(Object.assign({}, row, {c_status: 'undefined'}));
+                    this.diff.push(Object.assign({}, actual[i], {c_status: 'comment'}));
                 } else {
                     good++;
                     this.diff.push(row);
@@ -117,9 +119,9 @@ module.exports = {
             this.diff.forEach((row) => {
                 var rowString = '| ';
                 this.headers.forEach((header) => {
-                    if (!row.status) rowString += '    ' + row[header] + ' | ';
-                    else if (row.status === 'undefined') rowString += '(-) ' + row[header] + ' | ';
-                    else rowString += '(+) ' + row[header] + ' | ';
+                    if (!row.c_status) rowString += chalk.green('    ' + row[header] + ' | ');
+                    else if (row.c_status === 'undefined') rowString += chalk.yellow('(-) ' + row[header] + ' | ');
+                    else rowString += chalk.red('(+) ' + row[header] + ' | ');
                 });
                 s.push(rowString);
             });

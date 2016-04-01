@@ -36,8 +36,7 @@ BOOST_AUTO_TEST_CASE(io_data)
     osrm::util::deserializeVector(IO_TMP_FILE, data_out);
 
     BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
-    BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(),
-                                  data_in.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -20,7 +20,7 @@ var OSRMBaseLoader = class {
             });
         };
 
-        runLaunch(limit((e) => { if (e) callback(e); callback(); }));
+        runLaunch(limit((e) => { if (e) callback(e); else callback(); }));
     }
 
     shutdown (callback) {
@@ -30,7 +30,7 @@ var OSRMBaseLoader = class {
             this.osrmDown(cb);
         };
 
-        runShutdown(limit((e) => { if (e) callback(e); callback(); }));
+        runShutdown(limit((e) => { if (e) callback(e); else callback(); }));
     }
 
     osrmIsRunning () {
@@ -62,7 +62,7 @@ var OSRMBaseLoader = class {
 
     waitForShutdown (callback) {
         var check = () => {
-            if (!this.osrmIsRunning()) callback();
+            if (!this.osrmIsRunning()) return callback();
         };
         setTimeout(check, 100);
     }
@@ -86,7 +86,7 @@ var OSRMDirectLoader = class extends OSRMBaseLoader {
             fs.appendFile(this.scope.OSRM_ROUTED_LOG_FILE, data, (err) => { if (err) throw err; });
         };
 
-        var child = spawn(util.format('%s%s/osrm-routed', this.scope.LOAD_LIBRARIES, this.scope.BIN_PATH), [this.inputFile, util.format('-p%d', this.scope.OSRM_PORT)], {detached: true});
+        var child = spawn(util.format('%s%s/osrm-routed', this.scope.LOAD_LIBRARIES, this.scope.BIN_PATH), [this.inputFile, util.format('-p%d', this.scope.OSRM_PORT)]);
         this.scope.pid = child.pid;
         child.stdout.on('data', writeToLog);
         child.stderr.on('data', writeToLog);
@@ -111,7 +111,7 @@ var OSRMDatastoreLoader = class extends OSRMBaseLoader {
 
     loadData (callback) {
         this.scope.runBin('osrm-datastore', this.inputFile, (err) => {
-            if (err) return callback(new this.LaunchError(this.exitCode, 'datastore', err));
+            if (err) return callback(this.scope.LaunchError(this.exitCode, 'datastore', err));
             callback();
         });
     }
@@ -122,7 +122,7 @@ var OSRMDatastoreLoader = class extends OSRMBaseLoader {
             fs.appendFile(this.scope.OSRM_ROUTED_LOG_FILE, data, (err) => { if (err) throw err; });
         };
 
-        var child = spawn(util.format('%s%s/osrm-routed', this.scope.LOAD_LIBRARIES, this.scope.BIN_PATH), ['--shared-memory=1', util.format('-p%d', this.scope.OSRM_PORT)], {detached: true});
+        var child = spawn(util.format('%s%s/osrm-routed', this.scope.LOAD_LIBRARIES, this.scope.BIN_PATH), ['--shared-memory=1', util.format('-p%d', this.scope.OSRM_PORT)]);
         this.child = child;
         this.scope.pid = child.pid;
         child.stdout.on('data', writeToLog);

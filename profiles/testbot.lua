@@ -6,14 +6,6 @@
 -- Secondary road:  18km/h = 18000m/3600s = 100m/20s
 -- Tertiary road:  12km/h = 12000m/3600s = 100m/30s
 
--- modes:
--- 1: normal
--- 2: route
--- 3: river downstream
--- 4: river upstream
--- 5: steps down
--- 6: steps up
-
 speed_profile = {
   ["primary"] = 36,
   ["secondary"] = 18,
@@ -24,13 +16,10 @@ speed_profile = {
 
 -- these settings are read directly by osrm
 
-take_minimum_of_speeds  = true
-obey_oneway             = true
-obey_barriers           = true
-use_turn_restrictions   = true
-ignore_areas            = true  -- future feature
-traffic_signal_penalty  = 7     -- seconds
-u_turn_penalty          = 20
+properties.allow_u_turn_at_via     = false
+properties.use_turn_restrictions   = true
+properties.traffic_signal_penalty  = 7     -- seconds
+properties.u_turn_penalty          = 20
 
 function limit_speed(speed, limits)
   -- don't use ipairs(), since it stops at the first nil value
@@ -68,24 +57,26 @@ function way_function (way, result)
   if name then
     result.name = name
   end
+  result.forward_mode = mode.driving
+  result.backward_mode = mode.driving
 
   if duration and durationIsValid(duration) then
     result.duration = math.max( 1, parseDuration(duration) )
-    result.forward_mode = 2
-    result.backward_mode = 2
+    result.forward_mode = mode.route
+    result.backward_mode = mode.route
   else
     local speed_forw = speed_profile[highway] or speed_profile['default']
     local speed_back = speed_forw
 
     if highway == "river" then
       local temp_speed = speed_forw
-      result.forward_mode = 3
-      result.backward_mode = 4
+      result.forward_mode = mode.river_up
+      result.backward_mode = mode.river_down
       speed_forw = temp_speed*1.5
       speed_back = temp_speed/1.5
     elseif highway == "steps" then
-      result.forward_mode = 5
-      result.backward_mode = 6
+      result.forward_mode = mode.steps_up
+      result.backward_mode = mode.steps_down
     end
 
     if maxspeed_forward ~= nil and maxspeed_forward > 0 then
@@ -111,9 +102,9 @@ function way_function (way, result)
   if oneway == "no" or oneway == "0" or oneway == "false" then
     -- nothing to do
   elseif oneway == "-1" then
-    result.forward_mode = 0
+    result.forward_mode = mode.inaccessible
   elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
-    result.backward_mode = 0
+    result.backward_mode = mode.inaccessible
   end
 
   if junction == 'roundabout' then

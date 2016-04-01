@@ -20,8 +20,8 @@ Feature: Via points
             | ehijk   | yes    |
 
         When I route I should get
-            | from | to | route                      | distance  | turns                  |
-            | a    | k  | abcdefg,ehijk              |  34m +-1  | head,right,destination |
+            | from | to | route               | distance  | turns               |
+            | a    | k  | abcdefg,ehijk,ehijk |  34m +-1  | depart,right,arrive |
 
     Scenario: Slight Turn
         Given the node map
@@ -36,8 +36,8 @@ Feature: Via points
             | ehijk   | yes    |
 
         When I route I should get
-            | from | to | route                      | distance  | turns                         |
-            | a    | k  | abcdefg,ehijk              |  34m +-1  | head,slight_right,destination |
+            | from | to | route               | distance  | turns                      |
+            | a    | k  | abcdefg,ehijk,ehijk |  34m +-1  | depart,slight_right,arrive |
 
     Scenario: Nearly Slight Turn
         Given the node map
@@ -53,8 +53,8 @@ Feature: Via points
             | ehijk   | yes    |
 
         When I route I should get
-            | from | to | route                      | distance  | turns                         |
-            | a    | k  | abcdefg,ehijk              |  37m +-1  | head,right,destination        |
+            | from | to | route               | distance  | turns                      |
+            | a    | k  | abcdefg,ehijk,ehijk |  37m +-1  | depart,right,arrive        |
 
     Scenario: Nearly Slight Turn (Variation)
         Given the node map
@@ -70,5 +70,5 @@ Feature: Via points
             | ehijk   | yes    |
 
         When I route I should get
-            | from | to | route                      | distance  | turns                         |
-            | a    | k  | abcdefg,ehijk              |  37m +-1  | head,right,destination        |
+            | from | to | route               | distance  | turns                      |
+            | a    | k  | abcdefg,ehijk,ehijk |  37m +-1  | depart,right,arrive        |

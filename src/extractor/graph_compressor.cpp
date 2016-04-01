@@ -13,11 +13,6 @@ namespace osrm
 namespace extractor
 {
 
-GraphCompressor::GraphCompressor(SpeedProfileProperties speed_profile)
-    : speed_profile(std::move(speed_profile))
-{
-}
-
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                const std::unordered_set<NodeID> &traffic_lights,
                                RestrictionMap &restriction_map,
@@ -156,12 +151,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             restriction_map.FixupArrivingTurnRestriction(node_w, node_v, node_u, graph);
 
             // store compressed geometry in container
-            geometry_compressor.CompressEdge(
-                forward_e1, forward_e2, node_v, node_w,
-                forward_weight1, forward_weight2);
-            geometry_compressor.CompressEdge(
-                reverse_e1, reverse_e2, node_v, node_u,
-                reverse_weight1, reverse_weight2);
+            geometry_compressor.CompressEdge(forward_e1, forward_e2, node_v, node_w,
+                                             forward_weight1, forward_weight2);
+            geometry_compressor.CompressEdge(reverse_e1, reverse_e2, node_v, node_u,
+                                             reverse_weight1, reverse_weight2);
         }
     }
 
@@ -179,7 +172,6 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             geometry_compressor.AddUncompressedEdge(edge_id, target, data.distance);
         }
     }
-
 }
 
 void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,

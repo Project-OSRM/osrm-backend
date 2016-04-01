@@ -2,7 +2,6 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/restriction_map.hpp"
 #include "util/node_based_graph.hpp"
-#include "extractor/speed_profile.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/test/unit_test.hpp>
@@ -22,8 +21,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     //
     // 0---1---2---3---4
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -31,16 +29,15 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout,
-        // travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {2, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {3, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {3, 4, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT}};
+        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {2, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {3, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {3, 4, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE}};
 
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[2].data));
     BOOST_ASSERT(edges[2].data.IsCompatibleTo(edges[4].data));
@@ -63,8 +60,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
     // |       |
     // 5---4---3
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -72,20 +68,19 @@ BOOST_AUTO_TEST_CASE(loop_test)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, forward, backward,
-        // roundabout, travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {0, 5, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {2, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {3, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {3, 4, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {4, 5, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {5, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {5, 4, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
+        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {0, 5, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {2, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {3, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {3, 4, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {4, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {4, 5, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {5, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {5, 4, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
     };
 
     BOOST_ASSERT(edges.size() == 12);
@@ -120,8 +115,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     //     |
     //     3
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -129,14 +123,13 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, reversed, roundabout,
-        // travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {3, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
+        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 3, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {3, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
     };
 
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[1].data));
@@ -158,8 +151,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     //
     // 0---1---2
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -167,12 +159,11 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, forward, backward,
-        // roundabout, travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 1, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 1, false, false, false, true, TRAVEL_MODE_DEFAULT},
+        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 2, 1, SPECIAL_EDGEID, 1, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {2, 1, 1, SPECIAL_EDGEID, 1, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
     };
 
     BOOST_ASSERT(edges[0].data.IsCompatibleTo(edges[1].data));
@@ -190,8 +181,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     //
     // 0-->1---2
     //
-    SpeedProfileProperties speed_profile;
-    GraphCompressor compressor(speed_profile);
+    GraphCompressor compressor;
 
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -199,12 +189,11 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // source, target, distance, edge_id, name_id, access_restricted, reverse, roundabout,
-        // travel_mode
-        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 0, 1, SPECIAL_EDGEID, 0, false, true, false, true, TRAVEL_MODE_DEFAULT},
-        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
-        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_DEFAULT},
+        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        {0, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 0, 1, SPECIAL_EDGEID, 0, false, true, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {1, 2, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
+        {2, 1, 1, SPECIAL_EDGEID, 0, false, false, false, true, TRAVEL_MODE_INACCESSIBLE},
     };
 
     Graph graph(5, edges);

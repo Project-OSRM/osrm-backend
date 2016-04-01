@@ -35,12 +35,12 @@ Feature: Raster - weights
         When I run "osrm-extract {osm_base}.osm -p {profile}"
         And I run "osrm-contract {osm_base}.osm"
         And I route I should get
-            | from | to | route | speed   |
-            | a    | b  | ab    | 36 km/h |
-            | a    | c  | ab,bc | 36 km/h |
-            | b    | c  | bc    | 36 km/h |
-            | a    | d  | ad    | 36 km/h |
-            | d    | c  | dc    | 36 km/h |
+            | from | to | route    | speed   |
+            | a    | b  | ab,ab    | 36 km/h |
+            | a    | c  | ab,bc,bc | 36 km/h |
+            | b    | c  | bc,bc    | 36 km/h |
+            | a    | d  | ad,ad    | 36 km/h |
+            | d    | c  | dc,dc    | 36 km/h |
 
     Scenario: Weighting based on raster sources
         Given the profile "rasterbot"
@@ -48,32 +48,32 @@ Feature: Raster - weights
         Then stdout should contain "evaluating segment"
         And I run "osrm-contract {osm_base}.osm"
         And I route I should get
-            | from | to | route | speed   |
-            | a    | b  | ab    | 8 km/h  |
-            | a    | c  | ad,dc | 15 km/h |
-            | b    | c  | bc    | 8 km/h  |
-            | a    | d  | ad    | 15 km/h |
-            | d    | c  | dc    | 15 km/h |
-            | d    | e  | de    | 10 km/h |
-            | e    | b  | eb    | 10 km/h |
-            | d    | f  | df    | 15 km/h |
-            | f    | b  | fb    | 7 km/h  |
-            | d    | b  | de,eb | 10 km/h |
+            | from | to | route    | speed   |
+            | a    | b  | ab,ab    | 8 km/h  |
+            | a    | c  | ad,dc,dc | 15 km/h |
+            | b    | c  | bc,bc    | 8 km/h  |
+            | a    | d  | ad,ad    | 15 km/h |
+            | d    | c  | dc,dc    | 15 km/h |
+            | d    | e  | de,de    | 10 km/h |
+            | e    | b  | eb,eb    | 10 km/h |
+            | d    | f  | df,df    | 15 km/h |
+            | f    | b  | fb,fb    | 7 km/h  |
+            | d    | b  | de,eb,eb | 10 km/h |
 
     Scenario: Weighting based on raster sources
-        Given the profile "rasterbot-interp"
+        Given the profile "rasterbotinterp"
         When I run "osrm-extract {osm_base}.osm -p {profile}"
         Then stdout should contain "evaluating segment"
         And I run "osrm-contract {osm_base}.osm"
         And I route I should get
-            | from | to | route | speed   |
-            | a    | b  | ab    | 8 km/h  |
-            | a    | c  | ad,dc | 15 km/h |
-            | b    | c  | bc    | 8 km/h  |
-            | a    | d  | ad    | 15 km/h |
-            | d    | c  | dc    | 15 km/h |
-            | d    | e  | de    | 10 km/h |
-            | e    | b  | eb    | 10 km/h |
-            | d    | f  | df    | 15 km/h |
-            | f    | b  | fb    | 7 km/h  |
-            | d    | b  | de,eb | 10 km/h |
+            | from | to | route    | speed   |
+            | a    | b  | ab,ab    | 8 km/h  |
+            | a    | c  | ad,dc,dc | 15 km/h |
+            | b    | c  | bc,bc    | 8 km/h  |
+            | a    | d  | ad,ad    | 15 km/h |
+            | d    | c  | dc,dc    | 15 km/h |
+            | d    | e  | de,de    | 10 km/h |
+            | e    | b  | eb,eb    | 10 km/h |
+            | d    | f  | df,df    | 15 km/h |
+            | f    | b  | fb,fb    | 7 km/h  |
+            | d    | b  | de,eb,eb | 10 km/h |
