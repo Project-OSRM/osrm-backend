@@ -14,8 +14,8 @@ Feature: Compass bearing
             | ab    |
 
         When I route I should get
-            | from | to | route | bearing |
-            | a    | b  | ab    | 315     |
+            | from | to | route    | bearing   |
+            | a    | b  | ab,ab    | 315,0     |
 
     Scenario: Bearing when going west
         Given the node map
@@ -26,8 +26,8 @@ Feature: Compass bearing
             | ab    |
 
         When I route I should get
-            | from | to | route | bearing |
-            | a    | b  | ab    | 270     |
+            | from | to | route    | bearing |
+            | a    | b  | ab,ab    | 270,0   |
 
     Scenario: Bearing af 45 degree intervals
         Given the node map
@@ -47,15 +47,15 @@ Feature: Compass bearing
             | xh    |
 
         When I route I should get
-            | from | to | route | bearing |
-            | x    | a  | xa    | 0       |
-            | x    | b  | xb    | 315     |
-            | x    | c  | xc    | 270     |
-            | x    | d  | xd    | 225     |
-            | x    | e  | xe    | 180     |
-            | x    | f  | xf    | 135     |
-            | x    | g  | xg    | 90      |
-            | x    | h  | xh    | 45      |
+            | from | to | route    | bearing |
+            | x    | a  | xa,xa    | 0,0     |
+            | x    | b  | xb,xb    | 315,0   |
+            | x    | c  | xc,xc    | 270,0   |
+            | x    | d  | xd,xd    | 225,0   |
+            | x    | e  | xe,xe    | 180,0   |
+            | x    | f  | xf,xf    | 135,0   |
+            | x    | g  | xg,xg    | 90,0    |
+            | x    | h  | xh,xh    | 45,0    |
 
     Scenario: Bearing in a roundabout
         Given the node map
@@ -76,9 +76,9 @@ Feature: Compass bearing
             | ha    | yes    |
 
         When I route I should get
-            | from | to | route                | bearing                 |
-            | c    | b  | cd,de,ef,fg,gh,ha,ab | 270,225,180,135,90,45,0 |
-            | g    | f  | gh,ha,ab,bc,cd,de,ef | 90,45,0,315,270,225,180 |
+            | from | to | route                   | bearing                   |
+            | c    | b  | cd,de,ef,fg,gh,ha,ab,ab | 270,225,180,135,90,45,0,0 |
+            | g    | f  | gh,ha,ab,bc,cd,de,ef,ef | 90,45,0,315,270,225,180,0 |
 
     Scenario: Bearing should stay constant when zig-zagging
         Given the node map
@@ -96,8 +96,8 @@ Feature: Compass bearing
             | gh    |
 
         When I route I should get
-            | from | to | route                | bearing             |
-            | a    | h  | ab,bc,cd,de,ef,fg,gh | 0,135,0,135,0,135,0 |
+            | from | to | route                   | bearing               |
+            | a    | h  | ab,bc,cd,de,ef,fg,gh,gh | 0,135,0,135,0,135,0,0 |
 
     Scenario: Bearings on an east-west way.
         Given the node map
@@ -108,37 +108,37 @@ Feature: Compass bearing
             | abcdef |
 
         When I route I should get
-            | from | to | route  | bearing |
-            | a    | b  | abcdef | 90      |
-            | a    | c  | abcdef | 90      |
-            | a    | d  | abcdef | 90      |
-            | a    | e  | abcdef | 90      |
-            | a    | f  | abcdef | 90      |
-            | b    | a  | abcdef | 270     |
-            | b    | c  | abcdef | 90      |
-            | b    | d  | abcdef | 90      |
-            | b    | e  | abcdef | 90      |
-            | b    | f  | abcdef | 90      |
-            | c    | a  | abcdef | 270     |
-            | c    | b  | abcdef | 270     |
-            | c    | d  | abcdef | 90      |
-            | c    | e  | abcdef | 90      |
-            | c    | f  | abcdef | 90      |
-            | d    | a  | abcdef | 270     |
-            | d    | b  | abcdef | 270     |
-            | d    | c  | abcdef | 270     |
-            | d    | e  | abcdef | 90      |
-            | d    | f  | abcdef | 90      |
-            | e    | a  | abcdef | 270     |
-            | e    | b  | abcdef | 270     |
-            | e    | c  | abcdef | 270     |
-            | e    | d  | abcdef | 270     |
-            | e    | f  | abcdef | 90      |
-            | f    | a  | abcdef | 270     |
-            | f    | b  | abcdef | 270     |
-            | f    | c  | abcdef | 270     |
-            | f    | d  | abcdef | 270     |
-            | f    | e  | abcdef | 270     |
+            | from | to | route         | bearing |
+            | a    | b  | abcdef,abcdef | 90,0    |
+            | a    | c  | abcdef,abcdef | 90,0    |
+            | a    | d  | abcdef,abcdef | 90,0    |
+            | a    | e  | abcdef,abcdef | 90,0    |
+            | a    | f  | abcdef,abcdef | 90,0    |
+            | b    | a  | abcdef,abcdef | 270,0   |
+            | b    | c  | abcdef,abcdef | 90,0    |
+            | b    | d  | abcdef,abcdef | 90,0    |
+            | b    | e  | abcdef,abcdef | 90,0    |
+            | b    | f  | abcdef,abcdef | 90,0    |
+            | c    | a  | abcdef,abcdef | 270,0   |
+            | c    | b  | abcdef,abcdef | 270,0   |
+            | c    | d  | abcdef,abcdef | 90,0    |
+            | c    | e  | abcdef,abcdef | 90,0    |
+            | c    | f  | abcdef,abcdef | 90,0    |
+            | d    | a  | abcdef,abcdef | 270,0   |
+            | d    | b  | abcdef,abcdef | 270,0   |
+            | d    | c  | abcdef,abcdef | 270,0   |
+            | d    | e  | abcdef,abcdef | 90,0    |
+            | d    | f  | abcdef,abcdef | 90,0    |
+            | e    | a  | abcdef,abcdef | 270,0   |
+            | e    | b  | abcdef,abcdef | 270,0   |
+            | e    | c  | abcdef,abcdef | 270,0   |
+            | e    | d  | abcdef,abcdef | 270,0   |
+            | e    | f  | abcdef,abcdef | 90,0    |
+            | f    | a  | abcdef,abcdef | 270,0   |
+            | f    | b  | abcdef,abcdef | 270,0   |
+            | f    | c  | abcdef,abcdef | 270,0   |
+            | f    | d  | abcdef,abcdef | 270,0   |
+            | f    | e  | abcdef,abcdef | 270,0   |
 
     Scenario: Bearings at high latitudes
     # The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
@@ -162,18 +162,18 @@ Feature: Compass bearing
 
         When I route I should get
             | from | to | route | bearing |
-            | a    | b  | ab    | 0       |
-            | b    | c  | bc    | 90      |
-            | c    | d  | cd    | 180     |
-            | d    | a  | da    | 270     |
-            | b    | a  | ab    | 180     |
-            | c    | b  | bc    | 270     |
-            | d    | c  | cd    | 0       |
-            | a    | d  | da    | 90      |
-            | a    | c  | ac    | 45      |
-            | c    | a  | ac    | 225     |
-            | b    | d  | bd    | 135     |
-            | d    | b  | bd    | 315     |
+            | a    | b  | ab,ab | 0,0     |
+            | b    | c  | bc,bc | 90,0    |
+            | c    | d  | cd,cd | 180,0   |
+            | d    | a  | da,da | 270,0   |
+            | b    | a  | ab,ab | 180,0   |
+            | c    | b  | bc,bc | 270,0   |
+            | d    | c  | cd,cd | 0,0     |
+            | a    | d  | da,da | 90,0    |
+            | a    | c  | ac,ac | 45,0    |
+            | c    | a  | ac,ac | 225,0   |
+            | b    | d  | bd,bd | 135,0   |
+            | d    | b  | bd,bd | 315,0   |
 
     Scenario: Bearings at high negative latitudes
     # The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
@@ -196,16 +196,16 @@ Feature: Compass bearing
             | bd    |
 
         When I route I should get
-            | from | to | route | bearing |
-            | a    | b  | ab    | 180     |
-            | b    | c  | bc    | 90      |
-            | c    | d  | cd    | 0       |
-            | d    | a  | da    | 270     |
-            | b    | a  | ab    | 0       |
-            | c    | b  | bc    | 270     |
-            | d    | c  | cd    | 180     |
-            | a    | d  | da    | 90      |
-            | a    | c  | ac    | 135     |
-            | c    | a  | ac    | 315     |
-            | b    | d  | bd    | 45      |
-            | d    | b  | bd    | 225     |
+            | from | to | route  | bearing |
+            | a    | b  | ab,ab  | 180,0   |
+            | b    | c  | bc,bc  | 90,0    |
+            | c    | d  | cd,cd  | 0,0     |
+            | d    | a  | da,da  | 270,0   |
+            | b    | a  | ab,ab  | 0,0     |
+            | c    | b  | bc,bc  | 270,0   |
+            | d    | c  | cd,cd  | 180,0   |
+            | a    | d  | da,da  | 90,0    |
+            | a    | c  | ac,ac  | 135,0   |
+            | c    | a  | ac,ac  | 315,0   |
+            | b    | d  | bd,bd  | 45,0    |
+            | d    | b  | bd,bd  | 225,0   |
