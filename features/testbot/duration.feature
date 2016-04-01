@@ -20,11 +20,11 @@ Feature: Durations
 
         When I route I should get
             | from | to | route | distance | time       |
-            | a    | b  | ab    | 100m +-1 | 60s +-1    |
-            | b    | c  | bc    | 200m +-1 | 600s +-1   |
-            | c    | d  | cd    | 300m +-1 | 3600s +-1  |
-            | d    | e  | de    | 141m +-2 | 36000s +-1 |
-            | e    | f  | ef    | 224m +-2 | 3723s +-1  |
+            | a    | b  | ab,ab | 100m +-1 | 60s +-1    |
+            | b    | c  | bc,bc | 200m +-1 | 600s +-1   |
+            | c    | d  | cd,cd | 300m +-1 | 3600s +-1  |
+            | d    | e  | de,de | 141m +-2 | 36000s +-1 |
+            | e    | f  | ef,ef | 224m +-2 | 3723s +-1  |
 
     @todo
     Scenario: Partial duration of ways
@@ -36,7 +36,7 @@ Feature: Durations
             | abc   | primary | 0:01     |
 
         When I route I should get
-            | from | to | route | distance | time    |
-            | a    | c  | abc   | 300m +-1 | 60s +-1 |
-            | a    | b  | ab    | 100m +-1 | 20s +-1 |
-            | b    | c  | bc    | 200m +-1 | 40s +-1 |
+            | from | to | route   | distance | time    |
+            | a    | c  | abc,abc | 300m +-1 | 60s +-1 |
+            | a    | b  | ab,ab   | 100m +-1 | 20s +-1 |
+            | b    | c  | bc,bc   | 200m +-1 | 40s +-1 |
