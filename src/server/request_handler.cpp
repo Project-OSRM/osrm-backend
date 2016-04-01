@@ -77,7 +77,6 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
-        ;
         ServiceHandler::ResultT result;
 
         // check if the was an error with the request
