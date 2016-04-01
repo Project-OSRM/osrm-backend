@@ -15,8 +15,8 @@ namespace api
 {
 
 // Starts parsing and iter and modifies it until iter == end or parsing failed
-boost::optional<ParsedURL> parseURL(std::string::iterator &iter, std::string::iterator end);
-// copy on purpose because we need mutability
+boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end);
+
 inline boost::optional<ParsedURL> parseURL(std::string url_string)
 {
     auto iter = url_string.begin();

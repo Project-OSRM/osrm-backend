@@ -69,7 +69,7 @@ struct URLGrammar : boost::spirit::qi::grammar<Iterator>
 };
 }
 
-boost::optional<ParsedURL> parseURL(std::string::iterator &iter, std::string::iterator end)
+boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string::iterator end)
 {
     boost::optional<ParsedURL> parsed_url;
 
