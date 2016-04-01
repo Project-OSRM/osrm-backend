@@ -84,7 +84,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         {
 
             const engine::Status status =
-                service_handler->RunQuery(std::move(*maybe_parsed_url), result);
+                service_handler->RunQuery(*std::move(maybe_parsed_url), result);
             if (status != engine::Status::Ok)
             {
                 // 4xx bad request return code
