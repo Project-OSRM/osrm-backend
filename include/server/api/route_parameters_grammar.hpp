@@ -60,7 +60,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         {
             parameters.alternatives = alternatives;
         };
-        const auto set_uturns = [this](UturnsT &uturns)
+        const auto set_uturns = [this](UturnsT uturns)
         {
             parameters.uturns = std::move(uturns);
         };
