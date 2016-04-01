@@ -24,12 +24,12 @@ Feature: Projection to nearest point on road
     Scenario: Projection onto way at high latitudes, 1km distance
         When I route I should get
             | from | to | route | bearing | distance  |
-            | b    | a  | abc   | 225     | 1000m +-7 |
-            | b    | c  | abc   | 45      | 1000m +-7 |
-            | a    | d  | abc   | 45      | 1000m +-7 |
-            | d    | a  | abc   | 225     | 1000m +-7 |
-            | c    | d  | abc   | 225     | 1000m +-8 |
-            | d    | c  | abc   | 45  +-5 | 1000m +-8 |
+            | b    | a  | abc,abc | 225,0     | 1000m -7 |
+            | b    | c  | abc,abc | 45,0      | 1000m -7 |
+            | a    | d  | abc,abc | 45,0      | 1000m -7 |
+            | d    | a  | abc,abc | 225,0     | 1000m -7 |
+            | c    | d  | abc,abc | 225,0     | 1000m -8 |
+            | d    | c  | abc,abc | 45  -5 | 1000m -8 |
 
     Scenario: Projection onto way at high latitudes, no distance
         When I route I should get
