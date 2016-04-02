@@ -7,9 +7,9 @@ This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. P
 endif()
 
 project(OSRM C CXX)
-set(OSRM_VERSION_MAJOR 4)
-set(OSRM_VERSION_MINOR 9)
-set(OSRM_VERSION_PATCH 1)
+set(OSRM_VERSION_MAJOR 5)
+set(OSRM_VERSION_MINOR 0)
+set(OSRM_VERSION_PATCH 0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
