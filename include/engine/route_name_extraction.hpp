@@ -124,10 +124,6 @@ RouteNames extractRouteNames(std::vector<SegmentT> &shortest_path_segments,
     {
         std::swap(shortest_segment_1, shortest_segment_2);
     }
-    if (alternative_segment_1.position > alternative_segment_2.position)
-    {
-        std::swap(alternative_segment_1, alternative_segment_2);
-    }
 
     // fetching names for the selected segments
     route_names.shortest_path_name_1 = facade->get_name_for_id(shortest_segment_1.name_id);
@@ -135,6 +131,11 @@ RouteNames extractRouteNames(std::vector<SegmentT> &shortest_path_segments,
 
     if (!alternative_path_segments.empty())
     {
+        if (alternative_segment_1.position > alternative_segment_2.position)
+        {
+            std::swap(alternative_segment_1, alternative_segment_2);
+        }
+
         route_names.alternative_path_name_1 =
             facade->get_name_for_id(alternative_segment_1.name_id);
         route_names.alternative_path_name_2 =
