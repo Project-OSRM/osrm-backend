@@ -351,6 +351,8 @@ class StaticRTree
                 {
                     const auto &current_edge = current_leaf_node.objects[i];
 
+                    // we don't need to project the coordinates here,
+                    // because we use the unprojected rectangle to test against
                     const Rectangle bbox{std::min((*m_coordinate_list)[current_edge.u].lon,
                                                   (*m_coordinate_list)[current_edge.v].lon),
                                          std::max((*m_coordinate_list)[current_edge.u].lon,
@@ -360,6 +362,7 @@ class StaticRTree
                                          std::max((*m_coordinate_list)[current_edge.u].lat,
                                                   (*m_coordinate_list)[current_edge.v].lat)};
 
+                    // use the _unprojected_ input rectangle here
                     if (bbox.Intersects(search_rectangle))
                     {
                         results.push_back(current_edge);
@@ -376,7 +379,7 @@ class StaticRTree
                     const auto &child_tree_node = m_search_tree[child_id];
                     const auto &child_rectangle = child_tree_node.minimum_bounding_rectangle;
 
-                    if (child_rectangle.Intersects(search_rectangle))
+                    if (child_rectangle.Intersects(projected_rectangle))
                     {
                         traversal_queue.push(m_search_tree[child_id]);
                     }
