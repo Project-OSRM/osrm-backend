@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
     BOOST_REQUIRE(rc == Status::Ok);
 
     const auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "ok");
+    BOOST_CHECK_EQUAL(code, "Ok");
 
     const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(!waypoints.empty()); // the dataset has at least one nearest coordinate
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
     BOOST_REQUIRE(rc == Status::Ok);
 
     const auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "ok");
+    BOOST_CHECK_EQUAL(code, "Ok");
 
     const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(!waypoints.empty());
