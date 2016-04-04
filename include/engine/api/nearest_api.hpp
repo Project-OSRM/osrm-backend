@@ -43,7 +43,7 @@ class NearestAPI final : public BaseAPI
                            return waypoint;
                        });
 
-        response.values["code"] = "ok";
+        response.values["code"] = "Ok";
         response.values["waypoints"] = std::move(waypoints);
     }
 

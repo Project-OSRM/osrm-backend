@@ -44,7 +44,7 @@ class TripAPI final : public RouteAPI
         }
         response.values["waypoints"] = MakeWaypoints(sub_trips, phantoms);
         response.values["trips"] = std::move(routes);
-        response.values["code"] = "ok";
+        response.values["code"] = "Ok";
     }
 
     // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
