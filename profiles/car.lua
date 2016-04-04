@@ -5,7 +5,7 @@ local find_access_tag = require("lib/access").find_access_tag
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
+access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true, ["delivery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
