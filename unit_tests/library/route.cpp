@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     BOOST_CHECK(rc == Status::Ok);
 
     json::Object reference{
-        {{"code", "ok"},
+        {{"code", "Ok"},
          {"waypoints",
           json::Array{{json::Object{{{"name", ""}, {"location", json::Array{}}, {"hint", ""}}},
                        json::Object{{{"name", ""}, {"location", json::Array{}}, {"hint", ""}}}}}},
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     BOOST_CHECK(rc == Status::Ok);
 
     const auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "ok");
+    BOOST_CHECK_EQUAL(code, "Ok");
 
     const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK(waypoints.size() == params.coordinates.size());
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
     BOOST_CHECK(rc == Status::Ok);
 
     const auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "ok");
+    BOOST_CHECK_EQUAL(code, "Ok");
 
     const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
