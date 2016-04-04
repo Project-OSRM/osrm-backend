@@ -8,7 +8,7 @@ barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true,
 access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags_hierachy = { "bicycle", "vehicle", "access" }
+access_tags_hierarchy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "bicycle", "vehicle", "access" }
@@ -137,7 +137,7 @@ function node_function (node, result)
   local highway = node:get_value_by_key("highway")
   local is_crossing = highway and highway == "crossing"
 
-  local access = find_access_tag(node, access_tags_hierachy)
+  local access = find_access_tag(node, access_tags_hierarchy)
   if access and access ~= "" then
     -- access restrictions on crossing nodes are not relevant for
     -- the traffic on the road
@@ -186,7 +186,7 @@ function way_function (way, result)
   end
 
   -- access
-  local access = find_access_tag(way, access_tags_hierachy)
+  local access = find_access_tag(way, access_tags_hierarchy)
   if access and access_tag_blacklist[access] then
     return
   end

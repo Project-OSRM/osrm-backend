@@ -5,7 +5,7 @@ Feature: Bike - Access tags on ways
     Background:
         Given the profile "bicycle"
 
-    Scenario: Bike - Access tag hierachy on ways
+    Scenario: Bike - Access tag hierarchy on ways
         Then routability should be
             | highway | access | vehicle | bicycle | bothw |
             |         |        |         |         | x     |
