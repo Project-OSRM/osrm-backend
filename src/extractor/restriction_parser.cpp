@@ -188,7 +188,7 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     // should this restriction be ignored? yes if there's an overlap between:
     // a) the list of modes in the except tag of the restriction
     //    (except_tag_string), eg: except=bus;bicycle
-    // b) the lua profile defines a hierachy of modes,
+    // b) the lua profile defines a hierarchy of modes,
     //    eg: [access, vehicle, bicycle]
 
     if (except_tag_string.empty())

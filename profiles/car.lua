@@ -7,7 +7,7 @@ barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["check
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
+access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
@@ -180,7 +180,7 @@ end
 
 function node_function (node, result)
   -- parse access and barrier tags
-  local access = find_access_tag(node, access_tags_hierachy)
+  local access = find_access_tag(node, access_tags_hierarchy)
   if access and access ~= "" then
     if access_tag_blacklist[access] then
       result.barrier = true
@@ -237,7 +237,7 @@ function way_function (way, result)
   end
 
   -- Check if we are allowed to access the way
-  local access = find_access_tag(way, access_tags_hierachy)
+  local access = find_access_tag(way, access_tags_hierarchy)
   if access_tag_blacklist[access] then
     return
   end

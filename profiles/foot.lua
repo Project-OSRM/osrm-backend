@@ -7,7 +7,7 @@ barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true,
 access_tag_whitelist = { ["yes"] = true, ["foot"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags_hierachy = { "foot", "access" }
+access_tags_hierarchy = { "foot", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 restriction_exception_tags = { "foot" }
@@ -79,7 +79,7 @@ end
 
 function node_function (node, result)
   local barrier = node:get_value_by_key("barrier")
-  local access = find_access_tag(node, access_tags_hierachy)
+  local access = find_access_tag(node, access_tags_hierarchy)
   local traffic_signal = node:get_value_by_key("highway")
 
   -- flag node if it carries a traffic light
@@ -131,7 +131,7 @@ function way_function (way, result)
   end
 
   -- access
-  local access = find_access_tag(way, access_tags_hierachy)
+  local access = find_access_tag(way, access_tags_hierarchy)
   if access_tag_blacklist[access] then
     return
   end

@@ -5,7 +5,7 @@ Feature: Foot - Access tags on ways
     Background:
         Given the profile "foot"
 
-    Scenario: Foot - Access tag hierachy on ways
+    Scenario: Foot - Access tag hierarchy on ways
         Then routability should be
             | highway  | access | foot | bothw |
             | footway  |        |      | x     |
