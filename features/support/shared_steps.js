@@ -35,7 +35,7 @@ module.exports = function () {
 
                         var json = JSON.parse(body);
 
-                        var hasRoute = json.code === 'ok';
+                        var hasRoute = json.code === 'Ok';
 
                         if (hasRoute) {
                             instructions = this.wayList(json.routes[0]);
