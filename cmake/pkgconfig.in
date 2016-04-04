@@ -1,5 +1,5 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-includedir=${prefix}/include ${prefix}/include/osrm
+includedir=${prefix}/include
 libdir=${prefix}/lib
 
 Name: libOSRM
@@ -8,4 +8,4 @@ Version: v@OSRM_VERSION_MAJOR@.@OSRM_VERSION_MINOR@.@OSRM_VERSION_PATCH@
 Requires:
 Libs: -L${libdir} -losrm
 Libs.private: @ENGINE_LIBRARY_LISTING@
-Cflags: -I${includedir}
+Cflags: -I${includedir} -I${includedir}/osrm
