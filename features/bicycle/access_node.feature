@@ -47,6 +47,7 @@ Feature: Bike - Access tags on nodes
             | private      |              |              |       |
             | agricultural |              |              |       |
             | forestry     |              |              |       |
+            | delivery     |              |              |       |
             |              | yes          |              | x     |
             |              | permissive   |              | x     |
             |              | designated   |              | x     |
@@ -55,6 +56,7 @@ Feature: Bike - Access tags on nodes
             |              | private      |              |       |
             |              | agricultural |              |       |
             |              | forestry     |              |       |
+            |              | delivery     |              |       |
             |              |              | yes          | x     |
             |              |              | permissive   | x     |
             |              |              | designated   | x     |
@@ -63,3 +65,4 @@ Feature: Bike - Access tags on nodes
             |              |              | private      |       |
             |              |              | agricultural |       |
             |              |              | forestry     |       |
+            |              |              | delivery     |       |

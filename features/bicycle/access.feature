@@ -121,6 +121,7 @@ Feature: Bike - Access tags on ways
             | private      |              |              |       |
             | agricultural |              |              |       |
             | forestry     |              |              |       |
+            | delivery     |              |              |       |
             |              | yes          |              | x     |
             |              | permissive   |              | x     |
             |              | designated   |              | x     |
@@ -129,6 +130,7 @@ Feature: Bike - Access tags on ways
             |              | private      |              |       |
             |              | agricultural |              |       |
             |              | forestry     |              |       |
+            |              | delivery     |              |       |
             |              |              | yes          | x     |
             |              |              | permissive   | x     |
             |              |              | designated   | x     |
@@ -137,6 +139,7 @@ Feature: Bike - Access tags on ways
             |              |              | private      |       |
             |              |              | agricultural |       |
             |              |              | forestry     |       |
+            |              |              | delivery     |       |
 
     Scenario: Bike - Access tags on both node and way
         Then routability should be
