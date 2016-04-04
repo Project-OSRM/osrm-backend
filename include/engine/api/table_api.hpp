@@ -65,7 +65,7 @@ class TableAPI final : public BaseAPI
 
         response.values["durations"] =
             MakeTable(durations, number_of_sources, number_of_destinations);
-        response.values["code"] = "ok";
+        response.values["code"] = "Ok";
     }
 
     // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions

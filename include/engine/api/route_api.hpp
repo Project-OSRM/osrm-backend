@@ -54,7 +54,7 @@ class RouteAPI : public BaseAPI
         }
         response.values["waypoints"] = BaseAPI::MakeWaypoints(raw_route.segment_end_coordinates);
         response.values["routes"] = std::move(routes);
-        response.values["code"] = "ok";
+        response.values["code"] = "Ok";
     }
 
     // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions

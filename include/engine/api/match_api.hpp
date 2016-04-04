@@ -45,7 +45,7 @@ class MatchAPI final : public RouteAPI
         }
         response.values["tracepoints"] = MakeTracepoints(sub_matchings);
         response.values["matchings"] = std::move(routes);
-        response.values["code"] = "ok";
+        response.values["code"] = "Ok";
     }
 
     // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
