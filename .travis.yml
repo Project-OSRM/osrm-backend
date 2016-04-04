@@ -164,7 +164,7 @@ script:
   - ./util-tests
   - popd
   - npm test
-  - make -C test/data
+  - make -C test/data benchmark
   - mkdir example/build && pushd example/build
   - cmake ..
   - make

@@ -78,6 +78,7 @@ stxxl.errlog
 /test/profile.lua
 /test/cache
 /test/speeds.csv
+/test/data/monaco.*
 node_modules
 
 # Deprecated config file #
