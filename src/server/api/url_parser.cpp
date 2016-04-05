@@ -62,7 +62,7 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
 {
     using It = std::decay<decltype(iter)>::type;
 
-    static URLParser<It, ParsedURL> const parser;
+    static URLParser<It, ParsedURL()> const parser;
     ParsedURL out;
 
     const auto ok = boost::spirit::qi::parse(iter, end, parser, out);
