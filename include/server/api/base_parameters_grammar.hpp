@@ -29,10 +29,51 @@ namespace api
 {
 
 namespace qi = boost::spirit::qi;
+
+template <typename T, char... Fmt>
+struct no_trailing_dot_policy : qi::real_policies<T> {
+
+    template <typename Iterator>
+    static bool parse_dot(Iterator& first, Iterator const& last) {
+        if (first == last || *first != '.')
+            return false;
+
+        static const constexpr char fmt[sizeof...(Fmt)] = {Fmt...};
+
+        if (first + sizeof(fmt) < last
+            && std::equal(fmt, fmt + sizeof(fmt), first + 1u))
+            return false;
+
+        ++first;
+        return true;
+    }
+
+    template <typename Iterator>
+    static bool parse_exp(Iterator&, const Iterator&) {
+        return false;
+    }
+
+    template <typename Iterator, typename Attribute>
+    static bool parse_exp_n(Iterator&, const Iterator&, Attribute&) {
+        return false;
+    }
+
+    template <typename Iterator, typename Attribute>
+    static bool parse_nan(Iterator&, const Iterator&, Attribute&) {
+        return false;
+    }
+
+    template <typename Iterator, typename Attribute>
+    static bool parse_inf(Iterator&, const Iterator&, Attribute&) {
+        return false;
+    }
+};
+
 struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
 {
     using Iterator = std::string::iterator;
     using RadiusesT = std::vector<boost::optional<double>>;
+    using json_policy = no_trailing_dot_policy<double, 'j', 's', 'o', 'n'>;
 
     BaseParametersGrammar(qi::rule<Iterator> &root_rule_, engine::api::BaseParameters &parameters_)
         : BaseParametersGrammar::base_type(root_rule_), base_parameters(parameters_)
@@ -82,7 +123,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
             qi::lit("bearings=") >> (-(qi::short_ >> ',' >> qi::short_))[add_bearing] % ";";
         polyline_rule = qi::as_string[qi::lit("polyline(") >> +polyline_chars >>
                                       qi::lit(")")][polyline_to_coordinates];
-        location_rule = (qi::double_ >> qi::lit(',') >> qi::double_)[add_coordinate];
+        location_rule = (double_ >> qi::lit(',') >> double_)[add_coordinate];
         query_rule = (location_rule % ';') | polyline_rule;
 
         base_rule = bearings_rule | radiuses_rule[set_radiuses] | hints_rule;
@@ -100,6 +141,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
     qi::rule<Iterator, RadiusesT()> radiuses_rule;
     qi::rule<Iterator, unsigned char()> base64_char;
     qi::rule<Iterator, std::string()> alpha_numeral, polyline_chars;
+    qi::real_parser<double, json_policy> double_;
 };
 }
 }
