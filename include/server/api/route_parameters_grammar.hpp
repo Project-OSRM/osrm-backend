@@ -65,8 +65,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         route_rule = steps_rule[set_steps] | alternatives_rule[set_alternatives] | geometries_rule |
                      overview_rule | uturns_rule;
 
-        root_rule = query_rule >> -qi::lit(".") >> -qi::lit("json") >>
-                    -(qi::lit("?") >> (route_rule | base_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (route_rule | base_rule) % '&');
     }
 
     engine::api::RouteParameters parameters;
