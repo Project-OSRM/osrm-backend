@@ -3,13 +3,14 @@
 
 #include "engine/api/table_parameters.hpp"
 
+//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_uint.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
 #include <boost/spirit/include/qi_action.hpp>
+#include <boost/spirit/include/qi_grammar.hpp>
+#include <boost/spirit/include/qi_lit.hpp>
 #include <boost/spirit/include/qi_optional.hpp>
+#include <boost/spirit/include/qi_uint.hpp>
 
 namespace osrm
 {
@@ -28,12 +29,10 @@ struct TableParametersGrammar final : public BaseParametersGrammar
 
     TableParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
     {
-        const auto set_destiantions = [this](DestinationsT dests)
-        {
+        const auto set_destiantions = [this](DestinationsT dests) {
             parameters.destinations = std::move(dests);
         };
-        const auto set_sources = [this](SourcesT sources)
-        {
+        const auto set_sources = [this](SourcesT sources) {
             parameters.sources = std::move(sources);
         };
         destinations_rule = (qi::lit("destinations=") >> (qi::ulong_ % ";")[set_destiantions]) |
@@ -42,8 +41,8 @@ struct TableParametersGrammar final : public BaseParametersGrammar
             (qi::lit("sources=") >> (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
         table_rule = destinations_rule | sources_rule;
 
-        root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (table_rule | base_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".") >> -qi::lit("json") >>
+                    -(qi::lit("?") >> (table_rule | base_rule) % '&');
     }
 
     engine::api::TableParameters parameters;

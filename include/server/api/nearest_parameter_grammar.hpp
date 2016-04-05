@@ -3,13 +3,14 @@
 
 #include "engine/api/nearest_parameters.hpp"
 
+//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_uint.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
 #include <boost/spirit/include/qi_action.hpp>
+#include <boost/spirit/include/qi_grammar.hpp>
+#include <boost/spirit/include/qi_lit.hpp>
 #include <boost/spirit/include/qi_optional.hpp>
+#include <boost/spirit/include/qi_uint.hpp>
 
 namespace osrm
 {
@@ -26,13 +27,12 @@ struct NearestParametersGrammar final : public BaseParametersGrammar
 
     NearestParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
     {
-        const auto set_number = [this](const unsigned number)
-        {
+        const auto set_number = [this](const unsigned number) {
             parameters.number_of_results = number;
         };
         nearest_rule = (qi::lit("number=") >> qi::uint_)[set_number];
-        root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (nearest_rule | base_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".") >> -qi::lit("json") >>
+                    -(qi::lit("?") >> (nearest_rule | base_rule) % '&');
     }
 
     engine::api::NearestParameters parameters;
