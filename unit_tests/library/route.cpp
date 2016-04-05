@@ -25,7 +25,6 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 
     RouteParameters params;
     params.steps = true;
-    params.alternatives = true;
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
@@ -73,7 +72,6 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 
     RouteParameters params;
     params.steps = true;
-    params.alternatives = true;
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
@@ -107,8 +105,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     }
 
     const auto &routes = result.values.at("routes").get<json::Array>().values;
-    BOOST_CHECK(!routes.empty());
-    BOOST_CHECK(routes.size() > 1);
+    BOOST_REQUIRE_GT(routes.size(), 0);
 
     for (const auto &route : routes)
     {
