@@ -6,12 +6,9 @@ let fs = require('fs');
 
 let NUM_REQUEST = 1000;
 let NUM_COORDS = 2;
-let url_template = "http://127.0.0.1:5000/viaroute?{coords}&alt=false";
-let coord_template = "loc={lat},{lon}";
-let coords_separator = "&";
-//let url_template = "http://127.0.0.1:5000/route/v1/driving/{coords}?steps=false&alternatives=false";
-//let coord_template = "{lon},{lat}";
-//let coords_separator = ";";
+let url_template = "http://127.0.0.1:5000/route/v1/driving/{coords}?steps=false&alternatives=false";
+let coord_template = "{lon},{lat}";
+let coords_separator = ";";
 
 let monaco_poly_path = process.argv[2];
 let poly_data = fs.readFileSync(monaco_poly_path, 'utf-8');
