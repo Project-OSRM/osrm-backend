@@ -59,14 +59,6 @@ module.exports = function () {
                             got['#'] = row['#'];
                         }
 
-                        if (headers.has('start')) {
-                            got.start = instructions ? json.route_summary.start_point : null;
-                        }
-
-                        if (headers.has('end')) {
-                            got.end = instructions ? json.route_summary.end_point : null;
-                        }
-
                         if (headers.has('geometry')) {
                             got.geometry = json.routes[0].geometry;
                         }
