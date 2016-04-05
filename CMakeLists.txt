@@ -139,10 +139,6 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
   endif()
 endif()
 
-if(NOT WIN32)
-  add_definitions(-DBOOST_TEST_DYN_LINK)
-endif()
-
 # Configuring compilers
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics")
@@ -230,7 +226,8 @@ if(NOT WIN32)
 endif()
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_definitions(-DBOOST_RESULT_OF_USE_DECLTYPE)
-add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
+# Add this once we're clean of deprecated Boost.Filesystem features
+# add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)

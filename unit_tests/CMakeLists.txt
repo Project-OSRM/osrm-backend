@@ -33,7 +33,11 @@ add_executable(util-tests
 set(AllBoostLibrariesExceptUnitTest ${Boost_LIBRARIES})
 
 find_package(Boost 1.49.0 REQUIRED COMPONENTS unit_test_framework)
-add_definitions(-DBOOST_TEST_DYN_LINK)
+
+if(NOT WIN32)
+  add_definitions(-DBOOST_TEST_DYN_LINK)
+endif()
+
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 
