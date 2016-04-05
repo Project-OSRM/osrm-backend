@@ -3,12 +3,13 @@
 
 #include "engine/api/route_parameters.hpp"
 
+//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_lit.hpp>
+#include <boost/spirit/include/qi_action.hpp>
 #include <boost/spirit/include/qi_bool.hpp>
 #include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_action.hpp>
+#include <boost/spirit/include/qi_lit.hpp>
 #include <boost/spirit/include/qi_optional.hpp>
 
 namespace osrm
@@ -31,39 +32,27 @@ struct RouteParametersGrammar : public BaseParametersGrammar
 
     RouteParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
     {
-        const auto set_geojson_type = [this]()
-        {
+        const auto set_geojson_type = [this] {
             parameters.geometries = engine::api::RouteParameters::GeometriesType::GeoJSON;
         };
-        const auto set_polyline_type = [this]()
-        {
+        const auto set_polyline_type = [this] {
             parameters.geometries = engine::api::RouteParameters::GeometriesType::Polyline;
         };
 
-        const auto set_simplified_type = [this]()
-        {
+        const auto set_simplified_type = [this] {
             parameters.overview = engine::api::RouteParameters::OverviewType::Simplified;
         };
-        const auto set_full_type = [this]()
-        {
+        const auto set_full_type = [this] {
             parameters.overview = engine::api::RouteParameters::OverviewType::Full;
         };
-        const auto set_false_type = [this]()
-        {
+        const auto set_false_type = [this] {
             parameters.overview = engine::api::RouteParameters::OverviewType::False;
         };
-        const auto set_steps = [this](const StepsT steps)
-        {
-            parameters.steps = steps;
-        };
-        const auto set_alternatives = [this](const AlternativeT alternatives)
-        {
+        const auto set_steps = [this](const StepsT steps) { parameters.steps = steps; };
+        const auto set_alternatives = [this](const AlternativeT alternatives) {
             parameters.alternatives = alternatives;
         };
-        const auto set_uturns = [this](UturnsT uturns)
-        {
-            parameters.uturns = std::move(uturns);
-        };
+        const auto set_uturns = [this](UturnsT uturns) { parameters.uturns = std::move(uturns); };
 
         alternatives_rule = qi::lit("alternatives=") >> qi::bool_;
         steps_rule = qi::lit("steps=") >> qi::bool_;
@@ -76,8 +65,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         route_rule = steps_rule[set_steps] | alternatives_rule[set_alternatives] | geometries_rule |
                      overview_rule | uturns_rule;
 
-        root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (route_rule | base_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".") >> -qi::lit("json") >>
+                    -(qi::lit("?") >> (route_rule | base_rule) % '&');
     }
 
     engine::api::RouteParameters parameters;

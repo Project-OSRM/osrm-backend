@@ -3,14 +3,15 @@
 
 #include "engine/api/match_parameters.hpp"
 
+//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_uint.hpp>
+#include <boost/spirit/include/qi_action.hpp>
 #include <boost/spirit/include/qi_bool.hpp>
 #include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_action.hpp>
+#include <boost/spirit/include/qi_lit.hpp>
 #include <boost/spirit/include/qi_optional.hpp>
+#include <boost/spirit/include/qi_uint.hpp>
 
 namespace osrm
 {
@@ -31,33 +32,24 @@ struct MatchParametersGrammar final : public BaseParametersGrammar
 
     MatchParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
     {
-        const auto set_geojson_type = [this]()
-        {
+        const auto set_geojson_type = [this] {
             parameters.geometries = engine::api::RouteParameters::GeometriesType::GeoJSON;
         };
-        const auto set_polyline_type = [this]()
-        {
+        const auto set_polyline_type = [this] {
             parameters.geometries = engine::api::RouteParameters::GeometriesType::Polyline;
         };
 
-        const auto set_simplified_type = [this]()
-        {
+        const auto set_simplified_type = [this] {
             parameters.overview = engine::api::RouteParameters::OverviewType::Simplified;
         };
-        const auto set_full_type = [this]()
-        {
+        const auto set_full_type = [this] {
             parameters.overview = engine::api::RouteParameters::OverviewType::Full;
         };
-        const auto set_false_type = [this]()
-        {
+        const auto set_false_type = [this] {
             parameters.overview = engine::api::RouteParameters::OverviewType::False;
         };
-        const auto set_steps = [this](const StepsT steps)
-        {
-            parameters.steps = steps;
-        };
-        const auto set_timestamps = [this](TimestampsT timestamps)
-        {
+        const auto set_steps = [this](const StepsT steps) { parameters.steps = steps; };
+        const auto set_timestamps = [this](TimestampsT timestamps) {
             parameters.timestamps = std::move(timestamps);
         };
 
@@ -70,8 +62,8 @@ struct MatchParametersGrammar final : public BaseParametersGrammar
         timestamps_rule = qi::lit("timestamps=") >> qi::uint_ % ";";
         match_rule = steps_rule[set_steps] | geometries_rule | overview_rule |
                      timestamps_rule[set_timestamps];
-        root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (match_rule | base_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".") >> -qi::lit("json") >>
+                    -(qi::lit("?") >> (match_rule | base_rule) % '&');
     }
 
     engine::api::MatchParameters parameters;
