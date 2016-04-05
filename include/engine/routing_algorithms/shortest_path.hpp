@@ -309,7 +309,7 @@ class ShortestPathRouting final
                                     new_total_distance_to_forward, packed_leg_to_forward);
                     // if only the reverse node is valid (e.g. when using the match plugin) we
                     // actually need to move
-                    if (target_phantom.forward_segment_id.enabled)
+                    if (!target_phantom.forward_segment_id.enabled)
                     {
                         BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
                         new_total_distance_to_reverse = new_total_distance_to_forward;

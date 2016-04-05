@@ -85,3 +85,22 @@ Feature: Basic Map Matching
             | trace | matchings |
             | dcba  | hgfe      |
 
+    Scenario: Testbot - Matching with oneway streets
+        Given a grid size of 10 meters
+        Given the node map
+            | a | b | c | d |
+            | e | f | g | h |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | yes    |
+            | bc    | yes    |
+            | cd    | yes    |
+            | hg    | yes    |
+            | gf    | yes    |
+            | fe    | yes    |
+
+        When I match I should get
+            | trace | matchings |
+            | dcba  | hg,gf,fe  |
+            | efgh  | ab,bc,cd  |
