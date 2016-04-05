@@ -27,6 +27,11 @@ struct ParsedURL final
 } // server
 } // osrm
 
-BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL, service, version, profile, query)
+BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL,
+    (std::string, service),
+    (unsigned, version),
+    (std::string, profile),
+    (std::string, query)
+)
 
 #endif
