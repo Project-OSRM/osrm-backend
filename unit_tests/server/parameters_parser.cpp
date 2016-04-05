@@ -138,6 +138,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
 
     engine::api::RouteParameters reference_2{};
+    reference_2.alternatives = true;
+    reference_2.steps = true;
     reference_2.coordinates = coords_1;
     auto result_2 = api::parseParameters<engine::api::RouteParameters>(
         "1,2;3,4?steps=true&alternatives=true&geometries=polyline&overview=simplified");
@@ -178,7 +180,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         engine::Hint::FromBase64(
             "03AhA0vnzAA_SAAA_____3wEAAAYAAAAQAAAAB4AAABAAAAAoUYBAJ4AAADlcCEDSefMAAMAAQGLSzmR")};
     engine::api::RouteParameters reference_4{false,
-                                             true,
+                                             false,
                                              engine::api::RouteParameters::GeometriesType::Polyline,
                                              engine::api::RouteParameters::OverviewType::Simplified,
                                              boost::optional<bool>{},
@@ -206,7 +208,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         boost::none, engine::Bearing{200, 10}, engine::Bearing{100, 5},
     };
     engine::api::RouteParameters reference_5{false,
-                                             true,
+                                             false,
                                              engine::api::RouteParameters::GeometriesType::Polyline,
                                              engine::api::RouteParameters::OverviewType::Simplified,
                                              boost::optional<bool>{},

@@ -24,6 +24,8 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     using namespace osrm;
 
     RouteParameters params;
+    params.steps = true;
+    params.alternatives = true;
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
 
@@ -70,6 +72,8 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
     using namespace osrm;
 
     RouteParameters params;
+    params.steps = true;
+    params.alternatives = true;
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
@@ -102,7 +106,6 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
         BOOST_CHECK(!hint.empty());
     }
 
-    // alternative=true by default
     const auto &routes = result.values.at("routes").get<json::Array>().values;
     BOOST_CHECK(!routes.empty());
     BOOST_CHECK(routes.size() > 1);
@@ -138,7 +141,6 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
             const auto summary = leg_object.values.at("summary").get<json::String>().value;
             BOOST_CHECK(((void)summary, true));
 
-            // steps=true by default
             const auto &steps = leg_object.values.at("steps").get<json::Array>().values;
             BOOST_CHECK(!steps.empty());
 

@@ -81,8 +81,8 @@ struct RouteParameters : public BaseParameters
     {
     }
 
-    bool steps = true;
-    bool alternatives = true;
+    bool steps = false;
+    bool alternatives = false;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
     boost::optional<bool> uturns;
