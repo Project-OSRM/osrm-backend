@@ -110,6 +110,7 @@ module.exports = function () {
                 } else {
                     var params = this.queryParams,
                         waypoints = [];
+                    params['steps'] = 'true';
                     if (row.from && row.to) {
                         var fromNode = this.findNodeByName(row.from);
                         if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', row.from));
