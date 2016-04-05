@@ -44,12 +44,9 @@ module.exports = function () {
 
     this.Then(/^response should be a well-formed route$/, () => {
         this.ShouldBeWellFormed();
-        assert.equal(typeof this.json.status_message, 'string');
-        assert.equal(typeof this.json.route_summary, 'object');
-        assert.equal(typeof this.json.route_geometry, 'string');
-        assert.ok(Array.isArray(this.json.route_instructions));
-        assert.ok(Array.isArray(this.json.via_points));
-        assert.ok(Array.isArray(this.json.via_indices));
+        assert.equal(this.json.code, 'ok');
+        assert.ok(Array.isArray(this.json.routes));
+        assert.ok(Array.isArray(this.json.waypoints));
     });
 
     this.Then(/^"([^"]*)" should return code (\d+)$/, (binary, code) => {
