@@ -44,7 +44,6 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                          {"legs", json::Array{{json::Object{
                                       {{"distance", 0.},
                                        {"duration", 0.},
-                                       {"summary", ""},
                                        {"steps", json::Array{{json::Object{
                                                      {{"duration", 0.},
                                                       {"distance", 0.},
@@ -133,10 +132,6 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 
             const auto duration = leg_object.values.at("duration").get<json::Number>().value;
             BOOST_CHECK_EQUAL(duration, 0);
-
-            // nothing can be said about summary, empty or contains human readable summary
-            const auto summary = leg_object.values.at("summary").get<json::String>().value;
-            BOOST_CHECK(((void)summary, true));
 
             const auto &steps = leg_object.values.at("steps").get<json::Array>().values;
             BOOST_CHECK(!steps.empty());
