@@ -19,7 +19,7 @@ namespace osrm
 namespace extractor
 {
 
-class ProfileProperties;
+struct ProfileProperties;
 
 /**
  * Parses the relations that represents turn restrictions.
