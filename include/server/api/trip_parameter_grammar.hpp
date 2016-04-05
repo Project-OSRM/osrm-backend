@@ -57,8 +57,7 @@ struct TripParametersGrammar final : public BaseParametersGrammar
                         qi::lit("overview=false")[set_false_type];
         trip_rule = steps_rule[set_steps] | geometries_rule | overview_rule;
 
-        root_rule = query_rule >> -qi::lit(".") >> -qi::lit("json") >>
-                    -(qi::lit("?") >> (trip_rule | base_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (trip_rule | base_rule) % '&');
     }
 
     engine::api::TripParameters parameters;

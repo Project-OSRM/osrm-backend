@@ -41,8 +41,7 @@ struct TableParametersGrammar final : public BaseParametersGrammar
             (qi::lit("sources=") >> (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
         table_rule = destinations_rule | sources_rule;
 
-        root_rule = query_rule >> -qi::lit(".") >> -qi::lit("json") >>
-                    -(qi::lit("?") >> (table_rule | base_rule) % '&');
+        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (table_rule | base_rule) % '&');
     }
 
     engine::api::TableParameters parameters;
