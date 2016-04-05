@@ -78,16 +78,16 @@ Feature: U-turns at via points
             | uturns | true |
 
         And the ways
-            | nodes |
-            | ab    |
-            | bc    |
-            | cd    |
-            | be    |
-            | dg    |
-            | ef    |
-            | fg    |
+            | nodes | oneway |
+            | ab    | no     |
+            | bc    | no     |
+            | cd    | no     |
+            | be    | yes    |
+            | dg    | no     |
+            | ef    | no     |
+            | fg    | no     |
 
         When I route I should get
-            | waypoints | route                                        |
-            | 1,2,3,4,5 | ab,be,be,be,bc,bc,bc,be,ef,fg,dg,dg,dg,cd,cd |
+            | waypoints | route                                           |
+            | 1,2,3,4,5 | ab,be,be,be,ef,fg,dg,cd,bc,bc,bc,cd,dg,dg,dg,cd,cd |
 
