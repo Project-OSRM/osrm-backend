@@ -164,6 +164,7 @@ script:
   - ./extractor-tests
   - ./engine-tests
   - ./util-tests
+  - ./server-tests
   - echo "travis_fold:end:UNIT_TESTS"
   - popd
   - echo "travis_fold:start:CUCUMBER"
