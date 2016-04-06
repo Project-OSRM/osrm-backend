@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE(test_match)
     const auto &tracepoints = result.values.at("tracepoints").get<json::Array>().values;
     BOOST_CHECK_EQUAL(tracepoints.size(), params.coordinates.size());
 
-    const auto &number_of_matchings = result.values.at("matchings").get<json::Array>().values.size();
-    const auto &number_of_tracepoints = tracepoints.size();
+    const auto &matchings = result.values.at("matchings").get<json::Array>().values;
+    const auto &number_of_matchings = matchings.size();
     for (const auto &waypoint : tracepoints)
     {
         if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
@@ -54,6 +54,9 @@ BOOST_AUTO_TEST_CASE(test_match)
             BOOST_CHECK(location_coordinate.IsValid());
             const auto matchings_index = waypoint_object.values.at("matchings_index").get<json::Number>().value;
             const auto waypoint_index = waypoint_object.values.at("waypoint_index").get<json::Number>().value;
+            const auto &route_legs = matchings[matchings_index].get<json::Object>().values.at("legs").get<json::Array>().values;
+            BOOST_CHECK_LT(waypoint_index, route_legs.size() + 1);
+            BOOST_CHECK_LT(matchings_index, number_of_matchings);
         } else
         {
           BOOST_CHECK(waypoint.is<json::Null>());
