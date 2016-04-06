@@ -45,10 +45,9 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(tests DEPENDS engine-tests extractor-tests util-tests)
 add_custom_target(benchmarks DEPENDS rtree-bench)
 
-set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
+set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -60,10 +59,6 @@ file(GLOB ContractorGlob src/contractor/*.cpp)
 file(GLOB StorageGlob src/storage/*.cpp)
 file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
 file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
-file(GLOB ExtractorTestsGlob unit_tests/extractor/*.cpp)
-file(GLOB EngineTestsGlob unit_tests/engine/*.cpp)
-file(GLOB UtilTestsGlob unit_tests/util/*.cpp)
-file(GLOB IOTestsGlob unit_tests/io/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
 add_library(EXTRACTOR OBJECT ${ExtractorGlob})
@@ -84,15 +79,9 @@ add_library(osrm_extract $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
-# Unit tests
-add_executable(engine-tests EXCLUDE_FROM_ALL unit_tests/engine_tests.cpp ${EngineTestsGlob} $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
-add_executable(extractor-tests EXCLUDE_FROM_ALL unit_tests/extractor_tests.cpp ${ExtractorTestsGlob} $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
-add_executable(util-tests EXCLUDE_FROM_ALL unit_tests/util_tests.cpp ${UtilTestsGlob} $<TARGET_OBJECTS:UTIL>)
-
 # Benchmarks
 add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL>)
 
-target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
 target_include_directories(rtree-bench PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests)
 
 # Check the release mode
@@ -148,10 +137,6 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
     endif()
   endif()
-endif()
-
-if(NOT WIN32)
-  add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
 
 # Configuring compilers
@@ -235,11 +220,14 @@ find_package(Osmium REQUIRED COMPONENTS io)
 include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 
-find_package(Boost 1.49.0 COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
+find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 if(NOT WIN32)
   add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
-add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3 -DBOOST_RESULT_OF_USE_DECLTYPE)
+add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
+add_definitions(-DBOOST_RESULT_OF_USE_DECLTYPE)
+# Add this once we're clean of deprecated Boost.Filesystem features
+# add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)
@@ -250,7 +238,7 @@ if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
   set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
 endif()
 
-find_package( Luabind REQUIRED )
+find_package(Luabind REQUIRED)
 include(check_luabind)
 include_directories(SYSTEM ${LUABIND_INCLUDE_DIR})
 
@@ -312,6 +300,8 @@ set(CONTRACTOR_LIBRARIES
 set(ENGINE_LIBRARIES
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${LUABIND_LIBRARY}
+    ${USED_LUA_LIBRARIES}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY})
@@ -330,11 +320,9 @@ target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
-# Tests
-target_link_libraries(engine-tests ${ENGINE_LIBRARIES})
-target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES})
+
+# Benchmarks
 target_link_libraries(rtree-bench ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES})
-target_link_libraries(util-tests ${UTIL_LIBRARIES})
 
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
@@ -445,3 +433,7 @@ configure_file(
 
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
+
+# Modularizing the build system: each directory registered here provides its own CMakeLists.txt
+add_subdirectory(unit_tests)
+
