@@ -128,9 +128,11 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     // This step has length zero, the only reason we need it is the target location
     auto final_maneuver = detail::stepManeuverFromGeometry(
         extractor::guidance::TurnInstruction::NO_TURN(), WaypointType::Arrive, leg_geometry);
+
+    BOOST_ASSERT(!leg_geometry.locations.empty());
     steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
                               NO_ROTARY_NAME, ZERO_DURATION, ZERO_DISTANCE, target_mode,
-                              final_maneuver, leg_geometry.locations.size(),
+                              final_maneuver, leg_geometry.locations.size()-1,
                               leg_geometry.locations.size()});
 
     return steps;

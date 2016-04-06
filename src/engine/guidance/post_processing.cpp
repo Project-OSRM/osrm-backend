@@ -426,7 +426,9 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // This can happen if the last coordinate snaps to a node in the unpacked geometry
         geometry.locations.pop_back();
         geometry.segment_offsets.back()--;
-        BOOST_ASSERT(next_to_last_step.geometry_end == steps.back().geometry_begin);
+        // since the last geometry includes the location of arrival, the arrival instruction
+        // geometry overlaps with the previous segment
+        BOOST_ASSERT(next_to_last_step.geometry_end == steps.back().geometry_begin + 1);
         BOOST_ASSERT(next_to_last_step.geometry_begin < next_to_last_step.geometry_end);
         next_to_last_step.geometry_end--;
         steps.back().geometry_begin--;

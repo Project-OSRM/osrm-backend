@@ -16,7 +16,6 @@ BOOST_AUTO_TEST_CASE(rfc4648_test_vectors)
 {
     using namespace osrm::engine;
 
-    BOOST_CHECK_EQUAL(encodeBase64(""), "");
     BOOST_CHECK_EQUAL(encodeBase64("f"), "Zg==");
     BOOST_CHECK_EQUAL(encodeBase64("fo"), "Zm8=");
     BOOST_CHECK_EQUAL(encodeBase64("foo"), "Zm9v");
@@ -29,7 +28,6 @@ BOOST_AUTO_TEST_CASE(rfc4648_test_vectors_roundtrip)
 {
     using namespace osrm::engine;
 
-    BOOST_CHECK_EQUAL(decodeBase64(encodeBase64("")), "");
     BOOST_CHECK_EQUAL(decodeBase64(encodeBase64("f")), "f");
     BOOST_CHECK_EQUAL(decodeBase64(encodeBase64("fo")), "fo");
     BOOST_CHECK_EQUAL(decodeBase64(encodeBase64("foo")), "foo");

@@ -7,8 +7,8 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 
 #include "util/bearing.hpp"
-#include "util/integer_range.hpp"
 #include "util/exception.hpp"
+#include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
@@ -129,8 +129,7 @@ class StaticRTree
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, m_element_count),
             [&input_data_vector, &input_wrapper_vector,
-             &coordinate_list](const tbb::blocked_range<uint64_t> &range)
-            {
+             &coordinate_list](const tbb::blocked_range<uint64_t> &range) {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end; ++element_counter)
                 {
@@ -234,21 +233,20 @@ class StaticRTree
         std::reverse(m_search_tree.begin(), m_search_tree.end());
 
         std::uint32_t search_tree_size = m_search_tree.size();
-        tbb::parallel_for(tbb::blocked_range<std::uint32_t>(0, search_tree_size),
-                          [this, &search_tree_size](const tbb::blocked_range<std::uint32_t> &range)
-                          {
-                              for (std::uint32_t i = range.begin(), end = range.end(); i != end;
-                                   ++i)
-                              {
-                                  TreeNode &current_tree_node = this->m_search_tree[i];
-                                  for (std::uint32_t j = 0; j < current_tree_node.child_count; ++j)
-                                  {
-                                      const std::uint32_t old_id = current_tree_node.children[j];
-                                      const std::uint32_t new_id = search_tree_size - old_id - 1;
-                                      current_tree_node.children[j] = new_id;
-                                  }
-                              }
-                          });
+        tbb::parallel_for(
+            tbb::blocked_range<std::uint32_t>(0, search_tree_size),
+            [this, &search_tree_size](const tbb::blocked_range<std::uint32_t> &range) {
+                for (std::uint32_t i = range.begin(), end = range.end(); i != end; ++i)
+                {
+                    TreeNode &current_tree_node = this->m_search_tree[i];
+                    for (std::uint32_t j = 0; j < current_tree_node.child_count; ++j)
+                    {
+                        const std::uint32_t old_id = current_tree_node.children[j];
+                        const std::uint32_t new_id = search_tree_size - old_id - 1;
+                        current_tree_node.children[j] = new_id;
+                    }
+                }
+            });
 
         // open tree file
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);
@@ -393,12 +391,8 @@ class StaticRTree
     std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate, const std::size_t max_results)
     {
         return Nearest(input_coordinate,
-                       [](const CandidateSegment &)
-                       {
-                           return std::make_pair(true, true);
-                       },
-                       [max_results](const std::size_t num_results, const CandidateSegment &)
-                       {
+                       [](const CandidateSegment &) { return std::make_pair(true, true); },
+                       [max_results](const std::size_t num_results, const CandidateSegment &) {
                            return num_results >= max_results;
                        });
     }
@@ -439,11 +433,6 @@ class StaticRTree
             {
                 // inspecting an actual road segment
                 auto &current_candidate = current_query_node.node.template get<CandidateSegment>();
-                if (terminate(results.size(), current_candidate))
-                {
-                    traversal_queue = std::priority_queue<QueryCandidate>{};
-                    break;
-                }
 
                 auto use_segment = filter(current_candidate);
                 if (!use_segment.first && !use_segment.second)
@@ -455,6 +444,12 @@ class StaticRTree
 
                 // store phantom node in result vector
                 results.push_back(std::move(current_candidate.data));
+
+                if (terminate(results.size(), current_candidate))
+                {
+                    traversal_queue = std::priority_queue<QueryCandidate>{};
+                    break;
+                }
             }
         }
 
@@ -473,10 +468,10 @@ class StaticRTree
         // current object represents a block on disk
         for (const auto i : irange(0u, current_leaf_node.object_count))
         {
-            auto &current_edge = current_leaf_node.objects[i];
-            auto projected_u =
+            const auto &current_edge = current_leaf_node.objects[i];
+            const auto projected_u =
                 coordinate_calculation::mercator::fromWGS84((*m_coordinate_list)[current_edge.u]);
-            auto projected_v =
+            const auto projected_v =
                 coordinate_calculation::mercator::fromWGS84((*m_coordinate_list)[current_edge.v]);
 
             FloatCoordinate projected_nearest;
@@ -484,11 +479,11 @@ class StaticRTree
                 coordinate_calculation::projectPointOnSegment(projected_u, projected_v,
                                                               projected_input_coordinate);
 
-            auto squared_distance = coordinate_calculation::squaredEuclideanDistance(
-                projected_input_coordinate, projected_nearest);
+            const auto squared_distance = coordinate_calculation::squaredEuclideanDistance(
+                projected_nearest, projected_input_coordinate);
+
             // distance must be non-negative
             BOOST_ASSERT(0. <= squared_distance);
-
             traversal_queue.push(
                 QueryCandidate{squared_distance, CandidateSegment{Coordinate{projected_nearest},
                                                                   std::move(current_edge)}});

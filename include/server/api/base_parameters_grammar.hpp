@@ -72,7 +72,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
 
         alpha_numeral = +qi::char_("a-zA-Z0-9");
         polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
-        base64_char = qi::char_("a-zA-Z0-9--_");
+        base64_char = qi::char_("a-zA-Z0-9--_=");
 
         radiuses_rule = qi::lit("radiuses=") >> -qi::double_ % ";";
         hints_rule =

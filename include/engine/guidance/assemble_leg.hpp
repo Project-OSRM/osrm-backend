@@ -67,7 +67,7 @@ inline RouteLeg assembleLeg(const std::vector<PathData> &route_data,
     {
         duration -= (target_traversed_in_reverse ? source_node.reverse_weight
                                                  : source_node.forward_weight) /
-                    10;
+                    10.0;
     }
 
     return RouteLeg{duration, distance, {}};

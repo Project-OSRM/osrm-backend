@@ -1,18 +1,18 @@
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "args.hpp"
-#include "fixture.hpp"
-#include "equal_json.hpp"
 #include "coordinates.hpp"
-
-#include "osrm/route_parameters.hpp"
+#include "equal_json.hpp"
+#include "fixture.hpp"
 
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
-#include "osrm/status.hpp"
+#include "osrm/json_container.hpp"
 #include "osrm/osrm.hpp"
+#include "osrm/route_parameters.hpp"
+#include "osrm/status.hpp"
 
 BOOST_AUTO_TEST_SUITE(route)
 
@@ -32,32 +32,52 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
+    // unset snapping dependent hint
+    for (auto &itr : result.values["waypoints"].get<json::Array>().values)
+        itr.get<json::Object>().values["hint"] = "";
+
+    const auto location = json::Array{{{7.437070}, {43.749247}}};
+
     json::Object reference{
         {{"code", "Ok"},
          {"waypoints",
-          json::Array{{json::Object{{{"name", ""}, {"location", json::Array{}}, {"hint", ""}}},
-                       json::Object{{{"name", ""}, {"location", json::Array{}}, {"hint", ""}}}}}},
-         {"routes", json::Array{{json::Object{
-                        {{"distance", 0.},
-                         {"duration", 0.},
-                         {"geometry", ""},
-                         {"legs", json::Array{{json::Object{
-                                      {{"distance", 0.},
-                                       {"duration", 0.},
-                                       {"steps", json::Array{{json::Object{
-                                                     {{"duration", 0.},
-                                                      {"distance", 0.},
-                                                      {"geometry", ""},
-                                                      {"name", ""},
-                                                      {"mode", "driving"},
-                                                      {"maneuver", json::Object{{
-                                                                       {"type", "depart"},
-                                                                       {"location", json::Array{}},
-                                                                       {"modifier", ""},
-                                                                       {"bearing_before", 0.},
-                                                                       {"bearing_after", 0.},
-                                                                       {"exit", 0},
-                                                                   }}}}}}}}}}}}}}}}}}}};
+          json::Array{
+              {json::Object{
+                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}},
+               json::Object{
+                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}}}}},
+         {"routes",
+          json::Array{{json::Object{
+              {{"distance", 0.},
+               {"duration", 0.},
+               {"geometry", "yw_jGupkl@??"},
+               {"legs",
+                json::Array{{json::Object{
+                    {{"distance", 0.},
+                     {"duration", 0.},
+                     {"steps", json::Array{{json::Object{{{"duration", 0.},
+                                                          {"distance", 0.},
+                                                          {"geometry", "yw_jGupkl@??"},
+                                                          {"name", "Boulevard du Larvotto"},
+                                                          {"mode", "driving"},
+                                                          {"maneuver", json::Object{{
+                                                                           {"type", "depart"},
+                                                                           {"location", location},
+                                                                           {"bearing_before", 0.},
+                                                                           {"bearing_after", 0.},
+                                                                       }}}}},
+
+                                            json::Object{{{"duration", 0.},
+                                                          {"distance", 0.},
+                                                          {"geometry", "yw_jGupkl@"},
+                                                          {"name", "Boulevard du Larvotto"},
+                                                          {"mode", "driving"},
+                                                          {"maneuver", json::Object{{
+                                                                           {"type", "arrive"},
+                                                                           {"location", location},
+                                                                           {"bearing_before", 0.},
+                                                                           {"bearing_after", 0.},
+                                                                       }}}}}}}}}}}}}}}}}}}};
 
     CHECK_EQUAL_JSON(reference, result);
 }

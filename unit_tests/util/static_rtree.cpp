@@ -1,28 +1,28 @@
-#include "extractor/edge_based_node.hpp"
 #include "engine/geospatial_query.hpp"
-#include "util/typedefs.hpp"
-#include "util/rectangle.hpp"
-#include "util/exception.hpp"
-#include "util/coordinate_calculation.hpp"
+#include "extractor/edge_based_node.hpp"
 #include "util/coordinate.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/exception.hpp"
+#include "util/rectangle.hpp"
 #include "util/static_rtree.hpp"
+#include "util/typedefs.hpp"
 
 #include "mocks/mock_datafacade.hpp"
 
-#include <boost/test/unit_test.hpp>
+#include <boost/functional/hash.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
-#include <boost/functional/hash.hpp>
+#include <boost/test/unit_test.hpp>
 
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 
 #include <algorithm>
 #include <memory>
 #include <random>
 #include <string>
-#include <utility>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(static_rtree)
@@ -63,8 +63,8 @@ template <typename DataT> class LinearSearchNN
         std::vector<DataT> local_edges(edges);
 
         auto projected_input = coordinate_calculation::mercator::fromWGS84(input_coordinate);
-        const auto segment_comparator = [this, &projected_input](const DataT &lhs, const DataT &rhs)
-        {
+        const auto segment_comparator = [this, &projected_input](const DataT &lhs,
+                                                                 const DataT &rhs) {
             using coordinate_calculation::mercator::fromWGS84;
             const auto lhs_result = coordinate_calculation::projectPointOnSegment(
                 fromWGS84(coords->at(lhs.u)), fromWGS84(coords->at(lhs.v)), projected_input);
@@ -230,13 +230,10 @@ void sampling_verify_rtree(RTreeT &rtree,
         auto lsnn_u = result_lsnn.back().u;
         auto lsnn_v = result_lsnn.back().v;
 
-        Coordinate rtree_nearest;
-        Coordinate lsnn_nearest;
-        double ratio;
         const double rtree_dist = coordinate_calculation::perpendicularDistance(
-            coords[rtree_u], coords[rtree_v], q, rtree_nearest, ratio);
+            coords[rtree_u], coords[rtree_v], q);
         const double lsnn_dist = coordinate_calculation::perpendicularDistance(
-            coords[lsnn_u], coords[lsnn_v], q, lsnn_nearest, ratio);
+            coords[lsnn_u], coords[lsnn_v], q);
 
         BOOST_CHECK_CLOSE(rtree_dist, lsnn_dist, 0.0001);
     }
