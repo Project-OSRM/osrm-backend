@@ -46,8 +46,6 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-add_custom_target(benchmarks DEPENDS rtree-bench)
-
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
 
 configure_file(
@@ -79,9 +77,6 @@ add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTI
 add_library(osrm_extract $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
-
-# Benchmarks
-add_executable(rtree-bench EXCLUDE_FROM_ALL src/benchmarks/static_rtree.cpp $<TARGET_OBJECTS:UTIL>)
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -317,8 +312,6 @@ target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
-# Benchmarks
-target_link_libraries(rtree-bench ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES})
 
 if(BUILD_COMPONENTS)
   find_package(GDAL)
@@ -439,3 +432,4 @@ add_custom_target(uninstall
 
 # Modular build system: each directory registered here provides its own CMakeLists.txt
 add_subdirectory(unit_tests)
+add_subdirectory(src/benchmarks)
