@@ -28,7 +28,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-5' BUILD_TYPE='Debug'
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug'
 
     - os: linux
       compiler: gcc
@@ -36,7 +36,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-4.8' BUILD_TYPE='Debug'
+      env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Debug'
 
     - os: linux
       compiler: clang
@@ -44,12 +44,12 @@ matrix:
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='clang++-3.8' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
+      env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
 
     - os: osx
       osx_image: xcode7.3
       compiler: clang
-      env: COMPILER='clang++' BUILD_TYPE='Debug'
+      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug'
 
     # Release Builds
     - os: linux
@@ -58,7 +58,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-5' BUILD_TYPE='Release'
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
 
     - os: linux
       compiler: gcc
@@ -66,7 +66,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-4.8' BUILD_TYPE='Release'
+      env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Release'
 
     - os: linux
       compiler: clang
@@ -74,12 +74,12 @@ matrix:
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='clang++-3.8' BUILD_TYPE='Release'
+      env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release'
 
     - os: osx
       osx_image: xcode7.3
       compiler: clang
-      env: COMPILER='clang++' BUILD_TYPE='Release'
+      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
 
     # Shared Library
     - os: linux
@@ -88,7 +88,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
     - os: linux
       compiler: clang
@@ -96,7 +96,7 @@ matrix:
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: COMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+      env: CCOMPILER='clang3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 
     # Disabled until tests all pass on OSX:
@@ -105,22 +105,22 @@ matrix:
     #- os: osx
     #  osx_image: xcode6.4
     #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Debug'
+    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug'
 
     #- os: osx
     #  osx_image: xcode6.4
     #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Release'
+    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
 
     #- os: osx
     #  osx_image: xcode6.4
     #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
     #- os: osx
     #  osx_image: xcode7
     #  compiler: clang
-    #  env: COMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 before_install:
   - source ./scripts/install_node.sh 4
@@ -147,7 +147,7 @@ before_script:
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
   - mkdir build && pushd build
-  - export CXX=${COMPILER}
+  - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - export OSRM_PORT=5000 OSRM_TIMEOUT=6000
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
 
