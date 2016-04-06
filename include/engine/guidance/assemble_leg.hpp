@@ -1,20 +1,20 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_LEG_HPP_
 #define ENGINE_GUIDANCE_ASSEMBLE_LEG_HPP_
 
+#include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_leg.hpp"
 #include "engine/guidance/route_step.hpp"
-#include "engine/guidance/leg_geometry.hpp"
 #include "engine/internal_route_result.hpp"
 
 #include <cstddef>
 #include <cstdint>
 
-#include <vector>
+#include <algorithm>
 #include <array>
+#include <numeric>
 #include <string>
 #include <utility>
-#include <numeric>
-#include <algorithm>
+#include <vector>
 
 namespace osrm
 {
@@ -23,13 +23,11 @@ namespace engine
 namespace guidance
 {
 
-template <typename DataFacadeT>
-RouteLeg assembleLeg(const DataFacadeT &facade,
-                     const std::vector<PathData> &route_data,
-                     const LegGeometry &leg_geometry,
-                     const PhantomNode &source_node,
-                     const PhantomNode &target_node,
-                     const bool target_traversed_in_reverse)
+inline RouteLeg assembleLeg(const std::vector<PathData> &route_data,
+                            const LegGeometry &leg_geometry,
+                            const PhantomNode &source_node,
+                            const PhantomNode &target_node,
+                            const bool target_traversed_in_reverse)
 {
     const auto target_duration =
         (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight) /
@@ -38,8 +36,7 @@ RouteLeg assembleLeg(const DataFacadeT &facade,
     auto distance = std::accumulate(leg_geometry.segment_distances.begin(),
                                     leg_geometry.segment_distances.end(), 0.);
     auto duration = std::accumulate(route_data.begin(), route_data.end(), 0.,
-                                    [](const double sum, const PathData &data)
-                                    {
+                                    [](const double sum, const PathData &data) {
                                         return sum + data.duration_until_turn;
                                     }) /
                     10.;

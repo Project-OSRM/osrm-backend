@@ -23,7 +23,7 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
     BOOST_ASSERT_MSG(zoom_level < detail::DOUGLAS_PEUCKER_THRESHOLDS_SIZE,
                      "unsupported zoom level");
 
-    const auto size = std::distance(begin, end);
+    const std::size_t size = std::distance(begin, end);
     if (size < 2)
     {
         return {};

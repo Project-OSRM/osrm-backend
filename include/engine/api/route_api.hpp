@@ -2,15 +2,15 @@
 #define ENGINE_API_ROUTE_HPP
 
 #include "engine/api/base_api.hpp"
-#include "engine/api/route_parameters.hpp"
 #include "engine/api/json_factory.hpp"
+#include "engine/api/route_parameters.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 
-#include "engine/guidance/assemble_leg.hpp"
-#include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_geometry.hpp"
+#include "engine/guidance/assemble_leg.hpp"
 #include "engine/guidance/assemble_overview.hpp"
+#include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/post_processing.hpp"
 
@@ -92,8 +92,8 @@ class RouteAPI : public BaseAPI
 
             auto leg_geometry = guidance::assembleGeometry(
                 BaseAPI::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
-            auto leg = guidance::assembleLeg(BaseAPI::facade, path_data, leg_geometry,
-                                             phantoms.source_phantom, phantoms.target_phantom, reversed_target);
+            auto leg = guidance::assembleLeg(path_data, leg_geometry, phantoms.source_phantom,
+                                             phantoms.target_phantom, reversed_target);
 
             if (parameters.steps)
             {
@@ -160,8 +160,7 @@ class RouteAPI : public BaseAPI
             auto &leg_geometry = leg_geometries[idx];
             std::transform(
                 legs[idx].steps.begin(), legs[idx].steps.end(), std::back_inserter(step_geometries),
-                [this, &leg_geometry](const guidance::RouteStep &step)
-                {
+                [this, &leg_geometry](const guidance::RouteStep &step) {
                     if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
                     {
                         return static_cast<util::json::Value>(
