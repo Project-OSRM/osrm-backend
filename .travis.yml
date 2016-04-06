@@ -159,12 +159,18 @@ script:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
+  - echo "travis_fold:start:UNIT_TESTS"
   - ./extractor-tests
   - ./engine-tests
   - ./util-tests
+  - echo "travis_fold:end:UNIT_TESTS"
   - popd
+  - echo "travis_fold:start:CUCUMBER"
   - npm test
+  - echo "travis_fold:end:CUCUMBER"
+  - echo "travis_fold:start:BENCHMARK"
   - make -C test/data benchmark
+  - echo "travis_fold:end:BENCHMARK"
   - ./build/library-tests test/data/monaco.osrm
   - mkdir example/build && pushd example/build
   - cmake ..
