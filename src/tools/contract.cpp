@@ -31,20 +31,28 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
 
     // declare a group of options that will be allowed on command line
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "threads,t",
-        boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
-        "Number of threads to use")(
-        "core,k",
-        boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
-        "Percentage of the graph (in vertices) to contract [0..1]")(
-        "segment-speed-file",
-        boost::program_options::value<std::string>(&contractor_config.segment_speed_lookup_path),
-        "Lookup file containing nodeA,nodeB,speed data to adjust edge weights")(
-        "level-cache,o", boost::program_options::value<bool>(&contractor_config.use_cached_priority)
-                             ->default_value(false),
-        "Use .level file to retain the contaction level for each node from the last run.");
+    config_options.add_options() //
+
+        ("threads,t",
+         boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
+             ->default_value(tbb::task_scheduler_init::default_num_threads()),
+         "Number of threads to use") //
+
+        ("core,k",
+         boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
+         "Percentage of the graph (in vertices) to contract [0..1]") //
+
+        ("segment-speed-file",
+         boost::program_options::value<std::string>(&contractor_config.segment_speed_lookup_path),
+         "Lookup file containing nodeA,nodeB,speed data to adjust edge weights") //
+
+        ("turn-penalty-file",
+         boost::program_options::value<std::string>(&contractor_config.turn_penalty_lookup_path),
+         "Lookup file containing nodeA,via,nodeB,penalty data to adjust turn penalties") //
+
+        ("level-cache,o", boost::program_options::value<bool>(
+                              &contractor_config.use_cached_priority)->default_value(false),
+         "Use .level file to retain the contaction level for each node from the last run.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");

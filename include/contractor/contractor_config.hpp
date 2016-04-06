@@ -52,6 +52,7 @@ struct ContractorConfig
     double core_factor;
 
     std::string segment_speed_lookup_path;
+    std::string turn_penalty_lookup_path;
 
 #ifdef DEBUG_GEOMETRY
     std::string debug_geometry_path;
