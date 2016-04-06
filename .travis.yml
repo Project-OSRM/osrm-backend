@@ -161,10 +161,10 @@ script:
       sudo ldconfig
     fi
   - echo "travis_fold:start:UNIT_TESTS"
-  - ./extractor-tests
-  - ./engine-tests
-  - ./util-tests
-  - ./server-tests
+  - ./unit_tests/extractor-tests
+  - ./unit_tests/engine-tests
+  - ./unit_tests/util-tests
+  - ./unit_tests/server-tests
   - echo "travis_fold:end:UNIT_TESTS"
   - popd
   - echo "travis_fold:start:CUCUMBER"
@@ -173,7 +173,7 @@ script:
   - echo "travis_fold:start:BENCHMARK"
   - make -C test/data benchmark
   - echo "travis_fold:end:BENCHMARK"
-  - ./build/library-tests test/data/monaco.osrm
+  - ./build/unit_tests/library-tests test/data/monaco.osrm
   - mkdir example/build && pushd example/build
   - cmake ..
   - make
