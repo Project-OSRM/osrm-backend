@@ -8,6 +8,7 @@
 #include "engine/polyline_compressor.hpp"
 
 //#define BOOST_SPIRIT_DEBUG
+#include <boost/optional.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <string>
@@ -102,7 +103,14 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
         base64_char = qi::char_("a-zA-Z0-9--_");
 
-        radiuses_rule = qi::lit("radiuses=") >> -qi::double_ % ";";
+        // Radiuses is a list with one or more "unlimited" symbols or optional doubles.
+        qi::symbols<char, boost::optional<double>> unlimited;
+        unlimited.add("unlimited", boost::none);
+
+        // PEG tries the first alternative and in case it fails assigns an boost::none, that#s the
+        // reason we have to put the unlimited case first and the optional double second.
+        radiuses_rule = qi::lit("radiuses=") >> (unlimited | -qi::double_) % ";";
+
         hints_rule =
             qi::lit("hints=") >>
             qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
