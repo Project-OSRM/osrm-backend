@@ -2,15 +2,10 @@
 #define TABLE_PARAMETERS_GRAMMAR_HPP
 
 #include "engine/api/table_parameters.hpp"
-
-//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_action.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_optional.hpp>
-#include <boost/spirit/include/qi_uint.hpp>
+//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/qi.hpp>
 
 namespace osrm
 {
@@ -41,7 +36,8 @@ struct TableParametersGrammar final : public BaseParametersGrammar
             (qi::lit("sources=") >> (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
         table_rule = destinations_rule | sources_rule;
 
-        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (table_rule | base_rule) % '&');
+        root_rule =
+            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (table_rule | base_rule) % '&');
     }
 
     engine::api::TableParameters parameters;

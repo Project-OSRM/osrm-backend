@@ -2,15 +2,10 @@
 #define ROUTE_PARAMETERS_GRAMMAR_HPP
 
 #include "engine/api/route_parameters.hpp"
-
-//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_action.hpp>
-#include <boost/spirit/include/qi_bool.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_optional.hpp>
+//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/qi.hpp>
 
 namespace osrm
 {
@@ -65,7 +60,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         route_rule = steps_rule[set_steps] | alternatives_rule[set_alternatives] | geometries_rule |
                      overview_rule | uturns_rule;
 
-        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (route_rule | base_rule) % '&');
+        root_rule =
+            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (route_rule | base_rule) % '&');
     }
 
     engine::api::RouteParameters parameters;

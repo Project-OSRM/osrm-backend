@@ -3,21 +3,12 @@
 
 #include "engine/api/base_parameters.hpp"
 
-#include "engine/polyline_compressor.hpp"
-#include "engine/hint.hpp"
 #include "engine/bearing.hpp"
+#include "engine/hint.hpp"
+#include "engine/polyline_compressor.hpp"
 
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_char_.hpp>
-#include <boost/spirit/include/qi_int.hpp>
-#include <boost/spirit/include/qi_real.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_action.hpp>
-#include <boost/spirit/include/qi_optional.hpp>
-#include <boost/spirit/include/qi_attr_cast.hpp>
-#include <boost/spirit/include/qi_operator.hpp>
-#include <boost/spirit/include/qi_repeat.hpp>
-#include <boost/spirit/include/qi_as_string.hpp>
+//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/qi.hpp>
 
 #include <string>
 
@@ -30,41 +21,42 @@ namespace api
 
 namespace qi = boost::spirit::qi;
 
-template <typename T, char... Fmt>
-struct no_trailing_dot_policy : qi::real_policies<T> {
-
-    template <typename Iterator>
-    static bool parse_dot(Iterator& first, Iterator const& last) {
+template <typename T, char... Fmt> struct no_trailing_dot_policy : qi::real_policies<T>
+{
+    template <typename Iterator> static bool parse_dot(Iterator &first, Iterator const &last)
+    {
         if (first == last || *first != '.')
             return false;
 
         static const constexpr char fmt[sizeof...(Fmt)] = {Fmt...};
 
-        if (first + sizeof(fmt) < last
-            && std::equal(fmt, fmt + sizeof(fmt), first + 1u))
+        if (first + sizeof(fmt) < last && std::equal(fmt, fmt + sizeof(fmt), first + 1u))
             return false;
 
         ++first;
         return true;
     }
 
-    template <typename Iterator>
-    static bool parse_exp(Iterator&, const Iterator&) {
+    template <typename Iterator> static bool parse_exp(Iterator &, const Iterator &)
+    {
         return false;
     }
 
     template <typename Iterator, typename Attribute>
-    static bool parse_exp_n(Iterator&, const Iterator&, Attribute&) {
+    static bool parse_exp_n(Iterator &, const Iterator &, Attribute &)
+    {
         return false;
     }
 
     template <typename Iterator, typename Attribute>
-    static bool parse_nan(Iterator&, const Iterator&, Attribute&) {
+    static bool parse_nan(Iterator &, const Iterator &, Attribute &)
+    {
         return false;
     }
 
     template <typename Iterator, typename Attribute>
-    static bool parse_inf(Iterator&, const Iterator&, Attribute&) {
+    static bool parse_inf(Iterator &, const Iterator &, Attribute &)
+    {
         return false;
     }
 };
@@ -79,35 +71,30 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         : BaseParametersGrammar::base_type(root_rule_), base_parameters(parameters_)
     {
         const auto add_bearing =
-            [this](boost::optional<boost::fusion::vector2<short, short>> bearing_range)
-        {
-            boost::optional<engine::Bearing> bearing;
-            if (bearing_range)
-            {
-                bearing = engine::Bearing{boost::fusion::at_c<0>(*bearing_range),
-                                          boost::fusion::at_c<1>(*bearing_range)};
-            }
-            base_parameters.bearings.push_back(std::move(bearing));
-        };
-        const auto set_radiuses = [this](RadiusesT radiuses)
-        {
+            [this](boost::optional<boost::fusion::vector2<short, short>> bearing_range) {
+                boost::optional<engine::Bearing> bearing;
+                if (bearing_range)
+                {
+                    bearing = engine::Bearing{boost::fusion::at_c<0>(*bearing_range),
+                                              boost::fusion::at_c<1>(*bearing_range)};
+                }
+                base_parameters.bearings.push_back(std::move(bearing));
+            };
+        const auto set_radiuses = [this](RadiusesT radiuses) {
             base_parameters.radiuses = std::move(radiuses);
         };
-        const auto add_hint = [this](const std::string &hint_string)
-        {
+        const auto add_hint = [this](const std::string &hint_string) {
             if (hint_string.size() > 0)
             {
                 base_parameters.hints.push_back(engine::Hint::FromBase64(hint_string));
             }
         };
-        const auto add_coordinate = [this](const boost::fusion::vector<double, double> &lonLat)
-        {
+        const auto add_coordinate = [this](const boost::fusion::vector<double, double> &lonLat) {
             base_parameters.coordinates.emplace_back(util::Coordinate(
                 util::FixedLongitude(boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION),
                 util::FixedLatitude(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION)));
         };
-        const auto polyline_to_coordinates = [this](const std::string &polyline)
-        {
+        const auto polyline_to_coordinates = [this](const std::string &polyline) {
             base_parameters.coordinates = engine::decodePolyline(polyline);
         };
 
@@ -121,8 +108,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
             qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
         bearings_rule =
             qi::lit("bearings=") >> (-(qi::short_ >> ',' >> qi::short_))[add_bearing] % ";";
-        polyline_rule = qi::as_string[qi::lit("polyline(") >> +polyline_chars >>
-                                      qi::lit(")")][polyline_to_coordinates];
+        polyline_rule = qi::as_string[qi::lit("polyline(") >> +polyline_chars >> qi::lit(")")]
+                                     [polyline_to_coordinates];
         location_rule = (double_ >> qi::lit(',') >> double_)[add_coordinate];
         query_rule = (location_rule % ';') | polyline_rule;
 

@@ -2,16 +2,10 @@
 #define MATCH_PARAMETERS_GRAMMAR_HPP
 
 #include "engine/api/match_parameters.hpp"
-
-//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_action.hpp>
-#include <boost/spirit/include/qi_bool.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_optional.hpp>
-#include <boost/spirit/include/qi_uint.hpp>
+//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/qi.hpp>
 
 namespace osrm
 {
@@ -62,7 +56,8 @@ struct MatchParametersGrammar final : public BaseParametersGrammar
         timestamps_rule = qi::lit("timestamps=") >> qi::uint_ % ";";
         match_rule = steps_rule[set_steps] | geometries_rule | overview_rule |
                      timestamps_rule[set_timestamps];
-        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (match_rule | base_rule) % '&');
+        root_rule =
+            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (match_rule | base_rule) % '&');
     }
 
     engine::api::MatchParameters parameters;
