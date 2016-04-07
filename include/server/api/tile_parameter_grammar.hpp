@@ -3,14 +3,11 @@
 
 #include "engine/api/tile_parameters.hpp"
 
-#include "engine/polyline_compressor.hpp"
 #include "engine/hint.hpp"
+#include "engine/polyline_compressor.hpp"
 
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_uint.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_action.hpp>
-#include <boost/spirit/include/qi_operator.hpp>
+//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/qi.hpp>
 
 #include <string>
 
@@ -28,18 +25,9 @@ struct TileParametersGrammar final : boost::spirit::qi::grammar<std::string::ite
 
     TileParametersGrammar() : TileParametersGrammar::base_type(root_rule)
     {
-        const auto set_x = [this](const unsigned x_)
-        {
-            parameters.x = x_;
-        };
-        const auto set_y = [this](const unsigned y_)
-        {
-            parameters.y = y_;
-        };
-        const auto set_z = [this](const unsigned z_)
-        {
-            parameters.z = z_;
-        };
+        const auto set_x = [this](const unsigned x_) { parameters.x = x_; };
+        const auto set_y = [this](const unsigned y_) { parameters.y = y_; };
+        const auto set_z = [this](const unsigned z_) { parameters.z = z_; };
 
         query_rule = qi::lit("tile(") >> qi::uint_[set_x] >> qi::lit(",") >> qi::uint_[set_y] >>
                      qi::lit(",") >> qi::uint_[set_z] >> qi::lit(")");

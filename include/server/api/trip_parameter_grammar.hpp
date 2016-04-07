@@ -2,16 +2,10 @@
 #define TRIP_PARAMETERS_GRAMMAR_HPP
 
 #include "engine/api/trip_parameters.hpp"
-
-//#define BOOST_SPIRIT_DEBUG
 #include "server/api/base_parameters_grammar.hpp"
 
-#include <boost/spirit/include/qi_action.hpp>
-#include <boost/spirit/include/qi_bool.hpp>
-#include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_optional.hpp>
-#include <boost/spirit/include/qi_uint.hpp>
+//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/qi.hpp>
 
 namespace osrm
 {
@@ -57,7 +51,8 @@ struct TripParametersGrammar final : public BaseParametersGrammar
                         qi::lit("overview=false")[set_false_type];
         trip_rule = steps_rule[set_steps] | geometries_rule | overview_rule;
 
-        root_rule = query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (trip_rule | base_rule) % '&');
+        root_rule =
+            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (trip_rule | base_rule) % '&');
     }
 
     engine::api::TripParameters parameters;
