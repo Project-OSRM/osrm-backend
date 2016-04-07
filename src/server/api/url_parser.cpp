@@ -15,7 +15,6 @@ namespace qi = boost::spirit::qi;
 template <typename Iterator, typename Into> //
 struct URLParser final : qi::grammar<Iterator, Into>
 {
-
     URLParser() : URLParser::base_type(start)
     {
         alpha_numeral = qi::char_("a-zA-Z0-9");
@@ -29,10 +28,10 @@ struct URLParser final : qi::grammar<Iterator, Into>
 
         // Example input: /route/v1/driving/7.416351,43.731205;7.420363,43.736189
 
-        start = qi::lit('/') >> service                    //
-                >> qi::lit('/') >> qi::lit('v') >> version //
-                >> qi::lit('/') >> profile                 //
-                >> qi::lit('/') >> query;                  //
+        start = qi::lit('/') > service                  //
+                > qi::lit('/') > qi::lit('v') > version //
+                > qi::lit('/') > profile                //
+                > qi::lit('/') > query;                 //
 
         BOOST_SPIRIT_DEBUG_NODES((start)(service)(version)(profile)(query))
     }
@@ -65,10 +64,19 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
     static URLParser<It, ParsedURL()> const parser;
     ParsedURL out;
 
-    const auto ok = boost::spirit::qi::parse(iter, end, parser, out);
+    try
+    {
+        const auto ok = boost::spirit::qi::parse(iter, end, parser, out);
 
-    if (ok && iter == end)
-        return boost::make_optional(out);
+        if (ok && iter == end)
+            return boost::make_optional(out);
+    }
+    catch (const qi::expectation_failure<It> &failure)
+    {
+        // The grammar above using expectation parsers ">" does not automatically increment the
+        // iterator to the failing position. Extract the position from the exception ourselves.
+        iter = failure.first;
+    }
 
     return boost::none;
 }
