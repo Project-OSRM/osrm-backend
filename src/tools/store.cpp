@@ -35,8 +35,9 @@ bool generateDataStoreOptions(const int argc, const char *argv[], boost::filesys
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
 
+    const auto* executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::basename(argv[0]) + " [<options>] <configuration>");
+        boost::filesystem::path(executable).filename().string() + " [<options>] <configuration>");
     visible_options.add(generic_options).add(config_options);
 
     // print help options if no infile is specified

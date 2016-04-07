@@ -61,8 +61,9 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
 
+    const auto* executable = argv[0];
     boost::program_options::options_description visible_options(
-        "Usage: " + boost::filesystem::basename(argv[0]) + " <input.osrm> [options]");
+        "Usage: " + boost::filesystem::path(executable).filename().string() + " <input.osrm> [options]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options

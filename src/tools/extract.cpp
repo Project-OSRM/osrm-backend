@@ -64,8 +64,9 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
 
+    const auto* executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::basename(argv[0]) + " <input.osm/.osm.bz2/.osm.pbf> [options]");
+        boost::filesystem::path(executable).filename().string() + " <input.osm/.osm.bz2/.osm.pbf> [options]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options

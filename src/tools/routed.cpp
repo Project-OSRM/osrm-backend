@@ -111,7 +111,7 @@ generateServerProgramOptions(const int argc,
 
     const auto* executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).stem().string() + " <base.osrm> [<options>]");
+        boost::filesystem::path(executable).filename().string() + " <base.osrm> [<options>]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options

@@ -220,8 +220,7 @@ if(NOT WIN32)
 endif()
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_definitions(-DBOOST_RESULT_OF_USE_DECLTYPE)
-# XXX: activate when we're clean of deprecated Boost.FS features
-# add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
+add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)
