@@ -34,6 +34,7 @@ option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" 
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_COMPONENTS "Build OSRM tools" ON)
 option(ENABLE_ASSERTIONS OFF)
+option(COVERAGE OFF)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -131,6 +132,15 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
     endif()
   endif()
+endif()
+
+set(MAYBE_COVERAGE_LIBRARIES "")
+if (COVERAGE)
+  if (NOT CMAKE_BUILD_TYPE MATCHES "DEBUG")
+    message(ERROR "COVERAGE=ON only make sense with a Debug build")
+  endif()
+  set(MAYBE_COVERAGE_LIBRARIES "gcov")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs")
 endif()
 
 # Configuring compilers
@@ -281,7 +291,8 @@ set(EXTRACTOR_LIBRARIES
     ${OSMIUM_LIBRARIES}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
-    ${ZLIB_LIBRARY})
+    ${ZLIB_LIBRARY}
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(CONTRACTOR_LIBRARIES
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -289,23 +300,27 @@ set(CONTRACTOR_LIBRARIES
     ${USED_LUA_LIBRARIES}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
-    ${MAYBE_RT_LIBRARY})
+    ${MAYBE_RT_LIBRARY}
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(ENGINE_LIBRARIES
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
-    ${MAYBE_RT_LIBRARY})
+    ${MAYBE_RT_LIBRARY}
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(STORAGE_LIBRARIES
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
-    ${MAYBE_RT_LIBRARY})
+    ${MAYBE_RT_LIBRARY}
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(UTIL_LIBRARIES
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${STXXL_LIBRARY}
-    ${TBB_LIBRARIES})
+    ${TBB_LIBRARIES}
+    ${MAYBE_COVERAGE_LIBRARIES})
 # Libraries
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})

@@ -27,8 +27,8 @@ matrix:
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug'
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'pip']
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
 
     - os: linux
       compiler: gcc
@@ -130,11 +130,14 @@ install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
   - |
+    if [[ -n "${COVERAGE}" ]]; then
+      pip install --user cpp-coveralls
+    fi
+  - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       CMAKE_URL="http://www.cmake.org/files/v3.5/cmake-3.5.1-Linux-x86_64.tar.gz"
       mkdir cmake && travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       # implicit deps, but seem to be installed by default with recent images: libxml2 GDAL boost
       brew install cmake libzip libstxxl lua51 luabind tbb md5sha1sum
@@ -149,7 +152,7 @@ before_script:
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - export OSRM_PORT=5000 OSRM_TIMEOUT=6000
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
 
 script:
   - make --jobs=2
@@ -179,7 +182,12 @@ script:
   - make
   - ./osrm-example ../../test/data/monaco.osrm
   - popd
+
+after_success:
   - |
     if [ -n "$RUN_CLANG_FORMAT" ]; then
       ./scripts/format.sh || true # we don't want to fail just yet
     fi
+  - pushd build
+  - coveralls --exclude unit_tests --gcov-options '\-lp'
+  - popd

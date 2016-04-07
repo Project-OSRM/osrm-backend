@@ -10,6 +10,7 @@ The Open Source Routing Machine is a high performance routing engine written in 
 | Linux        | develop | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=develop)](https://travis-ci.org/Project-OSRM/osrm-backend) |
 | Windows      | master/develop | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
 | LUAbind fork | master  | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |
+| Coverage     | develop | [![Coverage Status](https://coveralls.io/repos/github/Project-OSRM/osrm-backend/badge.svg?branch=develop)](https://coveralls.io/github/Project-OSRM/osrm-backend?branch=develop) |
 
 ## Building
 
