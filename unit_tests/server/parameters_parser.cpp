@@ -86,10 +86,9 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&bearings=foo"),
         32UL);
-// FIXME enable when @daniel-j-h has fixed his spirit issues
-//    BOOST_CHECK_EQUAL(
-//        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&uturns=foo"),
-//        30UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&uturns=foo"),
+        30UL);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&radiuses=foo"),
         32UL);
