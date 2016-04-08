@@ -34,7 +34,7 @@ const constexpr double MAX_LONGITUDE = 180.0;
 }
 
 //! Takes the squared euclidean distance of the input coordinates. Does not return meters!
-double squaredEuclideanDistance(const FloatCoordinate &lhs, const FloatCoordinate &rhs);
+std::uint64_t squaredEuclideanDistance(const Coordinate &lhs, const Coordinate &rhs);
 
 double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 

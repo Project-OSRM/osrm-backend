@@ -18,10 +18,10 @@ namespace coordinate_calculation
 {
 
 // Does not project the coordinates!
-double squaredEuclideanDistance(const FloatCoordinate &lhs, const FloatCoordinate &rhs)
+std::uint64_t squaredEuclideanDistance(const Coordinate &lhs, const Coordinate &rhs)
 {
-    const double dx = static_cast<double>(lhs.lon - rhs.lon);
-    const double dy = static_cast<double>(lhs.lat - rhs.lat);
+    const std::uint64_t dx = static_cast<std::int32_t>(lhs.lon - rhs.lon);
+    const std::uint64_t dy = static_cast<std::int32_t>(lhs.lat - rhs.lat);
 
     return dx * dx + dy * dy;
 }
