@@ -1,0 +1,22 @@
+{
+  "request": {
+    "message": "Triggered build: osrm-backend develop branch commit <TRAVIS_COMMIT>",
+    "branch": "develop",
+    "config": {
+      "matrix": {
+        "include": [{
+          "os": "linux",
+          "compiler": ": clang-release-node-v0.10",
+          "env": "NODE='0.10' CC='clang-3.5' CXX='clang++-3.5' JOBS=6 PUBLISHABLE=false",
+          "sudo": false,
+          "addons": {
+            "apt": {
+              "sources": ["ubuntu-toolchain-r-test", "llvm-toolchain-precise-3.5"],
+              "packages": ["clang-3.5"]
+            }
+          }
+        }]
+      }
+    }
+  }
+}
