@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&radiuses=foo"),
         32UL);
     BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&hints=foo"), 22UL);
+        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&hints=foo"), 29UL);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&geometries=foo"),
         22UL);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
         22L);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&alternatives=foo"),
-        22UL);
+        36UL);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_table_urls)
@@ -114,9 +114,10 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>(
                           "1,2;3,4?sources=1&destinations=1&bla=foo"),
                       32UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>("1,2;3,4?sources=foo"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>("1,2;3,4?sources=foo"),
+                      16UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>("1,2;3,4?destinations=foo"),
-                      7UL);
+                      21UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_urls)

@@ -19,8 +19,8 @@ std::ostream &operator<<(std::ostream &out, const osrm::server::api::ParsedURL &
 }
 }
 
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test.hpp>
 
 #define CHECK_EQUAL_RANGE(R1, R2)                                                                  \
     BOOST_CHECK_EQUAL_COLLECTIONS(R1.begin(), R1.end(), R2.begin(), R2.end());
@@ -41,12 +41,12 @@ std::size_t testInvalidURL(std::string url)
 
 BOOST_AUTO_TEST_CASE(invalid_urls)
 {
-    BOOST_CHECK_EQUAL(testInvalidURL("/route/"), 0UL);
-    BOOST_CHECK_EQUAL(testInvalidURL("/route/bla"), 0UL);
-    BOOST_CHECK_EQUAL(testInvalidURL("/route/1/1,2;3;4"), 0UL);
-    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/pro_file/1,2;3,4"), 0UL);
-    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/profile"), 0UL);
-    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/profile/"), 0UL);
+    BOOST_CHECK_EQUAL(testInvalidURL("/route/"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidURL("/route/bla"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidURL("/route/1/1,2;3;4"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/pro_file/1,2;3,4"), 13UL);
+    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/profile"), 17UL);
+    BOOST_CHECK_EQUAL(testInvalidURL("/route/v1/profile/"), 18UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_urls)
