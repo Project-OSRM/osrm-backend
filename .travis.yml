@@ -167,5 +167,5 @@ after_success:
     if [ -n "$RUN_CLANG_FORMAT" ]; then
       ./scripts/format.sh || true # we don't want to fail just yet
     fi
-  - if [[ ${TRIGGER:-false} == true ]] then ./scripts/trigger-downstream.sh; fi
+  - if [[ ${TRIGGER:-false} == true ]]; then ./scripts/trigger-downstream.sh; fi
   - coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
