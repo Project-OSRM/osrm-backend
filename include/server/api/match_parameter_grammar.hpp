@@ -47,17 +47,17 @@ struct MatchParametersGrammar final : public BaseParametersGrammar
             parameters.timestamps = std::move(timestamps);
         };
 
-        steps_rule = qi::lit("steps=") >> qi::bool_;
+        steps_rule = qi::lit("steps=") > qi::bool_;
         geometries_rule = qi::lit("geometries=geojson")[set_geojson_type] |
                           qi::lit("geometries=polyline")[set_polyline_type];
         overview_rule = qi::lit("overview=simplified")[set_simplified_type] |
                         qi::lit("overview=full")[set_full_type] |
                         qi::lit("overview=false")[set_false_type];
-        timestamps_rule = qi::lit("timestamps=") >> qi::uint_ % ";";
+        timestamps_rule = qi::lit("timestamps=") > qi::uint_ % ";";
         match_rule = steps_rule[set_steps] | geometries_rule | overview_rule |
                      timestamps_rule[set_timestamps];
         root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (match_rule | base_rule) % '&');
+            query_rule > -qi::lit(".json") > -(qi::lit("?") > (match_rule | base_rule) % '&');
     }
 
     engine::api::MatchParameters parameters;

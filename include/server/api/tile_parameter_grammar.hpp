@@ -29,10 +29,11 @@ struct TileParametersGrammar final : boost::spirit::qi::grammar<std::string::ite
         const auto set_y = [this](const unsigned y_) { parameters.y = y_; };
         const auto set_z = [this](const unsigned z_) { parameters.z = z_; };
 
-        query_rule = qi::lit("tile(") >> qi::uint_[set_x] >> qi::lit(",") >> qi::uint_[set_y] >>
-                     qi::lit(",") >> qi::uint_[set_z] >> qi::lit(")");
+        query_rule = qi::lit("tile(") > qi::uint_[set_x]             //
+                     > qi::lit(",") > qi::uint_[set_y] >             //
+                     qi::lit(",") > qi::uint_[set_z] > qi::lit(")"); //
 
-        root_rule = query_rule >> qi::lit(".mvt");
+        root_rule = query_rule > qi::lit(".mvt");
     }
     engine::api::TileParameters parameters;
 

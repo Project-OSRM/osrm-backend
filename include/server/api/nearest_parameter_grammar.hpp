@@ -25,9 +25,9 @@ struct NearestParametersGrammar final : public BaseParametersGrammar
         const auto set_number = [this](const unsigned number) {
             parameters.number_of_results = number;
         };
-        nearest_rule = (qi::lit("number=") >> qi::uint_)[set_number];
+        nearest_rule = (qi::lit("number=") > qi::uint_)[set_number];
         root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (nearest_rule | base_rule) % '&');
+            query_rule > -qi::lit(".json") > -(qi::lit("?") > (nearest_rule | base_rule) % '&');
     }
 
     engine::api::NearestParameters parameters;

@@ -43,7 +43,7 @@ struct TripParametersGrammar final : public BaseParametersGrammar
         };
         const auto set_steps = [this](const StepsT steps) { parameters.steps = steps; };
 
-        steps_rule = qi::lit("steps=") >> qi::bool_;
+        steps_rule = qi::lit("steps=") > qi::bool_;
         geometries_rule = qi::lit("geometries=geojson")[set_geojson_type] |
                           qi::lit("geometries=polyline")[set_polyline_type];
         overview_rule = qi::lit("overview=simplified")[set_simplified_type] |
@@ -52,7 +52,7 @@ struct TripParametersGrammar final : public BaseParametersGrammar
         trip_rule = steps_rule[set_steps] | geometries_rule | overview_rule;
 
         root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (trip_rule | base_rule) % '&');
+            query_rule > -qi::lit(".json") > -(qi::lit("?") > (trip_rule | base_rule) % '&');
     }
 
     engine::api::TripParameters parameters;

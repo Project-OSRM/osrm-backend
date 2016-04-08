@@ -11,8 +11,8 @@
 //#define BOOST_SPIRIT_DEBUG
 #include <boost/spirit/include/qi.hpp>
 
-#include <string>
 #include <limits>
+#include <string>
 
 namespace osrm
 {
@@ -106,15 +106,15 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
 
         unlimited.add("unlimited", std::numeric_limits<double>::infinity());
 
-        radiuses_rule = qi::lit("radiuses=") >> -(unlimited | qi::double_) % ";";
+        radiuses_rule = qi::lit("radiuses=") > -(unlimited | qi::double_) % ";";
         hints_rule =
-            qi::lit("hints=") >>
+            qi::lit("hints=") >
             qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
         bearings_rule =
-            qi::lit("bearings=") >> (-(qi::short_ >> ',' >> qi::short_))[add_bearing] % ";";
-        polyline_rule = qi::as_string[qi::lit("polyline(") >> +polyline_chars >> qi::lit(")")]
+            qi::lit("bearings=") > (-(qi::short_ > ',' > qi::short_))[add_bearing] % ";";
+        polyline_rule = qi::as_string[qi::lit("polyline(") > +polyline_chars > qi::lit(")")]
                                      [polyline_to_coordinates];
-        location_rule = (double_ >> qi::lit(',') >> double_)[add_coordinate];
+        location_rule = (double_ > qi::lit(',') > double_)[add_coordinate];
         query_rule = (location_rule % ';') | polyline_rule;
 
         base_rule = bearings_rule | radiuses_rule[set_radiuses] | hints_rule;

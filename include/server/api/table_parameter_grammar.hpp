@@ -30,14 +30,14 @@ struct TableParametersGrammar final : public BaseParametersGrammar
         const auto set_sources = [this](SourcesT sources) {
             parameters.sources = std::move(sources);
         };
-        destinations_rule = (qi::lit("destinations=") >> (qi::ulong_ % ";")[set_destiantions]) |
+        destinations_rule = (qi::lit("destinations=") > (qi::ulong_ % ";")[set_destiantions]) |
                             qi::lit("destinations=all");
         sources_rule =
-            (qi::lit("sources=") >> (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
+            (qi::lit("sources=") > (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
         table_rule = destinations_rule | sources_rule;
 
         root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (table_rule | base_rule) % '&');
+            query_rule > -qi::lit(".json") > -(qi::lit("?") > (table_rule | base_rule) % '&');
     }
 
     engine::api::TableParameters parameters;

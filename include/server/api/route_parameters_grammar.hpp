@@ -49,19 +49,19 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         };
         const auto set_uturns = [this](UturnsT uturns) { parameters.uturns = std::move(uturns); };
 
-        alternatives_rule = qi::lit("alternatives=") >> qi::bool_;
-        steps_rule = qi::lit("steps=") >> qi::bool_;
+        alternatives_rule = qi::lit("alternatives=") > qi::bool_;
+        steps_rule = qi::lit("steps=") > qi::bool_;
         geometries_rule = qi::lit("geometries=geojson")[set_geojson_type] |
                           qi::lit("geometries=polyline")[set_polyline_type];
         overview_rule = qi::lit("overview=simplified")[set_simplified_type] |
                         qi::lit("overview=full")[set_full_type] |
                         qi::lit("overview=false")[set_false_type];
-        uturns_rule = qi::lit("uturns=default") | (qi::lit("uturns=") >> qi::bool_)[set_uturns];
+        uturns_rule = qi::lit("uturns=default") | (qi::lit("uturns=") > qi::bool_)[set_uturns];
         route_rule = steps_rule[set_steps] | alternatives_rule[set_alternatives] | geometries_rule |
                      overview_rule | uturns_rule;
 
         root_rule =
-            query_rule >> -qi::lit(".json") >> -(qi::lit("?") >> (route_rule | base_rule) % '&');
+            query_rule > -qi::lit(".json") > -(qi::lit("?") > (route_rule | base_rule) % '&');
     }
 
     engine::api::RouteParameters parameters;

@@ -1,11 +1,13 @@
 #include "server/api/parameters_parser.hpp"
 
+#include "server/api/match_parameter_grammar.hpp"
+#include "server/api/nearest_parameter_grammar.hpp"
 #include "server/api/route_parameters_grammar.hpp"
 #include "server/api/table_parameter_grammar.hpp"
-#include "server/api/nearest_parameter_grammar.hpp"
-#include "server/api/trip_parameter_grammar.hpp"
-#include "server/api/match_parameter_grammar.hpp"
 #include "server/api/tile_parameter_grammar.hpp"
+#include "server/api/trip_parameter_grammar.hpp"
+
+#include <type_traits>
 
 namespace osrm
 {
@@ -25,16 +27,29 @@ template <typename ParameterT,
           typename GrammarT,
           typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0,
           typename std::enable_if<detail::is_grammar_t<GrammarT>::value, int>::type = 0>
-boost::optional<ParameterT> parseParameters(std::string::iterator &iter, const std::string::iterator end)
+boost::optional<ParameterT> parseParameters(std::string::iterator &iter,
+                                            const std::string::iterator end)
 {
+    using It = std::decay<decltype(iter)>::type;
+
     GrammarT grammar;
-    const auto result = boost::spirit::qi::parse(iter, end, grammar);
 
-    boost::optional<ParameterT> parameters;
-    if (result && iter == end)
-        parameters = std::move(grammar.parameters);
+    try
+    {
+        const auto ok = boost::spirit::qi::parse(iter, end, grammar);
 
-    return parameters;
+        // return move(a.b) is needed to move b out of a and then return the rvalue by implicit move
+        if (ok && iter == end)
+            return std::move(grammar.parameters);
+    }
+    catch (const qi::expectation_failure<It> &failure)
+    {
+        // The grammar above using expectation parsers ">" does not automatically increment the
+        // iterator to the failing position. Extract the position from the exception ourselves.
+        iter = failure.first;
+    }
+
+    return boost::none;
 }
 } // ns detail
 
