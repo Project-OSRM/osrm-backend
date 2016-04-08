@@ -14,7 +14,6 @@ branches:
   only:
     - master
     - develop
-    - rewrite/new-api
 
 matrix:
   fast_finish: true
@@ -98,30 +97,6 @@ matrix:
           packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
-
-    # Disabled until tests all pass on OSX:
-    #
-    # 3/ OSX Clang Builds
-    #- os: osx
-    #  osx_image: xcode6.4
-    #  compiler: clang
-    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug'
-
-    #- os: osx
-    #  osx_image: xcode6.4
-    #  compiler: clang
-    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
-
-    #- os: osx
-    #  osx_image: xcode6.4
-    #  compiler: clang
-    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
-
-    #- os: osx
-    #  osx_image: xcode7
-    #  compiler: clang
-    #  env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
-
 before_install:
   - source ./scripts/install_node.sh 4
 
@@ -188,6 +163,4 @@ after_success:
     if [ -n "$RUN_CLANG_FORMAT" ]; then
       ./scripts/format.sh || true # we don't want to fail just yet
     fi
-  - pushd build
   - coveralls --exclude unit_tests --gcov-options '\-lp'
-  - popd
