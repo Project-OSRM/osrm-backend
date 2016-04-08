@@ -101,7 +101,7 @@ class StaticRTree
             return other.squared_min_dist < squared_min_dist;
         }
 
-        double squared_min_dist;
+        std::uint64_t squared_min_dist;
         QueryNodeType node;
     };
 
@@ -408,7 +408,7 @@ class StaticRTree
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
-        traversal_queue.push(QueryCandidate{0.f, m_search_tree[0]});
+        traversal_queue.push(QueryCandidate{0, m_search_tree[0]});
 
         while (!traversal_queue.empty())
         {
@@ -421,8 +421,8 @@ class StaticRTree
                     current_query_node.node.template get<TreeNode>();
                 if (current_tree_node.child_is_on_disk)
                 {
-                    ExploreLeafNode(current_tree_node.children[0], projected_coordinate,
-                                    traversal_queue);
+                    ExploreLeafNode(current_tree_node.children[0], fixed_projected_coordinate,
+                                    projected_coordinate, traversal_queue);
                 }
                 else
                 {
@@ -459,6 +459,7 @@ class StaticRTree
   private:
     template <typename QueueT>
     void ExploreLeafNode(const std::uint32_t leaf_id,
+                         const Coordinate projected_input_coordinate_fixed,
                          const FloatCoordinate &projected_input_coordinate,
                          QueueT &traversal_queue)
     {
@@ -480,8 +481,7 @@ class StaticRTree
                                                               projected_input_coordinate);
 
             const auto squared_distance = coordinate_calculation::squaredEuclideanDistance(
-                projected_nearest, projected_input_coordinate);
-
+                projected_input_coordinate_fixed, projected_nearest);
             // distance must be non-negative
             BOOST_ASSERT(0. <= squared_distance);
             traversal_queue.push(

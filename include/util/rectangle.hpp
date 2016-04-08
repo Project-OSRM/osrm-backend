@@ -83,7 +83,7 @@ struct RectangleInt2D
     // This code assumes that we are operating in euclidean space!
     // That means if you just put unprojected lat/lon in here you will
     // get invalid results.
-    double GetMinSquaredDist(const Coordinate location) const
+    std::uint64_t GetMinSquaredDist(const Coordinate location) const
     {
         const bool is_contained = Contains(location);
         if (is_contained)
@@ -116,7 +116,7 @@ struct RectangleInt2D
 
         BOOST_ASSERT(d != INVALID);
 
-        double min_dist = std::numeric_limits<double>::max();
+        std::uint64_t min_dist = std::numeric_limits<std::uint64_t>::max();
         switch (d)
         {
         case NORTH:
@@ -155,7 +155,7 @@ struct RectangleInt2D
             break;
         }
 
-        BOOST_ASSERT(min_dist < std::numeric_limits<double>::max());
+        BOOST_ASSERT(min_dist < std::numeric_limits<std::uint64_t>::max());
 
         return min_dist;
     }
