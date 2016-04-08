@@ -315,9 +315,9 @@ FloatLatitude yToLat(const double y)
 
 double latToY(const FloatLatitude latitude)
 {
-    const double normalized_lat = 90. + static_cast<double>(latitude);
-
-    const double y = RAD_TO_DEGREE * std::log(std::tan(normalized_lat * DEGREE_TO_RAD * 0.5));
+    // apparently this is the (faster) version of the canonical log(tan()) version
+    const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(latitude));
+    const double y = RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
     const auto clamped_y = std::max(-180., std::min(180., y));
     return clamped_y;
 }
