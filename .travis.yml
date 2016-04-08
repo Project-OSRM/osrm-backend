@@ -163,4 +163,4 @@ after_success:
     if [ -n "$RUN_CLANG_FORMAT" ]; then
       ./scripts/format.sh || true # we don't want to fail just yet
     fi
-  - coveralls --exclude unit_tests --exclude thrid_party --exclude build --gcov-options '\-lp'
+  - coveralls --exclude unit_tests --exclude thrid_party --gcov-options '\-lp'
