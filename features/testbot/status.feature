@@ -46,22 +46,22 @@ Feature: Status messages
             | ab    |
 
         When I route I should get
-            | request                     | status | message                                         |
-            | route/v1/driving/1,1;1,2    | 200    |                                                 |
-            | nonsense                    | 400    | URL string malformed close to position 0: "/no" |
-            | nonsense/v1/driving/1,1;1,2 | 400    | Service nonsense not found!                     |
-            |                             | 400    | URL string malformed close to position 0: "/"   |
-            | /                           | 400    | URL string malformed close to position 0: "//"  |
-            | ?                           | 400    | URL string malformed close to position 0: "/?"  |
-            | route/v1/driving            | 400    | URL string malformed close to position 0: "/ro" |
-            | route/v1/driving/           | 400    | URL string malformed close to position 0: "/ro" |
-            | route/v1/driving/1          | 400    | Query string malformed close to position 0      |
-            | route/v1/driving/1,1        | 400    | Number of coordinates needs to be at least two. |
-            | route/v1/driving/1,1,1      | 400    | Query string malformed close to position 3      |
-            | route/v1/driving/x          | 400    | Query string malformed close to position 0      |
-            | route/v1/driving/x,y        | 400    | Query string malformed close to position 0      |
-            | route/v1/driving/1,1;       | 400    | Query string malformed close to position 3      |
-            | route/v1/driving/1,1;1      | 400    | Query string malformed close to position 3      |
-            | route/v1/driving/1,1;1,1,1  | 400    | Query string malformed close to position 7      |
-            | route/v1/driving/1,1;x      | 400    | Query string malformed close to position 3      |
-            | route/v1/driving/1,1;x,y    | 400    | Query string malformed close to position 3      |
+            | request                     | status | message                                           |
+            | route/v1/driving/1,1;1,2    | 200    |                                                   |
+            | nonsense                    | 400    | URL string malformed close to position 9: "nse"   |
+            | nonsense/v1/driving/1,1;1,2 | 400    | Service nonsense not found!                       |
+            |                             | 400    | URL string malformed close to position 1: "/"     |
+            | /                           | 400    | URL string malformed close to position 1: "//"    |
+            | ?                           | 400    | URL string malformed close to position 1: "/?"    |
+            | route/v1/driving            | 400    | URL string malformed close to position 17: "ing"  |
+            | route/v1/driving/           | 400    | URL string malformed close to position 18: "ng/"  |
+            | route/v1/driving/1          | 400    | Query string malformed close to position 1        |
+            | route/v1/driving/1,1        | 400    | Number of coordinates needs to be at least two.   |
+            | route/v1/driving/1,1,1      | 400    | Query string malformed close to position 3        |
+            | route/v1/driving/x          | 400    | Query string malformed close to position 0        |
+            | route/v1/driving/x,y        | 400    | Query string malformed close to position 0        |
+            | route/v1/driving/1,1;       | 400    | Query string malformed close to position 3        |
+            | route/v1/driving/1,1;1      | 400    | Query string malformed close to position 5        |
+            | route/v1/driving/1,1;1,1,1  | 400    | Query string malformed close to position 7        |
+            | route/v1/driving/1,1;x      | 400    | Query string malformed close to position 3        |
+            | route/v1/driving/1,1;x,y    | 400    | Query string malformed close to position 3        |
