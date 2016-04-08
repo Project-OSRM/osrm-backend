@@ -7,10 +7,12 @@
 #include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
 
+#include <boost/optional.hpp>
 //#define BOOST_SPIRIT_DEBUG
 #include <boost/spirit/include/qi.hpp>
 
 #include <string>
+#include <limits>
 
 namespace osrm
 {
@@ -102,7 +104,9 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
         polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
         base64_char = qi::char_("a-zA-Z0-9--_=");
 
-        radiuses_rule = qi::lit("radiuses=") >> -qi::double_ % ";";
+        unlimited.add("unlimited", std::numeric_limits<double>::infinity());
+
+        radiuses_rule = qi::lit("radiuses=") >> -(unlimited | qi::double_) % ";";
         hints_rule =
             qi::lit("hints=") >>
             qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
@@ -125,6 +129,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
     qi::rule<Iterator> bearings_rule;
     qi::rule<Iterator> hints_rule;
     qi::rule<Iterator> polyline_rule, location_rule;
+    qi::symbols<char, double> unlimited;
     qi::rule<Iterator, RadiusesT()> radiuses_rule;
     qi::rule<Iterator, unsigned char()> base64_char;
     qi::rule<Iterator, std::string()> alpha_numeral, polyline_chars;
