@@ -15,6 +15,10 @@ branches:
     - master
     - develop
 
+env:
+  global:
+   - secure: hWsZLHs4YIPQVDOEnEP7zIvjSe/CS8vWUEWJwU8FP61h7sGb0Hbi2/MUW0u+KuBsiPfhcPP7E9mWt3trYirQdmZkuSU11qZsq9rdrFZCh/ykP/GBNTfZSDJos713yMV4KivLfjF7VlitkzsDXND489v3RQxQGAkKaytfDGpxc5c=
+
 matrix:
   fast_finish: true
 
