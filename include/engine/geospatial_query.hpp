@@ -6,6 +6,7 @@
 #include "engine/phantom_node.hpp"
 #include "util/bearing.hpp"
 #include "util/rectangle.hpp"
+#include "util/web_mercator.hpp"
 
 #include "osrm/coordinate.hpp"
 
@@ -424,10 +425,11 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         BOOST_ASSERT(segment.data.reverse_segment_id.id != SPECIAL_SEGMENTID ||
                      !segment.data.reverse_segment_id.enabled);
 
-        Coordinate wsg84_coordinate = util::coordinate_calculation::mercator::toWGS84(
-            segment.fixed_projected_coordinate);
+        Coordinate wsg84_coordinate =
+            util::web_mercator::toWGS84(segment.fixed_projected_coordinate);
 
-        return util::coordinate_calculation::haversineDistance(input_coordinate, wsg84_coordinate) > max_distance;
+        return util::coordinate_calculation::haversineDistance(input_coordinate, wsg84_coordinate) >
+               max_distance;
     }
 
     std::pair<bool, bool> checkSegmentBearing(const CandidateSegment &segment,

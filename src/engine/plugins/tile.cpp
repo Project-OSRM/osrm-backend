@@ -2,6 +2,7 @@
 #include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
+#include "util/web_mercator.hpp"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
@@ -119,7 +120,6 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
                                 const util::Coordinate target,
                                 const detail::BBox &tile_bbox)
 {
-    using namespace util::coordinate_calculation;
     FloatLine geo_line;
     geo_line.emplace_back(static_cast<double>(util::toFloating(start.lon)),
                           static_cast<double>(util::toFloating(start.lat)));
@@ -130,15 +130,16 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
 
     for (auto const &pt : geo_line)
     {
-        double px_merc = pt.x * mercator::DEGREE_TO_PX;
-        double py_merc = mercator::latToY(util::FloatLatitude(pt.y)) * mercator::DEGREE_TO_PX;
+        double px_merc = pt.x * util::web_mercator::DEGREE_TO_PX;
+        double py_merc = util::web_mercator::latToY(util::FloatLatitude(pt.y)) *
+                         util::web_mercator::DEGREE_TO_PX;
         // convert lon/lat to tile coordinates
         const auto px = std::round(
-            ((px_merc - tile_bbox.minx) * mercator::TILE_SIZE / tile_bbox.width()) *
-            detail::VECTOR_TILE_EXTENT / util::coordinate_calculation::mercator::TILE_SIZE);
+            ((px_merc - tile_bbox.minx) * util::web_mercator::TILE_SIZE / tile_bbox.width()) *
+            detail::VECTOR_TILE_EXTENT / util::web_mercator::TILE_SIZE);
         const auto py = std::round(
-            ((tile_bbox.maxy - py_merc) * mercator::TILE_SIZE / tile_bbox.height()) *
-            detail::VECTOR_TILE_EXTENT / util::coordinate_calculation::mercator::TILE_SIZE);
+            ((tile_bbox.maxy - py_merc) * util::web_mercator::TILE_SIZE / tile_bbox.height()) *
+            detail::VECTOR_TILE_EXTENT / util::web_mercator::TILE_SIZE);
 
         boost::geometry::append(unclipped_line, point_t(px, py));
     }
@@ -170,12 +171,11 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 {
     BOOST_ASSERT(parameters.IsValid());
 
-    using namespace util::coordinate_calculation;
     double min_lon, min_lat, max_lon, max_lat;
 
     // Convert the z,x,y mercator tile coordinates into WGS84 lon/lat values
-    mercator::xyzToWGS84(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon,
-                         max_lat);
+    util::web_mercator::xyzToWGS84(parameters.x, parameters.y, parameters.z, min_lon, min_lat,
+                                   max_lon, max_lat);
 
     util::Coordinate southwest{util::FloatLongitude(min_lon), util::FloatLatitude(min_lat)};
     util::Coordinate northeast{util::FloatLongitude(max_lon), util::FloatLatitude(max_lat)};
@@ -245,8 +245,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     // TODO: extract speed values for compressed and uncompressed geometries
 
     // Convert tile coordinates into mercator coordinates
-    mercator::xyzToMercator(parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon,
-                            max_lat);
+    util::web_mercator::xyzToMercator(parameters.x, parameters.y, parameters.z, min_lon, min_lat,
+                                      max_lon, max_lat);
     const detail::BBox tile_bbox{min_lon, min_lat, max_lon, max_lat};
 
     // Protobuf serialized blocks when objects go out of scope, hence

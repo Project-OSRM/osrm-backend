@@ -1,5 +1,6 @@
 #include "engine/douglas_peucker.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/web_mercator.hpp"
 #include "util/coordinate.hpp"
 
 #include <boost/assert.hpp>
@@ -19,15 +20,15 @@ namespace engine
 struct FastPerpendicularDistance
 {
     FastPerpendicularDistance(const util::Coordinate start, const util::Coordinate target)
-        : projected_start(util::coordinate_calculation::mercator::fromWGS84(start)),
-          projected_target(util::coordinate_calculation::mercator::fromWGS84(target))
+        : projected_start(util::web_mercator::fromWGS84(start)),
+          projected_target(util::web_mercator::fromWGS84(target))
     {
     }
 
     // Normed to the thresholds table
     std::uint64_t operator()(const util::Coordinate coordinate) const
     {
-        auto projected = util::coordinate_calculation::mercator::fromWGS84(coordinate);
+        auto projected = util::web_mercator::fromWGS84(coordinate);
         util::FloatCoordinate projected_point_on_segment;
         std::tie(std::ignore, projected_point_on_segment) =
             util::coordinate_calculation::projectPointOnSegment(projected_start, projected_target,

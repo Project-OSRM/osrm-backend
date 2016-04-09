@@ -62,10 +62,10 @@ template <typename DataT> class LinearSearchNN
     {
         std::vector<DataT> local_edges(edges);
 
-        auto projected_input = coordinate_calculation::mercator::fromWGS84(input_coordinate);
+        auto projected_input = web_mercator::fromWGS84(input_coordinate);
         const auto segment_comparator = [this, &projected_input](const DataT &lhs,
                                                                  const DataT &rhs) {
-            using coordinate_calculation::mercator::fromWGS84;
+            using web_mercator::fromWGS84;
             const auto lhs_result = coordinate_calculation::projectPointOnSegment(
                 fromWGS84(coords->at(lhs.u)), fromWGS84(coords->at(lhs.v)), projected_input);
             const auto rhs_result = coordinate_calculation::projectPointOnSegment(
@@ -327,13 +327,6 @@ BOOST_AUTO_TEST_CASE(regression_test)
     Coordinate input(FloatLongitude(55.1), FloatLatitude(20.0));
     auto result_rtree = rtree.Nearest(input, 1);
     auto result_ls = lsnn.Nearest(input, 1);
-
-    auto distance_rtree = coordinate_calculation::perpendicularDistance(
-        fixture.coords->at(result_rtree.front().u), fixture.coords->at(result_rtree.front().v),
-        input);
-
-    auto distance_lsnn = coordinate_calculation::perpendicularDistance(
-        fixture.coords->at(result_ls.front().u), fixture.coords->at(result_ls.front().v), input);
 
     BOOST_CHECK(result_rtree.size() == 1);
     BOOST_CHECK(result_ls.size() == 1);

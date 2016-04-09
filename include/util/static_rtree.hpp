@@ -5,11 +5,12 @@
 #include "util/hilbert_value.hpp"
 #include "util/rectangle.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
-
 #include "util/bearing.hpp"
 #include "util/exception.hpp"
 #include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/web_mercator.hpp"
 
 #include "osrm/coordinate.hpp"
 
@@ -129,7 +130,8 @@ class StaticRTree
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, m_element_count),
             [&input_data_vector, &input_wrapper_vector,
-             &coordinate_list](const tbb::blocked_range<uint64_t> &range) {
+             &coordinate_list](const tbb::blocked_range<uint64_t> &range)
+            {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end; ++element_counter)
                 {
@@ -144,9 +146,9 @@ class StaticRTree
 
                     Coordinate current_centroid = coordinate_calculation::centroid(
                         coordinate_list[current_element.u], coordinate_list[current_element.v]);
-                    current_centroid.lat = FixedLatitude(
-                        COORDINATE_PRECISION *
-                        coordinate_calculation::mercator::latToY(toFloating(current_centroid.lat)));
+                    current_centroid.lat =
+                        FixedLatitude(COORDINATE_PRECISION *
+                                      web_mercator::latToY(toFloating(current_centroid.lat)));
 
                     current_wrapper.m_hilbert_value = hilbertCode(current_centroid);
                 }
@@ -233,20 +235,21 @@ class StaticRTree
         std::reverse(m_search_tree.begin(), m_search_tree.end());
 
         std::uint32_t search_tree_size = m_search_tree.size();
-        tbb::parallel_for(
-            tbb::blocked_range<std::uint32_t>(0, search_tree_size),
-            [this, &search_tree_size](const tbb::blocked_range<std::uint32_t> &range) {
-                for (std::uint32_t i = range.begin(), end = range.end(); i != end; ++i)
-                {
-                    TreeNode &current_tree_node = this->m_search_tree[i];
-                    for (std::uint32_t j = 0; j < current_tree_node.child_count; ++j)
-                    {
-                        const std::uint32_t old_id = current_tree_node.children[j];
-                        const std::uint32_t new_id = search_tree_size - old_id - 1;
-                        current_tree_node.children[j] = new_id;
-                    }
-                }
-            });
+        tbb::parallel_for(tbb::blocked_range<std::uint32_t>(0, search_tree_size),
+                          [this, &search_tree_size](const tbb::blocked_range<std::uint32_t> &range)
+                          {
+                              for (std::uint32_t i = range.begin(), end = range.end(); i != end;
+                                   ++i)
+                              {
+                                  TreeNode &current_tree_node = this->m_search_tree[i];
+                                  for (std::uint32_t j = 0; j < current_tree_node.child_count; ++j)
+                                  {
+                                      const std::uint32_t old_id = current_tree_node.children[j];
+                                      const std::uint32_t new_id = search_tree_size - old_id - 1;
+                                      current_tree_node.children[j] = new_id;
+                                  }
+                              }
+                          });
 
         // open tree file
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);
@@ -325,10 +328,10 @@ class StaticRTree
     {
         const Rectangle projected_rectangle{
             search_rectangle.min_lon, search_rectangle.max_lon,
-            toFixed(FloatLatitude{coordinate_calculation::mercator::latToY(
-                toFloating(FixedLatitude(search_rectangle.min_lat)))}),
-            toFixed(FloatLatitude{coordinate_calculation::mercator::latToY(
-                toFloating(FixedLatitude(search_rectangle.max_lat)))})};
+            toFixed(FloatLatitude{
+                web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.min_lat)))}),
+            toFixed(FloatLatitude{
+                web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.max_lat)))})};
         std::vector<EdgeDataT> results;
 
         std::queue<TreeNode> traversal_queue;
@@ -391,8 +394,12 @@ class StaticRTree
     std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate, const std::size_t max_results)
     {
         return Nearest(input_coordinate,
-                       [](const CandidateSegment &) { return std::make_pair(true, true); },
-                       [max_results](const std::size_t num_results, const CandidateSegment &) {
+                       [](const CandidateSegment &)
+                       {
+                           return std::make_pair(true, true);
+                       },
+                       [max_results](const std::size_t num_results, const CandidateSegment &)
+                       {
                            return num_results >= max_results;
                        });
     }
@@ -403,7 +410,7 @@ class StaticRTree
     Nearest(const Coordinate input_coordinate, const FilterT filter, const TerminationT terminate)
     {
         std::vector<EdgeDataT> results;
-        auto projected_coordinate = coordinate_calculation::mercator::fromWGS84(input_coordinate);
+        auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
         Coordinate fixed_projected_coordinate{projected_coordinate};
 
         // initialize queue with root element
@@ -470,10 +477,8 @@ class StaticRTree
         for (const auto i : irange(0u, current_leaf_node.object_count))
         {
             const auto &current_edge = current_leaf_node.objects[i];
-            const auto projected_u =
-                coordinate_calculation::mercator::fromWGS84((*m_coordinate_list)[current_edge.u]);
-            const auto projected_v =
-                coordinate_calculation::mercator::fromWGS84((*m_coordinate_list)[current_edge.v]);
+            const auto projected_u = web_mercator::fromWGS84((*m_coordinate_list)[current_edge.u]);
+            const auto projected_v = web_mercator::fromWGS84((*m_coordinate_list)[current_edge.v]);
 
             FloatCoordinate projected_nearest;
             std::tie(std::ignore, projected_nearest) =
@@ -535,10 +540,10 @@ class StaticRTree
             BOOST_ASSERT(objects[i].u < coordinate_list.size());
             BOOST_ASSERT(objects[i].v < coordinate_list.size());
 
-            Coordinate projected_u{coordinate_calculation::mercator::fromWGS84(
-                Coordinate{coordinate_list[objects[i].u]})};
-            Coordinate projected_v{coordinate_calculation::mercator::fromWGS84(
-                Coordinate{coordinate_list[objects[i].v]})};
+            Coordinate projected_u{
+                web_mercator::fromWGS84(Coordinate{coordinate_list[objects[i].u]})};
+            Coordinate projected_v{
+                web_mercator::fromWGS84(Coordinate{coordinate_list[objects[i].v]})};
 
             BOOST_ASSERT(toFloating(projected_u.lon) <= FloatLongitude(180.));
             BOOST_ASSERT(toFloating(projected_u.lon) >= FloatLongitude(-180.));

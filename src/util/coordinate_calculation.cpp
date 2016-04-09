@@ -1,6 +1,7 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/trigonometry_table.hpp"
+#include "util/web_mercator.hpp"
 
 #include <boost/assert.hpp>
 
@@ -40,11 +41,11 @@ double haversineDistance(const Coordinate coordinate_1, const Coordinate coordin
     const double ln1 = lon1 / COORDINATE_PRECISION;
     const double lt2 = lat2 / COORDINATE_PRECISION;
     const double ln2 = lon2 / COORDINATE_PRECISION;
-    const double dlat1 = lt1 * DEGREE_TO_RAD;
+    const double dlat1 = lt1 * detail::DEGREE_TO_RAD;
 
-    const double dlong1 = ln1 * DEGREE_TO_RAD;
-    const double dlat2 = lt2 * DEGREE_TO_RAD;
-    const double dlong2 = ln2 * DEGREE_TO_RAD;
+    const double dlong1 = ln1 * detail::DEGREE_TO_RAD;
+    const double dlat2 = lt2 * detail::DEGREE_TO_RAD;
+    const double dlong2 = ln2 * detail::DEGREE_TO_RAD;
 
     const double dlong = dlong1 - dlong2;
     const double dlat = dlat1 - dlat2;
@@ -52,7 +53,7 @@ double haversineDistance(const Coordinate coordinate_1, const Coordinate coordin
     const double aharv = std::pow(std::sin(dlat / 2.0), 2.0) +
                          std::cos(dlat1) * std::cos(dlat2) * std::pow(std::sin(dlong / 2.), 2);
     const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
-    return EARTH_RADIUS * charv;
+    return detail::EARTH_RADIUS * charv;
 }
 
 double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
@@ -66,14 +67,14 @@ double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coord
     BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
 
-    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
-    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
-    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
-    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * DEGREE_TO_RAD;
+    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
+    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
+    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
+    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * detail::DEGREE_TO_RAD;
 
     const double x_value = (float_lon2 - float_lon1) * std::cos((float_lat1 + float_lat2) / 2.0);
     const double y_value = float_lat2 - float_lat1;
-    return std::hypot(x_value, y_value) * EARTH_RADIUS;
+    return std::hypot(x_value, y_value) * detail::EARTH_RADIUS;
 }
 
 std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoordinate &source,
@@ -125,10 +126,10 @@ double perpendicularDistance(const Coordinate segment_source,
     BOOST_ASSERT(query_location.IsValid());
 
     FloatCoordinate projected_nearest;
-    std::tie(ratio, projected_nearest) = projectPointOnSegment(mercator::fromWGS84(segment_source),
-                                                               mercator::fromWGS84(segment_target),
-                                                               mercator::fromWGS84(query_location));
-    nearest_location = mercator::toWGS84(projected_nearest);
+    std::tie(ratio, projected_nearest) = projectPointOnSegment(
+        web_mercator::fromWGS84(segment_source), web_mercator::fromWGS84(segment_target),
+        web_mercator::fromWGS84(query_location));
+    nearest_location = web_mercator::toWGS84(projected_nearest);
 
     const double approximate_distance = greatCircleDistance(query_location, nearest_location);
     BOOST_ASSERT(0.0 <= approximate_distance);
@@ -198,10 +199,10 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
 
     const double v1x = static_cast<double>(toFloating(first.lon - second.lon));
     const double v1y =
-        mercator::latToY(toFloating(first.lat)) - mercator::latToY(toFloating(second.lat));
+        web_mercator::latToY(toFloating(first.lat)) - web_mercator::latToY(toFloating(second.lat));
     const double v2x = static_cast<double>(toFloating(third.lon - second.lon));
     const double v2y =
-        mercator::latToY(toFloating(third.lat)) - mercator::latToY(toFloating(second.lat));
+        web_mercator::latToY(toFloating(third.lat)) - web_mercator::latToY(toFloating(second.lat));
 
     double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180. / pi<double>();
 
@@ -302,107 +303,6 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
     return {std::move(interpolated_lon), std::move(interpolated_lat)};
 }
 
-namespace mercator
-{
-FloatLatitude yToLat(const double y)
-{
-    const auto clamped_y = std::max(-180., std::min(180., y));
-    const double normalized_lat =
-        RAD_TO_DEGREE * 2. * std::atan(std::exp(clamped_y * DEGREE_TO_RAD));
-
-    return FloatLatitude(normalized_lat - 90.);
-}
-
-double latToY(const FloatLatitude latitude)
-{
-    // apparently this is the (faster) version of the canonical log(tan()) version
-    const double f = std::sin(DEGREE_TO_RAD * static_cast<double>(latitude));
-    const double y = RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
-    const auto clamped_y = std::max(-180., std::min(180., y));
-    return clamped_y;
-}
-
-FloatLatitude clamp(const FloatLatitude lat)
-{
-    return std::max(std::min(lat, FloatLatitude(detail::MAX_LATITUDE)),
-                    FloatLatitude(-detail::MAX_LATITUDE));
-}
-
-FloatLongitude clamp(const FloatLongitude lon)
-{
-    return std::max(std::min(lon, FloatLongitude(detail::MAX_LONGITUDE)),
-                    FloatLongitude(-detail::MAX_LONGITUDE));
-}
-
-inline void pixelToDegree(const double shift, double &x, double &y)
-{
-    const double b = shift / 2.0;
-    x = (x - b) / shift * 360.0;
-    // FIXME needs to be simplified
-    const double g = (y - b) / -(shift / (2 * M_PI)) / DEGREE_TO_RAD;
-    static_assert(DEGREE_TO_RAD / (2 * M_PI) - 1 / 360. < 0.0001, "");
-    y = static_cast<double>(util::coordinate_calculation::mercator::yToLat(g));
-}
-
-double degreeToPixel(FloatLongitude lon, unsigned zoom)
-{
-    const double shift = (1u << zoom) * TILE_SIZE;
-    const double b = shift / 2.0;
-    const double x = b * (1 + static_cast<double>(lon) / 180.0);
-    return x;
-}
-
-double degreeToPixel(FloatLatitude lat, unsigned zoom)
-{
-    const double shift = (1u << zoom) * TILE_SIZE;
-    const double b = shift / 2.0;
-    const double y = b * (1. - latToY(lat) / 180.);
-    return y;
-}
-
-FloatCoordinate fromWGS84(const FloatCoordinate &wgs84_coordinate)
-{
-    return {wgs84_coordinate.lon,
-            FloatLatitude{coordinate_calculation::mercator::latToY(wgs84_coordinate.lat)}};
-}
-
-FloatCoordinate toWGS84(const FloatCoordinate &mercator_coordinate)
-{
-    return {mercator_coordinate.lon,
-            coordinate_calculation::mercator::yToLat(static_cast<double>(mercator_coordinate.lat))};
-}
-
-// Converts a WMS tile coordinate (z,x,y) into a wgs bounding box
-void xyzToWGS84(
-    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
-{
-    using util::coordinate_calculation::mercator::TILE_SIZE;
-
-    minx = x * TILE_SIZE;
-    miny = (y + 1.0) * TILE_SIZE;
-    maxx = (x + 1.0) * TILE_SIZE;
-    maxy = y * TILE_SIZE;
-    // 2^z * TILE_SIZE
-    const double shift = (1u << static_cast<unsigned>(z)) * TILE_SIZE;
-    pixelToDegree(shift, minx, miny);
-    pixelToDegree(shift, maxx, maxy);
-}
-
-// Converts a WMS tile coordinate (z,x,y) into a mercator bounding box
-void xyzToMercator(
-    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
-{
-    using namespace util::coordinate_calculation::mercator;
-
-    xyzToWGS84(x, y, z, minx, miny, maxx, maxy);
-
-    minx = static_cast<double>(clamp(util::FloatLongitude(minx))) * DEGREE_TO_PX;
-    miny = latToY(clamp(util::FloatLatitude(miny))) * DEGREE_TO_PX;
-    maxx = static_cast<double>(clamp(util::FloatLongitude(maxx))) * DEGREE_TO_PX;
-    maxy = latToY(clamp(util::FloatLatitude(maxy))) * DEGREE_TO_PX;
-}
-
-} // ns mercato // ns mercatorr
 } // ns coordinate_calculation
 } // ns util
 } // ns osrm
