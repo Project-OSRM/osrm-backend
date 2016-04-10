@@ -77,6 +77,7 @@
         {"key": "access", "value": "emergency"},
         {"key": "access", "value": "psv"},
         {"key": "access", "value": "delivery"},
+        {"key": "maxspeed", "value": "none"},
         {"key": "maxspeed", "value": "urban"},
         {"key": "maxspeed", "value": "rural"},
         {"key": "maxspeed", "value": "trunk"},
