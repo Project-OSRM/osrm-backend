@@ -7,7 +7,8 @@ var d3 = require('d3-queue');
 module.exports = function () {
     this.initializeEnv = (callback) => {
         this.DEFAULT_PORT = 5000;
-        this.DEFAULT_TIMEOUT = 2000;
+	// OSX builds on Travis hit a timeout of ~2000 from time to time
+        this.DEFAULT_TIMEOUT = 5000;
         this.setDefaultTimeout(this.DEFAULT_TIMEOUT);
         this.ROOT_FOLDER = process.cwd();
         this.OSM_USER = 'osrm';
