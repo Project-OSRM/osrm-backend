@@ -76,9 +76,8 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const E
 }
 
 // Sets basic turn types as fallback for otherwise unhandled turns
-Intersection TurnAnalysis::setTurnTypes(const NodeID from_nid,
-                                        const EdgeID,
-                                        Intersection intersection) const
+Intersection
+TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection intersection) const
 {
     for (auto &road : intersection)
     {
