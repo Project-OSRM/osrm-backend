@@ -13,8 +13,7 @@ namespace guidance
 FunctionalRoadClass functionalRoadClassFromTag(std::string const &value)
 {
     // FIXME at some point this should be part of the profiles
-    const static auto class_hash = []
-    {
+    const static auto class_hash = [] {
         std::unordered_map<std::string, FunctionalRoadClass> hash;
         hash["motorway"] = FunctionalRoadClass::MOTORWAY;
         hash["motorway_link"] = FunctionalRoadClass::MOTORWAY_LINK;
