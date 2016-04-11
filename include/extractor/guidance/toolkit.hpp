@@ -63,10 +63,12 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
     for (auto compressed_geometry_itr = compressed_geometry_begin;
          compressed_geometry_itr != compressed_geometry_end; ++compressed_geometry_itr)
     {
-        BOOST_ASSERT(current_coordinate.IsValid());
-        BOOST_ASSERT(next_coordinate.IsValid());
         const auto next_coordinate =
             extractCoordinateFromNode(query_nodes[compressed_geometry_itr->node_id]);
+        if (!current_coordinate.IsValid() || !next_coordinate.IsValid())
+        std::cout << current_coordinate << " -> " << next_coordinate << std::endl;
+        BOOST_ASSERT(current_coordinate.IsValid());
+        BOOST_ASSERT(next_coordinate.IsValid());
         distance_to_next_coordinate =
             distance_to_current_coordinate +
             util::coordinate_calculation::haversineDistance(current_coordinate, next_coordinate);

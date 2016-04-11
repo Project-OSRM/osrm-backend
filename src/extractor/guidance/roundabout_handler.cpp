@@ -165,17 +165,19 @@ bool RoundaboutHandler::isRotary(const NodeID nid) const
         if (roundabout_nodes.size() == 2)
         {
             const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++);
-            BOOST_ASSERT(first->IsValid());
-            BOOST_ASSERT(second->IsValid());
+            if (!first.IsValid() || !second.IsValid()) { std::cout << first << " -> " << second << std::endl; }
+            BOOST_ASSERT(first.IsValid());
+            BOOST_ASSERT(second.IsValid());
             return 0.5 * util::coordinate_calculation::haversineDistance(first, second);
         }
         else
         {
             const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++),
                        third = getCoordinate(*node_itr++);
-            BOOST_ASSERT(first->IsValid());
-            BOOST_ASSERT(second->IsValid());
-            BOOST_ASSERT(third->IsValid());
+            if (!first.IsValid() || !second.IsValid() || !third.IsValid()) { std::cout << first << " -> " << second << " -> " << third << std::endl; }
+            BOOST_ASSERT(first.IsValid());
+            BOOST_ASSERT(second.IsValid());
+            BOOST_ASSERT(third.IsValid());
             return util::coordinate_calculation::circleRadius(first, second, third);
         }
     };
