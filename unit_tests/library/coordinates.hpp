@@ -25,4 +25,11 @@ inline Locations get_locations_in_small_component()
             {Longitude{7.438190}, Latitude{43.747560}}};
 }
 
+inline Locations get_locations_in_big_component()
+{
+    return {{Longitude{7.415800}, Latitude{43.734132}},
+            {Longitude{7.417710}, Latitude{43.736721}},
+            {Longitude{7.421315}, Latitude{43.738814}}};
+}
+
 #endif
