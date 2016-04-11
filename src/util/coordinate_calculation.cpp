@@ -197,6 +197,12 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     using namespace boost::math::constants;
     using namespace coordinate_calculation;
 
+    if (first == second || second == third) return 180;
+
+    BOOST_ASSERT( first.isValid() );
+    BOOST_ASSERT( second.isValid() );
+    BOOST_ASSERT( third.isValid() );
+
     const double v1x = static_cast<double>(toFloating(first.lon - second.lon));
     const double v1y =
         web_mercator::latToY(toFloating(first.lat)) - web_mercator::latToY(toFloating(second.lat));
