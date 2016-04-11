@@ -42,6 +42,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
                                  const util::Coordinate final_coordinate,
                                  const std::vector<extractor::QueryNode> &query_nodes)
 {
+    BOOST_ASSERT(compressed_geometry_begin != compressed_geometry_end);
     const auto extractCoordinateFromNode =
         [](const extractor::QueryNode &node) -> util::Coordinate {
         return {node.lon, node.lat};
@@ -62,6 +63,8 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
     for (auto compressed_geometry_itr = compressed_geometry_begin;
          compressed_geometry_itr != compressed_geometry_end; ++compressed_geometry_itr)
     {
+        BOOST_ASSERT(current_coordinate.IsValid());
+        BOOST_ASSERT(next_coordinate.IsValid());
         const auto next_coordinate =
             extractCoordinateFromNode(query_nodes[compressed_geometry_itr->node_id]);
         distance_to_next_coordinate =
@@ -78,6 +81,9 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
         current_coordinate = next_coordinate;
         distance_to_current_coordinate = distance_to_next_coordinate;
     }
+
+    BOOST_ASSERT(current_coordinate.IsValid());
+    BOOST_ASSERT(final_coordinate.IsValid());
 
     distance_to_next_coordinate =
         distance_to_current_coordinate +
