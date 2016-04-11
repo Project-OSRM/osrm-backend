@@ -10,6 +10,7 @@
 
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/discrete_angle.hpp"
+#include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
 #include <algorithm>
@@ -395,6 +396,25 @@ inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoa
     // Potentially we could include features like number of lanes here and others?
     // Should also be moved to profiles
     return std::abs(getPriority(first) - getPriority(second)) <= 1;
+}
+
+// To simplify handling of Left/Right hand turns, we can mirror turns and write an intersection
+// handler only for one side. The mirror function turns a left-hand turn in a equivalent right-hand
+// turn and vice versa.
+inline ConnectedRoad mirror(ConnectedRoad road)
+{
+    const constexpr DirectionModifier mirrored_modifiers[] = {
+        DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
+        DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
+        DirectionModifier::Right,      DirectionModifier::SharpRight};
+
+    if (angularDeviation(road.turn.angle, 0) > std::numeric_limits<double>::epsilon())
+    {
+        road.turn.angle = 360 - road.turn.angle;
+        road.turn.instruction.direction_modifier =
+            mirrored_modifiers[road.turn.instruction.direction_modifier];
+    }
+    return road;
 }
 
 } // namespace guidance

@@ -61,6 +61,19 @@ class IntersectionHandler
                     ConnectedRoad &center,
                     ConnectedRoad &right) const;
 
+    // Trivial Turns use findBasicTurnType and getTurnDirection as only criteria
+    void assignTrivialTurns(const EdgeID via_eid,
+                            Intersection &intersection,
+                            const std::size_t begin,
+                            const std::size_t end) const;
+
+    // Counting Turns are Essentially unseparable turns. Begin > end is a valid input
+    void assignCountingTurns(const EdgeID via_eid,
+                             Intersection &intersection,
+                             const std::size_t begin,
+                             const std::size_t end,
+                             const DirectionModifier modifier) const;
+
     bool isThroughStreet(const std::size_t index, const Intersection &intersection) const;
 };
 

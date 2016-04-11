@@ -389,7 +389,6 @@ Feature: Simple Turns
             | waypoints | route     | turns                   |
             | a,d       | abc,bd,bd | depart,turn left,arrive |
 
-    @bug @pr2275
     Scenario: Left Turn Assignment (6)
         Given the node map
             | d |   |   |   |   |
@@ -511,7 +510,6 @@ Feature: Simple Turns
             | waypoints | route     | turns                    |
             | a,d       | abc,bd,bd | depart,turn right,arrive |
 
-    @bug @pr2275
     Scenario: Right Turn Assignment (6)
         Given the node map
             |   |   | e |   |   |
@@ -569,7 +567,7 @@ Feature: Simple Turns
 
    Scenario: Right Turn Assignment Two Turns (2)
         Given the node map
-            |   |   | f | c |   |
+            |   |   | f |   | c |
             | a |   | b |   |   |
             |   |   |   |   | e |
             |   |   |   | d |   |
@@ -667,7 +665,6 @@ Feature: Simple Turns
             | d,e       | dbe,dbe | depart,arrive |
             | e,d       | dbe,dbe | depart,arrive |
 
-    @bug @pr2275
     Scenario: Slight Turn involving Oneways
         Given the node map
             |   |   |   | a |   |

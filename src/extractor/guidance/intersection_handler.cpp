@@ -2,6 +2,8 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
+#include "util/simple_logger.hpp"
+
 #include <algorithm>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
@@ -280,6 +282,47 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
         if (center.entry_allowed)
             center.turn.instruction = {findBasicTurnType(via_edge, center),
                                        getTurnDirection(center.turn.angle)};
+    }
+}
+
+void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
+                                             Intersection &intersection,
+                                             const std::size_t begin,
+                                             const std::size_t end) const
+{
+    for (std::size_t index = begin; index != end; ++index)
+        if (intersection[index].entry_allowed)
+            intersection[index].turn.instruction = {
+                findBasicTurnType(via_eid, intersection[index]),
+                getTurnDirection(intersection[index].turn.angle)};
+}
+
+void IntersectionHandler::assignCountingTurns(const EdgeID via_eid,
+                                              Intersection &intersection,
+                                              const std::size_t begin,
+                                              const std::size_t end,
+                                              const DirectionModifier modifier) const
+{
+    const constexpr TurnType turns[] = {TurnType::FirstTurn, TurnType::SecondTurn,
+                                        TurnType::ThirdTurn, TurnType::FourthTurn};
+    const constexpr TurnType ramps[] = {TurnType::FirstRamp, TurnType::SecondRamp,
+                                        TurnType::ThirdRamp, TurnType::FourthRamp};
+
+    const std::size_t length = end > begin ? end - begin : begin - end;
+    if (length > 4)
+    {
+        util::SimpleLogger().Write(logDEBUG) << "Counting Turn assignment called for " << length
+                                             << " turns. Supports at most four turns.";
+    }
+
+    // counting turns varies whether we consider left/right turns
+    for (std::size_t index = begin, count = 0; index != end;
+         count++, begin < end ? ++index : --index)
+    {
+        if (TurnType::Ramp == findBasicTurnType(via_eid, intersection[index]))
+            intersection[index].turn.instruction = {ramps[count], modifier};
+        else
+            intersection[index].turn.instruction = {turns[count], modifier};
     }
 }
 
