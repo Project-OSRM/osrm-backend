@@ -57,7 +57,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
         BOOST_ASSERT(segment_length > 0);
         BOOST_ASSERT(second_distance >= detail::DESIRED_SEGMENT_LENGTH);
         double missing_distance = detail::DESIRED_SEGMENT_LENGTH - first_distance;
-        return std::max(0, std::min(missing_distance / segment_length, 1.0));
+        return std::max(0., std::min(missing_distance / segment_length, 1.0));
     };
 
     for (auto compressed_geometry_itr = compressed_geometry_begin;
