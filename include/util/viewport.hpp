@@ -28,7 +28,7 @@ static constexpr double VIEWPORT_HEIGHT = 5 * web_mercator::TILE_SIZE;
 static double INV_LOG_2 = 1. / std::log(2);
 }
 
-unsigned getFittedZoom(util::Coordinate south_west, util::Coordinate north_east)
+inline unsigned getFittedZoom(util::Coordinate south_west, util::Coordinate north_east)
 {
     const auto min_x = web_mercator::degreeToPixel(toFloating(south_west.lon), detail::MAX_ZOOM);
     const auto max_y = web_mercator::degreeToPixel(toFloating(south_west.lat), detail::MAX_ZOOM);
