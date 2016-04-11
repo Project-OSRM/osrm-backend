@@ -442,6 +442,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Finally jump back to the empty space at the beginning and write length prefix
     edge_data_file.seekp(std::ios::beg);
 
+    BOOST_ASSERT( original_edges_counter < std::numeric_limits<unsigned>::max() );
     const auto length_prefix = boost::numeric_cast<unsigned>(original_edges_counter);
     static_assert(sizeof(length_prefix_empty_space) == sizeof(length_prefix), "type mismatch");
 
@@ -468,6 +469,14 @@ int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) co
     {
         // call lua profile to compute turn penalty
         double penalty = luabind::call_function<double>(lua_state, "turn_function", 180. - angle);
+#ifndef NDEBUG
+        if (penalty > std::numeric_limits<int>::max())
+        {
+            util::SimpleLogger().Write(logWARNING) << "LUA turn_penalty function returned value > INT_MAX: " << penalty << " when given an angle of " << angle;
+        }
+#endif
+        BOOST_ASSERT( penalty < std::numeric_limits<int>::max() );
+        BOOST_ASSERT( penalty > std::numeric_limits<int>::min() );
         return boost::numeric_cast<int>(penalty);
     }
     catch (const luabind::error &er)
