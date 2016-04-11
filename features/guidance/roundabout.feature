@@ -164,3 +164,98 @@ Feature: Basic Roundabout
            | j,i       | jkl,ghi,ghi | depart,roundabout-exit-2,arrive |
            | j,f       | jkl,def,def | depart,roundabout-exit-3,arrive |
            | j,c       | jkl,abc,abc | depart,roundabout-exit-4,arrive |
+
+       Scenario: Collinear in X
+        Given the node map
+            | a | b | c | d | f |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | bcdb  | roundabout |
+            | ce    |            |
+            | df    |            |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
+            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+
+       Scenario: Collinear in Y
+        Given the node map
+            | a |   |
+            | b |   |
+            | c | e |
+            | d |   |
+            | f |   |
+
+        And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | bcdb  | roundabout |
+            | ce    |            |
+            | df    |            |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
+            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+
+       Scenario: Collinear in X,Y
+        Given the node map
+            | a |   |   |
+            | b |   |   |
+            | c | d | f |
+            | e |   |   |
+
+        And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | bcdb  | roundabout |
+            | ce    |            |
+            | df    |            |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
+            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+
+       Scenario: Collinear in X,Y
+        Given the node map
+            | a |   |   |
+            | d |   |   |
+            | b | c | f |
+            | e |   |   |
+
+        And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | bcdb  | roundabout |
+            | ce    |            |
+            | df    |            |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
+            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+
+       Scenario: Collinear in X,Y
+        Given the node map
+            | a |   |   |
+            | c |   |   |
+            | d | b | f |
+            | e |   |   |
+
+        And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | bcdb  | roundabout |
+            | ce    |            |
+            | df    |            |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
+            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+

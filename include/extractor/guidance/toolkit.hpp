@@ -56,7 +56,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
         BOOST_ASSERT(segment_length > 0);
         BOOST_ASSERT(second_distance >= detail::DESIRED_SEGMENT_LENGTH);
         double missing_distance = detail::DESIRED_SEGMENT_LENGTH - first_distance;
-        return missing_distance / segment_length;
+        return std::max(0., std::min(missing_distance / segment_length, 1.0));
     };
 
     for (auto compressed_geometry_itr = compressed_geometry_begin;
@@ -84,7 +84,8 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
         util::coordinate_calculation::haversineDistance(current_coordinate, final_coordinate);
 
     // reached point where coordinates switch between
-    if (distance_to_next_coordinate >= detail::DESIRED_SEGMENT_LENGTH)
+    if (distance_to_current_coordinate < detail::DESIRED_SEGMENT_LENGTH &&
+        distance_to_next_coordinate >= detail::DESIRED_SEGMENT_LENGTH)
         return util::coordinate_calculation::interpolateLinear(
             getFactor(distance_to_current_coordinate, distance_to_next_coordinate),
             current_coordinate, final_coordinate);

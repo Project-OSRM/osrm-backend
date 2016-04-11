@@ -1,4 +1,5 @@
 #include <boost/test/unit_test.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include "util/coordinate_calculation.hpp"
 
@@ -10,6 +11,130 @@ using namespace osrm;
 using namespace osrm::util;
 
 BOOST_AUTO_TEST_SUITE(coordinate_calculation_tests)
+
+BOOST_AUTO_TEST_CASE(compute_angle)
+{
+    // Simple cases
+    // North-South straight line
+    Coordinate first(FloatLongitude(1), FloatLatitude(-1));
+    Coordinate middle(FloatLongitude(1), FloatLatitude(0));
+    Coordinate end(FloatLongitude(1), FloatLatitude(1));
+    auto angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // North-South-North u-turn
+    first = Coordinate(FloatLongitude(1), FloatLatitude(0));
+    middle = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    end = Coordinate(FloatLongitude(1), FloatLatitude(0));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 0);
+
+    // East-west straight lines are harder, *simple* coordinates only
+    // work at the equator.  For other locations, we need to follow
+    // a rhumb line.
+    first = Coordinate(FloatLongitude(1), FloatLatitude(0));
+    middle = Coordinate(FloatLongitude(2), FloatLatitude(0));
+    end = Coordinate(FloatLongitude(3), FloatLatitude(0));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // East-West-East u-turn
+    first = Coordinate(FloatLongitude(1), FloatLatitude(0));
+    middle = Coordinate(FloatLongitude(2), FloatLatitude(0));
+    end = Coordinate(FloatLongitude(1), FloatLatitude(0));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 0);
+
+    // 90 degree left turn
+    first = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    middle = Coordinate(FloatLongitude(0), FloatLatitude(1));
+    end = Coordinate(FloatLongitude(0), FloatLatitude(2));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 90);
+
+    // 90 degree right turn
+    first = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    middle = Coordinate(FloatLongitude(0), FloatLatitude(1));
+    end = Coordinate(FloatLongitude(0), FloatLatitude(0));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 270);
+
+    // Weird cases
+    // Crossing both the meridians
+    first = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    middle = Coordinate(FloatLongitude(0), FloatLatitude(1));
+    end = Coordinate(FloatLongitude(1), FloatLatitude(-1));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_CLOSE(angle, 53.1, 0.2);
+
+    // All coords in the same spot
+    first = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    middle = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    end = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // First two coords in the same spot, then heading north-east
+    first = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    middle = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    end = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // First two coords in the same spot, then heading west
+    first = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    middle = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    end = Coordinate(FloatLongitude(2), FloatLatitude(1));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // First two coords in the same spot then heading north
+    first = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    middle = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    end = Coordinate(FloatLongitude(1), FloatLatitude(2));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // Second two coords in the same spot
+    first = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    middle = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    end = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // First and last coords on the same spot
+    first = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    middle = Coordinate(FloatLongitude(-1), FloatLatitude(-1));
+    end = Coordinate(FloatLongitude(1), FloatLatitude(1));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 0);
+
+    // Check the antimeridian
+    first = Coordinate(FloatLongitude(180), FloatLatitude(90));
+    middle = Coordinate(FloatLongitude(180), FloatLatitude(0));
+    end = Coordinate(FloatLongitude(180), FloatLatitude(-90));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // Tiny changes below our calculation resolution
+    // This should be equivalent to having two points on the same
+    // spot.
+    first = Coordinate(FloatLongitude(0), FloatLatitude(0));
+    middle = Coordinate(FloatLongitude(1), FloatLatitude(0));
+    end = Coordinate(FloatLongitude(1 + std::numeric_limits<double>::epsilon()), FloatLatitude(0));
+    angle = coordinate_calculation::computeAngle(first, middle, end);
+    BOOST_CHECK_EQUAL(angle, 180);
+
+    // Invalid values
+    /* TODO: Enable this when I figure out how to use BOOST_CHECK_THROW
+     *       and not have the whole test case fail...
+    first = Coordinate(FloatLongitude(0), FloatLatitude(0));
+    middle = Coordinate(FloatLongitude(1), FloatLatitude(0));
+    end = Coordinate(FloatLongitude(std::numeric_limits<double>::max()), FloatLatitude(0));
+    BOOST_CHECK_THROW( coordinate_calculation::computeAngle(first,middle,end),
+                       boost::numeric::positive_overflow);
+                       */
+}
 
 // Regression test for bug captured in #1347
 BOOST_AUTO_TEST_CASE(regression_test_1347)
@@ -54,8 +179,10 @@ BOOST_AUTO_TEST_CASE(regression_point_on_segment)
 
     FloatCoordinate diff{target.lon - start.lon, target.lat - start.lat};
 
-    BOOST_CHECK_CLOSE(static_cast<double>(start.lon + FloatLongitude(ratio) * diff.lon), static_cast<double>(nearest.lon), 0.1);
-    BOOST_CHECK_CLOSE(static_cast<double>(start.lat + FloatLatitude(ratio) * diff.lat), static_cast<double>(nearest.lat), 0.1);
+    BOOST_CHECK_CLOSE(static_cast<double>(start.lon + FloatLongitude(ratio) * diff.lon),
+                      static_cast<double>(nearest.lon), 0.1);
+    BOOST_CHECK_CLOSE(static_cast<double>(start.lat + FloatLatitude(ratio) * diff.lat),
+                      static_cast<double>(nearest.lat), 0.1);
 }
 
 BOOST_AUTO_TEST_CASE(point_on_segment)
@@ -120,6 +247,55 @@ BOOST_AUTO_TEST_CASE(point_on_segment)
     BOOST_CHECK_EQUAL(result_4.first, reference_ratio_4);
     BOOST_CHECK_EQUAL(result_4.second.lon, reference_point_4.lon);
     BOOST_CHECK_EQUAL(result_4.second.lat, reference_point_4.lat);
+}
+
+BOOST_AUTO_TEST_CASE(circleCenter)
+{
+    Coordinate a(FloatLongitude(-100.), FloatLatitude(10.));
+    Coordinate b(FloatLongitude(-100.002), FloatLatitude(10.001));
+    Coordinate c(FloatLongitude(-100.001), FloatLatitude(10.002));
+
+    auto result = coordinate_calculation::circleCenter(a, b, c);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude(-100.000833), FloatLatitude(10.000833)));
+
+    // Co-linear longitude
+    a = Coordinate(FloatLongitude(-100.), FloatLatitude(10.));
+    b = Coordinate(FloatLongitude(-100.001), FloatLatitude(10.001));
+    c = Coordinate(FloatLongitude(-100.001), FloatLatitude(10.002));
+    result = coordinate_calculation::circleCenter(a, b, c);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude(-99.9995), FloatLatitude(10.0015)));
+
+    // Co-linear longitude, impossible to calculate
+    a = Coordinate(FloatLongitude(-100.001), FloatLatitude(10.));
+    b = Coordinate(FloatLongitude(-100.001), FloatLatitude(10.001));
+    c = Coordinate(FloatLongitude(-100.001), FloatLatitude(10.002));
+    result = coordinate_calculation::circleCenter(a, b, c);
+    BOOST_CHECK(!result);
+
+    // Co-linear latitude, this is a real case that failed
+    a = Coordinate(FloatLongitude(-112.096234), FloatLatitude(41.147101));
+    b = Coordinate(FloatLongitude(-112.096606), FloatLatitude(41.147101));
+    c = Coordinate(FloatLongitude(-112.096419), FloatLatitude(41.147259));
+    result = coordinate_calculation::circleCenter(a, b, c);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude(-112.09642), FloatLatitude(41.14707)));
+
+    // Co-linear latitude, variation
+    a = Coordinate(FloatLongitude(-112.096234), FloatLatitude(41.147101));
+    b = Coordinate(FloatLongitude(-112.096606), FloatLatitude(41.147259));
+    c = Coordinate(FloatLongitude(-112.096419), FloatLatitude(41.147259));
+    result = coordinate_calculation::circleCenter(a, b, c);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude(-112.096512), FloatLatitude(41.146962)));
+
+    // Co-linear latitude, impossible to calculate
+    a = Coordinate(FloatLongitude(-112.096234), FloatLatitude(41.147259));
+    b = Coordinate(FloatLongitude(-112.096606), FloatLatitude(41.147259));
+    c = Coordinate(FloatLongitude(-112.096419), FloatLatitude(41.147259));
+    result = coordinate_calculation::circleCenter(a, b, c);
+    BOOST_CHECK(!result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

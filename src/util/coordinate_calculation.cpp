@@ -197,6 +197,13 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     using namespace boost::math::constants;
     using namespace coordinate_calculation;
 
+    if (first == second || second == third)
+        return 180;
+
+    BOOST_ASSERT(first.IsValid());
+    BOOST_ASSERT(second.IsValid());
+    BOOST_ASSERT(third.IsValid());
+
     const double v1x = static_cast<double>(toFloating(first.lon - second.lon));
     const double v1y =
         web_mercator::latToY(toFloating(first.lat)) - web_mercator::latToY(toFloating(second.lat));
@@ -211,6 +218,7 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
         angle += 360.;
     }
 
+    BOOST_ASSERT(angle >= 0);
     return angle;
 }
 
@@ -230,9 +238,11 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
     const double C3C2_lat = static_cast<double>(toFloating(C3.lat - C2.lat)); // yDelta_b
     const double C3C2_lon = static_cast<double>(toFloating(C3.lon - C2.lon)); // xDelta_b
 
-    // check for collinear points in X-Direction
-    if (std::abs(C2C1_lon) < std::numeric_limits<double>::epsilon() &&
-        std::abs(C3C2_lon) < std::numeric_limits<double>::epsilon())
+    // check for collinear points in X-Direction / Y-Direction
+    if ((std::abs(C2C1_lon) < std::numeric_limits<double>::epsilon() &&
+         std::abs(C3C2_lon) < std::numeric_limits<double>::epsilon()) ||
+        (std::abs(C2C1_lat) < std::numeric_limits<double>::epsilon() &&
+         std::abs(C3C2_lat) < std::numeric_limits<double>::epsilon()))
     {
         return boost::none;
     }
@@ -258,9 +268,17 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
         return circleCenter(C2, C1, C3);
     }
     else
-    { // valid slope values for both lines, calculate the center as intersection of the lines
+    {
         const double C2C1_slope = C2C1_lat / C2C1_lon;
         const double C3C2_slope = C3C2_lat / C3C2_lon;
+
+        if (std::abs(C2C1_slope) < std::numeric_limits<double>::epsilon())
+        {
+            // Three non-collinear points with C2,C1 on same latitude.
+            // Due to the x-values correct, we can swap C3 and C1 to obtain the correct slope value
+            return circleCenter(C3, C2, C1);
+        }
+        // valid slope values for both lines, calculate the center as intersection of the lines
 
         // can this ever happen?
         if (std::abs(C2C1_slope - C3C2_slope) < std::numeric_limits<double>::epsilon())
