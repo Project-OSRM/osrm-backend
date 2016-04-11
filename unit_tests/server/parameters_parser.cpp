@@ -21,55 +21,45 @@ BOOST_AUTO_TEST_SUITE(api_parameters_parser)
 
 using namespace osrm;
 using namespace osrm::server;
+using namespace osrm::server::api;
+using namespace osrm::engine::api;
 
 // returns distance to front
 template <typename ParameterT> std::size_t testInvalidOptions(std::string options)
 {
     auto iter = options.begin();
-    auto result = api::parseParameters<ParameterT>(iter, options.end());
+    auto result = parseParameters<ParameterT>(iter, options.end());
     BOOST_CHECK(!result);
     return std::distance(options.begin(), iter);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_route_urls)
 {
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&bla=foo"), 22UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&bearings=foo"),
+                      32UL);
     BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&bla=foo"), 22UL);
+        testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&continue_straight=foo"), 41UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&radiuses=foo"),
+                      32UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&hints=foo"),
+                      29UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&geometries=foo"),
+                      22UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&overview=foo"),
+                      22L);
     BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&bearings=foo"),
-        32UL);
-    BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&continue_straight=foo"),
-        41UL);
-    BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&radiuses=foo"),
-        32UL);
-    BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&hints=foo"), 29UL);
-    BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&geometries=foo"),
-        22UL);
-    BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&overview=foo"),
-        22L);
-    BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&alternatives=foo"),
-        36UL);
+        testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&alternatives=foo"), 36UL);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_table_urls)
 {
-    BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>("1,2;3,4?sources=1&bla=foo"),
-                      17UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?sources=1&bla=foo"), 17UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=1&bla=foo"), 22UL);
     BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::TableParameters>("1,2;3,4?destinations=1&bla=foo"), 22UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>(
-                          "1,2;3,4?sources=1&destinations=1&bla=foo"),
-                      32UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>("1,2;3,4?sources=foo"),
-                      16UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<engine::api::TableParameters>("1,2;3,4?destinations=foo"),
-                      21UL);
+        testInvalidOptions<TableParameters>("1,2;3,4?sources=1&destinations=1&bla=foo"), 32UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?sources=foo"), 16UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TableParameters>("1,2;3,4?destinations=foo"), 21UL);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_urls)
@@ -77,9 +67,9 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
                                               {util::FloatLongitude(3), util::FloatLatitude(4)}};
 
-    engine::api::RouteParameters reference_1{};
+    RouteParameters reference_1{};
     reference_1.coordinates = coords_1;
-    auto result_1 = api::parseParameters<engine::api::RouteParameters>("1,2;3,4");
+    auto result_1 = parseParameters<RouteParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
     BOOST_CHECK_EQUAL(reference_1.steps, result_1->steps);
     BOOST_CHECK_EQUAL(reference_1.alternatives, result_1->alternatives);
@@ -90,11 +80,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
 
-    engine::api::RouteParameters reference_2{};
+    RouteParameters reference_2{};
     reference_2.alternatives = true;
     reference_2.steps = true;
     reference_2.coordinates = coords_1;
-    auto result_2 = api::parseParameters<engine::api::RouteParameters>(
+    auto result_2 = parseParameters<RouteParameters>(
         "1,2;3,4?steps=true&alternatives=true&geometries=polyline&overview=simplified");
     BOOST_CHECK(result_2);
     BOOST_CHECK_EQUAL(reference_2.steps, result_2->steps);
@@ -106,12 +96,12 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
 
-    engine::api::RouteParameters reference_3{
-        false, false, engine::api::RouteParameters::GeometriesType::GeoJSON,
-        engine::api::RouteParameters::OverviewType::False, true};
+    RouteParameters reference_3{false, false, RouteParameters::GeometriesType::GeoJSON,
+                                RouteParameters::OverviewType::False, true};
     reference_3.coordinates = coords_1;
     auto result_3 = api::parseParameters<engine::api::RouteParameters>(
-        "1,2;3,4?steps=false&alternatives=false&geometries=geojson&overview=false&continue_straight=true");
+        "1,2;3,4?steps=false&alternatives=false&geometries=geojson&overview=false&continue_"
+        "straight=true");
     BOOST_CHECK(result_3);
     BOOST_CHECK_EQUAL(reference_3.steps, result_3->steps);
     BOOST_CHECK_EQUAL(reference_3.alternatives, result_3->alternatives);
@@ -132,16 +122,16 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         engine::Hint::FromBase64("3gAAgP___"
                                  "39KAAAAHgAAACEAAAAAAAAAGAAAAE0BAABOAQAAGwAAAIAzcQBkUJsC1zNxAHBQmw"
                                  "IAAAEBl-Umfg==")};
-    engine::api::RouteParameters reference_4{false,
-                                             false,
-                                             engine::api::RouteParameters::GeometriesType::Polyline,
-                                             engine::api::RouteParameters::OverviewType::Simplified,
-                                             boost::optional<bool>{},
-                                             coords_1,
-                                             hints_4,
-                                             std::vector<boost::optional<double>>{},
-                                             std::vector<boost::optional<engine::Bearing>>{}};
-    auto result_4 = api::parseParameters<engine::api::RouteParameters>(
+    RouteParameters reference_4{false,
+                                false,
+                                RouteParameters::GeometriesType::Polyline,
+                                RouteParameters::OverviewType::Simplified,
+                                boost::optional<bool>{},
+                                coords_1,
+                                hints_4,
+                                std::vector<boost::optional<double>>{},
+                                std::vector<boost::optional<engine::Bearing>>{}};
+    auto result_4 = parseParameters<RouteParameters>(
         "1,2;3,4?steps=false&hints="
         "DAIAgP___38AAAAAAAAAAAIAAAAAAAAAEAAAAOgDAAD0AwAAGwAAAOUacQBQP5sCshpxAB0_mwIAAAEBl-Umfg==;"
         "cgAAgP___39jAAAADgAAACIAAABeAAAAkQAAANoDAABOAgAAGwAAAFVGcQCiRJsCR0VxAOZFmwIFAAEBl-Umfg==;"
@@ -159,17 +149,16 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     std::vector<boost::optional<engine::Bearing>> bearings_4 = {
         boost::none, engine::Bearing{200, 10}, engine::Bearing{100, 5},
     };
-    engine::api::RouteParameters reference_5{false,
-                                             false,
-                                             engine::api::RouteParameters::GeometriesType::Polyline,
-                                             engine::api::RouteParameters::OverviewType::Simplified,
-                                             boost::optional<bool>{},
-                                             coords_1,
-                                             std::vector<boost::optional<engine::Hint>>{},
-                                             std::vector<boost::optional<double>>{},
-                                             bearings_4};
-    auto result_5 = api::parseParameters<engine::api::RouteParameters>(
-        "1,2;3,4?steps=false&bearings=;200,10;100,5");
+    RouteParameters reference_5{false,
+                                false,
+                                RouteParameters::GeometriesType::Polyline,
+                                RouteParameters::OverviewType::Simplified,
+                                boost::optional<bool>{},
+                                coords_1,
+                                std::vector<boost::optional<engine::Hint>>{},
+                                std::vector<boost::optional<double>>{},
+                                bearings_4};
+    auto result_5 = parseParameters<RouteParameters>("1,2;3,4?steps=false&bearings=;200,10;100,5");
     BOOST_CHECK(result_5);
     BOOST_CHECK_EQUAL(reference_5.steps, result_5->steps);
     BOOST_CHECK_EQUAL(reference_5.alternatives, result_5->alternatives);
@@ -184,10 +173,9 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                               {util::FloatLongitude(2), util::FloatLatitude(3)},
                                               {util::FloatLongitude(4), util::FloatLatitude(5)}};
 
-    engine::api::RouteParameters reference_6{};
+    RouteParameters reference_6{};
     reference_6.coordinates = coords_2;
-    auto result_6 =
-        api::parseParameters<engine::api::RouteParameters>("polyline(_ibE?_seK_seK_seK_seK)");
+    auto result_6 = parseParameters<RouteParameters>("polyline(_ibE?_seK_seK_seK_seK)");
     BOOST_CHECK(result_6);
     BOOST_CHECK_EQUAL(reference_6.steps, result_6->steps);
     BOOST_CHECK_EQUAL(reference_6.alternatives, result_6->alternatives);
@@ -204,9 +192,9 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
                                               {util::FloatLongitude(3), util::FloatLatitude(4)}};
 
-    engine::api::TableParameters reference_1{};
+    TableParameters reference_1{};
     reference_1.coordinates = coords_1;
-    auto result_1 = api::parseParameters<engine::api::TableParameters>("1,2;3,4");
+    auto result_1 = parseParameters<TableParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
     CHECK_EQUAL_RANGE(reference_1.sources, result_1->sources);
     CHECK_EQUAL_RANGE(reference_1.destinations, result_1->destinations);
@@ -216,10 +204,9 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
 
     std::vector<std::size_t> sources_2 = {1, 2, 3};
     std::vector<std::size_t> destinations_2 = {4, 5};
-    engine::api::TableParameters reference_2{sources_2, destinations_2};
+    TableParameters reference_2{sources_2, destinations_2};
     reference_2.coordinates = coords_1;
-    auto result_2 = api::parseParameters<engine::api::TableParameters>(
-        "1,2;3,4?sources=1;2;3&destinations=4;5");
+    auto result_2 = parseParameters<TableParameters>("1,2;3,4?sources=1;2;3&destinations=4;5");
     BOOST_CHECK(result_2);
     CHECK_EQUAL_RANGE(reference_2.sources, result_2->sources);
     CHECK_EQUAL_RANGE(reference_2.destinations, result_2->destinations);
@@ -233,9 +220,9 @@ BOOST_AUTO_TEST_CASE(valid_match_urls)
     std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
                                               {util::FloatLongitude(3), util::FloatLatitude(4)}};
 
-    engine::api::MatchParameters reference_1{};
+    MatchParameters reference_1{};
     reference_1.coordinates = coords_1;
-    auto result_1 = api::parseParameters<engine::api::MatchParameters>("1,2;3,4");
+    auto result_1 = parseParameters<MatchParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
     CHECK_EQUAL_RANGE(reference_1.timestamps, result_1->timestamps);
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
@@ -247,9 +234,9 @@ BOOST_AUTO_TEST_CASE(valid_nearest_urls)
 {
     std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)}};
 
-    engine::api::NearestParameters reference_1{};
+    NearestParameters reference_1{};
     reference_1.coordinates = coords_1;
-    auto result_1 = api::parseParameters<engine::api::NearestParameters>("1,2");
+    auto result_1 = parseParameters<NearestParameters>("1,2");
     BOOST_CHECK(result_1);
     BOOST_CHECK_EQUAL(reference_1.number_of_results, result_1->number_of_results);
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
@@ -259,8 +246,8 @@ BOOST_AUTO_TEST_CASE(valid_nearest_urls)
 
 BOOST_AUTO_TEST_CASE(valid_tile_urls)
 {
-    engine::api::TileParameters reference_1{1, 2, 3};
-    auto result_1 = api::parseParameters<engine::api::TileParameters>("tile(1,2,3).mvt");
+    TileParameters reference_1{1, 2, 3};
+    auto result_1 = parseParameters<TileParameters>("tile(1,2,3).mvt");
     BOOST_CHECK(result_1);
     BOOST_CHECK_EQUAL(reference_1.x, result_1->x);
     BOOST_CHECK_EQUAL(reference_1.y, result_1->y);
@@ -272,9 +259,9 @@ BOOST_AUTO_TEST_CASE(valid_trip_urls)
     std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
                                               {util::FloatLongitude(3), util::FloatLatitude(4)}};
 
-    engine::api::TripParameters reference_1{};
+    TripParameters reference_1{};
     reference_1.coordinates = coords_1;
-    auto result_1 = api::parseParameters<engine::api::TripParameters>("1,2;3,4");
+    auto result_1 = parseParameters<TripParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
