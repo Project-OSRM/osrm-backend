@@ -2,6 +2,9 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/trigonometry_table.hpp"
 #include "util/web_mercator.hpp"
+#ifndef NDEBUG
+#include "util/simple_logger.hpp"
+#endif // NDEBUG
 
 #include <boost/assert.hpp>
 
@@ -197,6 +200,12 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     using namespace boost::math::constants;
     using namespace coordinate_calculation;
 
+    if (first == second || second == third) return 180;
+
+    BOOST_ASSERT( first.IsValid() );
+    BOOST_ASSERT( second.IsValid() );
+    BOOST_ASSERT( third.IsValid() );
+
     const double v1x = static_cast<double>(toFloating(first.lon - second.lon));
     const double v1y =
         web_mercator::latToY(toFloating(first.lat)) - web_mercator::latToY(toFloating(second.lat));
@@ -210,6 +219,15 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     {
         angle += 360.;
     }
+
+#ifndef NDEBUG
+    BOOST_ASSERT( angle >= 0 );
+    BOOST_ASSERT( angle < 360 );
+    if ( angle < 0 || angle >= 360)
+    {
+        util::SimpleLogger().Write(logDEBUG) << "Calculated bad angle of " << angle << " from " << first << " -> " << second << " -> " << third;
+    }
+#endif // NDEBUG
 
     return angle;
 }

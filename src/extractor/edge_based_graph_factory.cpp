@@ -2,12 +2,12 @@
 #include "extractor/edge_based_graph_factory.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/percent.hpp"
+#include "util/exception.hpp"
 #include "util/integer_range.hpp"
 #include "util/lua_util.hpp"
+#include "util/percent.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
-#include "util/exception.hpp"
 
 #include "extractor/guidance/toolkit.hpp"
 
@@ -122,8 +122,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
     NodeID current_edge_source_coordinate_id = node_u;
 
-    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id)
-    {
+    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
         if (edge_based_node_id == SPECIAL_NODEID)
         {
             return SegmentID{SPECIAL_SEGMENTID, false};
@@ -133,7 +132,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     };
 
     // traverse arrays from start and end respectively
-    for (const auto i : util::irange(std::size_t{ 0 }, geometry_size))
+    for (const auto i : util::irange(std::size_t{0}, geometry_size))
     {
         BOOST_ASSERT(
             current_edge_source_coordinate_id ==
@@ -468,6 +467,16 @@ int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) co
     {
         // call lua profile to compute turn penalty
         double penalty = luabind::call_function<double>(lua_state, "turn_function", 180. - angle);
+#ifndef NDEBUG
+        if (penalty > std::numeric_limits<int>::max())
+        {
+            util::SimpleLogger().Write(logWARNING)
+                << "LUA turn_penalty function returned value > INT_MAX: " << penalty
+                << " when given an angle of " << angle;
+        }
+#endif
+        BOOST_ASSERT(penalty < std::numeric_limits<int>::max());
+        BOOST_ASSERT(penalty > std::numeric_limits<int>::min());
         return boost::numeric_cast<int>(penalty);
     }
     catch (const luabind::error &er)
