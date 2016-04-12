@@ -1,10 +1,10 @@
 #include "engine/douglas_peucker.hpp"
-#include "util/coordinate_calculation.hpp"
-#include "util/web_mercator.hpp"
 #include "util/coordinate.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/integer_range.hpp"
+#include "util/web_mercator.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/range/irange.hpp>
 
 #include <cmath>
 #include <algorithm>
@@ -115,7 +115,7 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
     auto simplified_size = std::count(is_necessary.begin(), is_necessary.end(), true);
     std::vector<util::Coordinate> simplified_geometry;
     simplified_geometry.reserve(simplified_size);
-    for (auto idx : boost::irange<std::size_t>(0UL, size))
+    for (auto idx : util::irange<std::size_t>(0UL, size))
     {
         if (is_necessary[idx])
         {

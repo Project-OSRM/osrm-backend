@@ -2,10 +2,10 @@
 
 #include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
+#include "util/integer_range.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
-#include <boost/range/irange.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -206,7 +206,7 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
 {
     util::json::Array json_legs;
     auto step_geometry_iter = step_geometries.begin();
-    for (const auto idx : boost::irange(0UL, legs.size()))
+    for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
     {
         auto leg = std::move(legs[idx]);
         util::json::Array json_steps;
