@@ -30,7 +30,8 @@ struct TableParametersGrammar final : public BaseParametersGrammar
         const auto set_sources = [this](SourcesT sources) {
             parameters.sources = std::move(sources);
         };
-#ifdef BOOST_HAS_LONG_LONG
+// TODO: ulonglong -> size_t not only on Windows but on all 32 bit platforms; unsupported anyway as of now
+#ifdef WIN32
         destinations_rule = (qi::lit("destinations=") > (qi::ulong_long % ";")[set_destiantions]) |
                             qi::lit("destinations=all");
         sources_rule =
