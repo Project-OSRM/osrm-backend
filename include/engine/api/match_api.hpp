@@ -90,7 +90,7 @@ class MatchAPI final : public RouteAPI
             }
         }
 
-        for (auto trace_index : util::irange(0UL, parameters.coordinates.size()))
+        for (auto trace_index : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
             auto matching_index = trace_idx_to_matching_idx[trace_index];
             if (matching_index.NotMatched())
