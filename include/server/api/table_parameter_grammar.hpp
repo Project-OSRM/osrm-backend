@@ -30,10 +30,17 @@ struct TableParametersGrammar final : public BaseParametersGrammar
         const auto set_sources = [this](SourcesT sources) {
             parameters.sources = std::move(sources);
         };
+#ifdef BOOST_HAS_LONG_LONG
+        destinations_rule = (qi::lit("destinations=") > (qi::ulong_long % ";")[set_destiantions]) |
+                            qi::lit("destinations=all");
+        sources_rule =
+            (qi::lit("sources=") > (qi::ulong_long % ";")[set_sources]) | qi::lit("sources=all");
+#else
         destinations_rule = (qi::lit("destinations=") > (qi::ulong_ % ";")[set_destiantions]) |
                             qi::lit("destinations=all");
         sources_rule =
             (qi::lit("sources=") > (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
+#endif
         table_rule = destinations_rule | sources_rule;
 
         root_rule =
