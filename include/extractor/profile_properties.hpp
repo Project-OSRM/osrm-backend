@@ -11,7 +11,7 @@ namespace extractor
 struct ProfileProperties
 {
     ProfileProperties()
-        : traffic_signal_penalty(0), u_turn_penalty(0), allow_u_turn_at_via(false), use_turn_restrictions(false)
+        : traffic_signal_penalty(0), u_turn_penalty(0), continue_straight_at_waypoint(true), use_turn_restrictions(false)
     {
     }
 
@@ -39,7 +39,7 @@ struct ProfileProperties
     int traffic_signal_penalty;
     //! penalty to do a uturn in deci-seconds
     int u_turn_penalty;
-    bool allow_u_turn_at_via;
+    bool continue_straight_at_waypoint;
     bool use_turn_restrictions;
 };
 }

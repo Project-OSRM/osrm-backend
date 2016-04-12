@@ -91,10 +91,10 @@ surface_speeds = {
 }
 
 -- these need to be global because they are accesed externaly
-properties.traffic_signal_penalty = 2
-properties.use_turn_restrictions  = false
-properties.u_turn_penalty         = 20
-properties.allow_u_turn_at_via    = true
+properties.traffic_signal_penalty        = 2
+properties.use_turn_restrictions         = false
+properties.u_turn_penalty                = 20
+properties.continue_straight_at_waypoint = false
 
 local obey_oneway               = true
 local ignore_areas              = true

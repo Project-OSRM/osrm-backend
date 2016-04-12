@@ -58,24 +58,26 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
     auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
 
-    const bool allow_u_turn_at_via =
-        route_parameters.uturns ? *route_parameters.uturns : facade.GetUTurnsDefault();
+    const bool continue_straight_at_waypoint = route_parameters.continue_straight
+                                                   ? *route_parameters.continue_straight
+                                                   : facade.GetContinueStraightDefault();
 
     InternalRouteResult raw_route;
-    auto build_phantom_pairs = [&raw_route, allow_u_turn_at_via](const PhantomNode &first_node,
-                                                                 const PhantomNode &second_node)
+    auto build_phantom_pairs = [&raw_route, continue_straight_at_waypoint](
+        const PhantomNode &first_node, const PhantomNode &second_node)
     {
         raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
         auto &last_inserted = raw_route.segment_end_coordinates.back();
         // enable forward direction if possible
         if (last_inserted.source_phantom.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
-            last_inserted.source_phantom.forward_segment_id.enabled |= allow_u_turn_at_via;
+            last_inserted.source_phantom.forward_segment_id.enabled |=
+                !continue_straight_at_waypoint;
         }
         // enable reverse direction if possible
         if (last_inserted.source_phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
         {
-            last_inserted.source_phantom.reverse_segment_id.enabled |= allow_u_turn_at_via;
+            last_inserted.source_phantom.reverse_segment_id.enabled |= !continue_straight_at_waypoint;
         }
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
@@ -93,7 +95,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     }
     else
     {
-        shortest_path(raw_route.segment_end_coordinates, route_parameters.uturns, raw_route);
+        shortest_path(raw_route.segment_end_coordinates, route_parameters.continue_straight, raw_route);
     }
 
     // we can only know this after the fact, different SCC ids still

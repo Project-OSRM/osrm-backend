@@ -132,6 +132,7 @@ maxspeed_table = {
 properties.u_turn_penalty                  = 20
 properties.traffic_signal_penalty          = 2
 properties.use_turn_restrictions           = true
+properties.continue_straight_at_waypoint   = true
 
 local side_road_speed_multiplier = 0.8
 

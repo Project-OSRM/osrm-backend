@@ -649,7 +649,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 
-    bool GetUTurnsDefault() const override final { return m_profile_properties.allow_u_turn_at_via; }
+    bool GetContinueStraightDefault() const override final { return m_profile_properties.continue_straight_at_waypoint; }
 };
 }
 }

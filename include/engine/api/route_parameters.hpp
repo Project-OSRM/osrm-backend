@@ -48,7 +48,7 @@ namespace api
  *  - geometries: route geometry encoded in Polyline or GeoJSON
  *  - overview: adds overview geometry either Full, Simplified (according to highest zoom level) or
  *              False (not at all)
- *  - uturns: enable or disable uturns (disabled by default)
+ *  - continue_straight: enable or disable continue_straight (disabled by default)
  *
  * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
@@ -74,10 +74,10 @@ struct RouteParameters : public BaseParameters
                     const bool alternatives_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
-                    const boost::optional<bool> uturns_,
+                    const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          geometries{geometries_}, overview{overview_}, uturns{uturns_}
+          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_}
     {
     }
 
@@ -85,7 +85,7 @@ struct RouteParameters : public BaseParameters
     bool alternatives = false;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
-    boost::optional<bool> uturns;
+    boost::optional<bool> continue_straight;
 
     bool IsValid() const { return coordinates.size() >= 2 && BaseParameters::IsValid(); }
 };

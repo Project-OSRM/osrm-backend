@@ -135,7 +135,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &sna
     }
     BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
 
-    shortest_path(min_route.segment_end_coordinates, parameters.uturns, min_route);
+    shortest_path(min_route.segment_end_coordinates, parameters.continue_straight, min_route);
 
     BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;

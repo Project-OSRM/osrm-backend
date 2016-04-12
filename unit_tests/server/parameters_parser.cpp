@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&bearings=foo"),
         32UL);
     BOOST_CHECK_EQUAL(
-        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&uturns=foo"),
-        30UL);
+        testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&continue_straight=foo"),
+        41UL);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<engine::api::RouteParameters>("1,2;3,4?overview=false&radiuses=foo"),
         32UL);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_1.alternatives, result_1->alternatives);
     BOOST_CHECK_EQUAL(reference_1.geometries, result_1->geometries);
     BOOST_CHECK_EQUAL(reference_1.overview, result_1->overview);
-    BOOST_CHECK_EQUAL(reference_1.uturns, result_1->uturns);
+    BOOST_CHECK_EQUAL(reference_1.continue_straight, result_1->continue_straight);
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_2.alternatives, result_2->alternatives);
     BOOST_CHECK_EQUAL(reference_2.geometries, result_2->geometries);
     BOOST_CHECK_EQUAL(reference_2.overview, result_2->overview);
-    BOOST_CHECK_EQUAL(reference_2.uturns, result_2->uturns);
+    BOOST_CHECK_EQUAL(reference_2.continue_straight, result_2->continue_straight);
     CHECK_EQUAL_RANGE(reference_2.bearings, result_2->bearings);
     CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
@@ -159,13 +159,13 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         engine::api::RouteParameters::OverviewType::False, true};
     reference_3.coordinates = coords_1;
     auto result_3 = api::parseParameters<engine::api::RouteParameters>(
-        "1,2;3,4?steps=false&alternatives=false&geometries=geojson&overview=false&uturns=true");
+        "1,2;3,4?steps=false&alternatives=false&geometries=geojson&overview=false&continue_straight=true");
     BOOST_CHECK(result_3);
     BOOST_CHECK_EQUAL(reference_3.steps, result_3->steps);
     BOOST_CHECK_EQUAL(reference_3.alternatives, result_3->alternatives);
     BOOST_CHECK_EQUAL(reference_3.geometries, result_3->geometries);
     BOOST_CHECK_EQUAL(reference_3.overview, result_3->overview);
-    BOOST_CHECK_EQUAL(reference_3.uturns, result_3->uturns);
+    BOOST_CHECK_EQUAL(reference_3.continue_straight, result_3->continue_straight);
     CHECK_EQUAL_RANGE(reference_3.bearings, result_3->bearings);
     CHECK_EQUAL_RANGE(reference_3.radiuses, result_3->radiuses);
     CHECK_EQUAL_RANGE(reference_3.coordinates, result_3->coordinates);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_4.alternatives, result_4->alternatives);
     BOOST_CHECK_EQUAL(reference_4.geometries, result_4->geometries);
     BOOST_CHECK_EQUAL(reference_4.overview, result_4->overview);
-    BOOST_CHECK_EQUAL(reference_4.uturns, result_4->uturns);
+    BOOST_CHECK_EQUAL(reference_4.continue_straight, result_4->continue_straight);
     CHECK_EQUAL_RANGE(reference_4.bearings, result_4->bearings);
     CHECK_EQUAL_RANGE(reference_4.radiuses, result_4->radiuses);
     CHECK_EQUAL_RANGE(reference_4.coordinates, result_4->coordinates);
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_5.alternatives, result_5->alternatives);
     BOOST_CHECK_EQUAL(reference_5.geometries, result_5->geometries);
     BOOST_CHECK_EQUAL(reference_5.overview, result_5->overview);
-    BOOST_CHECK_EQUAL(reference_5.uturns, result_5->uturns);
+    BOOST_CHECK_EQUAL(reference_5.continue_straight, result_5->continue_straight);
     CHECK_EQUAL_RANGE(reference_5.bearings, result_5->bearings);
     CHECK_EQUAL_RANGE(reference_5.radiuses, result_5->radiuses);
     CHECK_EQUAL_RANGE(reference_5.coordinates, result_5->coordinates);
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_6.alternatives, result_6->alternatives);
     BOOST_CHECK_EQUAL(reference_6.geometries, result_6->geometries);
     BOOST_CHECK_EQUAL(reference_6.overview, result_6->overview);
-    BOOST_CHECK_EQUAL(reference_6.uturns, result_6->uturns);
+    BOOST_CHECK_EQUAL(reference_6.continue_straight, result_6->continue_straight);
     CHECK_EQUAL_RANGE(reference_6.bearings, result_6->bearings);
     CHECK_EQUAL_RANGE(reference_6.radiuses, result_6->radiuses);
     CHECK_EQUAL_RANGE(reference_6.coordinates, result_6->coordinates);

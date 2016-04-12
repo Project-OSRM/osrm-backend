@@ -170,7 +170,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     std::string GetNameForID(const unsigned /* name_id */) const override { return ""; }
     std::size_t GetCoreSize() const override { return 0; }
     std::string GetTimestamp() const override { return ""; }
-    bool GetUTurnsDefault() const override { return true; }
+    bool GetContinueStraightDefault() const override { return true; }
 };
 } // ns test
 } // ns osrm

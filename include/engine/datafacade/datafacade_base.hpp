@@ -144,7 +144,7 @@ class BaseDataFacade
 
     virtual std::string GetTimestamp() const = 0;
 
-    virtual bool GetUTurnsDefault() const = 0;
+    virtual bool GetContinueStraightDefault() const = 0;
 };
 }
 }

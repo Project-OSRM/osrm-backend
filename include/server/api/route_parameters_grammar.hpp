@@ -47,7 +47,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         const auto set_alternatives = [this](const AlternativeT alternatives) {
             parameters.alternatives = alternatives;
         };
-        const auto set_uturns = [this](UturnsT uturns) { parameters.uturns = std::move(uturns); };
+        const auto set_continue_straight = [this](UturnsT continue_straight) { parameters.continue_straight = std::move(continue_straight); };
 
         alternatives_rule = qi::lit("alternatives=") > qi::bool_;
         steps_rule = qi::lit("steps=") > qi::bool_;
@@ -56,9 +56,9 @@ struct RouteParametersGrammar : public BaseParametersGrammar
         overview_rule = qi::lit("overview=simplified")[set_simplified_type] |
                         qi::lit("overview=full")[set_full_type] |
                         qi::lit("overview=false")[set_false_type];
-        uturns_rule = qi::lit("uturns=default") | (qi::lit("uturns=") > qi::bool_)[set_uturns];
+        continue_straight_rule = qi::lit("continue_straight=default") | (qi::lit("continue_straight=") > qi::bool_)[set_continue_straight];
         route_rule = steps_rule[set_steps] | alternatives_rule[set_alternatives] | geometries_rule |
-                     overview_rule | uturns_rule;
+                     overview_rule | continue_straight_rule;
 
         root_rule =
             query_rule > -qi::lit(".json") > -(qi::lit("?") > (route_rule | base_rule) % '&');
@@ -69,7 +69,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar
   private:
     qi::rule<Iterator> root_rule;
     qi::rule<Iterator> route_rule, geometries_rule, overview_rule;
-    qi::rule<Iterator, UturnsT()> uturns_rule;
+    qi::rule<Iterator, UturnsT()> continue_straight_rule;
     qi::rule<Iterator, StepsT()> steps_rule;
     qi::rule<Iterator, AlternativeT()> alternatives_rule;
 };

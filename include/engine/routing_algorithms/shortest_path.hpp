@@ -245,10 +245,10 @@ class ShortestPathRouting final
     }
 
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
-                    const boost::optional<bool> uturns,
+                    const boost::optional<bool> continue_straight_at_waypoint,
                     InternalRouteResult &raw_route_data) const
     {
-        const bool allow_u_turn_at_via = uturns ? *uturns : super::facade->GetUTurnsDefault();
+        const bool allow_uturn_at_waypoint = !(continue_straight_at_waypoint ? *continue_straight_at_waypoint : super::facade->GetContinueStraightDefault());
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -299,7 +299,7 @@ class ShortestPathRouting final
 
             if (search_to_reverse_node || search_to_forward_node)
             {
-                if (allow_u_turn_at_via)
+                if (allow_uturn_at_waypoint)
                 {
                     SearchWithUTurn(forward_heap, reverse_heap, forward_core_heap,
                                     reverse_core_heap, search_from_forward_node,
