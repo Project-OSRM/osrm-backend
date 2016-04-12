@@ -87,7 +87,7 @@ class TripAPI final : public RouteAPI
             }
         }
 
-        for (auto input_index : util::irange(0UL, parameters.coordinates.size()))
+        for (auto input_index : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
             auto trip_index = input_idx_to_trip_idx[input_index];
             BOOST_ASSERT(!trip_index.NotUsed());
