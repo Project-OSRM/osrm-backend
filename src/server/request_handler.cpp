@@ -103,7 +103,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
             const auto context_begin = request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
             BOOST_ASSERT(context_begin >= request_string.begin());
             const auto context_end =
-                request_string.begin() + std::min(position + 3UL, request_string.size());
+                request_string.begin() + std::min<std::size_t>(position + 3UL, request_string.size());
             BOOST_ASSERT(context_end <= request_string.end());
             std::string context(context_begin, context_end);
 
