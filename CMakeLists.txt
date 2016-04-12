@@ -54,6 +54,7 @@ option(ENABLE_ASSERTIONS OFF)
 option(COVERAGE OFF)
 option(SANITIZER OFF)
 option(ENABLE_LTO "Use LTO if available" ON)
+option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -243,6 +244,7 @@ endif()
 if(UNIX AND NOT APPLE)
   set(MAYBE_RT_LIBRARY rt)
 endif()
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
 set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
@@ -498,3 +500,10 @@ add_custom_target(uninstall
 # Modular build system: each directory registered here provides its own CMakeLists.txt
 add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
+
+if (ENABLE_FUZZING)
+  # TODO(daniel-j-h): fuzz against configurable ubsan,msan,asan libosrm builds
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize-coverage=edge,indirect-calls,8bit-counters -fsanitize=address")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+  add_subdirectory(fuzz)
+endif ()
