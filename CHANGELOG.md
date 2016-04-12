@@ -1,4 +1,6 @@
 # 5.0.0 RC2
+   - Profiles:
+      - `properties.allow_uturns_at_via` -> `properties.continue_straight_at_waypoint` (value is inverted!)
    - API:
       - Removed summary from legs property
       - Disable steps and alternatives by default
