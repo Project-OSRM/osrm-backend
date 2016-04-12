@@ -5,6 +5,7 @@
       - Fix `code` field: 'ok' -> 'Ok'
       - Allow 4.json and 4.3.json format
       - Conform to v5 spec and support "unlimited" as radiuses value.
+      - `uturns` parameter was replaced by `continue_straight` (value is inverted!)
    - Features:
       - Report progress for gennerating edge expanded edges in the edge based graph factory
       - Add maxspeed=none tag to car profile.
