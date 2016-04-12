@@ -122,7 +122,7 @@ class BasePlugin
         const bool use_hints = !parameters.hints.empty();
         const bool use_bearings = !parameters.bearings.empty();
 
-        for (const auto i : util::irange<std::size_t>(0, parameters.coordinates.size()))
+        for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
             if (use_hints && parameters.hints[i] &&
                 parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
@@ -161,7 +161,7 @@ class BasePlugin
         const bool use_radiuses = !parameters.radiuses.empty();
 
         BOOST_ASSERT(parameters.IsValid());
-        for (const auto i : util::irange<std::size_t>(0, parameters.coordinates.size()))
+        for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
             if (use_hints && parameters.hints[i] &&
                 parameters.hints[i]->IsValid(parameters.coordinates[i], facade))
@@ -221,7 +221,7 @@ class BasePlugin
         const bool use_radiuses = !parameters.radiuses.empty();
 
         BOOST_ASSERT(parameters.IsValid());
-        for (const auto i : util::irange<std::size_t>(0, parameters.coordinates.size()))
+        for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
             if (use_hints && parameters.hints[i] &&
                 parameters.hints[i]->IsValid(parameters.coordinates[i], facade))

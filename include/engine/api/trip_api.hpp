@@ -77,10 +77,10 @@ class TripAPI final : public RouteAPI
         };
 
         std::vector<TripIndex> input_idx_to_trip_idx(parameters.coordinates.size());
-        for (auto sub_trip_index : util::irange(0u, static_cast<unsigned>(sub_trips.size())))
+        for (auto sub_trip_index : util::irange<unsigned>(0u, sub_trips.size()))
         {
             for (auto point_index :
-                 util::irange(0u, static_cast<unsigned>(sub_trips[sub_trip_index].size())))
+                 util::irange<unsigned>(0u, sub_trips[sub_trip_index].size()))
             {
                 input_idx_to_trip_idx[sub_trips[sub_trip_index][point_index]] =
                     TripIndex{sub_trip_index, point_index};

@@ -82,7 +82,7 @@ class RouteAPI : public BaseAPI
         legs.reserve(number_of_legs);
         leg_geometries.reserve(number_of_legs);
 
-        for (auto idx : util::irange(0UL, number_of_legs))
+        for (auto idx : util::irange<std::size_t>(0UL, number_of_legs))
         {
             const auto &phantoms = segment_end_coordinates[idx];
             const auto &path_data = unpacked_path_segments[idx];
@@ -155,7 +155,7 @@ class RouteAPI : public BaseAPI
         }
 
         std::vector<util::json::Value> step_geometries;
-        for (const auto idx : util::irange(0UL, legs.size()))
+        for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
         {
             auto &leg_geometry = leg_geometries[idx];
             std::transform(

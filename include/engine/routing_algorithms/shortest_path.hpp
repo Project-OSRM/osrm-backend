@@ -227,7 +227,7 @@ class ShortestPathRouting final
 
         raw_route_data.shortest_path_length = shortest_path_length;
 
-        for (const auto current_leg : util::irange<std::size_t>(0, packed_leg_begin.size() - 1))
+        for (const auto current_leg : util::irange<std::size_t>(0UL, packed_leg_begin.size() - 1))
         {
             auto leg_begin = total_packed_path.begin() + packed_leg_begin[current_leg];
             auto leg_end = total_packed_path.begin() + packed_leg_begin[current_leg + 1];

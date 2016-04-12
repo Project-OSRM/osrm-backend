@@ -342,7 +342,7 @@ class GraphContractor
                 // remaining graph
                 std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, SPECIAL_NODEID);
 
-                for (const auto new_node_id : util::irange<std::size_t>(0, remaining_nodes.size()))
+                for (const auto new_node_id : util::irange<std::size_t>(0UL, remaining_nodes.size()))
                 {
                     auto &node = remaining_nodes[new_node_id];
                     BOOST_ASSERT(node_priorities.size() > node.id);
@@ -352,7 +352,7 @@ class GraphContractor
                 }
 
                 // build forward and backward renumbering map and remap ids in remaining_nodes
-                for (const auto new_node_id : util::irange<std::size_t>(0, remaining_nodes.size()))
+                for (const auto new_node_id : util::irange<std::size_t>(0UL, remaining_nodes.size()))
                 {
                     auto &node = remaining_nodes[new_node_id];
                     // create renumbering maps in both directions
@@ -362,7 +362,7 @@ class GraphContractor
                 }
                 // walk over all nodes
                 for (const auto source :
-                     util::irange<NodeID>(0, contractor_graph->GetNumberOfNodes()))
+                     util::irange<NodeID>(0UL, contractor_graph->GetNumberOfNodes()))
                 {
                     for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
                     {

@@ -168,7 +168,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     }
 
     std::vector<InternalRouteResult> sub_routes(sub_matchings.size());
-    for (auto index : util::irange(0UL, sub_matchings.size()))
+    for (auto index : util::irange<std::size_t>(0UL, sub_matchings.size()))
     {
         BOOST_ASSERT(sub_matchings[index].nodes.size() > 1);
 

@@ -626,7 +626,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     int number_of_used_edges = 0;
 
     util::StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
-    for (const auto edge : util::irange<std::size_t>(0, contracted_edge_list.size()))
+    for (const auto edge : util::irange<std::size_t>(0UL, contracted_edge_list.size()))
     {
         // some self-loops are required for oneway handling. Need to assertthat we only keep these
         // (TODO)

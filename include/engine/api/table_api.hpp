@@ -103,7 +103,7 @@ class TableAPI final : public BaseAPI
                                         std::size_t number_of_columns) const
     {
         util::json::Array json_table;
-        for (const auto row : util::irange<std::size_t>(0, number_of_rows))
+        for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
         {
             util::json::Array json_row;
             auto row_begin_iterator = values.begin() + (row * number_of_columns);

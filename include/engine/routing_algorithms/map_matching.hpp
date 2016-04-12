@@ -244,14 +244,14 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 ((haversine_distance + max_distance_delta) * 0.25) * 10;
 
             // compute d_t for this timestamp and the next one
-            for (const auto s : util::irange<std::size_t>(0u, prev_viterbi.size()))
+            for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
             {
                 if (prev_pruned[s])
                 {
                     continue;
                 }
 
-                for (const auto s_prime : util::irange<std::size_t>(0u, current_viterbi.size()))
+                for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
                     const double emission_pr = emission_log_probabilities[t][s_prime];
                     double new_value = prev_viterbi[s] + emission_pr;

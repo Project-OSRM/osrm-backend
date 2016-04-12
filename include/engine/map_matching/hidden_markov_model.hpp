@@ -69,7 +69,7 @@ template <class CandidateLists> struct HiddenMarkovModel
         path_distances.resize(candidates_list.size());
         pruned.resize(candidates_list.size());
         breakage.resize(candidates_list.size());
-        for (const auto i : util::irange<std::size_t>(0u, candidates_list.size()))
+        for (const auto i : util::irange<std::size_t>(0UL, candidates_list.size()))
         {
             const auto &num_candidates = candidates_list[i].size();
             // add empty vectors
@@ -107,7 +107,7 @@ template <class CandidateLists> struct HiddenMarkovModel
         {
             BOOST_ASSERT(initial_timestamp < num_points);
 
-            for (const auto s : util::irange<std::size_t>(0u, viterbi[initial_timestamp].size()))
+            for (const auto s : util::irange<std::size_t>(0UL, viterbi[initial_timestamp].size()))
             {
                 viterbi[initial_timestamp][s] = emission_log_probabilities[initial_timestamp][s];
                 parents[initial_timestamp][s] = std::make_pair(initial_timestamp, s);
