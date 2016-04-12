@@ -12,6 +12,7 @@
 #include "util/integer_range.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <vector>
 

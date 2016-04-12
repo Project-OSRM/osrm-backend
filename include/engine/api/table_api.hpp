@@ -19,6 +19,8 @@
 
 #include <boost/range/algorithm/transform.hpp>
 
+#include <iterator>
+
 namespace osrm
 {
 namespace engine

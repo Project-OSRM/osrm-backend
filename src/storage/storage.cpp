@@ -30,6 +30,7 @@
 #include <cstdint>
 
 #include <fstream>
+#include <iterator>
 #include <new>
 #include <string>
 

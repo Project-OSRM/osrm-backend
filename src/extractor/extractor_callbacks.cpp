@@ -14,6 +14,7 @@
 
 #include "osrm/coordinate.hpp"
 
+#include <iterator>
 #include <limits>
 #include <string>
 #include <vector>

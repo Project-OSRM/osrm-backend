@@ -19,6 +19,7 @@
 #include "util/coordinate.hpp"
 #include "util/integer_range.hpp"
 
+#include <iterator>
 #include <vector>
 
 namespace osrm

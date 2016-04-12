@@ -7,6 +7,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
+#include <iterator>
 #include <string>
 #include <vector>
 

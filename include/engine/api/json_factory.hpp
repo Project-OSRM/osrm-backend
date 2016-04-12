@@ -14,8 +14,9 @@
 
 #include <boost/optional.hpp>
 
-#include <string>
 #include <algorithm>
+#include <iterator>
+#include <string>
 #include <vector>
 
 namespace osrm
