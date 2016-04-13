@@ -30,7 +30,8 @@ if (ENABLE_FUZZING)
 	    COMMENT "Fuzzing ${binary}" VERBATIM)
   endmacro ()
 
-  set(targets
+
+  set(ServerTargets
 	  "match_parameters"
 	  "nearest_parameters"
 	  "route_parameters"
@@ -40,8 +41,18 @@ if (ENABLE_FUZZING)
 	  "url_parser"
 	  "request_parser")
 
-  foreach (target ${targets})
-    add_fuzz_target(${target})
+  foreach (target ${ServerTargets})
+	  add_fuzz_target(${target})
   endforeach ()
+
+
+  set(UtilTargets
+	  "escape_json"
+	  "uri_decode")
+
+  foreach (target ${UtilTargets})
+	  add_fuzz_target(${target})
+  endforeach ()
+
 
 endif ()
