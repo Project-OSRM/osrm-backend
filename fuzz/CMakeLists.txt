@@ -13,13 +13,30 @@
 # ar ruv libFuzzer.a Fuzzer*.o
 
 if (ENABLE_FUZZING)
-  add_executable(driver driver.cc $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
-  target_link_libraries(driver Fuzzer osrm)
 
-  add_custom_target(fuzz
-	  DEPENDS driver
-	  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-	  COMMAND ${CMAKE_COMMAND} -E make_directory corpus
-	  COMMAND driver -jobs=4 -workers=4 -max_len=4096 corpus
-	  COMMENT "Fuzzing libosrm" VERBATIM)
+  macro(add_fuzz_target binary)
+    add_executable(${binary} ${binary}.cc $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
+    target_link_libraries(${binary} Fuzzer osrm)
+    target_include_directories(${binary} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+    add_custom_target(fuzz-${binary}
+	    DEPENDS ${binary}
+	    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	    COMMAND ${CMAKE_COMMAND} -E make_directory "corpus/${binary}"
+	    COMMAND ${binary} -jobs=1 -max_len=4096 "corpus/${binary}"
+	    COMMENT "Fuzzing ${binary}" VERBATIM)
+  endmacro ()
+
+  set(targets
+	  "match_parameters"
+	  "nearest_parameters"
+	  "route_parameters"
+	  "table_parameters"
+	  "tile_parameters"
+	  "trip_parameters")
+
+  foreach (target ${targets})
+    add_fuzz_target(${target})
+  endforeach ()
+
 endif ()
