@@ -458,8 +458,14 @@ add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
 
 if (ENABLE_FUZZING)
-  # TODO(daniel-j-h): fuzz against configurable ubsan,msan,asan libosrm builds
+  # Requires libosrm being built with sanitizers; make configurable and default to ubsan
+  set(FUZZ_SANITIZER "undefined" CACHE STRING "Sanitizer to be used for Fuzz testing")
+  set_property(CACHE FUZZ_SANITIZER PROPERTY STRINGS "undefined" "integer" "address" "memory" "thread" "leak")
+
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize-coverage=edge,indirect-calls,8bit-counters -fsanitize=address")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+
+  message(STATUS "Using -fsanitize=${FUZZ_SANITIZER} for Fuzz testing")
+
   add_subdirectory(fuzz)
 endif ()

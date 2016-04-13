@@ -8,7 +8,7 @@
 #  - make more user friendly, at the moment we require you to build and install libFuzzer.a
 #  - pick up LLVM_ROOT
 #  - build libFuzzer on the fly
-# 
+#
 # clang++ -std=c++11 -stdlib=libc++ -c -g -O2 ~/llvm/lib/Fuzzer/*.cpp -I~/llvm/lib/Fuzzer
 # ar ruv libFuzzer.a Fuzzer*.o
 
