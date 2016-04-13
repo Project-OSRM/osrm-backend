@@ -1,4 +1,4 @@
-@bycicle
+@range
 Feature: Getting the range limited by Distance
 
   Background:
