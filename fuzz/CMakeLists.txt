@@ -26,7 +26,7 @@ if (ENABLE_FUZZING)
 	    DEPENDS ${binary}
 	    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	    COMMAND ${CMAKE_COMMAND} -E make_directory "corpus/${binary}"
-	    COMMAND ${binary} -jobs=${nproc} -workers=${nproc} -max_len=4096 "corpus/${binary}"
+	    COMMAND ${binary} -use_traces=1 -jobs=${nproc} -workers=${nproc} -max_len=4096 "corpus/${binary}"
 	    COMMENT "Fuzzing ${binary}" VERBATIM)
   endmacro ()
 
