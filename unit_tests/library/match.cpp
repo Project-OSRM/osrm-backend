@@ -4,6 +4,7 @@
 #include "args.hpp"
 #include "fixture.hpp"
 #include "coordinates.hpp"
+#include "waypoint_check.hpp"
 
 #include "osrm/match_parameters.hpp"
 
@@ -46,12 +47,8 @@ BOOST_AUTO_TEST_CASE(test_match)
     {
         if (waypoint.is<mapbox::util::recursive_wrapper<util::json::Object>>())
         {
+            BOOST_CHECK(waypoint_check(waypoint));
             const auto &waypoint_object = waypoint.get<json::Object>();
-            const auto &waypoint_object_location = waypoint_object.values.at("location").get<json::Array>().values;
-            util::FloatLongitude lon(waypoint_object_location[0].get<json::Number>().value);
-            util::FloatLatitude lat(waypoint_object_location[1].get<json::Number>().value);
-            util::Coordinate location_coordinate(lon, lat);
-            BOOST_CHECK(location_coordinate.IsValid());
             const auto matchings_index = waypoint_object.values.at("matchings_index").get<json::Number>().value;
             const auto waypoint_index = waypoint_object.values.at("waypoint_index").get<json::Number>().value;
             const auto &route_legs = matchings[matchings_index].get<json::Object>().values.at("legs").get<json::Array>().values;
