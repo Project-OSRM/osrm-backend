@@ -230,10 +230,10 @@ void sampling_verify_rtree(RTreeT &rtree,
         auto lsnn_u = result_lsnn.back().u;
         auto lsnn_v = result_lsnn.back().v;
 
-        const double rtree_dist = coordinate_calculation::perpendicularDistance(
-            coords[rtree_u], coords[rtree_v], q);
-        const double lsnn_dist = coordinate_calculation::perpendicularDistance(
-            coords[lsnn_u], coords[lsnn_v], q);
+        const double rtree_dist =
+            coordinate_calculation::perpendicularDistance(coords[rtree_u], coords[rtree_v], q);
+        const double lsnn_dist =
+            coordinate_calculation::perpendicularDistance(coords[lsnn_u], coords[lsnn_v], q);
 
         BOOST_CHECK_CLOSE(rtree_dist, lsnn_dist, 0.0001);
     }
@@ -333,6 +333,34 @@ BOOST_AUTO_TEST_CASE(regression_test)
 
     BOOST_CHECK_EQUAL(result_ls.front().u, result_rtree.front().u);
     BOOST_CHECK_EQUAL(result_ls.front().v, result_rtree.front().v);
+}
+
+// Bug: If you querry a point with a narrow radius, no result should be returned
+BOOST_AUTO_TEST_CASE(radius_regression_test)
+{
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
+    using Edge = std::pair<unsigned, unsigned>;
+    GraphFixture fixture(
+        {
+            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
+            Coord(FloatLongitude(10.0), FloatLatitude(10.0)),
+        },
+        {Edge(0, 1), Edge(1, 0)});
+
+    std::string leaves_path;
+    std::string nodes_path;
+    build_rtree<GraphFixture, MiniStaticRTree>("test_angle", &fixture, leaves_path, nodes_path);
+    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+    MockDataFacade mockfacade;
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
+                                                                   mockfacade);
+
+    Coordinate input(FloatLongitude(5.2), FloatLatitude(5.0));
+
+    {
+        auto results = query.NearestPhantomNodesInRange(input, 0.01);
+        BOOST_CHECK_EQUAL(results.size(), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(bearing_tests)

@@ -441,6 +441,14 @@ class StaticRTree
                 // inspecting an actual road segment
                 auto &current_candidate = current_query_node.node.template get<CandidateSegment>();
 
+                // to allow returns of no-results if too restrictive filtering, this needs to be done here
+                // even though performance would indicate that we want to stop after adding the first candidate
+                if (terminate(results.size(), current_candidate))
+                {
+                    traversal_queue = std::priority_queue<QueryCandidate>{};
+                    break;
+                }
+
                 auto use_segment = filter(current_candidate);
                 if (!use_segment.first && !use_segment.second)
                 {
@@ -451,12 +459,6 @@ class StaticRTree
 
                 // store phantom node in result vector
                 results.push_back(std::move(current_candidate.data));
-
-                if (terminate(results.size(), current_candidate))
-                {
-                    traversal_queue = std::priority_queue<QueryCandidate>{};
-                    break;
-                }
             }
         }
 
