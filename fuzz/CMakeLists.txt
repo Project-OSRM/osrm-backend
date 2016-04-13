@@ -14,6 +14,9 @@
 
 if (ENABLE_FUZZING)
 
+  include(ProcessorCount)
+  ProcessorCount(nproc)
+
   macro(add_fuzz_target binary)
     add_executable(${binary} ${binary}.cc $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
     target_link_libraries(${binary} Fuzzer osrm)
@@ -23,7 +26,7 @@ if (ENABLE_FUZZING)
 	    DEPENDS ${binary}
 	    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	    COMMAND ${CMAKE_COMMAND} -E make_directory "corpus/${binary}"
-	    COMMAND ${binary} -jobs=1 -max_len=4096 "corpus/${binary}"
+	    COMMAND ${binary} -jobs=${nproc} -workers=${nproc} -max_len=4096 "corpus/${binary}"
 	    COMMENT "Fuzzing ${binary}" VERBATIM)
   endmacro ()
 
@@ -33,7 +36,9 @@ if (ENABLE_FUZZING)
 	  "route_parameters"
 	  "table_parameters"
 	  "tile_parameters"
-	  "trip_parameters")
+	  "trip_parameters"
+	  "url_parser"
+	  "request_parser")
 
   foreach (target ${targets})
     add_fuzz_target(${target})
