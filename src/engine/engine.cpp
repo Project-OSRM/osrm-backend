@@ -5,6 +5,7 @@
 
 #include "engine/plugins/table.hpp"
 #include "engine/plugins/nearest.hpp"
+#include "engine/plugins/timestamp.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/plugins/match.hpp"
@@ -16,6 +17,7 @@
 
 #include "storage/shared_barriers.hpp"
 #include "util/make_unique.hpp"
+#include "util/routed_options.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
