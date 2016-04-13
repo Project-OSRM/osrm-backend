@@ -71,7 +71,7 @@ def request_range node, user_params
   params = overwrite_params defaults, user_params
   params << ["loc", "#{node.lat},#{node.lon}"]
 
-  return request_path "range", params
+  return request_path "isochrone", params
 end
 
 def request_table waypoints, user_params

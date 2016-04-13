@@ -19,20 +19,21 @@ When /^I request range I should get$/ do |table|
       response = request_range source, @query_params
       if response.code == "200" && response.body.empty? == false
         json = JSON.parse response.body
-        # print(json)
+         print(json)
+         print("\n")
         if json['status'] == 200
-          size = json['Nodes found']
+          size = json['Nodes Found']
           range = json['Range-Analysis']
         end
       end
 
-      #print(size)
+      # print(size + "\n")
       # got = {'source' => row['source'],
       #        'node' => p1,
       #        'pred' => p2}
       # 'distance' => retDis}
 
-      # print(range)
+      print(range)
       ok = false
       for coordinate in range;
         p1 = Array.new
@@ -48,22 +49,25 @@ When /^I request range I should get$/ do |table|
                'node' => p1,
                'pred' => p2}
 
-        print(p1)
-        print(p2)
-        print("fuu");
+        # print("test\n")
+        # print(p1)
+        # print("\n");
+        # print(node)
+        # print("\n");
+        # print("\n");
 
-        if FuzzyMatch.match_location(p1, node) && FuzzyMatch.match_location(p2, pred) || ok
-          print("asdasdasd")
+
+        if FuzzyMatch.match_location(p1, node) && FuzzyMatch.match_location(p2, pred)
           key = 'node'
           got[key] = row[key]
           key = 'pred'
           got[key] = row[key]
           ok = true
-        else
+        elsif !FuzzyMatch.match_location(p1, node) && !FuzzyMatch.match_location(p2, pred)
           key = 'node'
           row[key] = "#{row[key]} [#{node.lat},#{node.lon}]"
           key = 'pred'
-          row[key] = "#{row[key]} [#{node.lat},#{node.lon}]"
+          row[key] = "#{row[key]} [#{pred.lat},#{pred.lon}]"
         end
       end
 
