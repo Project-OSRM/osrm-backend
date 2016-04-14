@@ -194,6 +194,25 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_6.bearings, result_6->bearings);
     CHECK_EQUAL_RANGE(reference_6.radiuses, result_6->radiuses);
     CHECK_EQUAL_RANGE(reference_6.coordinates, result_6->coordinates);
+
+    auto result_7 = parseParameters<RouteParameters>("1,2;3,4?radiuses=;unlimited");
+    BOOST_CHECK(result_7);
+    BOOST_CHECK_EQUAL(reference_1.steps, result_7->steps);
+    BOOST_CHECK_EQUAL(reference_1.alternatives, result_7->alternatives);
+    BOOST_CHECK_EQUAL(reference_1.geometries, result_7->geometries);
+    BOOST_CHECK_EQUAL(reference_1.overview, result_7->overview);
+    BOOST_CHECK_EQUAL(reference_1.uturns, result_7->uturns);
+    CHECK_EQUAL_RANGE(reference_1.bearings, result_7->bearings);
+    CHECK_EQUAL_RANGE(reference_1.radiuses, result_7->radiuses);
+    CHECK_EQUAL_RANGE(reference_1.coordinates, result_7->coordinates);
+
+    auto result_8 = parseParameters<RouteParameters>("1,2;3,4?radiuses=;");
+    BOOST_CHECK(result_8);
+    CHECK_EQUAL_RANGE(result_8->radiuses, result_7->radiuses);
+
+    auto result_9 = parseParameters<RouteParameters>("1,2;3,4?radiuses=");
+    BOOST_CHECK(result_9);
+    CHECK_EQUAL_RANGE(result_9->radiuses, result_7->radiuses);
 }
 
 BOOST_AUTO_TEST_CASE(valid_table_urls)
@@ -222,6 +241,14 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
     CHECK_EQUAL_RANGE(reference_2.bearings, result_2->bearings);
     CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
+
+    auto result_3 = parseParameters<TableParameters>("1,2;3,4?sources=all&destinations=all");
+    BOOST_CHECK(result_3);
+    CHECK_EQUAL_RANGE(reference_1.sources, result_3->sources);
+    CHECK_EQUAL_RANGE(reference_1.destinations, result_3->destinations);
+    CHECK_EQUAL_RANGE(reference_1.bearings, result_3->bearings);
+    CHECK_EQUAL_RANGE(reference_1.radiuses, result_3->radiuses);
+    CHECK_EQUAL_RANGE(reference_1.coordinates, result_3->coordinates);
 }
 
 BOOST_AUTO_TEST_CASE(valid_match_urls)
