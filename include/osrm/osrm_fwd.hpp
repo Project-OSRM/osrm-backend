@@ -52,6 +52,7 @@ struct NearestParameters;
 struct TripParameters;
 struct MatchParameters;
 struct TileParameters;
+struct IsochroneParameters;
 } // ns api
 
 class Engine;

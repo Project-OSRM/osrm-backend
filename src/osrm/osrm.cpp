@@ -4,6 +4,7 @@
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
+#include "engine/api/isochrone_parameters.hpp"
 #include "engine/engine.hpp"
 #include "engine/status.hpp"
 #include "engine/engine_config.hpp"
@@ -49,6 +50,10 @@ engine::Status OSRM::Match(const engine::api::MatchParameters &params, json::Obj
 engine::Status OSRM::Tile(const engine::api::TileParameters &params, std::string &result)
 {
     return engine_->Tile(params, result);
+}
+engine::Status OSRM::Isochrone(const engine::api::IsochroneParameters &params, json::Object &result)
+{
+    return engine_->Isochrone(params, result);
 }
 
 } // ns osrm
