@@ -3,6 +3,7 @@
 
 #include "util/coordinate_calculation.hpp"
 #include "util/web_mercator.hpp"
+#include "util/vector_tile.hpp"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
@@ -27,10 +28,6 @@ namespace plugins
 {
 namespace detail
 {
-// Vector tiles are 4096 virtual pixels on each side
-const constexpr double VECTOR_TILE_EXTENT = 4096.0;
-const constexpr double VECTOR_TILE_BUFFER = 128.0;
-
 // Simple container class for WGS84 coordinates
 template <typename T> struct Point final
 {
@@ -78,9 +75,9 @@ typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>
 typedef boost::geometry::model::linestring<point_t> linestring_t;
 typedef boost::geometry::model::box<point_t> box_t;
 typedef boost::geometry::model::multi_linestring<linestring_t> multi_linestring_t;
-const static box_t clip_box(point_t(-detail::VECTOR_TILE_BUFFER, -detail::VECTOR_TILE_BUFFER),
-                            point_t(detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER,
-                                    detail::VECTOR_TILE_EXTENT + detail::VECTOR_TILE_BUFFER));
+const static box_t clip_box(point_t(-util::vector_tile::BUFFER, -util::vector_tile::BUFFER),
+                            point_t(util::vector_tile::EXTENT + util::vector_tile::BUFFER,
+                                    util::vector_tile::EXTENT + util::vector_tile::BUFFER));
 
 // from mapnik-vector-tile
 // Encodes a linestring using protobuf zigzag encoding
@@ -136,10 +133,10 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
         // convert lon/lat to tile coordinates
         const auto px = std::round(
             ((px_merc - tile_bbox.minx) * util::web_mercator::TILE_SIZE / tile_bbox.width()) *
-            detail::VECTOR_TILE_EXTENT / util::web_mercator::TILE_SIZE);
+            util::vector_tile::EXTENT / util::web_mercator::TILE_SIZE);
         const auto py = std::round(
             ((tile_bbox.maxy - py_merc) * util::web_mercator::TILE_SIZE / tile_bbox.height()) *
-            detail::VECTOR_TILE_EXTENT / util::web_mercator::TILE_SIZE);
+            util::vector_tile::EXTENT / util::web_mercator::TILE_SIZE);
 
         boost::geometry::append(unclipped_line, point_t(px, py));
     }
@@ -254,15 +251,15 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     protozero::pbf_writer tile_writer{pbf_buffer};
     {
         // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec (2.1)
-        protozero::pbf_writer layer_writer(tile_writer, 3);
+        protozero::pbf_writer layer_writer(tile_writer, util::vector_tile::LAYER_TAG);
         // TODO: don't write a layer if there are no features
 
-        layer_writer.add_uint32(15, 2); // version
+        layer_writer.add_uint32(util::vector_tile::VERSION_TAG, 2); // version
         // Field 1 is the "layer name" field, it's a string
-        layer_writer.add_string(1, "speeds"); // name
+        layer_writer.add_string(util::vector_tile::NAME_TAG, "speeds"); // name
         // Field 5 is the tile extent.  It's a uint32 and should be set to 4096
         // for normal vector tiles.
-        layer_writer.add_uint32(5, 4096); // extent
+        layer_writer.add_uint32(util::vector_tile::EXTEND_TAG, util::vector_tile::EXTENT); // extent
 
         // Begin the layer features block
         {
@@ -328,11 +325,13 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     // is_small
                     // boolean.  We onl serve up speeds from 0-139, so all we do is save the
                     // first
-                    protozero::pbf_writer feature_writer(layer_writer, 2);
+                    protozero::pbf_writer feature_writer(layer_writer,
+                                                         util::vector_tile::FEATURE_TAG);
                     // Field 3 is the "geometry type" field.  Value 2 is "line"
-                    feature_writer.add_enum(3, 2); // geometry type
+                    feature_writer.add_enum(util::vector_tile::GEOMETRY_TAG,
+                                            util::vector_tile::GEOMETRY_TYPE_LINE); // geometry type
                     // Field 1 for the feature is the "id" field.
-                    feature_writer.add_uint64(1, id++); // id
+                    feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
                     {
                         // When adding attributes to a feature, we have to write
                         // pairs of numbers.  The first value is the index in the
@@ -341,7 +340,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         // not writing the actual speed or bool value here, we're saving
                         // an index into the "values" array.  This means many features
                         // can share the same value data, leading to smaller tiles.
-                        protozero::packed_field_uint32 field(feature_writer, 2);
+                        protozero::packed_field_uint32 field(
+                            feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
 
                         field.add_element(0); // "speed" tag key offset
                         field.add_element(
@@ -358,7 +358,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     {
 
                         // Encode the geometry for the feature
-                        protozero::packed_field_uint32 geometry(feature_writer, 4);
+                        protozero::packed_field_uint32 geometry(
+                            feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
                         encodeLinestring(tile_line, geometry, start_x, start_y);
                     }
                 };
@@ -405,10 +406,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         // Field id 3 is the "keys" attribute
         // We need two "key" fields, these are referred to with 0 and 1 (their array indexes)
         // earlier
-        layer_writer.add_string(3, "speed");
-        layer_writer.add_string(3, "is_small");
-        layer_writer.add_string(3, "datasource");
-        layer_writer.add_string(3, "duration");
+        layer_writer.add_string(util::vector_tile::KEY_TAG, "speed");
+        layer_writer.add_string(util::vector_tile::KEY_TAG, "is_small");
+        layer_writer.add_string(util::vector_tile::KEY_TAG, "datasource");
+        layer_writer.add_string(util::vector_tile::KEY_TAG, "duration");
 
         // Now, we write out the possible speed value arrays and possible is_tiny
         // values.  Field type 4 is the "values" field.  It's a variable type field,
@@ -416,35 +417,36 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         for (std::size_t i = 0; i < 128; i++)
         {
             // Writing field type 4 == variant type
-            protozero::pbf_writer values_writer(layer_writer, 4);
+            protozero::pbf_writer values_writer(layer_writer, util::vector_tile::VARIANT_TAG);
             // Attribute value 5 == uin64 type
-            values_writer.add_uint64(5, i);
+            values_writer.add_uint64(util::vector_tile::VARIANT_TYPE_UINT32, i);
         }
         {
-            protozero::pbf_writer values_writer(layer_writer, 4);
+            protozero::pbf_writer values_writer(layer_writer, util::vector_tile::VARIANT_TAG);
             // Attribute value 7 == bool type
-            values_writer.add_bool(7, true);
+            values_writer.add_bool(util::vector_tile::VARIANT_TYPE_BOOL, true);
         }
         {
-            protozero::pbf_writer values_writer(layer_writer, 4);
+            protozero::pbf_writer values_writer(layer_writer, util::vector_tile::VARIANT_TAG);
             // Attribute value 7 == bool type
-            values_writer.add_bool(7, false);
+            values_writer.add_bool(util::vector_tile::VARIANT_TYPE_BOOL, false);
         }
         for (std::size_t i = 0; i <= max_datasource_id; i++)
         {
             // Writing field type 4 == variant type
-            protozero::pbf_writer values_writer(layer_writer, 4);
+            protozero::pbf_writer values_writer(layer_writer, util::vector_tile::VARIANT_TAG);
             // Attribute value 1 == string type
-            values_writer.add_string(1, facade.GetDatasourceName(i));
+            values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING,
+                                     facade.GetDatasourceName(i));
         }
         for (auto weight : used_weights)
         {
             // Writing field type 4 == variant type
-            protozero::pbf_writer values_writer(layer_writer, 4);
+            protozero::pbf_writer values_writer(layer_writer, util::vector_tile::VARIANT_TAG);
             // Attribute value 2 == float type
             // Durations come out of OSRM in integer deciseconds, so we convert them
             // to seconds with a simple /10 for display
-            values_writer.add_double(3, weight / 10.);
+            values_writer.add_double(util::vector_tile::VARIANT_TYPE_DOUBLE, weight / 10.);
         }
     }
 
