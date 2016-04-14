@@ -555,6 +555,10 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
         in_iter++;
     }
     auto new_size = out_iter - node_based_edge_list.begin();
+    if (new_size == 0)
+    {
+        throw util::exception("There are no snappable edges left after processing.  Are you setting travel modes correctly in the profile?  Cannot continue.");
+    }
     node_based_edge_list.resize(new_size);
 
     TIMER_START(construction);
