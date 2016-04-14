@@ -17,6 +17,13 @@ namespace guidance
 // passed as none-reference to modify in-place and move out again
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps);
 
+// Multiple possible reasons can result in unnecessary/confusing instructions
+// A prime example would be a segregated intersection. Turning around at this
+// intersection would result in two instructions to turn left.
+// Collapsing such turns into a single turn instruction, we give a clearer
+// set of instructionst that is not cluttered by unnecessary turns/name changes.
+std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps);
+
 // trim initial/final segment of very short length.
 // This function uses in/out parameter passing to modify both steps and geometry in place.
 // We use this method since both steps and geometry are closely coupled logically but
@@ -29,6 +36,9 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
                                                const LegGeometry &geometry,
                                                const PhantomNode &source_node,
                                                const PhantomNode &target_node);
+
+//remove steps invalidated by post-processing
+std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps);
 
 // postProcess will break the connection between the leg geometry
 // for which a segment is supposed to represent exactly the coordinates
