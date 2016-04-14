@@ -6,6 +6,7 @@
 #include "server/api/table_parameter_grammar.hpp"
 #include "server/api/tile_parameter_grammar.hpp"
 #include "server/api/trip_parameter_grammar.hpp"
+#include "server/api/isochrone_parameter_grammar.hpp"
 
 #include <type_traits>
 
@@ -94,6 +95,13 @@ boost::optional<engine::api::TileParameters> parseParameters(std::string::iterat
                                                              const std::string::iterator end)
 {
     return detail::parseParameters<engine::api::TileParameters, TileParametersGrammar>(iter, end);
+}
+template <>
+boost::optional<engine::api::IsochroneParameters> parseParameters(std::string::iterator &iter,
+                                                                  const std::string::iterator end)
+{
+    return detail::parseParameters<engine::api::IsochroneParameters, IsochroneParametersGrammar>(
+        iter, end);
 }
 
 } // ns api

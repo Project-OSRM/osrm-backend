@@ -44,22 +44,23 @@ using engine::api::NearestParameters;
 using engine::api::TripParameters;
 using engine::api::MatchParameters;
 using engine::api::TileParameters;
+using engine::api::IsochroneParameters;
 
-/**
- * Represents a Open Source Routing Machine with access to its services.
- *
- * This represents an Open Source Routing Machine (OSRM) instance, with the services:
- *
- *  - Route: shortest path queries for coordinates
- *  - Table: distance tables for coordinates
- *  - Nearest: nearest street segment for coordinate
- *  - Trip: shortest round trip between coordinates
- *  - Match: snaps noisy coordinate traces to the road network
- *  - Tile: vector tiles with internal graph representation
- *
- *  All services take service-specific parameters, fill a JSON object, and return a status code.
- */
-class OSRM final
+    /**
+     * Represents a Open Source Routing Machine with access to its services.
+     *
+     * This represents an Open Source Routing Machine (OSRM) instance, with the services:
+     *
+     *  - Route: shortest path queries for coordinates
+     *  - Table: distance tables for coordinates
+     *  - Nearest: nearest street segment for coordinate
+     *  - Trip: shortest round trip between coordinates
+     *  - Match: snaps noisy coordinate traces to the road network
+     *  - Tile: vector tiles with internal graph representation
+     *
+     *  All services take service-specific parameters, fill a JSON object, and return a status code.
+     */
+    class OSRM final
 {
   public:
     /**
@@ -129,6 +130,14 @@ class OSRM final
      * \see Status, TileParameters and json::Object
      */
     Status Tile(const TileParameters &parameters, std::string &result);
+
+    /**
+     * Isocrhone for given distance
+     * \param parameters nearest query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, NearestParameters and json::Object
+     */
+    Status Isochrone(const IsochroneParameters &parameters, json::Object &result);
 
   private:
     std::unique_ptr<engine::Engine> engine_;

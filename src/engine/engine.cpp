@@ -5,11 +5,11 @@
 
 #include "engine/plugins/table.hpp"
 #include "engine/plugins/nearest.hpp"
-#include "engine/plugins/timestamp.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/plugins/match.hpp"
 #include "engine/plugins/tile.hpp"
+#include "engine/plugins/isochrone.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/internal_datafacade.hpp"
@@ -17,7 +17,6 @@
 
 #include "storage/shared_barriers.hpp"
 #include "util/make_unique.hpp"
-#include "util/routed_options.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/assert.hpp>
@@ -135,7 +134,12 @@ Engine::Engine(EngineConfig &config)
     }
     else
     {
-        return_code = plugin_iterator->second->HandleRequest(route_parameters, json_result);
+        if (!config.storage_config.IsValid())
+        {
+            throw util::exception("Invalid file paths given!");
+        }
+        query_data_facade =
+            util::make_unique<datafacade::InternalDataFacade>(config.storage_config);
     }
 
     // Register plugins
@@ -147,6 +151,7 @@ Engine::Engine(EngineConfig &config)
     trip_plugin = create<TripPlugin>(*query_data_facade, config.max_locations_trip);
     match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
     tile_plugin = create<TilePlugin>(*query_data_facade);
+    isochrone_plugin = create<IsochronePlugin>(*query_data_facade);
 }
 
 // make sure we deallocate the unique ptr at a position where we know the size of the plugins
@@ -183,6 +188,10 @@ Status Engine::Tile(const api::TileParameters &params, std::string &result)
 {
     return RunQuery(lock, *query_data_facade, params, *tile_plugin, result);
 }
+Status Engine::Isochrone(const api::IsochroneParameters &params, util::json::Object &result) {
+    return RunQuery(lock, *query_data_facade, params, *isochrone_plugin, result);
+}
+
 
 } // engine ns
 } // osrm ns

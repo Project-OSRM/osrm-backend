@@ -6,6 +6,7 @@
 #include "server/service/trip_service.hpp"
 #include "server/service/match_service.hpp"
 #include "server/service/tile_service.hpp"
+#include "server/service/isochrone_service.hpp"
 
 #include "server/api/parsed_url.hpp"
 #include "util/json_util.hpp"
@@ -23,6 +24,7 @@ ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(con
     service_map["trip"] = util::make_unique<service::TripService>(routing_machine);
     service_map["match"] = util::make_unique<service::MatchService>(routing_machine);
     service_map["tile"] = util::make_unique<service::TileService>(routing_machine);
+    service_map["isochrone"] = util::make_unique<service::IsochroneService>(routing_machine);
 }
 
 engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
