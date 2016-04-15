@@ -24,17 +24,6 @@ matrix:
 
   include:
 
-    # Release / Triggered build
-    # This is listed first so it runs first to enable
-    # quickly knowing if downstream apps are broken
-    - os: linux
-      compiler: gcc
-      addons: &gcc5
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release' TRIGGER=true
-
     # Debug Builds
     - os: linux
       compiler: gcc
@@ -42,7 +31,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'pip']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON TRIGGER_DOWNSTREAM=ON
 
     - os: linux
       compiler: gcc
@@ -66,6 +55,14 @@ matrix:
       env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug'
 
     # Release Builds
+    - os: linux
+      compiler: gcc
+      addons: &gcc5
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
+
     - os: linux
       compiler: gcc
       addons: &gcc48
@@ -167,8 +164,11 @@ script:
 
 after_success:
   - |
-    if [ -n "$RUN_CLANG_FORMAT" ]; then
+    if [ -n "${RUN_CLANG_FORMAT}" ]; then
       ./scripts/format.sh || true # we don't want to fail just yet
     fi
-  - if [[ ${TRIGGER:-false} == true ]]; then ./scripts/trigger-downstream.sh; fi
-  - coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+  - |
+    if [[ -n "${COVERAGE}" ]]; then
+       coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+    fi
+  - if [[ -n "${TRIGGER_DOWNSTREAM}" ]]; then ./scripts/trigger-downstream.sh; fi
