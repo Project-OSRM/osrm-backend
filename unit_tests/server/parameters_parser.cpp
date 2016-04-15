@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_1.alternatives, result_7->alternatives);
     BOOST_CHECK_EQUAL(reference_1.geometries, result_7->geometries);
     BOOST_CHECK_EQUAL(reference_1.overview, result_7->overview);
-    BOOST_CHECK_EQUAL(reference_1.uturns, result_7->uturns);
+    BOOST_CHECK_EQUAL(reference_1.continue_straight, result_7->continue_straight);
     CHECK_EQUAL_RANGE(reference_1.bearings, result_7->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_7->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_7->coordinates);
