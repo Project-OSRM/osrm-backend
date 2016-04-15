@@ -37,6 +37,7 @@ bool RoundaboutHandler::canProcess(const NodeID from_nid,
 Intersection RoundaboutHandler::
 operator()(const NodeID from_nid, const EdgeID via_eid, Intersection intersection) const
 {
+    invalidateExitAgainstDirection(from_nid, via_eid, intersection);
     const auto flags = getRoundaboutFlags(from_nid, via_eid, intersection);
     const bool is_rotary = isRotary(node_based_graph.GetTarget(via_eid));
     // find the radius of the roundabout
@@ -55,7 +56,7 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
     {
         const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
         // only check actual outgoing edges
-        if (edge_data.reversed)
+        if (edge_data.reversed || !road.entry_allowed )
             continue;
 
         if (edge_data.roundabout)
@@ -77,6 +78,42 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
         }
     }
     return {on_roundabout, can_enter_roundabout, can_exit_roundabout_separately};
+}
+
+void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
+                                                       const EdgeID via_eid,
+                                                       Intersection &intersection) const
+{
+    const auto &in_edge_data = node_based_graph.GetEdgeData(via_eid);
+    if( in_edge_data.roundabout )
+        return;
+
+    bool past_roundabout_angle = false;
+    for (auto &road : intersection)
+    {
+        const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
+        // only check actual outgoing edges
+        if (edge_data.reversed)
+        {
+            // remember whether we have seen the roundabout in-part
+            if (edge_data.roundabout)
+                past_roundabout_angle = true;
+
+            continue;
+        }
+
+        // Exiting roundabouts at an entry point is technically a data-modelling issue.
+        // This workaround handles cases in which an exit precedes and entry. The resulting
+        // u-turn against the roundabout direction is invalidated.
+        // The sorting of the angles represents a problem for left-sided driving, though.
+        // FIXME in case of left-sided driving, we have to check whether we can enter the
+        // roundabout later in the cycle, rather than prior.
+        if (!edge_data.roundabout && node_based_graph.GetTarget(road.turn.eid) != from_nid &&
+            past_roundabout_angle)
+        {
+            road.entry_allowed = false;
+        }
+    }
 }
 
 bool RoundaboutHandler::isRotary(const NodeID nid) const
@@ -191,7 +228,6 @@ Intersection RoundaboutHandler::handleRoundabouts(const bool is_rotary,
                                                   const bool can_exit_roundabout_separately,
                                                   Intersection intersection) const
 {
-    // TODO requires differentiation between roundabouts and rotaries
     // detect via radius (get via circle through three vertices)
     NodeID node_v = node_based_graph.GetTarget(via_eid);
     if (on_roundabout)
