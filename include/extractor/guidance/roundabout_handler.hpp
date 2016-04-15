@@ -56,6 +56,10 @@ class RoundaboutHandler : public IntersectionHandler
                                                const EdgeID via_eid,
                                                const Intersection &intersection) const;
 
+    void invalidateExitAgainstDirection(const NodeID from_nid,
+                                        const EdgeID via_eid,
+                                        Intersection &intersection) const;
+
     // decide whether we lookk at a roundabout or a rotary
     bool isRotary(const NodeID nid) const;
 

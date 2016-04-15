@@ -25,6 +25,28 @@ namespace engine
 namespace guidance
 {
 
+void print(const std::vector<RouteStep> &steps)
+{
+    std::cout << "Path\n";
+    int segment = 0;
+    for (const auto &step : steps)
+    {
+        const auto type = static_cast<int>(step.maneuver.instruction.type);
+        const auto modifier = static_cast<int>(step.maneuver.instruction.direction_modifier);
+
+        std::cout << "\t[" << ++segment << "]: " << type << " " << modifier
+                  << " Duration: " << step.duration << " Distance: " << step.distance
+                  << " Geometry: " << step.geometry_begin << " " << step.geometry_end
+                  << " exit: " << step.maneuver.exit
+                  << " Intersections: " << step.maneuver.intersections.size() << " [";
+
+        for (const auto &intersection : step.maneuver.intersections)
+            std::cout << "(" << intersection.duration << " " << intersection.distance << ")";
+
+        std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
+    }
+}
+
 namespace detail
 {
 bool canMergeTrivially(const RouteStep &destination, const RouteStep &source)
@@ -175,28 +197,6 @@ void closeOffRoundabout(const bool on_roundabout,
     }
 }
 } // namespace detail
-
-void print(const std::vector<RouteStep> &steps)
-{
-    std::cout << "Path\n";
-    int segment = 0;
-    for (const auto &step : steps)
-    {
-        const auto type = static_cast<int>(step.maneuver.instruction.type);
-        const auto modifier = static_cast<int>(step.maneuver.instruction.direction_modifier);
-
-        std::cout << "\t[" << ++segment << "]: " << type << " " << modifier
-                  << " Duration: " << step.duration << " Distance: " << step.distance
-                  << " Geometry: " << step.geometry_begin << " " << step.geometry_end
-                  << " exit: " << step.maneuver.exit
-                  << " Intersections: " << step.maneuver.intersections.size() << " [";
-
-        for (auto intersection : step.maneuver.intersections)
-            std::cout << "(" << intersection.duration << " " << intersection.distance << ")";
-
-        std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
-    }
-}
 
 // Every Step Maneuver consists of the information until the turn.
 // This list contains a set of instructions, called silent, which should

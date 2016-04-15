@@ -165,6 +165,84 @@ Feature: Basic Roundabout
            | j,f       | jkl,def,def | depart,roundabout-exit-3,arrive |
            | j,c       | jkl,abc,abc | depart,roundabout-exit-4,arrive |
 
+    Scenario: Mixed Entry and Exit - segregated roads
+        Given the node map
+           |   |   | a |   | c |   |   |
+           |   |   |   |   |   |   |   |
+           | l |   |   | b |   |   | d |
+           |   |   | k |   | e |   |   |
+           | j |   |   | h |   |   | f |
+           |   |   |   |   |   |   |   |
+           |   |   | i |   | g |   |   |
+
+        And the ways
+           | nodes | junction   | oneway |
+           | abc   |            | yes    |
+           | def   |            | yes    |
+           | ghi   |            | yes    |
+           | jkl   |            | yes    |
+           | bkheb | roundabout | yes    |
+
+        When I route I should get
+           | waypoints | route       | turns                           |
+           | a,c       | abc,abc,abc | depart,roundabout-exit-4,arrive |
+           | a,l       | abc,jkl,jkl | depart,roundabout-exit-1,arrive |
+           | a,i       | abc,ghi,ghi | depart,roundabout-exit-2,arrive |
+           | a,f       | abc,def,def | depart,roundabout-exit-3,arrive |
+           | d,f       | def,def,def | depart,roundabout-exit-4,arrive |
+           | d,c       | def,abc,abc | depart,roundabout-exit-1,arrive |
+           | d,l       | def,jkl,jkl | depart,roundabout-exit-2,arrive |
+           | d,i       | def,ghi,ghi | depart,roundabout-exit-3,arrive |
+           | g,i       | ghi,ghi,ghi | depart,roundabout-exit-4,arrive |
+           | g,f       | ghi,def,def | depart,roundabout-exit-1,arrive |
+           | g,c       | ghi,abc,abc | depart,roundabout-exit-2,arrive |
+           | g,l       | ghi,jkl,jkl | depart,roundabout-exit-3,arrive |
+           | j,l       | jkl,jkl,jkl | depart,roundabout-exit-4,arrive |
+           | j,i       | jkl,ghi,ghi | depart,roundabout-exit-1,arrive |
+           | j,f       | jkl,def,def | depart,roundabout-exit-2,arrive |
+           | j,c       | jkl,abc,abc | depart,roundabout-exit-3,arrive |
+
+    Scenario: Mixed Entry and Exit - segregated roads, different names
+        Given the node map
+           |   |   | a |   | c |   |   |
+           |   |   |   |   |   |   |   |
+           | l |   |   | b |   |   | d |
+           |   |   | k |   | e |   |   |
+           | j |   |   | h |   |   | f |
+           |   |   |   |   |   |   |   |
+           |   |   | i |   | g |   |   |
+
+        And the ways
+           | nodes | junction   | oneway |
+           | ab    |            | yes    |
+           | bc    |            | yes    |
+           | de    |            | yes    |
+           | ef    |            | yes    |
+           | gh    |            | yes    |
+           | hi    |            | yes    |
+           | jk    |            | yes    |
+           | kl    |            | yes    |
+           | bkheb | roundabout | yes    |
+
+        When I route I should get
+           | waypoints | route    | turns                           |
+           | a,c       | ab,bc,bc | depart,roundabout-exit-4,arrive |
+           | a,l       | ab,kl,kl | depart,roundabout-exit-1,arrive |
+           | a,i       | ab,hi,hi | depart,roundabout-exit-2,arrive |
+           | a,f       | ab,ef,ef | depart,roundabout-exit-3,arrive |
+           | d,f       | de,ef,ef | depart,roundabout-exit-4,arrive |
+           | d,c       | de,bc,bc | depart,roundabout-exit-1,arrive |
+           | d,l       | de,kl,kl | depart,roundabout-exit-2,arrive |
+           | d,i       | de,hi,hi | depart,roundabout-exit-3,arrive |
+           | g,i       | gh,hi,hi | depart,roundabout-exit-4,arrive |
+           | g,f       | gh,ef,ef | depart,roundabout-exit-1,arrive |
+           | g,c       | gh,bc,bc | depart,roundabout-exit-2,arrive |
+           | g,l       | gh,kl,kl | depart,roundabout-exit-3,arrive |
+           | j,l       | jk,kl,kl | depart,roundabout-exit-4,arrive |
+           | j,i       | jk,hi,hi | depart,roundabout-exit-1,arrive |
+           | j,f       | jk,ef,ef | depart,roundabout-exit-2,arrive |
+           | j,c       | jk,bc,bc | depart,roundabout-exit-3,arrive |
+
        Scenario: Collinear in X
         Given the node map
             | a | b | c | d | f |
@@ -184,11 +262,11 @@ Feature: Basic Roundabout
 
        Scenario: Collinear in Y
         Given the node map
-            | a |   |
-            | b |   |
-            | c | e |
-            | d |   |
-            | f |   |
+            |   | a |
+            |   | b |
+            | e | c |
+            |   | d |
+            |   | f |
 
         And the ways
             | nodes | junction   |
