@@ -4,6 +4,8 @@
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/toolkit.hpp"
 
+#include "util/guidance/toolkit.hpp"
+
 #include <boost/assert.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
@@ -17,6 +19,8 @@
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
 using TurnType = osrm::extractor::guidance::TurnType;
 using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
+using osrm::util::guidance::angularDeviation;
+using osrm::util::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -43,7 +47,9 @@ void print(const std::vector<RouteStep> &steps)
         for (const auto &intersection : step.maneuver.intersections)
             std::cout << "(" << intersection.duration << " " << intersection.distance << ")";
 
-        std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
+        std::cout << "] name[" << step.name_id << "]: " << step.name
+                  << " Bearings: " << step.maneuver.bearing_before << " "
+                  << step.maneuver.bearing_after << std::endl;
     }
 }
 
@@ -72,17 +78,25 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
          --propagation_index)
     {
         auto &propagation_step = steps[propagation_index];
-        if (propagation_index == 0 || entersRoundabout(propagation_step.maneuver.instruction))
+        if (entersRoundabout(propagation_step.maneuver.instruction))
         {
             propagation_step.maneuver.exit = 0;
             propagation_step.geometry_end = steps.back().geometry_begin;
 
+            // remember the current name as rotary name in tha case we end in a rotary
             if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
                 propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
                 propagation_step.rotary_name = propagation_step.name;
 
-            break;
+            else if (propagation_step.maneuver.instruction.type ==
+                         TurnType::EnterRoundaboutIntersection ||
+                     propagation_step.maneuver.instruction.type ==
+                         TurnType::EnterRoundaboutIntersectionAtExit)
+                propagation_step.maneuver.instruction.type = TurnType::EnterRoundabout;
+
+            return;
         }
+        // accumulate turn data into the enter instructions
         else if (propagation_step.maneuver.instruction.type == TurnType::StayOnRoundabout)
         {
             // TODO this operates on the data that is in the instructions.
@@ -102,14 +116,17 @@ bool setUpRoundabout(RouteStep &step)
     // Special case handling, if an entry is directly tied to an exit
     const auto instruction = step.maneuver.instruction;
     if (instruction.type == TurnType::EnterRotaryAtExit ||
-        instruction.type == TurnType::EnterRoundaboutAtExit)
+        instruction.type == TurnType::EnterRoundaboutAtExit ||
+        instruction.type == TurnType::EnterRoundaboutIntersectionAtExit)
     {
         step.maneuver.exit = 1;
         // prevent futher special case handling of these two.
         if (instruction.type == TurnType::EnterRotaryAtExit)
             step.maneuver.instruction.type = TurnType::EnterRotary;
-        else
+        else if (instruction.type == TurnType::EnterRoundaboutAtExit)
             step.maneuver.instruction.type = TurnType::EnterRoundabout;
+        else
+            step.maneuver.instruction.type = TurnType::EnterRoundaboutIntersection;
     }
 
     if (leavesRoundabout(instruction))
@@ -119,8 +136,10 @@ bool setUpRoundabout(RouteStep &step)
         // prevent futher special case handling of these two.
         if (instruction.type == TurnType::EnterAndExitRotary)
             step.maneuver.instruction.type = TurnType::EnterRotary;
-        else
+        else if (instruction.type == TurnType::EnterAndExitRoundabout)
             step.maneuver.instruction.type = TurnType::EnterRoundabout;
+        else
+            step.maneuver.instruction.type = TurnType::EnterRoundaboutIntersection;
         return false;
     }
     else
@@ -149,9 +168,17 @@ void closeOffRoundabout(const bool on_roundabout,
         steps[1] = detail::forwardInto(steps[1], steps[0]);
         steps[0].duration = 0;
         steps[0].distance = 0;
-        steps[1].maneuver.instruction.type = step.maneuver.instruction.type == TurnType::ExitRotary
-                                                 ? TurnType::EnterRotary
-                                                 : TurnType::EnterRoundabout;
+        const auto exitToEnter = [](const TurnType type) {
+            if (TurnType::ExitRotary == type)
+                return TurnType::EnterRotary;
+            // if we do not enter the roundabout Intersection, we cannot treat the full traversal as
+            // a turn. So we switch it up to the roundabout type
+            else if (type == TurnType::ExitRoundaboutIntersection)
+                return TurnType::EnterRoundabout;
+            else
+                return TurnType::EnterRoundabout;
+        };
+        steps[1].maneuver.instruction.type = exitToEnter(step.maneuver.instruction.type);
         if (steps[1].maneuver.instruction.type == TurnType::EnterRotary)
             steps[1].rotary_name = steps[0].name;
     }
@@ -160,6 +187,7 @@ void closeOffRoundabout(const bool on_roundabout,
     // Propagate the index back to the entering
     // location and
     // prepare the current silent set of instructions for removal.
+    const auto exit_bearing = steps[step_index].maneuver.bearing_after;
     if (step_index > 1)
     {
         // The very first route-step is head, so we cannot iterate past that one
@@ -170,15 +198,55 @@ void closeOffRoundabout(const bool on_roundabout,
             propagation_step = detail::forwardInto(propagation_step, steps[propagation_index + 1]);
             if (entersRoundabout(propagation_step.maneuver.instruction))
             {
-                // TODO at this point, we can remember the additional name for a rotary
-                // This requires some initial thought on the data format, though
-
                 propagation_step.maneuver.exit = step.maneuver.exit;
                 propagation_step.geometry_end = step.geometry_end;
                 // remember rotary name
                 if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
                     propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
+                {
                     propagation_step.rotary_name = propagation_step.name;
+                }
+                else if (propagation_step.maneuver.instruction.type ==
+                             TurnType::EnterRoundaboutIntersection ||
+                         propagation_step.maneuver.instruction.type ==
+                             TurnType::EnterRoundaboutIntersectionAtExit)
+                {
+                    // Compute the angle between two bearings on a normal turn circle
+                    //
+                    //      Bearings                      Angles
+                    //
+                    //         0                           180
+                    //   315         45               225       135
+                    //
+                    // 270     x       90           270     x      90
+                    //
+                    //   225        135               315        45
+                    //        180                           0
+                    //
+                    // A turn from north to north-east offerst bearing 0 and 45 has to be translated
+                    // into a turn of 135 degrees.
+                    // The same holdes for 90 - 135 (east to south east).
+                    // For north, the transformation works by angle = 540 (360 + 180) - exit_bearing
+                    // % 360;
+                    // All other cases are handled by first rotating both bearings to an
+                    // entry_bearing of 0.
+                    const double angle = [](const double entry_bearing, const double exit_bearing) {
+                        const double offset = 360 - entry_bearing;
+                        const double rotated_exit = [](double bearing, const double offset) {
+                            bearing += offset;
+                            return bearing > 360 ? bearing - 360 : bearing;
+                        }(exit_bearing, offset);
+
+                        const auto angle = 540 - rotated_exit;
+                        return angle > 360 ? angle - 360 : angle;
+                    }(propagation_step.maneuver.bearing_before, exit_bearing);
+
+                    std::cout << "Step: " << propagation_step.maneuver.bearing_before << " "
+                              << exit_bearing << " result: " << angle << std::endl;
+
+                    propagation_step.maneuver.instruction.direction_modifier =
+                        ::osrm::util::guidance::getTurnDirection(angle);
+                }
 
                 propagation_step.name = step.name;
                 propagation_step.name_id = step.name_id;
@@ -308,22 +376,27 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // Doing this step in post-processing provides a few challenges we cannot overcome.
     // The removal of an initial step imposes some copy overhead in the steps, moving all later
     // steps to the front.
-    // In addition, we cannot reduce the travel time that is accumulated at a different location.
-    // As a direct implication, we have to keep the time of the initial/final turns (which adds a
-    // few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
+    // In addition, we cannot reduce the travel time that is accumulated at a different
+    // location.
+    // As a direct implication, we have to keep the time of the initial/final turns (which adds
+    // a
+    // few seconds of inaccuracy at both ends. This is acceptable, however, since the turn
+    // should
     // usually not be as relevant.
 
     if (steps.size() < 2 || geometry.locations.size() <= 2)
         return;
 
-    // if phantom node is located at the connection of two segments, either one can be selected as
+    // if phantom node is located at the connection of two segments, either one can be selected
+    // as
     // turn
     //
     // a --- b
     //       |
     //       c
     //
-    // If a route from b to c is requested, both a--b and b--c could be selected as start segment.
+    // If a route from b to c is requested, both a--b and b--c could be selected as start
+    // segment.
     // In case of a--b, we end up with an unwanted turn saying turn-right onto b-c.
     // These cases start off with an initial segment which is of zero length.
     // We have to be careful though, since routing that starts in a roundabout has a valid.
@@ -357,12 +430,12 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             const auto &current_depart = steps.front();
             auto &designated_depart = *(steps.begin() + 1);
 
-            // FIXME this is required to be consistent with the route durations. The initial turn is
-            // not actually part of the route, though
+            // FIXME this is required to be consistent with the route durations. The initial
+            // turn is not actually part of the route, though
             designated_depart.duration += current_depart.duration;
 
-            // update initial turn direction/bearings. Due to the duplicated first coordinate, the
-            // initial bearing is invalid
+            // update initial turn direction/bearings. Due to the duplicated first coordinate,
+            // the initial bearing is invalid
             designated_depart.maneuver = detail::stepManeuverFromGeometry(
                 TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
 
@@ -394,8 +467,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     auto &next_to_last_step = *(steps.end() - 2);
-    // in the end, the situation with the roundabout cannot occur. As a result, we can remove all
-    // zero-length instructions
+    // in the end, the situation with the roundabout cannot occur. As a result, we can remove
+    // all zero-length instructions
     if (next_to_last_step.distance <= 1)
     {
         geometry.locations.pop_back();
