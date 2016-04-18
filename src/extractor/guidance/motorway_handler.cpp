@@ -3,11 +3,15 @@
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/simple_logger.hpp"
+#include "util/guidance/toolkit.hpp"
 
 #include <limits>
 #include <utility>
 
 #include <boost/assert.hpp>
+
+using osrm::util::guidance::angularDeviation;
+using osrm::util::guidance::getTurnDirection;
 
 namespace osrm
 {
