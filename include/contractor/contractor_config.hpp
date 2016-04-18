@@ -81,6 +81,7 @@ struct ContractorConfig
     double core_factor;
 
     std::vector<std::string> segment_speed_lookup_paths;
+    std::vector<std::string> turn_penalty_lookup_paths;
     std::string datasource_indexes_path;
     std::string datasource_names_path;
 };

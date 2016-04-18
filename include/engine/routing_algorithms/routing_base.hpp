@@ -301,8 +301,6 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
-                // ed.distance should be total_weight + penalties (turn, stop, etc)
-                BOOST_ASSERT(ed.distance >= total_weight);
                 const bool is_first_segment = unpacked_path.empty();
 
                 const std::size_t start_index =
@@ -350,7 +348,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 start_index =
                     id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
             }
-            end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
+            end_index =
+                id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
         }
         else
         {
@@ -396,8 +395,17 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             // However the first segment duration needs to be adjusted to the fact that the source
             // phantom is in the middle of the segment. We do this by subtracting v--s from the
             // duration.
-            BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
-            unpacked_path.front().duration_until_turn -= source_weight;
+
+            // Since it's possible duration_until_turn can be less than source_weight here if
+            // a negative enough turn penalty is used to modify this edge weight during
+            // osrm-contract, we clamp to 1 here so as not to return a negative duration
+            // for this segment.
+
+            // TODO this creates a scenario where it's possible the duration from a phantom
+            // node to the first turn would be the same as from end to end of a segment,
+            // which is obviously incorrect and not ideal...
+            unpacked_path.front().duration_until_turn =
+                std::max(unpacked_path.front().duration_until_turn - source_weight, 0);
         }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.
