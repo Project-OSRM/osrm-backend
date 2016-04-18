@@ -538,7 +538,7 @@ Intersection TurnHandler::assignRightTurns(const EdgeID via_edge,
             BOOST_ASSERT(intersection[1].entry_allowed && intersection[2].entry_allowed &&
                          intersection[3].entry_allowed);
             // count backwards from the slightest turn
-            assignCountingTurns(via_edge, intersection, 3, 0, second_direction);
+            assignTrivialTurns(via_edge, intersection, 1, up_to);
         }
         else if (((first_direction == second_direction &&
                    angularDeviation(intersection[2].turn.angle, intersection[3].turn.angle) >=
@@ -580,12 +580,6 @@ Intersection TurnHandler::assignRightTurns(const EdgeID via_edge,
 
             assignTrivialTurns(via_edge, intersection, 1, up_to);
         }
-    }
-    else if (up_to == 5)
-    {
-
-        // count backwards from the slightest turn
-        assignCountingTurns(via_edge, intersection, 4, 0, DirectionModifier::Right);
     }
     else
     {
@@ -726,21 +720,6 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
         // Keep Right perfect, shift left
         left.turn.instruction = {left_type, DirectionModifier::SharpLeft};
         right.turn.instruction = {right_type, DirectionModifier::Left};
-        return;
-    }
-    // Both turns?
-    if (TurnType::Ramp != left_type && TurnType::Ramp != right_type)
-    {
-        if (left.turn.angle < STRAIGHT_ANGLE)
-        {
-            left.turn.instruction = {TurnType::FirstTurn, getTurnDirection(left.turn.angle)};
-            right.turn.instruction = {TurnType::SecondTurn, getTurnDirection(right.turn.angle)};
-        }
-        else
-        {
-            left.turn.instruction = {TurnType::SecondTurn, getTurnDirection(left.turn.angle)};
-            right.turn.instruction = {TurnType::FirstTurn, getTurnDirection(right.turn.angle)};
-        }
         return;
     }
     // Shift the lesser penalty
