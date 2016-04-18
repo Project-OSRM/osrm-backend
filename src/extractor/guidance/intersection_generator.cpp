@@ -14,11 +14,12 @@ namespace extractor
 namespace guidance
 {
 
-IntersectionGenerator::IntersectionGenerator(const util::NodeBasedDynamicGraph &node_based_graph,
-                      const RestrictionMap &restriction_map,
-                      const std::unordered_set<NodeID> &barrier_nodes,
-                      const std::vector<QueryNode> &node_info_list,
-                      const CompressedEdgeContainer &compressed_edge_container)
+IntersectionGenerator::IntersectionGenerator(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const RestrictionMap &restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const std::vector<QueryNode> &node_info_list,
+    const CompressedEdgeContainer &compressed_edge_container)
     : node_based_graph(node_based_graph), restriction_map(restriction_map),
       barrier_nodes(barrier_nodes), node_info_list(node_info_list),
       compressed_edge_container(compressed_edge_container)
