@@ -282,3 +282,426 @@ Feature: Simple Turns
             | h,c       | first,second,second  | depart,turn left,arrive      |
             | h,i       | first,first,first    | depart,continue uturn,arrive |
 
+    Scenario: Three Way Similar Sharp Turns
+        Given the node map
+            | a |   |   |   | b |
+            | c |   |   |   |   |
+            |   | d |   |   |   |
+
+        And the ways
+            | nodes | highway |
+            | ab    | primary |
+            | bc    | primary |
+            | bd    | primary |
+
+        When I route I should get
+            | waypoints | route    | turns                          |
+            | a,c       | ab,bc,bc | depart,turn sharp right,arrive |
+            | a,d       | ab,bd,bd | depart,turn sharp right,arrive |
+            | d,c       | bd,bc,bc | depart,turn sharp left,arrive  |
+            | d,a       | bd,ab,ab | depart,turn sharp left,arrive  |
+
+    Scenario: Left Turn Assignment (1)
+        Given the node map
+            |   |   |   |   | d |
+            | a |   | b |   | c |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,turn slight left,arrive |
+
+    Scenario: Left Turn Assignment (2)
+        Given the node map
+            |   |   |   |   | d |
+            |   |   |   |   |   |
+            | a |   | b |   | c |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                   |
+            | a,d       | abc,bd,bd | depart,turn left,arrive |
+
+    Scenario: Left Turn Assignment (3)
+        Given the node map
+            |   |   |   | d |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | a |   | b |   | c |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                   |
+            | a,d       | abc,bd,bd | depart,turn left,arrive |
+
+    Scenario: Left Turn Assignment (4)
+        Given the node map
+            |   |   | d |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | a |   | b |   | c |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                   |
+            | a,d       | abc,bd,bd | depart,turn left,arrive |
+
+    Scenario: Left Turn Assignment (5)
+        Given the node map
+            |   | d |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | a |   | b |   | c |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                   |
+            | a,d       | abc,bd,bd | depart,turn left,arrive |
+
+    Scenario: Left Turn Assignment (6)
+        Given the node map
+            | d |   |   |   |   |
+            |   |   |   |   |   |
+            | a |   | b |   | c |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                         |
+            | a,d       | abc,bd,bd | depart,turn sharp left,arrive |
+
+    Scenario: Left Turn Assignment (7)
+        Given the node map
+            | d |   |   |   |   |
+            | a |   | b |   | c |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                         |
+            | a,d       | abc,bd,bd | depart,turn sharp left,arrive |
+
+    Scenario: Right Turn Assignment (1)
+        Given the node map
+            |   |   | e |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   | d |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
+
+    Scenario: Right Turn Assignment (2)
+        Given the node map
+            |   |   | e |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   |   |   | d |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                    |
+            | a,d       | abc,bd,bd | depart,turn right,arrive |
+
+    Scenario: Right Turn Assignment (3)
+        Given the node map
+            |   |   | e |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   | d |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                    |
+            | a,d       | abc,bd,bd | depart,turn right,arrive |
+
+    Scenario: Right Turn Assignment (4)
+        Given the node map
+            |   |   | e |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   | d |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                    |
+            | a,d       | abc,bd,bd | depart,turn right,arrive |
+
+    Scenario: Right Turn Assignment (5)
+        Given the node map
+            |   |   | e |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   | d |   |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                    |
+            | a,d       | abc,bd,bd | depart,turn right,arrive |
+
+    Scenario: Right Turn Assignment (6)
+        Given the node map
+            |   |   | e |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            | d |   |   |   |   |
+
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive |
+
+    Scenario: Right Turn Assignment (7)
+        Given the node map
+            |   |   | e |   |   |
+            | a |   | b |   | c |
+            | d |   |   |   |   |
+
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive |
+
+   Scenario: Right Turn Assignment Two Turns
+        Given the node map
+            |   |   | f |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            | d | e |   |   |   |
+
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+            | bf    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive |
+            | a,e       | abc,be,be | depart,turn right,arrive       |
+
+   Scenario: Right Turn Assignment Two Turns (2)
+        Given the node map
+            |   |   | f |   | c |
+            | a |   | b |   |   |
+            |   |   |   |   | e |
+            |   |   |   | d |   |
+
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+            | bf    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn right,arrive        |
+            | a,e       | abc,be,be | depart,turn slight right,arrive |
+
+   Scenario: Right Turn Assignment Two Turns (3)
+        Given the node map
+            |   |   | f |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   | e |
+            |   |   |   | d |   |
+
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+            | bf    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn right,arrive        |
+            | a,e       | abc,be,be | depart,turn slight right,arrive |
+
+   Scenario: Right Turn Assignment Two Turns (4)
+        Given the node map
+            |   |   | f |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   | d |   | e |
+
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+            | bf    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn right,arrive        |
+            | a,e       | abc,be,be | depart,turn slight right,arrive |
+
+   Scenario: Right Turn Assignment Three Turns
+        Given the node map
+            |   |   | g |   |   |
+            | a |   | b |   | c |
+            |   | d |   | f |   |
+            |   |   | e |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+            | bf    | primary |
+            | bg    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive  |
+            | a,e       | abc,be,be | depart,turn right,arrive        |
+            | a,f       | abc,bf,bf | depart,turn slight right,arrive |
+
+    Scenario: Slight Turn involving Oneways
+        Given the node map
+            |   |   | a |   |   |
+            |   |   |   |   |   |
+            |   |   | b |   | e |
+            | d |   |   |   |   |
+            |   |   | c |   |   |
+
+        And the ways
+            | nodes | highway | oneway |
+            | abc   | primary | yes    |
+            | dbe   | primary | no     |
+
+        When I route I should get
+            | waypoints | route   | turns         |
+            | a,c       | abc,abc | depart,arrive |
+            | d,e       | dbe,dbe | depart,arrive |
+            | e,d       | dbe,dbe | depart,arrive |
+
+    Scenario: Slight Turn involving Oneways
+        Given the node map
+            |   |   |   | a |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   | b |   | e |
+            | d |   |   |   |   |
+            |   |   | c |   |   |
+
+        And the ways
+            | nodes | highway | oneway |
+            | abc   | primary | yes    |
+            | dbe   | primary | no     |
+
+        When I route I should get
+            | waypoints | route   | turns         |
+            | a,c       | abc,abc | depart,arrive |
+            | d,e       | dbe,dbe | depart,arrive |
+            | e,d       | dbe,dbe | depart,arrive |
+
+
+    Scenario: Slight Turn involving Oneways - Name Change
+        Given the node map
+            |   |   | a |   |   |
+            |   |   |   |   |   |
+            |   |   | b |   | e |
+            | d |   |   |   |   |
+            |   |   | c |   |   |
+
+        And the ways
+            | nodes | highway | oneway |
+            | abc   | primary | yes    |
+            | db    | primary | no     |
+            | be    | primary | no     |
+
+        When I route I should get
+            | waypoints | route    | turns                               |
+            | a,c       | abc,abc  | depart,arrive                       |
+            | d,e       | db,be,be | depart,new name slight right,arrive |
+            | e,d       | be,db,db | depart,new name slight left,arrive  |

@@ -1,8 +1,8 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_MOTORWAY_HANDLER_HPP_
 #define OSRM_EXTRACTOR_GUIDANCE_MOTORWAY_HANDLER_HPP_
 
-#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/intersection.hpp"
+#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"

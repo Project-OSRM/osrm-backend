@@ -42,13 +42,23 @@ class RoundaboutHandler : public IntersectionHandler
     ~RoundaboutHandler() override final;
 
     // check whether the handler can actually handle the intersection
-    bool canProcess(const NodeID from_nid, const EdgeID via_eid, const Intersection &intersection) const override final;
+    bool canProcess(const NodeID from_nid,
+                    const EdgeID via_eid,
+                    const Intersection &intersection) const override final;
 
     // process the intersection
-    Intersection operator()(const NodeID from_nid, const EdgeID via_eid, Intersection intersection) const override final;
+    Intersection operator()(const NodeID from_nid,
+                            const EdgeID via_eid,
+                            Intersection intersection) const override final;
 
   private:
-    detail::RoundaboutFlags getRoundaboutFlags(const NodeID from_nid, const EdgeID via_eid, const Intersection &intersection) const;
+    detail::RoundaboutFlags getRoundaboutFlags(const NodeID from_nid,
+                                               const EdgeID via_eid,
+                                               const Intersection &intersection) const;
+
+    void invalidateExitAgainstDirection(const NodeID from_nid,
+                                        const EdgeID via_eid,
+                                        Intersection &intersection) const;
 
     // decide whether we lookk at a roundabout or a rotary
     bool isRotary(const NodeID nid) const;
