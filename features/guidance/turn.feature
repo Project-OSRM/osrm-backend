@@ -567,7 +567,7 @@ Feature: Simple Turns
 
    Scenario: Right Turn Assignment Two Turns (2)
         Given the node map
-            |   |   | f |   | c |
+            |   |   | f | c |   |
             | a |   | b |   |   |
             |   |   |   |   | e |
             |   |   |   | d |   |
@@ -705,3 +705,103 @@ Feature: Simple Turns
             | a,c       | abc,abc  | depart,arrive                       |
             | d,e       | db,be,be | depart,new name slight right,arrive |
             | e,d       | be,db,db | depart,new name slight left,arrive  |
+
+     Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 1
+        Given the node map
+            |   |   | g |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   | d | e | f |   |
+
+        And the ways
+            | nodes | highway | oneway |
+            | abc   | primary | no     |
+            | db    | primary | yes    |
+            | eb    | primary | no     |
+            | fb    | primary | no     |
+            | bg    | primary | no     |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,e       | abc,eb,eb | depart,turn right,arrive        |
+            | a,f       | abc,fb,fb | depart,turn slight right,arrive |
+
+     Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 2
+        Given the node map
+            |   |   | g |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   | d | e | f |   |
+
+        And the ways
+            | nodes | highway | oneway |
+            | abc   | primary | no     |
+            | db    | primary | no     |
+            | eb    | primary | yes    |
+            | fb    | primary | no     |
+            | bg    | primary | no     |
+
+        When I route I should get
+            | waypoints | route     | turns                          |
+            | a,d       | abc,db,db | depart,turn sharp right,arrive |
+            | a,f       | abc,fb,fb | depart,turn right,arrive       |
+
+    Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 3
+        Given the node map
+            |   |   | g |   |   |
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   | d | e | f |   |
+
+        And the ways
+            | nodes | highway | oneway |
+            | abc   | primary | no     |
+            | db    | primary | no     |
+            | be    | primary | no     |
+            | fb    | primary | yes    |
+            | bg    | primary | no     |
+
+        When I route I should get
+            | waypoints | route     | turns                          |
+            | a,d       | abc,db,db | depart,turn sharp right,arrive |
+            | a,e       | abc,be,be | depart,turn right,arrive       |
+
+    Scenario: Conflicting Turns with well distinguished turn
+        Given the node map
+            | a |   |   | b |   |   | c |
+            |   |   |   |   |   |   |   |
+            | f |   |   |   |   |   | d |
+            |   |   |   |   |   |   | e |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+            | bf    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
+            | a,e       | abc,be,be | depart,turn right,arrive        |
+            | a,f       | abc,bf,bf | depart,turn sharp right,arrive  |
+
+    Scenario: Conflicting Turns with well distinguished turn (back)
+        Given the node map
+            | a |   |   | b |   |   | c |
+            |   |   |   |   |   |   |   |
+            | d |   |   |   |   |   | f |
+            |   | e |   |   |   |   |   |
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | bd    | primary |
+            | be    | primary |
+            | bf    | primary |
+
+        When I route I should get
+            | waypoints | route     | turns                           |
+            | a,d       | abc,bd,bd | depart,turn sharp right,arrive  |
+            | a,e       | abc,be,be | depart,turn right,arrive        |
+            | a,f       | abc,bf,bf | depart,turn slight right,arrive |
