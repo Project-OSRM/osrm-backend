@@ -24,10 +24,12 @@ module.exports = function () {
     });
 
     this.After((scenario, callback) => {
-        this.setExtractArgs('');
-        this.setContractArgs('');
-        if (this.loadMethod === 'directly' && !!this.OSRMLoader.loader) this.OSRMLoader.shutdown(callback);
-        else callback();
+        this.setExtractArgs('', () => {
+            this.setContractArgs('', () => {
+                if (this.loadMethod === 'directly' && !!this.OSRMLoader.loader) this.OSRMLoader.shutdown(callback);
+                else callback();
+            });
+        });
     });
 
     this.Around('@stress', (scenario, callback) => {

@@ -29,6 +29,7 @@
 #include <memory>
 #include <thread>
 #include <iterator>
+#include <tuple>
 
 namespace std
 {
@@ -38,6 +39,16 @@ template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
     std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const
     {
         return static_cast<uint64_t>(k.first) ^ (static_cast<uint64_t>(k.second) << 12);
+    }
+};
+
+template <> struct hash<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>>
+{
+    std::size_t operator()(const std::tuple<OSMNodeID, OSMNodeID, OSMNodeID> &k) const
+    {
+        return (static_cast<uint64_t>(std::get<0>(k)) << 24) ^
+               (static_cast<uint64_t>(std::get<1>(k)) << 12) ^
+               (static_cast<uint64_t>(std::get<2>(k)));
     }
 };
 }
@@ -71,9 +82,9 @@ int Contractor::Run()
 
     std::size_t max_edge_id = LoadEdgeExpandedGraph(
         config.edge_based_graph_path, edge_based_edge_list, config.edge_segment_lookup_path,
-        config.edge_penalty_path, config.segment_speed_lookup_paths, config.node_based_graph_path,
-        config.geometry_path, config.datasource_names_path, config.datasource_indexes_path,
-        config.rtree_leaf_path);
+        config.edge_penalty_path, config.segment_speed_lookup_paths,
+        config.turn_penalty_lookup_paths, config.node_based_graph_path, config.geometry_path,
+        config.datasource_names_path, config.datasource_indexes_path, config.rtree_leaf_path);
 
     // Contracting the edge-expanded graph
 
@@ -129,6 +140,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_penalty_filename,
     const std::vector<std::string> &segment_speed_filenames,
+    const std::vector<std::string> &turn_penalty_filenames,
     const std::string &nodes_filename,
     const std::string &geometry_filename,
     const std::string &datasource_names_filename,
@@ -139,11 +151,12 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
 
     const bool update_edge_weights = !segment_speed_filenames.empty();
+    const bool update_turn_penalties = !turn_penalty_filenames.empty();
 
     boost::filesystem::ifstream edge_segment_input_stream;
     boost::filesystem::ifstream edge_fixed_penalties_input_stream;
 
-    if (update_edge_weights)
+    if (update_edge_weights || update_turn_penalties)
     {
         edge_segment_input_stream.open(edge_segment_lookup_filename, std::ios::binary);
         edge_fixed_penalties_input_stream.open(edge_penalty_filename, std::ios::binary);
@@ -172,37 +185,74 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
     std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, std::pair<unsigned, uint8_t>>
         segment_speed_lookup;
+    std::unordered_map<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>, std::pair<double, uint8_t>>
+        turn_penalty_lookup;
 
     // If we update the edge weights, this file will hold the datasource information
     // for each segment
     std::vector<uint8_t> m_geometry_datasource;
 
-    if (update_edge_weights)
+    if (update_edge_weights || update_turn_penalties)
     {
-        uint8_t file_id = 1;
-        for (auto segment_speed_filename : segment_speed_filenames)
-        {
-            util::SimpleLogger().Write()
-                << "Segment speed data supplied, will update edge weights from "
-                << segment_speed_filename;
-            io::CSVReader<3> csv_in(segment_speed_filename);
-            csv_in.set_header("from_node", "to_node", "speed");
-            uint64_t from_node_id{};
-            uint64_t to_node_id{};
-            unsigned speed{};
-            while (csv_in.read_row(from_node_id, to_node_id, speed))
-            {
-                segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id),
-                                                    OSMNodeID(to_node_id))] =
-                    std::make_pair(speed, file_id);
-            }
-            ++file_id;
+        uint8_t segment_file_id = 1;
+        uint8_t turn_file_id = 1;
 
-            // Check for overflow
-            if (file_id == 0)
+        if (update_edge_weights)
+        {
+            for (auto segment_speed_filename : segment_speed_filenames)
             {
-                throw util::exception(
-                    "Sorry, there's a limit of 254 segment speed files, you supplied too many");
+                util::SimpleLogger().Write()
+                    << "Segment speed data supplied, will update edge weights from "
+                    << segment_speed_filename;
+                io::CSVReader<3> csv_in(segment_speed_filename);
+                csv_in.set_header("from_node", "to_node", "speed");
+                uint64_t from_node_id{};
+                uint64_t to_node_id{};
+                unsigned speed{};
+                while (csv_in.read_row(from_node_id, to_node_id, speed))
+                {
+                    segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id),
+                                                        OSMNodeID(to_node_id))] =
+                        std::make_pair(speed, segment_file_id);
+                }
+                ++segment_file_id;
+
+                // Check for overflow
+                if (segment_file_id == 0)
+                {
+                    throw util::exception(
+                        "Sorry, there's a limit of 254 segment speed files; you supplied too many");
+                }
+            }
+        }
+
+        if (update_turn_penalties)
+        {
+            for (auto turn_penalty_filename : turn_penalty_filenames)
+            {
+                util::SimpleLogger().Write()
+                    << "Turn penalty data supplied, will update turn penalties from "
+                    << turn_penalty_filename;
+                io::CSVReader<4> csv_in(turn_penalty_filename);
+                csv_in.set_header("from_node", "via_node", "to_node", "penalty");
+                uint64_t from_node_id{};
+                uint64_t via_node_id{};
+                uint64_t to_node_id{};
+                double penalty{};
+                while (csv_in.read_row(from_node_id, via_node_id, to_node_id, penalty))
+                {
+                    turn_penalty_lookup[std::make_tuple(
+                        OSMNodeID(from_node_id), OSMNodeID(via_node_id), OSMNodeID(to_node_id))] =
+                        std::make_pair(penalty, turn_file_id);
+                }
+                ++turn_file_id;
+
+                // Check for overflow
+                if (turn_file_id == 0)
+                {
+                    throw util::exception(
+                        "Sorry, there's a limit of 254 turn penalty files; you supplied too many");
+                }
             }
         }
 
@@ -358,10 +408,9 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             u = &(internal_to_external_node_map
                                       [m_geometry_list[reverse_begin + rev_segment_position - 1]
                                            .node_id]);
-                            v = &(
-                                internal_to_external_node_map[m_geometry_list[reverse_begin +
-                                                                              rev_segment_position]
-                                                                  .node_id]);
+                            v = &(internal_to_external_node_map
+                                      [m_geometry_list[reverse_begin + rev_segment_position]
+                                           .node_id]);
                         }
                         const double segment_length =
                             util::coordinate_calculation::greatCircleDistance(
@@ -412,8 +461,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_indexes_filename +
-                                  " for writing");
+            throw util::exception("Failed to open " + datasource_indexes_filename + " for writing");
         }
         auto number_of_datasource_entries = m_geometry_datasource.size();
         datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
@@ -429,8 +477,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_names_filename +
-                                  " for writing");
+            throw util::exception("Failed to open " + datasource_names_filename + " for writing");
         }
         datasource_stream << "lua profile" << std::endl;
         for (auto const &name : segment_speed_filenames)
@@ -445,7 +492,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     {
         extractor::EdgeBasedEdge inbuffer;
         input_stream.read((char *)&inbuffer, sizeof(extractor::EdgeBasedEdge));
-        if (update_edge_weights)
+        if (update_edge_weights || update_turn_penalties)
         {
             // Processing-time edge updates
             unsigned fixed_penalty;
@@ -494,6 +541,23 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                 previous_osm_node_id = this_osm_node_id;
             }
 
+            OSMNodeID from_id;
+            OSMNodeID via_id;
+            OSMNodeID to_id;
+            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&from_id),
+                                                   sizeof(from_id));
+            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&via_id),
+                                                   sizeof(via_id));
+            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&to_id), sizeof(to_id));
+
+            auto turn_iter = turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
+            if (turn_iter != turn_penalty_lookup.end())
+            {
+                int new_turn_weight = static_cast<int>(turn_iter->second.first * 10);
+                new_weight += new_turn_weight;
+            }
+
+            BOOST_ASSERT(static_cast<int>(fixed_penalty) + new_weight > 0);
             inbuffer.weight = fixed_penalty + new_weight;
         }
 

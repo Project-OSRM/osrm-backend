@@ -122,7 +122,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
     NodeID current_edge_source_coordinate_id = node_u;
 
-    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
+    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id)
+    {
         if (edge_based_node_id == SPECIAL_NODEID)
         {
             return SegmentID{SPECIAL_SEGMENTID, false};
@@ -336,7 +337,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             auto possible_turns = turn_analysis.getTurns(node_u, edge_from_u);
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
-
             for (const auto turn : possible_turns)
             {
                 const double turn_angle = turn.angle;
@@ -431,6 +431,23 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                 sizeof(target_node.weight));
                         previous = target_node.node_id;
                     }
+
+                    // We also now write out the mapping between the edge-expanded edges and the
+                    // original nodes. Since each edge represents a possible maneuver, external
+                    // programs can use this to quickly perform updates to edge weights in order
+                    // to penalize certain turns.
+
+                    const auto &from_node = m_node_info_list[node_u];
+                    const auto &via_node =
+                        m_node_info_list[m_node_based_graph->GetTarget(edge_from_u)];
+                    const auto &to_node = m_node_info_list[m_node_based_graph->GetTarget(turn.eid)];
+
+                    edge_penalty_file.write(reinterpret_cast<const char *>(&from_node.node_id),
+                                            sizeof(from_node.node_id));
+                    edge_penalty_file.write(reinterpret_cast<const char *>(&via_node.node_id),
+                                            sizeof(via_node.node_id));
+                    edge_penalty_file.write(reinterpret_cast<const char *>(&to_node.node_id),
+                                            sizeof(to_node.node_id));
                 }
             }
         }
