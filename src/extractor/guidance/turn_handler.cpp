@@ -360,6 +360,7 @@ std::size_t TurnHandler::findObviousTurn(const EdgeID via_edge,
     if (best_deviation >= 2 * NARROW_TURN_ANGLE)
         return 0;
 
+    // TODO needs to handle continue cases
     // has no obvious continued road
     if (best_continue == 0 || true)
     {
