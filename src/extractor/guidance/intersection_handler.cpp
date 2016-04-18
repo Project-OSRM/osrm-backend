@@ -2,11 +2,13 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
+#include "util/guidance/toolkit.hpp"
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
+using osrm::util::guidance::getTurnDirection;
 
 namespace osrm
 {
