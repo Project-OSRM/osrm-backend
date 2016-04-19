@@ -1,6 +1,7 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_LEG_HPP_
 #define ENGINE_GUIDANCE_ASSEMBLE_LEG_HPP_
 
+#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_leg.hpp"
 #include "engine/guidance/route_step.hpp"
@@ -22,12 +23,86 @@ namespace engine
 {
 namespace guidance
 {
+namespace detail
+{
+const constexpr std::size_t MAX_USED_SEGMENTS = 2;
+struct NamedSegment
+{
+    EdgeWeight duration;
+    std::uint32_t position;
+    std::uint32_t name_id;
+};
 
-inline RouteLeg assembleLeg(const std::vector<PathData> &route_data,
+template <std::size_t SegmentNumber>
+std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathData> &route_data)
+{
+    // merges segments with same name id
+    const auto collapse_segments = [](std::vector<NamedSegment> &segments)
+    {
+        auto out = segments.begin();
+        auto end = segments.end();
+        for (auto in = segments.begin(); in != end; ++in)
+        {
+            if (in->name_id == out->name_id)
+            {
+                out->duration += in->duration;
+            }
+            else
+            {
+                ++out;
+                BOOST_ASSERT(out != end);
+                *out = *in;
+            }
+        }
+        return out;
+    };
+
+    std::vector<NamedSegment> segments(route_data.size());
+    std::uint32_t index = 0;
+    std::transform(
+        route_data.begin(), route_data.end(), segments.begin(), [&index](const PathData &point)
+        {
+            return NamedSegment{point.duration_until_turn, index++, point.name_id};
+        });
+    // this makes sure that the segment with the lowest position comes first
+    std::sort(segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs)
+              {
+                  return lhs.name_id < rhs.name_id ||
+                         (lhs.name_id == rhs.name_id && lhs.position < rhs.position);
+              });
+    auto new_end = collapse_segments(segments);
+    segments.resize(new_end - segments.begin());
+    // sort descending
+    std::sort(segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs)
+              {
+                  return lhs.duration > rhs.duration;
+              });
+
+    // make sure the segments are sorted by position
+    segments.resize(std::min(segments.size(), SegmentNumber));
+    std::sort(segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs)
+              {
+                  return lhs.position < rhs.position;
+              });
+
+    std::array<std::uint32_t, SegmentNumber> summary;
+    std::fill(summary.begin(), summary.end(), 0);
+    std::transform(segments.begin(), segments.end(), summary.begin(),
+                   [](const NamedSegment &segment)
+                   {
+                       return segment.name_id;
+                   });
+    return summary;
+}
+}
+
+inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
+                            const std::vector<PathData> &route_data,
                             const LegGeometry &leg_geometry,
                             const PhantomNode &source_node,
                             const PhantomNode &target_node,
-                            const bool target_traversed_in_reverse)
+                            const bool target_traversed_in_reverse,
+                            const bool needs_summary)
 {
     const auto target_duration =
         (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight) /
@@ -70,7 +145,26 @@ inline RouteLeg assembleLeg(const std::vector<PathData> &route_data,
                     10.0;
     }
 
-    return RouteLeg{duration, distance, {}};
+    std::string summary;
+    if (needs_summary)
+    {
+        auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(route_data);
+
+        BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
+        BOOST_ASSERT(summary_array.begin() != summary_array.end());
+        summary = std::accumulate(std::next(summary_array.begin()), summary_array.end(),
+                                  facade.GetNameForID(summary_array.front()),
+                                  [&facade](std::string previous, const std::uint32_t name_id)
+                                  {
+                                      if (name_id != 0)
+                                      {
+                                          previous += ", " + facade.GetNameForID(name_id);
+                                      }
+                                      return previous;
+                                  });
+    }
+
+    return RouteLeg{duration, distance, summary, {}};
 }
 
 } // namespace guidance

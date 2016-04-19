@@ -194,6 +194,7 @@ util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
     util::json::Object route_leg;
     route_leg.values["distance"] = std::round(leg.distance * 10) / 10.;
     route_leg.values["duration"] = std::round(leg.duration * 10) / 10.;
+    route_leg.values["summary"] = std::move(leg.summary);
     route_leg.values["steps"] = std::move(steps);
     return route_leg;
 }
