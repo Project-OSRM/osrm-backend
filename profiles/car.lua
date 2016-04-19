@@ -270,8 +270,6 @@ function way_function (way, result)
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
     end
-    result.forward_mode = mode.movable_bridge
-    result.backward_mode = mode.movable_bridge
     result.forward_speed = bridge_speed
     result.backward_speed = bridge_speed
   end
