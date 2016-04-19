@@ -100,9 +100,6 @@ std::string modeToString(const extractor::TravelMode mode)
     case TRAVEL_MODE_PUSHING_BIKE:
         token = "pushing bike";
         break;
-    case TRAVEL_MODE_MOVABLE_BRIDGE:
-        token = "movable bridge";
-        break;
     case TRAVEL_MODE_STEPS_UP:
         token = "steps up";
         break;

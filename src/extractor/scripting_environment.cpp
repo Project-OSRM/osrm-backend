@@ -80,7 +80,6 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                              luabind::value("ferry", TRAVEL_MODE_FERRY),
                              luabind::value("train", TRAVEL_MODE_TRAIN),
                              luabind::value("pushing_bike", TRAVEL_MODE_PUSHING_BIKE),
-                             luabind::value("movable_bridge", TRAVEL_MODE_MOVABLE_BRIDGE),
                              luabind::value("steps_up", TRAVEL_MODE_STEPS_UP),
                              luabind::value("steps_down", TRAVEL_MODE_STEPS_DOWN),
                              luabind::value("river_up", TRAVEL_MODE_RIVER_UP),

@@ -46,7 +46,6 @@ const constexpr osrm::extractor::TravelMode TRAVEL_MODE_WALKING = 3;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_FERRY = 4;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_TRAIN = 5;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_PUSHING_BIKE = 6;
-const constexpr osrm::extractor::TravelMode TRAVEL_MODE_MOVABLE_BRIDGE = 7;
 // FIXME only for testbot.lua
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_STEPS_UP = 8;
 const constexpr osrm::extractor::TravelMode TRAVEL_MODE_STEPS_DOWN = 9;
