@@ -32,7 +32,7 @@ namespace util
  * The since the restrictions reference nodes using their external node id,
  * we need to renumber it to the new internal id.
 */
-unsigned loadRestrictionsFromFile(std::istream &input_stream,
+inline unsigned loadRestrictionsFromFile(std::istream &input_stream,
                                   std::vector<extractor::TurnRestriction> &restriction_list)
 {
     const FingerPrint fingerprint_valid = FingerPrint::GetValid();
@@ -62,7 +62,7 @@ unsigned loadRestrictionsFromFile(std::istream &input_stream,
  *  - list of traffic lights
  *  - nodes indexed by their internal (non-osm) id
  */
-NodeID loadNodesFromFile(std::istream &input_stream,
+inline NodeID loadNodesFromFile(std::istream &input_stream,
                          std::vector<NodeID> &barrier_node_list,
                          std::vector<NodeID> &traffic_light_node_list,
                          std::vector<extractor::QueryNode> &node_array)
@@ -107,7 +107,7 @@ NodeID loadNodesFromFile(std::istream &input_stream,
 /**
  * Reads a .osrm file and produces the edges.
  */
-NodeID loadEdgesFromFile(std::istream &input_stream,
+inline NodeID loadEdgesFromFile(std::istream &input_stream,
                          std::vector<extractor::NodeBasedEdge> &edge_list)
 {
     EdgeID m;
