@@ -45,9 +45,9 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&hints=foo"),
                       29UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&geometries=foo"),
-                      22UL);
+                      34UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&overview=foo"),
-                      22L);
+                      32L);
     BOOST_CHECK_EQUAL(
         testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&alternatives=foo"), 36UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(""), 0);
@@ -273,6 +273,16 @@ BOOST_AUTO_TEST_CASE(valid_match_urls)
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
+
+    MatchParameters reference_2{};
+    reference_2.coordinates = coords_1;
+    reference_2.timestamps = {5, 6};
+    auto result_2 = parseParameters<MatchParameters>("1,2;3,4?timestamps=5;6");
+    BOOST_CHECK(result_2);
+    CHECK_EQUAL_RANGE(reference_2.timestamps, result_2->timestamps);
+    CHECK_EQUAL_RANGE(reference_2.bearings, result_2->bearings);
+    CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
+    CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
 }
 
 BOOST_AUTO_TEST_CASE(valid_nearest_urls)
@@ -287,6 +297,16 @@ BOOST_AUTO_TEST_CASE(valid_nearest_urls)
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
+
+    NearestParameters reference_2{};
+    reference_2.coordinates = coords_1;
+    reference_2.number_of_results = 42;
+    auto result_2 = parseParameters<NearestParameters>("1,2?number=42");
+    BOOST_CHECK(result_2);
+    BOOST_CHECK_EQUAL(reference_2.number_of_results, result_2->number_of_results);
+    CHECK_EQUAL_RANGE(reference_2.bearings, result_2->bearings);
+    CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
+    CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
 }
 
 BOOST_AUTO_TEST_CASE(valid_tile_urls)

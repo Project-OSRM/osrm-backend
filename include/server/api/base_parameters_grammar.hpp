@@ -8,7 +8,7 @@
 #include "engine/polyline_compressor.hpp"
 
 #include <boost/optional.hpp>
-//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <limits>
@@ -21,7 +21,11 @@ namespace server
 namespace api
 {
 
+namespace
+{
+namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
+}
 
 template <typename T, char... Fmt> struct no_trailing_dot_policy : qi::real_policies<T>
 {
@@ -63,76 +67,100 @@ template <typename T, char... Fmt> struct no_trailing_dot_policy : qi::real_poli
     }
 };
 
-struct BaseParametersGrammar : boost::spirit::qi::grammar<std::string::iterator>
+template <typename Iterator, typename Signature>
+struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
 {
-    using Iterator = std::string::iterator;
-    using RadiusesT = std::vector<boost::optional<double>>;
     using json_policy = no_trailing_dot_policy<double, 'j', 's', 'o', 'n'>;
 
-    BaseParametersGrammar(qi::rule<Iterator> &root_rule_, engine::api::BaseParameters &parameters_)
-        : BaseParametersGrammar::base_type(root_rule_), base_parameters(parameters_)
+    BaseParametersGrammar(qi::rule<Iterator, Signature> &root_rule)
+        : BaseParametersGrammar::base_type(root_rule)
     {
-        const auto add_bearing =
-            [this](boost::optional<boost::fusion::vector2<short, short>> bearing_range) {
-                boost::optional<engine::Bearing> bearing;
-                if (bearing_range)
-                {
-                    bearing = engine::Bearing{boost::fusion::at_c<0>(*bearing_range),
-                                              boost::fusion::at_c<1>(*bearing_range)};
-                }
-                base_parameters.bearings.push_back(std::move(bearing));
-            };
-        const auto set_radiuses = [this](RadiusesT radiuses) {
-            base_parameters.radiuses = std::move(radiuses);
-        };
-        const auto add_hint = [this](const std::string &hint_string) {
+        const auto add_hint = [](engine::api::BaseParameters &base_parameters, const std::string &hint_string)
+        {
             if (hint_string.size() > 0)
             {
-                base_parameters.hints.push_back(engine::Hint::FromBase64(hint_string));
+                base_parameters.hints.emplace_back(engine::Hint::FromBase64(hint_string));
             }
         };
-        const auto add_coordinate = [this](const boost::fusion::vector<double, double> &lonLat) {
-            base_parameters.coordinates.emplace_back(util::Coordinate(
-                util::FixedLongitude(boost::fusion::at_c<0>(lonLat) * COORDINATE_PRECISION),
-                util::FixedLatitude(boost::fusion::at_c<1>(lonLat) * COORDINATE_PRECISION)));
-        };
-        const auto polyline_to_coordinates = [this](const std::string &polyline) {
-            base_parameters.coordinates = engine::decodePolyline(polyline);
+
+        const auto add_bearing = [](engine::api::BaseParameters &base_parameters,
+                                    boost::optional<boost::fusion::vector2<short, short>> bearing_range)
+        {
+            boost::optional<engine::Bearing> bearing;
+            if (bearing_range)
+            {
+                bearing = engine::Bearing{boost::fusion::at_c<0>(*bearing_range),
+                                          boost::fusion::at_c<1>(*bearing_range)};
+            }
+            base_parameters.bearings.push_back(std::move(bearing));
         };
 
-        alpha_numeral = +qi::char_("a-zA-Z0-9");
         polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
         base64_char = qi::char_("a-zA-Z0-9--_=");
+        unlimited_rule = qi::lit("unlimited")[qi::_val = std::numeric_limits<double>::infinity()];
 
-        unlimited.add("unlimited", std::numeric_limits<double>::infinity());
+        bearing_rule
+            = (qi::short_ > ',' > qi::short_)
+              [qi::_val = ph::bind([](short bearing, short range) {
+                  return osrm::engine::Bearing{bearing, range};
+              }, qi::_1, qi::_2)]
+            ;
 
-        radiuses_rule = qi::lit("radiuses=") > -(unlimited | qi::double_) % ";";
-        hints_rule =
-            qi::lit("hints=") >
-            qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][add_hint] % ";";
-        bearings_rule =
-            qi::lit("bearings=") > (-(qi::short_ > ',' > qi::short_))[add_bearing] % ";";
-        polyline_rule = qi::as_string[qi::lit("polyline(") > +polyline_chars > qi::lit(")")]
-                                     [polyline_to_coordinates];
-        location_rule = (double_ > qi::lit(',') > double_)[add_coordinate];
-        query_rule = (location_rule % ';') | polyline_rule;
+        location_rule
+            = (double_ > qi::lit(',') > double_)
+              [qi::_val = ph::bind([](double lon, double lat) {
+                  return util::Coordinate(util::FixedLongitude(lon * COORDINATE_PRECISION),
+                                          util::FixedLatitude(lat * COORDINATE_PRECISION));
+              }, qi::_1, qi::_2)]
+            ;
 
-        base_rule = bearings_rule | radiuses_rule[set_radiuses] | hints_rule;
+        polyline_rule
+            = qi::as_string[qi::lit("polyline(") > +polyline_chars > ')']
+              [qi::_val = ph::bind([](const std::string &polyline) {
+                  return engine::decodePolyline(polyline);
+              }, qi::_1)]
+            ;
+
+        query_rule
+            = ((location_rule % ';') | polyline_rule)
+              [ph::bind(&engine::api::BaseParameters::coordinates, qi::_r1) = qi::_1]
+            ;
+
+        radiuses_rule
+            = qi::lit("radiuses=")
+            > (-(qi::double_ | unlimited_rule) % ';')
+              [ph::bind(&engine::api::BaseParameters::radiuses, qi::_r1) = qi::_1]
+            ;
+
+        hints_rule
+            = qi::lit("hints=")
+            > qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][ph::bind(add_hint, qi::_r1, qi::_1)] % ';'
+            ;
+
+        bearings_rule
+            = qi::lit("bearings=") >
+            (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';'
+            ;
+
+        base_rule = radiuses_rule(qi::_r1) | hints_rule(qi::_r1) | bearings_rule(qi::_r1);
     }
 
   protected:
-    qi::rule<Iterator> base_rule;
-    qi::rule<Iterator> query_rule;
+    qi::rule<Iterator, Signature> base_rule;
+    qi::rule<Iterator, Signature> query_rule;
 
   private:
-    engine::api::BaseParameters &base_parameters;
-    qi::rule<Iterator> bearings_rule;
-    qi::rule<Iterator> hints_rule;
-    qi::rule<Iterator> polyline_rule, location_rule;
-    qi::symbols<char, double> unlimited;
-    qi::rule<Iterator, RadiusesT()> radiuses_rule;
+    qi::rule<Iterator, Signature> bearings_rule;
+    qi::rule<Iterator, Signature> radiuses_rule;
+    qi::rule<Iterator, Signature> hints_rule;
+
+    qi::rule<Iterator, osrm::engine::Bearing()> bearing_rule;
+    qi::rule<Iterator, osrm::util::Coordinate()> location_rule;
+    qi::rule<Iterator, std::vector<osrm::util::Coordinate>()> polyline_rule;
+
     qi::rule<Iterator, unsigned char()> base64_char;
-    qi::rule<Iterator, std::string()> alpha_numeral, polyline_chars;
+    qi::rule<Iterator, std::string()> polyline_chars;
+    qi::rule<Iterator, double()> unlimited_rule;
     qi::real_parser<double, json_policy> double_;
 };
 }

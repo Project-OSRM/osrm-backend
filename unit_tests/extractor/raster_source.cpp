@@ -1,6 +1,6 @@
 #include "extractor/raster_source.hpp"
-#include "util/typedefs.hpp"
 #include "util/exception.hpp"
+#include "util/typedefs.hpp"
 
 #include <osrm/coordinate.hpp>
 
@@ -15,14 +15,10 @@ using namespace osrm::extractor;
 int normalize(double coord) { return static_cast<int>(coord * COORDINATE_PRECISION); }
 
 #define CHECK_QUERY(source_id, lon, lat, expected)                                                 \
-    BOOST_CHECK_EQUAL(                                                                             \
-        sources.getRasterDataFromSource(source_id, lon, lat).datum,          \
-        expected)
+    BOOST_CHECK_EQUAL(sources.getRasterDataFromSource(source_id, lon, lat).datum, expected)
 
 #define CHECK_INTERPOLATE(source_id, lon, lat, expected)                                           \
-    BOOST_CHECK_EQUAL(                                                                             \
-        sources.getRasterInterpolateFromSource(source_id, lon, lat).datum,   \
-        expected)
+    BOOST_CHECK_EQUAL(sources.getRasterInterpolateFromSource(source_id, lon, lat).datum, expected)
 
 BOOST_AUTO_TEST_CASE(raster_test)
 {
