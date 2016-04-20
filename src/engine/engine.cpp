@@ -151,7 +151,7 @@ Engine::Engine(EngineConfig &config)
     trip_plugin = create<TripPlugin>(*query_data_facade, config.max_locations_trip);
     match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
     tile_plugin = create<TilePlugin>(*query_data_facade);
-    isochrone_plugin = create<IsochronePlugin>(*query_data_facade);
+    isochrone_plugin = create<IsochronePlugin>(*query_data_facade, config.storage_config.base.string());
 }
 
 // make sure we deallocate the unique ptr at a position where we know the size of the plugins

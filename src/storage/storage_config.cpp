@@ -8,20 +8,21 @@ namespace storage
 {
 
 StorageConfig::StorageConfig(const boost::filesystem::path &base)
-    : ram_index_path{base.string() + ".ramIndex"}, file_index_path{base.string() + ".fileIndex"},
-      hsgr_data_path{base.string() + ".hsgr"}, nodes_data_path{base.string() + ".nodes"},
-      edges_data_path{base.string() + ".edges"}, core_data_path{base.string() + ".core"},
-      geometries_path{base.string() + ".geometry"}, timestamp_path{base.string() + ".timestamp"},
+    : base{base.string()}, ram_index_path{base.string() + ".ramIndex"},
+      file_index_path{base.string() + ".fileIndex"}, hsgr_data_path{base.string() + ".hsgr"},
+      nodes_data_path{base.string() + ".nodes"}, edges_data_path{base.string() + ".edges"},
+      core_data_path{base.string() + ".core"}, geometries_path{base.string() + ".geometry"},
+      timestamp_path{base.string() + ".timestamp"},
       datasource_names_path{base.string() + ".datasource_names"},
       datasource_indexes_path{base.string() + ".datasource_indexes"},
-      names_data_path{base.string() + ".names"},
-      properties_path{base.string() + ".properties"}
+      names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"}
 {
 }
 
 bool StorageConfig::IsValid() const
 {
-    return boost::filesystem::is_regular_file(ram_index_path) &&
+    return boost::filesystem::is_regular_file(base) &&
+           boost::filesystem::is_regular_file(ram_index_path) &&
            boost::filesystem::is_regular_file(file_index_path) &&
            boost::filesystem::is_regular_file(hsgr_data_path) &&
            boost::filesystem::is_regular_file(nodes_data_path) &&

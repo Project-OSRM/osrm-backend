@@ -52,6 +52,7 @@ struct StorageConfig final
     StorageConfig(const boost::filesystem::path &base);
     bool IsValid() const;
 
+    boost::filesystem::path base;
     boost::filesystem::path ram_index_path;
     boost::filesystem::path file_index_path;
     boost::filesystem::path hsgr_data_path;

@@ -17,6 +17,7 @@ namespace api
 struct IsochroneParameters : public BaseParameters
 {
     unsigned number_of_results = 1;
+    unsigned distance = 1000;
 
     bool IsValid() const {
         return BaseParameters::IsValid() && number_of_results >= 1;
