@@ -69,7 +69,7 @@ class RouteAPI : public BaseAPI
         }
 
         BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
-        return json::makeGeoJSONLineString(begin, end);
+        return json::makeGeoJSONGeometry(begin, end);
     }
 
     util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
@@ -169,7 +169,7 @@ class RouteAPI : public BaseAPI
                                                leg_geometry.locations.begin() + step.geometry_end));
                     }
                     BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
-                    return static_cast<util::json::Value>(json::makeGeoJSONLineString(
+                    return static_cast<util::json::Value>(json::makeGeoJSONGeometry(
                         leg_geometry.locations.begin() + step.geometry_begin,
                         leg_geometry.locations.begin() + step.geometry_end));
                 });

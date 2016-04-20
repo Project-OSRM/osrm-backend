@@ -48,13 +48,24 @@ template <typename ForwardIter> util::json::String makePolyline(ForwardIter begi
 }
 
 template <typename ForwardIter>
-util::json::Object makeGeoJSONLineString(ForwardIter begin, ForwardIter end)
+util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
 {
+    auto distance = std::distance(begin, end);
     util::json::Object geojson;
-    geojson.values["type"] = "LineString";
-    util::json::Array coordinates;
-    std::transform(begin, end, std::back_inserter(coordinates.values), &detail::coordinateToLonLat);
-    geojson.values["coordinates"] = std::move(coordinates);
+    if (distance > 1)
+    {
+        geojson.values["type"] = "LineString";
+        util::json::Array coordinates;
+        std::transform(begin, end, std::back_inserter(coordinates.values), &detail::coordinateToLonLat);
+        geojson.values["coordinates"] = std::move(coordinates);
+    }
+    else if (distance > 0)
+    {
+        geojson.values["type"] = "Point";
+        util::json::Array coordinates;
+        coordinates.values.push_back(detail::coordinateToLonLat(*begin));
+        geojson.values["coordinates"] = std::move(coordinates);
+    }
     return geojson;
 }
 
