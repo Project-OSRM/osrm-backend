@@ -1,3 +1,8 @@
+# 5.0.0
+   - API:
+     - if `geometry=geojson` is passed the resulting geometry can be a LineString or Point
+       depending on how many coordinates are present.
+
 # 5.0.0 RC2
    - Profiles:
       - `properties.allow_uturns_at_via` -> `properties.continue_straight_at_waypoint` (value is inverted!)
