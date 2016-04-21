@@ -63,6 +63,8 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     std::size_t segment_index = 0;
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
 
+    const auto target_node_name_id =
+        target_traversed_in_reverse ? target_node.reverse_name_id : target_node.name_id;
     if (leg_data.size() > 0)
     {
 
@@ -98,7 +100,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         const auto distance = leg_geometry.segment_distances[segment_index];
         const int duration = segment_duration + target_duration;
         BOOST_ASSERT(duration >= 0);
-        steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
+        steps.push_back(RouteStep{target_node_name_id, facade.GetNameForID(target_node_name_id),
                                   NO_ROTARY_NAME, duration / 10., distance, target_mode, maneuver,
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1});
@@ -117,7 +119,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         int duration = target_duration - source_duration;
         BOOST_ASSERT(duration >= 0);
 
-        steps.push_back(RouteStep{source_node.name_id, facade.GetNameForID(source_node.name_id),
+        const auto source_node_name_id =
+            source_traversed_in_reverse ? source_node.reverse_name_id : source_node.name_id;
+        steps.push_back(RouteStep{source_node_name_id, facade.GetNameForID(source_node_name_id),
                                   NO_ROTARY_NAME, duration / 10.,
                                   leg_geometry.segment_distances[segment_index], source_mode,
                                   std::move(maneuver), leg_geometry.FrontIndex(segment_index),
@@ -130,9 +134,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         extractor::guidance::TurnInstruction::NO_TURN(), WaypointType::Arrive, leg_geometry);
 
     BOOST_ASSERT(!leg_geometry.locations.empty());
-    steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
+    steps.push_back(RouteStep{target_node_name_id, facade.GetNameForID(target_node_name_id),
                               NO_ROTARY_NAME, ZERO_DURATION, ZERO_DISTANCE, target_mode,
-                              final_maneuver, leg_geometry.locations.size()-1,
+                              final_maneuver, leg_geometry.locations.size() - 1,
                               leg_geometry.locations.size()});
 
     return steps;
