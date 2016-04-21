@@ -245,7 +245,6 @@ Feature: Fork Instructions
             | a,c       | abd,bc,bc | depart,turn slight left,arrive |
             | a,d       | abd,abd   | depart,arrive                  |
 
-    @pr2275 @bug
     Scenario: Tripple fork
         Given the node map
             |   |   |   |   |   |   |   |   | c |

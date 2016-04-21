@@ -18,19 +18,6 @@ namespace extractor
 {
 namespace guidance
 {
-namespace detail
-{
-inline FunctionalRoadClass roadClass(const ConnectedRoad &road,
-                                     const util::NodeBasedDynamicGraph &graph)
-{
-    return graph.GetEdgeData(road.turn.eid).road_classification.road_class;
-}
-
-inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
-{
-    return isRampClass(node_based_graph.GetEdgeData(eid).road_classification.road_class);
-}
-}
 
 TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                          const std::vector<QueryNode> &node_info_list,
@@ -282,7 +269,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
                                           DirectionModifier::SlightRight};
             }
         }
-        else if (fork_range.second - fork_range.second == 2)
+        else if (fork_range.second - fork_range.first == 2)
         {
             assignFork(via_edge, intersection[fork_range.second],
                        intersection[fork_range.first + 1], intersection[fork_range.first]);
@@ -372,12 +359,6 @@ std::size_t TurnHandler::findObviousTurn(const EdgeID via_edge,
 
     if (best_deviation >= 2 * NARROW_TURN_ANGLE)
         return 0;
-
-    // TODO incorporate road class in decision
-    if (best != 0 && best_deviation < MAXIMAL_ALLOWED_NO_TURN_DEVIATION)
-    {
-        return best;
-    }
 
     // has no obvious continued road
     if (best_continue == 0 || true)
@@ -534,7 +515,6 @@ Intersection TurnHandler::assignRightTurns(const EdgeID via_edge,
                    angularDeviation(intersection[1].turn.angle, intersection[2].turn.angle) <
                        GROUP_ANGLE)))
         {
-
             BOOST_ASSERT(intersection[1].entry_allowed && intersection[2].entry_allowed &&
                          intersection[3].entry_allowed);
             // count backwards from the slightest turn
@@ -624,19 +604,22 @@ std::pair<std::size_t, std::size_t> TurnHandler::findFork(const Intersection &in
         }
         while (left + 1 < intersection.size() &&
                angularDeviation(intersection[left].turn.angle, intersection[left + 1].turn.angle) <
-                   NARROW_TURN_ANGLE)
+                   NARROW_TURN_ANGLE &&
+               angularDeviation(intersection[left].turn.angle, STRAIGHT_ANGLE) <= GROUP_ANGLE)
             ++left;
         while (right > 1 &&
                angularDeviation(intersection[right].turn.angle,
-                                intersection[right - 1].turn.angle) < NARROW_TURN_ANGLE)
+                                intersection[right - 1].turn.angle) < NARROW_TURN_ANGLE &&
+               angularDeviation(intersection[right - 1].turn.angle, STRAIGHT_ANGLE) <= GROUP_ANGLE)
             --right;
 
         // TODO check whether 2*NARROW_TURN is too large
         if (0 < right && right < left &&
             angularDeviation(intersection[left].turn.angle,
-                             intersection[(left + 1) % intersection.size()].turn.angle) >= 60 &&
+                             intersection[(left + 1) % intersection.size()].turn.angle) >=
+                GROUP_ANGLE &&
             angularDeviation(intersection[right].turn.angle, intersection[right - 1].turn.angle) >=
-                60)
+                GROUP_ANGLE)
             return std::make_pair(right, left);
     }
     return std::make_pair(std::size_t{0}, std::size_t{0});

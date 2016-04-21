@@ -726,7 +726,6 @@ Feature: Simple Turns
             | a,e       | abc,eb,eb | depart,turn right,arrive        |
             | a,f       | abc,fb,fb | depart,turn slight right,arrive |
 
-     @bug @pr2275
      Scenario: Right Turn Assignment Three Conflicting Turns with invalid - 2
         Given the node map
             |   |   | g |   |   |
@@ -787,7 +786,6 @@ Feature: Simple Turns
             | a,e       | abc,be,be | depart,turn right,arrive        |
             | a,f       | abc,bf,bf | depart,turn sharp right,arrive  |
 
-    @bug @pr2275
     Scenario: Conflicting Turns with well distinguished turn (back)
         Given the node map
             | a |   |   | b |   |   | c |
