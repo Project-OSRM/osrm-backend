@@ -211,3 +211,74 @@ Feature: Fork Instructions
             | a,c       | ,,    | depart,fork slight left,arrive  |
             | a,d       | ,,    | depart,fork slight right,arrive |
 
+    Scenario: Non-Fork on complex intersection - left
+        Given the node map
+            |   |   |   |   | c |
+            | a |   | b |   |   |
+            |   | e |   |   | d |
+
+        And the ways
+            | nodes  | highway   |
+            | abc    | secondary |
+            | bd     | tertiary  |
+            | eb     | tertiary  |
+
+       When I route I should get
+            | waypoints | route     | turns                           |
+            | a,c       | abc,abc   | depart,arrive                   |
+            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
+
+    Scenario: Non-Fork on complex intersection - right
+        Given the node map
+            |   | e |   |   | c |
+            | a |   | b |   |   |
+            |   |   |   |   | d |
+
+        And the ways
+            | nodes  | highway   |
+            | abd    | secondary |
+            | bc     | tertiary  |
+            | eb     | tertiary  |
+
+       When I route I should get
+            | waypoints | route     | turns                          |
+            | a,c       | abd,bc,bc | depart,turn slight left,arrive |
+            | a,d       | abd,abd   | depart,arrive                  |
+
+    @pr2275 @bug
+    Scenario: Tripple fork
+        Given the node map
+            |   |   |   |   |   |   |   |   | c |
+            | a |   | b |   | d |   |   |   |   |
+            |   |   |   |   |   |   |   |   | e |
+
+        And the ways
+            | nodes  | highway   |
+            | ab     | secondary |
+            | bc     | secondary |
+            | bd     | secondary |
+            | be     | secondary |
+
+       When I route I should get
+            | waypoints | route    | turns                           |
+            | a,c       | ab,bc,bc | depart,fork slight left,arrive  |
+            | a,d       | ab,bd,bd | depart,fork straight,arrive     |
+            | a,e       | ab,be,be | depart,fork slight right,arrive |
+
+    Scenario: Tripple fork -- middle obvious
+        Given the node map
+            |   |   |   |   | c |
+            | a |   | b |   | d |
+            |   |   |   |   | e |
+
+        And the ways
+            | nodes  | highway   |
+            | abd    | secondary |
+            | bc     | secondary |
+            | be     | secondary |
+
+       When I route I should get
+            | waypoints | route     | turns                           |
+            | a,c       | abd,bc,bc | depart,turn slight left,arrive  |
+            | a,d       | abd,abd   | depart,arrive                   |
+            | a,e       | abd,be,be | depart,turn slight right,arrive |
