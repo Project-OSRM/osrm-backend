@@ -55,12 +55,12 @@ Feature: Traffic - turn penalties
     Scenario: Weighting based on turn penalty file
         Given the turn penalty file
             """
-            9,6,7,1.0
-            9,13,14,22
-            8,4,3,23
+            9,6,7,1.8
+            9,13,14,24.5
+            8,4,3,26
             12,11,8,9
             8,11,12,13
-            1,4,5,-1.3
+            1,4,5,-0.2
             """
         And the contract extra arguments "--turn-penalty-file penalties.csv"
         When I route I should get
@@ -79,7 +79,7 @@ Feature: Traffic - turn penalties
                                                                               # was straight-left - forced around by hkl penalty
             | l    | e  | lm,im,fi,ef,ef             | 57 km/h | 25s +-1   |
                                                                               # double right - forced left by lkh penalty
-            | g    | n  | fg,fi,im,mn,mn             | 30 km/h | 47s +-1   |
+            | g    | n  | fg,fi,im,mn,mn             | 30 km/h | 47.5s +-1   |
                                                                               # double left - imn penalty
             | j    | c  | jk,kl,lm,im,fi,ef,de,cd,cd | 60 km/h | 48s +-1   |
                                                                               # double left - hdc penalty ever so slightly higher than imn; forces all the way around

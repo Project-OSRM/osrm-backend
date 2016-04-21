@@ -554,11 +554,13 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             if (turn_iter != turn_penalty_lookup.end())
             {
                 int new_turn_weight = static_cast<int>(turn_iter->second.first * 10);
-                new_weight += new_turn_weight;
+                BOOST_ASSERT(new_turn_weight + new_weight > 0);
+                inbuffer.weight = new_turn_weight + new_weight;
             }
-
-            BOOST_ASSERT(static_cast<int>(fixed_penalty) + new_weight > 0);
-            inbuffer.weight = fixed_penalty + new_weight;
+            else
+            {
+                inbuffer.weight = fixed_penalty + new_weight;
+            }
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
