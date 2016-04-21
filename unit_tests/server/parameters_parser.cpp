@@ -171,15 +171,9 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_3.coordinates, result_3->coordinates);
 
     std::vector<boost::optional<engine::Hint>> hints_4 = {
-        engine::Hint::FromBase64("DAIAgP___"
-                                 "38AAAAAAAAAAAIAAAAAAAAAEAAAAOgDAAD0AwAAGwAAAOUacQBQP5sCshpxAB0_"
-                                 "mwIAAAEBl-Umfg=="),
-        engine::Hint::FromBase64("cgAAgP___"
-                                 "39jAAAADgAAACIAAABeAAAAkQAAANoDAABOAgAAGwAAAFVGcQCiRJsCR0VxAOZFmw"
-                                 "IFAAEBl-Umfg=="),
-        engine::Hint::FromBase64("3gAAgP___"
-                                 "39KAAAAHgAAACEAAAAAAAAAGAAAAE0BAABOAQAAGwAAAIAzcQBkUJsC1zNxAHBQmw"
-                                 "IAAAEBl-Umfg==")};
+        engine::Hint::FromBase64("coQCgHOEAoDFCwAAxQsAABMAAAAAAAAAAAAAAAAAAADO2AIAzdgCAKwAAAAaXMgAgUUfA6RCDwC8Pg8AAAABAQFuWV0="),
+        engine::Hint::FromBase64("1EIAgPc3AYCLEAAAixAAACAAAAAAAAAAfAAAAAAAAACVOgAAtSIBAKwAAAAia8wArcAhA5NrzABdwCEDAQABAQFuWV0="),
+        engine::Hint::FromBase64("BxcAgCn5AYCKJgAAiiYAAB4AAAAHAAAAKgAAAFAAAAD6HAAAAxEBAKwAAAA4R8wAKLMhAwpJzAC5syEDAQABAQFuWV0=")};
     engine::api::RouteParameters reference_4{false,
                                              false,
                                              engine::api::RouteParameters::GeometriesType::Polyline,
@@ -191,9 +185,10 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                              std::vector<boost::optional<engine::Bearing>>{}};
     auto result_4 = api::parseParameters<engine::api::RouteParameters>(
         "1,2;3,4?steps=false&hints="
-        "DAIAgP___38AAAAAAAAAAAIAAAAAAAAAEAAAAOgDAAD0AwAAGwAAAOUacQBQP5sCshpxAB0_mwIAAAEBl-Umfg==;"
-        "cgAAgP___39jAAAADgAAACIAAABeAAAAkQAAANoDAABOAgAAGwAAAFVGcQCiRJsCR0VxAOZFmwIFAAEBl-Umfg==;"
-        "3gAAgP___39KAAAAHgAAACEAAAAAAAAAGAAAAE0BAABOAQAAGwAAAIAzcQBkUJsC1zNxAHBQmwIAAAEBl-Umfg==");
+        "coQCgHOEAoDFCwAAxQsAABMAAAAAAAAAAAAAAAAAAADO2AIAzdgCAKwAAAAaXMgAgUUfA6RCDwC8Pg8AAAABAQFuWV0=;"
+        "1EIAgPc3AYCLEAAAixAAACAAAAAAAAAAfAAAAAAAAACVOgAAtSIBAKwAAAAia8wArcAhA5NrzABdwCEDAQABAQFuWV0=;"
+        "BxcAgCn5AYCKJgAAiiYAAB4AAAAHAAAAKgAAAFAAAAD6HAAAAxEBAKwAAAA4R8wAKLMhAwpJzAC5syEDAQABAQFuWV0="
+        );
     BOOST_CHECK(result_4);
     BOOST_CHECK_EQUAL(reference_4.steps, result_4->steps);
     BOOST_CHECK_EQUAL(reference_4.alternatives, result_4->alternatives);
