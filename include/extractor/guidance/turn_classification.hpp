@@ -3,9 +3,9 @@
 
 #include "extractor/guidance/toolkit.hpp"
 
-#include "util/typedefs.hpp"
 #include "util/coordinate.hpp"
 #include "util/node_based_graph.hpp"
+#include "util/typedefs.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
@@ -84,8 +84,7 @@ classifyIntersection(NodeID nid,
     }
 
     std::sort(turns.begin(), turns.end(),
-              [](const TurnPossibility left, const TurnPossibility right)
-              {
+              [](const TurnPossibility left, const TurnPossibility right) {
                   return left.angle < right.angle;
               });
 

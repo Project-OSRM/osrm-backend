@@ -56,6 +56,12 @@ inline extractor::guidance::DirectionModifier angleToDirectionModifier(const dou
     return extractor::guidance::DirectionModifier::Left;
 }
 
+inline double angularDeviation(const double angle, const double from)
+{
+        const double deviation = std::abs(angle - from);
+            return std::min(360 - deviation, deviation);
+}
+
 } // namespace guidance
 } // namespace engine
 } // namespace osrm
