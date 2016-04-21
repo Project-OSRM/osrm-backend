@@ -95,8 +95,11 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                                           segment_duration / 10.0, distance, path_point.travel_mode,
                                           maneuver, leg_geometry.FrontIndex(segment_index),
                                           leg_geometry.BackIndex(segment_index) + 1});
-                if (leg_data_index + 1 < leg_data.size())
+                if (leg_data_index + 1 < leg_data.size()){
                     step_name_id = leg_data[leg_data_index + 1].name_id;
+                } else {
+                    step_name_id = target_node.name_id;
+                }
                 maneuver = detail::stepManeuverFromGeometry(path_point.turn_instruction,
                                                             leg_geometry, segment_index);
                 segment_index++;
@@ -106,7 +109,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         const auto distance = leg_geometry.segment_distances[segment_index];
         const int duration = segment_duration + target_duration;
         BOOST_ASSERT(duration >= 0);
-        steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
+        steps.push_back(RouteStep{step_name_id, facade.GetNameForID(step_name_id),
                                   NO_ROTARY_NAME, duration / 10., distance, target_mode, maneuver,
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1});

@@ -450,8 +450,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 // Post Processing to collapse unnecessary sets of combined instructions into a single one
 std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 {
-    std::cout << "Collapsing" << std::endl;
-    detail::print(steps);
     // Get the previous non-invalid instruction
     const auto getPreviousIndex = [&steps](std::size_t index) {
         BOOST_ASSERT(index > 0);

@@ -31,11 +31,11 @@ Feature: Car - Guidance - Bridges and Tunnels
             | dce   | primary |        | Nebenstraße        |
 
         When I route I should get
-            | from | to | route                               | turns                           |
-            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße | depart,end of road left,arrive  |
-            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße | depart,end of road right,arrive |
-            | e    | a  | Nebenstraße,Hauptstraße,Hauptstraße | depart,turn left,arrive         |
-            | d    | a  | Nebenstraße,Hauptstraße,Hauptstraße | depart,turn right,arrive        |
+            | from | to | route                                      | turns                           |
+            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road left,arrive  |
+            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road right,arrive |
+            | e    | a  | Nebenstraße,Hauptstraßenbrücke,Hauptstraße | depart,turn left,arrive         |
+            | d    | a  | Nebenstraße,Hauptstraßenbrücke,Hauptstraße | depart,turn right,arrive        |
 
     Scenario: Bridge with Immediate Turn Front and Back
         Given the node map
@@ -88,11 +88,11 @@ Feature: Car - Guidance - Bridges and Tunnels
             | dce   | primary |        | Nebenstraße        |
 
         When I route I should get
-            | from | to | route                               | turns                           |
-            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße | depart,end of road left,arrive  |
-            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße | depart,end of road right,arrive |
-            | e    | a  | Nebenstraße,Hauptstraße,Hauptstraße | depart,turn left,arrive         |
-            | d    | a  | Nebenstraße,Hauptstraße,Hauptstraße | depart,turn right,arrive        |
+            | from | to | route                                      | turns                           |
+            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road left,arrive  |
+            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road right,arrive |
+            | e    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn left,arrive         |
+            | d    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn right,arrive        |
 
     Scenario: Tunnel with Immediate Turn Front and Back
         Given the node map
