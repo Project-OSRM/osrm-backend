@@ -20,6 +20,8 @@
 #include <map>
 #include <string>
 
+#include <boost/algorithm/string/predicate.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -335,7 +337,8 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
 
     // check similarity of names
     const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto names_are_equal = from_name == to_name;
+    const auto name_is_contained = boost::starts_with(from_name,to_name) || boost::starts_with(to_name,from_name);
+    const auto names_are_equal = from_name == to_name || name_is_contained;
     const auto name_is_removed = !from_name.empty() && to_name.empty();
     // references are contained in one another
     const auto refs_are_empty = from_ref.empty() && to_ref.empty();
