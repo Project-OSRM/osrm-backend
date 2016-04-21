@@ -16,9 +16,9 @@ const double constexpr STRAIGHT_ANGLE = 180.;
 const double constexpr MAXIMAL_ALLOWED_NO_TURN_DEVIATION = 3.;
 // angle that lies between two nearly indistinguishable roads
 const double constexpr NARROW_TURN_ANGLE = 40.;
-const double constexpr GROUP_ANGLE = 90;
+const double constexpr GROUP_ANGLE = 60;
 // angle difference that can be classified as straight, if its the only narrow turn
-const double constexpr FUZZY_ANGLE_DIFFERENCE = 15.;
+const double constexpr FUZZY_ANGLE_DIFFERENCE = 20.;
 const double constexpr DISTINCTION_RATIO = 2;
 const unsigned constexpr INVALID_NAME_ID = 0;
 

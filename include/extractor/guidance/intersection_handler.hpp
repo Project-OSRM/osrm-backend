@@ -61,6 +61,12 @@ class IntersectionHandler
                     ConnectedRoad &center,
                     ConnectedRoad &right) const;
 
+    // Trivial Turns use findBasicTurnType and getTurnDirection as only criteria
+    void assignTrivialTurns(const EdgeID via_eid,
+                            Intersection &intersection,
+                            const std::size_t begin,
+                            const std::size_t end) const;
+
     bool isThroughStreet(const std::size_t index, const Intersection &intersection) const;
 };
 
