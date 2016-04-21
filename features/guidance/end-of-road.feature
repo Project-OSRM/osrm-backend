@@ -21,7 +21,6 @@ Feature: End Of Road Instructions
             | a,c       | ab,cbd,cbd | depart,end of road left,arrive  |
             | a,d       | ab,cbd,cbd | depart,end of road right,arrive |
 
-
     Scenario: End of Road with three streets
         Given the node map
             |   |   | c |
@@ -104,3 +103,21 @@ Feature: End Of Road Instructions
             | waypoints | route      | turns                           |
             | a,c       | ab,cbd,cbd | depart,end of road left,arrive  |
             | a,d       | ab,cbd,cbd | depart,end of road right,arrive |
+
+    Scenario: End of Road with two ramps - prefer ramp over end of road
+        Given the node map
+            |   |   | c |
+            | a |   | b |
+            |   |   | d |
+
+        And the ways
+            | nodes  | highway       |
+            | ab     | primary       |
+            | bc     | motorway_link |
+            | bd     | motorway_link |
+
+       When I route I should get
+            | waypoints | route    | turns                    |
+            | a,c       | ab,bc,bc | depart,ramp left,arrive  |
+            | a,d       | ab,bd,bd | depart,ramp right,arrive |
+

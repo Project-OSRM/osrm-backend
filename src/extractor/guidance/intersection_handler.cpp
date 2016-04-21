@@ -2,6 +2,8 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
+#include "util/simple_logger.hpp"
+
 #include <algorithm>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
@@ -281,6 +283,18 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
             center.turn.instruction = {findBasicTurnType(via_edge, center),
                                        getTurnDirection(center.turn.angle)};
     }
+}
+
+void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
+                                             Intersection &intersection,
+                                             const std::size_t begin,
+                                             const std::size_t end) const
+{
+    for (std::size_t index = begin; index != end; ++index)
+        if (intersection[index].entry_allowed)
+            intersection[index].turn.instruction = {
+                findBasicTurnType(via_eid, intersection[index]),
+                getTurnDirection(intersection[index].turn.angle)};
 }
 
 bool IntersectionHandler::isThroughStreet(const std::size_t index,
