@@ -2,6 +2,7 @@
    - API:
      - if `geometry=geojson` is passed the resulting geometry can be a LineString or Point
        depending on how many coordinates are present.
+     - the removal of the summary field was revered. for `steps=flase` the field will always be an empty string.
 
 # 5.0.0 RC2
    - Profiles:
