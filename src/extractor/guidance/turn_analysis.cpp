@@ -3,6 +3,7 @@
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/guidance/toolkit.hpp"
 #include "util/simple_logger.hpp"
 
 #include <cstddef>
@@ -10,6 +11,8 @@
 #include <limits>
 #include <set>
 #include <unordered_set>
+
+using osrm::util::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -36,7 +39,7 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                                                                  barrier_nodes,
                                                                  node_info_list,
                                                                  compressed_edge_container),
-      roundabout_handler(node_based_graph, node_info_list, name_table),
+      roundabout_handler(node_based_graph, node_info_list, name_table, compressed_edge_container),
       motorway_handler(node_based_graph, node_info_list, name_table),
       turn_handler(node_based_graph, node_info_list, name_table)
 {
@@ -76,9 +79,8 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const E
 }
 
 // Sets basic turn types as fallback for otherwise unhandled turns
-Intersection TurnAnalysis::setTurnTypes(const NodeID from_nid,
-                                        const EdgeID,
-                                        Intersection intersection) const
+Intersection
+TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection intersection) const
 {
     for (auto &road : intersection)
     {

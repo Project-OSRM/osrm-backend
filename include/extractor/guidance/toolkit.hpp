@@ -4,12 +4,14 @@
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/guidance/toolkit.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
 
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/discrete_angle.hpp"
+#include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
 #include <algorithm>
@@ -24,6 +26,8 @@ namespace extractor
 {
 namespace guidance
 {
+
+using util::guidance::angularDeviation;
 
 namespace detail
 {
@@ -245,12 +249,6 @@ inline double angleFromDiscreteAngle(const DiscreteAngle angle)
     return static_cast<double>(angle) * detail::discrete_angle_step_size;
 }
 
-inline double angularDeviation(const double angle, const double from)
-{
-    const double deviation = std::abs(angle - from);
-    return std::min(360 - deviation, deviation);
-}
-
 inline double getAngularPenalty(const double angle, DirectionModifier modifier)
 {
     // these are not aligned with getTurnDirection but represent an ideal center
@@ -269,30 +267,6 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
     const double difference = getAngularPenalty(angle, instruction.direction_modifier);
     const double max_deviation = deviations[static_cast<int>(instruction.direction_modifier)];
     return 1.0 - (difference / max_deviation) * (difference / max_deviation);
-}
-
-// Translates between angles and their human-friendly directional representation
-inline DirectionModifier getTurnDirection(const double angle)
-{
-    // An angle of zero is a u-turn
-    // 180 goes perfectly straight
-    // 0-180 are right turns
-    // 180-360 are left turns
-    if (angle > 0 && angle < 60)
-        return DirectionModifier::SharpRight;
-    if (angle >= 60 && angle < 140)
-        return DirectionModifier::Right;
-    if (angle >= 140 && angle < 170)
-        return DirectionModifier::SlightRight;
-    if (angle >= 165 && angle <= 195)
-        return DirectionModifier::Straight;
-    if (angle > 190 && angle <= 220)
-        return DirectionModifier::SlightLeft;
-    if (angle > 220 && angle <= 300)
-        return DirectionModifier::Left;
-    if (angle > 300 && angle < 360)
-        return DirectionModifier::SharpLeft;
-    return DirectionModifier::UTurn;
 }
 
 // swaps left <-> right modifier types
@@ -395,6 +369,25 @@ inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoa
     // Potentially we could include features like number of lanes here and others?
     // Should also be moved to profiles
     return std::abs(getPriority(first) - getPriority(second)) <= 1;
+}
+
+// To simplify handling of Left/Right hand turns, we can mirror turns and write an intersection
+// handler only for one side. The mirror function turns a left-hand turn in a equivalent right-hand
+// turn and vice versa.
+inline ConnectedRoad mirror(ConnectedRoad road)
+{
+    const constexpr DirectionModifier mirrored_modifiers[] = {
+        DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
+        DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
+        DirectionModifier::Right,      DirectionModifier::SharpRight};
+
+    if (angularDeviation(road.turn.angle, 0) > std::numeric_limits<double>::epsilon())
+    {
+        road.turn.angle = 360 - road.turn.angle;
+        road.turn.instruction.direction_modifier =
+            mirrored_modifiers[road.turn.instruction.direction_modifier];
+    }
+    return road;
 }
 
 } // namespace guidance

@@ -14,11 +14,12 @@ namespace extractor
 namespace guidance
 {
 
-IntersectionGenerator::IntersectionGenerator(const util::NodeBasedDynamicGraph &node_based_graph,
-                      const RestrictionMap &restriction_map,
-                      const std::unordered_set<NodeID> &barrier_nodes,
-                      const std::vector<QueryNode> &node_info_list,
-                      const CompressedEdgeContainer &compressed_edge_container)
+IntersectionGenerator::IntersectionGenerator(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const RestrictionMap &restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const std::vector<QueryNode> &node_info_list,
+    const CompressedEdgeContainer &compressed_edge_container)
     : node_based_graph(node_based_graph), restriction_map(restriction_map),
       barrier_nodes(barrier_nodes), node_info_list(node_info_list),
       compressed_edge_container(compressed_edge_container)
@@ -204,8 +205,17 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
             return result;
         }
     };
-    if (intersection.size() == 1)
+    if (intersection.size() <= 1)
         return intersection;
+
+    const bool is_connected_to_roundabout = [this,&intersection]() {
+        for (const auto &road : intersection)
+        {
+            if (node_based_graph.GetEdgeData(road.turn.eid).roundabout)
+                return true;
+        }
+        return false;
+    }();
 
     // check for merges including the basic u-turn
     // these result in an adjustment of all other angles
@@ -215,11 +225,26 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
             (360 - intersection[intersection.size() - 1].turn.angle) / 2;
         for (std::size_t i = 1; i + 1 < intersection.size(); ++i)
             intersection[i].turn.angle += correction_factor;
+
+        // FIXME if we have a left-sided country, we need to switch this off and enable it below
         intersection[0] = merge(intersection.front(), intersection.back());
         intersection[0].turn.angle = 0;
+
+        if (is_connected_to_roundabout)
+        {
+            // We are merging a u-turn against the direction of a roundabout
+            //
+            //    -----------> roundabout
+            //       /    \
+            //    out      in
+            //
+            // These cases have to be disabled, even if they are not forbidden specifically by a
+            // relation
+            intersection[0].entry_allowed = false;
+        }
+
         intersection.pop_back();
     }
-
     else if (mergable(0, 1))
     {
         const double correction_factor = (intersection[1].turn.angle) / 2;

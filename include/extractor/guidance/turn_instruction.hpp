@@ -5,6 +5,8 @@
 
 #include <boost/assert.hpp>
 
+#include "extractor/guidance/roundabout_type.hpp"
+
 namespace osrm
 {
 namespace extractor
@@ -36,35 +38,30 @@ enum DirectionModifier
 // enum class TurnType : unsigned char
 enum TurnType // at the moment we can support 32 turn types, without increasing memory consumption
 {
-    Invalid,                // no valid turn instruction
-    NoTurn,                 // end of segment without turn/middle of a segment
-    Suppressed,             // location that suppresses a turn
-    NewName,                // no turn, but name changes
-    Continue,               // remain on a street
-    Turn,                   // basic turn
-    FirstTurn,              // First of x turns
-    SecondTurn,             // Second of x turns
-    ThirdTurn,              // Third of x turns
-    FourthTurn,             // Fourth of x turns
-    Merge,                  // merge onto a street
-    Ramp,                   // special turn (highway ramp exits)
-    FirstRamp,              // first turn onto a ramp
-    SecondRamp,             // second turn onto a ramp
-    ThirdRamp,              // third turn onto a ramp
-    FourthRamp,             // fourth turn onto a ramp
-    Fork,                   // fork road splitting up
-    EndOfRoad,              // T intersection
-    EnterRoundabout,        // Entering a small Roundabout
-    EnterRoundaboutAtExit,  // Entering a small Roundabout at a countable exit
-    EnterAndExitRoundabout, // Touching a roundabout
-    ExitRoundabout,         // Exiting a small Roundabout
-    EnterRotary,            // Enter a rotary
-    EnterRotaryAtExit,      // Enter A Rotary at a countable exit
-    EnterAndExitRotary,     // Touching a rotary
-    ExitRotary,             // Exit a rotary
-    StayOnRoundabout,       // Continue on Either a small or a large Roundabout
-    Restriction,            // Cross a Barrier, requires barrier penalties instead of full block
-    Notification            // Travel Mode Changes`
+    Invalid,                            // no valid turn instruction
+    NewName,                            // no turn, but name changes
+    Continue,                           // remain on a street
+    Turn,                               // basic turn
+    Merge,                              // merge onto a street
+    Ramp,                               // special turn (highway ramp exits)
+    Fork,                               // fork road splitting up
+    EndOfRoad,                          // T intersection
+    Notification,                       // Travel Mode Changes, Restrictions apply...
+    EnterRoundabout,                    // Entering a small Roundabout
+    EnterAndExitRoundabout,             // Touching a roundabout
+    EnterRotary,                        // Enter a rotary
+    EnterAndExitRotary,                 // Touching a rotary
+    EnterRoundaboutIntersection,        // Entering a small Roundabout
+    EnterAndExitRoundaboutIntersection, // Touching a roundabout
+    NoTurn,                             // end of segment without turn/middle of a segment
+    Suppressed,                         // location that suppresses a turn
+    EnterRoundaboutAtExit,              // Entering a small Roundabout at a countable exit
+    ExitRoundabout,                     // Exiting a small Roundabout
+    EnterRotaryAtExit,                  // Enter A Rotary at a countable exit
+    ExitRotary,                         // Exit a rotary
+    EnterRoundaboutIntersectionAtExit,  // Entering a small Roundabout at a countable exit
+    ExitRoundaboutIntersection,         // Exiting a small Roundabout
+    StayOnRoundabout                    // Continue on Either a small or a large Roundabout
 };
 
 // turn angle in 1.40625 degree -> 128 == 180 degree
@@ -89,27 +86,45 @@ struct TurnInstruction
         return TurnInstruction(TurnType::NoTurn, DirectionModifier::UTurn);
     }
 
-    static TurnInstruction REMAIN_ROUNDABOUT(bool is_rotary, const DirectionModifier modifier)
+    static TurnInstruction REMAIN_ROUNDABOUT(const RoundaboutType, const DirectionModifier modifier)
     {
-        (void)is_rotary; // staying does not require a different instruction at the moment
         return TurnInstruction(TurnType::StayOnRoundabout, modifier);
     }
 
-    static TurnInstruction ENTER_ROUNDABOUT(bool is_rotary, const DirectionModifier modifier)
+    static TurnInstruction ENTER_ROUNDABOUT(const RoundaboutType roundabout_type,
+                                            const DirectionModifier modifier)
     {
-        return {is_rotary ? TurnType::EnterRotary : TurnType::EnterRoundabout, modifier};
+        const constexpr TurnType enter_instruction[] = {
+            TurnType::Invalid, TurnType::EnterRoundabout, TurnType::EnterRotary,
+            TurnType::EnterRoundaboutIntersection};
+        return {enter_instruction[static_cast<int>(roundabout_type)], modifier};
     }
 
-    static TurnInstruction EXIT_ROUNDABOUT(bool is_rotary, const DirectionModifier modifier)
+    static TurnInstruction EXIT_ROUNDABOUT(const RoundaboutType roundabout_type,
+                                           const DirectionModifier modifier)
     {
-        return {is_rotary ? TurnType::ExitRotary : TurnType::ExitRoundabout, modifier};
+        const constexpr TurnType exit_instruction[] = {TurnType::Invalid, TurnType::ExitRoundabout,
+                                                       TurnType::ExitRotary,
+                                                       TurnType::ExitRoundaboutIntersection};
+        return {exit_instruction[static_cast<int>(roundabout_type)], modifier};
     }
 
-    static TurnInstruction ENTER_AND_EXIT_ROUNDABOUT(bool is_rotary,
+    static TurnInstruction ENTER_AND_EXIT_ROUNDABOUT(const RoundaboutType roundabout_type,
                                                      const DirectionModifier modifier)
     {
-        return {is_rotary ? TurnType::EnterAndExitRotary : TurnType::EnterAndExitRoundabout,
-                modifier};
+        const constexpr TurnType exit_instruction[] = {
+            TurnType::Invalid, TurnType::EnterAndExitRoundabout, TurnType::EnterAndExitRotary,
+            TurnType::EnterAndExitRoundaboutIntersection};
+        return {exit_instruction[static_cast<int>(roundabout_type)], modifier};
+    }
+
+    static TurnInstruction ENTER_ROUNDABOUT_AT_EXIT(const RoundaboutType roundabout_type,
+                                                    const DirectionModifier modifier)
+    {
+        const constexpr TurnType enter_instruction[] = {
+            TurnType::Invalid, TurnType::EnterRoundaboutAtExit, TurnType::EnterRotaryAtExit,
+            TurnType::EnterRoundaboutIntersectionAtExit};
+        return {enter_instruction[static_cast<int>(roundabout_type)], modifier};
     }
 
     static TurnInstruction SUPPRESSED(const DirectionModifier modifier)

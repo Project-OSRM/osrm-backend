@@ -3,11 +3,15 @@
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/simple_logger.hpp"
+#include "util/guidance/toolkit.hpp"
 
 #include <limits>
 #include <utility>
 
 #include <boost/assert.hpp>
+
+using osrm::util::guidance::angularDeviation;
+using osrm::util::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -222,7 +226,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
 
                 intersection[1].turn.instruction =
                     getInstructionForObvious(intersection.size(), via_eid,
-                                             isThroughStreet(1,intersection), intersection[1]);
+                                             isThroughStreet(1, intersection), intersection[1]);
             }
             else
             {
@@ -236,7 +240,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                     if (road.turn.angle == continue_angle)
                     {
                         road.turn.instruction = getInstructionForObvious(
-                            intersection.size(), via_eid, isThroughStreet(1,intersection), road);
+                            intersection.size(), via_eid, isThroughStreet(1, intersection), road);
                     }
                     else if (road.turn.angle < continue_angle)
                     {
@@ -264,7 +268,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             {
                 intersection[1].turn.instruction =
                     getInstructionForObvious(intersection.size(), via_eid,
-                                             isThroughStreet(1,intersection), intersection[1]);
+                                             isThroughStreet(1, intersection), intersection[1]);
                 util::SimpleLogger().Write(logDEBUG) << "Disabled U-Turn on a freeway";
                 intersection[0].entry_allowed = false; // UTURN on the freeway
             }
@@ -341,7 +345,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
         BOOST_ASSERT(detail::isMotorwayClass(intersection[1].turn.eid, node_based_graph));
 
         intersection[1].turn.instruction = getInstructionForObvious(
-            intersection.size(), via_eid, isThroughStreet(1,intersection), intersection[1]);
+            intersection.size(), via_eid, isThroughStreet(1, intersection), intersection[1]);
     }
     else if (intersection.size() == 3)
     {
@@ -378,7 +382,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 {
                     intersection[1].turn.instruction =
                         getInstructionForObvious(intersection.size(), via_eid,
-                                                 isThroughStreet(1,intersection), intersection[1]);
+                                                 isThroughStreet(1, intersection), intersection[1]);
                 }
             }
             else
@@ -403,7 +407,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 {
                     intersection[2].turn.instruction =
                         getInstructionForObvious(intersection.size(), via_eid,
-                                                 isThroughStreet(2,intersection), intersection[2]);
+                                                 isThroughStreet(2, intersection), intersection[2]);
                 }
             }
         }
