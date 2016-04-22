@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 namespace osrm
@@ -398,10 +399,13 @@ inline bool requiresNameAnnounced(const std::string &from,
             first.size() > common_length
                 ? first.substr(common_length + (first[common_length] == ' ' ? 1 : 0))
                 : "";
+        boost::algorithm::to_lower(first_suffix);
+
         std::string second_suffix =
             second.size() > common_length
                 ? second.substr(common_length + (second[common_length] == ' ' ? 1 : 0))
                 : "";
+        boost::algorithm::to_lower(second_suffix);
 
         const auto first_delta_is_suffix =
             first_suffix.empty() || suffix_table.isSuffix(first_suffix);

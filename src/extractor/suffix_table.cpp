@@ -5,6 +5,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/ref.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <vector>
 
@@ -31,8 +32,11 @@ void SuffixTable::fill(lua_State *lua_state)
         util::SimpleLogger().Write(logWARNING) << er.what();
     }
 
-    for (const auto &suffix : suffixes_vector)
+    for (auto suffix : suffixes_vector)
+    {
+        boost::algorithm::to_lower(suffix);
         suffix_set.insert(suffix);
+    }
 }
 
 bool SuffixTable::isSuffix(const std::string &possible_suffix) const
