@@ -23,9 +23,10 @@ namespace guidance
 
 RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                      const std::vector<QueryNode> &node_info_list,
+                                     const CompressedEdgeContainer &compressed_edge_container,
                                      const util::NameTable &name_table,
-                                     const CompressedEdgeContainer &compressed_edge_container)
-    : IntersectionHandler(node_based_graph, node_info_list, name_table),
+                                     const SuffixTable &street_name_suffix_table)
+    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
       compressed_edge_container(compressed_edge_container)
 {
 }
@@ -142,9 +143,11 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
     if (!has_limited_size)
         return false;
 
-    const bool simple_exits = !std::find_if( roundabout_nodes.begin(), roundabout_nodes.end(), [this]( const NodeID node ){
-        return (node_based_graph.GetOutDegree(node) > 3);
-    });
+    const bool simple_exits =
+        roundabout_nodes.end() ==
+        std::find_if(roundabout_nodes.begin(), roundabout_nodes.end(), [this](const NodeID node) {
+            return (node_based_graph.GetOutDegree(node) > 3);
+        });
 
     if (!simple_exits)
         return false;
@@ -219,7 +222,8 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
                 // roundabout does not keep its name
                 if (roundabout_name_id != 0 && roundabout_name_id != edge_data.name_id &&
                     requiresNameAnnounced(name_table.GetNameForID(roundabout_name_id),
-                                          name_table.GetNameForID(edge_data.name_id)))
+                                          name_table.GetNameForID(edge_data.name_id),
+                                          street_name_suffix_table))
                 {
                     return SPECIAL_EDGEID;
                 }

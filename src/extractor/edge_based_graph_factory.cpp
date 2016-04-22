@@ -9,6 +9,7 @@
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 
+#include "extractor/suffix_table.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
@@ -320,8 +321,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
+    SuffixTable street_name_suffix_table(lua_state);
     guidance::TurnAnalysis turn_analysis(*m_node_based_graph, m_node_info_list, *m_restriction_map,
-                                         m_barrier_nodes, m_compressed_edge_container, name_table);
+                                         m_barrier_nodes, m_compressed_edge_container, name_table,
+                                         street_name_suffix_table);
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         progress.printStatus(node_u);

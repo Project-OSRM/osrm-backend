@@ -11,6 +11,9 @@ access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
+-- A list of suffixes to suppress in name change instructions
+suffix_list = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "road", "street" }
+
 speed_profile = {
   ["motorway"] = 90,
   ["motorway_link"] = 45,
@@ -149,6 +152,12 @@ local min = math.min
 local max = math.max
 
 local speed_reduction = 0.8
+
+function get_name_suffix_list(vector)
+  for index,suffix in ipairs(suffix_list) do
+      vector:Add(suffix)
+  end
+end
 
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do

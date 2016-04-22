@@ -28,6 +28,9 @@ with open(profile_path) as f:
 
 n_errors = 0
 for n, line in enumerate(profile):
+    # allow arbitrary suffix lists
+    if line.strip().startswith("suffix_list"):
+        continue
     # ignore comments
     if line.strip().startswith("--"):
         continue

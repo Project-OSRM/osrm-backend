@@ -79,7 +79,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
 
         // some name changes are not announced in our processing. For these, we have to keep the
         // first name on the segment
-        unsigned step_name_id = source_node.name_id;
+        auto step_name_id = source_node.name_id;
         for (std::size_t leg_data_index = 0; leg_data_index < leg_data.size(); ++leg_data_index)
         {
             const auto &path_point = leg_data[leg_data_index];

@@ -26,7 +26,8 @@ class TurnHandler : public IntersectionHandler
   public:
     TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                 const std::vector<QueryNode> &node_info_list,
-                const util::NameTable &name_table);
+                const util::NameTable &name_table,
+                const SuffixTable &street_name_suffix_table);
     ~TurnHandler() override final;
 
     // check whether the handler can actually handle the intersection
