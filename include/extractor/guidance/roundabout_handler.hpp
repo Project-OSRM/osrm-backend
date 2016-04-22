@@ -37,7 +37,8 @@ class RoundaboutHandler : public IntersectionHandler
   public:
     RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                       const std::vector<QueryNode> &node_info_list,
-                      const util::NameTable &name_table);
+                      const util::NameTable &name_table,
+                      const SuffixTable &street_name_suffix_table);
 
     ~RoundaboutHandler() override final;
 

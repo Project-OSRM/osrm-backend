@@ -7,6 +7,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/suffix_table.hpp"
 
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/discrete_angle.hpp"
@@ -332,7 +333,9 @@ inline bool isDistinct(const DirectionModifier first, const DirectionModifier se
     return true;
 }
 
-inline bool requiresNameAnnounced(const std::string &from, const std::string &to)
+inline bool requiresNameAnnounced(const std::string &from,
+                                  const std::string &to,
+                                  const SuffixTable &suffix_table)
 {
     // FIXME, handle in profile to begin with?
     // this uses the encoding of references in the profile, which is very BAD
@@ -359,12 +362,23 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
         }
     };
 
+    const auto getCommonLength = [](const std::string &first, const std::string &second) {
+        for (std::size_t common_end = 0; common_end < std::min(first.size(), second.size());
+             ++common_end)
+        {
+            if (first[common_end] != second[common_end])
+                return common_end;
+        }
+        return std::min(first.size(), second.size());
+    };
+
     split(from, from_name, from_ref);
     split(to, to_name, to_ref);
 
     // check similarity of names
     const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto name_is_contained = boost::starts_with(from_name,to_name) || boost::starts_with(to_name,from_name);
+    const auto name_is_contained =
+        boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
     const auto names_are_equal = from_name == to_name || name_is_contained;
     const auto name_is_removed = !from_name.empty() && to_name.empty();
     // references are contained in one another
@@ -374,9 +388,36 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
         (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
     const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
 
-    const auto obvious_change =
-        (names_are_empty && refs_are_empty) || (names_are_equal && ref_is_contained) ||
-        (names_are_equal && refs_are_empty) || name_is_removed || ref_is_removed;
+    const auto checkForSuffixChange = [](const std::size_t common_length, const std::string &first,
+                                         const std::string &second,
+                                         const SuffixTable &suffix_table) {
+        if (0 == common_length)
+            return false;
+
+        std::string first_suffix =
+            first.size() > common_length
+                ? first.substr(common_length + (first[common_length] == ' ' ? 1 : 0))
+                : "";
+        std::string second_suffix =
+            second.size() > common_length
+                ? second.substr(common_length + (second[common_length] == ' ' ? 1 : 0))
+                : "";
+
+        const auto first_delta_is_suffix =
+            first_suffix.empty() || suffix_table.isSuffix(first_suffix);
+        const auto second_delta_is_suffix =
+            second_suffix.empty() || suffix_table.isSuffix(second_suffix);
+
+        return first_delta_is_suffix && second_delta_is_suffix;
+    };
+
+    const auto is_suffix_change =
+        checkForSuffixChange(getCommonLength(from_name, to_name), from_name, to_name, suffix_table);
+
+    const auto obvious_change = (names_are_empty && refs_are_empty) ||
+                                (names_are_equal && ref_is_contained) ||
+                                (names_are_equal && refs_are_empty) || name_is_removed ||
+                                ref_is_removed || is_suffix_change;
 
     return !obvious_change;
 }

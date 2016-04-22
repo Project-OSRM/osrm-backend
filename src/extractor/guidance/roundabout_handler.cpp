@@ -19,8 +19,9 @@ namespace guidance
 
 RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                      const std::vector<QueryNode> &node_info_list,
-                                     const util::NameTable &name_table)
-    : IntersectionHandler(node_based_graph, node_info_list, name_table)
+                                     const util::NameTable &name_table,
+                                     const SuffixTable &street_name_suffix_table)
+    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
 {
 }
 
@@ -105,7 +106,8 @@ bool RoundaboutHandler::isRotary(const NodeID nid) const
                 // roundabout does not keep its name
                 if (roundabout_name_id != 0 && roundabout_name_id != edge_data.name_id &&
                     requiresNameAnnounced(name_table.GetNameForID(roundabout_name_id),
-                                          name_table.GetNameForID(edge_data.name_id)))
+                                          name_table.GetNameForID(edge_data.name_id),
+                                          street_name_suffix_table))
                 {
                     return SPECIAL_EDGEID;
                 }
