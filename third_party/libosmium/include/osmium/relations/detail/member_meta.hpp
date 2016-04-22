@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -134,21 +134,6 @@ namespace osmium {
         inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const MemberMeta& mm) {
             out << "MemberMeta(member_id=" << mm.member_id() << " relation_pos=" << mm.relation_pos() << " member_pos=" << mm.member_pos() << " buffer_offset=" << mm.buffer_offset() << ")";
             return out;
-        }
-
-        /**
-         * Count the number of MemberMeta objects in the iterator range
-         * that are not marked as removed.
-         *
-         * @tparam TIter Iterator that dereferences to a MemberMeta
-         * @param begin Begin of iterator range
-         * @param end End of iterator range
-         */
-        template <class TIter>
-        inline typename std::iterator_traits<TIter>::difference_type count_not_removed(TIter begin, TIter end) {
-            return std::count_if(begin, end, [](MemberMeta& mm) {
-                return !mm.removed();
-            });
         }
 
     } // namespace relations

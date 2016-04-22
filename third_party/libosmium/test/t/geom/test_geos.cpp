@@ -1,9 +1,9 @@
 #include "catch.hpp"
 
-#include <osmium/builder/builder_helper.hpp>
 #include <osmium/geom/geos.hpp>
 
-#include "../basic/helper.hpp"
+#include "area_helper.hpp"
+#include "wnl_helper.hpp"
 
 TEST_CASE("GEOS geometry factory - create point") {
     osmium::geom::GEOSFactory<> factory;
@@ -43,12 +43,7 @@ TEST_CASE("GEOS geometry factory - create linestring") {
     osmium::geom::GEOSFactory<> factory;
 
     osmium::memory::Buffer buffer(10000);
-    auto& wnl = osmium::builder::build_way_node_list(buffer, {
-        {1, {3.2, 4.2}},
-        {3, {3.5, 4.7}},
-        {4, {3.5, 4.7}},
-        {2, {3.6, 4.9}}
-    });
+    auto &wnl = create_test_wnl_okay(buffer);
 
     SECTION("from way node list") {
         std::unique_ptr<geos::geom::LineString> linestring {factory.create_linestring(wnl)};
@@ -88,17 +83,7 @@ TEST_CASE("GEOS geometry factory - create area with one outer and no inner rings
     osmium::geom::GEOSFactory<> factory;
 
     osmium::memory::Buffer buffer(10000);
-    osmium::Area& area = buffer_add_area(buffer,
-        "foo",
-        {},
-        {
-            { true, {
-                {1, {3.2, 4.2}},
-                {2, {3.5, 4.7}},
-                {3, {3.6, 4.9}},
-                {1, {3.2, 4.2}}
-            }}
-        });
+    const osmium::Area& area = create_test_area_1outer_0inner(buffer);
 
     std::unique_ptr<geos::geom::MultiPolygon> mp {factory.create_multipolygon(area)};
     REQUIRE(1 == mp->getNumGeometries());
@@ -117,25 +102,7 @@ TEST_CASE("GEOS geometry factory - create area with one outer and one inner ring
     osmium::geom::GEOSFactory<> factory;
 
     osmium::memory::Buffer buffer(10000);
-    osmium::Area& area = buffer_add_area(buffer,
-        "foo",
-        {},
-        {
-            { true, {
-                {1, {0.1, 0.1}},
-                {2, {9.1, 0.1}},
-                {3, {9.1, 9.1}},
-                {4, {0.1, 9.1}},
-                {1, {0.1, 0.1}}
-            }},
-            { false, {
-                {5, {1.0, 1.0}},
-                {6, {8.0, 1.0}},
-                {7, {8.0, 8.0}},
-                {8, {1.0, 8.0}},
-                {5, {1.0, 1.0}}
-            }}
-        });
+    const osmium::Area& area = create_test_area_1outer_1inner(buffer);
 
     std::unique_ptr<geos::geom::MultiPolygon> mp {factory.create_multipolygon(area)};
     REQUIRE(1 == mp->getNumGeometries());
@@ -154,38 +121,7 @@ TEST_CASE("GEOS geometry factory - create area with two outer and two inner ring
     osmium::geom::GEOSFactory<> factory;
 
     osmium::memory::Buffer buffer(10000);
-    osmium::Area& area = buffer_add_area(buffer,
-        "foo",
-        {},
-        {
-            { true, {
-                {1, {0.1, 0.1}},
-                {2, {9.1, 0.1}},
-                {3, {9.1, 9.1}},
-                {4, {0.1, 9.1}},
-                {1, {0.1, 0.1}}
-            }},
-            { false, {
-                {5, {1.0, 1.0}},
-                {6, {4.0, 1.0}},
-                {7, {4.0, 4.0}},
-                {8, {1.0, 4.0}},
-                {5, {1.0, 1.0}}
-            }},
-            { false, {
-                {10, {5.0, 5.0}},
-                {11, {5.0, 7.0}},
-                {12, {7.0, 7.0}},
-                {10, {5.0, 5.0}}
-            }},
-            { true, {
-                {100, {10.0, 10.0}},
-                {101, {11.0, 10.0}},
-                {102, {11.0, 11.0}},
-                {103, {10.0, 11.0}},
-                {100, {10.0, 10.0}}
-            }}
-        });
+    const osmium::Area& area = create_test_area_2outer_2inner(buffer);
 
     std::unique_ptr<geos::geom::MultiPolygon> mp {factory.create_multipolygon(area)};
     REQUIRE(2 == mp->getNumGeometries());

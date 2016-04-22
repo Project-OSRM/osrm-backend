@@ -3,6 +3,8 @@
 #include <fstream>
 #include <map>
 
+#include <gdalcpp.hpp>
+
 #include <osmium/index/map/sparse_mem_array.hpp>
 
 #include <osmium/area/assembler.hpp>
@@ -41,10 +43,9 @@ inline tagmap_type create_map(const osmium::TagList& taglist) {
 
 class TestHandler : public osmium::handler::Handler {
 
-    OGRDataSource* m_data_source;
-    OGRLayer* m_layer_point;
-    OGRLayer* m_layer_linestring;
-    OGRLayer* m_layer_polygon;
+    gdalcpp::Layer m_layer_point;
+    gdalcpp::Layer m_layer_lines;
+    gdalcpp::Layer m_layer_mpoly;
 
     osmium::geom::OGRFactory<> m_ogr_factory;
     osmium::geom::WKTFactory<> m_wkt_factory;
@@ -55,84 +56,20 @@ class TestHandler : public osmium::handler::Handler {
 
 public:
 
-    TestHandler(OGRDataSource* data_source) :
-        m_data_source(data_source),
+    explicit TestHandler(gdalcpp::Dataset& dataset) :
+        m_layer_point(dataset, "points", wkbPoint),
+        m_layer_lines(dataset, "lines", wkbLineString),
+        m_layer_mpoly(dataset, "multipolygons", wkbMultiPolygon),
         m_out("multipolygon-tests.json") {
 
-        OGRSpatialReference sparef;
-        sparef.SetWellKnownGeogCS("WGS84");
+        m_layer_point.add_field("id", OFTReal, 10);
+        m_layer_point.add_field("type", OFTString, 30);
 
-        /**************/
+        m_layer_lines.add_field("id", OFTReal, 10);
+        m_layer_lines.add_field("type", OFTString, 30);
 
-        m_layer_point = m_data_source->CreateLayer("points", &sparef, wkbPoint, nullptr);
-        if (!m_layer_point) {
-            std::cerr << "Layer creation failed.\n";
-            exit(1);
-        }
-
-        OGRFieldDefn layer_point_field_id("id", OFTReal);
-        layer_point_field_id.SetWidth(10);
-
-        if (m_layer_point->CreateField(&layer_point_field_id) != OGRERR_NONE) {
-            std::cerr << "Creating id field failed.\n";
-            exit(1);
-        }
-
-        OGRFieldDefn layer_point_field_type("type", OFTString);
-        layer_point_field_type.SetWidth(30);
-
-        if (m_layer_point->CreateField(&layer_point_field_type) != OGRERR_NONE) {
-            std::cerr << "Creating type field failed.\n";
-            exit(1);
-        }
-
-        /**************/
-
-        m_layer_linestring = m_data_source->CreateLayer("lines", &sparef, wkbLineString, nullptr);
-        if (!m_layer_linestring) {
-            std::cerr << "Layer creation failed.\n";
-            exit(1);
-        }
-
-        OGRFieldDefn layer_linestring_field_id("id", OFTReal);
-        layer_linestring_field_id.SetWidth(10);
-
-        if (m_layer_linestring->CreateField(&layer_linestring_field_id) != OGRERR_NONE) {
-            std::cerr << "Creating id field failed.\n";
-            exit(1);
-        }
-
-        OGRFieldDefn layer_linestring_field_type("type", OFTString);
-        layer_linestring_field_type.SetWidth(30);
-
-        if (m_layer_linestring->CreateField(&layer_linestring_field_type) != OGRERR_NONE) {
-            std::cerr << "Creating type field failed.\n";
-            exit(1);
-        }
-
-        /**************/
-
-        m_layer_polygon = m_data_source->CreateLayer("multipolygons", &sparef, wkbMultiPolygon, nullptr);
-        if (!m_layer_polygon) {
-            std::cerr << "Layer creation failed.\n";
-            exit(1);
-        }
-
-        OGRFieldDefn layer_polygon_field_id("id", OFTInteger);
-        layer_polygon_field_id.SetWidth(10);
-
-        if (m_layer_polygon->CreateField(&layer_polygon_field_id) != OGRERR_NONE) {
-            std::cerr << "Creating id field failed.\n";
-            exit(1);
-        }
-
-        OGRFieldDefn layer_polygon_field_from_type("from_type", OFTString);
-        layer_polygon_field_from_type.SetWidth(1);
-
-        if (m_layer_polygon->CreateField(&layer_polygon_field_from_type) != OGRERR_NONE) {
-            std::cerr << "Creating from_type field failed.\n";
-            exit(1);
-        }
+        m_layer_mpoly.add_field("id", OFTReal, 10);
+        m_layer_mpoly.add_field("from_type", OFTString, 1);
     }
 
     ~TestHandler() {
@@ -140,34 +77,18 @@ public:
     }
 
     void node(const osmium::Node& node) {
-        OGRFeature* feature = OGRFeature::CreateFeature(m_layer_point->GetLayerDefn());
-        std::unique_ptr<OGRPoint> ogr_point = m_ogr_factory.create_point(node);
-        feature->SetGeometry(ogr_point.get());
-        feature->SetField("id", static_cast<double>(node.id()));
-        feature->SetField("type", node.tags().get_value_by_key("type"));
-
-        if (m_layer_point->CreateFeature(feature) != OGRERR_NONE) {
-            std::cerr << "Failed to create feature.\n";
-            exit(1);
-        }
-
-        OGRFeature::DestroyFeature(feature);
+        gdalcpp::Feature feature(m_layer_point, m_ogr_factory.create_point(node));
+        feature.set_field("id", static_cast<double>(node.id()));
+        feature.set_field("type", node.tags().get_value_by_key("type"));
+        feature.add_to_layer();
     }
 
     void way(const osmium::Way& way) {
         try {
-            std::unique_ptr<OGRLineString> ogr_linestring = m_ogr_factory.create_linestring(way);
-            OGRFeature* feature = OGRFeature::CreateFeature(m_layer_linestring->GetLayerDefn());
-            feature->SetGeometry(ogr_linestring.get());
-            feature->SetField("id", static_cast<double>(way.id()));
-            feature->SetField("type", way.tags().get_value_by_key("type"));
-
-            if (m_layer_linestring->CreateFeature(feature) != OGRERR_NONE) {
-                std::cerr << "Failed to create feature.\n";
-                exit(1);
-            }
-
-            OGRFeature::DestroyFeature(feature);
+            gdalcpp::Feature feature(m_layer_lines, m_ogr_factory.create_linestring(way));
+            feature.set_field("id", static_cast<double>(way.id()));
+            feature.set_field("type", way.tags().get_value_by_key("type"));
+            feature.add_to_layer();
         } catch (osmium::geometry_error&) {
             std::cerr << "Ignoring illegal geometry for way " << way.id() << ".\n";
         }
@@ -200,10 +121,8 @@ public:
             m_out << "INVALID\"\n}";
         }
         try {
-            std::unique_ptr<OGRMultiPolygon> ogr_polygon = m_ogr_factory.create_multipolygon(area);
-            OGRFeature* feature = OGRFeature::CreateFeature(m_layer_polygon->GetLayerDefn());
-            feature->SetGeometry(ogr_polygon.get());
-            feature->SetField("id", static_cast<int>(area.orig_id()));
+            gdalcpp::Feature feature(m_layer_mpoly, m_ogr_factory.create_multipolygon(area));
+            feature.set_field("id", static_cast<double>(area.orig_id()));
 
             std::string from_type;
             if (area.from_way()) {
@@ -211,14 +130,8 @@ public:
             } else {
                 from_type = "r";
             }
-            feature->SetField("from_type", from_type.c_str());
-
-            if (m_layer_polygon->CreateFeature(feature) != OGRERR_NONE) {
-                std::cerr << "Failed to create feature.\n";
-                exit(1);
-            }
-
-            OGRFeature::DestroyFeature(feature);
+            feature.set_field("from_type", from_type.c_str());
+            feature.add_to_layer();
         } catch (osmium::geometry_error&) {
             std::cerr << "Ignoring illegal geometry for area " << area.id() << " created from " << (area.from_way() ? "way" : "relation") << " with id=" << area.orig_id() << ".\n";
         }
@@ -227,26 +140,6 @@ public:
 }; // class TestHandler
 
 /* ================================================== */
-
-OGRDataSource* initialize_database(const std::string& output_format, const std::string& output_filename) {
-    OGRRegisterAll();
-
-    OGRSFDriver* driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(output_format.c_str());
-    if (!driver) {
-        std::cerr << output_format << " driver not available.\n";
-        exit(1);
-    }
-
-    CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "FALSE");
-    const char* options[] = { "SPATIALITE=TRUE", nullptr };
-    OGRDataSource* data_source = driver->CreateDataSource(output_filename.c_str(), const_cast<char**>(options));
-    if (!data_source) {
-        std::cerr << "Creation of output file failed.\n";
-        exit(1);
-    }
-
-    return data_source;
-}
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -258,9 +151,10 @@ int main(int argc, char* argv[]) {
     std::string input_filename(argv[1]);
     std::string output_filename("multipolygon.db");
 
-    OGRDataSource* data_source = initialize_database(output_format, output_filename);
+    CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "FALSE");
+    gdalcpp::Dataset dataset{output_format, output_filename, gdalcpp::SRS{}, { "SPATIALITE=TRUE" }};
 
-    osmium::area::ProblemReporterOGR problem_reporter(data_source);
+    osmium::area::ProblemReporterOGR problem_reporter(dataset);
     osmium::area::Assembler::config_type assembler_config(&problem_reporter);
     assembler_config.enable_debug_output();
     osmium::area::MultipolygonCollector<osmium::area::Assembler> collector(assembler_config);
@@ -275,7 +169,7 @@ int main(int argc, char* argv[]) {
     location_handler_type location_handler(index);
     location_handler.ignore_errors();
 
-    TestHandler test_handler(data_source);
+    TestHandler test_handler(dataset);
 
     std::cerr << "Pass 2...\n";
     osmium::io::Reader reader2(input_filename);
@@ -284,8 +178,5 @@ int main(int argc, char* argv[]) {
     }));
     reader2.close();
     std::cerr << "Pass 2 done\n";
-
-    OGRDataSource::DestroyDataSource(data_source);
-    OGRCleanupAll();
 }
 

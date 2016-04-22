@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,9 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
+#include <cstddef>
 #include <cstring>
 #include <initializer_list>
+#include <limits>
 #include <new>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -47,13 +51,12 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/types.hpp>
-#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
     namespace memory {
         class Buffer;
-    }
+    } // namespace memory
 
     namespace builder {
 
@@ -76,6 +79,12 @@ namespace osmium {
              * @param value Tag value (0-terminated string).
              */
             void add_tag(const char* key, const char* value) {
+                if (std::strlen(key) > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM tag key is too long");
+                }
+                if (std::strlen(value) > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM tag value is too long");
+                }
                 add_size(append(key) + append(value));
             }
 
@@ -87,8 +96,15 @@ namespace osmium {
              * @param value Pointer to tag value.
              * @param value_length Length of value (not including the \0 byte).
              */
-            void add_tag(const char* key, const string_size_type key_length, const char* value, const string_size_type value_length) {
-                add_size(append(key, key_length) + append_zero() + append(value, value_length) + append_zero());
+            void add_tag(const char* key, const size_t key_length, const char* value, const size_t value_length) {
+                if (key_length > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM tag key is too long");
+                }
+                if (value_length > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM tag value is too long");
+                }
+                add_size(append(key,   osmium::memory::item_size_type(key_length))   + append_zero() +
+                         append(value, osmium::memory::item_size_type(value_length)) + append_zero());
             }
 
             /**
@@ -98,13 +114,55 @@ namespace osmium {
              * @param value Tag value.
              */
             void add_tag(const std::string& key, const std::string& value) {
-                add_size(append(key.data(),   static_cast_with_assert<string_size_type>(key.size()   + 1)) +
-                         append(value.data(), static_cast_with_assert<string_size_type>(value.size() + 1)));
+                if (key.size() > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM tag key is too long");
+                }
+                if (value.size() > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM tag value is too long");
+                }
+                add_size(append(key.data(),   osmium::memory::item_size_type(key.size())   + 1) +
+                         append(value.data(), osmium::memory::item_size_type(value.size()) + 1));
+            }
+
+            /**
+             * Add tag to buffer.
+             *
+             * @param tag Tag.
+             */
+            void add_tag(const osmium::Tag& tag) {
+                add_size(append(tag.key()) + append(tag.value()));
+            }
+
+            /**
+             * Add tag to buffer.
+             *
+             * @param tag Pair of key/value 0-terminated strings.
+             */
+            void add_tag(const std::pair<const char* const, const char* const>& tag) {
+                add_tag(tag.first, tag.second);
+            }
+            void add_tag(const std::pair<const char* const, const char*>& tag) {
+                add_tag(tag.first, tag.second);
+            }
+            void add_tag(const std::pair<const char*, const char* const>& tag) {
+                add_tag(tag.first, tag.second);
+            }
+            void add_tag(const std::pair<const char*, const char*>& tag) {
+                add_tag(tag.first, tag.second);
+            }
+
+            /**
+             * Add tag to buffer.
+             *
+             * @param tag Pair of std::string references.
+             */
+            void add_tag(const std::pair<const std::string&, const std::string&>& tag) {
+                add_tag(tag.first, tag.second);
             }
 
         }; // class TagListBuilder
 
-        template <class T>
+        template <typename T>
         class NodeRefListBuilder : public ObjectBuilder<T> {
 
         public:
@@ -122,7 +180,7 @@ namespace osmium {
                 static_cast<Builder*>(this)->add_size(sizeof(osmium::NodeRef));
             }
 
-            void add_node_ref(const object_id_type ref, const osmium::Location location = Location()) {
+            void add_node_ref(const object_id_type ref, const osmium::Location& location = Location{}) {
                 add_node_ref(NodeRef(ref, location));
             }
 
@@ -141,33 +199,15 @@ namespace osmium {
              *               will be set.
              * @param role The role.
              * @param length Length of role (without \0 termination).
+             * @throws std:length_error If role is longer than osmium::max_osm_string_length
              */
-            void add_role(osmium::RelationMember& member, const char* role, const string_size_type length) {
-                member.set_role_size(length + 1);
-                add_size(append(role, length) + append_zero());
+            void add_role(osmium::RelationMember& member, const char* role, const size_t length) {
+                if (length > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM relation member role is too long");
+                }
+                member.set_role_size(osmium::string_size_type(length) + 1);
+                add_size(append(role, osmium::memory::item_size_type(length)) + append_zero());
                 add_padding(true);
-            }
-
-            /**
-             * Add role to buffer.
-             *
-             * @param member Relation member object where the length of the role
-             *               will be set.
-             * @param role \0-terminated role.
-             */
-            void add_role(osmium::RelationMember& member, const char* role) {
-                add_role(member, role, static_cast_with_assert<string_size_type>(std::strlen(role)));
-            }
-
-            /**
-             * Add role to buffer.
-             *
-             * @param member Relation member object where the length of the role
-             *               will be set.
-             * @param role Role.
-             */
-            void add_role(osmium::RelationMember& member, const std::string& role) {
-                add_role(member, role.data(), static_cast_with_assert<string_size_type>(role.size()));
             }
 
         public:
@@ -190,8 +230,10 @@ namespace osmium {
              * @param full_member Optional pointer to the member object. If it
              *                    is available a copy will be added to the
              *                    relation.
+             * @throws std:length_error If role_length is greater than
+             *         osmium::max_osm_string_length
              */
-            void add_member(osmium::item_type type, object_id_type ref, const char* role, const string_size_type role_length, const osmium::OSMObject* full_member = nullptr) {
+            void add_member(osmium::item_type type, object_id_type ref, const char* role, const size_t role_length, const osmium::OSMObject* full_member = nullptr) {
                 osmium::RelationMember* member = reserve_space_for<osmium::RelationMember>();
                 new (member) osmium::RelationMember(ref, type, full_member != nullptr);
                 add_size(sizeof(RelationMember));
@@ -210,9 +252,10 @@ namespace osmium {
              * @param full_member Optional pointer to the member object. If it
              *                    is available a copy will be added to the
              *                    relation.
+             * @throws std:length_error If role is longer than osmium::max_osm_string_length
              */
             void add_member(osmium::item_type type, object_id_type ref, const char* role, const osmium::OSMObject* full_member = nullptr) {
-                add_member(type, ref, role, strlen(role), full_member);
+                add_member(type, ref, role, std::strlen(role), full_member);
             }
 
             /**
@@ -224,6 +267,7 @@ namespace osmium {
              * @param full_member Optional pointer to the member object. If it
              *                    is available a copy will be added to the
              *                    relation.
+             * @throws std:length_error If role is longer than osmium::max_osm_string_length
              */
             void add_member(osmium::item_type type, object_id_type ref, const std::string& role, const osmium::OSMObject* full_member = nullptr) {
                 add_member(type, ref, role.data(), role.size(), full_member);
@@ -231,7 +275,65 @@ namespace osmium {
 
         }; // class RelationMemberListBuilder
 
-        template <class T>
+        class ChangesetDiscussionBuilder : public ObjectBuilder<ChangesetDiscussion> {
+
+            osmium::ChangesetComment* m_comment = nullptr;
+
+            void add_user(osmium::ChangesetComment& comment, const char* user, const size_t length) {
+                if (length > osmium::max_osm_string_length) {
+                    throw std::length_error("OSM user name is too long");
+                }
+                comment.set_user_size(osmium::string_size_type(length) + 1);
+                add_size(append(user, osmium::memory::item_size_type(length)) + append_zero());
+            }
+
+            void add_text(osmium::ChangesetComment& comment, const char* text, const size_t length) {
+                // XXX There is no limit on the length of a comment text. We
+                // limit it here to 2^16-2 characters, because that's all that
+                // will fit into our internal data structure. This is not ideal,
+                // and will have to be discussed and cleared up.
+                if (length > std::numeric_limits<osmium::string_size_type>::max() - 1) {
+                    throw std::length_error("OSM changeset comment is too long");
+                }
+                comment.set_text_size(osmium::string_size_type(length) + 1);
+                add_size(append(text, osmium::memory::item_size_type(length)) + append_zero());
+                add_padding(true);
+            }
+
+        public:
+
+            explicit ChangesetDiscussionBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
+                ObjectBuilder<ChangesetDiscussion>(buffer, parent) {
+            }
+
+            ~ChangesetDiscussionBuilder() {
+                assert(!m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
+                add_padding();
+            }
+
+            void add_comment(osmium::Timestamp date, osmium::user_id_type uid, const char* user) {
+                assert(!m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
+                m_comment = reserve_space_for<osmium::ChangesetComment>();
+                new (m_comment) osmium::ChangesetComment(date, uid);
+                add_size(sizeof(ChangesetComment));
+                add_user(*m_comment, user, std::strlen(user));
+            }
+
+            void add_comment_text(const char* text) {
+                assert(m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
+                add_text(*m_comment, text, std::strlen(text));
+                m_comment = nullptr;
+            }
+
+            void add_comment_text(const std::string& text) {
+                assert(m_comment && "You have to always call both add_comment() and then add_comment_text() in that order for each comment!");
+                add_text(*m_comment, text.c_str(), text.size());
+                m_comment = nullptr;
+            }
+
+        }; // class ChangesetDiscussionBuilder
+
+        template <typename T>
         class OSMObjectBuilder : public ObjectBuilder<T> {
 
         public:

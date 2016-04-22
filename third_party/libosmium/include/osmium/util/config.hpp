@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -49,7 +49,7 @@ namespace osmium {
             if (env) {
                 return std::atoi(env);
             }
-            return -2;
+            return 0;
         }
 
         inline bool use_pool_threads_for_pbf_parsing() {

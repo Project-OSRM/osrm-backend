@@ -17,15 +17,15 @@ Feature: Bike - Handle ferry routes
             | efg   | primary |       |         |
 
         When I route I should get
-            | from | to | route       |
-            | a    | g  | abc,cde,efg |
-            | b    | f  | abc,cde,efg |
-            | e    | c  | cde         |
-            | e    | b  | cde,abc     |
-            | e    | a  | cde,abc     |
-            | c    | e  | cde         |
-            | c    | f  | cde,efg     |
-            | c    | g  | cde,efg     |
+            | from | to | route           |
+            | a    | g  | abc,cde,efg,efg |
+            | b    | f  | abc,cde,efg,efg |
+            | e    | c  | cde,cde         |
+            | e    | b  | cde,abc,abc     |
+            | e    | a  | cde,abc,abc     |
+            | c    | e  | cde,cde         |
+            | c    | f  | cde,efg,efg     |
+            | c    | g  | cde,efg,efg     |
 
     Scenario: Bike - Ferry duration, single node
         Given the node map
@@ -59,5 +59,5 @@ Feature: Bike - Handle ferry routes
 
         When I route I should get
             | from | to | route | time       |
-            | a    | d  | abcd  | 3600s +-10 |
-            | d    | a  | abcd  | 3600s +-10 |
+            | a    | d  | abcd,abcd  | 3600s +-10 |
+            | d    | a  | abcd,abcd  | 3600s +-10 |

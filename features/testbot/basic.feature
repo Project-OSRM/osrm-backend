@@ -14,9 +14,9 @@ Feature: Basic Routing
             | ab    |
 
         When I route I should get
-            | from | to | route |
-            | a    | b  | ab    |
-            | b    | a  | ab    |
+            | from | to | route    |
+            | a    | b  | ab,ab    |
+            | b    | a  | ab,ab    |
 
     Scenario: Routing in between two nodes of way
         Given the node map
@@ -27,9 +27,9 @@ Feature: Basic Routing
             | abcd  |
 
         When I route I should get
-            | from | to | route |
-            | 1    | 2  | abcd  |
-            | 2    | 1  | abcd  |
+            | from | to | route      |
+            | 1    | 2  | abcd,abcd  |
+            | 2    | 1  | abcd,abcd  |
 
     Scenario: Routing between the middle nodes of way
         Given the node map
@@ -40,19 +40,19 @@ Feature: Basic Routing
             | abcdef |
 
         When I route I should get
-            | from | to | route  |
-            | b    | c  | abcdef |
-            | b    | d  | abcdef |
-            | b    | e  | abcdef |
-            | c    | b  | abcdef |
-            | c    | d  | abcdef |
-            | c    | e  | abcdef |
-            | d    | b  | abcdef |
-            | d    | c  | abcdef |
-            | d    | e  | abcdef |
-            | e    | b  | abcdef |
-            | e    | c  | abcdef |
-            | e    | d  | abcdef |
+            | from | to | route         |
+            | b    | c  | abcdef,abcdef |
+            | b    | d  | abcdef,abcdef |
+            | b    | e  | abcdef,abcdef |
+            | c    | b  | abcdef,abcdef |
+            | c    | d  | abcdef,abcdef |
+            | c    | e  | abcdef,abcdef |
+            | d    | b  | abcdef,abcdef |
+            | d    | c  | abcdef,abcdef |
+            | d    | e  | abcdef,abcdef |
+            | e    | b  | abcdef,abcdef |
+            | e    | c  | abcdef,abcdef |
+            | e    | d  | abcdef,abcdef |
 
     Scenario: Two ways connected in a straight line
         Given the node map
@@ -64,13 +64,13 @@ Feature: Basic Routing
             | bc    |
 
         When I route I should get
-            | from | to | route |
-            | a    | c  | ab,bc |
-            | c    | a  | bc,ab |
-            | a    | b  | ab    |
-            | b    | a  | ab    |
-            | b    | c  | bc    |
-            | c    | b  | bc    |
+            | from | to | route    |
+            | a    | c  | ab,bc,bc |
+            | c    | a  | bc,ab,ab |
+            | a    | b  | ab,ab    |
+            | b    | a  | ab,ab    |
+            | b    | c  | bc,bc    |
+            | c    | b  | bc,bc    |
 
     Scenario: 2 unconnected parallel ways
         Given the node map
@@ -83,33 +83,33 @@ Feature: Basic Routing
             | def   |
 
         When I route I should get
-            | from | to | route |
-            | a    | b  | abc   |
-            | b    | a  | abc   |
-            | b    | c  | abc   |
-            | c    | b  | abc   |
-            | d    | e  | def   |
-            | e    | d  | def   |
-            | e    | f  | def   |
-            | f    | e  | def   |
-            | a    | d  |       |
-            | d    | a  |       |
-            | b    | d  |       |
-            | d    | b  |       |
-            | c    | d  |       |
-            | d    | c  |       |
-            | a    | e  |       |
-            | e    | a  |       |
-            | b    | e  |       |
-            | e    | b  |       |
-            | c    | e  |       |
-            | e    | c  |       |
-            | a    | f  |       |
-            | f    | a  |       |
-            | b    | f  |       |
-            | f    | b  |       |
-            | c    | f  |       |
-            | f    | c  |       |
+            | from | to | route   |
+            | a    | b  | abc,abc |
+            | b    | a  | abc,abc |
+            | b    | c  | abc,abc |
+            | c    | b  | abc,abc |
+            | d    | e  | def,def |
+            | e    | d  | def,def |
+            | e    | f  | def,def |
+            | f    | e  | def,def |
+            | a    | d  |         |
+            | d    | a  |         |
+            | b    | d  |         |
+            | d    | b  |         |
+            | c    | d  |         |
+            | d    | c  |         |
+            | a    | e  |         |
+            | e    | a  |         |
+            | b    | e  |         |
+            | e    | b  |         |
+            | c    | e  |         |
+            | e    | c  |         |
+            | a    | f  |         |
+            | f    | a  |         |
+            | b    | f  |         |
+            | f    | b  |         |
+            | c    | f  |         |
+            | f    | c  |         |
 
     Scenario: 3 ways connected in a triangle
         Given the node map
@@ -124,13 +124,13 @@ Feature: Basic Routing
             | ca    |
 
         When I route I should get
-            | from | to | route |
-            | a    | b  | ab    |
-            | a    | c  | ca    |
-            | b    | c  | bc    |
-            | b    | a  | ab    |
-            | c    | a  | ca    |
-            | c    | b  | bc    |
+            | from | to | route  |
+            | a    | b  | ab,ab  |
+            | a    | c  | ca,ca  |
+            | b    | c  | bc,bc  |
+            | b    | a  | ab,ab  |
+            | c    | a  | ca,ca  |
+            | c    | b  | bc,bc  |
 
     Scenario: 3 connected triangles
         Given a grid size of 100 meters
@@ -157,12 +157,12 @@ Feature: Basic Routing
 
         When I route I should get
             | from | to | route |
-            | a    | b  | ab    |
-            | a    | c  | ca    |
-            | b    | c  | bc    |
-            | b    | a  | ab    |
-            | c    | a  | ca    |
-            | c    | b  | bc    |
+            | a    | b  | ab,ab |
+            | a    | c  | ca,ca |
+            | b    | c  | bc,bc |
+            | b    | a  | ab,ab |
+            | c    | a  | ca,ca |
+            | c    | b  | bc,bc |
 
     Scenario: To ways connected at a 45 degree angle
         Given the node map
@@ -176,13 +176,13 @@ Feature: Basic Routing
             | cde   |
 
         When I route I should get
-            | from | to | route   |
-            | b    | d  | abc,cde |
-            | a    | e  | abc,cde |
-            | a    | c  | abc     |
-            | c    | a  | abc     |
-            | c    | e  | cde     |
-            | e    | c  | cde     |
+            | from | to | route       |
+            | b    | d  | abc,cde,cde |
+            | a    | e  | abc,cde,cde |
+            | a    | c  | abc,abc     |
+            | c    | a  | abc,abc     |
+            | c    | e  | cde,cde     |
+            | e    | c  | cde,cde     |
 
     Scenario: Grid city center
         Given the node map
@@ -203,11 +203,11 @@ Feature: Basic Routing
             | dhlp  |
 
         When I route I should get
-            | from | to | route |
-            | f    | g  | efgh  |
-            | g    | f  | efgh  |
-            | f    | j  | bfjn  |
-            | j    | f  | bfjn  |
+            | from | to | route     |
+            | f    | g  | efgh,efgh |
+            | g    | f  | efgh,efgh |
+            | f    | j  | bfjn,bfjn |
+            | j    | f  | bfjn,bfjn |
 
     Scenario: Grid city periphery
         Given the node map
@@ -228,11 +228,11 @@ Feature: Basic Routing
             | dhlp  |
 
         When I route I should get
-            | from | to | route |
-            | a    | d  | abcd  |
-            | d    | a  | abcd  |
-            | a    | m  | aeim  |
-            | m    | a  | aeim  |
+            | from | to | route      |
+            | a    | d  | abcd,abcd  |
+            | d    | a  | abcd,abcd  |
+            | a    | m  | aeim,aeim  |
+            | m    | a  | aeim,aeim  |
     
     Scenario: Testbot - Triangle challenge
         Given the node map
@@ -249,5 +249,5 @@ Feature: Basic Routing
 
         When I route I should get
             | from | to | route |
-            | d    | c  | de,ce |
-            | e    | d  | de    |
+            | d    | c  | de,ce,ce |
+            | e    | d  | de,de    |

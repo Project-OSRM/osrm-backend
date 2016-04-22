@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM contributors
+Copyright (c) 2016, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,47 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef COORDINATE_HPP_
-#define COORDINATE_HPP_
+#ifndef GLOBAL_COORDINATE_HPP
+#define GLOBAL_COORDINATE_HPP
 
-#include <iosfwd> //for std::ostream
-#include <string>
-#include <type_traits>
+#include "util/coordinate.hpp"
 
-namespace
+namespace osrm
 {
-constexpr static const float COORDINATE_PRECISION = 1000000.f;
+using util::Coordinate;
 }
 
-struct FixedPointCoordinate
-{
-    int lat;
-    int lon;
-
-    FixedPointCoordinate();
-    FixedPointCoordinate(int lat, int lon);
-
-    template <class T>
-    FixedPointCoordinate(const T &coordinate)
-        : lat(coordinate.lat), lon(coordinate.lon)
-    {
-        static_assert(std::is_same<decltype(lat), decltype(coordinate.lat)>::value,
-                      "coordinate types incompatible");
-        static_assert(std::is_same<decltype(lon), decltype(coordinate.lon)>::value,
-                      "coordinate types incompatible");
-    }
-
-    bool is_valid() const;
-    bool operator==(const FixedPointCoordinate &other) const;
-
-    float bearing(const FixedPointCoordinate &other) const;
-    void output(std::ostream &out) const;
-};
-
-inline std::ostream &operator<<(std::ostream &out_stream, FixedPointCoordinate const &coordinate)
-{
-    coordinate.output(out_stream);
-    return out_stream;
-}
-
-#endif /* COORDINATE_HPP_ */
+#endif

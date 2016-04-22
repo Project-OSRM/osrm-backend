@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,29 +34,48 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <functional>
-#include <future>
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
+#include <osmium/handler.hpp>
+#include <osmium/io/detail/queue_util.hpp>
+#include <osmium/io/detail/string_util.hpp>
 #include <osmium/io/file.hpp>
 #include <osmium/io/file_format.hpp>
-#include <osmium/io/header.hpp>
-#include <osmium/thread/queue.hpp>
+#include <osmium/memory/buffer.hpp>
 
 namespace osmium {
 
-    namespace memory {
-        class Buffer;
-    }
+    namespace io {
+        class Header;
+    } // namespace io
 
     namespace io {
 
         namespace detail {
 
-            typedef osmium::thread::Queue<std::future<std::string>> data_queue_type;
+            class OutputBlock : public osmium::handler::Handler {
+
+            protected:
+
+                std::shared_ptr<osmium::memory::Buffer> m_input_buffer;
+
+                std::shared_ptr<std::string> m_out;
+
+                explicit OutputBlock(osmium::memory::Buffer&& buffer) :
+                    m_input_buffer(std::make_shared<osmium::memory::Buffer>(std::move(buffer))),
+                    m_out(std::make_shared<std::string>()) {
+                }
+
+                template <typename... TArgs>
+                void output_formatted(const char* format, TArgs&&... args) {
+                    append_printf_formatted_string(*m_out, format, std::forward<TArgs>(args)...);
+                }
+
+            }; // class OutputBlock;
 
             /**
              * Virtual base class for all classes writing OSM files in different
@@ -69,13 +88,19 @@ namespace osmium {
 
             protected:
 
-                osmium::io::File m_file;
-                data_queue_type& m_output_queue;
+                future_string_queue_type& m_output_queue;
+
+                /**
+                 * Wrap the string into a future and add it to the output
+                 * queue.
+                 */
+                void send_to_output_queue(std::string&& data) {
+                    add_to_queue(m_output_queue, std::move(data));
+                }
 
             public:
 
-                explicit OutputFormat(const osmium::io::File& file, data_queue_type& output_queue) :
-                    m_file(file),
+                explicit OutputFormat(future_string_queue_type& output_queue) :
                     m_output_queue(output_queue) {
                 }
 
@@ -85,15 +110,15 @@ namespace osmium {
                 OutputFormat& operator=(const OutputFormat&) = delete;
                 OutputFormat& operator=(OutputFormat&&) = delete;
 
-                virtual ~OutputFormat() {
-                }
+                virtual ~OutputFormat() noexcept = default;
 
                 virtual void write_header(const osmium::io::Header&) {
                 }
 
                 virtual void write_buffer(osmium::memory::Buffer&&) = 0;
 
-                virtual void close() = 0;
+                virtual void write_end() {
+                }
 
             }; // class OutputFormat
 
@@ -108,7 +133,7 @@ namespace osmium {
 
             public:
 
-                typedef std::function<osmium::io::detail::OutputFormat*(const osmium::io::File&, data_queue_type&)> create_output_type;
+                typedef std::function<osmium::io::detail::OutputFormat*(const osmium::io::File&, future_string_queue_type&)> create_output_type;
 
             private:
 
@@ -134,15 +159,18 @@ namespace osmium {
                     return true;
                 }
 
-                std::unique_ptr<osmium::io::detail::OutputFormat> create_output(const osmium::io::File& file, data_queue_type& output_queue) {
-                    file.check();
-
+                std::unique_ptr<osmium::io::detail::OutputFormat> create_output(const osmium::io::File& file, future_string_queue_type& output_queue) {
                     auto it = m_callbacks.find(file.format());
                     if (it != m_callbacks.end()) {
                         return std::unique_ptr<osmium::io::detail::OutputFormat>((it->second)(file, output_queue));
                     }
 
-                    throw std::runtime_error(std::string("Support for output format '") + as_string(file.format()) + "' not compiled into this binary.");
+                    throw unsupported_file_format_error(
+                                std::string("Can not open file '") +
+                                file.filename() +
+                                "' with type '" +
+                                as_string(file.format()) +
+                                "'. No support for writing this format in this program.");
                 }
 
             }; // class OutputFormatFactory

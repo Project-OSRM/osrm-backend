@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -188,7 +188,9 @@ namespace osmium {
                 linestring_type linestring_finish(size_t num_points) {
                     set_size(m_linestring_size_offset, num_points);
                     std::string data;
-                    std::swap(data, m_data);
+
+                    using std::swap;
+                    swap(data, m_data);
 
                     if (m_out_type == out_type::hex) {
                         return convert_to_hex(data);
@@ -246,7 +248,9 @@ namespace osmium {
                 multipolygon_type multipolygon_finish() {
                     set_size(m_multipolygon_size_offset, m_polygons);
                     std::string data;
-                    std::swap(data, m_data);
+
+                    using std::swap;
+                    swap(data, m_data);
 
                     if (m_out_type == out_type::hex) {
                         return convert_to_hex(data);
@@ -259,7 +263,7 @@ namespace osmium {
 
         } // namespace detail
 
-        template <class TProjection = IdentityProjection>
+        template <typename TProjection = IdentityProjection>
         using WKBFactory = GeometryFactory<osmium::geom::detail::WKBFactoryImpl, TProjection>;
 
     } // namespace geom

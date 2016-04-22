@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -43,7 +43,12 @@ namespace osmium {
 
     class OSMObject;
 
-    template <class TBasicIterator>
+    /**
+     * An input iterator wrapping any iterator over OSMObjects. When
+     * dereferenced it will yield DiffObject objects pointing to the
+     * underlying OSMObjects.
+     */
+    template <typename TBasicIterator>
     class DiffIterator : public std::iterator<std::input_iterator_tag, const osmium::DiffObject> {
 
         static_assert(std::is_base_of<osmium::OSMObject, typename TBasicIterator::value_type>::value, "TBasicIterator::value_type must derive from osmium::OSMObject");
@@ -56,36 +61,28 @@ namespace osmium {
 
         mutable osmium::DiffObject m_diff;
 
-        void set_diff() const {
+        void set_diff() const noexcept {
             assert(m_curr != m_end);
 
-            TBasicIterator prev = m_prev;
-            if (prev->type() != m_curr->type() || prev->id() != m_curr->id()) {
-                prev = m_curr;
-            }
+            bool use_curr_for_prev =                    m_prev->type() != m_curr->type() || m_prev->id() != m_curr->id();
+            bool use_curr_for_next = m_next == m_end || m_next->type() != m_curr->type() || m_next->id() != m_curr->id();
 
-            TBasicIterator next = m_next;
-            if (next == m_end || next->type() != m_curr->type() || next->id() != m_curr->id()) {
-                next = m_curr;
-            }
-
-            m_diff = osmium::DiffObject(*prev, *m_curr, *next);
+            m_diff = std::move(osmium::DiffObject{
+                *(use_curr_for_prev ? m_curr : m_prev),
+                *m_curr,
+                *(use_curr_for_next ? m_curr : m_next)
+            });
         }
 
     public:
 
-        explicit DiffIterator(TBasicIterator begin, TBasicIterator end) :
+        DiffIterator(TBasicIterator begin, TBasicIterator end) :
             m_prev(begin),
             m_curr(begin),
             m_next(begin == end ? begin : ++begin),
-            m_end(end) {
+            m_end(std::move(end)),
+            m_diff() {
         }
-
-        DiffIterator(const DiffIterator&) = default;
-        DiffIterator& operator=(const DiffIterator&) = default;
-
-        DiffIterator(DiffIterator&&) = default;
-        DiffIterator& operator=(DiffIterator&&) = default;
 
         DiffIterator& operator++() {
             m_prev = std::move(m_curr);
@@ -104,25 +101,34 @@ namespace osmium {
             return tmp;
         }
 
-        bool operator==(const DiffIterator& rhs) const {
+        bool operator==(const DiffIterator& rhs) const noexcept {
             return m_curr == rhs.m_curr && m_end == rhs.m_end;
         }
 
-        bool operator!=(const DiffIterator& rhs) const {
+        bool operator!=(const DiffIterator& rhs) const noexcept {
             return !(*this == rhs);
         }
 
-        reference operator*() const {
+        reference operator*() const noexcept {
             set_diff();
             return m_diff;
         }
 
-        pointer operator->() const {
+        pointer operator->() const noexcept {
             set_diff();
             return &m_diff;
         }
 
     }; // class DiffIterator
+
+    /**
+     * Create a DiffIterator based on the given iterators.
+     */
+    template <typename TBasicIterator>
+    inline DiffIterator<TBasicIterator> make_diff_iterator(TBasicIterator begin,
+                                                           TBasicIterator end) {
+        return DiffIterator<TBasicIterator>{begin, end};
+    }
 
 } // namespace osmium
 

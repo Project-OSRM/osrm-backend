@@ -17,8 +17,8 @@ OSRM will use 4/5 of the projected free-flow speed.
 
         When I route I should get
             | from | to | route | speed        |
-            | a    | b  | ab    | 47 km/h +- 1 |
-            | b    | c  | bc    | 47 km/h +- 1 |
+            | a    | b  | ab,ab | 47 km/h +- 1 |
+            | b    | c  | bc,bc | 47 km/h +- 1 |
 
     Scenario: Car - Advisory speed overwrites forward maxspeed
         Given the node map
@@ -31,9 +31,10 @@ OSRM will use 4/5 of the projected free-flow speed.
 
         When I route I should get
             | from | to | route | speed        |
-            | a    | b  | ab    | 47 km/h +- 1 |
-            | b    | c  | bc    | 47 km/h +- 1 |
+            | a    | b  | ab,ab | 47 km/h +- 1 |
+            | b    | c  | bc,bc | 47 km/h +- 1 |
 
+    @mokob @2162
     Scenario: Car - Advisory speed overwrites backwards maxspeed
         Given the node map
             | a | b | c |
@@ -45,9 +46,26 @@ OSRM will use 4/5 of the projected free-flow speed.
 
         When I route I should get
             | from | to | route | speed        |
-            | b    | a  | ab    | 47 km/h +- 1 |
-            | c    | b  | bc    | 47 km/h +- 1 |
+            | b    | a  | ab,ab | 47 km/h +- 1 |
+            | c    | b  | bc,bc | 47 km/h +- 1 |
 
+    @mokob @2162 @deleteme
+    Scenario: Car - Advisory speed overwrites backwards maxspeed
+        Given the node map
+            | a | b | c | d |
+
+        And the ways
+            | nodes | highway       | maxspeed:backward | maxspeed:advisory:backward |
+            | ab    | residential   |                   | 45                         |
+            | bc    | residential   | 90                | 45                         |
+            | cd    | residential   |                   | 45                         |
+
+        When I route I should get
+            | from | to | route | speed        |
+            | c    | b  | bc,bc | 47 km/h +- 1 |
+            | d    | c  | cd,cd | 47 km/h +- 1 |
+
+    @mokob @2162
     Scenario: Car - Directional advisory speeds play nice with eachother
         Given the node map
             | a | b | c |
@@ -59,9 +77,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
         When I route I should get
             | from | to | route | speed        |
-            | a    | b  | ab    | 47 km/h +- 1 |
-            | b    | a  | ab    | 59 km/h +- 1 |
-            | b    | c  | bc    | 59 km/h +- 1 |
-            | c    | b  | bc    | 47 km/h +- 1 |
+            | a    | b  | ab,ab | 47 km/h +- 1 |
+            | b    | a  | ab,ab | 59 km/h +- 1 |
+            | b    | c  | bc,bc | 59 km/h +- 1 |
+            | c    | b  | bc,bc | 47 km/h +- 1 |
 
 

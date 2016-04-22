@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -49,6 +49,7 @@ namespace osmium {
     typedef uint32_t user_id_type;            ///< Type for OSM user IDs.
     typedef int32_t  signed_user_id_type;     ///< Type for signed OSM user IDs.
     typedef uint32_t num_changes_type;        ///< Type for changeset num_changes.
+    typedef uint32_t num_comments_type;       ///< Type for changeset num_comments.
 
     /**
      * Size for strings in OSM data such as user names, tag keys, roles, etc.
@@ -56,6 +57,9 @@ namespace osmium {
      * defined limits.
      */
     typedef uint16_t string_size_type;
+
+    // maximum of 256 characters of max 4 bytes each (in UTF-8 encoding)
+    constexpr const int max_osm_string_length = 256 * 4;
 
 } // namespace osmium
 

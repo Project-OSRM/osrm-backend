@@ -1,10 +1,9 @@
-@routing @testbot @overlap
+@routing @testbot @overlap @todo
 Feature: Testbot - overlapping ways
- 
+
     Background:
         Given the profile "testbot"
 
-    @bug @610
     Scenario: Testbot - multiple way between same nodes 
     Note that cb is connecting the same two nodes as bc
         Given the node map
@@ -18,11 +17,10 @@ Feature: Testbot - overlapping ways
             | cb    | secondary |
 
         When I route I should get
-            | from | to | route    |
-            | a    | d  | ab,bc,cd |
-            | d    | a  | cd,bc,ab |
-    
-    @bug @610
+            | from | to | route       |
+            | a    | d  | ab,bc,cd,cd |
+            | d    | a  | cd,bc,ab,ab |
+
     Scenario: Testbot - area on top of way
         Given the node map
             | x | a | b | y |
@@ -34,6 +32,6 @@ Feature: Testbot - overlapping ways
             | abcda | secondary | yes  |
 
         When I route I should get
-            | from | to | route |
-            | x    | y  | xaby  |
-            | y    | x  | xaby  |
+            | from | to | route      |
+            | x    | y  | xaby,xaby  |
+            | y    | x  | xaby,xaby  |

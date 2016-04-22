@@ -8,34 +8,45 @@ TEST_CASE("Timestamp") {
 
     SECTION("can be default initialized to invalid value") {
         osmium::Timestamp t;
-        REQUIRE(0 == t);
+        REQUIRE(0 == uint32_t(t));
         REQUIRE("" == t.to_iso());
+        REQUIRE_FALSE(t.valid());
     }
 
     SECTION("invalid value is zero") {
         osmium::Timestamp t(static_cast<time_t>(0));
-        REQUIRE(0 == t);
+        REQUIRE(0 == uint32_t(t));
         REQUIRE("" == t.to_iso());
+        REQUIRE_FALSE(t.valid());
     }
 
     SECTION("can be initialized from time_t") {
         osmium::Timestamp t(static_cast<time_t>(1));
-        REQUIRE(1 == t);
+        REQUIRE(1 == uint32_t(t));
         REQUIRE("1970-01-01T00:00:01Z" == t.to_iso());
+        REQUIRE(t.valid());
+    }
+
+    SECTION("can be initialized from const char*") {
+        osmium::Timestamp t("2000-01-01T00:00:00Z");
+        REQUIRE("2000-01-01T00:00:00Z" == t.to_iso());
+        REQUIRE(t.valid());
     }
 
     SECTION("can be initialized from string") {
-        osmium::Timestamp t("2000-01-01T00:00:00Z");
+        std::string s = "2000-01-01T00:00:00Z";
+        osmium::Timestamp t(s);
         REQUIRE("2000-01-01T00:00:00Z" == t.to_iso());
+        REQUIRE(t.valid());
     }
 
     SECTION("throws if initialized from bad string") {
         REQUIRE_THROWS_AS(osmium::Timestamp("x"), std::invalid_argument);
     }
 
-    SECTION("can be implicitly cast to time_t") {
+    SECTION("can be explicitly cast to time_t") {
         osmium::Timestamp t(4242);
-        time_t x = t;
+        time_t x = t.seconds_since_epoch();
         REQUIRE(x == 4242);
     }
 
@@ -50,6 +61,10 @@ TEST_CASE("Timestamp") {
         osmium::Timestamp t1(10);
         osmium::Timestamp t2(50);
         REQUIRE(t1 < t2);
+        REQUIRE(t1 > osmium::start_of_time());
+        REQUIRE(t2 > osmium::start_of_time());
+        REQUIRE(t1 < osmium::end_of_time());
+        REQUIRE(t2 < osmium::end_of_time());
     }
 
     SECTION("can be written to stream") {

@@ -16,10 +16,6 @@ documentation.
  * @brief Contains low-level varint and zigzag encoding and decoding functions.
  */
 
-#if __BYTE_ORDER != __LITTLE_ENDIAN
-# error "This code only works on little endian machines."
-#endif
-
 #include <cstdint>
 
 #include <protozero/exception.hpp>
@@ -29,13 +25,13 @@ namespace protozero {
 /**
  * The maximum length of a 64bit varint.
  */
-const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
+constexpr const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
 
 // from https://github.com/facebook/folly/blob/master/folly/Varint.h
 /**
  * Decode a 64bit varint.
  *
- * String exception guarantee: if there is an exception the data pointer will
+ * Strong exception guarantee: if there is an exception the data pointer will
  * not be changed.
  *
  * @param[in,out] data Pointer to pointer to the input data. After the function

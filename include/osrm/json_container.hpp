@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM contributors
+Copyright (c) 2016, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,72 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-// based on
-// https://svn.apache.org/repos/asf/mesos/tags/release-0.9.0-incubating-RC0/src/common/json.hpp
-
-#ifndef JSON_CONTAINER_HPP
-#define JSON_CONTAINER_HPP
-
-#include <variant/variant.hpp>
-
-#include <iostream>
-#include <vector>
-#include <string>
-#include <unordered_map>
-
+#ifndef GLOBAL_JSON_CONTAINER_HPP
+#define GLOBAL_JSON_CONTAINER_HPP
+#include "util/json_container.hpp"
 namespace osrm
 {
-namespace json
-{
-
-struct Object;
-struct Array;
-
-struct String
-{
-    String() {}
-    String(const char *value) : value(value) {}
-    String(std::string value) : value(std::move(value)) {}
-    std::string value;
-};
-
-struct Number
-{
-    Number() {}
-    Number(double value) : value(static_cast<double>(value)) {}
-    double value;
-};
-
-struct True
-{
-};
-
-struct False
-{
-};
-
-struct Null
-{
-};
-
-using Value = mapbox::util::variant<String,
-                                    Number,
-                                    mapbox::util::recursive_wrapper<Object>,
-                                    mapbox::util::recursive_wrapper<Array>,
-                                    True,
-                                    False,
-                                    Null>;
-
-struct Object
-{
-    std::unordered_map<std::string, Value> values;
-};
-
-struct Array
-{
-    std::vector<Value> values;
-};
-
-} // namespace JSON
-} // namespace osrm
-#endif // JSON_CONTAINER_HPP
+namespace json = osrm::util::json;
+}
+#endif

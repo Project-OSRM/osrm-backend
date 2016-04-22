@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <type_traits>
 
+#include <osmium/fwd.hpp>
 #include <osmium/io/reader_iterator.hpp> // IWYU pragma: keep
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm.hpp>
@@ -43,22 +44,16 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
-    class TagList;
-    class WayNodeList;
-    class RelationMemberList;
-    class OuterRing;
-    class InnerRing;
-
     namespace memory {
         class Item;
-    }
+    } // namespace memory
 
     namespace detail {
 
         template <typename T, typename U>
         using ConstIfConst = typename std::conditional<std::is_const<T>::value, typename std::add_const<U>::type, U>::type;
 
-        template <class THandler, class TItem>
+        template <typename THandler, typename TItem>
         inline void apply_item_recurse(TItem& item, THandler& handler) {
             switch (item.type()) {
                 case osmium::item_type::undefined:
@@ -98,10 +93,13 @@ namespace osmium {
                 case osmium::item_type::inner_ring:
                     handler.inner_ring(static_cast<ConstIfConst<TItem, osmium::InnerRing>&>(item));
                     break;
+                case osmium::item_type::changeset_discussion:
+                    handler.changeset_discussion(static_cast<ConstIfConst<TItem, osmium::ChangesetDiscussion>&>(item));
+                    break;
             }
         }
 
-        template <class THandler>
+        template <typename THandler>
         inline void apply_item_recurse(const osmium::OSMEntity& item, THandler& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
@@ -128,7 +126,7 @@ namespace osmium {
             }
         }
 
-        template <class THandler>
+        template <typename THandler>
         inline void apply_item_recurse(osmium::OSMEntity& item, THandler& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
@@ -155,7 +153,7 @@ namespace osmium {
             }
         }
 
-        template <class THandler>
+        template <typename THandler>
         inline void apply_item_recurse(const osmium::OSMObject& item, THandler& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
@@ -179,7 +177,7 @@ namespace osmium {
             }
         }
 
-        template <class THandler>
+        template <typename THandler>
         inline void apply_item_recurse(osmium::OSMObject& item, THandler& handler) {
             switch (item.type()) {
                 case osmium::item_type::node:
@@ -203,18 +201,18 @@ namespace osmium {
             }
         }
 
-        template <class THandler, class TItem, class ...TRest>
+        template <typename THandler, typename TItem, typename... TRest>
         inline void apply_item_recurse(TItem& item, THandler& handler, TRest&... more) {
             apply_item_recurse(item, handler);
             apply_item_recurse(item, more...);
         }
 
-        template <class THandler>
+        template <typename THandler>
         inline void flush_recurse(THandler& handler) {
             handler.flush();
         }
 
-        template <class THandler, class ...TRest>
+        template <typename THandler, typename... TRest>
         inline void flush_recurse(THandler& handler, TRest&... more) {
             flush_recurse(handler);
             flush_recurse(more...);
@@ -222,17 +220,17 @@ namespace osmium {
 
     } // namespace detail
 
-    template <class ...THandlers>
+    template <typename... THandlers>
     inline void apply_item(const osmium::memory::Item& item, THandlers&... handlers) {
         detail::apply_item_recurse(item, handlers...);
     }
 
-    template <class ...THandlers>
+    template <typename... THandlers>
     inline void apply_item(osmium::memory::Item& item, THandlers&... handlers) {
         detail::apply_item_recurse(item, handlers...);
     }
 
-    template <class TIterator, class ...THandlers>
+    template <typename TIterator, typename... THandlers>
     inline void apply(TIterator it, TIterator end, THandlers&... handlers) {
         for (; it != end; ++it) {
             detail::apply_item_recurse(*it, handlers...);
@@ -240,12 +238,12 @@ namespace osmium {
         detail::flush_recurse(handlers...);
     }
 
-    template <class TContainer, class ...THandlers>
+    template <typename TContainer, typename... THandlers>
     inline void apply(TContainer& c, THandlers&... handlers) {
         apply(std::begin(c), std::end(c), handlers...);
     }
 
-    template <class ...THandlers>
+    template <typename... THandlers>
     inline void apply(const osmium::memory::Buffer& buffer, THandlers&... handlers) {
         apply(buffer.cbegin(), buffer.cend(), handlers...);
     }

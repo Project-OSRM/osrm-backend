@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -71,36 +71,37 @@ namespace osmium {
 
                 SparseMemMap() = default;
 
-                ~SparseMemMap() override final = default;
+                ~SparseMemMap() noexcept final = default;
 
-                void set(const TId id, const TValue value) override final {
+                void set(const TId id, const TValue value) final {
                     m_elements[id] = value;
                 }
 
-                const TValue get(const TId id) const override final {
-                    try {
-                        return m_elements.at(id);
-                    } catch (std::out_of_range&) {
+                const TValue get(const TId id) const final {
+                    auto it = m_elements.find(id);
+                    if (it == m_elements.end()) {
                         not_found_error(id);
                     }
+                    return it->second;
                 }
 
-                size_t size() const override final {
+                size_t size() const noexcept final {
                     return m_elements.size();
                 }
 
-                size_t used_memory() const override final {
+                size_t used_memory() const noexcept final {
                     return element_size * m_elements.size();
                 }
 
-                void clear() override final {
+                void clear() final {
                     m_elements.clear();
                 }
 
-                void dump_as_list(const int fd) override final {
+                void dump_as_list(const int fd) final {
                     typedef typename std::map<TId, TValue>::value_type t;
                     std::vector<t> v;
-                    std::copy(m_elements.begin(), m_elements.end(), std::back_inserter(v));
+                    v.reserve(m_elements.size());
+                    std::copy(m_elements.cbegin(), m_elements.cend(), std::back_inserter(v));
                     osmium::io::detail::reliable_write(fd, reinterpret_cast<const char*>(v.data()), sizeof(t) * v.size());
                 }
 

@@ -21,10 +21,8 @@ Feature: Retrieve geometry
             | cd    |
 
         When I route I should get
-            | from | to | route | geometry                             |
-            | a    | c  | ab,bc | _c`\|@_upzA_c`\|@_c`\|@_c`\|@_c`\|@  |
-            | b    | d  | bc,cd | _gayB_yqwC_c`\|@_c`\|@_c`\|@_c`\|@   |
+            | from | to | route    | geometry         |
+            | a    | c  | ab,bc,bc | _ibE_~cH_seK_seK |
+            | b    | d  | bc,cd,cd | _seK_hgN_seK_seK |
 
 # Mind the \ before the pipes
-# polycodec.rb decode2 '_c`|@_upzA_c`|@_c`|@_c`|@_c`|@' [[1.0, 1.5], [2.0, 2.5], [3.0, 3.5]]
-# polycodec.rb decode2 '_gayB_yqwC_c`|@_c`|@_c`|@_c`|@' [[2.0, 2.5], [3.0, 3.5], [4.0, 4.5]]

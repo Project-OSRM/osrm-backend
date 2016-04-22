@@ -15,7 +15,7 @@ Feature: Handling of UTF characters
             | cd    | Cyrillic Москва        |
 
         When I route I should get
-            | from | to | route                  |
-            | a    | b  | Scandinavian København |
-            | b    | c  | Japanese 東京            |
-            | c    | d  | Cyrillic Москва        |
+            | from | to | route                                         |
+            | a    | b  | Scandinavian København,Scandinavian København |
+            | b    | c  | Japanese 東京,Japanese 東京                    |
+            | c    | d  | Cyrillic Москва,Cyrillic Москва               |

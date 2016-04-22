@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <zlib.h>
 
+#include <osmium/io/error.hpp>
 #include <osmium/util/cast.hpp>
 
 namespace osmium {
@@ -69,7 +70,7 @@ namespace osmium {
                 );
 
                 if (result != Z_OK) {
-                    throw std::runtime_error(std::string("failed to compress data: ") + zError(result));
+                    throw io_error(std::string("failed to compress data: ") + zError(result));
                 }
 
                 output.resize(output_size);
@@ -99,7 +100,7 @@ namespace osmium {
                 );
 
                 if (result != Z_OK) {
-                    throw std::runtime_error(std::string("failed to uncompress data: ") + zError(result));
+                    throw io_error(std::string("failed to uncompress data: ") + zError(result));
                 }
 
                 return std::make_pair(output.data(), output.size());

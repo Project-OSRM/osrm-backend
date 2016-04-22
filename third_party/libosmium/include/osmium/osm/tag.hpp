@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -53,7 +53,7 @@ namespace osmium {
         Tag& operator=(const Tag&) = delete;
         Tag& operator=(Tag&&) = delete;
 
-        template <class TMember>
+        template <typename TMember>
         friend class osmium::memory::CollectionIterator;
 
         static unsigned char* after_null(unsigned char* ptr) {
@@ -122,9 +122,8 @@ namespace osmium {
             });
             if (result == cend()) {
                 return default_value;
-            } else {
-                return result->value();
             }
+            return result->value();
         }
 
         const char* operator[](const char* key) const noexcept {

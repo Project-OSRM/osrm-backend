@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -43,9 +43,19 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/util/cast.hpp>
 
 namespace osmium {
 
+    /**
+     * Convert string with object id to object_id_type.
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
     inline object_id_type string_to_object_id(const char* input) {
         assert(input);
         if (*input != '\0' && !std::isspace(*input)) {
@@ -58,6 +68,19 @@ namespace osmium {
         throw std::range_error(std::string("illegal id: '") + input + "'");
     }
 
+    /**
+     * Parse string with object type identifier followed by object id. This
+     * reads strings like "n1234" and "w10".
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     * @param types Allowed types. Must not be osmium::osm_entity_bits::nothing.
+     *
+     * @returns std::pair of type and id.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
     inline std::pair<osmium::item_type, osmium::object_id_type> string_to_object_id(const char* input, osmium::osm_entity_bits::type types) {
         assert(input);
         assert(types != osmium::osm_entity_bits::nothing);
@@ -75,7 +98,7 @@ namespace osmium {
 
     namespace detail {
 
-        inline long string_to_ulong(const char* input, const char *name) {
+        inline unsigned long string_to_ulong(const char* input, const char *name) {
             if (*input != '\0' && *input != '-' && !std::isspace(*input)) {
                 char* end;
                 auto value = std::strtoul(input, &end, 10);
@@ -88,27 +111,77 @@ namespace osmium {
 
     } // namespace detail
 
+    /**
+     * Convert string with object version to object_version_type.
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
     inline object_version_type string_to_object_version(const char* input) {
         assert(input);
-        return static_cast<object_version_type>(detail::string_to_ulong(input, "version"));
+        return static_cast_with_assert<object_version_type>(detail::string_to_ulong(input, "version"));
     }
 
+    /**
+     * Convert string with object version to object_version_type.
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
     inline changeset_id_type string_to_changeset_id(const char* input) {
         assert(input);
-        return static_cast<changeset_id_type>(detail::string_to_ulong(input, "changeset"));
+        return static_cast_with_assert<changeset_id_type>(detail::string_to_ulong(input, "changeset"));
     }
 
+    /**
+     * Convert string with user id to signed_user_id_type.
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
     inline signed_user_id_type string_to_user_id(const char* input) {
         assert(input);
         if (input[0] == '-' && input[1] == '1' && input[2] == '\0') {
             return -1;
         }
-        return static_cast<signed_user_id_type>(detail::string_to_ulong(input, "user id"));
+        return static_cast_with_assert<signed_user_id_type>(detail::string_to_ulong(input, "user id"));
     }
 
+    /**
+     * Convert string with number of changes to num_changes_type.
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
     inline num_changes_type string_to_num_changes(const char* input) {
         assert(input);
-        return static_cast<num_changes_type>(detail::string_to_ulong(input, "value for num changes"));
+        return static_cast_with_assert<num_changes_type>(detail::string_to_ulong(input, "value for num changes"));
+    }
+
+    /**
+     * Convert string with number of comments to num_comments_type.
+     *
+     * @pre input must not be nullptr.
+     *
+     * @param input Input string.
+     *
+     * @throws std::range_error if the value is out of range.
+     */
+    inline num_comments_type string_to_num_comments(const char* input) {
+        assert(input);
+        return static_cast_with_assert<num_comments_type>(detail::string_to_ulong(input, "value for num comments"));
     }
 
 } // namespace osmium

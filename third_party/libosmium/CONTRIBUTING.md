@@ -36,22 +36,21 @@ different.
 * Class names begin with uppercase chars and use CamelCase. Smaller helper
   classes are usually defined as struct and have lowercase names.
 * Macros (and only macros) are all uppercase. Use macros sparingly, usually
-  a constexpr is better.
+  a simple (maybe constexpr) inline function is better. Undef macros after use
+  if possible.
+* Macros should only be used for controlling which parts of the code should be
+  included when compiling or to avoid major code repetitions.
 * Variables, attributes, and function names are lowercase with
   `underscores_between_words`.
 * Class attribute names start with `m_` (member).
-* Template parameters are single uppercase letters or start with uppercase `T`
-  and use CamelCase.
-* Typedefs have `names_like_this_type` which end in `_type`.
-* Macros should only be used for controlling which parts of the code should be
-  included when compiling.
 * Use `descriptive_variable_names`, exceptions are well-established conventions
   like `i` for a loop variable. Iterators are usually called `it`.
 * Declare variables where they are first used (C++ style), not at the beginning
   of a function (old C style).
 * Names from external namespaces (even `std`) are always mentioned explicitly.
   Do not use `using` (except for `std::swap`). This way we can't even by
-  accident pollute the namespace of the code including Osmium.
+  accident pollute the namespace of the code using Osmium.
+* Always use the standard swap idiom: `using std::swap; swap(foo, bar);`.
 * `#include` directives appear in three "blocks" after the copyright notice.
   The blocks are separated by blank lines. First block contains `#include`s for
   standard C/C++ includes, second block for any external libs used, third
@@ -64,8 +63,20 @@ different.
 * All files have suffix `.hpp`.
 * Closing } of all classes and namespaces should have a trailing comment
   with the name of the class/namespace.
-* All constructors with one or more arguments should be declared "explicit"
-  unless there is a reason for them not to be. Document that reason.
+* All constructors with one (or more arguments if they have a default) should
+  be declared "explicit" unless there is a reason for them not to be. Document
+  that reason.
+* If a class has any of the special methods (copy/move constructor/assigment,
+  destructor) it should have all of them, possibly marking them as default or
+  deleted.
+* Typedefs have `names_like_this_type` which end in `_type`. Typedefs should
+  use the new `using foo_type = bar` syntax instead of the old
+  `typedef bar foo_type`.
+* Template parameters are single uppercase letters or start with uppercase `T`
+  and use CamelCase.
+* Always use `typename` in templates, not `class`: `template <typename T>`.
+* The ellipsis in variadic template never has a space to the left of it and
+  always has a space to the right: `template <typename... TArgs>` etc.
 
 Keep to the indentation and other styles used in the code. Use `make indent`
 in the toplevel directory to fix indentation and styling. It calls `astyle`
@@ -81,15 +92,15 @@ about which compilers support which feature and what operating system versions
 or distributions have which versions of these compilers installed.
 
 GCC 4.6   - too old, not supported (Ubuntu 12.04 LTS)
-GCC 4.7.2 - can probably not be supported (Debian wheezy/stable)
-GCC 4.7.3 - works
-GCC 4.8   - works
-clang 3.0 - too old, not supported (Debian wheezy/stable, Ubuntu 12.04 LTS)
-clang 3.2 - works
+GCC 4.7.2 - can probably not be supported (Debian wheezy)
+GCC 4.7.3 - probably works
+GCC 4.8   - works and is supported from here on
+clang 3.0 - too old, not supported (Debian wheezy, Ubuntu 12.04 LTS)
+clang 3.2 - probably works
+clang 3.5 - works and is supported from here on
 
-C++11 features you should not use:
-* Inherited Constructors (works only in GCC 4.8+ and clang 3.3+, not in Visual
-  Studio)
+Use `include/osmium/util/compatibility.hpp` if there are compatibility problems
+between compilers due to different C++11 support.
 
 
 ## Checking your code

@@ -5,10 +5,9 @@ local find_access_tag = require("lib/access").find_access_tag
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true }
+access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true, ["delivery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags = { "motorcar", "motor_vehicle", "vehicle" }
-access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
+access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
@@ -125,32 +124,31 @@ maxspeed_table = {
   ["gb:motorway"] = (70*1609)/1000,
   ["uk:nsl_single"] = (60*1609)/1000,
   ["uk:nsl_dual"] = (70*1609)/1000,
-  ["uk:motorway"] = (70*1609)/1000
+  ["uk:motorway"] = (70*1609)/1000,
+  ["none"] = 140
 }
 
--- these need to be global because they are accesed externaly
-u_turn_penalty                  = 20
-traffic_signal_penalty          = 2
-use_turn_restrictions           = true
+-- set profile properties
+properties.u_turn_penalty                  = 20
+properties.traffic_signal_penalty          = 2
+properties.use_turn_restrictions           = true
+properties.continue_straight_at_waypoint   = true
 
-local turn_penalty              = 10
+local side_road_speed_multiplier = 0.8
+
+local turn_penalty               = 10
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
-local turn_bias                 = 1.2
+local turn_bias                  = 1.2
 
-local obey_oneway               = true
-local ignore_areas              = true
+local obey_oneway                = true
+local ignore_areas               = true
 
 local abs = math.abs
 local min = math.min
 local max = math.max
 
 local speed_reduction = 0.8
-
---modes
-local mode_normal = 1
-local mode_ferry = 2
-local mode_movable_bridge = 3
 
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
@@ -184,7 +182,7 @@ end
 
 function node_function (node, result)
   -- parse access and barrier tags
-  local access = find_access_tag(node, access_tags_hierachy)
+  local access = find_access_tag(node, access_tags_hierarchy)
   if access and access ~= "" then
     if access_tag_blacklist[access] then
       result.barrier = true
@@ -241,10 +239,13 @@ function way_function (way, result)
   end
 
   -- Check if we are allowed to access the way
-  local access = find_access_tag(way, access_tags_hierachy)
+  local access = find_access_tag(way, access_tags_hierarchy)
   if access_tag_blacklist[access] then
     return
   end
+
+  result.forward_mode = mode.driving
+  result.backward_mode = mode.driving
 
   -- handling ferries and piers
   local route_speed = speed_profile[route]
@@ -254,8 +255,8 @@ function way_function (way, result)
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
     end
-    result.forward_mode = mode_ferry
-    result.backward_mode = mode_ferry
+    result.forward_mode = mode.ferry
+    result.backward_mode = mode.ferry
     result.forward_speed = route_speed
     result.backward_speed = route_speed
   end
@@ -269,8 +270,6 @@ function way_function (way, result)
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
     end
-    result.forward_mode = mode_movable_bridge
-    result.backward_mode = mode_movable_bridge
     result.forward_speed = bridge_speed
     result.backward_speed = bridge_speed
   end
@@ -309,6 +308,14 @@ function way_function (way, result)
 
   if -1 == result.forward_speed and -1 == result.backward_speed then
     return
+  end
+
+  -- reduce speed on special side roads
+  local sideway = way:get_value_by_key("side_road")
+  if "yes" == sideway or
+  "rotary" == sideway then
+    result.forward_speed = result.forward_speed * side_road_speed_multiplier
+    result.backward_speed = result.backward_speed * side_road_speed_multiplier
   end
 
   -- reduce speed on bad surfaces
@@ -368,14 +375,14 @@ function way_function (way, result)
   -- Set direction according to tags on way
   if obey_oneway then
     if oneway == "-1" then
-      result.forward_mode = 0
+      result.forward_mode = mode.inaccessible
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
-      result.backward_mode = 0
+      result.backward_mode = mode.inaccessible
     end
   end
 
@@ -383,7 +390,7 @@ function way_function (way, result)
   local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward"))
   local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward"))
   if maxspeed_forward and maxspeed_forward > 0 then
-    if 0 ~= result.forward_mode and 0 ~= result.backward_mode then
+    if mode.inaccessible ~= result.forward_mode and mode.inaccessible ~= result.backward_mode then
       result.backward_speed = result.forward_speed
     end
     result.forward_speed = maxspeed_forward
@@ -398,15 +405,15 @@ function way_function (way, result)
   local advisory_backward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:backward"))
   -- apply bi-directional advisory speed first
   if advisory_speed and advisory_speed > 0 then
-    if 0 ~= result.forward_mode then
+    if mode.inaccessible ~= result.forward_mode then
       result.forward_speed = advisory_speed
     end
-    if 0 ~= result.backward_mode then
+    if mode.inaccessible ~= result.backward_mode then
       result.backward_speed = advisory_speed
     end
   end
   if advisory_forward and advisory_forward > 0 then
-    if 0 ~= result.forward_mode and 0 ~= result.backward_mode then
+    if mode.inaccessible ~= result.forward_mode and mode.inaccessible ~= result.backward_mode then
       result.backward_speed = result.forward_speed
     end
     result.forward_speed = advisory_forward
@@ -429,7 +436,7 @@ function way_function (way, result)
     end
   end
 
-  local is_bidirectional = result.forward_mode ~= 0 and result.backward_mode ~= 0
+  local is_bidirectional = result.forward_mode ~= mode.inaccessible and result.backward_mode ~= mode.inaccessible
 
   -- scale speeds to get better avg driving times
   if result.forward_speed > 0 then
@@ -451,7 +458,7 @@ function way_function (way, result)
   end
 
   -- only allow this road as start point if it not a ferry
-  result.is_startpoint = result.forward_mode == mode_normal or result.backward_mode == mode_normal
+  result.is_startpoint = result.forward_mode == mode.driving or result.backward_mode == mode.driving
 end
 
 function turn_function (angle)

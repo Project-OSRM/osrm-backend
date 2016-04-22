@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -52,7 +52,7 @@ namespace osmium {
          * source. It hides all the buffer handling and makes the contents of a
          * source accessible as a normal STL input iterator.
          */
-        template <class TSource, class TItem = osmium::memory::Item>
+        template <typename TSource, typename TItem = osmium::memory::Item>
         class InputIterator {
 
             static_assert(std::is_base_of<osmium::memory::Item, TItem>::value, "TItem must derive from osmium::buffer::Item");
@@ -132,6 +132,44 @@ namespace osmium {
             }
 
         }; // class InputIterator
+
+        template <typename TSource, typename TItem = osmium::memory::Item>
+        class InputIteratorRange {
+
+            InputIterator<TSource, TItem> m_begin;
+            InputIterator<TSource, TItem> m_end;
+
+        public:
+
+            InputIteratorRange(InputIterator<TSource, TItem>&& begin,
+                               InputIterator<TSource, TItem>&& end) :
+                m_begin(std::move(begin)),
+                m_end(std::move(end)) {
+            }
+
+            InputIterator<TSource, TItem> begin() const noexcept {
+                return m_begin;
+            }
+
+            InputIterator<TSource, TItem> end() const noexcept {
+                return m_end;
+            }
+
+            const InputIterator<TSource, TItem> cbegin() const noexcept {
+                return m_begin;
+            }
+
+            const InputIterator<TSource, TItem> cend() const noexcept {
+                return m_end;
+            }
+
+        }; // class InputIteratorRange
+
+        template <typename TItem, typename TSource>
+        InputIteratorRange<TSource, TItem> make_input_iterator_range(TSource& source) {
+            using it_type = InputIterator<TSource, TItem>;
+            return InputIteratorRange<TSource, TItem>(it_type{source}, it_type{});
+        }
 
     } // namespace io
 

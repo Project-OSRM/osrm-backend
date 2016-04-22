@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,21 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <atomic>
 #include <cassert>
-#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <future>
-#include <iostream>
 #include <memory>
-#include <ratio>
-#include <sstream>
-#include <stdexcept>
 #include <string>
-#include <thread>
 #include <utility>
 
 #include <expat.h>
@@ -55,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/builder/builder.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/detail/input_format.hpp>
+#include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/error.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
@@ -130,23 +124,11 @@ namespace osmium {
 
     namespace io {
 
-        class File;
-
         namespace detail {
 
-            /**
-             * Once the header is fully parsed this exception will be thrown if
-             * the caller is not interested in anything else except the header.
-             * It will break off the parsing at this point.
-             *
-             * This exception is never seen by user code, it is caught internally.
-             */
-            class ParserIsDone : std::exception {
-            };
+            class XMLParser : public Parser {
 
-            class XMLParser {
-
-                static constexpr int buffer_size = 10 * 1000 * 1000;
+                static constexpr int buffer_size = 2 * 1000 * 1000;
 
                 enum class context {
                     root,
@@ -155,6 +137,9 @@ namespace osmium {
                     way,
                     relation,
                     changeset,
+                    discussion,
+                    comment,
+                    comment_text,
                     ignored_node,
                     ignored_way,
                     ignored_relation,
@@ -175,29 +160,22 @@ namespace osmium {
 
                 osmium::memory::Buffer m_buffer;
 
-                std::unique_ptr<osmium::builder::NodeBuilder>               m_node_builder;
-                std::unique_ptr<osmium::builder::WayBuilder>                m_way_builder;
-                std::unique_ptr<osmium::builder::RelationBuilder>           m_relation_builder;
-                std::unique_ptr<osmium::builder::ChangesetBuilder>          m_changeset_builder;
+                std::unique_ptr<osmium::builder::NodeBuilder>                m_node_builder;
+                std::unique_ptr<osmium::builder::WayBuilder>                 m_way_builder;
+                std::unique_ptr<osmium::builder::RelationBuilder>            m_relation_builder;
+                std::unique_ptr<osmium::builder::ChangesetBuilder>           m_changeset_builder;
+                std::unique_ptr<osmium::builder::ChangesetDiscussionBuilder> m_changeset_discussion_builder;
 
-                std::unique_ptr<osmium::builder::TagListBuilder>            m_tl_builder;
-                std::unique_ptr<osmium::builder::WayNodeListBuilder>        m_wnl_builder;
-                std::unique_ptr<osmium::builder::RelationMemberListBuilder> m_rml_builder;
+                std::unique_ptr<osmium::builder::TagListBuilder>             m_tl_builder;
+                std::unique_ptr<osmium::builder::WayNodeListBuilder>         m_wnl_builder;
+                std::unique_ptr<osmium::builder::RelationMemberListBuilder>  m_rml_builder;
 
-                osmium::thread::Queue<std::string>& m_input_queue;
-                osmium::thread::Queue<osmium::memory::Buffer>& m_queue;
-                std::promise<osmium::io::Header>& m_header_promise;
-
-                osmium::osm_entity_bits::type m_read_types;
-
-                std::atomic<bool>& m_done;
-
-                bool m_header_is_done;
+                std::string m_comment_text;
 
                 /**
                  * A C++ wrapper for the Expat parser that makes sure no memory is leaked.
                  */
-                template <class T>
+                template <typename T>
                 class ExpatXMLParser {
 
                     XML_Parser m_parser;
@@ -210,15 +188,20 @@ namespace osmium {
                         static_cast<XMLParser*>(data)->end_element(element);
                     }
 
+                    static void XMLCALL character_data_wrapper(void* data, const XML_Char* text, int len) {
+                        static_cast<XMLParser*>(data)->characters(text, len);
+                    }
+
                 public:
 
-                    ExpatXMLParser(T* callback_object) :
+                    explicit ExpatXMLParser(T* callback_object) :
                         m_parser(XML_ParserCreate(nullptr)) {
                         if (!m_parser) {
                             throw osmium::io_error("Internal error: Can not create parser");
                         }
                         XML_SetUserData(m_parser, callback_object);
                         XML_SetElementHandler(m_parser, start_element_wrapper, end_element_wrapper);
+                        XML_SetCharacterDataHandler(m_parser, character_data_wrapper);
                     }
 
                     ExpatXMLParser(const ExpatXMLParser&) = delete;
@@ -227,7 +210,7 @@ namespace osmium {
                     ExpatXMLParser& operator=(const ExpatXMLParser&) = delete;
                     ExpatXMLParser& operator=(ExpatXMLParser&&) = delete;
 
-                    ~ExpatXMLParser() {
+                    ~ExpatXMLParser() noexcept {
                         XML_ParserFree(m_parser);
                     }
 
@@ -239,125 +222,13 @@ namespace osmium {
 
                 }; // class ExpatXMLParser
 
-                /**
-                 * A helper class that makes sure a promise is kept. It stores
-                 * a reference to some piece of data and to a promise and, on
-                 * destruction, sets the value of the promise from the data.
-                 */
-                template <class T>
-                class PromiseKeeper {
-
-                    T& m_data;
-                    std::promise<T>& m_promise;
-                    bool m_done;
-
-                public:
-
-                    PromiseKeeper(T& data, std::promise<T>& promise) :
-                        m_data(data),
-                        m_promise(promise),
-                        m_done(false) {
+                template <typename T>
+                static void check_attributes(const XML_Char** attrs, T check) {
+                    while (*attrs) {
+                        check(attrs[0], attrs[1]);
+                        attrs += 2;
                     }
-
-                    void fullfill_promise() {
-                        if (!m_done) {
-                            m_promise.set_value(m_data);
-                            m_done = true;
-                        }
-                    }
-
-                    ~PromiseKeeper() {
-                        fullfill_promise();
-                    }
-
-                }; // class PromiseKeeper
-
-            public:
-
-                explicit XMLParser(osmium::thread::Queue<std::string>& input_queue, osmium::thread::Queue<osmium::memory::Buffer>& queue, std::promise<osmium::io::Header>& header_promise, osmium::osm_entity_bits::type read_types, std::atomic<bool>& done) :
-                    m_context(context::root),
-                    m_last_context(context::root),
-                    m_in_delete_section(false),
-                    m_header(),
-                    m_buffer(buffer_size),
-                    m_node_builder(),
-                    m_way_builder(),
-                    m_relation_builder(),
-                    m_changeset_builder(),
-                    m_tl_builder(),
-                    m_wnl_builder(),
-                    m_rml_builder(),
-                    m_input_queue(input_queue),
-                    m_queue(queue),
-                    m_header_promise(header_promise),
-                    m_read_types(read_types),
-                    m_done(done),
-                    m_header_is_done(false) {
                 }
-
-                /**
-                 * The copy constructor is needed for storing XMLParser in a std::function.
-                 * The copy will look the same as if it has been initialized with the
-                 * same parameters as the original. Any state changes in the original will
-                 * not be reflected in the copy.
-                 */
-                XMLParser(const XMLParser& other) :
-                    m_context(context::root),
-                    m_last_context(context::root),
-                    m_in_delete_section(false),
-                    m_header(),
-                    m_buffer(buffer_size),
-                    m_node_builder(),
-                    m_way_builder(),
-                    m_relation_builder(),
-                    m_changeset_builder(),
-                    m_tl_builder(),
-                    m_wnl_builder(),
-                    m_rml_builder(),
-                    m_input_queue(other.m_input_queue),
-                    m_queue(other.m_queue),
-                    m_header_promise(other.m_header_promise),
-                    m_read_types(other.m_read_types),
-                    m_done(other.m_done),
-                    m_header_is_done(other.m_header_is_done) {
-                }
-
-                XMLParser(XMLParser&&) = default;
-
-                XMLParser& operator=(const XMLParser&) = delete;
-
-                XMLParser& operator=(XMLParser&&) = default;
-
-                ~XMLParser() = default;
-
-                bool operator()() {
-                    ExpatXMLParser<XMLParser> parser(this);
-                    PromiseKeeper<osmium::io::Header> promise_keeper(m_header, m_header_promise);
-                    bool last;
-                    do {
-                        std::string data;
-                        m_input_queue.wait_and_pop(data);
-                        last = data.empty();
-                        try {
-                            parser(data, last);
-                            if (m_header_is_done) {
-                                promise_keeper.fullfill_promise();
-                            }
-                        } catch (ParserIsDone&) {
-                            return true;
-                        } catch (...) {
-                            m_queue.push(osmium::memory::Buffer()); // empty buffer to signify eof
-                            throw;
-                        }
-                    } while (!last && !m_done);
-                    if (m_buffer.committed() > 0) {
-                        m_queue.push(std::move(m_buffer));
-                    }
-                    m_queue.push(osmium::memory::Buffer()); // empty buffer to signify eof
-                    return true;
-                }
-
-            private:
 
                 const char* init_object(osmium::OSMObject& object, const XML_Char** attrs) {
                     const char* user = "";
@@ -367,17 +238,18 @@ namespace osmium {
                     }
 
                     osmium::Location location;
-                    for (int count = 0; attrs[count]; count += 2) {
-                        if (!strcmp(attrs[count], "lon")) {
-                            location.set_lon(std::atof(attrs[count+1])); // XXX doesn't detect garbage after the number
-                        } else if (!strcmp(attrs[count], "lat")) {
-                            location.set_lat(std::atof(attrs[count+1])); // XXX doesn't detect garbage after the number
-                        } else if (!strcmp(attrs[count], "user")) {
-                            user = attrs[count+1];
+
+                    check_attributes(attrs, [&location, &user, &object](const XML_Char* name, const XML_Char* value) {
+                        if (!strcmp(name, "lon")) {
+                            location.set_lon(std::atof(value)); // XXX doesn't detect garbage after the number
+                        } else if (!strcmp(name, "lat")) {
+                            location.set_lat(std::atof(value)); // XXX doesn't detect garbage after the number
+                        } else if (!strcmp(name, "user")) {
+                            user = value;
                         } else {
-                            object.set_attribute(attrs[count], attrs[count+1]);
+                            object.set_attribute(name, value);
                         }
-                    }
+                    });
 
                     if (location && object.type() == osmium::item_type::node) {
                         static_cast<osmium::Node&>(object).set_location(location);
@@ -392,21 +264,21 @@ namespace osmium {
 
                     osmium::Location min;
                     osmium::Location max;
-                    for (int count = 0; attrs[count]; count += 2) {
-                        if (!strcmp(attrs[count], "min_lon")) {
-                            min.set_lon(atof(attrs[count+1]));
-                        } else if (!strcmp(attrs[count], "min_lat")) {
-                            min.set_lat(atof(attrs[count+1]));
-                        } else if (!strcmp(attrs[count], "max_lon")) {
-                            max.set_lon(atof(attrs[count+1]));
-                        } else if (!strcmp(attrs[count], "max_lat")) {
-                            max.set_lat(atof(attrs[count+1]));
-                        } else if (!strcmp(attrs[count], "user")) {
-                            user = attrs[count+1];
+                    check_attributes(attrs, [&min, &max, &user, &new_changeset](const XML_Char* name, const XML_Char* value) {
+                        if (!strcmp(name, "min_lon")) {
+                            min.set_lon(atof(value));
+                        } else if (!strcmp(name, "min_lat")) {
+                            min.set_lat(atof(value));
+                        } else if (!strcmp(name, "max_lon")) {
+                            max.set_lon(atof(value));
+                        } else if (!strcmp(name, "max_lat")) {
+                            max.set_lat(atof(value));
+                        } else if (!strcmp(name, "user")) {
+                            user = value;
                         } else {
-                            new_changeset.set_attribute(attrs[count], attrs[count+1]);
+                            new_changeset.set_attribute(name, value);
                         }
-                    }
+                    });
 
                     new_changeset.bounds().extend(min);
                     new_changeset.bounds().extend(max);
@@ -414,32 +286,24 @@ namespace osmium {
                     builder->add_user(user);
                 }
 
-                void check_tag(osmium::builder::Builder* builder, const XML_Char* element, const XML_Char** attrs) {
-                    if (!strcmp(element, "tag")) {
-                        m_wnl_builder.reset();
-                        m_rml_builder.reset();
-
-                        const char* key = "";
-                        const char* value = "";
-                        for (int count = 0; attrs[count]; count += 2) {
-                            if (attrs[count][0] == 'k' && attrs[count][1] == 0) {
-                                key = attrs[count+1];
-                            } else if (attrs[count][0] == 'v' && attrs[count][1] == 0) {
-                                value = attrs[count+1];
-                            }
+                void get_tag(osmium::builder::Builder* builder, const XML_Char** attrs) {
+                    const char* k = "";
+                    const char* v = "";
+                    check_attributes(attrs, [&k, &v](const XML_Char* name, const XML_Char* value) {
+                        if (name[0] == 'k' && name[1] == 0) {
+                            k = value;
+                        } else if (name[0] == 'v' && name[1] == 0) {
+                            v = value;
                         }
-                        if (!m_tl_builder) {
-                            m_tl_builder = std::unique_ptr<osmium::builder::TagListBuilder>(new osmium::builder::TagListBuilder(m_buffer, builder));
-                        }
-                        m_tl_builder->add_tag(key, value);
+                    });
+                    if (!m_tl_builder) {
+                        m_tl_builder = std::unique_ptr<osmium::builder::TagListBuilder>(new osmium::builder::TagListBuilder(m_buffer, builder));
                     }
+                    m_tl_builder->add_tag(k, v);
                 }
 
-                void header_is_done() {
-                    m_header_is_done = true;
-                    if (m_read_types == osmium::osm_entity_bits::nothing) {
-                        throw ParserIsDone();
-                    }
+                void mark_header_as_done() {
+                    set_header_value(m_header);
                 }
 
                 void start_element(const XML_Char* element, const XML_Char** attrs) {
@@ -449,16 +313,16 @@ namespace osmium {
                                 if (!strcmp(element, "osmChange")) {
                                     m_header.set_has_multiple_object_versions(true);
                                 }
-                                for (int count = 0; attrs[count]; count += 2) {
-                                    if (!strcmp(attrs[count], "version")) {
-                                        m_header.set("version", attrs[count+1]);
-                                        if (strcmp(attrs[count+1], "0.6")) {
-                                            throw osmium::format_version_error(attrs[count+1]);
+                                check_attributes(attrs, [this](const XML_Char* name, const XML_Char* value) {
+                                    if (!strcmp(name, "version")) {
+                                        m_header.set("version", value);
+                                        if (strcmp(value, "0.6")) {
+                                            throw osmium::format_version_error(value);
                                         }
-                                    } else if (!strcmp(attrs[count], "generator")) {
-                                        m_header.set("generator", attrs[count+1]);
+                                    } else if (!strcmp(name, "generator")) {
+                                        m_header.set("generator", value);
                                     }
-                                }
+                                });
                                 if (m_header.get("version") == "") {
                                     throw osmium::format_version_error();
                                 }
@@ -470,8 +334,8 @@ namespace osmium {
                         case context::top:
                             assert(!m_tl_builder);
                             if (!strcmp(element, "node")) {
-                                header_is_done();
-                                if (m_read_types & osmium::osm_entity_bits::node) {
+                                mark_header_as_done();
+                                if (read_types() & osmium::osm_entity_bits::node) {
                                     m_node_builder = std::unique_ptr<osmium::builder::NodeBuilder>(new osmium::builder::NodeBuilder(m_buffer));
                                     m_node_builder->add_user(init_object(m_node_builder->object(), attrs));
                                     m_context = context::node;
@@ -479,8 +343,8 @@ namespace osmium {
                                     m_context = context::ignored_node;
                                 }
                             } else if (!strcmp(element, "way")) {
-                                header_is_done();
-                                if (m_read_types & osmium::osm_entity_bits::way) {
+                                mark_header_as_done();
+                                if (read_types() & osmium::osm_entity_bits::way) {
                                     m_way_builder = std::unique_ptr<osmium::builder::WayBuilder>(new osmium::builder::WayBuilder(m_buffer));
                                     m_way_builder->add_user(init_object(m_way_builder->object(), attrs));
                                     m_context = context::way;
@@ -488,8 +352,8 @@ namespace osmium {
                                     m_context = context::ignored_way;
                                 }
                             } else if (!strcmp(element, "relation")) {
-                                header_is_done();
-                                if (m_read_types & osmium::osm_entity_bits::relation) {
+                                mark_header_as_done();
+                                if (read_types() & osmium::osm_entity_bits::relation) {
                                     m_relation_builder = std::unique_ptr<osmium::builder::RelationBuilder>(new osmium::builder::RelationBuilder(m_buffer));
                                     m_relation_builder->add_user(init_object(m_relation_builder->object(), attrs));
                                     m_context = context::relation;
@@ -497,8 +361,8 @@ namespace osmium {
                                     m_context = context::ignored_relation;
                                 }
                             } else if (!strcmp(element, "changeset")) {
-                                header_is_done();
-                                if (m_read_types & osmium::osm_entity_bits::changeset) {
+                                mark_header_as_done();
+                                if (read_types() & osmium::osm_entity_bits::changeset) {
                                     m_changeset_builder = std::unique_ptr<osmium::builder::ChangesetBuilder>(new osmium::builder::ChangesetBuilder(m_buffer));
                                     init_changeset(m_changeset_builder.get(), attrs);
                                     m_context = context::changeset;
@@ -508,17 +372,17 @@ namespace osmium {
                             } else if (!strcmp(element, "bounds")) {
                                 osmium::Location min;
                                 osmium::Location max;
-                                for (int count = 0; attrs[count]; count += 2) {
-                                    if (!strcmp(attrs[count], "minlon")) {
-                                        min.set_lon(atof(attrs[count+1]));
-                                    } else if (!strcmp(attrs[count], "minlat")) {
-                                        min.set_lat(atof(attrs[count+1]));
-                                    } else if (!strcmp(attrs[count], "maxlon")) {
-                                        max.set_lon(atof(attrs[count+1]));
-                                    } else if (!strcmp(attrs[count], "maxlat")) {
-                                        max.set_lat(atof(attrs[count+1]));
+                                check_attributes(attrs, [&min, &max](const XML_Char* name, const XML_Char* value) {
+                                    if (!strcmp(name, "minlon")) {
+                                        min.set_lon(atof(value));
+                                    } else if (!strcmp(name, "minlat")) {
+                                        min.set_lat(atof(value));
+                                    } else if (!strcmp(name, "maxlon")) {
+                                        max.set_lon(atof(value));
+                                    } else if (!strcmp(name, "maxlat")) {
+                                        max.set_lat(atof(value));
                                     }
-                                }
+                                });
                                 osmium::Box box;
                                 box.extend(min).extend(max);
                                 m_header.add_box(box);
@@ -529,7 +393,9 @@ namespace osmium {
                         case context::node:
                             m_last_context = context::node;
                             m_context = context::in_object;
-                            check_tag(m_node_builder.get(), element, attrs);
+                            if (!strcmp(element, "tag")) {
+                                get_tag(m_node_builder.get(), attrs);
+                            }
                             break;
                         case context::way:
                             m_last_context = context::way;
@@ -541,13 +407,14 @@ namespace osmium {
                                     m_wnl_builder = std::unique_ptr<osmium::builder::WayNodeListBuilder>(new osmium::builder::WayNodeListBuilder(m_buffer, m_way_builder.get()));
                                 }
 
-                                for (int count = 0; attrs[count]; count += 2) {
-                                    if (!strcmp(attrs[count], "ref")) {
-                                        m_wnl_builder->add_node_ref(osmium::string_to_object_id(attrs[count+1]));
+                                check_attributes(attrs, [this](const XML_Char* name, const XML_Char* value) {
+                                    if (!strcmp(name, "ref")) {
+                                        m_wnl_builder->add_node_ref(osmium::string_to_object_id(value));
                                     }
-                                }
-                            } else {
-                                check_tag(m_way_builder.get(), element, attrs);
+                                });
+                            } else if (!strcmp(element, "tag")) {
+                                m_wnl_builder.reset();
+                                get_tag(m_way_builder.get(), attrs);
                             }
                             break;
                         case context::relation:
@@ -560,28 +427,68 @@ namespace osmium {
                                     m_rml_builder = std::unique_ptr<osmium::builder::RelationMemberListBuilder>(new osmium::builder::RelationMemberListBuilder(m_buffer, m_relation_builder.get()));
                                 }
 
-                                char type = 'x';
-                                object_id_type ref  = 0;
+                                item_type type = item_type::undefined;
+                                object_id_type ref = 0;
                                 const char* role = "";
-                                for (int count = 0; attrs[count]; count += 2) {
-                                    if (!strcmp(attrs[count], "type")) {
-                                        type = static_cast<char>(attrs[count+1][0]);
-                                    } else if (!strcmp(attrs[count], "ref")) {
-                                        ref = osmium::string_to_object_id(attrs[count+1]);
-                                    } else if (!strcmp(attrs[count], "role")) {
-                                        role = static_cast<const char*>(attrs[count+1]);
+                                check_attributes(attrs, [&type, &ref, &role](const XML_Char* name, const XML_Char* value) {
+                                    if (!strcmp(name, "type")) {
+                                        type = char_to_item_type(value[0]);
+                                    } else if (!strcmp(name, "ref")) {
+                                        ref = osmium::string_to_object_id(value);
+                                    } else if (!strcmp(name, "role")) {
+                                        role = static_cast<const char*>(value);
                                     }
+                                });
+                                if (type != item_type::node && type != item_type::way && type != item_type::relation) {
+                                    throw osmium::xml_error("Unknown type on relation member");
                                 }
-                                // XXX assert type, ref, role are set
-                                m_rml_builder->add_member(char_to_item_type(type), ref, role);
-                            } else {
-                                check_tag(m_relation_builder.get(), element, attrs);
+                                if (ref == 0) {
+                                    throw osmium::xml_error("Missing ref on relation member");
+                                }
+                                m_rml_builder->add_member(type, ref, role);
+                            } else if (!strcmp(element, "tag")) {
+                                m_rml_builder.reset();
+                                get_tag(m_relation_builder.get(), attrs);
                             }
                             break;
                         case context::changeset:
                             m_last_context = context::changeset;
-                            m_context = context::in_object;
-                            check_tag(m_changeset_builder.get(), element, attrs);
+                            if (!strcmp(element, "discussion")) {
+                                m_context = context::discussion;
+                                m_tl_builder.reset();
+                                if (!m_changeset_discussion_builder) {
+                                    m_changeset_discussion_builder = std::unique_ptr<osmium::builder::ChangesetDiscussionBuilder>(new osmium::builder::ChangesetDiscussionBuilder(m_buffer, m_changeset_builder.get()));
+                                }
+                            } else if (!strcmp(element, "tag")) {
+                                m_context = context::in_object;
+                                m_changeset_discussion_builder.reset();
+                                get_tag(m_changeset_builder.get(), attrs);
+                            }
+                            break;
+                        case context::discussion:
+                            if (!strcmp(element, "comment")) {
+                                m_context = context::comment;
+                                osmium::Timestamp date;
+                                osmium::user_id_type uid = 0;
+                                const char* user = "";
+                                check_attributes(attrs, [&date, &uid, &user](const XML_Char* name, const XML_Char* value) {
+                                    if (!strcmp(name, "date")) {
+                                        date = osmium::Timestamp(value);
+                                    } else if (!strcmp(name, "uid")) {
+                                        uid = osmium::string_to_user_id(value);
+                                    } else if (!strcmp(name, "user")) {
+                                        user = static_cast<const char*>(value);
+                                    }
+                                });
+                                m_changeset_discussion_builder->add_comment(date, uid, user);
+                            }
+                            break;
+                        case context::comment:
+                            if (!strcmp(element, "text")) {
+                                m_context = context::comment_text;
+                            }
+                            break;
+                        case context::comment_text:
                             break;
                         case context::ignored_node:
                             break;
@@ -604,7 +511,7 @@ namespace osmium {
                             break;
                         case context::top:
                             if (!strcmp(element, "osm") || !strcmp(element, "osmChange")) {
-                                header_is_done();
+                                mark_header_as_done();
                                 m_context = context::root;
                             } else if (!strcmp(element, "delete")) {
                                 m_in_delete_section = false;
@@ -639,10 +546,24 @@ namespace osmium {
                         case context::changeset:
                             assert(!strcmp(element, "changeset"));
                             m_tl_builder.reset();
+                            m_changeset_discussion_builder.reset();
                             m_changeset_builder.reset();
                             m_buffer.commit();
                             m_context = context::top;
                             flush_buffer();
+                            break;
+                        case context::discussion:
+                            assert(!strcmp(element, "discussion"));
+                            m_context = context::changeset;
+                            break;
+                        case context::comment:
+                            assert(!strcmp(element, "comment"));
+                            m_context = context::discussion;
+                            break;
+                        case context::comment_text:
+                            assert(!strcmp(element, "text"));
+                            m_context = context::comment;
+                            m_changeset_discussion_builder->add_comment_text(m_comment_text);
                             break;
                         case context::in_object:
                             m_context = m_last_context;
@@ -670,85 +591,84 @@ namespace osmium {
                     }
                 }
 
+                void characters(const XML_Char* text, int len) {
+                    if (m_context == context::comment_text) {
+                        m_comment_text.append(text, len);
+                    } else {
+                        m_comment_text.resize(0);
+                    }
+                }
+
                 void flush_buffer() {
-                    if (m_buffer.capacity() - m_buffer.committed() < 1000 * 1000) {
-                        m_queue.push(std::move(m_buffer));
+                    if (m_buffer.committed() > buffer_size / 10 * 9) {
+                        send_to_output_queue(std::move(m_buffer));
                         osmium::memory::Buffer buffer(buffer_size);
-                        std::swap(m_buffer, buffer);
+                        using std::swap;
+                        swap(m_buffer, buffer);
+                    }
+                }
+
+            public:
+
+                XMLParser(future_string_queue_type& input_queue,
+                          future_buffer_queue_type& output_queue,
+                          std::promise<osmium::io::Header>& header_promise,
+                          osmium::osm_entity_bits::type read_types) :
+                    Parser(input_queue, output_queue, header_promise, read_types),
+                    m_context(context::root),
+                    m_last_context(context::root),
+                    m_in_delete_section(false),
+                    m_header(),
+                    m_buffer(buffer_size),
+                    m_node_builder(),
+                    m_way_builder(),
+                    m_relation_builder(),
+                    m_changeset_builder(),
+                    m_changeset_discussion_builder(),
+                    m_tl_builder(),
+                    m_wnl_builder(),
+                    m_rml_builder() {
+                }
+
+                ~XMLParser() noexcept final = default;
+
+                void run() final {
+                    osmium::thread::set_thread_name("_osmium_xml_in");
+
+                    ExpatXMLParser<XMLParser> parser(this);
+
+                    while (!input_done()) {
+                        std::string data = get_input();
+                        parser(data, input_done());
+                        if (read_types() == osmium::osm_entity_bits::nothing && header_is_done()) {
+                            break;
+                        }
+                    }
+
+                    mark_header_as_done();
+
+                    if (m_buffer.committed() > 0) {
+                        send_to_output_queue(std::move(m_buffer));
                     }
                 }
 
             }; // class XMLParser
 
-            class XMLInputFormat : public osmium::io::detail::InputFormat {
+            // we want the register_parser() function to run, setting
+            // the variable is only a side-effect, it will never be used
+            const bool registered_xml_parser = ParserFactory::instance().register_parser(
+                file_format::xml,
+                [](future_string_queue_type& input_queue,
+                    future_buffer_queue_type& output_queue,
+                    std::promise<osmium::io::Header>& header_promise,
+                    osmium::osm_entity_bits::type read_which_entities) {
+                    return std::unique_ptr<Parser>(new XMLParser(input_queue, output_queue, header_promise, read_which_entities));
+            });
 
-                static constexpr size_t max_queue_size = 100;
-
-                osmium::thread::Queue<osmium::memory::Buffer> m_queue;
-                std::atomic<bool> m_done;
-                std::promise<osmium::io::Header> m_header_promise;
-                std::future<bool> m_parser_future;
-
-            public:
-
-                /**
-                 * Instantiate XML Parser
-                 *
-                 * @param file osmium::io::File instance describing file to be read from.
-                 * @param read_which_entities Which types of OSM entities (nodes, ways, relations, changesets) should be parsed?
-                 * @param input_queue String queue where data is read from.
-                 */
-                explicit XMLInputFormat(const osmium::io::File& file, osmium::osm_entity_bits::type read_which_entities, osmium::thread::Queue<std::string>& input_queue) :
-                    osmium::io::detail::InputFormat(file, read_which_entities),
-                    m_queue(max_queue_size, "xml_parser_results"),
-                    m_done(false),
-                    m_header_promise(),
-                    m_parser_future(std::async(std::launch::async, XMLParser(input_queue, m_queue, m_header_promise, read_which_entities, m_done))) {
-                }
-
-                ~XMLInputFormat() {
-                    try {
-                        close();
-                    } catch (...) {
-                        // ignore any exceptions at this point because destructor should not throw
-                    }
-                }
-
-                virtual osmium::io::Header header() override final {
-                    osmium::thread::check_for_exception(m_parser_future);
-                    return m_header_promise.get_future().get();
-                }
-
-                osmium::memory::Buffer read() override {
-                    osmium::memory::Buffer buffer;
-                    if (!m_done || !m_queue.empty()) {
-                        m_queue.wait_and_pop(buffer);
-                    }
-
-                    osmium::thread::check_for_exception(m_parser_future);
-                    return buffer;
-                }
-
-                void close() override {
-                    m_done = true;
-                    osmium::thread::wait_until_done(m_parser_future);
-                }
-
-            }; // class XMLInputFormat
-
-            namespace {
-
-// we want the register_input_format() function to run, setting the variable
-// is only a side-effect, it will never be used
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-                const bool registered_xml_input = osmium::io::detail::InputFormatFactory::instance().register_input_format(osmium::io::file_format::xml,
-                    [](const osmium::io::File& file, osmium::osm_entity_bits::type read_which_entities, osmium::thread::Queue<std::string>& input_queue) {
-                        return new osmium::io::detail::XMLInputFormat(file, read_which_entities, input_queue);
-                });
-#pragma GCC diagnostic pop
-
-            } // anonymous namespace
+            // dummy function to silence the unused variable warning from above
+            inline bool get_registered_xml_parser() noexcept {
+                return registered_xml_parser;
+            }
 
         } // namespace detail
 

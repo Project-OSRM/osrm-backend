@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -281,7 +281,7 @@ namespace osmium {
          * @param timestamp Timestamp
          * @returns Reference to object to make calls chainable.
          */
-        OSMObject& set_timestamp(const osmium::Timestamp timestamp) noexcept {
+        OSMObject& set_timestamp(const osmium::Timestamp& timestamp) noexcept {
             m_timestamp = timestamp;
             return *this;
         }
@@ -355,38 +355,38 @@ namespace osmium {
             return cend();
         }
 
-        template <class T>
+        template <typename T>
         using t_iterator = osmium::memory::ItemIterator<T>;
 
-        template <class T>
+        template <typename T>
         using t_const_iterator = osmium::memory::ItemIterator<const T>;
 
-        template <class T>
+        template <typename T>
         t_iterator<T> begin() {
             return t_iterator<T>(subitems_position(), next());
         }
 
-        template <class T>
+        template <typename T>
         t_iterator<T> end() {
             return t_iterator<T>(next(), next());
         }
 
-        template <class T>
+        template <typename T>
         t_const_iterator<T> cbegin() const {
             return t_const_iterator<T>(subitems_position(), next());
         }
 
-        template <class T>
+        template <typename T>
         t_const_iterator<T> cend() const {
             return t_const_iterator<T>(next(), next());
         }
 
-        template <class T>
+        template <typename T>
         t_const_iterator<T> begin() const {
             return cbegin<T>();
         }
 
-        template <class T>
+        template <typename T>
         t_const_iterator<T> end() const {
             return cend<T>();
         }

@@ -48,9 +48,9 @@ Feature: Bike - Max speed restrictions
             | bc    | residential | 80       |
 
         When I route I should get
-            | from | to | route | speed   |
-            | a    | b  | ab    | 15 km/h |
-            | b    | c  | bc    | 15 km/h |
+            | from | to | route    | speed   |
+            | a    | b  | ab,ab    | 15 km/h |
+            | b    | c  | bc,bc    | 15 km/h |
 
     Scenario: Bike - Forward/backward maxspeed
         Given the shortcuts

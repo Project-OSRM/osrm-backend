@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -61,7 +61,7 @@ namespace osmium {
 
     public:
 
-        geometry_error(const std::string& message, const char* object_type = "", osmium::object_id_type id = 0) :
+        explicit geometry_error(const std::string& message, const char* object_type = "", osmium::object_id_type id = 0) :
             std::runtime_error(message),
             m_message(message),
             m_id(id) {
@@ -89,7 +89,7 @@ namespace osmium {
             return m_id;
         }
 
-        virtual const char* what() const noexcept override {
+        const char* what() const noexcept override {
             return m_message.c_str();
         }
 
@@ -142,7 +142,7 @@ namespace osmium {
         /**
          * Geometry factory.
          */
-        template <class TGeomImpl, class TProjection = IdentityProjection>
+        template <typename TGeomImpl, typename TProjection = IdentityProjection>
         class GeometryFactory {
 
             /**
@@ -166,8 +166,8 @@ namespace osmium {
             /**
              * Constructor for default initialized projection.
              */
-            template <class... TArgs>
-            GeometryFactory<TGeomImpl, TProjection>(TArgs&&... args) :
+            template <typename... TArgs>
+            explicit GeometryFactory<TGeomImpl, TProjection>(TArgs&&... args) :
                 m_projection(),
                 m_impl(std::forward<TArgs>(args)...) {
             }
@@ -176,12 +176,13 @@ namespace osmium {
              * Constructor for explicitly initialized projection. Note that the
              * projection is moved into the GeometryFactory.
              */
-            template <class... TArgs>
-            GeometryFactory<TGeomImpl, TProjection>(TProjection&& projection, TArgs&&... args) :
+            template <typename... TArgs>
+            explicit GeometryFactory<TGeomImpl, TProjection>(TProjection&& projection, TArgs&&... args) :
                 m_projection(std::move(projection)),
                 m_impl(std::forward<TArgs>(args)...) {
             }
 
+            typedef TProjection projection_type;
             typedef typename TGeomImpl::point_type        point_type;
             typedef typename TGeomImpl::linestring_type   linestring_type;
             typedef typename TGeomImpl::polygon_type      polygon_type;
@@ -198,7 +199,7 @@ namespace osmium {
 
             /* Point */
 
-            point_type create_point(const osmium::Location location) const {
+            point_type create_point(const osmium::Location& location) const {
                 return m_impl.make_point(m_projection(location));
             }
 
@@ -226,7 +227,7 @@ namespace osmium {
                 m_impl.linestring_start();
             }
 
-            template <class TIter>
+            template <typename TIter>
             size_t fill_linestring(TIter it, TIter end) {
                 size_t num_points = 0;
                 for (; it != end; ++it, ++num_points) {
@@ -235,7 +236,7 @@ namespace osmium {
                 return num_points;
             }
 
-            template <class TIter>
+            template <typename TIter>
             size_t fill_linestring_unique(TIter it, TIter end) {
                 size_t num_points = 0;
                 osmium::Location last_location;
@@ -300,7 +301,7 @@ namespace osmium {
                 m_impl.polygon_start();
             }
 
-            template <class TIter>
+            template <typename TIter>
             size_t fill_polygon(TIter it, TIter end) {
                 size_t num_points = 0;
                 for (; it != end; ++it, ++num_points) {
@@ -309,7 +310,7 @@ namespace osmium {
                 return num_points;
             }
 
-            template <class TIter>
+            template <typename TIter>
             size_t fill_polygon_unique(TIter it, TIter end) {
                 size_t num_points = 0;
                 osmium::Location last_location;

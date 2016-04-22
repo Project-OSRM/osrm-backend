@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -54,6 +54,32 @@ namespace osmium {
      */
     namespace thread {
 
+        namespace detail {
+
+            // Maximum number of allowed pool threads (just to keep the user
+            // from setting something silly).
+            constexpr const int max_pool_threads = 256;
+
+            inline int get_pool_size(int num_threads, int user_setting, unsigned hardware_concurrency) {
+                if (num_threads == 0) {
+                    num_threads = user_setting ? user_setting : -2;
+                }
+
+                if (num_threads < 0) {
+                    num_threads += hardware_concurrency;
+                }
+
+                if (num_threads < 1) {
+                    num_threads = 1;
+                } else if (num_threads > max_pool_threads) {
+                    num_threads = max_pool_threads;
+                }
+
+                return num_threads;
+            }
+
+        } // namespace detail
+
         /**
          *  Thread pool.
          */
@@ -83,7 +109,6 @@ namespace osmium {
 
             }; // class thread_joiner
 
-            std::atomic<bool> m_done;
             osmium::thread::Queue<function_wrapper> m_work_queue;
             std::vector<std::thread> m_threads;
             thread_joiner m_joiner;
@@ -91,11 +116,15 @@ namespace osmium {
 
             void worker_thread() {
                 osmium::thread::set_thread_name("_osmium_worker");
-                while (!m_done) {
+                while (true) {
                     function_wrapper task;
                     m_work_queue.wait_and_pop_with_timeout(task);
                     if (task) {
-                        task();
+                        if (task()) {
+                            // The called tasks returns true only when the
+                            // worker thread should shut down.
+                            return;
+                        }
                     }
                 }
             }
@@ -113,26 +142,17 @@ namespace osmium {
              * In all cases the minimum number of threads in the pool is 1.
              */
             explicit Pool(int num_threads, size_t max_queue_size) :
-                m_done(false),
                 m_work_queue(max_queue_size, "work"),
                 m_threads(),
                 m_joiner(m_threads),
-                m_num_threads(num_threads) {
-
-                if (m_num_threads == 0) {
-                    m_num_threads = osmium::config::get_pool_threads();
-                }
-
-                if (m_num_threads <= 0) {
-                    m_num_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency()) + m_num_threads);
-                }
+                m_num_threads(detail::get_pool_size(num_threads, osmium::config::get_pool_threads(), std::thread::hardware_concurrency())) {
 
                 try {
                     for (int i = 0; i < m_num_threads; ++i) {
                         m_threads.push_back(std::thread(&Pool::worker_thread, this));
                     }
                 } catch (...) {
-                    m_done = true;
+                    shutdown_all_workers();
                     throw;
                 }
             }
@@ -147,8 +167,15 @@ namespace osmium {
                 return pool;
             }
 
+            void shutdown_all_workers() {
+                for (int i = 0; i < m_num_threads; ++i) {
+                    // The special function wrapper makes a worker shut down.
+                    m_work_queue.push(function_wrapper{0});
+                }
+            }
+
             ~Pool() {
-                m_done = true;
+                shutdown_all_workers();
                 m_work_queue.shutdown();
             }
 

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,10 +33,18 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/handler/node_locations_for_ways.hpp>
-#include <osmium/visitor.hpp>
-#include <osmium/area/multipolygon_collector.hpp>
+#include <string>
+#include <vector>
+
 #include <osmium/area/assembler.hpp>
+#include <osmium/area/multipolygon_collector.hpp>
+#include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/io/file.hpp>
+#include <osmium/io/header.hpp>
+#include <osmium/io/reader.hpp>
+#include <osmium/memory/buffer.hpp>
+#include <osmium/osm/entity_bits.hpp>
+#include <osmium/visitor.hpp>
 
 namespace osmium {
 
@@ -45,7 +53,7 @@ namespace osmium {
      */
     namespace experimental {
 
-        template <class TLocationHandler>
+        template <typename TLocationHandler>
         class FlexReader {
 
             bool m_with_areas;
@@ -104,7 +112,7 @@ namespace osmium {
                 return buffer;
             }
 
-            osmium::io::Header header() const {
+            osmium::io::Header header() {
                 return m_reader.header();
             }
 

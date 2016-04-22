@@ -6,7 +6,7 @@ Feature: Alternative route
 
         And the node map
             |   | b | c | d |   |   |
-            | a |   |   |   |   | z |
+            | a |   | k |   |   | z |
             |   | g | h | i | j |   |
 
         And the ways
@@ -20,19 +20,21 @@ Feature: Alternative route
             | hi    |
             | ij    |
             | jz    |
+            | ck    |
+            | kh    |
 
     Scenario: Enabled alternative
         Given the query options
-            | alt | true |
+            | alternatives | true |
 
         When I route I should get
-            | from | to | route       | alternative    |
-            | a    | z  | ab,bc,cd,dz | ag,gh,hi,ij,jz |
+            | from | to | route          | alternative       |
+            | a    | z  | ab,bc,cd,dz,dz | ag,gh,hi,ij,jz,jz |
 
     Scenario: Disabled alternative
         Given the query options
-            | alt | false |
+            | alternatives | false |
 
         When I route I should get
-            | from | to | route       | alternative |
-            | a    | z  | ab,bc,cd,dz |             |
+            | from | to | route          | alternative |
+            | a    | z  | ab,bc,cd,dz,dz |             |

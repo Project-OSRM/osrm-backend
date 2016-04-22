@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -88,7 +88,10 @@ namespace osmium {
                 linestring_type linestring_finish(size_t /* num_points */) {
                     assert(!m_str.empty());
                     std::string str;
-                    std::swap(str, m_str);
+
+                    using std::swap;
+                    swap(str, m_str);
+
                     str.back() = ']';
                     str += "}";
                     return str;
@@ -134,7 +137,10 @@ namespace osmium {
                 multipolygon_type multipolygon_finish() {
                     assert(!m_str.empty());
                     std::string str;
-                    std::swap(str, m_str);
+
+                    using std::swap;
+                    swap(str, m_str);
+
                     str.back() = ']';
                     str += "}";
                     return str;
@@ -144,7 +150,7 @@ namespace osmium {
 
         } // namespace detail
 
-        template <class TProjection = IdentityProjection>
+        template <typename TProjection = IdentityProjection>
         using GeoJSONFactory = GeometryFactory<osmium::geom::detail::GeoJSONFactoryImpl, TProjection>;
 
     } // namespace geom

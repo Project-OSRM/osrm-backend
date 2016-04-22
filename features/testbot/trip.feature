@@ -82,5 +82,20 @@ Feature: Basic trip planning
             | waypoints                       | trips              |
             | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | cbalkjihgfedc,ponm |
 
+    # Test single node in each component #1850
+    Scenario: Testbot - Trip planning with less than 10 nodes
+        Given the node map
+            | a | 1 | b |
+            |   |   |   |
+            | c | 2 | d |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | cd    |
+
+        When I plan a trip I should get
+            | waypoints | trips |
+            | 1,2       |       |
 
 

@@ -18,9 +18,9 @@ Feature: Choosing fastest route
             | asb   | primary |
 
         When I route I should get
-            | from | to | route     |
-            | x    | y  | xa,atb,by |
-            | y    | x  | by,atb,xa |
+            | from | to | route        |
+            | x    | y  | xa,atb,by,by |
+            | y    | x  | by,atb,xa,xa |
 
     Scenario: Pick the fastest route, even when it's longer
         Given the node map
@@ -33,6 +33,6 @@ Feature: Choosing fastest route
             | asb   | secondary |
 
         When I route I should get
-            | from | to | route |
-            | a    | b  | apb   |
-            | b    | a  | apb   |
+            | from | to | route   |
+            | a    | b  | apb,apb |
+            | b    | a  | apb,apb |

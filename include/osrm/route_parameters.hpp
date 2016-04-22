@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Project OSRM contributors
+Copyright (c) 2016, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,92 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ROUTE_PARAMETERS_HPP
-#define ROUTE_PARAMETERS_HPP
+#ifndef GLOBAL_ROUTE_PARAMETERS_HPP
+#define GLOBAL_ROUTE_PARAMETERS_HPP
 
-#include <osrm/coordinate.hpp>
+#include "engine/api/route_parameters.hpp"
 
-#include <boost/fusion/container/vector/vector_fwd.hpp>
-#include <boost/spirit/include/qi.hpp>
-
-#include <string>
-#include <vector>
-
-struct RouteParameters
+namespace osrm
 {
-    RouteParameters();
+using engine::api::RouteParameters;
+}
 
-    void setZoomLevel(const short level);
-
-    void setNumberOfResults(const short number);
-
-    void setAlternateRouteFlag(const bool flag);
-
-    void setUTurn(const bool flag);
-
-    void setAllUTurns(const bool flag);
-
-    void setClassify(const bool classify);
-
-    void setMatchingBeta(const double beta);
-
-    void setGPSPrecision(const double precision);
-
-    void setDeprecatedAPIFlag(const std::string &);
-
-    void setChecksum(const unsigned check_sum);
-
-    void setInstructionFlag(const bool flag);
-
-    void setService(const std::string &service);
-
-    void setOutputFormat(const std::string &format);
-
-    void setJSONpParameter(const std::string &parameter);
-
-    void addHint(const std::string &hint);
-
-    void addTimestamp(const unsigned timestamp);
-
-    void addBearing(const boost::fusion::vector<int, boost::optional<int>> &received_bearing, boost::spirit::qi::unused_type unused, bool& pass);
-
-    void setLanguage(const std::string &language);
-
-    void setGeometryFlag(const bool flag);
-
-    void setCompressionFlag(const bool flag);
-
-    void addCoordinate(const boost::fusion::vector<double, double> &received_coordinates);
-
-    void addDestination(const boost::fusion::vector<double, double> &received_coordinates);
-
-    void addSource(const boost::fusion::vector<double, double> &received_coordinates);
-
-    void getCoordinatesFromGeometry(const std::string &geometry_string);
-
-    short zoom_level;
-    bool print_instructions;
-    bool alternate_route;
-    bool geometry;
-    bool compression;
-    bool deprecatedAPI;
-    bool uturn_default;
-    bool classify;
-    double matching_beta;
-    double gps_precision;
-    unsigned check_sum;
-    short num_results;
-    std::string service;
-    std::string output_format;
-    std::string jsonp_parameter;
-    std::string language;
-    std::vector<std::string> hints;
-    std::vector<unsigned> timestamps;
-    std::vector<std::pair<const int,const boost::optional<int>>> bearings;
-    std::vector<bool> uturns;
-    std::vector<FixedPointCoordinate> coordinates;
-    std::vector<bool> is_destination;
-    std::vector<bool> is_source;
-};
-
-#endif // ROUTE_PARAMETERS_HPP
+#endif
