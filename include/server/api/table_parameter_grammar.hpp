@@ -32,15 +32,11 @@ struct TableParametersGrammar final : public BaseParametersGrammar
         };
 // TODO: ulonglong -> size_t not only on Windows but on all 32 bit platforms; unsupported anyway as of now
 #ifdef WIN32
-        destinations_rule = (qi::lit("destinations=") > (qi::ulong_long % ";")[set_destiantions]) |
-                            qi::lit("destinations=all");
-        sources_rule =
-            (qi::lit("sources=") > (qi::ulong_long % ";")[set_sources]) | qi::lit("sources=all");
+        destinations_rule = qi::lit("destinations=all") | (qi::lit("destinations=") > (qi::ulong_long % ";")[set_destiantions]);
+        sources_rule = qi::lit("sources=all") | (qi::lit("sources=") > (qi::ulong_long % ";")[set_sources]);
 #else
-        destinations_rule = (qi::lit("destinations=") > (qi::ulong_ % ";")[set_destiantions]) |
-                            qi::lit("destinations=all");
-        sources_rule =
-            (qi::lit("sources=") > (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
+        destinations_rule = qi::lit("destinations=all") | (qi::lit("destinations=") > (qi::ulong_ % ";")[set_destiantions]);
+        sources_rule = qi::lit("sources=all") | (qi::lit("sources=") > (qi::ulong_ % ";")[set_sources]);
 #endif
         table_rule = destinations_rule | sources_rule;
 
