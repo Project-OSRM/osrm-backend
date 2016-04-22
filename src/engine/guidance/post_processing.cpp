@@ -29,14 +29,26 @@ namespace engine
 namespace guidance
 {
 
+namespace
+{
+
+// invalidate a step and set its content to nothing
+void invalidateStep(RouteStep &step)
+{
+    step = {};
+    step.maneuver.instruction = TurnInstruction::NO_TURN();
+};
+
 void print(const std::vector<RouteStep> &steps)
 {
     std::cout << "Path\n";
     int segment = 0;
     for (const auto &step : steps)
     {
-        const auto type = static_cast<int>(step.maneuver.instruction.type);
-        const auto modifier = static_cast<int>(step.maneuver.instruction.direction_modifier);
+        const auto type =
+            static_cast<std::underlying_type<TurnType>::type>(step.maneuver.instruction.type);
+        const auto modifier = static_cast<std::underlying_type<DirectionModifier>::type>(
+            step.maneuver.instruction.direction_modifier);
 
         std::cout << "\t[" << ++segment << "]: " << type << " " << modifier
                   << " Duration: " << step.duration << " Distance: " << step.distance
@@ -53,37 +65,6 @@ void print(const std::vector<RouteStep> &steps)
     }
 }
 
-namespace detail
-{
-
-void print(const std::vector<RouteStep> &steps)
-{
-    std::cout << "Path\n";
-    int segment = 0;
-    for (const auto &step : steps)
-    {
-        const auto type = static_cast<int>(step.maneuver.instruction.type);
-        const auto modifier = static_cast<int>(step.maneuver.instruction.direction_modifier);
-
-        std::cout << "\t[" << ++segment << "]: " << type << " " << modifier
-                  << " Duration: " << step.duration << " Distance: " << step.distance
-                  << " Geometry: " << step.geometry_begin << " " << step.geometry_end
-                  << " exit: " << step.maneuver.exit
-                  << " Intersections: " << step.maneuver.intersections.size() << " [";
-
-        for (auto intersection : step.maneuver.intersections)
-            std::cout << "(" << intersection.duration << " " << intersection.distance << ")";
-
-        std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
-    }
-}
-
-bool canMergeTrivially(const RouteStep &destination, const RouteStep &source)
-{
-    return destination.maneuver.exit == 0 && destination.name_id == source.name_id &&
-           isSilent(source.maneuver.instruction);
-}
-
 RouteStep forwardInto(RouteStep destination, const RouteStep &source)
 {
     // Merge a turn into a silent turn
@@ -94,13 +75,6 @@ RouteStep forwardInto(RouteStep destination, const RouteStep &source)
     destination.geometry_end = std::max(destination.geometry_end, source.geometry_end);
     return destination;
 }
-
-// invalidate a step and set its content to nothing
-inline void invalidateStep(RouteStep &step)
-{
-    step = {};
-    step.maneuver.instruction = TurnInstruction::NO_TURN();
-};
 
 void fixFinalRoundabout(std::vector<RouteStep> &steps)
 {
@@ -194,7 +168,7 @@ void closeOffRoundabout(const bool on_roundabout,
         BOOST_ASSERT(leavesRoundabout(steps[1].maneuver.instruction) ||
                      steps[1].maneuver.instruction.type == TurnType::StayOnRoundabout);
         steps[0].geometry_end = 1;
-        steps[1] = detail::forwardInto(steps[1], steps[0]);
+        steps[1] = forwardInto(steps[1], steps[0]);
         steps[0].duration = 0;
         steps[0].distance = 0;
         const auto exitToEnter = [](const TurnType type) {
@@ -223,7 +197,7 @@ void closeOffRoundabout(const bool on_roundabout,
              --propagation_index)
         {
             auto &propagation_step = steps[propagation_index];
-            propagation_step = detail::forwardInto(propagation_step, steps[propagation_index + 1]);
+            propagation_step = forwardInto(propagation_step, steps[propagation_index + 1]);
             if (entersRoundabout(propagation_step.maneuver.instruction))
             {
                 propagation_step.maneuver.exit = step.maneuver.exit;
@@ -334,7 +308,7 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
 // A check whether two instructions can be treated as one. This is only the case for very short
 // maneuvers that can, in some form, be seen as one. The additional in_step is to find out about
 // a possible u-turn.
-inline bool collapsable(const RouteStep &step)
+bool collapsable(const RouteStep &step)
 {
     const constexpr double MAX_COLLAPSE_DISTANCE = 25;
     return step.distance < MAX_COLLAPSE_DISTANCE;
@@ -345,6 +319,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                     const std::size_t one_back_index,
                     const std::size_t step_index)
 {
+    BOOST_ASSERT(step_index < steps.size());
+    BOOST_ASSERT(one_back_index < steps.size());
     const auto &current_step = steps[step_index];
 
     const auto &one_back_step = steps[one_back_index];
@@ -357,6 +333,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     // Very Short New Name
     if (TurnType::NewName == one_back_step.maneuver.instruction.type)
     {
+        BOOST_ASSERT(two_back_index < steps.size());
         if (one_back_step.mode == steps[two_back_index].mode)
         {
             steps[two_back_index] = elongate(std::move(steps[two_back_index]), one_back_step);
@@ -387,6 +364,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                                  current_step.maneuver.bearing_after))
 
     {
+        BOOST_ASSERT(two_back_index < steps.size());
         // the simple case is a u-turn that changes directly into the in-name again
         const bool direct_u_turn = steps[two_back_index].name == current_step.name;
 
@@ -420,7 +398,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     }
 }
 
-} // namespace detail
+} // namespace
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
 // is turned into exit counts. These instructions are removed by the following function
@@ -469,7 +447,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         into.maneuver.intersections.push_back(
             {last_step.duration, last_step.distance, intersection.maneuver.location});
 
-        return detail::forwardInto(std::move(into), intersection);
+        return forwardInto(std::move(into), intersection);
     };
 
     // count the exits forward. if enter/exit roundabout happen both, no further treatment is
@@ -484,7 +462,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         if (entersRoundabout(instruction))
         {
             last_valid_instruction = step_index;
-            has_entered_roundabout = detail::setUpRoundabout(step);
+            has_entered_roundabout = setUpRoundabout(step);
 
             if (has_entered_roundabout && step_index + 1 < steps.size())
                 steps[step_index + 1].maneuver.exit = step.maneuver.exit;
@@ -506,7 +484,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
                 // the first valid instruction
                 last_valid_instruction = 1;
             }
-            detail::closeOffRoundabout(has_entered_roundabout, steps, step_index);
+            closeOffRoundabout(has_entered_roundabout, steps, step_index);
             has_entered_roundabout = false;
             on_roundabout = false;
         }
@@ -529,7 +507,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // A roundabout without exit translates to enter-roundabout.
     if (has_entered_roundabout || on_roundabout)
     {
-        detail::fixFinalRoundabout(steps);
+        fixFinalRoundabout(steps);
     }
 
     return removeNoTurnInstructions(std::move(steps));
@@ -541,6 +519,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     // Get the previous non-invalid instruction
     const auto getPreviousIndex = [&steps](std::size_t index) {
         BOOST_ASSERT(index > 0);
+        BOOST_ASSERT(index < steps.size());
         --index;
         while (index > 0 && steps[index].maneuver.instruction == TurnInstruction::NO_TURN())
             --index;
@@ -553,6 +532,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     {
         const auto &current_step = steps[step_index];
         const auto one_back_index = getPreviousIndex(step_index);
+        BOOST_ASSERT(one_back_index < steps.size());
 
         // cannot collapse the depart instruction
         if (one_back_index == 0 || current_step.maneuver.instruction == TurnInstruction::NO_TURN())
@@ -560,6 +540,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 
         const auto &one_back_step = steps[one_back_index];
         const auto two_back_index = getPreviousIndex(one_back_index);
+        BOOST_ASSERT(two_back_index < steps.size());
 
         // If we look at two consecutive name changes, we can check for a name oszillation.
         // A name oszillation changes from name A shortly to name B and back to A.
@@ -574,20 +555,20 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 if (current_step.mode == one_back_step.mode &&
                     one_back_step.mode == steps[two_back_index].mode)
                 {
-                    steps[two_back_index] = detail::elongate(
-                        detail::elongate(std::move(steps[two_back_index]), steps[one_back_index]),
-                        steps[step_index]);
-                    detail::invalidateStep(steps[one_back_index]);
-                    detail::invalidateStep(steps[step_index]);
+                    steps[two_back_index] =
+                        elongate(elongate(std::move(steps[two_back_index]), steps[one_back_index]),
+                                 steps[step_index]);
+                    invalidateStep(steps[one_back_index]);
+                    invalidateStep(steps[step_index]);
                 }
                 // TODO discuss: we could think about changing the new-name to a pure notification
                 // about mode changes
             }
         }
-        else if (detail::collapsable(one_back_step))
+        else if (collapsable(one_back_step))
         {
             // check for one of the multiple collapse scenarios and, if possible, collapse the turn
-            detail::collapseTurnAt(steps, two_back_index, one_back_index, step_index);
+            collapseTurnAt(steps, two_back_index, one_back_index, step_index);
         }
     }
     return removeNoTurnInstructions(std::move(steps));
