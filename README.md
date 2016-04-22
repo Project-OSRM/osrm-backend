@@ -4,13 +4,12 @@ The Open Source Routing Machine is a high performance routing engine written in 
 
 ## Current build status
 
-| build config |  branch | status |
-|:-------------|:--------|:------------|
-| Linux        | master  | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) |
-| Linux        | develop | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=develop)](https://travis-ci.org/Project-OSRM/osrm-backend) |
-| Windows      | master/develop | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
-| LUAbind fork | master  | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |
-| Coverage     | develop | [![Coverage Status](https://coveralls.io/repos/github/Project-OSRM/osrm-backend/badge.svg?branch=develop)](https://coveralls.io/github/Project-OSRM/osrm-backend?branch=develop) |
+| build config | status |
+|:-------------|:-------|
+| Linux        | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) |
+| Windows      | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
+| Coverage     | [![Coverage Status](https://coveralls.io/repos/github/Project-OSRM/osrm-backend/badge.svg?branch=master)](https://coveralls.io/github/Project-OSRM/osrm-backend?branch=develop) |
+| LUAbind fork | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |
 
 ## Building
 
@@ -20,7 +19,7 @@ To quickly try OSRM use our [free and daily updated online service](http://map.p
 
 ## Documentation
 
-See the Wiki's [server API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Server-api) as well as the [library API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Library-api)
+See the Wiki's [server API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/New-Server-api) as well as the [library API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Library-api)
 
 ## References in publications
 
