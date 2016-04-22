@@ -1,0 +1,22 @@
+{
+  "request": {
+    "message": "Triggered build: osrm-backend develop branch commit <TRAVIS_COMMIT>",
+    "branch": "develop",
+    "config": {
+      "matrix": {
+        "include": [{
+          "os": "linux",
+          "compiler": ": gcc-debug-node-v4",
+          "env": "NODE='4' TARGET=Debug CC='gcc-4.8' CXX='clang++-4.8' JOBS=6 PUBLISHABLE=false",
+          "sudo": false,
+          "addons": {
+            "apt": {
+              "sources": [ "ubuntu-toolchain-r-test" ],
+              "packages": [ "g++-4.8" ]
+            }
+          }
+        }]
+      }
+    }
+  }
+}
