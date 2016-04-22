@@ -295,9 +295,10 @@ module.exports = function () {
         this.writeAndExtract((e) => {
             if (e) return callback(e);
             this.isContracted((isContracted) => {
-                var contractFn = isContracted ? noop : this.contractData;
+                var contractFn = (isContracted && !this.forceContract) ? noop : this.contractData;
                 if (isContracted) this.log('Already contracted ' + this.osmData.contractedFile, 'preprocess');
                 contractFn((e) => {
+                    this.forceContract = false;
                     if (e) return callback(e);
                     this.logPreprocessDone();
                     callback();
@@ -311,9 +312,10 @@ module.exports = function () {
             this.writeInputData((e) => {
                 if (e) return callback(e);
                 this.isExtracted((isExtracted) => {
-                    var extractFn = isExtracted ? noop : this.extractData;
+                    var extractFn = (isExtracted && !this.forceExtract) ? noop : this.extractData;
                     if (isExtracted) this.log('Already extracted ' + this.osmData.extractedFile, 'preprocess');
                     extractFn((e) => {
+                        this.forceExtract = false;
                         callback(e);
                     });
                 });

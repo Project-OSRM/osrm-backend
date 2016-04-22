@@ -10,13 +10,11 @@ module.exports = function () {
     });
 
     this.Given(/^the extract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setExtractArgs(args);
-        callback();
+        this.setExtractArgs(args, callback);
     });
 
     this.Given(/^the contract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setContractArgs(args);
-        callback();
+        this.setContractArgs(args, callback);
     });
 
     this.Given(/^a grid size of (\d+) meters$/, (meters, callback) => {
@@ -226,6 +224,10 @@ module.exports = function () {
 
     this.Given(/^the speed file$/, (data, callback) => {
         fs.writeFile(path.resolve(this.TEST_FOLDER, 'speeds.csv'), data, callback);
+    });
+
+    this.Given(/^the turn penalty file$/, (data, callback) => {
+        fs.writeFile(path.resolve(this.TEST_FOLDER, 'penalties.csv'), data, callback);
     });
 
     this.Given(/^the data has been saved to disk$/, (callback) => {

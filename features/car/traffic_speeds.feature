@@ -31,7 +31,7 @@ Feature: Traffic - speeds
         4,1,27
         """
 
-    Scenario: Weighting not based on raster sources
+    Scenario: Weighting based on speed file
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file speeds.csv"

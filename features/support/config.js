@@ -105,11 +105,16 @@ module.exports = function () {
         } else cb();
     };
 
-    this.setExtractArgs = (args) => {
+    this.setExtractArgs = (args, callback) => {
         this.extractArgs = args;
+        this.forceExtract = true;
+        this.forceContract = true;
+        callback();
     };
 
-    this.setContractArgs = (args) => {
+    this.setContractArgs = (args, callback) => {
         this.contractArgs = args;
+        this.forceContract = true;
+        callback();
     };
 };

@@ -302,7 +302,6 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
                 // ed.distance should be total_weight + penalties (turn, stop, etc)
-                BOOST_ASSERT(ed.distance >= total_weight);
                 const bool is_first_segment = unpacked_path.empty();
 
                 const std::size_t start_index =

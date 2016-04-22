@@ -80,6 +80,7 @@ stxxl.errlog
 /test/profile.lua
 /test/cache
 /test/speeds.csv
+/test/penalties.csv
 /test/data/monaco.*
 node_modules
 

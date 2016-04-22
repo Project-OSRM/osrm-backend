@@ -84,6 +84,7 @@ class Contractor
                           const std::string &edge_segment_lookup_path,
                           const std::string &edge_penalty_path,
                           const std::vector<std::string> &segment_speed_path,
+                          const std::vector<std::string> &turn_penalty_path,
                           const std::string &nodes_filename,
                           const std::string &geometry_filename,
                           const std::string &datasource_names_filename,
