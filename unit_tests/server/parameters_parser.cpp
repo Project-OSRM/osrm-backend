@@ -122,9 +122,13 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_3.radiuses, result_3->radiuses);
     CHECK_EQUAL_RANGE(reference_3.coordinates, result_3->coordinates);
 
+    std::cout << engine::ENCODED_HINT_SIZE << std::endl;
     std::string filler_hint_1(engine::ENCODED_HINT_SIZE, '_');
+    BOOST_ASSERT(filler_hint_1.size() == engine::ENCODED_HINT_SIZE);
     std::string filler_hint_2(engine::ENCODED_HINT_SIZE, '=');
+    BOOST_ASSERT(filler_hint_2.size() == engine::ENCODED_HINT_SIZE);
     std::string filler_hint_3(engine::ENCODED_HINT_SIZE, '-');
+    BOOST_ASSERT(filler_hint_3.size() == engine::ENCODED_HINT_SIZE);
     std::vector<boost::optional<engine::Hint>> hints_4 = {engine::Hint::FromBase64(filler_hint_1),
                                                           engine::Hint::FromBase64(filler_hint_2),
                                                           engine::Hint::FromBase64(filler_hint_3)};
