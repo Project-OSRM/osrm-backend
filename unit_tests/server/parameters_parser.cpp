@@ -55,10 +55,11 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4.json?nooptions"), 13);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4..json?nooptions"), 14);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4.0.json?nooptions"), 15);
-    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,4"} + '\0' + ".json"), 7);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,4"} + '\0' + ".json"),
+                      7);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,"} + '\0'), 6);
 
-    //BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(), );
+    // BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(), );
 }
 
 BOOST_AUTO_TEST_CASE(invalid_table_urls)
@@ -121,16 +122,12 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_3.radiuses, result_3->radiuses);
     CHECK_EQUAL_RANGE(reference_3.coordinates, result_3->coordinates);
 
-    std::vector<boost::optional<engine::Hint>> hints_4 = {
-        engine::Hint::FromBase64("DAIAgP___"
-                                 "38AAAAAAAAAAAIAAAAAAAAAEAAAAOgDAAD0AwAAGwAAAOUacQBQP5sCshpxAB0_"
-                                 "mwIAAAEBl-Umfg=="),
-        engine::Hint::FromBase64("cgAAgP___"
-                                 "39jAAAADgAAACIAAABeAAAAkQAAANoDAABOAgAAGwAAAFVGcQCiRJsCR0VxAOZFmw"
-                                 "IFAAEBl-Umfg=="),
-        engine::Hint::FromBase64("3gAAgP___"
-                                 "39KAAAAHgAAACEAAAAAAAAAGAAAAE0BAABOAQAAGwAAAIAzcQBkUJsC1zNxAHBQmw"
-                                 "IAAAEBl-Umfg==")};
+    std::string filler_hint_1(engine::ENCODED_HINT_SIZE, '_');
+    std::string filler_hint_2(engine::ENCODED_HINT_SIZE, '=');
+    std::string filler_hint_3(engine::ENCODED_HINT_SIZE, '-');
+    std::vector<boost::optional<engine::Hint>> hints_4 = {engine::Hint::FromBase64(filler_hint_1),
+                                                          engine::Hint::FromBase64(filler_hint_2),
+                                                          engine::Hint::FromBase64(filler_hint_3)};
     RouteParameters reference_4{false,
                                 false,
                                 RouteParameters::GeometriesType::Polyline,
@@ -140,11 +137,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                 hints_4,
                                 std::vector<boost::optional<double>>{},
                                 std::vector<boost::optional<engine::Bearing>>{}};
-    auto result_4 = parseParameters<RouteParameters>(
-        "1,2;3,4?steps=false&hints="
-        "DAIAgP___38AAAAAAAAAAAIAAAAAAAAAEAAAAOgDAAD0AwAAGwAAAOUacQBQP5sCshpxAB0_mwIAAAEBl-Umfg==;"
-        "cgAAgP___39jAAAADgAAACIAAABeAAAAkQAAANoDAABOAgAAGwAAAFVGcQCiRJsCR0VxAOZFmwIFAAEBl-Umfg==;"
-        "3gAAgP___39KAAAAHgAAACEAAAAAAAAAGAAAAE0BAABOAQAAGwAAAIAzcQBkUJsC1zNxAHBQmwIAAAEBl-Umfg==");
+    auto result_4 = parseParameters<RouteParameters>("1,2;3,4?steps=false&hints=" + filler_hint_1 +
+                                                     ";" + filler_hint_2 + ";" + filler_hint_3);
     BOOST_CHECK(result_4);
     BOOST_CHECK_EQUAL(reference_4.steps, result_4->steps);
     BOOST_CHECK_EQUAL(reference_4.alternatives, result_4->alternatives);
@@ -198,7 +192,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     auto result_7 = parseParameters<RouteParameters>("1,2;3,4?radiuses=;unlimited");
     RouteParameters reference_7{};
     reference_7.coordinates = coords_1;
-    reference_7.radiuses = {boost::none, boost::make_optional(std::numeric_limits<double>::infinity())};
+    reference_7.radiuses = {boost::none,
+                            boost::make_optional(std::numeric_limits<double>::infinity())};
     BOOST_CHECK(result_7);
     BOOST_CHECK_EQUAL(reference_7.steps, result_7->steps);
     BOOST_CHECK_EQUAL(reference_7.alternatives, result_7->alternatives);
