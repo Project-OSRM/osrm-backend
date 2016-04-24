@@ -149,7 +149,7 @@ script:
   - ./unit_tests/engine-tests
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
-  - ./unit_tests/library-tests test/data/monaco.osrm
+  - ./unit_tests/library-tests ../test/data/monaco.osrm
   - echo "travis_fold:end:UNIT_TESTS"
   - popd
   - echo "travis_fold:start:CUCUMBER"
