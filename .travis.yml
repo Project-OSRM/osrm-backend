@@ -168,5 +168,5 @@ after_success:
     fi
   - |
     if [ -n "${COVERAGE}" ]; then
-      coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+      coveralls --build-root build --gcov-options '\-lp'
     fi
