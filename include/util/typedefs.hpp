@@ -71,13 +71,10 @@ struct SegmentID
         BOOST_ASSERT(!enabled || id != SPECIAL_SEGMENTID);
     }
 
-    NodeID id : 31;
-    bool enabled : 1;
+    NodeID  id              : 31;
+    std::uint32_t enabled   :  1;
 };
 
-// bit-fields are broken on Windows
-#ifndef _MSC_VER
 static_assert(sizeof(SegmentID) == 4, "SegmentID needs to be 4 bytes big");
-#endif
 
 #endif /* TYPEDEFS_H */

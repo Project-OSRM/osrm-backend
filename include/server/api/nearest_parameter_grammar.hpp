@@ -4,7 +4,7 @@
 #include "engine/api/nearest_parameters.hpp"
 #include "server/api/base_parameters_grammar.hpp"
 
-//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace osrm
@@ -14,27 +14,34 @@ namespace server
 namespace api
 {
 
-namespace qi = boost::spirit::qi;
-
-struct NearestParametersGrammar final : public BaseParametersGrammar
+namespace
 {
-    using Iterator = std::string::iterator;
+namespace ph = boost::phoenix;
+namespace qi = boost::spirit::qi;
+}
 
-    NearestParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
+template <typename Iterator = std::string::iterator,
+          typename Signature = void(engine::api::NearestParameters &)>
+struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, Signature>
+{
+    using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
+
+    NearestParametersGrammar() : BaseGrammar(root_rule)
     {
-        const auto set_number = [this](const unsigned number) {
-            parameters.number_of_results = number;
-        };
-        nearest_rule = (qi::lit("number=") > qi::uint_)[set_number];
-        root_rule =
-            query_rule > -qi::lit(".json") > -(qi::lit("?") > (nearest_rule | base_rule) % '&');
+        nearest_rule
+            = (qi::lit("number=") > qi::uint_)
+              [ph::bind(&engine::api::NearestParameters::number_of_results, qi::_r1) = qi::_1]
+            ;
+
+        root_rule
+            = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json")
+            > -('?' > (nearest_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&')
+            ;
     }
 
-    engine::api::NearestParameters parameters;
-
   private:
-    qi::rule<Iterator> root_rule;
-    qi::rule<Iterator> nearest_rule;
+    qi::rule<Iterator, Signature> root_rule;
+    qi::rule<Iterator, Signature> nearest_rule;
 };
 }
 }

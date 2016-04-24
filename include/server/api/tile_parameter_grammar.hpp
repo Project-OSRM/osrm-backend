@@ -6,7 +6,7 @@
 #include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
 
-//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <string>
@@ -18,28 +18,29 @@ namespace server
 namespace api
 {
 
-namespace qi = boost::spirit::qi;
-struct TileParametersGrammar final : boost::spirit::qi::grammar<std::string::iterator>
+namespace
 {
-    using Iterator = std::string::iterator;
+namespace ph = boost::phoenix;
+namespace qi = boost::spirit::qi;
+}
 
+template <typename Iterator = std::string::iterator,
+          typename Signature = void(engine::api::TileParameters &)>
+struct TileParametersGrammar final : boost::spirit::qi::grammar<Iterator, Signature>
+{
     TileParametersGrammar() : TileParametersGrammar::base_type(root_rule)
     {
-        const auto set_x = [this](const unsigned x_) { parameters.x = x_; };
-        const auto set_y = [this](const unsigned y_) { parameters.y = y_; };
-        const auto set_z = [this](const unsigned z_) { parameters.z = z_; };
-
-        query_rule = qi::lit("tile(") > qi::uint_[set_x]             //
-                     > qi::lit(",") > qi::uint_[set_y] >             //
-                     qi::lit(",") > qi::uint_[set_z] > qi::lit(")"); //
-
-        root_rule = query_rule > qi::lit(".mvt");
+        root_rule
+            = qi::lit("tile(")
+            > qi::uint_[ph::bind(&engine::api::TileParameters::x, qi::_r1) = qi::_1] > ','
+            > qi::uint_[ph::bind(&engine::api::TileParameters::y, qi::_r1) = qi::_1] > ','
+            > qi::uint_[ph::bind(&engine::api::TileParameters::z, qi::_r1) = qi::_1]
+            > qi::lit(").mvt")
+            ;
     }
-    engine::api::TileParameters parameters;
 
   private:
-    qi::rule<Iterator> root_rule;
-    qi::rule<Iterator> query_rule;
+    qi::rule<Iterator, Signature> root_rule;
 };
 }
 }
