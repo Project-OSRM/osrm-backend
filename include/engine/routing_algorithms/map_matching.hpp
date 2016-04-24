@@ -4,12 +4,12 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 
 #include "engine/map_matching/hidden_markov_model.hpp"
-#include "engine/map_matching/sub_matching.hpp"
 #include "engine/map_matching/matching_confidence.hpp"
+#include "engine/map_matching/sub_matching.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/json_logger.hpp"
 #include "util/for_each_pair.hpp"
+#include "util/json_logger.hpp"
 
 #include <cstddef>
 
@@ -86,8 +86,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         const bool use_timestamps = trace_timestamps.size() > 1;
 
-        const auto median_sample_time = [&]
-        {
+        const auto median_sample_time = [&] {
             if (use_timestamps)
             {
                 return std::max(1u, GetMedianSampleTime(trace_timestamps));
@@ -98,8 +97,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }();
         const auto max_broken_time = median_sample_time * MAX_BROKEN_STATES;
-        const auto max_distance_delta = [&]
-        {
+        const auto max_distance_delta = [&] {
             if (use_timestamps)
             {
                 return median_sample_time * MAX_SPEED;
@@ -118,8 +116,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 emission_log_probabilities[t].resize(candidates_list[t].size());
                 std::transform(candidates_list[t].begin(), candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
-                               [this](const PhantomNodeWithDistance &candidate)
-                               {
+                               [this](const PhantomNodeWithDistance &candidate) {
                                    return default_emission_log_probability(candidate.distance);
                                });
             }
@@ -136,8 +133,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     std::transform(
                         candidates_list[t].begin(), candidates_list[t].end(),
                         emission_log_probabilities[t].begin(),
-                        [&emission_log_probability](const PhantomNodeWithDistance &candidate)
-                        {
+                        [&emission_log_probability](const PhantomNodeWithDistance &candidate) {
                             return emission_log_probability(candidate.distance);
                         });
                 }
@@ -145,8 +141,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 {
                     std::transform(candidates_list[t].begin(), candidates_list[t].end(),
                                    emission_log_probabilities[t].begin(),
-                                   [this](const PhantomNodeWithDistance &candidate)
-                                   {
+                                   [this](const PhantomNodeWithDistance &candidate) {
                                        return default_emission_log_probability(candidate.distance);
                                    });
                 }
@@ -293,7 +288,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     const double transition_pr = transition_log_probability(d_t);
                     new_value += transition_pr;
 
-                    if (new_value > current_viterbi[s_prime])
+                    if (new_value > current_viterbi[s_prime] ||
+                        (new_value == current_viterbi[s_prime] && s == s_prime))
                     {
                         current_viterbi[s_prime] = new_value;
                         current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
@@ -400,8 +396,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             util::for_each_pair(
                 reconstructed_indices, [&trace_distance, &trace_coordinates](
                                            const std::pair<std::size_t, std::size_t> &prev,
-                                           const std::pair<std::size_t, std::size_t> &curr)
-                {
+                                           const std::pair<std::size_t, std::size_t> &curr) {
                     trace_distance += util::coordinate_calculation::haversineDistance(
                         trace_coordinates[prev.first], trace_coordinates[curr.first]);
                 });

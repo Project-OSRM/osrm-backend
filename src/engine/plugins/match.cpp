@@ -1,9 +1,9 @@
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/plugins/match.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "engine/map_matching/bayes_classifier.hpp"
-#include "engine/api/match_parameters.hpp"
 #include "engine/api/match_api.hpp"
+#include "engine/api/match_parameters.hpp"
+#include "engine/map_matching/bayes_classifier.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_logger.hpp"
@@ -52,24 +52,27 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         }
 
         // sort by forward id, then by reverse id and then by distance
-        std::sort(
-            candidates.begin(), candidates.end(),
-            [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-            {
-                return lhs.phantom_node.forward_segment_id.id < rhs.phantom_node.forward_segment_id.id ||
-                       (lhs.phantom_node.forward_segment_id.id == rhs.phantom_node.forward_segment_id.id &&
-                        (lhs.phantom_node.reverse_segment_id.id < rhs.phantom_node.reverse_segment_id.id ||
-                         (lhs.phantom_node.reverse_segment_id.id == rhs.phantom_node.reverse_segment_id.id &&
-                          lhs.distance < rhs.distance)));
-            });
+        std::sort(candidates.begin(), candidates.end(),
+                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
+                      return lhs.phantom_node.forward_segment_id.id <
+                                 rhs.phantom_node.forward_segment_id.id ||
+                             (lhs.phantom_node.forward_segment_id.id ==
+                                  rhs.phantom_node.forward_segment_id.id &&
+                              (lhs.phantom_node.reverse_segment_id.id <
+                                   rhs.phantom_node.reverse_segment_id.id ||
+                               (lhs.phantom_node.reverse_segment_id.id ==
+                                    rhs.phantom_node.reverse_segment_id.id &&
+                                lhs.distance < rhs.distance)));
+                  });
 
-        auto new_end = std::unique(
-            candidates.begin(), candidates.end(),
-            [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-            {
-                return lhs.phantom_node.forward_segment_id.id == rhs.phantom_node.forward_segment_id.id &&
-                       lhs.phantom_node.reverse_segment_id.id == rhs.phantom_node.reverse_segment_id.id;
-            });
+        auto new_end =
+            std::unique(candidates.begin(), candidates.end(),
+                        [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
+                            return lhs.phantom_node.forward_segment_id.id ==
+                                       rhs.phantom_node.forward_segment_id.id &&
+                                   lhs.phantom_node.reverse_segment_id.id ==
+                                       rhs.phantom_node.reverse_segment_id.id;
+                        });
         candidates.resize(new_end - candidates.begin());
 
         if (!allow_uturn)
@@ -83,18 +86,22 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
                 {
                     PhantomNode reverse_node(candidates[i].phantom_node);
                     reverse_node.forward_segment_id.enabled = false;
+                    reverse_node.name_id = reverse_node.reverse_name_id;
                     candidates.push_back(
                         PhantomNodeWithDistance{reverse_node, candidates[i].distance});
 
                     candidates[i].phantom_node.reverse_segment_id.enabled = false;
+                }
+                else if (!candidates[i].phantom_node.forward_segment_id.enabled)
+                {
+                    candidates[i].phantom_node.name_id = candidates[i].phantom_node.reverse_name_id;
                 }
             }
         }
 
         // sort by distance to make pruning effective
         std::sort(candidates.begin(), candidates.end(),
-                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-                  {
+                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
                       return lhs.distance < rhs.distance;
                   });
     }
@@ -130,8 +137,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     {
         search_radiuses.resize(parameters.coordinates.size());
         std::transform(parameters.radiuses.begin(), parameters.radiuses.end(),
-                       search_radiuses.begin(), [](const boost::optional<double> &maybe_radius)
-                       {
+                       search_radiuses.begin(), [](const boost::optional<double> &maybe_radius) {
                            if (maybe_radius)
                            {
                                return *maybe_radius * RADIUS_MULTIPLIER;
@@ -148,8 +154,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
 
     filterCandidates(parameters.coordinates, candidates_lists);
     if (std::all_of(candidates_lists.begin(), candidates_lists.end(),
-                    [](const std::vector<PhantomNodeWithDistance> &candidates)
-                    {
+                    [](const std::vector<PhantomNodeWithDistance> &candidates) {
                         return candidates.empty();
                     }))
     {
@@ -183,7 +188,8 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
             BOOST_ASSERT(current_phantom_node_pair.target_phantom.IsValid());
             sub_routes[index].segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
-        // force uturns to be on, since we split the phantom nodes anyway and only have bi-directional
+        // force uturns to be on, since we split the phantom nodes anyway and only have
+        // bi-directional
         // phantom nodes for possible uturns
         shortest_path(sub_routes[index].segment_end_coordinates, {true}, sub_routes[index]);
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
