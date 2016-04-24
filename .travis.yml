@@ -129,28 +129,32 @@ before_script:
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
 
 script:
+  - echo "travis_fold:start:MAKE"
   - make --jobs=2
   - make tests --jobs=2
   - make benchmarks
+  - echo "travis_fold:end:MAKE"
+  - echo "travis_fold:start:INSTALL"
   - sudo make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
+  - echo "travis_fold:end:INSTALL"
+  - echo "travis_fold:start:BENCHMARK"
+  - make -C ../test/data benchmark
+  - echo "travis_fold:end:BENCHMARK"
   - echo "travis_fold:start:UNIT_TESTS"
   - ./unit_tests/extractor-tests
   - ./unit_tests/engine-tests
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
+  - ./unit_tests/library-tests test/data/monaco.osrm
   - echo "travis_fold:end:UNIT_TESTS"
   - popd
   - echo "travis_fold:start:CUCUMBER"
   - npm test
   - echo "travis_fold:end:CUCUMBER"
-  - echo "travis_fold:start:BENCHMARK"
-  - make -C test/data benchmark
-  - echo "travis_fold:end:BENCHMARK"
-  - ./build/unit_tests/library-tests test/data/monaco.osrm
   - mkdir example/build && pushd example/build
   - cmake ..
   - make
@@ -159,7 +163,10 @@ script:
 
 after_success:
   - |
-    if [ -n "$RUN_CLANG_FORMAT" ]; then
+    if [ -n "${RUN_CLANG_FORMAT}" ]; then
       ./scripts/format.sh || true # we don't want to fail just yet
     fi
-  - coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+  - |
+    if [ -n "${COVERAGE}" ]; then
+      coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+    fi
