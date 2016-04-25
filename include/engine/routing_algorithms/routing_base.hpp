@@ -558,9 +558,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         // make sure to correctly unpack loops
         if (distance != forward_heap.GetKey(middle) + reverse_heap.GetKey(middle))
         {
-            // self loop
-            BOOST_ASSERT(forward_heap.GetData(middle).parent == middle &&
-                         reverse_heap.GetData(middle).parent == middle);
+            // self loop makes up the full path
             packed_leg.push_back(middle);
             packed_leg.push_back(middle);
         }
