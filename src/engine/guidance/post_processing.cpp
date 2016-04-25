@@ -532,7 +532,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     // Look for distances under 1m
-    const bool zero_length_step = steps.front().distance <= 1;
+    const bool zero_length_step = steps.front().distance <= 1 && steps.size() > 2;
     const bool duplicated_coordinate = util::coordinate_calculation::haversineDistance(
                                            geometry.locations[0], geometry.locations[1]) <= 1;
     if (zero_length_step || duplicated_coordinate)
