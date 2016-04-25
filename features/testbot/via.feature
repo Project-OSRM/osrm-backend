@@ -46,7 +46,6 @@ Feature: Via points
             | a,d,c     | abc,bd,bd,bd,abc,abc |
             | c,d,a     | abc,bd,bd,bd,abc,abc |
 
-    @mokob
     Scenario: Multiple via points
         Given the node map
             | a |   |   |   | e | f | g |   |

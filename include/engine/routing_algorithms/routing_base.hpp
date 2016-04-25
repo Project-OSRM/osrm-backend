@@ -373,8 +373,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         // t: fwd_segment 3
         // -> (U, v), (v, w), (w, x)
         // note that (x, t) is _not_ included but needs to be added later.
-        BOOST_ASSERT(start_index <= end_index);
-        for (std::size_t i = start_index; i != end_index; ++i)
+        for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
