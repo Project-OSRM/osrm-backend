@@ -168,5 +168,5 @@ after_success:
     fi
   - |
     if [ -n "${COVERAGE}" ]; then
-      coveralls --build-root build --gcov /usr/bin/llvm-cov-3.8 --gcov-options '\-lp'
+      coveralls --build-root build --exclude src/benchmarks --gcov /usr/bin/llvm-cov-3.8 --gcov-options '\-lp'
     fi
