@@ -11,6 +11,7 @@
 
 #include "extractor/suffix_table.hpp"
 #include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -22,6 +23,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 namespace osrm
 {
@@ -326,6 +328,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     guidance::TurnAnalysis turn_analysis(*m_node_based_graph, m_node_info_list, *m_restriction_map,
                                          m_barrier_nodes, m_compressed_edge_container, name_table,
                                          street_name_suffix_table);
+
+    bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
+                                            std::numeric_limits<std::uint32_t>::max());
+
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         progress.PrintStatus(node_u);
@@ -340,6 +346,40 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             auto possible_turns = turn_analysis.getTurns(node_u, edge_from_u);
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
+
+            // the entry class depends on the turn, so we have to classify the interesction for
+            // every edge
+            const auto turn_classification = classifyIntersection(
+                node_v, turn_analysis.getIntersection(node_u, edge_from_u), *m_node_based_graph,
+                m_compressed_edge_container, m_node_info_list);
+
+            const auto entry_class_id = [&](const util::guidance::EntryClass entry_class) {
+                if (0 == entry_class_hash.count(entry_class))
+                {
+                    const auto id = static_cast<std::uint16_t>(entry_class_hash.size());
+                    entry_class_hash[entry_class] = id;
+                    return id;
+                }
+                else
+                {
+                    return entry_class_hash.find(entry_class)->second;
+                }
+            }(turn_classification.first);
+
+            const auto bearing_class_id = [&](const util::guidance::BearingClass bearing_class) {
+                if (0 == bearing_class_hash.count(bearing_class))
+                {
+                    const auto id = static_cast<std::uint32_t>(bearing_class_hash.size());
+                    bearing_class_hash[bearing_class] = id;
+                    return id;
+                }
+                else
+                {
+                    return bearing_class_hash.find(bearing_class)->second;
+                }
+            }(turn_classification.second);
+            bearing_class_by_node_based_node[node_v] = bearing_class_id;
+
             for (const auto turn : possible_turns)
             {
                 const double turn_angle = turn.angle;
@@ -373,7 +413,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_from_u));
                 original_edge_data_vector.emplace_back(
                     m_compressed_edge_container.GetPositionForID(edge_from_u), edge_data1.name_id,
-                    turn_instruction, edge_data1.travel_mode);
+                    turn_instruction, entry_class_id, edge_data1.travel_mode);
 
                 ++original_edges_counter;
 
@@ -469,6 +509,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         }
     }
 
+    util::SimpleLogger().Write() << "Created " << entry_class_hash.size() << " entry classes and "
+                                 << bearing_class_hash.size() << " Bearing Classes";
+
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
     // Finally jump back to the empty space at the beginning and write length prefix
@@ -491,6 +534,38 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     util::SimpleLogger().Write() << "  skips " << skipped_uturns_counter << " U turns";
     util::SimpleLogger().Write() << "  skips " << skipped_barrier_turns_counter
                                  << " turns over barriers";
+}
+
+std::vector<util::guidance::BearingClass> EdgeBasedGraphFactory::GetBearingClasses() const
+{
+    std::vector<util::guidance::BearingClass> result(bearing_class_hash.size());
+    for (const auto &pair : bearing_class_hash)
+    {
+        BOOST_ASSERT(pair.second < result.size());
+        result[pair.second] = pair.first;
+    }
+    return result;
+}
+
+const std::vector<BearingClassID> &EdgeBasedGraphFactory::GetBearingClassIds() const
+{
+    return bearing_class_by_node_based_node;
+}
+
+std::vector<BearingClassID> &EdgeBasedGraphFactory::GetBearingClassIds()
+{
+    return bearing_class_by_node_based_node;
+}
+
+std::vector<util::guidance::EntryClass> EdgeBasedGraphFactory::GetEntryClasses() const
+{
+    std::vector<util::guidance::EntryClass> result(entry_class_hash.size());
+    for (const auto &pair : entry_class_hash)
+    {
+        BOOST_ASSERT(pair.second < result.size());
+        result[pair.second] = pair.first;
+    }
+    return result;
 }
 
 int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const

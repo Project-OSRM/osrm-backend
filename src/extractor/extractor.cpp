@@ -9,20 +9,18 @@
 #include "extractor/scripting_environment.hpp"
 
 #include "extractor/raster_source.hpp"
+#include "util/graph_loader.hpp"
 #include "util/io.hpp"
+#include "util/lua_util.hpp"
 #include "util/make_unique.hpp"
+#include "util/name_table.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
-#include "util/lua_util.hpp"
-#include "util/graph_loader.hpp"
-#include "util/name_table.hpp"
 
-#include "util/typedefs.hpp"
-
-#include "util/static_graph.hpp"
-#include "util/static_rtree.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/restriction_map.hpp"
+#include "util/static_graph.hpp"
+#include "util/static_rtree.hpp"
 
 #include "extractor/tarjan_scc.hpp"
 
@@ -41,14 +39,14 @@
 
 #include <algorithm>
 #include <atomic>
+#include <bitset>
+#include <chrono>
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <bitset>
-#include <chrono>
 
 namespace osrm
 {
@@ -159,8 +157,7 @@ int Extractor::run()
             // parse OSM entities in parallel, store in resulting vectors
             tbb::parallel_for(
                 tbb::blocked_range<std::size_t>(0, osm_elements.size()),
-                [&](const tbb::blocked_range<std::size_t> &range)
-                {
+                [&](const tbb::blocked_range<std::size_t> &range) {
                     ExtractionNode result_node;
                     ExtractionWay result_way;
                     auto &local_context = scripting_environment.GetContex();
@@ -269,10 +266,10 @@ int Extractor::run()
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
-        auto graph_size = BuildEdgeExpandedGraph(main_context.state, main_context.properties,
-                                                 internal_to_external_node_map,
-                                                 edge_based_node_list, node_is_startpoint,
-                                                 edge_based_node_weights, edge_based_edge_list);
+        auto graph_size = BuildEdgeExpandedGraph(
+            main_context.state, main_context.properties, internal_to_external_node_map,
+            edge_based_node_list, node_is_startpoint, edge_based_node_weights, edge_based_edge_list,
+            config.intersection_class_data_output_path);
 
         auto number_of_node_based_nodes = graph_size.first;
         auto max_edge_id = graph_size.second;
@@ -474,7 +471,8 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
-                                  util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list)
+                                  util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+                                  const std::string &intersection_class_output_file)
 {
     std::unordered_set<NodeID> barrier_nodes;
     std::unordered_set<NodeID> traffic_lights;
@@ -508,6 +506,11 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
     auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
 
     const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
+
+    WriteIntersectionClassificationData(
+        intersection_class_output_file, edge_based_graph_factory.GetBearingClassIds(),
+        edge_based_graph_factory.GetBearingClasses(), edge_based_graph_factory.GetEntryClasses());
+
     return std::make_pair(number_of_node_based_nodes, max_edge_id);
 }
 
@@ -600,6 +603,41 @@ void Extractor::WriteEdgeBasedGraph(
     util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
 
     util::SimpleLogger().Write() << "Processed " << number_of_used_edges << " edges";
+}
+
+void Extractor::WriteIntersectionClassificationData(
+    const std::string &output_file_name,
+    const std::vector<BearingClassID> &node_based_intersection_classes,
+    const std::vector<util::guidance::BearingClass> &bearing_classes,
+    const std::vector<util::guidance::EntryClass> &entry_classes) const
+{
+    std::ofstream file_out_stream(output_file_name.c_str(), std::ios::binary);
+    if (!file_out_stream)
+    {
+        util::SimpleLogger().Write(logWARNING) << "Failed to open " << output_file_name
+                                               << " for writing";
+        return;
+    }
+
+    util::SimpleLogger().Write() << "Writing Intersection Classification Data";
+    TIMER_START(write_edges);
+    util::writeFingerprint(file_out_stream);
+    util::serializeVector(file_out_stream, node_based_intersection_classes);
+
+    static_assert(std::is_trivially_copyable<util::guidance::BearingClass>::value,
+                  "BearingClass Serialization requires trivial copyable bearing classes");
+
+    util::serializeVector(file_out_stream, bearing_classes);
+
+    static_assert(std::is_trivially_copyable<util::guidance::EntryClass>::value,
+                  "EntryClass Serialization requires trivial copyable entry classes");
+
+    util::serializeVector(file_out_stream, entry_classes);
+    TIMER_STOP(write_edges);
+    util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s for "
+                                 << node_based_intersection_classes.size() << " Indices into "
+                                 << bearing_classes.size() << " bearing classes and "
+                                 << entry_classes.size() << " entry classes";
 }
 }
 }

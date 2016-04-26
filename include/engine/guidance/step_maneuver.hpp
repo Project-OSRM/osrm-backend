@@ -3,6 +3,8 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "util/coordinate.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -27,6 +29,8 @@ struct IntermediateIntersection
     double duration;
     double distance;
     util::Coordinate location;
+    util::guidance::EntryClass entry_class;
+    util::guidance::BearingClass bearing_class;
 };
 
 struct StepManeuver
@@ -37,6 +41,8 @@ struct StepManeuver
     extractor::guidance::TurnInstruction instruction;
     WaypointType waypoint_type;
     unsigned exit;
+    util::guidance::EntryClass entry_class;
+    util::guidance::BearingClass bearing_class;
     std::vector<IntermediateIntersection> intersections;
 };
 

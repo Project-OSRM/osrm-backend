@@ -34,13 +34,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 #include <cstddef>
+#include <cstdint>
 
 // OpenStreetMap node ids are higher than 2^32
-OSRM_STRONG_TYPEDEF(uint64_t, OSMNodeID)
-OSRM_STRONG_TYPEDEF_HASHABLE(uint64_t, OSMNodeID)
+OSRM_STRONG_TYPEDEF(std::uint64_t, OSMNodeID)
+OSRM_STRONG_TYPEDEF_HASHABLE(std::uint64_t, OSMNodeID)
 
-OSRM_STRONG_TYPEDEF(uint32_t, OSMWayID)
-OSRM_STRONG_TYPEDEF_HASHABLE(uint32_t, OSMWayID)
+OSRM_STRONG_TYPEDEF(std::uint32_t, OSMWayID)
+OSRM_STRONG_TYPEDEF_HASHABLE(std::uint32_t, OSMWayID)
 
 static const OSMNodeID SPECIAL_OSM_NODEID = OSMNodeID(std::numeric_limits<std::uint64_t>::max());
 static const OSMWayID SPECIAL_OSM_WAYID = OSMWayID(std::numeric_limits<std::uint32_t>::max());
@@ -56,6 +57,12 @@ using OSMEdgeID_weak = std::uint64_t;
 using NodeID = unsigned int;
 using EdgeID = unsigned int;
 using EdgeWeight = int;
+
+using BearingClassID = std::uint32_t;
+static const BearingClassID INVALID_BEARING_CLASSID = std::numeric_limits<std::uint32_t>::max();
+
+using EntryClassID = std::uint16_t;
+static const EntryClassID INVALID_ENTRY_CLASSID = std::numeric_limits<std::uint16_t>::max();
 
 static const NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
 static const NodeID SPECIAL_SEGMENTID = std::numeric_limits<int>::max();

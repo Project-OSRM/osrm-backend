@@ -29,9 +29,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EXTRACTOR_HPP
 
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/extractor_config.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
+#include "extractor/extractor_config.hpp"
 #include "extractor/graph_compressor.hpp"
+
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -52,14 +55,16 @@ class Extractor
     ExtractorConfig config;
 
     std::pair<std::size_t, std::size_t>
-    BuildEdgeExpandedGraph(lua_State* lua_state,
-                           const ProfileProperties& profile_properties,
+    BuildEdgeExpandedGraph(lua_State *lua_state,
+                           const ProfileProperties &profile_properties,
                            std::vector<QueryNode> &internal_to_external_node_map,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
-                           util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list);
-    void WriteProfileProperties(const std::string& output_path, const ProfileProperties& properties) const;
+                           util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+                           const std::string &intersection_class_output_file);
+    void WriteProfileProperties(const std::string &output_path,
+                                const ProfileProperties &properties) const;
     void WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map);
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &edges,
@@ -76,6 +81,12 @@ class Extractor
     void WriteEdgeBasedGraph(const std::string &output_file_filename,
                              const size_t max_edge_id,
                              util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list);
+
+    void WriteIntersectionClassificationData(
+        const std::string &output_file_name,
+        const std::vector<std::uint32_t> &node_based_intersection_classes,
+        const std::vector<util::guidance::BearingClass> &bearing_classes,
+        const std::vector<util::guidance::EntryClass> &entry_classes) const;
 };
 }
 }

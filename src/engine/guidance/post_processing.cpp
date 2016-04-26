@@ -444,7 +444,8 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     auto addIntersection = [](RouteStep into, const RouteStep &last_step,
                               const RouteStep &intersection) {
         into.maneuver.intersections.push_back(
-            {last_step.duration, last_step.distance, intersection.maneuver.location});
+            {last_step.duration, last_step.distance, intersection.maneuver.location,
+             intersection.maneuver.entry_class, intersection.maneuver.bearing_class});
 
         return forwardInto(std::move(into), intersection);
     };

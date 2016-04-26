@@ -54,7 +54,7 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/util/version.hpp
 )
-file(GLOB UtilGlob src/util/*.cpp)
+file(GLOB UtilGlob src/util/*.cpp src/util/*/*.cpp)
 file(GLOB ExtractorGlob src/extractor/*.cpp src/extractor/*/*.cpp)
 file(GLOB ContractorGlob src/contractor/*.cpp)
 file(GLOB StorageGlob src/storage/*.cpp)

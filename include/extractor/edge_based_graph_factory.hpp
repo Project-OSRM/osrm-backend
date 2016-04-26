@@ -3,33 +3,35 @@
 #ifndef EDGE_BASED_GRAPH_FACTORY_HPP_
 #define EDGE_BASED_GRAPH_FACTORY_HPP_
 
-#include "extractor/edge_based_edge.hpp"
-#include "extractor/profile_properties.hpp"
-#include "extractor/restriction_map.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "extractor/original_edge_data.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/restriction_map.hpp"
 
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
-#include "util/node_based_graph.hpp"
-#include "util/typedefs.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/name_table.hpp"
+#include "util/node_based_graph.hpp"
+#include "util/typedefs.hpp"
 
 #include <algorithm>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <iosfwd>
 #include <memory>
 #include <queue>
 #include <string>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <string>
 
 #include <boost/filesystem/fstream.hpp>
 
@@ -66,6 +68,12 @@ class EdgeBasedGraphFactory
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
+
+    // These access functions don't destroy the content
+    const std::vector<BearingClassID> &GetBearingClassIds() const;
+    std::vector<BearingClassID> &GetBearingClassIds();
+    std::vector<util::guidance::BearingClass> GetBearingClasses() const;
+    std::vector<util::guidance::EntryClass> GetEntryClasses() const;
 
     unsigned GetHighestEdgeID();
 
@@ -127,6 +135,10 @@ class EdgeBasedGraphFactory
     std::size_t restricted_turns_counter;
     std::size_t skipped_uturns_counter;
     std::size_t skipped_barrier_turns_counter;
+
+    std::unordered_map<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
+    std::vector<BearingClassID> bearing_class_by_node_based_node;
+    std::unordered_map<util::guidance::EntryClass, EntryClassID> entry_class_hash;
 };
 } // namespace extractor
 } // namespace osrm

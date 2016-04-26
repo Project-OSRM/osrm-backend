@@ -4,6 +4,10 @@
 #include "engine/polyline_compressor.hpp"
 #include "util/integer_range.hpp"
 
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
+#include "util/guidance/toolkit.hpp"
+
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
@@ -93,6 +97,47 @@ util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
     return array;
 }
 
+util::json::Object getConnection(const bool entry_allowed, const double bearing)
+{
+    util::json::Object result;
+    result.values["entry_allowed"] = entry_allowed ? "true" : "false";
+    result.values["bearing"] = bearing;
+    return result;
+}
+
+util::json::Array getConnections(const util::guidance::EntryClass entry_class,
+                                 const util::guidance::BearingClass bearing_class)
+{
+    util::json::Array result;
+    const auto bearings = bearing_class.getAvailableBearings();
+    for (size_t connection = 0; connection < bearings.size(); ++connection)
+    {
+        result.values.push_back(
+            getConnection(entry_class.allowsEntry(connection), bearings[connection]));
+    }
+    return result;
+}
+
+util::json::Object getIntersection(const guidance::StepManeuver maneuver)
+{
+    util::json::Object result;
+    // bearings are oriented in the direction of driving. For the in-bearing, we actually need to
+    // find the bearing from the view of the intersection. This means we have to rotate the bearing
+    // by 180 degree.
+    const auto rotated_bearing_before = (maneuver.bearing_before >= 180.0)
+                                            ? (maneuver.bearing_before - 180.0)
+                                            : (maneuver.bearing_before + 180.0);
+    result.values["from_bearing"] =
+        getMatchingDiscreteBearing(false, rotated_bearing_before, maneuver.entry_class,
+                                   maneuver.bearing_class.getAvailableBearings());
+    result.values["to_bearing"] =
+        getMatchingDiscreteBearing(true, maneuver.bearing_after, maneuver.entry_class,
+                                   maneuver.bearing_class.getAvailableBearings());
+
+    result.values["connections"] = getConnections(maneuver.entry_class, maneuver.bearing_class);
+    return result;
+}
+
 // FIXME this actually needs to be configurable from the profiles
 std::string modeToString(const extractor::TravelMode mode)
 {
@@ -150,6 +195,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     if (maneuver.waypoint_type == guidance::WaypointType::None)
     {
         step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
+        step_maneuver.values["intersection"] = detail::getIntersection(maneuver);
     }
     else
         step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
@@ -169,6 +215,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     // actually compute the correct locations of the intersections
     if (!maneuver.intersections.empty() && maneuver.exit == 0)
         step_maneuver.values["exit"] = maneuver.intersections.size();
+
     return step_maneuver;
 }
 

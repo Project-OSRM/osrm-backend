@@ -14,8 +14,8 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       geometries_path{base.string() + ".geometry"}, timestamp_path{base.string() + ".timestamp"},
       datasource_names_path{base.string() + ".datasource_names"},
       datasource_indexes_path{base.string() + ".datasource_indexes"},
-      names_data_path{base.string() + ".names"},
-      properties_path{base.string() + ".properties"}
+      names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"},
+      intersection_class_path{base.string() + ".icd"}
 {
 }
 
@@ -32,7 +32,8 @@ bool StorageConfig::IsValid() const
            boost::filesystem::is_regular_file(datasource_names_path) &&
            boost::filesystem::is_regular_file(datasource_indexes_path) &&
            boost::filesystem::is_regular_file(names_data_path) &&
-           boost::filesystem::is_regular_file(properties_path);
+           boost::filesystem::is_regular_file(properties_path) &&
+           boost::filesystem::is_regular_file(intersection_class_path);
 }
 }
 }

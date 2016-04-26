@@ -12,6 +12,9 @@
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/optional.hpp>
 #include <cstddef>
@@ -27,12 +30,13 @@ namespace detail
 {
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                       const LegGeometry &leg_geometry,
-                                      const std::size_t segment_index);
+                                      const std::size_t segment_index,
+                                      util::guidance::EntryClass entry_class,
+                                      util::guidance::BearingClass bearing_class);
 
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                       const WaypointType waypoint_type,
                                       const LegGeometry &leg_geometry);
-
 } // ns detail
 
 template <typename DataFacadeT>
@@ -100,8 +104,10 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                 } else {
                     step_name_id = target_node.name_id;
                 }
-                maneuver = detail::stepManeuverFromGeometry(path_point.turn_instruction,
-                                                            leg_geometry, segment_index);
+                maneuver = detail::stepManeuverFromGeometry(
+                    path_point.turn_instruction, leg_geometry, segment_index,
+                    facade.GetEntryClass(path_point.entry_classid),
+                    facade.GetBearingClass(facade.GetBearingClassID(path_point.turn_via_node)));
                 segment_index++;
                 segment_duration = 0;
             }

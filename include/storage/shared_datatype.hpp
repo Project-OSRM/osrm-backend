@@ -29,6 +29,7 @@ struct SharedDataLayout
         GRAPH_EDGE_LIST,
         COORDINATE_LIST,
         TURN_INSTRUCTION,
+        ENTRY_CLASSID,
         TRAVEL_MODE,
         R_SEARCH_TREE,
         GEOMETRIES_INDEX,
@@ -42,6 +43,9 @@ struct SharedDataLayout
         DATASOURCE_NAME_OFFSETS,
         DATASOURCE_NAME_LENGTHS,
         PROPERTIES,
+        BEARING_CLASSID,
+        ENTRY_CLASS,
+        BEARING_CLASS,
         NUM_BLOCKS
     };
 

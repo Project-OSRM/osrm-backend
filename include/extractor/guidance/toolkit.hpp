@@ -41,7 +41,8 @@ const constexpr bool shiftable_ccw[] = {false, true, true, false, false, true, t
 const constexpr bool shiftable_cw[] = {false, false, true, true, false, false, true, true};
 const constexpr std::uint8_t modifier_bounds[detail::num_direction_modifiers] = {
     0, 36, 93, 121, 136, 163, 220, 255};
-const constexpr double discrete_angle_step_size = 360. / 256.;
+
+const constexpr double discrete_angle_step_size = 360. / 24;
 
 template <typename IteratorType>
 util::Coordinate
@@ -246,12 +247,12 @@ inline bool isConflict(const TurnInstruction first, const TurnInstruction second
 inline DiscreteAngle discretizeAngle(const double angle)
 {
     BOOST_ASSERT(angle >= 0. && angle <= 360.);
-    return DiscreteAngle(static_cast<std::uint8_t>(angle / detail::discrete_angle_step_size));
+    return DiscreteAngle(static_cast<std::uint8_t>((angle + 0.5 *detail::discrete_angle_step_size) / detail::discrete_angle_step_size));
 }
 
 inline double angleFromDiscreteAngle(const DiscreteAngle angle)
 {
-    return static_cast<double>(angle) * detail::discrete_angle_step_size;
+    return static_cast<double>(angle) * detail::discrete_angle_step_size + 0.5 * detail::discrete_angle_step_size;
 }
 
 inline double getAngularPenalty(const double angle, DirectionModifier modifier)

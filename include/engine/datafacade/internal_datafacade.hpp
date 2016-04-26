@@ -6,21 +6,23 @@
 #include "engine/datafacade/datafacade_base.hpp"
 
 #include "extractor/guidance/turn_instruction.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
 
 #include "storage/storage_config.hpp"
 #include "engine/geospatial_query.hpp"
+#include "extractor/compressed_edge_container.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
-#include "contractor/query_edge.hpp"
+#include "util/graph_loader.hpp"
+#include "util/io.hpp"
+#include "util/range_table.hpp"
+#include "util/rectangle.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
+#include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
-#include "util/range_table.hpp"
-#include "util/graph_loader.hpp"
-#include "util/simple_logger.hpp"
-#include "util/rectangle.hpp"
-#include "extractor/compressed_edge_container.hpp"
 
 #include "osrm/coordinate.hpp"
 
@@ -89,6 +91,17 @@ class InternalDataFacade final : public BaseDataFacade
     boost::filesystem::path file_index_path;
     util::RangeTable<16, false> m_name_table;
 
+    // bearing classes by node based node
+    util::ShM<BearingClassID, false>::vector m_bearing_class_id_table;
+    // entry class IDs by edge based egde
+    util::ShM<EntryClassID, false>::vector m_entry_class_id_list;
+    // the look-up table for entry classes. An entry class lists the possibility of entry for all
+    // available turns. For every turn, there is an associated entry class.
+    util::ShM<util::guidance::EntryClass, false>::vector m_entry_class_table;
+    // the look-up table for distinct bearing classes. A bearing class lists the available bearings
+    // at an intersection
+    util::ShM<util::guidance::BearingClass, false>::vector m_bearing_class_table;
+
     void LoadProfileProperties(const boost::filesystem::path &properties_path)
     {
         boost::filesystem::ifstream in_stream(properties_path);
@@ -97,7 +110,8 @@ class InternalDataFacade final : public BaseDataFacade
             throw util::exception("Could not open " + properties_path.string() + " for reading.");
         }
 
-        in_stream.read(reinterpret_cast<char*>(&m_profile_properties), sizeof(m_profile_properties));
+        in_stream.read(reinterpret_cast<char *>(&m_profile_properties),
+                       sizeof(m_profile_properties));
     }
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
@@ -154,6 +168,7 @@ class InternalDataFacade final : public BaseDataFacade
         m_name_ID_list.resize(number_of_edges);
         m_turn_instruction_list.resize(number_of_edges);
         m_travel_mode_list.resize(number_of_edges);
+        m_entry_class_id_list.resize(number_of_edges);
 
         extractor::OriginalEdgeData current_edge_data;
         for (unsigned i = 0; i < number_of_edges; ++i)
@@ -164,6 +179,7 @@ class InternalDataFacade final : public BaseDataFacade
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
             m_travel_mode_list[i] = current_edge_data.travel_mode;
+            m_entry_class_id_list[i] = current_edge_data.entry_classid;
         }
     }
 
@@ -224,7 +240,8 @@ class InternalDataFacade final : public BaseDataFacade
         boost::filesystem::ifstream datasources_stream(datasource_indexes_file, std::ios::binary);
         if (!datasources_stream)
         {
-            throw util::exception("Could not open " + datasource_indexes_file.string() + " for reading!");
+            throw util::exception("Could not open " + datasource_indexes_file.string() +
+                                  " for reading!");
         }
         BOOST_ASSERT(datasources_stream);
 
@@ -241,7 +258,8 @@ class InternalDataFacade final : public BaseDataFacade
         boost::filesystem::ifstream datasourcenames_stream(datasource_names_file, std::ios::binary);
         if (!datasourcenames_stream)
         {
-            throw util::exception("Could not open " + datasource_names_file.string() + " for reading!");
+            throw util::exception("Could not open " + datasource_names_file.string() +
+                                  " for reading!");
         }
         BOOST_ASSERT(datasourcenames_stream);
         std::string name;
@@ -277,6 +295,43 @@ class InternalDataFacade final : public BaseDataFacade
         }
     }
 
+    void LoadIntersectionClasses(const boost::filesystem::path &intersection_class_file)
+    {
+        std::ifstream intersection_stream(intersection_class_file.string(), std::ios::binary);
+        if (!intersection_stream)
+            util::SimpleLogger().Write(logWARNING) << "Failed to open " << intersection_class_file
+                                                   << " for reading.";
+        if (!util::readAndCheckFingerprint(intersection_stream))
+        {
+            util::SimpleLogger().Write(logWARNING)
+                << "Fingerprint does not match or reading failed";
+            exit(-1);
+        }
+
+        {
+            util::SimpleLogger().Write(logINFO) << "Loading Bearing Class IDs";
+            std::vector<BearingClassID> bearing_class_id;
+            util::deserializeVector(intersection_stream, bearing_class_id);
+            m_bearing_class_id_table.resize(bearing_class_id.size());
+            std::copy(bearing_class_id.begin(), bearing_class_id.end(),
+                      &m_bearing_class_id_table[0]);
+        }
+        {
+            util::SimpleLogger().Write(logINFO) << "Loading Bearing Classes";
+            std::vector<util::guidance::BearingClass> bearing_classes;
+            util::deserializeVector(intersection_stream, bearing_classes);
+            m_bearing_class_table.resize(bearing_classes.size());
+            std::copy(bearing_classes.begin(), bearing_classes.end(), &m_bearing_class_table[0]);
+        }
+        {
+            util::SimpleLogger().Write(logINFO) << "Loading Entry Classes";
+            std::vector<util::guidance::EntryClass> entry_classes;
+            util::deserializeVector(intersection_stream, entry_classes);
+            m_entry_class_table.resize(entry_classes.size());
+            std::copy(entry_classes.begin(), entry_classes.end(), &m_entry_class_table[0]);
+        }
+    }
+
   public:
     virtual ~InternalDataFacade()
     {
@@ -284,7 +339,7 @@ class InternalDataFacade final : public BaseDataFacade
         m_geospatial_query.reset();
     }
 
-    explicit InternalDataFacade(const storage::StorageConfig& config)
+    explicit InternalDataFacade(const storage::StorageConfig &config)
     {
         ram_index_path = config.ram_index_path;
         file_index_path = config.file_index_path;
@@ -302,8 +357,7 @@ class InternalDataFacade final : public BaseDataFacade
         LoadGeometries(config.geometries_path);
 
         util::SimpleLogger().Write() << "loading datasource info";
-        LoadDatasourceInfo(config.datasource_names_path,
-                           config.datasource_indexes_path);
+        LoadDatasourceInfo(config.datasource_names_path, config.datasource_indexes_path);
 
         util::SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(config.timestamp_path);
@@ -316,6 +370,9 @@ class InternalDataFacade final : public BaseDataFacade
 
         util::SimpleLogger().Write() << "loading rtree";
         LoadRTree();
+
+        util::SimpleLogger().Write() << "loading intersection class data";
+        LoadIntersectionClasses(config.intersection_class_path);
     }
 
     // search graph access
@@ -548,8 +605,7 @@ class InternalDataFacade final : public BaseDataFacade
         result_nodes.clear();
         result_nodes.reserve(end - begin);
         std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
-                      {
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_nodes.emplace_back(edge.node_id);
                       });
     }
@@ -564,8 +620,7 @@ class InternalDataFacade final : public BaseDataFacade
         result_weights.clear();
         result_weights.reserve(end - begin);
         std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
-                      {
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_weights.emplace_back(edge.weight);
                       });
     }
@@ -592,11 +647,9 @@ class InternalDataFacade final : public BaseDataFacade
         }
         else
         {
-            std::for_each(m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
-                          [&](const uint8_t &datasource_id)
-                          {
-                              result_datasources.push_back(datasource_id);
-                          });
+            std::for_each(
+                m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
+                [&](const uint8_t &datasource_id) { result_datasources.push_back(datasource_id); });
         }
     }
 
@@ -609,7 +662,33 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 
-    bool GetContinueStraightDefault() const override final { return m_profile_properties.continue_straight_at_waypoint; }
+    bool GetContinueStraightDefault() const override final
+    {
+        return m_profile_properties.continue_straight_at_waypoint;
+    }
+
+    BearingClassID GetBearingClassID(const NodeID nid) const override final
+    {
+        return m_bearing_class_id_table.at(nid);
+    }
+
+    util::guidance::BearingClass
+    GetBearingClass(const BearingClassID bearing_class_id) const override final
+    {
+        BOOST_ASSERT(bearing_class_id != INVALID_BEARING_CLASSID);
+        return m_bearing_class_table.at(bearing_class_id);
+    }
+
+    EntryClassID GetEntryClassID(const EdgeID eid) const override final
+    {
+        return m_entry_class_id_list.at(eid);
+    }
+
+    util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
+    {
+        BOOST_ASSERT(entry_class_id != INVALID_ENTRY_CLASSID);
+        return m_entry_class_table.at(entry_class_id);
+    }
 };
 }
 }

@@ -9,8 +9,10 @@
 #include <cstddef>
 #include <iomanip>
 #include <limits>
+#include <map>
 #include <set>
 #include <unordered_set>
+#include <unordered_map>
 
 using osrm::util::guidance::getTurnDirection;
 
@@ -77,6 +79,11 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const E
             turns.emplace_back(road.turn);
 
     return turns;
+}
+
+Intersection TurnAnalysis::getIntersection(const NodeID from_nid, const EdgeID via_eid) const
+{
+    return intersection_generator(from_nid, via_eid);
 }
 
 // Sets basic turn types as fallback for otherwise unhandled turns

@@ -37,20 +37,23 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
         pre_turn_bearing =
             util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate);
     }
-    return StepManeuver{
-        std::move(turn_coordinate),
-        pre_turn_bearing,
-        post_turn_bearing,
-        std::move(instruction),
-        waypoint_type,
-        INVALID_EXIT_NR,
-        {} // no intermediate intersections
-    };
+    return StepManeuver{std::move(turn_coordinate),
+                        pre_turn_bearing,
+                        post_turn_bearing,
+                        std::move(instruction),
+                        waypoint_type,
+                        INVALID_EXIT_NR,
+                        // BearingClass,EntryClass, and Intermediate intersections are unknown yet
+                        {},
+                        {},
+                        {}};
 }
 
 StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instruction,
                                       const LegGeometry &leg_geometry,
-                                      const std::size_t segment_index)
+                                      const std::size_t segment_index,
+                                      util::guidance::EntryClass entry_class,
+                                      util::guidance::BearingClass bearing_class)
 {
     auto turn_index = leg_geometry.BackIndex(segment_index);
     BOOST_ASSERT(turn_index > 0);
@@ -66,15 +69,10 @@ StepManeuver stepManeuverFromGeometry(extractor::guidance::TurnInstruction instr
     const double post_turn_bearing =
         util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
 
-    return StepManeuver{
-        std::move(turn_coordinate),
-        pre_turn_bearing,
-        post_turn_bearing,
-        std::move(instruction),
-        WaypointType::None,
-        INVALID_EXIT_NR,
-        {} // no intermediate intersections
-    };
+    // add a step without intermediate intersections
+    return StepManeuver{std::move(turn_coordinate), pre_turn_bearing,         post_turn_bearing,
+                        std::move(instruction),     WaypointType::None,       INVALID_EXIT_NR,
+                        std::move(entry_class),     std::move(bearing_class), {}};
 }
 } // ns detail
 } // ns engine

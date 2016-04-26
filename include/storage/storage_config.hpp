@@ -64,6 +64,7 @@ struct StorageConfig final
     boost::filesystem::path datasource_indexes_path;
     boost::filesystem::path names_data_path;
     boost::filesystem::path properties_path;
+    boost::filesystem::path intersection_class_path;
 };
 }
 }
