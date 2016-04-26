@@ -15,7 +15,7 @@ namespace server
 namespace service
 {
 
-engine::Status TileService::RunQuery(std::string &query, ResultT &result)
+engine::Status TileService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
 {
     auto query_iterator = query.begin();
     auto parameters =
@@ -27,7 +27,7 @@ engine::Status TileService::RunQuery(std::string &query, ResultT &result)
         auto &json_result = result.get<util::json::Object>();
         json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
-            "Query string malformed close to position " + std::to_string(position);
+            "Query string malformed close to position " + std::to_string(prefix_length + position);
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters);

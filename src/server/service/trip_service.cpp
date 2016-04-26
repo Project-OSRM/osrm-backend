@@ -38,7 +38,7 @@ std::string getWrongOptionHelp(const engine::api::TripParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TripService::RunQuery(std::string &query, ResultT &result)
+engine::Status TripService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
@@ -53,7 +53,7 @@ engine::Status TripService::RunQuery(std::string &query, ResultT &result)
         auto &json_result = result.get<util::json::Object>();
         json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
-            "Query string malformed close to position " + std::to_string(position);
+            "Query string malformed close to position " + std::to_string(prefix_length + position);
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters);
