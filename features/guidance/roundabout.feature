@@ -308,15 +308,15 @@ Feature: Basic Roundabout
 
         And the ways
             | nodes | junction   |
-            | ab    |            |
+            | ad    |            |
             | bcdb  | roundabout |
-            | ce    |            |
-            | df    |            |
+            | be    |            |
+            | cf    |            |
 
         When I route I should get
             | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+            | a,e       | ad,be,be | depart,roundabout-exit-1,arrive |
+            | a,f       | ad,cf,cf | depart,roundabout-exit-2,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -327,13 +327,13 @@ Feature: Basic Roundabout
 
         And the ways
             | nodes | junction   |
-            | ab    |            |
+            | ac    |            |
             | bcdb  | roundabout |
-            | ce    |            |
-            | df    |            |
+            | de    |            |
+            | bf    |            |
 
         When I route I should get
             | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+            | a,e       | ac,de,de | depart,roundabout-exit-1,arrive |
+            | a,f       | ac,bf,bf | depart,roundabout-exit-2,arrive |
 
