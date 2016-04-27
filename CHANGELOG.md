@@ -1,3 +1,11 @@
+# 5.1.0
+   - API:
+     - added roundabout-turn instruction. The instruction indicates a small roundabout that is treated as an intersection
+        (turn right at the roundabout for first exit, go straight at the roundabout...)
+
+   - Infrastructure
+    - BREAKING: reordered internal instruction types. This breaks the data format
+
 # 5.0.0
    Changes with regard 5.0.0 RC2:
    - API:

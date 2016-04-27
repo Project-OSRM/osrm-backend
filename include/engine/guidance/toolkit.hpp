@@ -1,5 +1,5 @@
-#ifndef OSRM_UTIL_GUIDANCE_TOOLKIT_HPP_
-#define OSRM_UTIL_GUIDANCE_TOOLKIT_HPP_
+#ifndef OSRM_ENGINE_GUIDANCE_TOOLKIT_HPP_
+#define OSRM_ENGINE_GUIDANCE_TOOLKIT_HPP_
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "util/bearing.hpp"
@@ -25,9 +25,12 @@ inline bool entersRoundabout(const extractor::guidance::TurnInstruction instruct
 {
     return (instruction.type == extractor::guidance::TurnType::EnterRoundabout ||
             instruction.type == extractor::guidance::TurnType::EnterRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersection ||
             instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
             instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit ||
             instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
             instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
 }
 
@@ -35,8 +38,10 @@ inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruct
 {
     return (instruction.type == extractor::guidance::TurnType::ExitRoundabout ||
             instruction.type == extractor::guidance::TurnType::ExitRotary ||
+            instruction.type == extractor::guidance::TurnType::ExitRoundaboutIntersection ||
             instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection);
 }
 
 inline bool staysOnRoundabout(const extractor::guidance::TurnInstruction instruction)
@@ -68,4 +73,4 @@ inline double angularDeviation(const double angle, const double from)
 } // namespace engine
 } // namespace osrm
 
-#endif /* OSRM_UTIL_GUIDANCE_TOOLKIT_HPP_ */
+#endif /* OSRM_ENGINE_GUIDANCE_TOOLKIT_HPP_ */
