@@ -1,8 +1,14 @@
 #include "catch.hpp"
 
+#include <map>
+#include <vector>
+
+#include <osmium/builder/attr.hpp>
 #include <osmium/builder/builder_helper.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/tag.hpp>
+
+using namespace osmium::builder::attr;
 
 TEST_CASE("create tag list") {
     osmium::memory::Buffer buffer(10240);
@@ -11,6 +17,42 @@ TEST_CASE("create tag list") {
         {
             osmium::builder::TagListBuilder builder(buffer);
             builder.add_tag("highway", "primary");
+            builder.add_tag("name", "Main Street");
+        }
+        buffer.commit();
+    }
+
+    SECTION("with TagListBuilder from pair<const char*, const char*>") {
+        {
+            osmium::builder::TagListBuilder builder(buffer);
+            builder.add_tag(std::pair<const char*, const char*>{"highway", "primary"});
+            builder.add_tag("name", "Main Street");
+        }
+        buffer.commit();
+    }
+
+    SECTION("with TagListBuilder from pair<const char* const, const char*>") {
+        {
+            osmium::builder::TagListBuilder builder(buffer);
+            builder.add_tag(std::pair<const char* const, const char*>{"highway", "primary"});
+            builder.add_tag("name", "Main Street");
+        }
+        buffer.commit();
+    }
+
+    SECTION("with TagListBuilder from pair<const char*, const char* const>") {
+        {
+            osmium::builder::TagListBuilder builder(buffer);
+            builder.add_tag(std::pair<const char*, const char* const>{"highway", "primary"});
+            builder.add_tag("name", "Main Street");
+        }
+        buffer.commit();
+    }
+
+    SECTION("with TagListBuilder from pair<const char* const, const char* const>") {
+        {
+            osmium::builder::TagListBuilder builder(buffer);
+            builder.add_tag(std::pair<const char* const, const char* const>{"highway", "primary"});
             builder.add_tag("name", "Main Street");
         }
         buffer.commit();
@@ -36,18 +78,86 @@ TEST_CASE("create tag list") {
         buffer.commit();
     }
 
-    SECTION("with build_tag_list from initializer list") {
-        osmium::builder::build_tag_list(buffer, {
-            { "highway", "primary" },
-            { "name", "Main Street" }
-        });
+    SECTION("with add_tag_list from pair<const char*, const char*>") {
+        osmium::builder::add_tag_list(buffer,
+            _tag(std::pair<const char*, const char*>{"highway", "primary"}),
+            _tag("name", "Main Street")
+        );
     }
 
-    SECTION("with build_tag_list_from_map") {
-        osmium::builder::build_tag_list_from_map(buffer, std::map<const char*, const char*>({
+    SECTION("with add_tag_list from pair<const char* const, const char*>") {
+        osmium::builder::add_tag_list(buffer,
+            _tag(std::pair<const char* const, const char*>{"highway", "primary"}),
+            _tag("name", "Main Street")
+        );
+    }
+
+    SECTION("with add_tag_list from pair<const char*, const char* const>") {
+        osmium::builder::add_tag_list(buffer,
+            _tag(std::pair<const char*, const char* const>{"highway", "primary"}),
+            _tag("name", "Main Street")
+        );
+    }
+
+    SECTION("with add_tag_list from pair<const char* const, const char* const>") {
+        osmium::builder::add_tag_list(buffer,
+            _tag(std::pair<const char* const, const char* const>{"highway", "primary"}),
+            _tag("name", "Main Street")
+        );
+    }
+
+    SECTION("with add_tag_list from vector of pairs (const/const)") {
+        std::vector<std::pair<const char* const, const char* const>> v{
+            { "highway", "primary" },
+            { "name", "Main Street" }
+        };
+        osmium::builder::add_tag_list(buffer, _tags(v));
+    }
+
+    SECTION("with add_tag_list from vector of pairs (const/nc)") {
+        std::vector<std::pair<const char* const, const char*>> v{
+            { "highway", "primary" },
+            { "name", "Main Street" }
+        };
+        osmium::builder::add_tag_list(buffer, _tags(v));
+    }
+
+    SECTION("with add_tag_list from vector of pairs (nc/const)") {
+        std::vector<std::pair<const char*, const char* const>> v{
+            { "highway", "primary" },
+            { "name", "Main Street" }
+        };
+        osmium::builder::add_tag_list(buffer, _tags(v));
+    }
+
+    SECTION("with add_tag_list from vector of pairs (nc/nc)") {
+        std::vector<std::pair<const char*, const char*>> v{
+            { "highway", "primary" },
+            { "name", "Main Street" }
+        };
+        osmium::builder::add_tag_list(buffer, _tags(v));
+    }
+
+    SECTION("with add_tag_list from initializer list") {
+        osmium::builder::add_tag_list(buffer, _tags({
             { "highway", "primary" },
             { "name", "Main Street" }
         }));
+    }
+
+    SECTION("with add_tag_list from _tag") {
+        osmium::builder::add_tag_list(buffer,
+            _tag("highway", "primary"),
+            _tag("name", "Main Street")
+        );
+    }
+
+    SECTION("with add_tag_list from map") {
+        std::map<const char*, const char*> m{
+            { "highway", "primary" },
+            { "name", "Main Street" }
+        };
+        osmium::builder::add_tag_list(buffer, _tags(m));
     }
 
     SECTION("with build_tag_list_from_func") {
@@ -80,10 +190,11 @@ TEST_CASE("create tag list") {
 TEST_CASE("empty keys and values are okay") {
     osmium::memory::Buffer buffer(10240);
 
-    const osmium::TagList& tl = osmium::builder::build_tag_list(buffer, {
-        { "empty value", "" },
-        { "", "empty key" }
-    });
+    auto pos = osmium::builder::add_tag_list(buffer,
+        _tag("empty value", ""),
+        _tag("", "empty key")
+    );
+    const osmium::TagList& tl = buffer.get<osmium::TagList>(pos);
 
     REQUIRE(osmium::item_type::tag_list == tl.type());
     REQUIRE(2 == tl.size());
@@ -100,3 +211,14 @@ TEST_CASE("empty keys and values are okay") {
     REQUIRE(std::string("") == tl.get_value_by_key("empty value"));
     REQUIRE(std::string("empty key") == tl.get_value_by_key(""));
 }
+
+TEST_CASE("tag key or value is too long") {
+    osmium::memory::Buffer buffer(10240);
+    osmium::builder::TagListBuilder builder(buffer);
+
+    const char kv[2000] = "";
+    builder.add_tag(kv, 1, kv, 1000);
+    REQUIRE_THROWS(builder.add_tag(kv, 1500, kv, 1));
+    REQUIRE_THROWS(builder.add_tag(kv, 1, kv, 1500));
+}
+

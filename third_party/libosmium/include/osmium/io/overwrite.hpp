@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,20 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-namespace osmium {
-
-    namespace io {
-
-        /**
-         * Allow overwriting of existing file.
-         */
-        enum class overwrite : bool {
-            no    = false,
-            allow = true
-        };
-
-    } // namespace io
-
-} // namespace osmium
+#pragma message("Including overwrite.hpp is deprecated, #include <osmium/io/writer_options.hpp> instead.")
+#include <osmium/io/writer_options.hpp>
 
 #endif // OSMIUM_IO_OVERWRITE_HPP

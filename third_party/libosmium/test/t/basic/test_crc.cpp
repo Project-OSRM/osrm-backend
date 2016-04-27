@@ -4,8 +4,6 @@
 
 #include <osmium/osm/crc.hpp>
 
-#include "helper.hpp"
-
 TEST_CASE("CRC of basic datatypes") {
 
     osmium::CRC<boost::crc_32_type> crc32;
@@ -22,6 +20,27 @@ TEST_CASE("CRC of basic datatypes") {
         crc32.update_int8('y');
 
         REQUIRE(crc32().checksum() == 0x8fe62899);
+    }
+
+    SECTION("Int16") {
+        crc32.update_int16(0x0123U);
+        crc32.update_int16(0x1234U);
+
+        REQUIRE(crc32().checksum() == 0xda923744);
+    }
+
+    SECTION("Int32") {
+        crc32.update_int32(0x01234567UL);
+        crc32.update_int32(0x12345678UL);
+
+        REQUIRE(crc32().checksum() == 0x9b4e2af3);
+    }
+
+    SECTION("Int64") {
+        crc32.update_int64(0x0123456789abcdefULL);
+        crc32.update_int64(0x123456789abcdef0ULL);
+
+        REQUIRE(crc32().checksum() == 0x6d8b7267);
     }
 
     SECTION("String") {

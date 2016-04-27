@@ -10,7 +10,7 @@ IF /I "%PLATFORM"=="x64" (
   CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 )
 
-IF NOT EXIST deps\gyp git clone --depth 1 https://chromium.googlesource.com/external/gyp.git deps/gyp
+IF NOT EXIST deps\gyp git clone --quiet --depth 1 https://chromium.googlesource.com/external/gyp.git deps/gyp
 
 CALL deps\gyp\gyp.bat variant.gyp --depth=. ^
 -f msvs ^

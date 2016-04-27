@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include <osmium/builder/builder_helper.hpp>
+#include <osmium/builder/attr.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/tag.hpp>
 #include <osmium/tags/taglist.hpp>
@@ -23,6 +23,12 @@ void check_filter(const osmium::TagList& tag_list, const TFilter filter, const s
     REQUIRE(std::distance(fi_begin, fi_end) == std::count(reference.begin(), reference.end(), true));
 }
 
+const osmium::TagList& make_tag_list(osmium::memory::Buffer& buffer, std::initializer_list<std::pair<const char*, const char*>> tags) {
+    auto pos = osmium::builder::add_tag_list(buffer, osmium::builder::attr::_tags(tags));
+    return buffer.get<osmium::TagList>(pos);
+}
+
+
 TEST_CASE("Filter") {
 
     SECTION("KeyFilter_matches_some_tags") {
@@ -30,7 +36,7 @@ TEST_CASE("Filter") {
         filter.add(true, "highway").add(true, "railway");
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },  // match
             { "name", "Main Street" }, // no match
             { "source", "GPS" }        // no match
@@ -46,7 +52,7 @@ TEST_CASE("Filter") {
         filter.add(true, "highway").add(true, "source");
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tl = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tl = make_tag_list(buffer, {
             { "highway", "primary" },  // match
             { "name", "Main Street" }, // no match
             { "source", "GPS" }        // no match
@@ -72,7 +78,7 @@ TEST_CASE("Filter") {
         filter.add(true, "highway", "residential").add(true, "highway", "primary").add(true, "railway");
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },
             { "railway", "tram" },
             { "source", "GPS" }
@@ -92,12 +98,12 @@ TEST_CASE("Filter") {
 
         osmium::memory::Buffer buffer(10240);
 
-        const osmium::TagList& tag_list1 = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list1 = make_tag_list(buffer, {
             { "highway", "road" },
             { "name", "Main Street" }
         });
 
-        const osmium::TagList& tag_list2 = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list2 = make_tag_list(buffer, {
             { "highway", "primary" },
             { "name", "Main Street" }
         });
@@ -113,7 +119,7 @@ TEST_CASE("Filter") {
         filter.add(true, "highway", "primary").add(true, "name");
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },
             { "railway", "tram" },
             { "source", "GPS" }
@@ -130,7 +136,7 @@ TEST_CASE("Filter") {
         filter.add(true, "highway", "primary").add(true, "name");
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },
             { "name", "Main Street" }
         });
@@ -146,7 +152,7 @@ TEST_CASE("Filter") {
         filter.add(true, "highway", "road").add(true, "source");
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },
             { "name", "Main Street" }
         });
@@ -158,7 +164,7 @@ TEST_CASE("Filter") {
 
     SECTION("KeyValueFilter_matches_against_taglist_with_any_called_with_rvalue") {
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },
             { "railway", "tram" },
             { "source", "GPS" }
@@ -173,11 +179,11 @@ TEST_CASE("Filter") {
         filter.add(true, "highway", std::regex(".*_link"));
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list1 = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list1 = make_tag_list(buffer, {
             { "highway", "primary_link" },
             { "source", "GPS" }
         });
-        const osmium::TagList& tag_list2 = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list2 = make_tag_list(buffer, {
             { "highway", "primary" },
             { "source", "GPS" }
         });
@@ -192,7 +198,7 @@ TEST_CASE("Filter") {
         filter.add(true, "name", r);
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },
             { "name", "Hauptstraße" }
         });
@@ -205,7 +211,7 @@ TEST_CASE("Filter") {
         filter.add(true, "name:");
 
         osmium::memory::Buffer buffer(10240);
-        const osmium::TagList& tag_list = osmium::builder::build_tag_list(buffer, {
+        const osmium::TagList& tag_list = make_tag_list(buffer, {
             { "highway", "primary" },
             { "name:de", "Hauptstraße" }
         });

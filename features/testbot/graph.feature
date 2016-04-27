@@ -17,8 +17,8 @@ Feature: Basic Routing
             | dce   |
 
         When I route I should get
-            | from | to | route   |
-            | a    | e  | abc,dce |
+            | from | to | route       |
+            | a    | e  | abc,dce,dce |
 
     Scenario: Turn instructions on compressed road network geometry
         Given the node map
@@ -36,5 +36,5 @@ Feature: Basic Routing
             | fy     | last  |
 
         When I route I should get
-            | from | to | route            | turns                       |
-            | x    | y  | first,compr,last | head,right,left,destination |
+            | from | to | route                 |
+            | x    | y  | first,compr,last,last |

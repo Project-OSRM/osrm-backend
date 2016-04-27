@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -47,46 +47,65 @@ namespace osmium {
          * as a base class. Options are stored and retrieved by key using the
          * different set() and get() methods.
          *
+         * Both keys and values are stored as strings. The values "true",
+         * "yes", "false", and "no" are interpreted as boolean values in some
+         * functions.
+         *
          * You can iterate over all set options. Dereferencing an iterator
          * yields a std::pair of the key and value strings.
          */
         class Options {
 
-            typedef std::map<std::string, std::string> option_map;
+            using option_map = std::map<std::string, std::string>;
             option_map m_options;
 
         public:
 
-            typedef option_map::iterator iterator;
-            typedef option_map::const_iterator const_iterator;
-            typedef option_map::value_type value_type;
+            using iterator = option_map::iterator;
+            using const_iterator = option_map::const_iterator;
+            using value_type = option_map::value_type;
 
+            /**
+             * Construct empty option set.
+             */
             Options() = default;
 
+            /**
+             * Construct option set from initializer list:
+             * @code
+             *   Options options{ { "foo", "true" }, { "bar", "17" } };
+             * @endcode
+             */
             explicit Options(const std::initializer_list<value_type>& values) :
                 m_options(values) {
             }
 
-            Options(const Options&) = default;
-            Options& operator=(const Options&) = default;
-
-            Options(Options&&) = default;
-            Options& operator=(Options&&) = default;
-
-            ~Options() = default;
-
+            /**
+             * Set option 'key' to 'value'.
+             */
             void set(const std::string& key, const std::string& value) {
                 m_options[key] = value;
             }
 
+            /**
+             * Set option 'key' to 'value'.
+             */
             void set(const std::string& key, const char* value) {
                 m_options[key] = value;
             }
 
+            /**
+             * Set option 'key' to 'value'.
+             */
             void set(const std::string& key, bool value) {
                 m_options[key] = value ? "true" : "false";
             }
 
+            /**
+             * Set option from string in the form 'key=value'. If the string
+             * contains no equal sign, the whole string is the key and it will
+             * be set to "true".
+             */
             void set(std::string data) {
                 size_t pos = data.find_first_of('=');
                 if (pos == std::string::npos) {
@@ -99,7 +118,7 @@ namespace osmium {
             }
 
             /**
-             * Get value of "key" option. If not set the default_value (or
+             * Get value of "key" option. If not set, the default_value (or
              * empty string) is returned.
              */
             std::string get(const std::string& key, const std::string& default_value="") const noexcept {
@@ -112,36 +131,67 @@ namespace osmium {
 
             /**
              * Is this option set to a true value ("true" or "yes")?
+             * Will return false if the value is unset.
              */
             bool is_true(const std::string& key) const noexcept {
                 std::string value = get(key);
                 return (value == "true" || value == "yes");
             }
 
+            /**
+             * Is this option not set to a false value ("false" or "no")?
+             * Will return true if the value is unset.
+             */
+            bool is_not_false(const std::string& key) const noexcept {
+                std::string value = get(key);
+                return !(value == "false" || value == "no");
+            }
+
+            /**
+             * The number of options set.
+             */
             size_t size() const noexcept {
                 return m_options.size();
             }
 
+            /**
+             * Returns an iterator to the beginning.
+             */
             iterator begin() noexcept {
                 return m_options.begin();
             }
 
+            /**
+             * Returns an iterator to the end.
+             */
             iterator end() noexcept {
                 return m_options.end();
             }
 
+            /**
+             * Returns an iterator to the beginning.
+             */
             const_iterator begin() const noexcept {
                 return m_options.cbegin();
             }
 
+            /**
+             * Returns an iterator to the end.
+             */
             const_iterator end() const noexcept {
                 return m_options.cend();
             }
 
+            /**
+             * Returns an iterator to the beginning.
+             */
             const_iterator cbegin() const noexcept {
                 return m_options.cbegin();
             }
 
+            /**
+             * Returns a iterator to the end.
+             */
             const_iterator cend() const noexcept {
                 return m_options.cend();
             }

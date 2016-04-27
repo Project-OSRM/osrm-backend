@@ -8,16 +8,39 @@ SET PROJECT_DIR=%CD%
 ECHO PROJECT_DIR^: %PROJECT_DIR%
 ECHO NUMBER_OF_PROCESSORS^: %NUMBER_OF_PROCESSORS%
 ECHO cmake^: && cmake --version
+IF %ERRORLEVEL% NEQ 0 ECHO CMAKE not found GOTO ERROR
+
+FOR /F %%G IN ("--version") DO cmake %%G 2>&1 | findstr /C:"3.5.0" > nul && goto CMAKE_NOT_OK
+GOTO CMAKE_OK
+
+:CMAKE_NOT_OK
+ECHO CMAKE NOT OK - downloading new CMake
+IF NOT EXIST cm.zip powershell Invoke-WebRequest https://cmake.org/files/v3.5/cmake-3.5.1-win32-x86.zip -OutFile $env:PROJECT_DIR\cm.zip
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF NOT EXIST cmake-3.5.1-win32-x86 7z -y x cm.zip | %windir%\system32\FIND "ing archive"
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+SET PATH=%PROJECT_DIR%\cmake-3.5.1-win32-x86\bin;%PATH%
+
+:CMAKE_OK
+ECHO CMAKE_OK
+cmake --version
 
 ECHO activating VS command prompt ...
 SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
 CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
 ECHO platform^: %platform%
+
+ECHO cl.exe version
+cl
+ECHO msbuild version
+msbuild /version
+
 :: HARDCODE "x64" as it is uppercase on AppVeyor and download from S3 is case sensitive
 SET DEPSPKG=osrm-deps-win-x64-14.0.7z
 
 :: local development
+ECHO.
 ECHO LOCAL_DEV^: %LOCAL_DEV%
 IF NOT DEFINED LOCAL_DEV SET LOCAL_DEV=0
 IF DEFINED LOCAL_DEV IF %LOCAL_DEV% EQU 1 IF EXIST %DEPSPKG% ECHO skipping deps download && GOTO SKIPDL
@@ -33,27 +56,39 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF EXIST osrm-deps ECHO deleting osrm-deps... && RD /S /Q osrm-deps
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-IF EXIST build ECHO deletings build dir... && RD /S /Q build
+IF EXIST build ECHO deleting build dir... && RD /S /Q build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 7z -y x %DEPSPKG% | %windir%\system32\FIND "ing archive"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+::tree osrm-deps
 
 MKDIR build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 cd build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-SET OSRMDEPSDIR=%PROJECT_DIR%\osrm-deps
+SET OSRMDEPSDIR=%PROJECT_DIR%/osrm-deps
 set PREFIX=%OSRMDEPSDIR%/libs
 set BOOST_ROOT=%OSRMDEPSDIR%/boost
+set BOOST_LIBRARYDIR=%BOOST_ROOT%/lib
 set TBB_INSTALL_DIR=%OSRMDEPSDIR%/tbb
 set TBB_ARCH_PLATFORM=intel64/vc14
+
+ECHO OSRMDEPSDIR       ^: %OSRMDEPSDIR%
+ECHO PREFIX            ^: %PREFIX%
+ECHO BOOST_ROOT        ^: %BOOST_ROOT%
+ECHO BOOST_LIBRARYDIR  ^: %BOOST_LIBRARYDIR%
+ECHO TBB_INSTALL_DIR   ^: %TBB_INSTALL_DIR%
+ECHO TBB_ARCH_PLATFORM ^: %TBB_ARCH_PLATFORM%
+
 
 ECHO calling cmake ....
 cmake .. ^
 -G "Visual Studio 14 2015 Win64" ^
 -DBOOST_ROOT=%BOOST_ROOT% ^
+-DBOOST_LIBRARYDIR=%BOOST_LIBRARYDIR% ^
 -DBoost_ADDITIONAL_VERSIONS=1.58 ^
 -DBoost_USE_MULTITHREADED=ON ^
 -DBoost_USE_STATIC_LIBS=ON ^
@@ -81,11 +116,14 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 SET PATH=%PROJECT_DIR%\osrm-deps\libs\bin;%PATH%
 
-ECHO running datastructure-tests.exe ...
-%Configuration%\datastructure-tests.exe
+ECHO running engine-tests.exe ...
+%Configuration%\unit_tests\engine-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-ECHO running algorithm-tests.exe ...
-%Configuration%\algorithm-tests.exe
+ECHO running extractor-tests.exe ...
+%Configuration%\unit_tests\extractor-tests.exe
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+ECHO running util-tests.exe ...
+%Configuration%\unit_tests\util-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE

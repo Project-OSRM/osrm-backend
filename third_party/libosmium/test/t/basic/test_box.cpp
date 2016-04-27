@@ -8,26 +8,34 @@
 #include <osmium/osm/crc.hpp>
 #include <osmium/geom/relations.hpp>
 
-TEST_CASE("Box") {
+TEST_CASE("Starting with default constructed box") {
 
-    SECTION("instantiation") {
-        osmium::Box b;
+    osmium::Box b;
+
+    SECTION("default constructor creates invalid box") {
         REQUIRE(!b);
         REQUIRE(!b.bottom_left());
         REQUIRE(!b.top_right());
         REQUIRE_THROWS_AS(b.size(), osmium::invalid_location);
     }
 
-    SECTION("instantiation_and_extend_with_undefined") {
-        osmium::Box b;
+    SECTION("extend with undefined") {
         REQUIRE(!b);
-        b.extend(osmium::Location());
+        b.extend(osmium::Location{});
+        REQUIRE(!b);
         REQUIRE(!b.bottom_left());
         REQUIRE(!b.top_right());
     }
 
-    SECTION("instantiation_and_extend") {
-        osmium::Box b;
+    SECTION("extend with invalid") {
+        REQUIRE(!b);
+        b.extend(osmium::Location{200.0, 100.0});
+        REQUIRE(!b);
+        REQUIRE(!b.bottom_left());
+        REQUIRE(!b.top_right());
+    }
+
+    SECTION("extend with valid") {
         osmium::Location loc1 { 1.2, 3.4 };
         b.extend(loc1);
         REQUIRE(!!b);
@@ -57,8 +65,7 @@ TEST_CASE("Box") {
         REQUIRE(crc32().checksum() == 0xd381a838);
     }
 
-    SECTION("output_defined") {
-        osmium::Box b;
+    SECTION("output defined") {
         b.extend(osmium::Location(1.2, 3.4));
         b.extend(osmium::Location(5.6, 7.8));
         std::stringstream out;
@@ -67,32 +74,61 @@ TEST_CASE("Box") {
         REQUIRE(b.size() == Approx(19.36).epsilon(0.000001));
     }
 
-    SECTION("output_undefined") {
-        osmium::Box b;
+    SECTION("output undefined") {
         std::stringstream out;
         out << b;
         REQUIRE(out.str() == "(undefined)");
     }
 
-    SECTION("box_inside_box") {
-        osmium::Box outer;
-        outer.extend(osmium::Location(1, 1));
-        outer.extend(osmium::Location(10, 10));
-
-        osmium::Box inner;
-        inner.extend(osmium::Location(2, 2));
-        inner.extend(osmium::Location(4, 4));
-
-        osmium::Box overlap;
-        overlap.extend(osmium::Location(3, 3));
-        overlap.extend(osmium::Location(5, 5));
-
-        REQUIRE( osmium::geom::contains(inner, outer));
-        REQUIRE(!osmium::geom::contains(outer, inner));
-
-        REQUIRE(!osmium::geom::contains(overlap, inner));
-        REQUIRE(!osmium::geom::contains(inner, overlap));
+    SECTION("output undefined bottom left") {
+        b.top_right() = osmium::Location(1.2, 3.4);
+        std::stringstream out;
+        out << b;
+        REQUIRE(out.str() == "(undefined)");
     }
+
+    SECTION("output undefined top right") {
+        b.bottom_left() = osmium::Location(1.2, 3.4);
+        std::stringstream out;
+        out << b;
+        REQUIRE(out.str() == "(undefined)");
+    }
+
+}
+
+TEST_CASE("Create box from locations") {
+    osmium::Box b{osmium::Location{1.23, 2.34}, osmium::Location{3.45, 4.56}};
+    REQUIRE(!!b);
+    REQUIRE(b.bottom_left() == (osmium::Location{1.23, 2.34}));
+    REQUIRE(b.top_right() == (osmium::Location{3.45, 4.56}));
+}
+
+TEST_CASE("Create box from doubles") {
+    osmium::Box b{1.23, 2.34, 3.45, 4.56};
+    REQUIRE(!!b);
+    REQUIRE(b.bottom_left() == (osmium::Location{1.23, 2.34}));
+    REQUIRE(b.top_right() == (osmium::Location{3.45, 4.56}));
+}
+
+TEST_CASE("Relationship between boxes") {
+
+    osmium::Box outer;
+    outer.extend(osmium::Location(1, 1));
+    outer.extend(osmium::Location(10, 10));
+
+    osmium::Box inner;
+    inner.extend(osmium::Location(2, 2));
+    inner.extend(osmium::Location(4, 4));
+
+    osmium::Box overlap;
+    overlap.extend(osmium::Location(3, 3));
+    overlap.extend(osmium::Location(5, 5));
+
+    REQUIRE( osmium::geom::contains(inner, outer));
+    REQUIRE(!osmium::geom::contains(outer, inner));
+
+    REQUIRE(!osmium::geom::contains(overlap, inner));
+    REQUIRE(!osmium::geom::contains(inner, overlap));
 
 }
 

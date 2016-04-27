@@ -1,8 +1,11 @@
+
 CXX := $(CXX)
+CXX_STD ?= c++11
+
 BOOST_LIBS = -lboost_timer -lboost_system -lboost_chrono
-RELEASE_FLAGS = -O3 -DNDEBUG -finline-functions -march=native -DSINGLE_THREADED
+RELEASE_FLAGS = -O3 -DNDEBUG -march=native -DSINGLE_THREADED -fvisibility-inlines-hidden
 DEBUG_FLAGS = -O0 -g -DDEBUG -fno-inline-functions
-COMMON_FLAGS = -Wall -Wsign-compare -Wsign-conversion -Wshadow -Wunused-parameter -pedantic -fvisibility-inlines-hidden -std=c++11
+COMMON_FLAGS = -Wall -pedantic -Wextra -Wsign-compare -Wsign-conversion -Wshadow -Wunused-parameter -std=$(CXX_STD)
 CXXFLAGS := $(CXXFLAGS)
 LDFLAGS := $(LDFLAGS)
 
@@ -33,23 +36,23 @@ gyp: ./deps/gyp
 	make V=1 -C ./out tests
 	./out/Release/tests
 
-out/bench-variant-debug: Makefile test/bench_variant.cpp variant.hpp
+out/bench-variant-debug: Makefile test/bench_variant.cpp variant.hpp recursive_wrapper.hpp
 	mkdir -p ./out
-	$(CXX) -o out/bench-variant-debug test/bench_variant.cpp -I./ $(DEBUG_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS)
+	$(CXX) -o out/bench-variant-debug test/bench_variant.cpp -I./ -pthreads $(DEBUG_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS)
 
-out/bench-variant: Makefile test/bench_variant.cpp variant.hpp
+out/bench-variant: Makefile test/bench_variant.cpp variant.hpp recursive_wrapper.hpp
 	mkdir -p ./out
 	$(CXX) -o out/bench-variant test/bench_variant.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS)
 
-out/unique_ptr_test: Makefile test/unique_ptr_test.cpp variant.hpp
+out/unique_ptr_test: Makefile test/unique_ptr_test.cpp variant.hpp recursive_wrapper.hpp
 	mkdir -p ./out
 	$(CXX) -o out/unique_ptr_test test/unique_ptr_test.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS)
 
-out/recursive_wrapper_test: Makefile test/recursive_wrapper_test.cpp variant.hpp
+out/recursive_wrapper_test: Makefile test/recursive_wrapper_test.cpp variant.hpp recursive_wrapper.hpp
 	mkdir -p ./out
 	$(CXX) -o out/recursive_wrapper_test test/recursive_wrapper_test.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS)
 
-out/binary_visitor_test: Makefile test/binary_visitor_test.cpp variant.hpp
+out/binary_visitor_test: Makefile test/binary_visitor_test.cpp variant.hpp variant_io.hpp recursive_wrapper.hpp
 	mkdir -p ./out
 	$(CXX) -o out/binary_visitor_test test/binary_visitor_test.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS)
 
@@ -59,24 +62,30 @@ bench: out/bench-variant out/unique_ptr_test out/unique_ptr_test out/recursive_w
 	./out/recursive_wrapper_test 100000
 	./out/binary_visitor_test 100000
 
-out/unit: Makefile test/unit.cpp test/optional_unit.cpp optional.hpp variant.hpp
+out/unit.o: Makefile test/unit.cpp
 	mkdir -p ./out
-	$(CXX) -o out/unit test/unit.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS)
-	$(CXX) -o out/optional_unit test/optional_unit.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -c -o $@ test/unit.cpp -Itest/include $(DEBUG_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS)
+
+out/%.o: test/t/%.cpp Makefile optional.hpp recursive_wrapper.hpp variant.hpp variant_io.hpp
+	mkdir -p ./out
+	$(CXX) -c -o $@ $< -I. -Itest/include $(DEBUG_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS)
+
+out/unit: out/unit.o out/binary_visitor_1.o out/binary_visitor_2.o out/binary_visitor_3.o out/binary_visitor_4.o out/binary_visitor_5.o out/binary_visitor_6.o out/issue21.o out/mutating_visitor.o out/optional.o out/recursive_wrapper.o out/sizeof.o out/unary_visitor.o out/variant.o
+	mkdir -p ./out
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 test: out/unit
 	./out/unit
-	./out/optional_unit
 
 coverage:
 	mkdir -p ./out
-	$(CXX) -o out/cov-test --coverage test/unit.cpp -I./ $(DEBUG_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o out/cov-test --coverage test/unit.cpp test/t/*.cpp -I./ -Itest/include $(DEBUG_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS)
 
-sizes: Makefile variant.hpp
+sizes: Makefile variant.hpp recursive_wrapper.hpp
 	mkdir -p ./out
-	@$(CXX) -o ./out/variant_hello_world.out variant.hpp $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) &&  du -h ./out/variant_hello_world.out
+	@$(CXX) -o ./out/our_variant_hello_world.out variant.hpp $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) &&  du -h ./out/our_variant_hello_world.out
 	@$(CXX) -o ./out/boost_variant_hello_world.out $(RUN_ARGS) $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) &&  du -h ./out/boost_variant_hello_world.out
-	@$(CXX) -o ./out/variant_hello_world ./test/variant_hello_world.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) &&  du -h ./out/variant_hello_world
+	@$(CXX) -o ./out/our_variant_hello_world ./test/our_variant_hello_world.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) &&  du -h ./out/our_variant_hello_world
 	@$(CXX) -o ./out/boost_variant_hello_world ./test/boost_variant_hello_world.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) &&  du -h ./out/boost_variant_hello_world
 
 profile: out/bench-variant-debug
@@ -91,8 +100,9 @@ clean:
 	rm -f *gcov
 	rm -f test/unit.gc*
 	rm -f test/*gcov
+	rm -f *.gcda *.gcno
 
-pgo: out Makefile variant.hpp
+pgo: out Makefile variant.hpp recursive_wrapper.hpp
 	$(CXX) -o out/bench-variant test/bench_variant.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS) -pg -fprofile-generate
 	./test-variant 500000 >/dev/null 2>/dev/null
 	$(CXX) -o out/bench-variant test/bench_variant.cpp -I./ $(RELEASE_FLAGS) $(COMMON_FLAGS) $(CXXFLAGS) $(LDFLAGS) $(BOOST_LIBS) -fprofile-use

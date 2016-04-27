@@ -5,9 +5,9 @@ local find_access_tag = require("lib/access").find_access_tag
 -- Begin of globals
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["block"] = true}
 access_tag_whitelist = { ["yes"] = true, ["foot"] = true, ["permissive"] = true, ["designated"] = true  }
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true }
+access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["delivery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags_hierachy = { "foot", "access" }
+access_tags_hierarchy = { "foot", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 restriction_exception_tags = { "foot" }
@@ -64,14 +64,12 @@ leisure_speeds = {
   ["track"] = walking_speed
 }
 
-traffic_signal_penalty   = 2
-u_turn_penalty           = 2
-use_turn_restrictions    = false
-local fallback_names     = true
+properties.traffic_signal_penalty        = 2
+properties.u_turn_penalty                = 2
+properties.use_turn_restrictions         = false
+properties.continue_straight_at_waypoint = false
 
---modes
-local mode_normal = 1
-local mode_ferry = 2
+local fallback_names     = true
 
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
@@ -81,7 +79,7 @@ end
 
 function node_function (node, result)
   local barrier = node:get_value_by_key("barrier")
-  local access = find_access_tag(node, access_tags_hierachy)
+  local access = find_access_tag(node, access_tags_hierarchy)
   local traffic_signal = node:get_value_by_key("highway")
 
   -- flag node if it carries a traffic light
@@ -133,10 +131,13 @@ function way_function (way, result)
   end
 
   -- access
-  local access = find_access_tag(way, access_tags_hierachy)
+  local access = find_access_tag(way, access_tags_hierarchy)
   if access_tag_blacklist[access] then
     return
   end
+
+  result.forward_mode = mode.walking
+  result.backward_mode = mode.walking
 
   local name = way:get_value_by_key("name")
   local ref = way:get_value_by_key("ref")
@@ -175,8 +176,8 @@ function way_function (way, result)
     result.forward_speed = route_speeds[route]
     result.backward_speed = route_speeds[route]
   end
-    result.forward_mode = mode_ferry
-    result.backward_mode = mode_ferry
+    result.forward_mode = mode.ferry
+    result.backward_mode = mode.ferry
   elseif railway and platform_speeds[railway] then
     -- railway platforms (old tagging scheme)
     result.forward_speed = platform_speeds[railway]
@@ -205,11 +206,11 @@ function way_function (way, result)
 
   -- oneway
   if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
-    result.backward_mode = 0
+    result.backward_mode = mode.inaccessible
   elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
     -- nothing to do
   elseif onewayClass == "-1" then
-    result.forward_mode = 0
+    result.forward_mode = mode.inaccessible
   end
 
   -- surfaces

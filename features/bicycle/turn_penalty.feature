@@ -23,11 +23,11 @@ Feature: Turn Penalties
             | jg    |
 
         When I route I should get
-            | from | to | route | time    | distance |
-            | s    | a  | sj,ja | 39s +-1 | 242m +-1 |
-            | s    | b  | sj,jb | 30s +-1 | 200m +-1 |
-            | s    | c  | sj,jc | 29s +-1 | 242m +-1 |
-            | s    | d  | sj,jd | 20s +-1 | 200m +-1 |
-            | s    | e  | sj,je | 29s +-1 | 242m +-1 |
-            | s    | f  | sj,jf | 30s +-1 | 200m +-1 |
-            | s    | g  | sj,jg | 39s +-1 | 242m +-1 |
+            | from | to | route    | time    | distance |
+            | s    | a  | sj,ja,ja | 39s +-1 | 242m +-1 |
+            | s    | b  | sj,jb,jb | 30s +-1 | 200m +-1 |
+            | s    | c  | sj,jc,jc | 29s +-1 | 242m +-1 |
+            | s    | d  | sj,jd,jd | 20s +-1 | 200m +-1 |
+            | s    | e  | sj,je,je | 29s +-1 | 242m +-1 |
+            | s    | f  | sj,jf,jf | 30s +-1 | 200m +-1 |
+            | s    | g  | sj,jg,jg | 39s +-1 | 242m +-1 |

@@ -32,7 +32,7 @@ Feature: Bike - Accessability of different way types
             | primary    | -1     | foot | bike  |
             | pedestrian | -1     | foot | foot  |
 
-    @square    
+    @square
     Scenario: Bike - Push bikes on pedestrian areas
         Given the node map
             | x |   |
@@ -46,14 +46,14 @@ Feature: Bike - Accessability of different way types
 
         When I route I should get
             | from | to | route |
-            | a    | b  | abcda |
-            | a    | d  | abcda |
-            | b    | c  | abcda |
-            | c    | b  | abcda |
-            | c    | d  | abcda |
-            | d    | c  | abcda |
-            | d    | a  | abcda |
-            | a    | d  | abcda |
+            | a    | b  | abcda,abcda |
+            | a    | d  | abcda,abcda |
+            | b    | c  | abcda,abcda |
+            | c    | b  | abcda,abcda |
+            | c    | d  | abcda,abcda |
+            | d    | c  | abcda,abcda |
+            | d    | a  | abcda,abcda |
+            | a    | d  | abcda,abcda |
 
     Scenario: Bike - Pushing bikes on ways with foot=yes
         Then routability should be
@@ -62,8 +62,7 @@ Feature: Bike - Accessability of different way types
             | motorway | yes  | foot |       |
             | runway   |      |      |       |
             | runway   | yes  | foot | foot  |
-    
-    @todo
+
     Scenario: Bike - Pushing bikes on ways with foot=yes in one direction
         Then routability should be
             | highway  | foot:forward | foot:backward | forw | backw |
@@ -72,20 +71,20 @@ Feature: Bike - Accessability of different way types
             | motorway |              | yes           |      | foot  |
 
     @construction
-    Scenario: Bike - Don't allow routing on ways still under construction 
+    Scenario: Bike - Don't allow routing on ways still under construction
         Then routability should be
             | highway      | foot | bicycle | bothw |
             | primary      |      |         | x     |
             | construction |      |         |       |
             | construction | yes  |         |       |
             | construction |      | yes     |       |
-        
+
     @roundabout
     Scenario: Bike - Don't push bikes against oneway flow on roundabouts
         Then routability should be
             | junction   | forw | backw |
             | roundabout | x    |       |
- 
+
     Scenario: Bike - Instructions when pushing bike on oneways
         Given the node map
             | a | b |   |
@@ -98,13 +97,12 @@ Feature: Bike - Accessability of different way types
             | cd    | primary |        |
 
         When I route I should get
-            | from | to | route    | turns                       |
-            | a    | d  | ab,bc,cd | head,right,left,destination |
-            | d    | a  | cd,bc,ab | head,right,left,destination |
-            | c    | a  | bc,ab    | head,left,destination       |
-            | d    | b  | cd,bc    | head,right,destination      |
+            | from | to | route       | modes                                   |
+            | a    | d  | ab,bc,cd,cd | cycling,cycling,cycling,cycling         |
+            | d    | a  | cd,bc,ab,ab | cycling,pushing bike,cycling,cycling    |
+            | c    | a  | bc,ab,ab    | pushing bike,cycling,cycling            |
+            | d    | b  | cd,bc,bc    | cycling,pushing bike,pushing bike       |
 
-    @todo
     Scenario: Bike - Instructions when pushing bike on footway/pedestrian, etc.
         Given the node map
             | a | b |   |
@@ -117,8 +115,8 @@ Feature: Bike - Accessability of different way types
             | cd    | primary |
 
         When I route I should get
-            | from | to | route    | turns                       |
-            | a    | d  | ab,bc,cd | head,right,left,destination |
-            | d    | a  | cd,bc,ab | head,right,left,destination |
-            | c    | a  | bc,ab    | head,left,destination       |
-            | d    | b  | cd,bc    | head,right,destination      |
+            | from | to | route       | modes                                |
+            | a    | d  | ab,bc,cd,cd | cycling,pushing bike,cycling,cycling |
+            | d    | a  | cd,bc,ab,ab | cycling,pushing bike,cycling,cycling |
+            | c    | a  | bc,ab,ab    | pushing bike,cycling,cycling         |
+            | d    | b  | cd,bc,bc    | cycling,pushing bike,pushing bike    |

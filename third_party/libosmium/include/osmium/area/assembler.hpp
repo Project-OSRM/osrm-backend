@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,9 +34,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
+#include <cassert>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <list>
+#include <set>
+#include <string>
 #include <map>
 #include <vector>
 
@@ -228,7 +232,7 @@ namespace osmium {
                     if (!ring.closed()) {
                         open_rings = true;
                         if (m_config.problem_reporter) {
-                            m_config.problem_reporter->report_ring_not_closed(ring.get_segment_front().first().location(), ring.get_segment_back().second().location());
+                            m_config.problem_reporter->report_ring_not_closed(ring.get_node_ref_front().location(), ring.get_node_ref_back().location());
                         }
                     }
                 }
@@ -244,14 +248,14 @@ namespace osmium {
              * true.
              */
             bool possibly_combine_rings_back(ProtoRing& ring) {
-                const osmium::NodeRef& nr = ring.get_segment_back().second();
+                const osmium::NodeRef& nr = ring.get_node_ref_back();
 
                 if (debug()) {
                     std::cerr << "      possibly_combine_rings_back()\n";
                 }
                 for (auto it = m_rings.begin(); it != m_rings.end(); ++it) {
                     if (&*it != &ring && !it->closed()) {
-                        if (has_same_location(nr, it->get_segment_front().first())) {
+                        if (has_same_location(nr, it->get_node_ref_front())) {
                             if (debug()) {
                                 std::cerr << "      ring.last=it->first\n";
                             }
@@ -259,7 +263,7 @@ namespace osmium {
                             m_rings.erase(it);
                             return true;
                         }
-                        if (has_same_location(nr, it->get_segment_back().second())) {
+                        if (has_same_location(nr, it->get_node_ref_back())) {
                             if (debug()) {
                                 std::cerr << "      ring.last=it->last\n";
                             }
@@ -280,14 +284,14 @@ namespace osmium {
              * true.
              */
             bool possibly_combine_rings_front(ProtoRing& ring) {
-                const osmium::NodeRef& nr = ring.get_segment_front().first();
+                const osmium::NodeRef& nr = ring.get_node_ref_front();
 
                 if (debug()) {
                     std::cerr << "      possibly_combine_rings_front()\n";
                 }
                 for (auto it = m_rings.begin(); it != m_rings.end(); ++it) {
                     if (&*it != &ring && !it->closed()) {
-                        if (has_same_location(nr, it->get_segment_back().second())) {
+                        if (has_same_location(nr, it->get_node_ref_back())) {
                             if (debug()) {
                                 std::cerr << "      ring.first=it->last\n";
                             }
@@ -296,7 +300,7 @@ namespace osmium {
                             m_rings.erase(it);
                             return true;
                         }
-                        if (has_same_location(nr, it->get_segment_front().first())) {
+                        if (has_same_location(nr, it->get_node_ref_front())) {
                             if (debug()) {
                                 std::cerr << "      ring.first=it->first\n";
                             }
@@ -364,7 +368,7 @@ namespace osmium {
                 }
 
                 osmium::area::detail::ProtoRing::segments_type segments(ring.segments().size());
-                std::copy(ring.segments().begin(), ring.segments().end(), segments.begin());
+                std::copy(ring.segments().cbegin(), ring.segments().cend(), segments.begin());
                 std::sort(segments.begin(), segments.end());
                 const auto it = std::adjacent_find(segments.begin(), segments.end(), [this](const osmium::area::detail::NodeRefSegment& s1, const osmium::area::detail::NodeRefSegment& s2) {
                     return has_same_location(s1.first(), s2.first());
@@ -429,14 +433,14 @@ namespace osmium {
                     }
                     {
                         osmium::builder::OuterRingBuilder ring_builder(builder.buffer(), &builder);
-                        ring_builder.add_node_ref(ring->get_segment_front().first());
+                        ring_builder.add_node_ref(ring->get_node_ref_front());
                         for (const auto& segment : ring->segments()) {
                             ring_builder.add_node_ref(segment.second());
                         }
                     }
                     for (ProtoRing* inner : ring->inner_rings()) {
                         osmium::builder::InnerRingBuilder ring_builder(builder.buffer(), &builder);
-                        ring_builder.add_node_ref(inner->get_segment_front().first());
+                        ring_builder.add_node_ref(inner->get_node_ref_front());
                         for (const auto& segment : inner->segments()) {
                             ring_builder.add_node_ref(segment.second());
                         }
@@ -455,21 +459,21 @@ namespace osmium {
                             std::cerr << " => ring CLOSED\n";
                         }
                     } else {
-                        if (has_same_location(ring.get_segment_back().second(), segment.first())) {
+                        if (has_same_location(ring.get_node_ref_back(), segment.first())) {
                             combine_rings_back(segment, ring);
                             return true;
                         }
-                        if (has_same_location(ring.get_segment_back().second(), segment.second())) {
+                        if (has_same_location(ring.get_node_ref_back(), segment.second())) {
                             segment.swap_locations();
                             combine_rings_back(segment, ring);
                             return true;
                         }
-                        if (has_same_location(ring.get_segment_front().first(), segment.first())) {
+                        if (has_same_location(ring.get_node_ref_front(), segment.first())) {
                             segment.swap_locations();
                             combine_rings_front(segment, ring);
                             return true;
                         }
-                        if (has_same_location(ring.get_segment_front().first(), segment.second())) {
+                        if (has_same_location(ring.get_node_ref_front(), segment.second())) {
                             combine_rings_front(segment, ring);
                             return true;
                         }
@@ -692,7 +696,7 @@ namespace osmium {
                 }
 
                 // Now create the Area object and add the attributes and tags
-                // from the relation.
+                // from the way.
                 {
                     osmium::builder::AreaBuilder builder(out_buffer);
                     builder.initialize_from_object(way);
@@ -749,7 +753,7 @@ namespace osmium {
                     for (size_t offset : members) {
                         if (!std::strcmp(memit->role(), "inner")) {
                             const osmium::Way& way = in_buffer.get<const osmium::Way>(offset);
-                            if (way.is_closed() && way.tags().size() > 0) {
+                            if (!way.nodes().empty() && way.is_closed() && way.tags().size() > 0) {
                                 auto d = std::count_if(way.tags().begin(), way.tags().end(), filter());
                                 if (d > 0) {
                                     osmium::tags::KeyFilter::iterator way_fi_begin(filter(), way.tags().begin(), way.tags().end());

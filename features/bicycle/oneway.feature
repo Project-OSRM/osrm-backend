@@ -29,9 +29,9 @@ Feature: Bike - Oneway streets
             | da    |        | no   |
 
         When I route I should get
-            | from | to | route    |
-            | a    | b  | ab       |
-            | b    | a  | bc,cd,da |
+            | from | to | route       |
+            | a    | b  | ab,ab       |
+            | b    | a  | bc,cd,da,da |
 
     Scenario: Bike - Handle various oneway tag values
         Then routability should be
@@ -124,5 +124,5 @@ Feature: Bike - Oneway streets
 
 
         When I route I should get
-            | from | to | route |
-            | a    | c  | ab,bc |
+            | from | to | route    |
+            | a    | c  | ab,bc,bc |

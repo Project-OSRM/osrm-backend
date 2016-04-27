@@ -5,7 +5,7 @@ Feature: Car - Restricted access
     Background:
         Given the profile "car"
 
-    Scenario: Car - Access tag hierachy    on ways
+    Scenario: Car - Access tag hierarchy    on ways
         Then routability should be
             | access | vehicle | motor_vehicle | motorcar | bothw |
             |        |         |               |          | x     |
@@ -30,7 +30,7 @@ Feature: Car - Restricted access
             |        |         | no            | yes      | x     |
             |        |         | yes           | no       |       |
 
-    Scenario: Car - Access tag hierachy on nodes
+    Scenario: Car - Access tag hierarchy on nodes
         Then routability should be
             | node/access | node/vehicle | node/motor_vehicle | node/motorcar | bothw |
             |             |              |                    |               | x     |
@@ -94,6 +94,7 @@ Feature: Car - Restricted access
             | agricultural |       |
             | forestry     |       |
             | psv          |       |
+            | delivery     |       |
             | some_tag     | x     |
 
 
@@ -108,6 +109,7 @@ Feature: Car - Restricted access
             | agricultural |       |
             | forestry     |       |
             | psv          |       |
+            | delivery     |       |
             | some_tag     | x     |
 
     Scenario: Car - Access tags on both node and way

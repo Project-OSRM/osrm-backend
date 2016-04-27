@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -52,6 +52,8 @@ DEALINGS IN THE SOFTWARE.
 # define ftruncate _chsize_s
 #endif
 
+#include <osmium/util/cast.hpp>
+
 namespace osmium {
 
     namespace util {
@@ -92,7 +94,7 @@ namespace osmium {
          * @throws std::system_error If ftruncate(2) call failed
          */
         inline void resize_file(int fd, size_t new_size) {
-            if (::ftruncate(fd, new_size) != 0) {
+            if (::ftruncate(fd, static_cast_with_assert<off_t>(new_size)) != 0) {
                 throw std::system_error(errno, std::system_category(), "ftruncate failed");
             }
         }
@@ -108,7 +110,7 @@ namespace osmium {
             return si.dwPageSize;
 #else
             // Unix implementation
-            return ::sysconf(_SC_PAGESIZE);
+            return size_t(::sysconf(_SC_PAGESIZE));
 #endif
         }
 

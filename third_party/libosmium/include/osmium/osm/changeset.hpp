@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -48,8 +48,102 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     namespace builder {
-        template <class T> class ObjectBuilder;
-    }
+        class ChangesetDiscussionBuilder;
+        template <typename T> class ObjectBuilder;
+    } // namespace builder
+
+    class Changeset;
+
+    class ChangesetComment : public osmium::memory::detail::ItemHelper {
+
+        friend class osmium::builder::ChangesetDiscussionBuilder;
+
+        osmium::Timestamp m_date;
+        osmium::user_id_type m_uid {0};
+        string_size_type m_user_size;
+        string_size_type m_text_size;
+
+        ChangesetComment(const ChangesetComment&) = delete;
+        ChangesetComment(ChangesetComment&&) = delete;
+
+        ChangesetComment& operator=(const ChangesetComment&) = delete;
+        ChangesetComment& operator=(ChangesetComment&&) = delete;
+
+        unsigned char* endpos() {
+            return data() + osmium::memory::padded_length(sizeof(ChangesetComment) + m_user_size + m_text_size);
+        }
+
+        const unsigned char* endpos() const {
+            return data() + osmium::memory::padded_length(sizeof(ChangesetComment) + m_user_size + m_text_size);
+        }
+
+        template <typename TMember>
+        friend class osmium::memory::CollectionIterator;
+
+        unsigned char* next() {
+            return endpos();
+        }
+
+        unsigned const char* next() const {
+            return endpos();
+        }
+
+        void set_user_size(string_size_type size) noexcept {
+            m_user_size = size;
+        }
+
+        void set_text_size(string_size_type size) noexcept {
+            m_text_size = size;
+        }
+
+    public:
+
+        static constexpr item_type collection_type = item_type::changeset_discussion;
+
+        ChangesetComment(osmium::Timestamp date, osmium::user_id_type uid) noexcept :
+            m_date(date),
+            m_uid(uid),
+            m_user_size(0),
+            m_text_size(0) {
+        }
+
+        osmium::Timestamp date() const noexcept {
+            return m_date;
+        }
+
+        osmium::user_id_type uid() const noexcept {
+            return m_uid;
+        }
+
+        const char* user() const noexcept {
+            return reinterpret_cast<const char*>(data() + sizeof(ChangesetComment));
+        }
+
+        const char* text() const noexcept {
+            return reinterpret_cast<const char*>(data() + sizeof(ChangesetComment) + m_user_size);
+        }
+
+    }; // class ChangesetComment
+
+    class ChangesetDiscussion : public osmium::memory::Collection<ChangesetComment, osmium::item_type::changeset_discussion> {
+
+        friend class osmium::builder::ObjectBuilder<osmium::Changeset>;
+
+    public:
+
+        typedef size_t size_type;
+
+        ChangesetDiscussion() :
+            osmium::memory::Collection<ChangesetComment, osmium::item_type::changeset_discussion>() {
+        }
+
+        size_type size() const noexcept {
+            return static_cast<size_type>(std::distance(begin(), end()));
+        }
+
+    }; // class ChangesetDiscussion
+
+    static_assert(sizeof(ChangesetDiscussion) % osmium::memory::align_bytes == 0, "Class osmium::ChangesetDiscussion has wrong size to be aligned properly!");
 
     /**
      * \brief An OSM Changeset, a group of changes made by a single user over
@@ -62,13 +156,16 @@ namespace osmium {
 
         friend class osmium::builder::ObjectBuilder<osmium::Changeset>;
 
+        osmium::Box       m_bounds;
         osmium::Timestamp m_created_at;
         osmium::Timestamp m_closed_at;
-        osmium::Box       m_bounds;
         changeset_id_type m_id {0};
         num_changes_type  m_num_changes {0};
+        num_comments_type m_num_comments {0};
         user_id_type      m_uid {0};
         string_size_type  m_user_size;
+        int16_t           m_padding1 {0};
+        int32_t           m_padding2 {0};
 
         Changeset() :
             OSMEntity(sizeof(Changeset), osmium::item_type::changeset) {
@@ -188,7 +285,7 @@ namespace osmium {
          * @param timestamp Timestamp
          * @returns Reference to changeset to make calls chainable.
          */
-        Changeset& set_created_at(const osmium::Timestamp timestamp) {
+        Changeset& set_created_at(const osmium::Timestamp& timestamp) {
             m_created_at = timestamp;
             return *this;
         }
@@ -199,7 +296,7 @@ namespace osmium {
          * @param timestamp Timestamp
          * @returns Reference to changeset to make calls chainable.
          */
-        Changeset& set_closed_at(const osmium::Timestamp timestamp) {
+        Changeset& set_closed_at(const osmium::Timestamp& timestamp) {
             m_closed_at = timestamp;
             return *this;
         }
@@ -216,8 +313,24 @@ namespace osmium {
         }
 
         /// Set the number of changes in this changeset
-        Changeset& set_num_changes(const char* num_changes) noexcept {
+        Changeset& set_num_changes(const char* num_changes) {
             return set_num_changes(osmium::string_to_num_changes(num_changes));
+        }
+
+        /// Get the number of comments in this changeset
+        num_comments_type num_comments() const noexcept {
+            return m_num_comments;
+        }
+
+        /// Set the number of comments in this changeset
+        Changeset& set_num_comments(num_comments_type num_comments) noexcept {
+            m_num_comments = num_comments;
+            return *this;
+        }
+
+        /// Set the number of comments in this changeset
+        Changeset& set_num_comments(const char* num_comments) {
+            return set_num_comments(osmium::string_to_num_comments(num_comments));
         }
 
         /**
@@ -260,6 +373,8 @@ namespace osmium {
                 set_id(value);
             } else if (!strcmp(attr, "num_changes")) {
                 set_num_changes(value);
+            } else if (!strcmp(attr, "comments_count")) {
+                set_num_comments(value);
             } else if (!strcmp(attr, "created_at")) {
                 set_created_at(osmium::Timestamp(value));
             } else if (!strcmp(attr, "closed_at")) {
@@ -294,6 +409,14 @@ namespace osmium {
 
         const_iterator end() const {
             return cend();
+        }
+
+        ChangesetDiscussion& discussion() {
+            return osmium::detail::subitem_of_type<ChangesetDiscussion>(begin(), end());
+        }
+
+        const ChangesetDiscussion& discussion() const {
+            return osmium::detail::subitem_of_type<const ChangesetDiscussion>(cbegin(), cend());
         }
 
     }; // class Changeset

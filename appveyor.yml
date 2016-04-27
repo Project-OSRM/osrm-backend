@@ -25,6 +25,11 @@ artifacts:
 #  - path: osrm_Debug.zip
 #    name: osrm_Debug.zip
 
+branches:
+  only:
+    - master
+    - develop
+
 deploy:
   provider: FTP
   server:
@@ -36,9 +41,3 @@ deploy:
   folder: /
   enable_ssl: true
   active_mode: false
-
-# notifications:
-#   - provider: HipChat
-#     auth_token:
-#       secure: boLE7BjcahdIUxv9jkN7U3F8iOASF+MkhtctlVoWJoo=
-#     room: Directions

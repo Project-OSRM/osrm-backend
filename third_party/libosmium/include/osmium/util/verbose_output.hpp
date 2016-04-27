@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -115,22 +115,27 @@ namespace osmium {
             }
 
             template<typename T>
-            friend VerboseOutput& operator<<(VerboseOutput& verbose_output, const T& value) {
-                if (verbose_output.m_verbose) {
-                    verbose_output.start_line();
+            void print(const T& value) {
+                if (m_verbose) {
+                    start_line();
                     std::cerr << value;
 
                     // check if there was a newline a the end and remember that
                     std::ostringstream output_buffer;
                     output_buffer << value;
                     if (!output_buffer.str().empty() && output_buffer.str().back() == '\n') {
-                        verbose_output.m_newline = true;
+                        m_newline = true;
                     }
                 }
-                return verbose_output;
             }
 
         }; // class VerboseOutput
+
+        template<typename T>
+        inline VerboseOutput& operator<<(VerboseOutput& verbose_output, const T& value) {
+            verbose_output.print(value);
+            return verbose_output;
+        }
 
     } // namespace util
 

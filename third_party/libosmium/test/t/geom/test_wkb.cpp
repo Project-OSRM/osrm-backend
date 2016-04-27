@@ -1,9 +1,7 @@
 #include "catch.hpp"
 
-#include <osmium/builder/builder_helper.hpp>
 #include <osmium/geom/wkb.hpp>
-
-#include "../basic/helper.hpp"
+#include "wnl_helper.hpp"
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 
@@ -27,12 +25,7 @@ SECTION("linestring") {
     osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
 
     osmium::memory::Buffer buffer(10000);
-    auto& wnl = osmium::builder::build_way_node_list(buffer, {
-        {1, {3.2, 4.2}},
-        {3, {3.5, 4.7}},
-        {4, {3.5, 4.7}},
-        {2, {3.6, 4.9}}
-    });
+    auto &wnl = create_test_wnl_okay(buffer);
 
     {
         std::string wkb {factory.create_linestring(wnl)};
@@ -59,12 +52,7 @@ SECTION("linestring_ewkb") {
     osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex);
 
     osmium::memory::Buffer buffer(10000);
-    auto& wnl = osmium::builder::build_way_node_list(buffer, {
-        {1, {3.2, 4.2}},
-        {3, {3.5, 4.7}},
-        {4, {3.5, 4.7}},
-        {2, {3.6, 4.9}}
-    });
+    auto &wnl = create_test_wnl_okay(buffer);
 
     std::string ewkb {factory.create_linestring(wnl)};
     REQUIRE(std::string{"0102000020E6100000030000009A99999999990940CDCCCCCCCCCC10400000000000000C40CDCCCCCCCCCC1240CDCCCCCCCCCC0C409A99999999991340"} == ewkb);
@@ -74,10 +62,7 @@ SECTION("linestring_with_two_same_locations") {
     osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
 
     osmium::memory::Buffer buffer(10000);
-    auto& wnl = osmium::builder::build_way_node_list(buffer, {
-        {1, {3.5, 4.7}},
-        {2, {3.5, 4.7}}
-    });
+    auto &wnl = create_test_wnl_same_location(buffer);
 
     REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
     REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
@@ -97,10 +82,7 @@ SECTION("linestring_with_undefined_location") {
     osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
 
     osmium::memory::Buffer buffer(10000);
-    auto& wnl = osmium::builder::build_way_node_list(buffer, {
-        {1, {3.5, 4.7}},
-        {2, osmium::Location()}
-    });
+    auto &wnl = create_test_wnl_undefined_location(buffer);
 
     REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::invalid_location);
 }
@@ -121,7 +103,7 @@ SECTION("empty_linestring") {
     osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
 
     osmium::memory::Buffer buffer(10000);
-    auto& wnl = osmium::builder::build_way_node_list(buffer, {});
+    auto &wnl = create_test_wnl_empty(buffer);
 
     REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
     REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);

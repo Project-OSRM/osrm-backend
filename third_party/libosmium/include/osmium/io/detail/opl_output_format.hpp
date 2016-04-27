@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <chrono>
 #include <cinttypes>
 #include <cstddef>
 #include <cstdint>
@@ -41,14 +40,10 @@ DEALINGS IN THE SOFTWARE.
 #include <future>
 #include <iterator>
 #include <memory>
-#include <ratio>
 #include <string>
 #include <thread>
 #include <utility>
 
-#include <utf8.h>
-
-#include <osmium/handler.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -74,71 +69,27 @@ namespace osmium {
 
         namespace detail {
 
+            struct opl_output_options {
+
+                /// Should metadata of objects be added?
+                bool add_metadata;
+
+            };
+
             /**
              * Writes out one buffer with OSM data in OPL format.
              */
-            class OPLOutputBlock : public osmium::handler::Handler {
+            class OPLOutputBlock : public OutputBlock {
 
-                static constexpr size_t tmp_buffer_size = 100;
-
-                std::shared_ptr<osmium::memory::Buffer> m_input_buffer;
-
-                std::shared_ptr<std::string> m_out;
-
-                char m_tmp_buffer[tmp_buffer_size+1];
-
-                bool m_add_metadata;
-
-                template <typename... TArgs>
-                void output_formatted(const char* format, TArgs&&... args) {
-#ifndef NDEBUG
-                    int len =
-#endif
-#ifndef _MSC_VER
-                    snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
-#else
-                    _snprintf(m_tmp_buffer, tmp_buffer_size, format, std::forward<TArgs>(args)...);
-#endif
-                    assert(len > 0 && static_cast<size_t>(len) < tmp_buffer_size);
-                    *m_out += m_tmp_buffer;
-                }
+                opl_output_options m_options;
 
                 void append_encoded_string(const char* data) {
-                    const char* end = data + std::strlen(data);
-
-                    while (data != end) {
-                        const char* last = data;
-                        uint32_t c = utf8::next(data, end);
-
-                        // This is a list of Unicode code points that we let
-                        // through instead of escaping them. It is incomplete
-                        // and can be extended later.
-                        // Generally we don't want to let through any character
-                        // that has special meaning in the OPL format such as
-                        // space, comma, @, etc. and any non-printing characters.
-                        if ((0x0021 <= c && c <= 0x0024) ||
-                            (0x0026 <= c && c <= 0x002b) ||
-                            (0x002d <= c && c <= 0x003c) ||
-                            (0x003e <= c && c <= 0x003f) ||
-                            (0x0041 <= c && c <= 0x007e) ||
-                            (0x00a1 <= c && c <= 0x00ac) ||
-                            (0x00ae <= c && c <= 0x05ff)) {
-                            m_out->append(last, data);
-                        } else {
-                            *m_out += '%';
-                            if (c <= 0xff) {
-                                output_formatted("%02x", c);
-                            } else {
-                                output_formatted("%04x", c);
-                            }
-                            *m_out += '%';
-                        }
-                    }
+                    osmium::io::detail::append_utf8_encoded_string(*m_out, data);
                 }
 
                 void write_meta(const osmium::OSMObject& object) {
                     output_formatted("%" PRId64, object.id());
-                    if (m_add_metadata) {
+                    if (m_options.add_metadata) {
                         output_formatted(" v%d d", object.version());
                         *m_out += (object.visible() ? 'V' : 'D');
                         output_formatted(" c%d t", object.changeset());
@@ -160,7 +111,7 @@ namespace osmium {
                     }
                 }
 
-                void write_location(const osmium::Location location, const char x, const char y) {
+                void write_location(const osmium::Location& location, const char x, const char y) {
                     if (location) {
                         output_formatted(" %c%.7f %c%.7f", x, location.lon_without_check(), y, location.lat_without_check());
                     } else {
@@ -173,11 +124,9 @@ namespace osmium {
 
             public:
 
-                explicit OPLOutputBlock(osmium::memory::Buffer&& buffer, bool add_metadata) :
-                    m_input_buffer(std::make_shared<osmium::memory::Buffer>(std::move(buffer))),
-                    m_out(std::make_shared<std::string>()),
-                    m_tmp_buffer(),
-                    m_add_metadata(add_metadata) {
+                OPLOutputBlock(osmium::memory::Buffer&& buffer, const opl_output_options& options) :
+                    OutputBlock(std::move(buffer)),
+                    m_options(options) {
                 }
 
                 OPLOutputBlock(const OPLOutputBlock&) = default;
@@ -186,13 +135,15 @@ namespace osmium {
                 OPLOutputBlock(OPLOutputBlock&&) = default;
                 OPLOutputBlock& operator=(OPLOutputBlock&&) = default;
 
-                ~OPLOutputBlock() = default;
+                ~OPLOutputBlock() noexcept = default;
 
                 std::string operator()() {
                     osmium::apply(m_input_buffer->cbegin(), m_input_buffer->cend(), *this);
 
                     std::string out;
-                    std::swap(out, *m_out);
+                    using std::swap;
+                    swap(out, *m_out);
+
                     return out;
                 }
 
@@ -244,7 +195,7 @@ namespace osmium {
                     *m_out += changeset.created_at().to_iso();
                     *m_out += " e";
                     *m_out += changeset.closed_at().to_iso();
-                    output_formatted(" i%d u", changeset.uid());
+                    output_formatted(" d%d i%d u", changeset.num_comments(), changeset.uid());
                     append_encoded_string(changeset.user());
                     write_location(changeset.bounds().bottom_left(), 'x', 'y');
                     write_location(changeset.bounds().top_right(), 'X', 'Y');
@@ -264,48 +215,42 @@ namespace osmium {
                     *m_out += '\n';
                 }
 
-            }; // OPLOutputBlock
+            }; // class OPLOutputBlock
 
             class OPLOutputFormat : public osmium::io::detail::OutputFormat {
 
-                bool m_add_metadata;
+                opl_output_options m_options;
 
             public:
 
-                OPLOutputFormat(const osmium::io::File& file, data_queue_type& output_queue) :
-                    OutputFormat(file, output_queue),
-                    m_add_metadata(file.get("add_metadata") != "false") {
+                OPLOutputFormat(const osmium::io::File& file, future_string_queue_type& output_queue) :
+                    OutputFormat(output_queue),
+                    m_options() {
+                    m_options.add_metadata = file.is_not_false("add_metadata");
                 }
 
                 OPLOutputFormat(const OPLOutputFormat&) = delete;
                 OPLOutputFormat& operator=(const OPLOutputFormat&) = delete;
 
-                void write_buffer(osmium::memory::Buffer&& buffer) override final {
-                    m_output_queue.push(osmium::thread::Pool::instance().submit(OPLOutputBlock{std::move(buffer), m_add_metadata}));
-                }
+                ~OPLOutputFormat() noexcept final = default;
 
-                void close() override final {
-                    std::string out;
-                    std::promise<std::string> promise;
-                    m_output_queue.push(promise.get_future());
-                    promise.set_value(out);
+                void write_buffer(osmium::memory::Buffer&& buffer) final {
+                    m_output_queue.push(osmium::thread::Pool::instance().submit(OPLOutputBlock{std::move(buffer), m_options}));
                 }
 
             }; // class OPLOutputFormat
 
-            namespace {
+            // we want the register_output_format() function to run, setting
+            // the variable is only a side-effect, it will never be used
+            const bool registered_opl_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::opl,
+                [](const osmium::io::File& file, future_string_queue_type& output_queue) {
+                    return new osmium::io::detail::OPLOutputFormat(file, output_queue);
+            });
 
-// we want the register_output_format() function to run, setting the variable
-// is only a side-effect, it will never be used
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-                const bool registered_opl_output = osmium::io::detail::OutputFormatFactory::instance().register_output_format(osmium::io::file_format::opl,
-                    [](const osmium::io::File& file, data_queue_type& output_queue) {
-                        return new osmium::io::detail::OPLOutputFormat(file, output_queue);
-                });
-#pragma GCC diagnostic pop
-
-            } // anonymous namespace
+            // dummy function to silence the unused variable warning from above
+            inline bool get_registered_opl_output() noexcept {
+                return registered_opl_output;
+            }
 
         } // namespace detail
 

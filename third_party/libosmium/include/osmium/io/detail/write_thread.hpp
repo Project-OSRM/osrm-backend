@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <algorithm>
+#include <exception>
 #include <future>
 #include <string>
 
 #include <osmium/io/compression.hpp>
-#include <osmium/io/detail/output_format.hpp>
+#include <osmium/io/detail/queue_util.hpp>
 #include <osmium/thread/util.hpp>
 
 namespace osmium {
@@ -46,33 +48,52 @@ namespace osmium {
 
         namespace detail {
 
+            /**
+             * This codes runs in its own thread, getting data from the given
+             * queue, (optionally) compressing it, and writing it to the output
+             * file.
+             */
             class WriteThread {
 
-                typedef osmium::io::detail::data_queue_type data_queue_type;
-
-                data_queue_type& m_input_queue;
-                osmium::io::Compressor* m_compressor;
+                queue_wrapper<std::string> m_queue;
+                std::unique_ptr<osmium::io::Compressor> m_compressor;
+                std::promise<bool> m_promise;
 
             public:
 
-                explicit WriteThread(data_queue_type& input_queue, osmium::io::Compressor* compressor) :
-                    m_input_queue(input_queue),
-                    m_compressor(compressor) {
+                WriteThread(future_string_queue_type& input_queue,
+                            std::unique_ptr<osmium::io::Compressor>&& compressor,
+                            std::promise<bool>&& promise) :
+                    m_queue(input_queue),
+                    m_compressor(std::move(compressor)),
+                    m_promise(std::move(promise)) {
                 }
 
-                bool operator()() {
-                    osmium::thread::set_thread_name("_osmium_output");
+                WriteThread(const WriteThread&) = delete;
+                WriteThread& operator=(const WriteThread&) = delete;
 
-                    std::future<std::string> data_future;
-                    std::string data;
-                    do {
-                        m_input_queue.wait_and_pop(data_future);
-                        data = data_future.get();
-                        m_compressor->write(data);
-                    } while (!data.empty());
+                WriteThread(WriteThread&&) = delete;
+                WriteThread& operator=(WriteThread&&) = delete;
 
-                    m_compressor->close();
-                    return true;
+                ~WriteThread() noexcept = default;
+
+                void operator()() {
+                    osmium::thread::set_thread_name("_osmium_write");
+
+                    try {
+                        while (true) {
+                            std::string data = m_queue.pop();
+                            if (at_end_of_data(data)) {
+                                break;
+                            }
+                            m_compressor->write(data);
+                        }
+                        m_compressor->close();
+                        m_promise.set_value(true);
+                    } catch (...) {
+                        m_promise.set_exception(std::current_exception());
+                        m_queue.drain();
+                    }
                 }
 
             }; // class WriteThread

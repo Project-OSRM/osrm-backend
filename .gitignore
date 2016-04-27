@@ -40,6 +40,8 @@ Thumbs.db
 # build related files #
 #######################
 /build/
+/example/build/
+/test/data/monaco*
 /cmake/postinst
 
 # Eclipse related files #
@@ -73,8 +75,16 @@ stxxl.errlog
 ###################
 /sandbox/
 
+# Test related files #
+######################
 /test/profile.lua
+/test/cache
+/test/speeds.csv
+/test/data/monaco.*
+node_modules
 
 # Deprecated config file #
 ##########################
 /server.ini
+
+*.swp

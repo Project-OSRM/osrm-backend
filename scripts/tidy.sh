@@ -3,4 +3,12 @@
 # Runs the Clang Tidy Tool in parallel on the code base.
 # Requires a compilation database in the build directory.
 
-git ls-files '*.cpp' | grep -v third_party | xargs -I{} -P $(nproc) clang-tidy -p build -header-filter='.*' {}
+
+find src include unit_tests -type f -name '*.hpp' -o -name '*.cpp' \
+  | xargs \
+      -I{} \
+      -P $(nproc) \
+      clang-tidy \
+        -p build \
+        -header-filter='.*' \
+      {}

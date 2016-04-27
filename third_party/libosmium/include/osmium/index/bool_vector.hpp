@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -56,11 +56,13 @@ namespace osmium {
         public:
 
             BoolVector() = default;
+
             BoolVector(const BoolVector&) = default;
             BoolVector(BoolVector&&) = default;
             BoolVector& operator=(const BoolVector&) = default;
             BoolVector& operator=(BoolVector&&) = default;
-            ~BoolVector() = default;
+
+            ~BoolVector() noexcept = default;
 
             void set(T id, bool value = true) {
                 if (m_bits.size() <= id) {

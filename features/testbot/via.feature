@@ -13,9 +13,23 @@ Feature: Via points
             | abc   |
 
         When I route I should get
-            | waypoints | route   |
-            | a,b,c     | abc,abc |
-            | c,b,a     | abc,abc |
+            | waypoints | route           |
+            | a,b,c     | abc,abc,abc,abc |
+
+    Scenario: Simple via point with core factor
+        Given the contract extra arguments "--core 0.8"
+        Given the node map
+            | a | b | c |
+
+        And the ways
+            | nodes |
+            | abc   |
+
+        When I route I should get
+            | waypoints | route           |
+            | a,b,c     | abc,abc,abc,abc |
+            | c,b,a     | abc,abc,abc,abc |
+            | c,b,a     | abc,abc,abc,abc |
 
     Scenario: Via point at a dead end
         Given the node map
@@ -28,10 +42,11 @@ Feature: Via points
             | bd    |
 
         When I route I should get
-            | waypoints | route            |
-            | a,d,c     | abc,bd,bd,bd,abc |
-            | c,d,a     | abc,bd,bd,bd,abc |
+            | waypoints | route                |
+            | a,d,c     | abc,bd,bd,bd,abc,abc |
+            | c,d,a     | abc,bd,bd,bd,abc,abc |
 
+    @mokob
     Scenario: Multiple via points
         Given the node map
             | a |   |   |   | e | f | g |   |
@@ -48,9 +63,9 @@ Feature: Via points
             | dh    |
 
         When I route I should get
-            | waypoints | route                    |
-            | a,c,f     | ab,bcd,bcd,de,efg        |
-            | a,c,f,h   | ab,bcd,bcd,de,efg,efg,gh |
+            | waypoints | route                               |
+            | a,c,f     | ab,bcd,bcd,bcd,de,efg,efg           |
+            | a,c,f,h   | ab,bcd,bcd,bcd,de,efg,efg,efg,gh,gh |
 
 
     Scenario: Duplicate via point
@@ -65,8 +80,8 @@ Feature: Via points
             | ab    |
 
         When I route I should get
-            | waypoints | route | turns                |
-            | 1,1,4     | ab,ab | head,via,destination |
+            | waypoints | route       |
+            | 1,1,4     | ab,ab,ab,ab |
 
     Scenario: Via points on ring of oneways
     # xa it to avoid only having a single ring, which cna trigger edge cases
@@ -86,12 +101,12 @@ Feature: Via points
             | fa    | yes    |
 
         When I route I should get
-            | waypoints | route                      | distance  | turns                                                               |
-            | 1,3       | ab,bc,cd                   |  400m +-1 | head,straight,straight,destination                                  |
-            | 3,1       | cd,de,ef,fa,ab             | 1000m +-1 | head,right,right,right,right,destination                            |
-            | 1,2,3     | ab,bc,bc,cd                |  400m +-1 | head,straight,via,straight,destination                              |
-            | 1,3,2     | ab,bc,cd,cd,de,ef,fa,ab,bc | 1600m +-1 | head,straight,straight,via,right,right,right,right,straight,destination |
-            | 3,2,1     | cd,de,ef,fa,ab,bc,bc,cd,de,ef,fa,ab | 2400m +-1 | head,right,right,right,right,straight,via,straight,right,right,right,right,destination |
+            | waypoints | route                                     | distance  |
+            | 1,3       | ab,bc,cd,cd                               |  400m +-1 |
+            | 3,1       | cd,de,ef,fa,ab,ab                         | 1000m +-1 |
+            | 1,2,3     | ab,bc,bc,bc,cd,cd                         |  400m +-1 |
+            | 1,3,2     | ab,bc,cd,cd,cd,de,ef,fa,ab,bc,bc          | 1600m +-1 |
+            | 3,2,1     | cd,de,ef,fa,ab,bc,bc,bc,cd,de,ef,fa,ab,ab | 2400m +-1 |
 
     Scenario: Via points on ring on the same oneway
     # xa it to avoid only having a single ring, which cna trigger edge cases
@@ -109,9 +124,95 @@ Feature: Via points
             | da    | yes    |
 
         When I route I should get
-            | waypoints | route                      | distance  | turns                                                            |
-            | 1,3       | ab                         | 200m +-1  | head,destination                                                 |
-            | 3,1       | ab,bc,cd,da,ab             | 800m +-1  | head,right,right,right,right,destination                         |
-            | 1,2,3     | ab,ab                      | 200m +-1  | head,via,destination                                             |
-            | 1,3,2     | ab,ab,bc,cd,da,ab          | 1100m +-1 | head,via,right,right,right,right,destination                     |
-            | 3,2,1     | ab,bc,cd,da,ab,ab,bc,cd,da,ab | 1800m     | head,right,right,right,right,via,right,right,right,right,destination |
+            | waypoints | route                               | distance  |
+            | 1,3       | ab,ab                               | 200m +-1  |
+            | 3,1       | ab,bc,cd,da,ab,ab                   | 800m +-1  |
+            | 1,2,3     | ab,ab,ab,ab                         | 200m +-1  |
+            | 1,3,2     | ab,ab,ab,bc,cd,da,ab,ab             | 1100m +-1 |
+            | 3,2,1     | ab,bc,cd,da,ab,ab,ab,bc,cd,da,ab,ab | 1800m +-1 |
+
+    # See issue #1896
+    Scenario: Via point at a dead end with oneway
+        Given the node map
+            | a | b | c |
+            |   | d |   |
+            |   | e |   |
+
+        And the ways
+            | nodes | oneway |
+            | abc   |  no    |
+            | bd    |  no    |
+            | de    |  yes   |
+
+        When I route I should get
+            | waypoints | route                |
+            | a,d,c     | abc,bd,bd,bd,abc,abc |
+            | c,d,a     | abc,bd,bd,bd,abc,abc |
+
+    # See issue #1896
+    Scenario: Via point at a dead end with barrier
+        Given the profile "car"
+        Given the node map
+            | a | b | c |
+            |   | 1 |   |
+            |   | d |   |
+            |   |   |   |
+            |   |   |   |
+            | f | e |   |
+
+        And the nodes
+            | node | barrier |
+            | d    | bollard |
+
+        And the ways
+            | nodes |
+            | abc   |
+            | bd    |
+            | afed  |
+
+        When I route I should get
+            | waypoints | route                   |
+            | a,1,c     | abc,bd,bd,bd,bd,abc,abc |
+            | c,1,a     | abc,bd,bd,bd,bd,abc,abc |
+
+    Scenario: Via points on ring on the same oneway, forces one of the vertices to be top node
+        Given the node map
+            | a | 1 | 2 | b |
+            | 8 |   |   | 3 |
+            | 7 |   |   | 4 |
+            | d | 6 | 5 | c |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | yes    |
+            | bc    | yes    |
+            | cd    | yes    |
+            | da    | yes    |
+
+        When I route I should get
+            | waypoints | route                      | distance   |
+            | 2,1       | ab,bc,cd,da,ab,ab          | 1100m +-1  |
+            | 4,3       | bc,cd,da,ab,bc,bc          | 1100m +-1  |
+            | 6,5       | cd,da,ab,bc,cd,cd          | 1100m +-1  |
+            | 8,7       | da,ab,bc,cd,da,da          | 1100m +-1  |
+
+    Scenario: Multiple Via points on ring on the same oneway, forces one of the vertices to be top node
+        Given the node map
+            | a | 1 | 2 | 3 | b |
+            |   |   |   |   | 4 |
+            |   |   |   |   | 5 |
+            |   |   |   |   | 6 |
+            | d | 9 | 8 | 7 | c |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | yes    |
+            | bc    | yes    |
+            | cd    | yes    |
+            | da    | yes    |
+
+        When I route I should get
+            | waypoints | route                               | distance     |
+            | 3,2,1     | ab,bc,cd,da,ab,ab,ab,bc,cd,da,ab,ab | 3000m +-1    |
+            | 6,5,4     | bc,cd,da,ab,bc,bc,bc,cd,da,ab,bc,bc | 3000m +-1    |
+            | 9,8,7     | cd,da,ab,bc,cd,cd,cd,da,ab,bc,cd,cd | 3000m +-1    |

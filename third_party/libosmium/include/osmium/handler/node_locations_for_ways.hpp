@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -60,7 +60,7 @@ namespace osmium {
          *                        get(id) methods.
          * @tparam TStorageNegIDs Same but for negative IDs.
          */
-        template <class TStoragePosIDs, class TStorageNegIDs = dummy_type>
+        template <typename TStoragePosIDs, typename TStorageNegIDs = dummy_type>
         class NodeLocationsForWays : public osmium::handler::Handler {
 
             static_assert(std::is_base_of<osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>, TStoragePosIDs>::value, "Index class must be derived from osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>");

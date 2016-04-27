@@ -33,9 +33,9 @@ TEST_CASE("String store") {
     }
 
     SECTION("add zero-length string and longer strings") {
-        const char* s1 = ss.add("");
-        const char* s2 = ss.add("xxx");
-        const char* s3 = ss.add("yyyyy");
+        ss.add("");
+        ss.add("xxx");
+        ss.add("yyyyy");
 
         auto it = ss.begin();
         REQUIRE(std::string(*it++) == "");

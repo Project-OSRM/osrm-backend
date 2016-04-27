@@ -16,7 +16,6 @@ documentation.
  * @brief Contains the pbf_reader class.
  */
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -24,17 +23,13 @@ documentation.
 #include <string>
 #include <utility>
 
-#include <protozero/pbf_types.hpp>
+#include <protozero/config.hpp>
 #include <protozero/exception.hpp>
+#include <protozero/types.hpp>
 #include <protozero/varint.hpp>
 
-#if __BYTE_ORDER != __LITTLE_ENDIAN
+#if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
 # include <protozero/byteswap.hpp>
-#endif
-
-/// Wrapper for assert() used for testing
-#ifndef protozero_assert
-# define protozero_assert(x) assert(x)
 #endif
 
 namespace protozero {
@@ -77,25 +72,34 @@ class pbf_reader {
     // The tag of the current field.
     pbf_tag_type m_tag = 0;
 
+    // Copy N bytes from src to dest on little endian machines, on big endian
+    // swap the bytes in the process.
+    template <int N>
+    static void copy_or_byteswap(const char* src, void* dest) noexcept {
+#if PROTOZERO_BYTE_ORDER == PROTOZERO_LITTLE_ENDIAN
+        memcpy(dest, src, N);
+#else
+        byteswap<N>(src, reinterpret_cast<char*>(dest));
+#endif
+    }
+
     template <typename T>
     inline T get_fixed() {
         T result;
         skip_bytes(sizeof(T));
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-        memcpy(&result, m_data - sizeof(T), sizeof(T));
-#else
-        byteswap<sizeof(T)>(m_data - sizeof(T), reinterpret_cast<char*>(&result));
-#endif
+        copy_or_byteswap<sizeof(T)>(m_data - sizeof(T), &result);
         return result;
     }
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#ifdef PROTOZERO_USE_BARE_POINTER_FOR_PACKED_FIXED
+
     template <typename T>
-    inline std::pair<const T*, const T*> packed_fixed() {
-        protozero_assert(tag() != 0 && "call next() before accessing field value");
-        auto len = get_len_and_skip();
-        protozero_assert(len % sizeof(T) == 0);
-        return std::make_pair(reinterpret_cast<const T*>(m_data-len), reinterpret_cast<const T*>(m_data));
+    using const_fixed_iterator = const T*;
+
+    template <typename T>
+    inline std::pair<const_fixed_iterator<T>, const_fixed_iterator<T>> create_fixed_iterator_pair(const char* first, const char* last) {
+        return std::make_pair(reinterpret_cast<const T*>(first),
+                              reinterpret_cast<const T*>(last));
     }
 
 #else
@@ -128,7 +132,7 @@ class pbf_reader {
 
         T operator*() {
             T result;
-            byteswap<sizeof(T)>(m_data, reinterpret_cast<char*>(&result));
+            copy_or_byteswap<sizeof(T)>(m_data , &result);
             return result;
         }
 
@@ -154,14 +158,20 @@ class pbf_reader {
     }; // class const_fixed_iterator
 
     template <typename T>
+    inline std::pair<const_fixed_iterator<T>, const_fixed_iterator<T>> create_fixed_iterator_pair(const char* first, const char* last) {
+        return std::make_pair(const_fixed_iterator<T>(first, last),
+                              const_fixed_iterator<T>(last, last));
+    }
+
+#endif
+
+    template <typename T>
     inline std::pair<const_fixed_iterator<T>, const_fixed_iterator<T>> packed_fixed() {
         protozero_assert(tag() != 0 && "call next() before accessing field value");
         auto len = get_len_and_skip();
         protozero_assert(len % sizeof(T) == 0);
-        return std::make_pair(const_fixed_iterator<T>(m_data-len, m_data),
-                              const_fixed_iterator<T>(m_data, m_data));
+        return create_fixed_iterator_pair<T>(m_data-len, m_data);
     }
-#endif
 
     template <typename T> inline T get_varint();
     template <typename T> inline T get_svarint();
@@ -183,7 +193,7 @@ public:
      *
      * @post There is no current field.
      */
-    inline pbf_reader(const char *data, size_t length) noexcept;
+    inline pbf_reader(const char *data, std::size_t length) noexcept;
 
     /**
      * Construct a pbf_reader message from a data pointer and a length. The pointer
@@ -194,7 +204,7 @@ public:
      *
      * @post There is no current field.
      */
-    inline pbf_reader(std::pair<const char *, size_t> data) noexcept;
+    inline pbf_reader(std::pair<const char *, std::size_t> data) noexcept;
 
     /**
      * Construct a pbf_reader message from a std::string. A pointer to the string
@@ -243,8 +253,8 @@ public:
      * buffer. Of course you have to know reasonably well what data to expect
      * and how it is encoded for this number to have any meaning.
      */
-    size_t length() const noexcept {
-        return size_t(m_end - m_data);
+    std::size_t length() const noexcept {
+        return std::size_t(m_end - m_data);
     }
 
     /**
@@ -828,14 +838,14 @@ public:
 
 }; // class pbf_reader
 
-pbf_reader::pbf_reader(const char *data, size_t length) noexcept
+pbf_reader::pbf_reader(const char *data, std::size_t length) noexcept
     : m_data(data),
       m_end(data + length),
       m_wire_type(pbf_wire_type::unknown),
       m_tag(0) {
 }
 
-pbf_reader::pbf_reader(std::pair<const char *, size_t> data) noexcept
+pbf_reader::pbf_reader(std::pair<const char *, std::size_t> data) noexcept
     : m_data(data.first),
       m_end(data.first + data.second),
       m_wire_type(pbf_wire_type::unknown),
@@ -866,8 +876,16 @@ bool pbf_reader::next() {
     protozero_assert(((m_tag > 0 && m_tag < 19000) || (m_tag > 19999 && m_tag <= ((1 << 29) - 1))) && "tag out of range");
 
     m_wire_type = pbf_wire_type(value & 0x07);
-// XXX do we want this check? or should it throw an exception?
-//        protozero_assert((m_wire_type <=2 || m_wire_type == 5) && "illegal wire type");
+    switch (m_wire_type) {
+        case pbf_wire_type::varint:
+        case pbf_wire_type::fixed64:
+        case pbf_wire_type::length_delimited:
+        case pbf_wire_type::fixed32:
+            break;
+        default:
+            throw unknown_pbf_wire_type_exception();
+    }
+
     return true;
 }
 
@@ -923,7 +941,7 @@ void pbf_reader::skip() {
             skip_bytes(4);
             break;
         default:
-            throw unknown_pbf_wire_type_exception();
+            protozero_assert(false && "can not be here because next() should have thrown already");
     }
 }
 

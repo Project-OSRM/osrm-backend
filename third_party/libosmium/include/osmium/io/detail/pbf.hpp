@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstdint>
 #include <string>
 
 // needed for htonl and ntohl
@@ -53,11 +54,11 @@ namespace osmium {
      */
     struct pbf_error : public io_error {
 
-        pbf_error(const std::string& what) :
+        explicit pbf_error(const std::string& what) :
             io_error(std::string("PBF error: ") + what) {
         }
 
-        pbf_error(const char* what) :
+        explicit pbf_error(const char* what) :
             io_error(std::string("PBF error: ") + what) {
         }
 
@@ -79,9 +80,9 @@ namespace osmium {
 
             const int64_t resolution_convert = lonlat_resolution / osmium::Location::coordinate_precision;
 
-        }
+        } // namespace detail
 
-    }
+    } // namespace io
 
 } // namespace osmium
 

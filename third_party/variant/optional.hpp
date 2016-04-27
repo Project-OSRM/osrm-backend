@@ -1,16 +1,18 @@
 #ifndef MAPBOX_UTIL_OPTIONAL_HPP
 #define MAPBOX_UTIL_OPTIONAL_HPP
 
+#pragma message("This implementation of optional is deprecated. See https://github.com/mapbox/variant/issues/64.")
+
 #include <type_traits>
+#include <utility>
 
 #include "variant.hpp"
 
-namespace mapbox
-{
-namespace util
-{
+namespace mapbox {
+namespace util {
 
-template <typename T> class optional
+template <typename T>
+class optional
 {
     static_assert(!std::is_reference<T>::value, "optional doesn't support references");
 
@@ -23,7 +25,7 @@ template <typename T> class optional
   public:
     optional() = default;
 
-    optional(optional const &rhs)
+    optional(optional const& rhs)
     {
         if (this != &rhs)
         { // protect against invalid self-assignment
@@ -31,23 +33,23 @@ template <typename T> class optional
         }
     }
 
-    optional(T const &v) { variant_ = v; }
+    optional(T const& v) { variant_ = v; }
 
     explicit operator bool() const noexcept { return variant_.template is<T>(); }
 
-    T const &get() const { return variant_.template get<T>(); }
-    T &get() { return variant_.template get<T>(); }
+    T const& get() const { return variant_.template get<T>(); }
+    T& get() { return variant_.template get<T>(); }
 
-    T const &operator*() const { return this->get(); }
+    T const& operator*() const { return this->get(); }
     T operator*() { return this->get(); }
 
-    optional &operator=(T const &v)
+    optional& operator=(T const& v)
     {
         variant_ = v;
         return *this;
     }
 
-    optional &operator=(optional const &rhs)
+    optional& operator=(optional const& rhs)
     {
         if (this != &rhs)
         {
@@ -56,14 +58,17 @@ template <typename T> class optional
         return *this;
     }
 
-    template <typename... Args> void emplace(Args &&... args)
+    template <typename... Args>
+    void emplace(Args&&... args)
     {
         variant_ = T{std::forward<Args>(args)...};
     }
 
     void reset() { variant_ = none_type{}; }
-};
-}
-}
 
-#endif
+}; // class optional
+
+} // namespace util
+} // namespace mapbox
+
+#endif // MAPBOX_UTIL_OPTIONAL_HPP

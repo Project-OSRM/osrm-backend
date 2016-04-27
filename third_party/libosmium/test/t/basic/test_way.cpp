@@ -2,30 +2,30 @@
 
 #include <boost/crc.hpp>
 
+#include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/osm/crc.hpp>
 #include <osmium/osm/way.hpp>
 
-#include "helper.hpp"
+using namespace osmium::builder::attr;
 
 TEST_CASE("Build way") {
-
-    osmium::CRC<boost::crc_32_type> crc32;
-
-SECTION("way_builder") {
     osmium::memory::Buffer buffer(10000);
 
-    osmium::Way& way = buffer_add_way(buffer,
-        "foo",
-        {{"highway", "residential"}, {"name", "High Street"}},
-        {1, 3, 2});
+    osmium::builder::add_way(buffer,
+        _id(17),
+        _version(3),
+        _visible(true),
+        _cid(333),
+        _uid(21),
+        _timestamp(time_t(123)),
+        _user("foo"),
+        _tag("highway", "residential"),
+        _tag("name", "High Street"),
+        _nodes({1, 3, 2})
+    );
 
-    way.set_id(17)
-        .set_version(3)
-        .set_visible(true)
-        .set_changeset(333)
-        .set_uid(21)
-        .set_timestamp(123);
+    const osmium::Way& way = buffer.get<osmium::Way>(0);
 
     REQUIRE(osmium::item_type::way == way.type());
     REQUIRE(way.type_is_in(osmium::osm_entity_bits::way));
@@ -36,7 +36,7 @@ SECTION("way_builder") {
     REQUIRE(333 == way.changeset());
     REQUIRE(21 == way.uid());
     REQUIRE(std::string("foo") == way.user());
-    REQUIRE(123 == way.timestamp());
+    REQUIRE(123 == uint32_t(way.timestamp()));
     REQUIRE(2 == way.tags().size());
     REQUIRE(3 == way.nodes().size());
     REQUIRE(1 == way.nodes()[0].ref());
@@ -44,23 +44,28 @@ SECTION("way_builder") {
     REQUIRE(2 == way.nodes()[2].ref());
     REQUIRE(! way.is_closed());
 
+    osmium::CRC<boost::crc_32_type> crc32;
     crc32.update(way);
-    REQUIRE(crc32().checksum() == 0x20fe7a30);
+    REQUIRE(crc32().checksum() == 0x7676d0c2);
 }
 
-SECTION("closed_way") {
+TEST_CASE("build closed way") {
     osmium::memory::Buffer buffer(10000);
 
-    osmium::Way& way = buffer_add_way(buffer,
-        "foo",
-        {{"highway", "residential"}, {"name", "High Street"}},
-        {1, 3, 1});
+    osmium::builder::add_way(buffer,
+        _tag("highway", "residential"),
+        _tag("name", "High Street"),
+        _nodes({1, 3, 1})
+    );
+
+    const osmium::Way& way = buffer.get<osmium::Way>(0);
 
     REQUIRE(way.is_closed());
 }
 
-SECTION("way_builder_with_helpers") {
+TEST_CASE("build way with helpers") {
     osmium::memory::Buffer buffer(10000);
+
     {
         osmium::builder::WayBuilder builder(buffer);
         builder.add_user("username");
@@ -74,7 +79,8 @@ SECTION("way_builder_with_helpers") {
         });
     }
     buffer.commit();
-    osmium::Way& way = buffer.get<osmium::Way>(0);
+
+    const osmium::Way& way = buffer.get<osmium::Way>(0);
 
     REQUIRE(std::string("username") == way.user());
 
@@ -87,4 +93,3 @@ SECTION("way_builder_with_helpers") {
     REQUIRE(4.1 == way.nodes()[1].location().lon());
 }
 
-}

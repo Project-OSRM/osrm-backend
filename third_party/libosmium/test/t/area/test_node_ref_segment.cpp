@@ -52,6 +52,20 @@ TEST_CASE("NodeRefSegmentClass") {
         REQUIRE(calculate_intersection(s1, s7) == osmium::Location());
     }
 
+    SECTION("intersection of very long segments") {
+        NodeRefSegment s1({ 1, {90.0, 90.0}}, { 2, {-90.0, -90.0}}, nullptr, nullptr);
+        NodeRefSegment s2({ 1, {-90.0, 90.0}}, { 2, {90.0, -90.0}}, nullptr, nullptr);
+        REQUIRE(calculate_intersection(s1, s2) == osmium::Location(0.0, 0.0));
+
+        NodeRefSegment s3({ 1, {-90.0, -90.0}}, { 2, {90.0, 90.0}}, nullptr, nullptr);
+        NodeRefSegment s4({ 1, {-90.0, 90.0}}, { 2, {90.0, -90.0}}, nullptr, nullptr);
+        REQUIRE(calculate_intersection(s3, s4) == osmium::Location(0.0, 0.0));
+
+        NodeRefSegment s5({ 1, {-90.0000001, -90.0}}, { 2, {90.0, 90.0}}, nullptr, nullptr);
+        NodeRefSegment s6({ 1, {-90.0, 90.0}}, { 2, {90.0, -90.0}}, nullptr, nullptr);
+        REQUIRE(calculate_intersection(s5, s6) == osmium::Location(0.0, 0.0));
+    }
+
     SECTION("to_left_of") {
         osmium::Location loc { 2.0, 2.0 };
 

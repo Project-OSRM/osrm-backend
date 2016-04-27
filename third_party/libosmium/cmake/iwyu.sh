@@ -16,7 +16,7 @@ echo "INCLUDE WHAT YOU USE REPORT:" >$log
 
 allok=yes
 
-for file in `find include/osmium -name \*.hpp`; do
+for file in `find include/osmium -name \*.hpp | sort`; do
     mkdir -p `dirname build/check_reports/$file`
     ifile="build/check_reports/${file%.hpp}.iwyu"
     $cmdline $file >$ifile 2>&1

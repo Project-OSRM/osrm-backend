@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -75,6 +75,9 @@ namespace osmium {
             /// The largest size the queue has been so far.
             size_t m_largest_size;
 
+            /// The number of times push() was called on the queue.
+            std::atomic<int> m_push_counter;
+
             /// The number of times the queue was full and a thread pushing
             /// to the queue was blocked.
             std::atomic<int> m_full_counter;
@@ -89,7 +92,7 @@ namespace osmium {
              *                 0 for an unlimited size.
              * @param name Optional name for this queue. (Used for debugging.)
              */
-            Queue(size_t max_size = 0, const std::string& name = "") :
+            explicit Queue(size_t max_size = 0, const std::string& name = "") :
                 m_max_size(max_size),
                 m_name(name),
                 m_mutex(),
@@ -99,6 +102,7 @@ namespace osmium {
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
                 ,
                 m_largest_size(0),
+                m_push_counter(0),
                 m_full_counter(0)
 #endif
             {
@@ -107,7 +111,7 @@ namespace osmium {
             ~Queue() {
                 shutdown();
 #ifdef OSMIUM_DEBUG_QUEUE_SIZE
-                std::cerr << "queue '" << m_name << "' with max_size=" << m_max_size << " had largest size " << m_largest_size << " and was full " << m_full_counter << " times\n";
+                std::cerr << "queue '" << m_name << "' with max_size=" << m_max_size << " had largest size " << m_largest_size << " and was full " << m_full_counter << " times in " << m_push_counter << " push() calls\n";
 #endif
             }
 
@@ -116,6 +120,9 @@ namespace osmium {
              * call will block if the queue is full.
              */
             void push(T value) {
+#ifdef OSMIUM_DEBUG_QUEUE_SIZE
+                ++m_push_counter;
+#endif
                 if (m_max_size) {
                     while (size() >= m_max_size) {
                         std::this_thread::sleep_for(full_queue_sleep_duration);

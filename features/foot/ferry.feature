@@ -17,15 +17,15 @@ Feature: Foot - Handle ferry routes
             | efg   | primary |       |      |
 
         When I route I should get
-            | from | to | route       | modes |
-            | a    | g  | abc,cde,efg | 1,2,1 |
-            | b    | f  | abc,cde,efg | 1,2,1 |
-            | e    | c  | cde         | 2     |
-            | e    | b  | cde,abc     | 2,1   |
-            | e    | a  | cde,abc     | 2,1   |
-            | c    | e  | cde         | 2     |
-            | c    | f  | cde,efg     | 2,1   |
-            | c    | g  | cde,efg     | 2,1   |
+            | from | to | route           | modes                         |
+            | a    | g  | abc,cde,efg,efg | walking,ferry,walking,walking |
+            | b    | f  | abc,cde,efg,efg | walking,ferry,walking,walking |
+            | e    | c  | cde,cde         | ferry,ferry                   |
+            | e    | b  | cde,abc,abc     | ferry,walking,walking         |
+            | e    | a  | cde,abc,abc     | ferry,walking,walking         |
+            | c    | e  | cde,cde         | ferry,ferry                   |
+            | c    | f  | cde,efg,efg     | ferry,walking,walking         |
+            | c    | g  | cde,efg,efg     | ferry,walking,walking         |
 
     Scenario: Foot - Ferry duration, single node
         Given the node map
@@ -58,6 +58,6 @@ Feature: Foot - Handle ferry routes
             | abcd  |         | ferry | yes  | 1:00     |
 
         When I route I should get
-            | from | to | route | time       |
-            | a    | d  | abcd  | 3600s +-10 |
-            | d    | a  | abcd  | 3600s +-10 |
+            | from | to | route     | time       |
+            | a    | d  | abcd,abcd | 3600s +-10 |
+            | d    | a  | abcd,abcd | 3600s +-10 |

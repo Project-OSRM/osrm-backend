@@ -1,13 +1,14 @@
+
+#include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
-#include <vector>
-#include <thread>
-#include <string>
 #include <sstream>
-#include <utility>
+#include <string>
 #include <type_traits>
-#include <boost/variant.hpp>
-#include <boost/timer/timer.hpp>
+#include <utility>
+#include <vector>
+
 #include "variant.hpp"
 #include "variant_io.hpp"
 
@@ -16,12 +17,14 @@ using namespace mapbox;
 namespace test {
 
 template <typename T>
-struct string_to_number {};
+struct string_to_number
+{
+};
 
 template <>
 struct string_to_number<double>
 {
-    double operator() (std::string const& str) const
+    double operator()(std::string const& str) const
     {
         return std::stod(str);
     }
@@ -30,7 +33,7 @@ struct string_to_number<double>
 template <>
 struct string_to_number<std::int64_t>
 {
-    std::int64_t operator() (std::string const& str) const
+    std::int64_t operator()(std::string const& str) const
     {
         return std::stoll(str);
     }
@@ -39,7 +42,7 @@ struct string_to_number<std::int64_t>
 template <>
 struct string_to_number<std::uint64_t>
 {
-    std::uint64_t operator() (std::string const& str) const
+    std::uint64_t operator()(std::string const& str) const
     {
         return std::stoull(str);
     }
@@ -48,7 +51,7 @@ struct string_to_number<std::uint64_t>
 template <>
 struct string_to_number<bool>
 {
-    bool operator() (std::string const& str) const
+    bool operator()(std::string const& str) const
     {
         bool result;
         std::istringstream(str) >> std::boolalpha >> result;
@@ -56,28 +59,28 @@ struct string_to_number<bool>
     }
 };
 
-struct javascript_equal_visitor : util::static_visitor<bool>
+struct javascript_equal_visitor
 {
     template <typename T>
-    bool operator() (T lhs, T rhs) const
+    bool operator()(T lhs, T rhs) const
     {
         return lhs == rhs;
     }
 
     template <typename T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type>
-    bool operator() (T lhs, std::string const& rhs) const
+    bool operator()(T lhs, std::string const& rhs) const
     {
         return lhs == string_to_number<T>()(rhs);
     }
 
     template <typename T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type>
-    bool operator() (std::string const& lhs, T rhs) const
+    bool operator()(std::string const& lhs, T rhs) const
     {
         return string_to_number<T>()(lhs) == rhs;
     }
 
     template <typename T0, typename T1>
-    bool operator() (T0 lhs, T1 rhs) const
+    bool operator()(T0 lhs, T1 rhs) const
     {
         return lhs == static_cast<T0>(rhs);
     }
@@ -89,7 +92,7 @@ struct javascript_equal
     javascript_equal(T const& lhs)
         : lhs_(lhs) {}
 
-    bool operator() (T const& rhs) const
+    bool operator()(T const& rhs) const
     {
         return util::apply_visitor(test::javascript_equal_visitor(), lhs_, rhs);
     }
@@ -98,7 +101,7 @@ struct javascript_equal
 
 } // namespace test
 
-int main (/*int argc, char** argv*/)
+int main()
 {
     typedef util::variant<bool, std::int64_t, std::uint64_t, double, std::string> variant_type;
     variant_type v0(3.14159);
@@ -107,7 +110,6 @@ int main (/*int argc, char** argv*/)
 
     std::cerr << v0 << " == " << v1 << " -> "
               << std::boolalpha << util::apply_visitor(test::javascript_equal_visitor(), v0, v1) << std::endl;
-
 
     std::vector<variant_type> vec;
 

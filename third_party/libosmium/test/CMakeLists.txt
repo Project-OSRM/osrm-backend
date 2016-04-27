@@ -106,8 +106,11 @@ add_unit_test(basic test_timestamp)
 add_unit_test(basic test_types_from_string)
 add_unit_test(basic test_way)
 
+add_unit_test(buffer test_buffer_basics)
 add_unit_test(buffer test_buffer_node)
 add_unit_test(buffer test_buffer_purge)
+
+add_unit_test(builder test_attr)
 
 if(GEOS_FOUND AND PROJ_FOUND)
     set(GEOS_AND_PROJ_FOUND TRUE)
@@ -118,6 +121,7 @@ add_unit_test(geom test_factory_with_projection
     ENABLE_IF ${GEOS_AND_PROJ_FOUND}
     LIBS ${GEOS_LIBRARY} ${PROJ_LIBRARY})
 
+add_unit_test(geom test_crs ENABLE_IF ${PROJ_FOUND} LIBS ${PROJ_LIBRARY})
 add_unit_test(geom test_exception)
 add_unit_test(geom test_geojson)
 add_unit_test(geom test_geos ENABLE_IF ${GEOS_FOUND} LIBS ${GEOS_LIBRARY})
@@ -133,9 +137,15 @@ add_unit_test(index test_id_to_location ENABLE_IF ${SPARSEHASH_FOUND})
 
 add_unit_test(io test_bzip2 ENABLE_IF ${BZIP2_FOUND} LIBS ${BZIP2_LIBRARIES})
 add_unit_test(io test_file_formats)
-add_unit_test(io test_reader LIBS "${OSMIUM_XML_LIBRARIES}")
+add_unit_test(io test_reader LIBS "${OSMIUM_XML_LIBRARIES};${OSMIUM_PBF_LIBRARIES}")
+add_unit_test(io test_reader_with_mock_decompression ENABLE_IF ${Threads_FOUND} LIBS ${OSMIUM_XML_LIBRARIES})
+add_unit_test(io test_reader_with_mock_parser ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
+add_unit_test(io test_output_utils)
 add_unit_test(io test_output_iterator ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 add_unit_test(io test_string_table)
+add_unit_test(io test_writer ENABLE_IF ${Threads_FOUND} LIBS ${OSMIUM_XML_LIBRARIES})
+add_unit_test(io test_writer_with_mock_compression ENABLE_IF ${Threads_FOUND} LIBS ${OSMIUM_XML_LIBRARIES})
+add_unit_test(io test_writer_with_mock_encoder ENABLE_IF ${Threads_FOUND} LIBS ${OSMIUM_XML_LIBRARIES})
 
 add_unit_test(tags test_filter)
 add_unit_test(tags test_operators)
@@ -144,10 +154,10 @@ add_unit_test(tags test_tag_list)
 add_unit_test(thread test_pool ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 add_unit_test(util test_cast_with_assert)
-add_unit_test(util test_data_file)
 add_unit_test(util test_delta)
 add_unit_test(util test_double)
 add_unit_test(util test_file)
+add_unit_test(util test_memory)
 add_unit_test(util test_memory_mapping)
 add_unit_test(util test_minmax)
 add_unit_test(util test_options)

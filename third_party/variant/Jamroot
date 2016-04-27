@@ -1,3 +1,6 @@
+# Inofficial and incomplete build file using Boost build system.
+# You should use make unless you know what you are doing.
+
 local BOOST_DIR = "/usr/local" ;
 
 #using clang : : ;
@@ -15,7 +18,6 @@ exe variant-test
     :
     <include>$(BOOST_DIR)/include
     <include>./
-    <cxxflags>-std=c++11
     #<define>SINGLE_THREADED
     <variant>release:<cxxflags>-march=native
     ;
@@ -30,7 +32,6 @@ exe binary-visitor-test
     :
     <include>$(BOOST_DIR)/include
     <include>./
-    <cxxflags>-std=c++11
     <variant>release:<cxxflags>-march=native
     ;
 
@@ -43,7 +44,6 @@ exe recursive-wrapper-test
     :
     <include>$(BOOST_DIR)/include
     <include>./
-    <cxxflags>-std=c++11
     <variant>release:<cxxflags>-march=native
     ;
 
@@ -56,7 +56,6 @@ exe unique-ptr-test
     :
     <include>$(BOOST_DIR)/include
     <include>./
-    <cxxflags>-std=c++11
     <variant>release:<cxxflags>-march=native
     ;
 
@@ -70,6 +69,5 @@ exe reference_wrapper_test
     :
     <include>$(BOOST_DIR)/include
     <include>./
-    <cxxflags>-std=c++11
     <variant>release:<cxxflags>-march=native
     ;

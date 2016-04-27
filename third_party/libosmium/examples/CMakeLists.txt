@@ -14,12 +14,10 @@ set(EXAMPLES
     count
     create_node_cache
     debug
+    filter_discussions
     index
     read
     serdump
-    toogr
-    toogr2
-    toogr2_exp
     use_node_cache
     CACHE STRING "Example programs"
 )
@@ -30,7 +28,7 @@ set(EXAMPLES
 #  Examples depending on wingetopt
 #
 #-----------------------------------------------------------------------------
-set(GETOPT_EXAMPLES area_test convert serdump toogr toogr2 toogr2_exp)
+set(GETOPT_EXAMPLES area_test convert serdump)
 if(NOT GETOPT_MISSING)
     foreach(example ${GETOPT_EXAMPLES})
         list(APPEND EXAMPLE_LIBS_${example} ${GETOPT_LIBRARY})
@@ -71,27 +69,6 @@ else()
     list(REMOVE_ITEM EXAMPLES index)
     message(STATUS "Configuring examples - Skipping examples because Boost program_options not found:")
     message(STATUS "  - osmium_index")
-endif()
-
-
-#-----------------------------------------------------------------------------
-#
-#  Examples depending on GDAL/PROJ.4/SparseHash
-#
-#-----------------------------------------------------------------------------
-set(OGR_EXAMPLES toogr toogr2 toogr2_exp)
-
-if(GDAL_FOUND AND PROJ_FOUND AND SPARSEHASH_FOUND)
-    foreach(example ${OGR_EXAMPLES})
-        list(APPEND EXAMPLE_LIBS_${example} ${GDAL_LIBRARIES})
-        list(APPEND EXAMPLE_LIBS_${example} ${PROJ_LIBRARIES})
-    endforeach()
-else()
-    message(STATUS "Configuring examples - Skipping examples because GDAL and/or Proj.4 and/or SparseHash not found:")
-    foreach(example ${OGR_EXAMPLES})
-        message(STATUS "  - osmium_${example}")
-        list(REMOVE_ITEM EXAMPLES ${example})
-    endforeach()
 endif()
 
 

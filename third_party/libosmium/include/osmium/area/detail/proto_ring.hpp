@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,12 +34,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
-#include <cassert>
+#include <cstdint>
+#include <cstdlib>
 #include <iostream>
-#include <list>
+#include <iterator>
 #include <set>
 #include <vector>
 
+#include <osmium/osm/location.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/area/detail/node_ref_segment.hpp>
 
@@ -116,12 +118,20 @@ namespace osmium {
                     return m_segments.front();
                 }
 
+                const NodeRef& get_node_ref_front() const {
+                    return get_segment_front().first();
+                }
+
                 const NodeRefSegment& get_segment_back() const {
                     return m_segments.back();
                 }
 
                 NodeRefSegment& get_segment_back() {
                     return m_segments.back();
+                }
+
+                const NodeRef& get_node_ref_back() const {
+                    return get_segment_back().second();
                 }
 
                 bool closed() const {
@@ -148,7 +158,8 @@ namespace osmium {
                 }
 
                 void swap_segments(ProtoRing& other) {
-                    std::swap(m_segments, other.m_segments);
+                    using std::swap;
+                    swap(m_segments, other.m_segments);
                 }
 
                 void add_inner_ring(ProtoRing* ring) {

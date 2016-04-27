@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -46,10 +46,9 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
-    template <class TCRC>
-    class CRC {
+    namespace util {
 
-        static inline uint16_t byte_swap_16(uint16_t value) noexcept {
+        inline uint16_t byte_swap_16(uint16_t value) noexcept {
 # if defined(__GNUC__) || defined(__clang__)
             return __builtin_bswap16(value);
 # else
@@ -57,26 +56,31 @@ namespace osmium {
 # endif
         }
 
-        static inline uint32_t byte_swap_32(uint32_t value) noexcept {
+        inline uint32_t byte_swap_32(uint32_t value) noexcept {
 # if defined(__GNUC__) || defined(__clang__)
             return __builtin_bswap32(value);
 # else
             return  (value >> 24) |
-                    ((value >>  8) & 0x0000FF00) |
-                    ((value <<  8) & 0x00FF0000) |
+                   ((value >>  8) & 0x0000FF00) |
+                   ((value <<  8) & 0x00FF0000) |
                     (value << 24);
 # endif
         }
 
-        static inline uint64_t byte_swap_64(uint64_t value) noexcept {
+        inline uint64_t byte_swap_64(uint64_t value) noexcept {
 # if defined(__GNUC__) || defined(__clang__)
             return __builtin_bswap64(value);
 # else
             uint64_t val1 = byte_swap_32(value & 0xFFFFFFFF);
             uint64_t val2 = byte_swap_32(value >> 32);
-            return (val1 << 32) & val2;
+            return (val1 << 32) | val2;
 # endif
         }
+
+    } // namespace util
+
+    template <typename TCRC>
+    class CRC {
 
         TCRC m_crc;
 
@@ -90,37 +94,37 @@ namespace osmium {
             return m_crc;
         }
 
-        void update_bool(bool value) {
+        void update_bool(const bool value) {
             m_crc.process_byte(value);
         }
 
-        void update_int8(uint8_t value) {
+        void update_int8(const uint8_t value) {
             m_crc.process_byte(value);
         }
 
-        void update_int16(uint16_t value) {
+        void update_int16(const uint16_t value) {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint16_t));
 #else
-            uint16_t v = byte_swap_16(value);
+            uint16_t v = osmium::util::byte_swap_16(value);
             m_crc.process_bytes(&v, sizeof(uint16_t));
 #endif
         }
 
-        void update_int32(uint32_t value) {
+        void update_int32(const uint32_t value) {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint32_t));
 #else
-            uint32_t v = byte_swap_32(value);
+            uint32_t v = osmium::util::byte_swap_32(value);
             m_crc.process_bytes(&v, sizeof(uint32_t));
 #endif
         }
 
-        void update_int64(uint64_t value) {
+        void update_int64(const uint64_t value) {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint64_t));
 #else
-            uint64_t v = byte_swap_64(value);
+            uint64_t v = osmium::util::byte_swap_64(value);
             m_crc.process_bytes(&v, sizeof(uint64_t));
 #endif
         }
@@ -156,7 +160,10 @@ namespace osmium {
         }
 
         void update(const TagList& tags) {
-            m_crc.process_bytes(tags.data(), tags.byte_size());
+            for (const Tag& tag : tags) {
+                update_string(tag.key());
+                update_string(tag.value());
+            }
         }
 
         void update(const osmium::RelationMember& member) {
@@ -206,14 +213,26 @@ namespace osmium {
             }
         }
 
+        void update(const osmium::ChangesetDiscussion& discussion) {
+            for (const auto& comment : discussion) {
+                update(comment.date());
+                update_int32(comment.uid());
+                update_string(comment.user());
+                update_string(comment.text());
+            }
+        }
+
         void update(const osmium::Changeset& changeset) {
             update_int64(changeset.id());
             update(changeset.created_at());
             update(changeset.closed_at());
             update(changeset.bounds());
             update_int32(changeset.num_changes());
+            update_int32(changeset.num_comments());
             update_int32(changeset.uid());
             update_string(changeset.user());
+            update(changeset.tags());
+            update(changeset.discussion());
         }
 
     }; // class CRC

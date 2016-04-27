@@ -64,6 +64,14 @@ def request_nearest node, user_params
   params << ["loc", "#{node.lat},#{node.lon}"]
 
   return request_path "nearest", params
+  end
+
+def request_range node, user_params
+  defaults = [['output', 'json']]
+  params = overwrite_params defaults, user_params
+  params << ["loc", "#{node.lat},#{node.lon}"]
+
+  return request_path "isochrone", params
 end
 
 def request_table waypoints, user_params
@@ -155,8 +163,9 @@ def turn_list instructions
       13 => :stay_roundabout,
       14 => :start_end_of_street,
       15 => :destination,
-      16 => :enter_contraflow,
-      17 => :leave_contraflow
+      16 => :name_changes,
+      17 => :enter_contraflow,
+      18 => :leave_contraflow
     }
     # replace instructions codes with strings
     # "11-3" (enter roundabout and leave a 3rd exit) gets converted to "enter_roundabout-3"

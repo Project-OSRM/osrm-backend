@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2015 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -67,10 +67,10 @@ namespace osmium {
             explicit Tile(uint32_t zoom, const osmium::Location& location) :
                 z(zoom) {
                 osmium::geom::Coordinates c = lonlat_to_mercator(location);
-                const int32_t n = 1LL << zoom;
+                const int32_t n = 1 << zoom;
                 const double scale = detail::max_coordinate_epsg3857 * 2 / n;
-                x = detail::restrict_to_range<int32_t>((c.x + detail::max_coordinate_epsg3857) / scale, 0, n-1);
-                y = detail::restrict_to_range<int32_t>((detail::max_coordinate_epsg3857 - c.y) / scale, 0, n-1);
+                x = uint32_t(detail::restrict_to_range<int32_t>(int32_t((c.x + detail::max_coordinate_epsg3857) / scale), 0, n-1));
+                y = uint32_t(detail::restrict_to_range<int32_t>(int32_t((detail::max_coordinate_epsg3857 - c.y) / scale), 0, n-1));
             }
 
         }; // struct Tile
