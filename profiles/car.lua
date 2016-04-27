@@ -12,7 +12,7 @@ service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
 -- A list of suffixes to suppress in name change instructions
-suffix_list = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "North", "South", "West", "East" }
+suffix_list = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
 
 speed_profile = {
   ["motorway"] = 90,
