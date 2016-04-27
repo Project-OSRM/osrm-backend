@@ -51,52 +51,57 @@ BOOST_AUTO_TEST_CASE(invalid_urls)
 
 BOOST_AUTO_TEST_CASE(valid_urls)
 {
-    api::ParsedURL reference_1{"route", 1, "profile", "0,1;2,3;4,5?options=value&foo=bar"};
+    api::ParsedURL reference_1{"route", 1, "profile", "0,1;2,3;4,5?options=value&foo=bar", 18UL};
     auto result_1 = api::parseURL("/route/v1/profile/0,1;2,3;4,5?options=value&foo=bar");
     BOOST_CHECK(result_1);
     BOOST_CHECK_EQUAL(reference_1.service, result_1->service);
     BOOST_CHECK_EQUAL(reference_1.version, result_1->version);
     BOOST_CHECK_EQUAL(reference_1.profile, result_1->profile);
     CHECK_EQUAL_RANGE(reference_1.query, result_1->query);
+    BOOST_CHECK_EQUAL(reference_1.prefix_length, result_1->prefix_length);
 
     // no options
-    api::ParsedURL reference_2{"route", 1, "profile", "0,1;2,3;4,5"};
+    api::ParsedURL reference_2{"route", 1, "profile", "0,1;2,3;4,5", 18UL};
     auto result_2 = api::parseURL("/route/v1/profile/0,1;2,3;4,5");
     BOOST_CHECK(result_2);
     BOOST_CHECK_EQUAL(reference_2.service, result_2->service);
     BOOST_CHECK_EQUAL(reference_2.version, result_2->version);
     BOOST_CHECK_EQUAL(reference_2.profile, result_2->profile);
     CHECK_EQUAL_RANGE(reference_2.query, result_2->query);
+    BOOST_CHECK_EQUAL(reference_2.prefix_length, result_2->prefix_length);
 
     // one coordinate
     std::vector<util::Coordinate> coords_3 = {
         util::Coordinate(util::FloatLongitude(0), util::FloatLatitude(1)),
     };
-    api::ParsedURL reference_3{"route", 1, "profile", "0,1"};
+    api::ParsedURL reference_3{"route", 1, "profile", "0,1", 18UL};
     auto result_3 = api::parseURL("/route/v1/profile/0,1");
     BOOST_CHECK(result_3);
     BOOST_CHECK_EQUAL(reference_3.service, result_3->service);
     BOOST_CHECK_EQUAL(reference_3.version, result_3->version);
     BOOST_CHECK_EQUAL(reference_3.profile, result_3->profile);
     CHECK_EQUAL_RANGE(reference_3.query, result_3->query);
+    BOOST_CHECK_EQUAL(reference_3.prefix_length, result_3->prefix_length);
 
     // polyline
-    api::ParsedURL reference_5{"route", 1, "profile", "polyline(_ibE?_seK_seK_seK_seK)?"};
+    api::ParsedURL reference_5{"route", 1, "profile", "polyline(_ibE?_seK_seK_seK_seK)?", 18UL};
     auto result_5 = api::parseURL("/route/v1/profile/polyline(_ibE?_seK_seK_seK_seK)?");
     BOOST_CHECK(result_5);
     BOOST_CHECK_EQUAL(reference_5.service, result_5->service);
     BOOST_CHECK_EQUAL(reference_5.version, result_5->version);
     BOOST_CHECK_EQUAL(reference_5.profile, result_5->profile);
     CHECK_EQUAL_RANGE(reference_5.query, result_5->query);
+    BOOST_CHECK_EQUAL(reference_5.prefix_length, result_5->prefix_length);
 
     // tile
-    api::ParsedURL reference_6{"route", 1, "profile", "tile(1,2,3).mvt"};
+    api::ParsedURL reference_6{"route", 1, "profile", "tile(1,2,3).mvt", 18UL};
     auto result_6 = api::parseURL("/route/v1/profile/tile(1,2,3).mvt");
-    BOOST_CHECK(result_5);
+    BOOST_CHECK(result_6);
     BOOST_CHECK_EQUAL(reference_6.service, result_6->service);
     BOOST_CHECK_EQUAL(reference_6.version, result_6->version);
     BOOST_CHECK_EQUAL(reference_6.profile, result_6->profile);
     CHECK_EQUAL_RANGE(reference_6.query, result_6->query);
+    BOOST_CHECK_EQUAL(reference_6.prefix_length, result_6->prefix_length);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -57,7 +57,7 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 }
 } // anon. ns
 
-engine::Status TableService::RunQuery(std::string &query, ResultT &result)
+engine::Status TableService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
@@ -70,7 +70,7 @@ engine::Status TableService::RunQuery(std::string &query, ResultT &result)
         const auto position = std::distance(query.begin(), query_iterator);
         json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
-            "Query string malformed close to position " + std::to_string(position);
+            "Query string malformed close to position " + std::to_string(prefix_length + position);
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters);

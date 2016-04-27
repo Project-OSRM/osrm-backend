@@ -25,7 +25,7 @@ class BaseService
     BaseService(OSRM &routing_machine) : routing_machine(routing_machine) {}
     virtual ~BaseService() = default;
 
-    virtual engine::Status RunQuery(std::string &query, ResultT &result) = 0;
+    virtual engine::Status RunQuery(std::size_t prefix_length, std::string &query, ResultT &result) = 0;
 
     virtual unsigned GetVersion() = 0;
 
