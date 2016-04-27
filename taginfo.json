@@ -205,6 +205,16 @@
             "description": "Ref of road for navigation instructions, overrides name."
         },
         {
+            "key": "destination",
+            "object_types": [ "way" ],
+            "description": "Destination of road for navigation instructions, supplements name."
+        },
+        {
+            "key": "destination:ref",
+            "object_types": [ "way" ],
+            "description": "Destination of road for navigation instructions, supplements name."
+        },
+        {
             "key": "junction",
             "object_types": [ "way" ],
             "value": "roundabout"

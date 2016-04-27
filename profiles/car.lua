@@ -1,6 +1,7 @@
 -- Car profile
 
 local find_access_tag = require("lib/access").find_access_tag
+local get_destination = require("lib/destination").get_destination
 
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
@@ -352,15 +353,19 @@ function way_function (way, result)
   -- local barrier = way:get_value_by_key("barrier", "")
   -- local cycleway = way:get_value_by_key("cycleway", "")
   local service = way:get_value_by_key("service")
+  local destination = get_destination(way)
 
   -- Set the name that will be used for instructions
   local has_ref = ref and "" ~= ref
   local has_name = name and "" ~= name
+  local has_destination = destination and "" ~= destination
 
   if has_name and has_ref then
     result.name = name .. " (" .. ref .. ")"
   elseif has_ref then
     result.name = ref
+  elseif has_name and has_destination then
+    result.name = name .. " (" .. destination .. ")"
   elseif has_name then
     result.name = name
 --  else
