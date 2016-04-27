@@ -2,6 +2,10 @@
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
+#include "util/guidance/toolkit.hpp"
+
+using osrm::util::guidance::angularDeviation;
+
 namespace osrm
 {
 namespace extractor
