@@ -1,5 +1,4 @@
-#ifndef SHARED_MEMORY_HPP
-#define SHARED_MEMORY_HPP
+/*
 
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
@@ -78,6 +77,7 @@ class SharedMemory
   public:
     void *Ptr() const { return region.get_address(); }
 
+  
     SharedMemory(const SharedMemory &) = delete;
     SharedMemory &operator=(const SharedMemory &) = delete;
 
