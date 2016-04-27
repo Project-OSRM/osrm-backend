@@ -1,3 +1,9 @@
+# 5.0.1
+   - Fixes:
+     - Issue #2309: Fixes local path looping, same coordinates crash
+     - Issue #2310: Local paths could falsely end up trying to remove the start step
+
+
 # 5.0.0
    Changes with regard 5.0.0 RC2:
    - API:
