@@ -13,8 +13,7 @@ notifications:
 branches:
   only:
     - master
-    - develop
-    - 5.0
+    - "5.0"
 
 matrix:
   fast_finish: true
