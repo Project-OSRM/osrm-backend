@@ -4,9 +4,11 @@
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/guidance/toolkit.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/suffix_table.hpp"
 
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/discrete_angle.hpp"
@@ -19,12 +21,17 @@
 #include <map>
 #include <string>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 namespace osrm
 {
 namespace extractor
 {
 namespace guidance
 {
+
+using util::guidance::angularDeviation;
 
 namespace detail
 {
@@ -246,12 +253,6 @@ inline double angleFromDiscreteAngle(const DiscreteAngle angle)
     return static_cast<double>(angle) * detail::discrete_angle_step_size;
 }
 
-inline double angularDeviation(const double angle, const double from)
-{
-    const double deviation = std::abs(angle - from);
-    return std::min(360 - deviation, deviation);
-}
-
 inline double getAngularPenalty(const double angle, DirectionModifier modifier)
 {
     // these are not aligned with getTurnDirection but represent an ideal center
@@ -270,30 +271,6 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
     const double difference = getAngularPenalty(angle, instruction.direction_modifier);
     const double max_deviation = deviations[static_cast<int>(instruction.direction_modifier)];
     return 1.0 - (difference / max_deviation) * (difference / max_deviation);
-}
-
-// Translates between angles and their human-friendly directional representation
-inline DirectionModifier getTurnDirection(const double angle)
-{
-    // An angle of zero is a u-turn
-    // 180 goes perfectly straight
-    // 0-180 are right turns
-    // 180-360 are left turns
-    if (angle > 0 && angle < 60)
-        return DirectionModifier::SharpRight;
-    if (angle >= 60 && angle < 140)
-        return DirectionModifier::Right;
-    if (angle >= 140 && angle < 170)
-        return DirectionModifier::SlightRight;
-    if (angle >= 165 && angle <= 195)
-        return DirectionModifier::Straight;
-    if (angle > 190 && angle <= 220)
-        return DirectionModifier::SlightLeft;
-    if (angle > 220 && angle <= 300)
-        return DirectionModifier::Left;
-    if (angle > 300 && angle < 360)
-        return DirectionModifier::SharpLeft;
-    return DirectionModifier::UTurn;
 }
 
 // swaps left <-> right modifier types
@@ -330,7 +307,9 @@ inline bool isDistinct(const DirectionModifier first, const DirectionModifier se
     return true;
 }
 
-inline bool requiresNameAnnounced(const std::string &from, const std::string &to)
+inline bool requiresNameAnnounced(const std::string &from,
+                                  const std::string &to,
+                                  const SuffixTable &suffix_table)
 {
     // FIXME, handle in profile to begin with?
     // this uses the encoding of references in the profile, which is very BAD
@@ -357,12 +336,20 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
         }
     };
 
+    const auto getCommonLength = [](const std::string &first, const std::string &second) {
+        BOOST_ASSERT(first.size() <= second.size());
+        const auto mismatch_result = std::mismatch(first.begin(), first.end(), second.begin());
+        return std::distance(first.begin(), mismatch_result.first);
+    };
+
     split(from, from_name, from_ref);
     split(to, to_name, to_ref);
 
     // check similarity of names
     const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto names_are_equal = from_name == to_name;
+    const auto name_is_contained =
+        boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
+    const auto names_are_equal = from_name == to_name || name_is_contained;
     const auto name_is_removed = !from_name.empty() && to_name.empty();
     // references are contained in one another
     const auto refs_are_empty = from_ref.empty() && to_ref.empty();
@@ -371,9 +358,41 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
         (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
     const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
 
-    const auto obvious_change =
-        (names_are_empty && refs_are_empty) || (names_are_equal && ref_is_contained) ||
-        (names_are_equal && refs_are_empty) || name_is_removed || ref_is_removed;
+    const auto checkForSuffixChange = [](const std::size_t common_length, const std::string &first,
+                                         const std::string &second,
+                                         const SuffixTable &suffix_table) {
+        if (0 == common_length)
+            return false;
+
+        const auto endsOnSuffix = [](const std::size_t trim_length,
+                                     const std::string &string_with_possible_suffix,
+                                     const SuffixTable &suffix_table) {
+            auto suffix =
+                string_with_possible_suffix.size() > trim_length
+                    ? string_with_possible_suffix.substr(
+                          trim_length + (string_with_possible_suffix[trim_length] == ' ' ? 1 : 0))
+                    : " ";
+            boost::algorithm::to_lower(suffix);
+            return suffix.empty() || suffix_table.isSuffix(suffix);
+        };
+
+        const auto first_delta_is_suffix = endsOnSuffix(common_length, first, suffix_table);
+        const auto second_delta_is_suffix = endsOnSuffix(common_length, second, suffix_table);
+
+        return first_delta_is_suffix && second_delta_is_suffix;
+    };
+
+    const auto common_length = from_name.size() < to_name.size()
+                                   ? getCommonLength(from_name, to_name)
+                                   : getCommonLength(to_name, from_name);
+
+    const auto is_suffix_change =
+        checkForSuffixChange(common_length, from_name, to_name, suffix_table);
+
+    const auto obvious_change = (names_are_empty && refs_are_empty) ||
+                                (names_are_equal && ref_is_contained) ||
+                                (names_are_equal && refs_are_empty) || name_is_removed ||
+                                ref_is_removed || is_suffix_change;
 
     return !obvious_change;
 }

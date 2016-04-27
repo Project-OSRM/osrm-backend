@@ -4,6 +4,7 @@
 #include "extractor/guidance/turn_handler.hpp"
 
 #include "util/simple_logger.hpp"
+#include "util/guidance/toolkit.hpp"
 
 #include <limits>
 #include <utility>
@@ -11,6 +12,8 @@
 #include <boost/assert.hpp>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
+using osrm::util::guidance::getTurnDirection;
+using osrm::util::guidance::angularDeviation;
 
 namespace osrm
 {
@@ -21,8 +24,9 @@ namespace guidance
 
 TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                          const std::vector<QueryNode> &node_info_list,
-                         const util::NameTable &name_table)
-    : IntersectionHandler(node_based_graph, node_info_list, name_table)
+                         const util::NameTable &name_table,
+                         const SuffixTable &street_name_suffix_table)
+    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
 {
 }
 
@@ -403,22 +407,23 @@ Intersection TurnHandler::assignLeftTurns(const EdgeID via_edge,
                                           Intersection intersection,
                                           const std::size_t starting_at) const
 {
-    BOOST_ASSERT(!intersection.empty());
     BOOST_ASSERT(starting_at <= intersection.size());
-    for (auto &road : intersection)
-        road = mirror(road);
+    const auto switch_left_and_right = []( Intersection &intersection )
+    {
+        BOOST_ASSERT(!intersection.empty());
 
-    std::reverse(intersection.begin() + 1, intersection.end());
+        for (auto &road : intersection)
+            road = mirror(std::move(road));
 
+        std::reverse(intersection.begin() + 1, intersection.end());
+    };
+
+    switch_left_and_right(intersection);
     // account for the u-turn in the beginning
     const auto count = intersection.size() - starting_at + 1;
-
     intersection = assignRightTurns(via_edge, std::move(intersection), count);
+    switch_left_and_right(intersection);
 
-    std::reverse(intersection.begin() + 1, intersection.end());
-
-    for (auto &road : intersection)
-        road = mirror(road);
 
     return intersection;
 }

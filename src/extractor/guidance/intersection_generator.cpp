@@ -205,7 +205,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
             return result;
         }
     };
-    if (intersection.size() == 1)
+    if (intersection.size() <= 1)
         return intersection;
 
     const bool is_connected_to_roundabout = [this,&intersection]() {
@@ -245,7 +245,6 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 
         intersection.pop_back();
     }
-
     else if (mergable(0, 1))
     {
         const double correction_factor = (intersection[1].turn.angle) / 2;

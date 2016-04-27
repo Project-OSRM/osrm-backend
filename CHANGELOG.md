@@ -1,3 +1,16 @@
+# 5.1.0
+   - API:
+     - added roundabout-turn instruction. The instruction indicates a small roundabout that is treated as an intersection
+        (turn right at the roundabout for first exit, go straight at the roundabout...)
+     - reduced new name instructions for trivial changes
+     - combined multiple turns into a single instruction at segregated roads`
+
+   - Profile Changes:
+    - introduced a suffix_list / get_name_suffix_list to specify name suffices to be suppressed in name change announcements
+
+   - Infrastructure
+    - BREAKING: reordered internal instruction types. This breaks the data format
+
 # 5.0.0
    Changes with regard 5.0.0 RC2:
    - API:

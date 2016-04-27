@@ -14,6 +14,7 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <boost/optional.hpp>
+#include <cstddef>
 #include <vector>
 
 namespace osrm
@@ -75,20 +76,30 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         // We need to skip the first segment because it is already covered by the
         // initial start of a route
         int segment_duration = 0;
-        for (const auto &path_point : leg_data)
+
+        // some name changes are not announced in our processing. For these, we have to keep the
+        // first name on the segment
+        auto step_name_id = source_node.name_id;
+        for (std::size_t leg_data_index = 0; leg_data_index < leg_data.size(); ++leg_data_index)
         {
+            const auto &path_point = leg_data[leg_data_index];
             segment_duration += path_point.duration_until_turn;
 
             // all changes to this check have to be matched with assemble_geometry
             if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
             {
                 BOOST_ASSERT(segment_duration >= 0);
-                const auto name = facade.GetNameForID(path_point.name_id);
+                const auto name = facade.GetNameForID(step_name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
-                steps.push_back(RouteStep{path_point.name_id, name, NO_ROTARY_NAME,
+                steps.push_back(RouteStep{step_name_id, name, NO_ROTARY_NAME,
                                           segment_duration / 10.0, distance, path_point.travel_mode,
                                           maneuver, leg_geometry.FrontIndex(segment_index),
                                           leg_geometry.BackIndex(segment_index) + 1});
+                if (leg_data_index + 1 < leg_data.size()){
+                    step_name_id = leg_data[leg_data_index + 1].name_id;
+                } else {
+                    step_name_id = target_node.name_id;
+                }
                 maneuver = detail::stepManeuverFromGeometry(path_point.turn_instruction,
                                                             leg_geometry, segment_index);
                 segment_index++;
@@ -98,7 +109,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         const auto distance = leg_geometry.segment_distances[segment_index];
         const int duration = segment_duration + target_duration;
         BOOST_ASSERT(duration >= 0);
-        steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
+        steps.push_back(RouteStep{step_name_id, facade.GetNameForID(step_name_id),
                                   NO_ROTARY_NAME, duration / 10., distance, target_mode, maneuver,
                                   leg_geometry.FrontIndex(segment_index),
                                   leg_geometry.BackIndex(segment_index) + 1});
@@ -132,7 +143,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     BOOST_ASSERT(!leg_geometry.locations.empty());
     steps.push_back(RouteStep{target_node.name_id, facade.GetNameForID(target_node.name_id),
                               NO_ROTARY_NAME, ZERO_DURATION, ZERO_DISTANCE, target_mode,
-                              final_maneuver, leg_geometry.locations.size()-1,
+                              final_maneuver, leg_geometry.locations.size() - 1,
                               leg_geometry.locations.size()});
 
     return steps;

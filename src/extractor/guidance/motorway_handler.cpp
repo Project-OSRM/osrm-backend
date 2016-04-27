@@ -3,11 +3,15 @@
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/simple_logger.hpp"
+#include "util/guidance/toolkit.hpp"
 
 #include <limits>
 #include <utility>
 
 #include <boost/assert.hpp>
+
+using osrm::util::guidance::angularDeviation;
+using osrm::util::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -40,8 +44,9 @@ inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_base
 
 MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const std::vector<QueryNode> &node_info_list,
-                                 const util::NameTable &name_table)
-    : IntersectionHandler(node_based_graph, node_info_list, name_table)
+                                 const util::NameTable &name_table,
+                                 const SuffixTable &street_name_suffix_table)
+    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
 {
 }
 

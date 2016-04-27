@@ -1,14 +1,17 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
 #define OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
 
+#include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/roundabout_type.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -37,7 +40,9 @@ class RoundaboutHandler : public IntersectionHandler
   public:
     RoundaboutHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                       const std::vector<QueryNode> &node_info_list,
-                      const util::NameTable &name_table);
+                      const CompressedEdgeContainer &compressed_edge_container,
+                      const util::NameTable &name_table,
+                      const SuffixTable &street_name_suffix_table);
 
     ~RoundaboutHandler() override final;
 
@@ -61,17 +66,21 @@ class RoundaboutHandler : public IntersectionHandler
                                         Intersection &intersection) const;
 
     // decide whether we lookk at a roundabout or a rotary
-    bool isRotary(const NodeID nid) const;
+    RoundaboutType getRoundaboutType(const NodeID nid) const;
 
     // TODO handle bike/walk cases that allow crossing a roundabout!
     // Processing of roundabouts
     // Produces instructions to enter/exit a roundabout or to stay on it.
     // Performs the distinction between roundabout and rotaries.
-    Intersection handleRoundabouts(const bool is_rotary,
+    Intersection handleRoundabouts(const RoundaboutType roundabout_type,
                                    const EdgeID via_edge,
                                    const bool on_roundabout,
                                    const bool can_exit_roundabout,
                                    Intersection intersection) const;
+
+    bool qualifiesAsRoundaboutIntersection(const std::set<NodeID> &roundabout_nodes) const;
+
+    const CompressedEdgeContainer &compressed_edge_container;
 };
 
 } // namespace guidance

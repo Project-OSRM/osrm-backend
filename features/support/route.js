@@ -149,6 +149,8 @@ module.exports = function () {
                         return v.rotary_name + '-exit-' + v.maneuver.exit;
                     else
                         return 'rotary-exit-' + v.maneuver.exit;
+                case 'roundabout_turn':
+                    return v.maneuver.type + ' ' + v.maneuver.modifier + ' exit-' + v.maneuver.exit;
                 // FIXME this is a little bit over-simplistic for merge/fork instructions
                 default:
                     return v.maneuver.type + ' ' + v.maneuver.modifier;
