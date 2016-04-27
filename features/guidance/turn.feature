@@ -61,7 +61,6 @@ Feature: Simple Turns
             | e,c       | eb,cb,cb | depart,turn right,arrive        |
             | e,d       | eb,db,db | depart,turn left,arrive         |
 
-
     Scenario: Four Way Intersection Through Street
         Given the node map
             |   | c |   |
