@@ -96,7 +96,7 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     util::SimpleLogger().Write() << coordinate_list[source].lat << "    "
                                  << coordinate_list[source].lon;
 
-    util::SimpleLogger().Write() << "segment id " << phantom.front().phantom_node.forward_segment_id;
+    util::SimpleLogger().Write() << "segment id " << phantom.front().phantom_node.forward_segment_id.id;
     util::SimpleLogger().Write() << "packed id " << source;
     // Init complete
 
