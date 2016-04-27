@@ -10,7 +10,7 @@ function Destination.get_destination(way)
   local rv = ""
 
   if destination_ref and destination_ref ~= "" then
-    rv = rv .. destination_ref
+    rv = rv .. string.gsub(destination_ref, ";", ", ")
   end
 
   if destination and destination ~= "" then
