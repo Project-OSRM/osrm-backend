@@ -185,7 +185,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
         }
         // force uturns to be on, since we split the phantom nodes anyway and only have bi-directional
         // phantom nodes for possible uturns
-        shortest_path(sub_routes[index].segment_end_coordinates, {true}, sub_routes[index]);
+        shortest_path(sub_routes[index].segment_end_coordinates, {false}, sub_routes[index]);
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
 
