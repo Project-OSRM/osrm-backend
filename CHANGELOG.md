@@ -1,3 +1,7 @@
+# 5.0.2
+   - Fixes:
+     - Issue #2335, map matching was using shortest path with uturns disabled
+
 # 5.0.1
    - Fixes:
      - Issue #2309: Fixes local path looping, same coordinates crash
