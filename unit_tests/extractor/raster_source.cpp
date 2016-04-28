@@ -15,15 +15,15 @@ using namespace osrm::extractor;
 int normalize(double coord) { return static_cast<int>(coord * COORDINATE_PRECISION); }
 
 #define CHECK_QUERY(source_id, lon, lat, expected)                                                 \
-    BOOST_CHECK_EQUAL(sources.getRasterDataFromSource(source_id, lon, lat).datum, expected)
+    BOOST_CHECK_EQUAL(sources.GetRasterDataFromSource(source_id, lon, lat).datum, expected)
 
 #define CHECK_INTERPOLATE(source_id, lon, lat, expected)                                           \
-    BOOST_CHECK_EQUAL(sources.getRasterInterpolateFromSource(source_id, lon, lat).datum, expected)
+    BOOST_CHECK_EQUAL(sources.GetRasterInterpolateFromSource(source_id, lon, lat).datum, expected)
 
 BOOST_AUTO_TEST_CASE(raster_test)
 {
     SourceContainer sources;
-    int source_id = sources.loadRasterSource("../unit_tests/fixtures/raster_data.asc", 0, 0.09, 0,
+    int source_id = sources.LoadRasterSource("../unit_tests/fixtures/raster_data.asc", 0, 0.09, 0,
                                              0.09, 10, 10);
     BOOST_CHECK_EQUAL(source_id, 0);
 
@@ -67,15 +67,15 @@ BOOST_AUTO_TEST_CASE(raster_test)
     CHECK_INTERPOLATE(0, 0.056, 0.028, 68);
     CHECK_INTERPOLATE(0, 0.05, 0.028, 56);
 
-    int source_already_loaded_id = sources.loadRasterSource(
+    int source_already_loaded_id = sources.LoadRasterSource(
         "../unit_tests/fixtures/raster_data.asc", 0, 0.09, 0, 0.09, 10, 10);
 
     BOOST_CHECK_EQUAL(source_already_loaded_id, 0);
-    BOOST_CHECK_THROW(sources.getRasterDataFromSource(1, normalize(0.02), normalize(0.02)),
+    BOOST_CHECK_THROW(sources.GetRasterDataFromSource(1, normalize(0.02), normalize(0.02)),
                       util::exception);
 
     BOOST_CHECK_THROW(
-        sources.loadRasterSource("../unit_tests/fixtures/nonexistent.asc", 0, 0.1, 0, 0.1, 7, 7),
+        sources.LoadRasterSource("../unit_tests/fixtures/nonexistent.asc", 0, 0.1, 0, 0.1, 7, 7),
         util::exception);
 }
 

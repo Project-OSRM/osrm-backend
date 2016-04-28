@@ -87,9 +87,9 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                              luabind::value("route", TRAVEL_MODE_ROUTE)],
          luabind::class_<SourceContainer>("sources")
              .def(luabind::constructor<>())
-             .def("load", &SourceContainer::loadRasterSource)
-             .def("query", &SourceContainer::getRasterDataFromSource)
-             .def("interpolate", &SourceContainer::getRasterInterpolateFromSource),
+             .def("load", &SourceContainer::LoadRasterSource)
+             .def("query", &SourceContainer::GetRasterDataFromSource)
+             .def("interpolate", &SourceContainer::GetRasterInterpolateFromSource),
          luabind::class_<const float>("constants")
              .enum_("enums")[luabind::value("precision", COORDINATE_PRECISION)],
 
