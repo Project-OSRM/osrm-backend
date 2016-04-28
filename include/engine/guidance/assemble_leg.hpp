@@ -34,6 +34,7 @@ struct NamedSegment
 };
 
 template <std::size_t SegmentNumber>
+
 std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathData> &route_data)
 {
     // merges segments with same name id
@@ -41,7 +42,14 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
     {
         auto out = segments.begin();
         auto end = segments.end();
-        for (auto in = segments.begin(); in != end; ++in)
+
+        // Do nothing if we were given an empty array
+        if (out == end)
+        {
+            return end;
+        }
+
+        for (auto in = std::next(out); in != end; ++in)
         {
             if (in->name_id == out->name_id)
             {
@@ -54,7 +62,8 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
                 *out = *in;
             }
         }
-        return out;
+        BOOST_ASSERT(out != end);
+        return ++out;
     };
 
     std::vector<NamedSegment> segments(route_data.size());
@@ -72,10 +81,19 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
               });
     auto new_end = collapse_segments(segments);
     segments.resize(new_end - segments.begin());
+
+    // Filter out segments with an empty name (name_id == 0)
+    new_end = std::remove_if(segments.begin(), segments.end(), [](const NamedSegment &segment)
+              {
+                  return segment.name_id == 0;
+              });
+    segments.resize(new_end - segments.begin());
+
     // sort descending
     std::sort(segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs)
               {
-                  return lhs.duration > rhs.duration;
+                  return lhs.duration > rhs.duration ||
+                         (lhs.duration == rhs.duration && lhs.position < rhs.position);
               });
 
     // make sure the segments are sorted by position

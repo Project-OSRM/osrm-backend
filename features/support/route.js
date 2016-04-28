@@ -127,6 +127,12 @@ module.exports = function () {
         }
     };
 
+    this.summary = (instructions) => {
+        if (instructions) {
+            return instructions.legs.map(l => l.summary).join(',');
+        }
+    }
+
     this.wayList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.name);
     };

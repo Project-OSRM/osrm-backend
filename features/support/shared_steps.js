@@ -31,7 +31,7 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        var instructions, bearings, turns, modes, times, distances;
+                        var instructions, bearings, turns, modes, times, distances, summary;
 
                         var json = JSON.parse(body);
 
@@ -44,6 +44,7 @@ module.exports = function () {
                             modes = this.modeList(json.routes[0]);
                             times = this.timeList(json.routes[0]);
                             distances = this.distanceList(json.routes[0]);
+                            summary = this.summary(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
@@ -65,6 +66,10 @@ module.exports = function () {
 
                         if (headers.has('route')) {
                             got.route = (instructions || '').trim();
+
+                            if (headers.has('summary')) {
+                                got.summary = (summary || '').trim();
+                            }
 
                             if (headers.has('alternative')) {
                                 // TODO examine more than first alternative?
