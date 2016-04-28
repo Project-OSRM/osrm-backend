@@ -56,7 +56,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                           [this, max_distance, input_coordinate](const std::size_t,
                                                                  const CandidateSegment &segment)
                           {
-                              return checkSegmentDistance(input_coordinate, segment, max_distance);
+                              return CheckSegmentDistance(input_coordinate, segment, max_distance);
                           });
 
         return MakePhantomNodes(input_coordinate, results);
@@ -74,12 +74,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             input_coordinate,
             [this, bearing, bearing_range, max_distance](const CandidateSegment &segment)
             {
-                return checkSegmentBearing(segment, bearing, bearing_range);
+                return CheckSegmentBearing(segment, bearing, bearing_range);
             },
             [this, max_distance, input_coordinate](const std::size_t,
                                                    const CandidateSegment &segment)
             {
-                return checkSegmentDistance(input_coordinate, segment, max_distance);
+                return CheckSegmentDistance(input_coordinate, segment, max_distance);
             });
 
         return MakePhantomNodes(input_coordinate, results);
@@ -97,7 +97,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             rtree.Nearest(input_coordinate,
                           [this, bearing, bearing_range](const CandidateSegment &segment)
                           {
-                              return checkSegmentBearing(segment, bearing, bearing_range);
+                              return CheckSegmentBearing(segment, bearing, bearing_range);
                           },
                           [max_results](const std::size_t num_results, const CandidateSegment &)
                           {
@@ -121,13 +121,13 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             rtree.Nearest(input_coordinate,
                           [this, bearing, bearing_range](const CandidateSegment &segment)
                           {
-                              return checkSegmentBearing(segment, bearing, bearing_range);
+                              return CheckSegmentBearing(segment, bearing, bearing_range);
                           },
                           [this, max_distance, max_results, input_coordinate](
                               const std::size_t num_results, const CandidateSegment &segment)
                           {
                               return num_results >= max_results ||
-                                     checkSegmentDistance(input_coordinate, segment, max_distance);
+                                     CheckSegmentDistance(input_coordinate, segment, max_distance);
                           });
 
         return MakePhantomNodes(input_coordinate, results);
@@ -169,7 +169,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                               const std::size_t num_results, const CandidateSegment &segment)
                           {
                               return num_results >= max_results ||
-                                     checkSegmentDistance(input_coordinate, segment, max_distance);
+                                     CheckSegmentDistance(input_coordinate, segment, max_distance);
                           });
 
         return MakePhantomNodes(input_coordinate, results);
@@ -200,7 +200,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              input_coordinate](const std::size_t num_results, const CandidateSegment &segment)
             {
                 return (num_results > 0 && has_big_component) ||
-                       checkSegmentDistance(input_coordinate, segment, max_distance);
+                       CheckSegmentDistance(input_coordinate, segment, max_distance);
             });
 
         if (results.size() == 0)
@@ -266,7 +266,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
                 if (use_segment)
                 {
-                    use_directions = checkSegmentBearing(segment, bearing, bearing_range);
+                    use_directions = CheckSegmentBearing(segment, bearing, bearing_range);
                     if (use_directions.first || use_directions.second)
                     {
                         has_big_component = has_big_component || !segment.data.component.is_tiny;
@@ -312,7 +312,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
                 if (use_segment)
                 {
-                    use_directions = checkSegmentBearing(segment, bearing, bearing_range);
+                    use_directions = CheckSegmentBearing(segment, bearing, bearing_range);
                     if (use_directions.first || use_directions.second)
                     {
                         has_big_component = has_big_component || !segment.data.component.is_tiny;
@@ -326,7 +326,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
              input_coordinate](const std::size_t num_results, const CandidateSegment &segment)
             {
                 return (num_results > 0 && has_big_component) ||
-                       checkSegmentDistance(input_coordinate, segment, max_distance);
+                       CheckSegmentDistance(input_coordinate, segment, max_distance);
             });
 
         if (results.size() == 0)
@@ -416,7 +416,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return transformed;
     }
 
-    bool checkSegmentDistance(const Coordinate input_coordinate,
+    bool CheckSegmentDistance(const Coordinate input_coordinate,
                               const CandidateSegment &segment,
                               const double max_distance)
     {
@@ -432,7 +432,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                max_distance;
     }
 
-    std::pair<bool, bool> checkSegmentBearing(const CandidateSegment &segment,
+    std::pair<bool, bool> CheckSegmentBearing(const CandidateSegment &segment,
                                               const int filter_bearing,
                                               const int filter_bearing_range)
     {
