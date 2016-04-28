@@ -84,9 +84,9 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     auto wrapper = std::make_shared<util::MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
                                                                           number_of_locations);
     auto scc = extractor::TarjanSCC<util::MatrixGraphWrapper<EdgeWeight>>(wrapper);
-    scc.run();
+    scc.Run();
 
-    const auto number_of_components = scc.get_number_of_components();
+    const auto number_of_components = scc.GetNumberOfComponents();
 
     std::vector<std::size_t> range_insertion;
     std::vector<std::size_t> range;
@@ -100,15 +100,15 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     {
         range_insertion.push_back(prefix);
         range.push_back(prefix);
-        prefix += scc.get_component_size(j);
+        prefix += scc.GetComponentSize(j);
     }
     // senitel
     range.push_back(components.size());
 
     for (std::size_t i = 0; i < number_of_locations; ++i)
     {
-        components[range_insertion[scc.get_component_id(i)]] = i;
-        ++range_insertion[scc.get_component_id(i)];
+        components[range_insertion[scc.GetComponentID(i)]] = i;
+        ++range_insertion[scc.GetComponentID(i)];
     }
 
     return SCC_Component(std::move(components), std::move(range));
