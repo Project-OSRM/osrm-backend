@@ -136,7 +136,6 @@ int main(int argc, char *argv[]) try
     osrm::tools::deleteFileIfExists("component.shx");
     osrm::tools::deleteFileIfExists("component.shp");
 
-    osrm::util::Percent percentage(graph->GetNumberOfNodes());
 
     OGRRegisterAll();
 
@@ -167,11 +166,11 @@ int main(int argc, char *argv[]) try
                                        << TIMER_MSEC(SCC_RUN_SETUP) / 1000. << "s";
 
     uint64_t total_network_length = 0;
-    percentage.reinit(graph->GetNumberOfNodes());
+    osrm::util::Percent percentage(graph->GetNumberOfNodes());
     TIMER_START(SCC_OUTPUT);
     for (const NodeID source : osrm::util::irange(0u, graph->GetNumberOfNodes()))
     {
-        percentage.printIncrement();
+        percentage.PrintIncrement();
         for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
         {
             const auto target = graph->GetTarget(current_edge);

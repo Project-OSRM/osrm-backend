@@ -245,7 +245,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
     {
         BOOST_ASSERT(node_u != SPECIAL_NODEID);
         BOOST_ASSERT(node_u < m_node_based_graph->GetNumberOfNodes());
-        progress.printStatus(node_u);
+        progress.PrintStatus(node_u);
         for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
             const EdgeData &edge_data = m_node_based_graph->GetEdgeData(e1);
@@ -328,7 +328,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          street_name_suffix_table);
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
-        progress.printStatus(node_u);
+        progress.PrintStatus(node_u);
         for (const EdgeID edge_from_u : m_node_based_graph->GetAdjacentEdgeRange(node_u))
         {
             if (m_node_based_graph->GetEdgeData(edge_from_u).reversed)

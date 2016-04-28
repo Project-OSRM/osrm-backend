@@ -561,7 +561,7 @@ class GraphContractor
             number_of_contracted_nodes += end_independent_nodes_idx - begin_independent_nodes_idx;
             remaining_nodes.resize(begin_independent_nodes_idx);
 
-            p.printStatus(number_of_contracted_nodes);
+            p.PrintStatus(number_of_contracted_nodes);
             ++current_level;
         }
 
@@ -627,7 +627,7 @@ class GraphContractor
             Edge new_edge;
             for (const auto node : util::irange(0u, number_of_nodes))
             {
-                p.printStatus(node);
+                p.PrintStatus(node);
                 for (auto edge : contractor_graph->GetAdjacentEdgeRange(node))
                 {
                     const NodeID target = contractor_graph->GetTarget(edge);
