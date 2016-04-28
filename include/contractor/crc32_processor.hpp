@@ -17,9 +17,9 @@ namespace contractor
 class IteratorbasedCRC32
 {
   public:
-    bool using_hardware() const { return use_hardware_implementation; }
+    bool UsingHardware() const { return use_hardware_implementation; }
 
-    IteratorbasedCRC32() : crc(0) { use_hardware_implementation = detect_hardware_support(); }
+    IteratorbasedCRC32() : crc(0) { use_hardware_implementation = DetectHardwareSupport(); }
 
     template <class Iterator> unsigned operator()(Iterator iter, const Iterator end)
     {
@@ -31,11 +31,11 @@ class IteratorbasedCRC32
 
             if (use_hardware_implementation)
             {
-                crc = compute_in_hardware(data, sizeof(value_type));
+                crc = ComputeInHardware(data, sizeof(value_type));
             }
             else
             {
-                crc = compute_in_software(data, sizeof(value_type));
+                crc = ComputeInSoftware(data, sizeof(value_type));
             }
             ++iter;
         }
@@ -43,7 +43,7 @@ class IteratorbasedCRC32
     }
 
   private:
-    bool detect_hardware_support() const
+    bool DetectHardwareSupport() const
     {
         static const int sse42_bit = 0x00100000;
         const unsigned ecx = cpuid();
@@ -51,14 +51,14 @@ class IteratorbasedCRC32
         return sse42_found;
     }
 
-    unsigned compute_in_software(const char *str, unsigned len)
+    unsigned ComputeInSoftware(const char *str, unsigned len)
     {
         crc_processor.process_bytes(str, len);
         return crc_processor.checksum();
     }
 
     // adapted from http://byteworm.com/2010/10/13/crc32/
-    unsigned compute_in_hardware(const char *str, unsigned len)
+    unsigned ComputeInHardware(const char *str, unsigned len)
     {
 #if defined(__x86_64__)
         unsigned q = len / sizeof(unsigned);
@@ -114,7 +114,7 @@ struct RangebasedCRC32
         return crc32(std::begin(iterable), std::end(iterable));
     }
 
-    bool using_hardware() const { return crc32.using_hardware(); }
+    bool UsingHardware() const { return crc32.UsingHardware(); }
 
   private:
     IteratorbasedCRC32 crc32;
