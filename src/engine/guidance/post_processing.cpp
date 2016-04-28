@@ -37,7 +37,7 @@ void invalidateStep(RouteStep &step)
 {
     step = {};
     step.maneuver.instruction = TurnInstruction::NO_TURN();
-};
+}
 
 void print(const std::vector<RouteStep> &steps)
 {
@@ -312,7 +312,7 @@ bool collapsable(const RouteStep &step)
 {
     const constexpr double MAX_COLLAPSE_DISTANCE = 25;
     return step.distance < MAX_COLLAPSE_DISTANCE;
-};
+}
 
 void collapseTurnAt(std::vector<RouteStep> &steps,
                     const std::size_t two_back_index,
