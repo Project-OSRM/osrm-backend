@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -307,6 +308,19 @@ inline bool isDistinct(const DirectionModifier first, const DirectionModifier se
     return true;
 }
 
+inline std::pair<std::string, std::string> getPrefixAndSuffix(const std::string &data)
+{
+    const auto suffix_pos = data.find_last_of(' ');
+    if (suffix_pos == std::string::npos)
+        return {};
+
+    const auto prefix_pos = data.find_first_of(' ');
+    auto result = std::make_pair(data.substr(0, prefix_pos), data.substr(suffix_pos + 1));
+    boost::to_lower(result.first);
+    boost::to_lower(result.second);
+    return result;
+}
+
 inline bool requiresNameAnnounced(const std::string &from,
                                   const std::string &to,
                                   const SuffixTable &suffix_table)
@@ -336,12 +350,6 @@ inline bool requiresNameAnnounced(const std::string &from,
         }
     };
 
-    const auto getCommonLength = [](const std::string &first, const std::string &second) {
-        BOOST_ASSERT(first.size() <= second.size());
-        const auto mismatch_result = std::mismatch(first.begin(), first.end(), second.begin());
-        return std::distance(first.begin(), mismatch_result.first);
-    };
-
     split(from, from_name, from_ref);
     split(to, to_name, to_ref);
 
@@ -349,7 +357,41 @@ inline bool requiresNameAnnounced(const std::string &from,
     const auto names_are_empty = from_name.empty() && to_name.empty();
     const auto name_is_contained =
         boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
-    const auto names_are_equal = from_name == to_name || name_is_contained;
+
+    const auto checkForPrefixOrSuffixChange =
+        [](const std::string &first, const std::string &second, const SuffixTable &suffix_table) {
+
+            const auto first_prefix_and_suffixes = getPrefixAndSuffix(first);
+            const auto second_prefix_and_suffixes = getPrefixAndSuffix(second);
+            // reverse strings, get suffices and reverse them to get prefixes
+            const auto checkTable = [&](const std::string str) {
+                return str.empty() || suffix_table.isSuffix(str);
+            };
+
+            const bool is_prefix_change = [&]() -> bool {
+                if (!checkTable(first_prefix_and_suffixes.first))
+                    return false;
+                if (!checkTable(first_prefix_and_suffixes.first))
+                    return false;
+                return !first.compare(first_prefix_and_suffixes.first.length(), std::string::npos,
+                                     second, second_prefix_and_suffixes.first.length(),
+                                     std::string::npos);
+            }();
+
+            const bool is_suffix_change = [&]() -> bool {
+                if (!checkTable(first_prefix_and_suffixes.second))
+                    return false;
+                if (!checkTable(first_prefix_and_suffixes.second))
+                    return false;
+                return !first.compare(0, first.length() - first_prefix_and_suffixes.second.length(),
+                                     second, 0, second.length() - second_prefix_and_suffixes.second.length());
+            }();
+
+            return is_prefix_change || is_suffix_change;
+        };
+
+    const auto is_suffix_change = checkForPrefixOrSuffixChange(from_name, to_name, suffix_table);
+    const auto names_are_equal = from_name == to_name || name_is_contained || is_suffix_change;
     const auto name_is_removed = !from_name.empty() && to_name.empty();
     // references are contained in one another
     const auto refs_are_empty = from_ref.empty() && to_ref.empty();
@@ -357,37 +399,6 @@ inline bool requiresNameAnnounced(const std::string &from,
         from_ref.empty() || to_ref.empty() ||
         (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
     const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
-
-    const auto checkForSuffixChange = [](const std::size_t common_length, const std::string &first,
-                                         const std::string &second,
-                                         const SuffixTable &suffix_table) {
-        if (0 == common_length)
-            return false;
-
-        const auto endsOnSuffix = [](const std::size_t trim_length,
-                                     const std::string &string_with_possible_suffix,
-                                     const SuffixTable &suffix_table) {
-            auto suffix =
-                string_with_possible_suffix.size() > trim_length
-                    ? string_with_possible_suffix.substr(
-                          trim_length + (string_with_possible_suffix[trim_length] == ' ' ? 1 : 0))
-                    : " ";
-            boost::algorithm::to_lower(suffix);
-            return suffix.empty() || suffix_table.isSuffix(suffix);
-        };
-
-        const auto first_delta_is_suffix = endsOnSuffix(common_length, first, suffix_table);
-        const auto second_delta_is_suffix = endsOnSuffix(common_length, second, suffix_table);
-
-        return first_delta_is_suffix && second_delta_is_suffix;
-    };
-
-    const auto common_length = from_name.size() < to_name.size()
-                                   ? getCommonLength(from_name, to_name)
-                                   : getCommonLength(to_name, from_name);
-
-    const auto is_suffix_change =
-        checkForSuffixChange(common_length, from_name, to_name, suffix_table);
 
     const auto obvious_change = (names_are_empty && refs_are_empty) ||
                                 (names_are_equal && ref_is_contained) ||
