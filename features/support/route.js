@@ -131,7 +131,7 @@ module.exports = function () {
         if (instructions) {
             return instructions.legs.map(l => l.summary).join(',');
         }
-    }
+    };
 
     this.wayList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.name);
