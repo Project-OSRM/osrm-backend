@@ -29,7 +29,7 @@ let coords_separators = {
   "table_5.0": ";",
   "table_4.9": "&"
 };
-var axis = "distance";
+var axis = "waypoints";
 
 var sw = [Number.MAX_VALUE, Number.MAX_VALUE];
 var ne = [Number.MIN_VALUE, Number.MIN_VALUE];
