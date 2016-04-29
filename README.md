@@ -19,7 +19,8 @@ To quickly try OSRM use our [free and daily updated online service](http://map.p
 
 ## Documentation
 
-See the Wiki's [server API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/New-Server-api) as well as the [library API documentation](https://github.com/Project-OSRM/osrm-backend/wiki/Library-api)
+- [osrm-routed HTTP API documentation](docs/http.md)
+- [libosrm API documentation](docs/libosrm.md)
 
 ## References in publications
 
