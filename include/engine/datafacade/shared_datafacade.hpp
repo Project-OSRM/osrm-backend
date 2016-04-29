@@ -9,6 +9,7 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/compressed_edge_container.hpp"
 
 #include "engine/geospatial_query.hpp"
 #include "util/range_table.hpp"

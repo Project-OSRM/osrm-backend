@@ -7,6 +7,7 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 
+#include "storage/storage_config.hpp"
 #include "engine/geospatial_query.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
