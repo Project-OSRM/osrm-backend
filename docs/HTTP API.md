@@ -1,0 +1,1 @@
+This moved to https://github.com/Project-OSRM/osrm-backend/wiki/Server-API-v5,-current
