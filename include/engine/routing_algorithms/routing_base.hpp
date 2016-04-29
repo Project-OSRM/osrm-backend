@@ -398,7 +398,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
             // Since it's possible duration_until_turn can be less than source_weight here if
             // a negative enough turn penalty is used to modify this edge weight during
-            // osrm-contract, we clamp to 1 here so as not to return a negative duration
+            // osrm-contract, we clamp to 0 here so as not to return a negative duration
             // for this segment.
 
             // TODO this creates a scenario where it's possible the duration from a phantom
