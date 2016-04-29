@@ -210,7 +210,7 @@ function way_function (way, result)
 
   -- name
   if ref and "" ~= ref and name and "" ~= name then
-    result.name = name .. ' / ' .. ref
+    result.name = name .. " (" .. ref .. ")"
   elseif ref and "" ~= ref then
     result.name = ref
   elseif name and "" ~= name then

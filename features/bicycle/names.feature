@@ -10,13 +10,13 @@ Feature: Bike - Street names in instructions
             |   | c |
 
         And the ways
-            | nodes | name     |
-            | ab    | My Way   |
-            | bc    | Your Way |
+            | nodes | name     | ref |
+            | ab    | My Way   | A6  |
+            | bc    | Your Way | A7  |
 
         When I route I should get
-            | from | to | route                    |
-            | a    | c  | My Way,Your Way,Your Way |
+            | from | to | route                                   |
+            | a    | c  | My Way (A6),Your Way (A7),Your Way (A7) |
 
     @unnamed
     Scenario: Bike - Use way type to describe unnamed ways
