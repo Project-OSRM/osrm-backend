@@ -2,7 +2,7 @@
 
 `osrm-routed` supports only `GET` requests of the form. If you your response size
 exceeds the limits of a simple URL encoding, consider using our [NodeJS bindings](https://github.com/Project-OSRM/node-osrm)
-or using the [C++ library directly](https://github.com/Project-OSRM/osrm-backend/wiki/Library-api).
+or using the [C++ library directly](libosrm.md).
 
 ### Request
 
