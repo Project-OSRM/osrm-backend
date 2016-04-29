@@ -353,19 +353,15 @@ function way_function (way, result)
   -- local barrier = way:get_value_by_key("barrier", "")
   -- local cycleway = way:get_value_by_key("cycleway", "")
   local service = way:get_value_by_key("service")
-  local destination = get_destination(way)
 
   -- Set the name that will be used for instructions
   local has_ref = ref and "" ~= ref
   local has_name = name and "" ~= name
-  local has_destination = destination and "" ~= destination
 
   if has_name and has_ref then
     result.name = name .. " (" .. ref .. ")"
   elseif has_ref then
     result.name = ref
-  elseif has_name and has_destination then
-    result.name = name .. " (" .. destination .. ")"
   elseif has_name then
     result.name = name
 --  else
@@ -397,6 +393,14 @@ function way_function (way, result)
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
       result.backward_mode = mode.inaccessible
+
+      -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
+      local destination = get_destination(way)
+      local has_destination = destination and "" ~= destination
+
+      if has_destination and has_name and not has_ref then
+        result.name = name .. " (" .. destination .. ")"
+      end
     end
   end
 
