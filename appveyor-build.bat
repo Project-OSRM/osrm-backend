@@ -129,7 +129,7 @@ ECHO running server-tests.exe ...
 unit_tests\%Configuration%\server-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-IF NOT "%APPVEYOR_REPO_BRANCH%"=="develop" GOTO DONE
+IF NOT "%APPVEYOR_REPO_BRANCH%"=="master" GOTO DONE
 ECHO ========= CREATING PACKAGES ==========
 
 CD %PROJECT_DIR%\build\%Configuration%
