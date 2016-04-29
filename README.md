@@ -9,7 +9,6 @@ The Open Source Routing Machine is a high performance routing engine written in 
 | Linux        | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) |
 | Windows      | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
 | Coverage     | [![Coverage Status](https://coveralls.io/repos/github/Project-OSRM/osrm-backend/badge.svg?branch=master)](https://coveralls.io/github/Project-OSRM/osrm-backend?branch=master) |
-| LUAbind fork | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |
 
 ## Building
 
@@ -19,8 +18,46 @@ To quickly try OSRM use our [free and daily updated online service](http://map.p
 
 ## Documentation
 
+### Full documentation
+
 - [osrm-routed HTTP API documentation](docs/http.md)
 - [libosrm API documentation](docs/libosrm.md)
+
+### Quick start
+
+Building OSRM assuming all dependencies are installed:
+
+```
+mkdir -p build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+sudo cmake --build . --target install
+```
+
+Loading preparing a dataset and starting the server:
+
+```
+osrm-extract data.osm.pbf -p profiles/car.lua
+osrm-contract data.osrm
+osrm-routed data.osrm
+```
+
+Running a query on your local server:
+
+```
+curl http://127.0.0.1:5000/13.388860,52.517037;13.385983,52.496891?steps=true&alternatives=true
+```
+
+### Running a request against the Demo Server
+
+First read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy).
+
+Then run simple query with instructions and alternatives on Berlin:
+
+```
+curl https://router.project-osrm.org/13.388860,52.517037;13.385983,52.496891?steps=true&alternatives=true
+```
 
 ## References in publications
 
