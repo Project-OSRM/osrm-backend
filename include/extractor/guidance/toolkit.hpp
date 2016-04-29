@@ -103,7 +103,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
 }
 } // namespace detail
 
-// Finds a (potentially inteprolated) coordinate that is DESIRED_SEGMENT_LENGTH away
+// Finds a (potentially interpolated) coordinate that is DESIRED_SEGMENT_LENGTH away
 // from the start of an edge
 inline util::Coordinate
 getRepresentativeCoordinate(const NodeID from_node,
