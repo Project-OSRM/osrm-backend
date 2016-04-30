@@ -17,30 +17,19 @@ namespace osrm
 namespace engine
 {
 
-struct FastPerpendicularDistance
+// Normed to the thresholds table
+std::uint64_t fastPerpendicularDistance(const util::FloatCoordinate &projected_start,
+                                        const util::FloatCoordinate &projected_target,
+                                        const util::FloatCoordinate &projected)
 {
-    FastPerpendicularDistance(const util::Coordinate start, const util::Coordinate target)
-        : projected_start(util::web_mercator::fromWGS84(start)),
-          projected_target(util::web_mercator::fromWGS84(target))
-    {
-    }
-
-    // Normed to the thresholds table
-    std::uint64_t operator()(const util::Coordinate coordinate) const
-    {
-        auto projected = util::web_mercator::fromWGS84(coordinate);
-        util::FloatCoordinate projected_point_on_segment;
-        std::tie(std::ignore, projected_point_on_segment) =
-            util::coordinate_calculation::projectPointOnSegment(projected_start, projected_target,
-                                                                projected);
-        auto squared_distance = util::coordinate_calculation::squaredEuclideanDistance(projected,
-                                                                      projected_point_on_segment);
-        return squared_distance;
-    }
-
-    const util::FloatCoordinate projected_start;
-    const util::FloatCoordinate projected_target;
-};
+    util::FloatCoordinate projected_point_on_segment;
+    std::tie(std::ignore, projected_point_on_segment) =
+        util::coordinate_calculation::projectPointOnSegment(projected_start, projected_target,
+                                                            projected);
+    auto squared_distance = util::coordinate_calculation::squaredEuclideanDistance(
+        projected, projected_point_on_segment);
+    return squared_distance;
+}
 
 std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::const_iterator begin,
                                              std::vector<util::Coordinate>::const_iterator end,
@@ -54,6 +43,12 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
     {
         return {};
     }
+
+    std::vector<util::FloatCoordinate> projected_coordinates(size);
+    std::transform(begin, end, projected_coordinates.begin(), [](const util::Coordinate coord)
+                   {
+                       return util::web_mercator::fromWGS84(coord);
+                   });
 
     std::vector<bool> is_necessary(size, false);
     BOOST_ASSERT(is_necessary.size() >= 2);
@@ -80,13 +75,13 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
         std::uint64_t max_distance = 0;
         auto farthest_entry_index = pair.second;
 
-        FastPerpendicularDistance perpendicular_distance(begin[pair.first], begin[pair.second]);
-
         // sweep over range to find the maximum
         for (auto idx = pair.first + 1; idx != pair.second; ++idx)
         {
             using namespace util::coordinate_calculation;
-            const auto distance = perpendicular_distance(begin[idx]);
+            const auto distance = fastPerpendicularDistance(projected_coordinates[pair.first],
+                                                            projected_coordinates[pair.second],
+                                                            projected_coordinates[idx]);
             // found new feasible maximum?
             if (distance > max_distance &&
                 distance > detail::DOUGLAS_PEUCKER_THRESHOLDS[zoom_level])
@@ -122,6 +117,7 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
             simplified_geometry.push_back(begin[idx]);
         }
     }
+
     return simplified_geometry;
 }
 } // ns engine
