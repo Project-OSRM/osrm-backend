@@ -242,9 +242,6 @@ void closeOffRoundabout(const bool on_roundabout,
                         return angle > 360 ? angle - 360 : angle;
                     }(propagation_step.maneuver.bearing_before, exit_bearing);
 
-                    std::cout << "Step: " << propagation_step.maneuver.bearing_before << " "
-                              << exit_bearing << " result: " << angle << std::endl;
-
                     propagation_step.maneuver.instruction.direction_modifier =
                         ::osrm::util::guidance::getTurnDirection(angle);
                 }
