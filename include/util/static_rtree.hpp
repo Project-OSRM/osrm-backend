@@ -348,8 +348,7 @@ class StaticRTree
 
             if (current_tree_node.child_is_on_disk)
             {
-                LeafNode current_leaf_node;
-                LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
+                LeafNode current_leaf_node = LoadLeafFromDisk(current_tree_node.children[0]);
 
                 for (const auto i : irange(0u, current_leaf_node.object_count))
                 {
@@ -488,8 +487,7 @@ class StaticRTree
             return;
         }
 
-        LeafNode current_leaf_node;
-        LoadLeafFromDisk(leaf_id, current_leaf_node);
+        LeafNode current_leaf_node = LoadLeafFromDisk(leaf_id);
 
         // current object represents a block on disk
         for (const auto i : irange(0u, current_leaf_node.object_count))
@@ -529,8 +527,9 @@ class StaticRTree
         }
     }
 
-    inline void LoadLeafFromDisk(const std::uint32_t leaf_id, LeafNode &result_node)
+    inline LeafNode LoadLeafFromDisk(const std::uint32_t leaf_id)
     {
+        LeafNode result_node;
         if (!leaves_stream.is_open())
         {
             leaves_stream.open(m_leaf_node_filename, std::ios::in | std::ios::binary);
@@ -544,6 +543,7 @@ class StaticRTree
         BOOST_ASSERT_MSG(leaves_stream.good(), "Seeking to position in leaf file failed.");
         leaves_stream.read((char *)&result_node, sizeof(LeafNode));
         BOOST_ASSERT_MSG(leaves_stream.good(), "Reading from leaf file failed.");
+        return result_node;
     }
 
     template <typename CoordinateT>
