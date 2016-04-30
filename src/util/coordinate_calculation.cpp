@@ -77,43 +77,6 @@ double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coord
     return std::hypot(x_value, y_value) * detail::EARTH_RADIUS;
 }
 
-std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoordinate &source,
-                                                         const FloatCoordinate &target,
-                                                         const FloatCoordinate &coordinate)
-{
-    const FloatCoordinate slope_vector{target.lon - source.lon, target.lat - source.lat};
-    const FloatCoordinate rel_coordinate{coordinate.lon - source.lon, coordinate.lat - source.lat};
-    // dot product of two un-normed vectors
-    const auto unnormed_ratio = static_cast<double>(slope_vector.lon * rel_coordinate.lon) +
-                                static_cast<double>(slope_vector.lat * rel_coordinate.lat);
-    // squared length of the slope vector
-    const auto squared_length = static_cast<double>(slope_vector.lon * slope_vector.lon) +
-                                static_cast<double>(slope_vector.lat * slope_vector.lat);
-
-    if (squared_length < std::numeric_limits<double>::epsilon())
-    {
-        return {0, source};
-    }
-
-    const double normed_ratio = unnormed_ratio / squared_length;
-    double clamped_ratio = normed_ratio;
-    if (clamped_ratio > 1.)
-    {
-        clamped_ratio = 1.;
-    }
-    else if (clamped_ratio < 0.)
-    {
-        clamped_ratio = 0.;
-    }
-
-    return {clamped_ratio,
-            {
-                FloatLongitude(1.0 - clamped_ratio) * source.lon +
-                    target.lon * FloatLongitude(clamped_ratio),
-                FloatLatitude(1.0 - clamped_ratio) * source.lat +
-                    target.lat * FloatLatitude(clamped_ratio),
-            }};
-}
 
 double perpendicularDistance(const Coordinate segment_source,
                              const Coordinate segment_target,
