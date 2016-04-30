@@ -25,7 +25,7 @@ const constexpr long double EARTH_RADIUS = 6372797.560856;
 
 
 //! Takes the squared euclidean distance of the input coordinates. Does not return meters!
-std::uint64_t squaredEuclideanDistance(const Coordinate &lhs, const Coordinate &rhs);
+std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs);
 
 double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
