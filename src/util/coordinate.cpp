@@ -17,24 +17,6 @@ namespace osrm
 namespace util
 {
 
-Coordinate::Coordinate()
-    : lon(std::numeric_limits<int>::min()), lat(std::numeric_limits<int>::min())
-{
-}
-
-Coordinate::Coordinate(const FloatCoordinate &other)
-    : Coordinate(toFixed(other.lon), toFixed(other.lat))
-{
-}
-
-Coordinate::Coordinate(const FloatLongitude lon_, const FloatLatitude lat_)
-    : Coordinate(toFixed(lon_), toFixed(lat_))
-{
-}
-
-Coordinate::Coordinate(const FixedLongitude lon_, const FixedLatitude lat_) : lon(lon_), lat(lat_)
-{
-}
 
 bool Coordinate::IsValid() const
 {
@@ -44,24 +26,6 @@ bool Coordinate::IsValid() const
              lon < FixedLongitude(-180 * COORDINATE_PRECISION));
 }
 
-FloatCoordinate::FloatCoordinate()
-    : lon(std::numeric_limits<double>::min()), lat(std::numeric_limits<double>::min())
-{
-}
-
-FloatCoordinate::FloatCoordinate(const Coordinate other)
-    : FloatCoordinate(toFloating(other.lon), toFloating(other.lat))
-{
-}
-
-FloatCoordinate::FloatCoordinate(const FixedLongitude lon_, const FixedLatitude lat_)
-    : FloatCoordinate(toFloating(lon_), toFloating(lat_))
-{
-}
-
-FloatCoordinate::FloatCoordinate(const FloatLongitude lon_, const FloatLatitude lat_) : lon(lon_), lat(lat_)
-{
-}
 
 bool FloatCoordinate::IsValid() const
 {
