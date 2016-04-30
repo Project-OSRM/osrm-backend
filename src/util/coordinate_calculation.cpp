@@ -41,8 +41,8 @@ double haversineDistance(const Coordinate coordinate_1, const Coordinate coordin
     const double ln1 = lon1 / COORDINATE_PRECISION;
     const double lt2 = lat2 / COORDINATE_PRECISION;
     const double ln2 = lon2 / COORDINATE_PRECISION;
-    const double dlat1 = lt1 * detail::DEGREE_TO_RAD;
 
+    const double dlat1 = lt1 * detail::DEGREE_TO_RAD;
     const double dlong1 = ln1 * detail::DEGREE_TO_RAD;
     const double dlat2 = lt2 * detail::DEGREE_TO_RAD;
     const double dlong2 = ln2 * detail::DEGREE_TO_RAD;
