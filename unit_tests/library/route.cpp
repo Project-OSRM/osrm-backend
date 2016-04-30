@@ -331,6 +331,7 @@ BOOST_AUTO_TEST_CASE(test_benchmark)
 
     MatchParameters params;
     params.overview = RouteParameters::OverviewType::False;
+    params.steps = true;
 
     using osrm::util::FloatCoordinate;
     using osrm::util::FloatLatitude;
