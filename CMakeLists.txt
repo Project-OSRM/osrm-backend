@@ -99,6 +99,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
   # Check if LTO is available
   check_cxx_compiler_flag("-flto" LTO_AVAILABLE)
   if(LTO_AVAILABLE)
