@@ -93,7 +93,7 @@ class StaticRTree
         }
     };
 
-    using QueryNodeType = mapbox::util::variant<TreeNode, CandidateSegment>;
+    using QueryNodeType = mapbox::util::variant<std::uint32_t, CandidateSegment>;
     struct QueryCandidate
     {
         inline bool operator<(const QueryCandidate &other) const
@@ -415,17 +415,17 @@ class StaticRTree
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
-        traversal_queue.push(QueryCandidate{0, m_search_tree[0]});
+        traversal_queue.push(QueryCandidate{0, 0});
 
         while (!traversal_queue.empty())
         {
             QueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
 
-            if (current_query_node.node.template is<TreeNode>())
+            if (current_query_node.node.template is<std::uint32_t>())
             { // current object is a tree node
                 const TreeNode &current_tree_node =
-                    current_query_node.node.template get<TreeNode>();
+                    m_search_tree[current_query_node.node.template get<std::uint32_t>()];
                 if (current_tree_node.child_is_on_disk)
                 {
                     ExploreLeafNode(current_tree_node.children[0], fixed_projected_coordinate,
@@ -510,7 +510,7 @@ class StaticRTree
             const auto squared_lower_bound_to_element =
                 child_rectangle.GetMinSquaredDist(fixed_projected_input_coordinate);
             traversal_queue.push(
-                QueryCandidate{squared_lower_bound_to_element, m_search_tree[child_id]});
+                QueryCandidate{squared_lower_bound_to_element, child_id});
         }
     }
 
