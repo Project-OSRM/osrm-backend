@@ -13,9 +13,8 @@ namespace engine
 namespace /*detail*/ // anonymous to keep TU local
 {
 
-std::string encode(int number_to_encode)
+void encode(int number_to_encode, std::string& output)
 {
-    std::string output;
     while (number_to_encode >= 0x20)
     {
         const int next_value = (0x20 | (number_to_encode & 0x1f)) + 63;
@@ -25,7 +24,6 @@ std::string encode(int number_to_encode)
 
     number_to_encode += 63;
     output += static_cast<char>(number_to_encode);
-    return output;
 }
 
 std::string encode(std::vector<int> &numbers)
@@ -33,25 +31,20 @@ std::string encode(std::vector<int> &numbers)
     std::string output;
     for (auto &number : numbers)
     {
-        bool isNegative = number < 0;
-
-        if (isNegative)
+        if (number < 0)
         {
             const unsigned binary = std::llabs(number);
             const unsigned twos = (~binary) + 1u;
             number = twos;
-        }
-
-        number <<= 1u;
-
-        if (isNegative)
-        {
+            number <<= 1u;
             number = ~number;
         }
-    }
-    for (const int number : numbers)
-    {
-        output += encode(number);
+        else
+        {
+            number <<= 1u;
+        }
+
+        encode(number, output);
     }
     return output;
 }
