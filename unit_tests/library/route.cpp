@@ -329,6 +329,7 @@ BOOST_AUTO_TEST_CASE(test_benchmark)
     using namespace osrm;
 
     RouteParameters params;
+    params.overview = RouteParameters::OverviewType::False;
 
     using osrm::util::FloatCoordinate;
     using osrm::util::FloatLatitude;
@@ -442,8 +443,8 @@ BOOST_AUTO_TEST_CASE(test_benchmark)
         json::Object result;
         const auto rc = osrm.Route(params, result);
         BOOST_CHECK(rc == Status::Ok);
-        auto& geometry = result.values.at("routes").get<json::Array>().values[0].get<json::Object>().values.at("geometry").get<json::String>().value;
-        BOOST_CHECK_EQUAL(geometry.size(), 9972);
+        //auto& geometry = result.values.at("routes").get<json::Array>().values[0].get<json::Object>().values.at("geometry").get<json::String>().value;
+        //BOOST_CHECK_EQUAL(geometry.size(), 9972);
     }
     TIMER_STOP(routes);
     std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req" << std::endl;
