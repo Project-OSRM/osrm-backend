@@ -44,13 +44,17 @@ template <class EdgeDataT,
           class CoordinateListT = std::vector<Coordinate>,
           bool UseSharedMemory = false,
           std::uint32_t BRANCHING_FACTOR = 128,
-          std::uint32_t LEAF_NODE_SIZE = 128>
+          std::uint32_t LEAF_PAGE_SIZE = 4096>
 class StaticRTree
 {
   public:
     using Rectangle = RectangleInt2D;
     using EdgeData = EdgeDataT;
     using CoordinateList = CoordinateListT;
+
+    static_assert(LEAF_PAGE_SIZE >= sizeof(uint32_t) + sizeof(EdgeDataT), "LEAF_PAGE_SIZE is too small");
+    static_assert(((LEAF_PAGE_SIZE - 1) & LEAF_PAGE_SIZE) == 0, "LEAF_PAGE_SIZE is not a power of 2");
+    static constexpr std::uint32_t LEAF_NODE_SIZE = (LEAF_PAGE_SIZE - sizeof(uint32_t)) / sizeof(EdgeDataT);
 
     struct CandidateSegment
     {
@@ -72,7 +76,9 @@ class StaticRTree
         LeafNode() : object_count(0), objects() {}
         uint32_t object_count;
         std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
+        unsigned char leaf_page_padding[LEAF_PAGE_SIZE - sizeof(object_count) - sizeof(objects)];
     };
+    static_assert(sizeof(LeafNode) == LEAF_PAGE_SIZE, "LeafNode size does not fit the page size");
 
   private:
     struct WrappedInputElement
@@ -110,8 +116,6 @@ class StaticRTree
     };
 
     typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
-    uint64_t m_element_count;
-    const std::string m_leaf_node_filename;
     std::shared_ptr<CoordinateListT> m_coordinate_list;
 
     boost::iostreams::mapped_file_source m_leaves_region;
@@ -128,13 +132,13 @@ class StaticRTree
                          const std::string &tree_node_filename,
                          const std::string &leaf_node_filename,
                          const std::vector<CoordinateT> &coordinate_list)
-        : m_element_count(input_data_vector.size())
     {
-        std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
+        const uint64_t element_count = input_data_vector.size();
+        std::vector<WrappedInputElement> input_wrapper_vector(element_count);
 
         // generate auxiliary vector of hilbert-values
         tbb::parallel_for(
-            tbb::blocked_range<uint64_t>(0, m_element_count),
+            tbb::blocked_range<uint64_t>(0, element_count),
             [&input_data_vector, &input_wrapper_vector,
              &coordinate_list](const tbb::blocked_range<uint64_t> &range)
             {
@@ -162,7 +166,6 @@ class StaticRTree
 
         // open leaf file
         boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
-        leaf_node_file.write((char *)&m_element_count, sizeof(uint64_t));
 
         // sort the hilbert-value representatives
         tbb::parallel_sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
@@ -170,7 +173,7 @@ class StaticRTree
 
         // pack M elements into leaf node and write to leaf file
         uint64_t processed_objects_count = 0;
-        while (processed_objects_count < m_element_count)
+        while (processed_objects_count < element_count)
         {
 
             LeafNode current_leaf;
@@ -178,7 +181,7 @@ class StaticRTree
             for (std::uint32_t current_element_index = 0; LEAF_NODE_SIZE > current_element_index;
                  ++current_element_index)
             {
-                if (m_element_count > (processed_objects_count + current_element_index))
+                if (element_count > (processed_objects_count + current_element_index))
                 {
                     std::uint32_t index_of_next_object =
                         input_wrapper_vector[processed_objects_count + current_element_index]
@@ -267,16 +270,12 @@ class StaticRTree
         tree_node_file.write((char *)&size_of_tree, sizeof(std::uint32_t));
         tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
 
-        m_leaves_region.open(leaf_node_filename);
-        std::uint64_t num_leaves = reinterpret_cast<const std::uint64_t*>(m_leaves_region.data())[0];
-        const char* m_leaves_begin = m_leaves_region.data() + sizeof(std::uint64_t);
-        m_leaves.reset(reinterpret_cast<const LeafNode*>(m_leaves_begin), num_leaves);
+        MapLeafNodesFile(leaf_node_filename);
     }
 
     explicit StaticRTree(const boost::filesystem::path &node_file,
                          const boost::filesystem::path &leaf_file,
                          const std::shared_ptr<CoordinateListT> coordinate_list)
-        : m_leaf_node_filename(leaf_file.string())
     {
         // open tree node file and load into RAM.
         m_coordinate_list = coordinate_list;
@@ -300,43 +299,29 @@ class StaticRTree
             tree_node_file.read((char *)&m_search_tree[0], sizeof(TreeNode) * tree_size);
         }
 
-        // open leaf node file and store thread specific pointer
-        if (!boost::filesystem::exists(leaf_file))
-        {
-            throw exception("mem index file does not exist");
-        }
-        if (0 == boost::filesystem::file_size(leaf_file))
-        {
-            throw exception("mem index file is empty");
-        }
-
-        m_leaves_region.open(leaf_file);
-        std::uint64_t num_leaves = reinterpret_cast<const std::uint64_t*>(m_leaves_region.data())[0];
-        const char* m_leaves_begin = m_leaves_region.data() + sizeof(std::uint64_t);
-        m_leaves.reset(reinterpret_cast<const LeafNode*>(m_leaves_begin), num_leaves);
+        MapLeafNodesFile(leaf_file);
     }
 
     explicit StaticRTree(TreeNode *tree_node_ptr,
                          const uint64_t number_of_nodes,
                          const boost::filesystem::path &leaf_file,
                          std::shared_ptr<CoordinateListT> coordinate_list)
-        : m_search_tree(tree_node_ptr, number_of_nodes),
-          m_coordinate_list(std::move(coordinate_list))
+        : m_search_tree(tree_node_ptr, number_of_nodes)
+        , m_coordinate_list(std::move(coordinate_list))
     {
-        // open leaf node file and store thread specific pointer
-        if (!boost::filesystem::exists(leaf_file))
-        {
-            throw exception("mem index file does not exist");
-        }
-        if (0 == boost::filesystem::file_size(leaf_file))
-        {
-            throw exception("mem index file is empty");
-        }
+        MapLeafNodesFile(leaf_file);
+    }
 
-        m_leaves_region.open(leaf_file);
-        std::uint64_t num_leaves = reinterpret_cast<const std::uint64_t*>(m_leaves_region.data())[0];
-        const char* m_leaves_begin = m_leaves_region.data() + sizeof(std::uint64_t);
-        m_leaves.reset(reinterpret_cast<const LeafNode*>(m_leaves_begin), num_leaves);
+    void MapLeafNodesFile(const boost::filesystem::path &leaf_file)
+    {
+        // open leaf node file and return a pointer to the mapped leaves data
+        try {
+            m_leaves_region.open(leaf_file);
+            std::size_t num_leaves = m_leaves_region.size() / sizeof(LeafNode);
+            m_leaves.reset(reinterpret_cast<const LeafNode*>(m_leaves_region.data()), num_leaves);
+        } catch (std::exception& exc) {
+            throw exception(boost::str(boost::format("Leaf file %1% mapping failed: %2%") % leaf_file % exc.what()));
+        }
     }
 
     /* Returns all features inside the bounding box.
