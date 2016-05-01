@@ -42,8 +42,8 @@ namespace util
 template <class EdgeDataT,
           class CoordinateListT = std::vector<Coordinate>,
           bool UseSharedMemory = false,
-          std::uint32_t BRANCHING_FACTOR = 64,
-          std::uint32_t LEAF_NODE_SIZE = 256,
+          std::uint32_t BRANCHING_FACTOR = 128,
+          std::uint32_t LEAF_NODE_SIZE = 128,
           std::uint32_t MAX_NUM_CANDIDATES = LEAF_NODE_SIZE * 10>
 class StaticRTree
 {
