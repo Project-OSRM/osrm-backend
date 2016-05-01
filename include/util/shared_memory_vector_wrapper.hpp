@@ -55,6 +55,12 @@ template <typename DataT> class SharedMemoryWrapper
 
     SharedMemoryWrapper(DataT *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
 
+    void reset(DataT *ptr, std::size_t size)
+    {
+        m_ptr = ptr;
+        m_size = size;
+    }
+
     DataT &at(const std::size_t index) { return m_ptr[index]; }
 
     const DataT &at(const std::size_t index) const { return m_ptr[index]; }
@@ -99,6 +105,12 @@ template <> class SharedMemoryWrapper<bool>
         const std::size_t bucket = index / 32;
         const unsigned offset = static_cast<unsigned>(index % 32);
         return m_ptr[bucket] & (1u << offset);
+    }
+
+    void reset(unsigned *ptr, std::size_t size)
+    {
+        m_ptr = ptr;
+        m_size = size;
     }
 
     std::size_t size() const { return m_size; }
