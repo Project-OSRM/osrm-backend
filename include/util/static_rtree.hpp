@@ -43,9 +43,8 @@ namespace util
 template <class EdgeDataT,
           class CoordinateListT = std::vector<Coordinate>,
           bool UseSharedMemory = false,
-          std::uint32_t BRANCHING_FACTOR = 64,
-          std::uint32_t LEAF_NODE_SIZE = 256,
-          std::uint32_t MAX_NUM_CANDIDATES = LEAF_NODE_SIZE * 10>
+          std::uint32_t BRANCHING_FACTOR = 128,
+          std::uint32_t LEAF_NODE_SIZE = 128>
 class StaticRTree
 {
   public:
@@ -96,7 +95,7 @@ class StaticRTree
     };
 
     struct TreeIndex { std::uint32_t index; };
-    struct SegmentIndex { std::uint32_t index; };
+    struct SegmentIndex { std::uint32_t index; std::uint32_t object; Coordinate fixed_projected_coordinate; };
     using QueryNodeType = mapbox::util::variant<TreeIndex, SegmentIndex>;
     struct QueryCandidate
     {
@@ -434,11 +433,6 @@ class StaticRTree
         std::priority_queue<QueryCandidate> traversal_queue;
         traversal_queue.push(QueryCandidate{0, TreeIndex{0}});
 
-        // we need to limit the size of this vector to MAX_NUM_CANDIDATES
-        // otherwise this could fill up
-        std::vector<CandidateSegment> candidate_cache;
-        candidate_cache.reserve(LEAF_NODE_SIZE);
-
         while (!traversal_queue.empty())
         {
             QueryCandidate current_query_node = traversal_queue.top();
@@ -451,7 +445,7 @@ class StaticRTree
                 if (current_tree_node.child_is_on_disk)
                 {
                     ExploreLeafNode(current_tree_node.children[0], fixed_projected_coordinate,
-                                    projected_coordinate, traversal_queue, candidate_cache);
+                                    projected_coordinate, traversal_queue);
                 }
                 else
                 {
@@ -461,7 +455,9 @@ class StaticRTree
             else
             {
                 // inspecting an actual road segment
-                auto &current_candidate = candidate_cache[current_query_node.node.template get<SegmentIndex>().index];
+                const auto &segment_index = current_query_node.node.template get<SegmentIndex>();
+                auto edge_data = m_leaves[segment_index.index].objects[segment_index.object];
+                const auto &current_candidate = CandidateSegment{segment_index.fixed_projected_coordinate, edge_data};
 
                 // to allow returns of no-results if too restrictive filtering, this needs to be done here
                 // even though performance would indicate that we want to stop after adding the first candidate
@@ -476,11 +472,11 @@ class StaticRTree
                 {
                     continue;
                 }
-                current_candidate.data.forward_segment_id.enabled &= use_segment.first;
-                current_candidate.data.reverse_segment_id.enabled &= use_segment.second;
+                edge_data.forward_segment_id.enabled &= use_segment.first;
+                edge_data.reverse_segment_id.enabled &= use_segment.second;
 
                 // store phantom node in result vector
-                results.push_back(std::move(current_candidate.data));
+                results.push_back(std::move(edge_data));
             }
         }
 
@@ -492,16 +488,8 @@ class StaticRTree
     void ExploreLeafNode(const std::uint32_t leaf_id,
                          const Coordinate projected_input_coordinate_fixed,
                          const FloatCoordinate &projected_input_coordinate,
-                         QueueT &traversal_queue,
-                         std::vector<CandidateSegment> &candidate_cache)
+                         QueueT &traversal_queue)
     {
-        // we are not going to load any more elements, because the cache would
-        // fill up
-        if (candidate_cache.size() > MAX_NUM_CANDIDATES)
-        {
-            return;
-        }
-
         const LeafNode& current_leaf_node = m_leaves[leaf_id];
 
         // current object represents a block on disk
@@ -520,8 +508,7 @@ class StaticRTree
                 projected_input_coordinate_fixed, projected_nearest);
             // distance must be non-negative
             BOOST_ASSERT(0. <= squared_distance);
-            traversal_queue.push(QueryCandidate{squared_distance, SegmentIndex {static_cast<std::uint32_t>(candidate_cache.size())}});
-            candidate_cache.push_back(CandidateSegment{Coordinate{projected_nearest}, std::move(current_edge)});
+            traversal_queue.push(QueryCandidate{squared_distance, SegmentIndex{leaf_id, i, Coordinate{projected_nearest}}});
         }
     }
 
