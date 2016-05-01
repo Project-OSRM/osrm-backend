@@ -201,6 +201,8 @@ class StaticRTree
             leaf_node_file.write((char *)&current_leaf, sizeof(current_leaf));
             processed_objects_count += current_leaf.object_count;
         }
+        leaf_node_file.flush();
+        leaf_node_file.close();
 
         std::uint32_t processing_level = 0;
         while (1 < tree_nodes_in_level.size())
