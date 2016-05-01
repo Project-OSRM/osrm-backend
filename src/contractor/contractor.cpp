@@ -330,16 +330,16 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
             using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
 
-            std::ifstream leaf_node_file(rtree_leaf_filename, std::ios::binary | std::ios::in);
+            std::ifstream leaf_node_file(rtree_leaf_filename, std::ios::binary | std::ios::in | std::ios::ate);
             if (!leaf_node_file)
             {
                 throw util::exception("Failed to open " + rtree_leaf_filename);
             }
-            uint64_t m_element_count;
-            leaf_node_file.read((char *)&m_element_count, sizeof(uint64_t));
+            std::size_t leaf_nodes_count = leaf_node_file.tellg() / sizeof(LeafNode);
+            leaf_node_file.seekg(0, std::ios::beg);
 
             LeafNode current_node;
-            while (m_element_count > 0)
+            while (leaf_nodes_count > 0)
             {
                 leaf_node_file.read(reinterpret_cast<char *>(&current_node), sizeof(current_node));
 
@@ -435,7 +435,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                         }
                     }
                 }
-                m_element_count -= current_node.object_count;
+                --leaf_nodes_count;
             }
         }
 
