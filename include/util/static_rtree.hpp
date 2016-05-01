@@ -17,6 +17,7 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
 
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
@@ -113,7 +114,10 @@ class StaticRTree
     uint64_t m_element_count;
     const std::string m_leaf_node_filename;
     std::shared_ptr<CoordinateListT> m_coordinate_list;
-    boost::filesystem::ifstream leaves_stream;
+
+    boost::iostreams::mapped_file_source m_leaves_region;
+    // read-only view of leaves
+    typename ShM<const LeafNode, true>::vector m_leaves;
 
   public:
     StaticRTree(const StaticRTree &) = delete;
@@ -125,7 +129,7 @@ class StaticRTree
                          const std::string &tree_node_filename,
                          const std::string &leaf_node_filename,
                          const std::vector<CoordinateT> &coordinate_list)
-        : m_element_count(input_data_vector.size()), m_leaf_node_filename(leaf_node_filename)
+        : m_element_count(input_data_vector.size())
     {
         std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
@@ -261,6 +265,11 @@ class StaticRTree
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
         tree_node_file.write((char *)&size_of_tree, sizeof(std::uint32_t));
         tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
+
+        m_leaves_region.open(leaf_node_filename);
+        std::uint64_t num_leaves = reinterpret_cast<const std::uint64_t*>(m_leaves_region.data())[0];
+        const char* m_leaves_begin = m_leaves_region.data() + sizeof(std::uint64_t);
+        m_leaves.reset(reinterpret_cast<const LeafNode*>(m_leaves_begin), num_leaves);
     }
 
     explicit StaticRTree(const boost::filesystem::path &node_file,
@@ -300,15 +309,17 @@ class StaticRTree
             throw exception("mem index file is empty");
         }
 
-        leaves_stream.open(leaf_file, std::ios::binary);
-        leaves_stream.read((char *)&m_element_count, sizeof(uint64_t));
+        m_leaves_region.open(leaf_file);
+        std::uint64_t num_leaves = reinterpret_cast<const std::uint64_t*>(m_leaves_region.data())[0];
+        const char* m_leaves_begin = m_leaves_region.data() + sizeof(std::uint64_t);
+        m_leaves.reset(reinterpret_cast<const LeafNode*>(m_leaves_begin), num_leaves);
     }
 
     explicit StaticRTree(TreeNode *tree_node_ptr,
                          const uint64_t number_of_nodes,
                          const boost::filesystem::path &leaf_file,
                          std::shared_ptr<CoordinateListT> coordinate_list)
-        : m_search_tree(tree_node_ptr, number_of_nodes), m_leaf_node_filename(leaf_file.string()),
+        : m_search_tree(tree_node_ptr, number_of_nodes),
           m_coordinate_list(std::move(coordinate_list))
     {
         // open leaf node file and store thread specific pointer
@@ -321,8 +332,10 @@ class StaticRTree
             throw exception("mem index file is empty");
         }
 
-        leaves_stream.open(leaf_file, std::ios::binary);
-        leaves_stream.read((char *)&m_element_count, sizeof(uint64_t));
+        m_leaves_region.open(leaf_file);
+        std::uint64_t num_leaves = reinterpret_cast<const std::uint64_t*>(m_leaves_region.data())[0];
+        const char* m_leaves_begin = m_leaves_region.data() + sizeof(std::uint64_t);
+        m_leaves.reset(reinterpret_cast<const LeafNode*>(m_leaves_begin), num_leaves);
     }
 
     /* Returns all features inside the bounding box.
@@ -348,7 +361,7 @@ class StaticRTree
 
             if (current_tree_node.child_is_on_disk)
             {
-                LeafNode current_leaf_node = LoadLeafFromDisk(current_tree_node.children[0]);
+                const LeafNode& current_leaf_node = m_leaves[current_tree_node.children[0]];
 
                 for (const auto i : irange(0u, current_leaf_node.object_count))
                 {
@@ -487,7 +500,7 @@ class StaticRTree
             return;
         }
 
-        LeafNode current_leaf_node = LoadLeafFromDisk(leaf_id);
+        const LeafNode& current_leaf_node = m_leaves[leaf_id];
 
         // current object represents a block on disk
         for (const auto i : irange(0u, current_leaf_node.object_count))
@@ -525,25 +538,6 @@ class StaticRTree
             traversal_queue.push(
                 QueryCandidate{squared_lower_bound_to_element, TreeIndex{static_cast<std::uint32_t>(child_id)}});
         }
-    }
-
-    inline LeafNode LoadLeafFromDisk(const std::uint32_t leaf_id)
-    {
-        LeafNode result_node;
-        if (!leaves_stream.is_open())
-        {
-            leaves_stream.open(m_leaf_node_filename, std::ios::in | std::ios::binary);
-        }
-        if (!leaves_stream.good())
-        {
-            throw exception("Could not read from leaf file.");
-        }
-        const uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
-        leaves_stream.seekg(seek_pos);
-        BOOST_ASSERT_MSG(leaves_stream.good(), "Seeking to position in leaf file failed.");
-        leaves_stream.read((char *)&result_node, sizeof(LeafNode));
-        BOOST_ASSERT_MSG(leaves_stream.good(), "Reading from leaf file failed.");
-        return result_node;
     }
 
     template <typename CoordinateT>
