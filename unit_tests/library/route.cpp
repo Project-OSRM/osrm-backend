@@ -514,7 +514,8 @@ BOOST_AUTO_TEST_CASE(test_benchmark)
         // BOOST_CHECK_EQUAL(geometry.size(), 9972);
     }
     TIMER_STOP(routes);
-    std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req" << std::endl;
+    std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " <<  params.coordinates.size() << " coordinate" << std::endl;
+    std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate" << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
