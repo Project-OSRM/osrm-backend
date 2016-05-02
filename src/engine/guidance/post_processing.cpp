@@ -35,8 +35,7 @@ namespace
 // invalidate a step and set its content to nothing
 void invalidateStep(RouteStep &step)
 {
-    step = {};
-    step.maneuver.instruction = TurnInstruction::NO_TURN();
+    step = getInvalidRouteStep();
 }
 
 void print(const std::vector<RouteStep> &steps)

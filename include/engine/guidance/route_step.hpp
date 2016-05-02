@@ -34,6 +34,11 @@ struct RouteStep
     std::size_t geometry_begin;
     std::size_t geometry_end;
 };
+
+inline RouteStep getInvalidRouteStep()
+{
+    return {0, "", "", 0, 0, TRAVEL_MODE_INACCESSIBLE, getInvalidStepManeuver(), 0, 0};
+}
 }
 }
 }

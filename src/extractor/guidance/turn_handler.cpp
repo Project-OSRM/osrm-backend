@@ -303,20 +303,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
     }
     else
     {
-        if (fallback_count++ < 10)
-        {
-            util::SimpleLogger().Write(logWARNING)
-                << "Resolved to keep fallback on complex turn assignment"
-                << "Straightmost: " << straightmost_turn;
-            ;
-            for (const auto &road : intersection)
-            {
-                const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
-                util::SimpleLogger().Write(logWARNING)
-                    << "road: " << toString(road) << " Name: " << out_data.name_id
-                    << " Road Class: " << (int)out_data.road_classification.road_class;
-            }
-        }
+        assignTrivialTurns(via_edge,intersection,1,intersection.size());
     }
     return intersection;
 }
