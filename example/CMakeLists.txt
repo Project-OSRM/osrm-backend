@@ -19,8 +19,8 @@ else()
   message(WARNING "Building on a 32 bit system is unsupported")
 endif()
 
-if(WIN32 AND MSVC_VERSION LESS 1800)
-  message(FATAL_ERROR "Building with Microsoft compiler needs Visual Studio 2013 or later (Express version works too)")
+if(WIN32 AND MSVC_VERSION LESS 1900)
+  message(FATAL_ERROR "Building with Microsoft compiler needs Latest Visual Studio 2015 (Community or better)")
 endif()
 
 add_executable(osrm-example example.cpp)
