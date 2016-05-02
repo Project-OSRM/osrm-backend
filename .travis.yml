@@ -132,7 +132,6 @@ script:
   - echo "travis_fold:start:MAKE"
   - make --jobs=2
   - make tests --jobs=2
-  - make benchmarks
   - echo "travis_fold:end:MAKE"
   - echo "travis_fold:start:INSTALL"
   - sudo make install
