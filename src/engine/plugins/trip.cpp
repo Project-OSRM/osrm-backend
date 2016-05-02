@@ -115,7 +115,6 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
 }
 
 InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &snapped_phantoms,
-                                             const api::TripParameters &parameters,
                                              const std::vector<NodeID> &trip)
 {
     InternalRouteResult min_route;
@@ -135,7 +134,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &sna
     }
     BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
 
-    shortest_path(min_route.segment_end_coordinates, parameters.continue_straight, min_route);
+    shortest_path(min_route.segment_end_coordinates, {false}, min_route);
 
     BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
@@ -232,7 +231,7 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     routes.reserve(trips.size());
     for (const auto &trip : trips)
     {
-        routes.push_back(ComputeRoute(snapped_phantoms, parameters, trip));
+        routes.push_back(ComputeRoute(snapped_phantoms, trip));
     }
 
     api::TripAPI trip_api{BasePlugin::facade, parameters};
