@@ -14,6 +14,7 @@ Feature: Destination Signs
           | k | l |
           | m | n |
           | o | p |
+          | q | r |
 
         And the ways
           | nodes | name | ref | destination    | destination:ref | oneway | #                                    |
@@ -25,6 +26,7 @@ Feature: Destination Signs
           | kl    | KL   | E1  | Berlin         | A1              | yes    |                                      |
           | mn    | MN   |     | Berlin;Hamburg | A1;A2           | yes    |                                      |
           | op    | OP   |     | Berlin;Hamburg | A1;A2           | no     | mis-tagged destination: not a oneway |
+          | qr    | QR   |     |                | A1;A2           | yes    |                                      |
 
         When I route I should get
           | from | to | route                                                     | #                         |
@@ -36,3 +38,4 @@ Feature: Destination Signs
           | k    | l  | KL (E1),KL (E1)                                           |                           |
           | m    | n  | MN (A1, A2: Berlin, Hamburg),MN (A1, A2: Berlin, Hamburg) |                           |
           | o    | p  | OP,OP                                                     | guard against mis-tagging |
+          | q    | r  | QR (A1, A2),QR (A1, A2)                                   |                           |
