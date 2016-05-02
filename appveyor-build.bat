@@ -41,9 +41,7 @@ SET DEPSPKG=osrm-deps-win-x64-14.0.7z
 
 :: local development
 ECHO.
-ECHO LOCAL_DEV^: %LOCAL_DEV%
-IF NOT DEFINED LOCAL_DEV SET LOCAL_DEV=0
-IF DEFINED LOCAL_DEV IF %LOCAL_DEV% EQU 1 IF EXIST %DEPSPKG% ECHO skipping deps download && GOTO SKIPDL
+IF EXIST %DEPSPKG% ECHO skipping deps download && GOTO SKIPDL
 
 IF EXIST %DEPSPKG% DEL %DEPSPKG%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
@@ -54,15 +52,10 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 :SKIPDL
 
-IF EXIST osrm-deps ECHO deleting osrm-deps... && RD /S /Q osrm-deps
+IF EXIST osrm-deps (ECHO osrm-deps already extracted) ELSE (ECHO extracting osrm-deps && 7z -y x %DEPSPKG% | %windir%\system32\FIND "ing archive")
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 IF EXIST build ECHO deleting build dir... && RD /S /Q build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-7z -y x %DEPSPKG% | %windir%\system32\FIND "ing archive"
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-
-::tree osrm-deps
 
 MKDIR build
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
@@ -82,6 +75,12 @@ ECHO BOOST_ROOT        ^: %BOOST_ROOT%
 ECHO BOOST_LIBRARYDIR  ^: %BOOST_LIBRARYDIR%
 ECHO TBB_INSTALL_DIR   ^: %TBB_INSTALL_DIR%
 ECHO TBB_ARCH_PLATFORM ^: %TBB_ARCH_PLATFORM%
+ECHO node -v
+node -v
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+ECHO npm -v
+CALL npm -v
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
 ECHO calling cmake ....
@@ -127,6 +126,11 @@ unit_tests\%Configuration%\util-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO running server-tests.exe ...
 unit_tests\%Configuration%\server-tests.exe
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+CALL npm install
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+CALL npm test
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="master" GOTO DONE
