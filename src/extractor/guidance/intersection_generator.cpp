@@ -7,6 +7,8 @@
 #include <limits>
 #include <utility>
 
+#include <boost/range/algorithm/count_if.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -54,6 +56,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     const bool is_barrier_node = barrier_nodes.find(turn_node) != barrier_nodes.end();
 
     bool has_uturn_edge = false;
+    bool uturn_could_be_valid = false;
     for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
     {
         BOOST_ASSERT(onto_edge != SPECIAL_EDGEID);
@@ -74,6 +77,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
         auto angle = 0.;
         if (from_node == to_node)
         {
+            uturn_could_be_valid = turn_is_valid;
             if (turn_is_valid && !is_barrier_node)
             {
                 // we only add u-turns for dead-end streets.
@@ -90,7 +94,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
                             ++number_of_emmiting_bidirectional_edges;
                         }
                     }
-                    // is a dead-end
+                    // is a dead-end, only possible road is to go back
                     turn_is_valid = number_of_emmiting_bidirectional_edges <= 1;
                 }
             }
@@ -106,7 +110,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
                 turn_node, to_node, onto_edge, !INVERT, compressed_edge_container, node_info_list);
             angle = util::coordinate_calculation::computeAngle(
                 first_coordinate, node_info_list[turn_node], third_coordinate);
-            if (angle < std::numeric_limits<double>::epsilon())
+            if (std::abs(angle) < std::numeric_limits<double>::epsilon())
                 has_uturn_edge = true;
         }
 
@@ -116,8 +120,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     }
 
     // We hit the case of a street leading into nothing-ness. Since the code here assumes that this
-    // will
-    // never happen we add an artificial invalid uturn in this case.
+    // will never happen we add an artificial invalid uturn in this case.
     if (!has_uturn_edge)
     {
         intersection.push_back(
@@ -131,6 +134,11 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
 
     BOOST_ASSERT(intersection[0].turn.angle >= 0. &&
                  intersection[0].turn.angle < std::numeric_limits<double>::epsilon());
+
+    const auto valid_count =
+        boost::count_if(intersection, [](const ConnectedRoad &road) { return road.entry_allowed; });
+    if (0 == valid_count && uturn_could_be_valid)
+        intersection[0].entry_allowed = true;
 
     return mergeSegregatedRoads(std::move(intersection));
 }
@@ -208,7 +216,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
     if (intersection.size() <= 1)
         return intersection;
 
-    const bool is_connected_to_roundabout = [this,&intersection]() {
+    const bool is_connected_to_roundabout = [this, &intersection]() {
         for (const auto &road : intersection)
         {
             if (node_based_graph.GetEdgeData(road.turn.eid).roundabout)
