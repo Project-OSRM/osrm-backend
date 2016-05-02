@@ -7,6 +7,7 @@
 
    - Profile Changes:
     - introduced a suffix_list / get_name_suffix_list to specify name suffices to be suppressed in name change announcements
+    - street names are now consistently assembled for the car, bike and walk profile as: "Name (Ref)" as in "Berlin (A5)"
 
    - Infrastructure
     - BREAKING: reordered internal instruction types. This breaks the data format
