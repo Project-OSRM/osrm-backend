@@ -1,8 +1,31 @@
 # Releasing a new OSRM version
 
-## Major or Minor release x.y
-
 Do decide if this is a major or minor version bump use: http://semver.org/
+
+What we guarantee on major version changes:
+
+- Breaking changes will be in the changelog
+- If we break an HTTP API we bump the version
+
+What we guarantee on minor version changes:
+
+- HTTP API does not include breaking changes
+- C++ library API does not include breaking changes
+- node-osrm API does not include breaking changes
+
+What we DO NOT guarantee on minor version changes:
+
+- file format comp ability. Breakage will be listed in the changelog.
+- new turn types and fields may be introduced. How to handle this see [the HTTP API docs](http.md).
+
+What we guarantee on patch version changes:
+
+- HTTP API does not include breaking changes
+- C++ library API does not include breaking changes
+- node-osrm API does not include breaking changes
+- full file format compatibility
+
+## Major or Minor release x.y
 
 1. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
 2. Make sure `CHANGELOG.md` is up to date.
