@@ -117,7 +117,7 @@ Feature: End Of Road Instructions
             | bd     | motorway_link |
 
        When I route I should get
-            | waypoints | route    | turns                    |
-            | a,c       | ab,bc,bc | depart,ramp left,arrive  |
-            | a,d       | ab,bd,bd | depart,ramp right,arrive |
+            | waypoints | route    | turns                       |
+            | a,c       | ab,bc,bc | depart,on ramp left,arrive  |
+            | a,d       | ab,bd,bd | depart,on ramp right,arrive |
 

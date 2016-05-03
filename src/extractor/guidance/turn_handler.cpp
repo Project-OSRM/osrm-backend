@@ -177,18 +177,18 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     {
         if (intersection[1].entry_allowed)
         {
-            if (TurnType::Ramp != findBasicTurnType(via_edge, intersection[1]))
+            if (TurnType::OnRamp != findBasicTurnType(via_edge, intersection[1]))
                 intersection[1].turn.instruction = {TurnType::EndOfRoad, DirectionModifier::Right};
             else
-                intersection[1].turn.instruction = {TurnType::Ramp, DirectionModifier::Right};
+                intersection[1].turn.instruction = {TurnType::OnRamp, DirectionModifier::Right};
         }
         if (intersection[2].entry_allowed)
         {
-            if (TurnType::Ramp != findBasicTurnType(via_edge, intersection[2]))
+            if (TurnType::OnRamp != findBasicTurnType(via_edge, intersection[2]))
 
                 intersection[2].turn.instruction = {TurnType::EndOfRoad, DirectionModifier::Left};
             else
-                intersection[2].turn.instruction = {TurnType::Ramp, DirectionModifier::Left};
+                intersection[2].turn.instruction = {TurnType::OnRamp, DirectionModifier::Left};
         }
     }
     else
@@ -220,7 +220,6 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 
 Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection intersection) const
 {
-    static int fallback_count = 0;
     const std::size_t obvious_index = findObviousTurn(via_edge, intersection);
     const auto fork_range = findFork(intersection);
     std::size_t straightmost_turn = 0;

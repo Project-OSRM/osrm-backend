@@ -54,7 +54,7 @@ TurnType IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     bool onto_ramp = isRampClass(out_data.road_classification.road_class);
 
     if (!on_ramp && onto_ramp)
-        return TurnType::Ramp;
+        return TurnType::OnRamp;
 
     if (in_data.name_id == out_data.name_id && in_data.name_id != INVALID_NAME_ID)
     {
@@ -73,9 +73,9 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     // handle travel modes:
     const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
     const auto out_mode = node_based_graph.GetEdgeData(road.turn.eid).travel_mode;
-    if (type == TurnType::Ramp)
+    if (type == TurnType::OnRamp)
     {
-        return {TurnType::Ramp, getTurnDirection(road.turn.angle)};
+        return {TurnType::OnRamp, getTurnDirection(road.turn.angle)};
     }
 
     if (angularDeviation(road.turn.angle, 0) < 0.01)

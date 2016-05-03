@@ -43,7 +43,8 @@ enum TurnType // at the moment we can support 32 turn types, without increasing 
     Continue,                           // remain on a street
     Turn,                               // basic turn
     Merge,                              // merge onto a street
-    Ramp,                               // special turn (highway ramp exits)
+    OnRamp,                             // special turn (highway ramp on-ramps)
+    OffRamp,                            // special turn, highway exit
     Fork,                               // fork road splitting up
     EndOfRoad,                          // T intersection
     Notification,                       // Travel Mode Changes, Restrictions apply...

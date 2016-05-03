@@ -430,13 +430,15 @@ step.
   | depart            | indicates the departure of the leg                           |
   | arrive            | indicates the destination of the leg                         |
   | merge             | merge onto a street (e.g. getting on the highway from a ramp, the `modifier specifies the direction of the merge`) |
-  | ramp              | take a ramp to enter/exit a highway (direction given my `modifier`)                          |
+  | ramp              | **Deprecated**. Replaced by `on_ramp` and `off_ramp`.        |
+  | on ramp           | take a ramp to enter a highway (direction given my `modifier`) |
+  | off ramp          | take a ramp to exit a highway (direction given my `modifier`)  |
   | fork              | take the left/right side at a fork depending on `modifier`   |
   | end of road       | road ends in a T intersection turn in direction of `modifier`|
   | continue          | Turn in direction of `modifier` to stay on the same road     |
   | roundabout        | traverse roundabout, has additional field `exit` with NR if the roundabout is left. `the modifier specifies the direction of entering the roundabout` |
   | rotary            | a larger version of a roundabout, can offer `rotary_name` in addition to the `exit` parameter.  |
-  | roundabout_turn | A `roundabout_turn` describes a turn at a small intersection that is modelled as a roundabout. The intersection itself is small and can be overseen as a whole. The `direction modifier` indicates the normal turn direction as we would expect at an intersection. A possible announcement would be: `At the roundabout turn left`. |
+  | roundabout turn   | Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
   | notification      | not an actual turn but a change in the driving conditions. For example the travel mode.  If the road takes a turn itself, the `modifier` describes the direction |
 
   Please note that even though there are `new name` and `notification` instructions, the `mode` and `name` can change

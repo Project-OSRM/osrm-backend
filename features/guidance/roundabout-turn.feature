@@ -23,18 +23,18 @@ Feature: Basic Roundabout
 
        When I route I should get
            | waypoints | route    | turns                                         |
-           | a,d       | ab,cd,cd | depart,roundabout_turn left exit-3,arrive     |
-           | a,f       | ab,ef,ef | depart,roundabout_turn straight exit-2,arrive |
-           | a,h       | ab,gh,gh | depart,roundabout_turn right exit-1,arrive    |
-           | d,f       | cd,ef,ef | depart,roundabout_turn left exit-3,arrive     |
-           | d,h       | cd,gh,gh | depart,roundabout_turn straight exit-2,arrive |
-           | d,a       | cd,ab,ab | depart,roundabout_turn right exit-1,arrive    |
-           | f,h       | ef,gh,gh | depart,roundabout_turn left exit-3,arrive     |
-           | f,a       | ef,ab,ab | depart,roundabout_turn straight exit-2,arrive |
-           | f,d       | ef,cd,cd | depart,roundabout_turn right exit-1,arrive    |
-           | h,a       | gh,ab,ab | depart,roundabout_turn left exit-3,arrive     |
-           | h,d       | gh,cd,cd | depart,roundabout_turn straight exit-2,arrive |
-           | h,f       | gh,ef,ef | depart,roundabout_turn right exit-1,arrive    |
+           | a,d       | ab,cd,cd | depart,roundabout turn left exit-3,arrive     |
+           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive |
+           | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    |
+           | d,f       | cd,ef,ef | depart,roundabout turn left exit-3,arrive     |
+           | d,h       | cd,gh,gh | depart,roundabout turn straight exit-2,arrive |
+           | d,a       | cd,ab,ab | depart,roundabout turn right exit-1,arrive    |
+           | f,h       | ef,gh,gh | depart,roundabout turn left exit-3,arrive     |
+           | f,a       | ef,ab,ab | depart,roundabout turn straight exit-2,arrive |
+           | f,d       | ef,cd,cd | depart,roundabout turn right exit-1,arrive    |
+           | h,a       | gh,ab,ab | depart,roundabout turn left exit-3,arrive     |
+           | h,d       | gh,cd,cd | depart,roundabout turn straight exit-2,arrive |
+           | h,f       | gh,ef,ef | depart,roundabout turn right exit-1,arrive    |
 
     Scenario: Enter and Exit - Rotated
         Given the node map
@@ -53,18 +53,18 @@ Feature: Basic Roundabout
 
        When I route I should get
            | waypoints | route    | turns                                         |
-           | a,d       | ab,cd,cd | depart,roundabout_turn left exit-3,arrive     |
-           | a,f       | ab,ef,ef | depart,roundabout_turn straight exit-2,arrive |
-           | a,h       | ab,gh,gh | depart,roundabout_turn right exit-1,arrive    |
-           | d,f       | cd,ef,ef | depart,roundabout_turn left exit-3,arrive     |
-           | d,h       | cd,gh,gh | depart,roundabout_turn straight exit-2,arrive |
-           | d,a       | cd,ab,ab | depart,roundabout_turn right exit-1,arrive    |
-           | f,h       | ef,gh,gh | depart,roundabout_turn left exit-3,arrive     |
-           | f,a       | ef,ab,ab | depart,roundabout_turn straight exit-2,arrive |
-           | f,d       | ef,cd,cd | depart,roundabout_turn right exit-1,arrive    |
-           | h,a       | gh,ab,ab | depart,roundabout_turn left exit-3,arrive     |
-           | h,d       | gh,cd,cd | depart,roundabout_turn straight exit-2,arrive |
-           | h,f       | gh,ef,ef | depart,roundabout_turn right exit-1,arrive    |
+           | a,d       | ab,cd,cd | depart,roundabout turn left exit-3,arrive     |
+           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive |
+           | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    |
+           | d,f       | cd,ef,ef | depart,roundabout turn left exit-3,arrive     |
+           | d,h       | cd,gh,gh | depart,roundabout turn straight exit-2,arrive |
+           | d,a       | cd,ab,ab | depart,roundabout turn right exit-1,arrive    |
+           | f,h       | ef,gh,gh | depart,roundabout turn left exit-3,arrive     |
+           | f,a       | ef,ab,ab | depart,roundabout turn straight exit-2,arrive |
+           | f,d       | ef,cd,cd | depart,roundabout turn right exit-1,arrive    |
+           | h,a       | gh,ab,ab | depart,roundabout turn left exit-3,arrive     |
+           | h,d       | gh,cd,cd | depart,roundabout turn straight exit-2,arrive |
+           | h,f       | gh,ef,ef | depart,roundabout turn right exit-1,arrive    |
 
     Scenario: Only Enter
         Given the node map
@@ -263,8 +263,8 @@ Feature: Basic Roundabout
 
         When I route I should get
             | waypoints | route    | turns                                         |
-            | a,e       | ab,ce,ce | depart,roundabout_turn straight exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout_turn left exit-2,arrive     |
+            | a,e       | ab,ce,ce | depart,roundabout turn straight exit-1,arrive |
+            | a,f       | ab,df,df | depart,roundabout turn left exit-2,arrive     |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -282,8 +282,8 @@ Feature: Basic Roundabout
 
         When I route I should get
             | waypoints | route    | turns                                         |
-            | a,e       | ad,be,be | depart,roundabout_turn straight exit-1,arrive |
-            | a,f       | ad,cf,cf | depart,roundabout_turn left exit-2,arrive     |
+            | a,e       | ad,be,be | depart,roundabout turn straight exit-1,arrive |
+            | a,f       | ad,cf,cf | depart,roundabout turn left exit-2,arrive     |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -301,8 +301,8 @@ Feature: Basic Roundabout
 
         When I route I should get
             | waypoints | route    | turns                                         |
-            | a,e       | ac,de,de | depart,roundabout_turn straight exit-1,arrive |
-            | a,f       | ac,bf,bf | depart,roundabout_turn left exit-2,arrive     |
+            | a,e       | ac,de,de | depart,roundabout turn straight exit-1,arrive |
+            | a,f       | ac,bf,bf | depart,roundabout turn left exit-2,arrive     |
 
     Scenario: Enter and Exit -- too complex
         Given the node map

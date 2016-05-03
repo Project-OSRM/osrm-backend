@@ -2,8 +2,8 @@
 #include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
-#include "util/simple_logger.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/simple_logger.hpp"
 
 #include <limits>
 #include <utility>
@@ -92,7 +92,12 @@ operator()(const NodeID, const EdgeID via_eid, Intersection intersection) const
     // coming from motorway
     if (detail::isMotorwayClass(in_data.road_classification.road_class))
     {
-        return fromMotorway(via_eid, std::move(intersection));
+        intersection = fromMotorway(via_eid, std::move(intersection));
+        std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
+            if (road.turn.instruction.type == TurnType::OnRamp)
+                road.turn.instruction.type = TurnType::OffRamp;
+        });
+        return intersection;
     }
     else // coming from a ramp
     {
@@ -246,16 +251,18 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                     else if (road.turn.angle < continue_angle)
                     {
                         road.turn.instruction = {
-                            detail::isRampClass(road.turn.eid, node_based_graph) ? TurnType::Ramp
-                                                                                 : TurnType::Turn,
+                            detail::isRampClass(road.turn.eid, node_based_graph)
+                                ? TurnType::OffRamp
+                                : TurnType::Turn,
                             (road.turn.angle < 145) ? DirectionModifier::Right
                                                     : DirectionModifier::SlightRight};
                     }
                     else if (road.turn.angle > continue_angle)
                     {
                         road.turn.instruction = {
-                            detail::isRampClass(road.turn.eid, node_based_graph) ? TurnType::Ramp
-                                                                                 : TurnType::Turn,
+                            detail::isRampClass(road.turn.eid, node_based_graph)
+                                ? TurnType::OffRamp
+                                : TurnType::Turn,
                             (road.turn.angle > 215) ? DirectionModifier::Left
                                                     : DirectionModifier::SlightLeft};
                     }
@@ -472,7 +479,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
             else
             {
                 BOOST_ASSERT(isRampClass(edge_data.road_classification.road_class));
-                road.turn.instruction = {TurnType::Ramp, getTurnDirection(road.turn.angle)};
+                road.turn.instruction = {TurnType::OffRamp, getTurnDirection(road.turn.angle)};
             }
         }
     }

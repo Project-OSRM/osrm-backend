@@ -16,8 +16,8 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                    |
-            | a,d       | abc,bd,bd | depart,ramp right,arrive |
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,on ramp right,arrive |
 
     Scenario: Ramp On Through Street Left
         Given the node map
@@ -30,8 +30,8 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                   |
-            | a,d       | abc,bd,bd | depart,ramp left,arrive |
+            | waypoints | route     | turns                         |
+            | a,d       | abc,bd,bd | depart,on ramp left,arrive |
 
     Scenario: Ramp On Through Street Left and Right
         Given the node map
@@ -46,9 +46,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                    |
-            | a,d       | abc,bd,bd | depart,ramp right,arrive |
-            | a,e       | abc,be,be | depart,ramp left,arrive  |
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,on ramp right,arrive |
+            | a,e       | abc,be,be | depart,on ramp left,arrive  |
 
     Scenario: Ramp On Three Way Intersection Right
         Given the node map
@@ -62,8 +62,8 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route    | turns                    |
-            | a,d       | ab,bd,bd | depart,ramp right,arrive |
+            | waypoints | route    | turns                          |
+            | a,d       | ab,bd,bd | depart,on ramp right,arrive |
 
     Scenario: Ramp On Three Way Intersection Right
         Given the node map
@@ -78,8 +78,8 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route    | turns                    |
-            | a,d       | ab,bd,bd | depart,ramp right,arrive |
+            | waypoints | route    | turns                          |
+            | a,d       | ab,bd,bd | depart,on ramp right,arrive |
 
     Scenario: Ramp Off Though Street
         Given the node map
@@ -93,9 +93,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                    |
-            | a,d       | abc,bd,bd | depart,ramp right,arrive |
-            | a,c       | abc,abc   | depart,arrive            |
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,on ramp right,arrive |
+            | a,c       | abc,abc   | depart,arrive                  |
 
     Scenario: Straight Ramp Off Turning Though Street
         Given the node map
@@ -108,9 +108,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route       | turns                       |
-            | a,d       | abc,bd,bd   | depart,ramp straight,arrive |
-            | a,c       | abc,abc,abc | depart,continue left,arrive |
+            | waypoints | route       | turns                             |
+            | a,d       | abc,bd,bd   | depart,on ramp straight,arrive |
+            | a,c       | abc,abc,abc | depart,continue left,arrive       |
 
     Scenario: Fork Ramp Off Turning Though Street
         Given the node map
@@ -124,9 +124,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route       | turns                       |
-            | a,d       | abc,bd,bd   | depart,ramp right,arrive    |
-            | a,c       | abc,abc,abc | depart,continue left,arrive |
+            | waypoints | route       | turns                             |
+            | a,d       | abc,bd,bd   | depart,on ramp right,arrive    |
+            | a,c       | abc,abc,abc | depart,continue left,arrive       |
 
     Scenario: Fork Ramp
         Given the node map
@@ -141,9 +141,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route    | turns                    |
-            | a,d       | ab,bd,bd | depart,ramp right,arrive |
-            | a,c       | ab,bc,bc | depart,turn left,arrive  |
+            | waypoints | route    | turns                          |
+            | a,d       | ab,bd,bd | depart,on ramp right,arrive |
+            | a,c       | ab,bc,bc | depart,turn left,arrive        |
 
     Scenario: Fork Slight Ramp
         Given the node map
@@ -158,9 +158,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,d       | ab,bd,bd | depart,ramp slight right,arrive |
-            | a,c       | ab,bc,bc | depart,turn slight left,arrive  |
+            | waypoints | route    | turns                                 |
+            | a,d       | ab,bd,bd | depart,on ramp slight right,arrive |
+            | a,c       | ab,bc,bc | depart,turn slight left,arrive        |
 
     Scenario: Fork Slight Ramp on Through Street
         Given the node map
@@ -174,9 +174,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route       | turns                              |
-            | a,d       | abc,bd,bd   | depart,ramp slight right,arrive    |
-            | a,c       | abc,abc,abc | depart,continue slight left,arrive |
+            | waypoints | route       | turns                                    |
+            | a,d       | abc,bd,bd   | depart,on ramp slight right,arrive    |
+            | a,c       | abc,abc,abc | depart,continue slight left,arrive       |
 
     Scenario: Fork Slight Ramp on Obvious Through Street
         Given the node map
@@ -190,9 +190,9 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                           |
-            | a,d       | abc,bd,bd | depart,ramp slight right,arrive |
-            | a,c       | abc,abc   | depart,arrive                   |
+            | waypoints | route     | turns                                 |
+            | a,d       | abc,bd,bd | depart,on ramp slight right,arrive |
+            | a,c       | abc,abc   | depart,arrive                         |
 
     Scenario: Two Ramps Joining into common Motorway
         Given the node map
