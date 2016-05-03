@@ -2,6 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var util = require('util');
 var exec = require('child_process').exec;
+var execFile = require('child_process').execFile;
 var d3 = require('d3-queue');
 
 var OSM = require('./build_osm');
@@ -194,11 +195,33 @@ module.exports = function () {
     this.extractData = (callback) => {
         this.logPreprocessInfo();
         this.log(util.format('== Extracting %s.osm...', this.osmData.osmFile), 'preprocess');
-        var cmd = util.format('%s%s/osrm-extract %s.osm %s --profile %s/%s.lua >>%s 2>&1',
-            this.LOAD_LIBRARIES, this.BIN_PATH, this.osmData.osmFile, this.extractArgs || '', this.PROFILES_PATH, this.profile, this.PREPROCESS_LOG_FILE);
+        // var cmd = util.format('%s%s/osrm-extract%s %s.osm %s --profile %s.lua >>%s 2>&1',
+        //     this.LOAD_LIBRARIES,
+        //     this.BIN_PATH,
+        //     this.EXE,
+        //     this.osmData.osmFile,
+        //     this.extractArgs || '',
+        //     path.resolve(this.PROFILES_PATH, this.profile),
+        //     this.PREPROCESS_LOG_FILE
+        // );
+        var cmd = this.LOAD_LIBRARIES + path.resolve(this.BIN_PATH, 'osrm-extract' + this.EXE);
+        var args = [
+            path.resolve(this.osmData.osmFile) + '.osm',
+            this.extractArgs || '',
+            '--profile',
+            path.resolve(this.PROFILES_PATH, this.profile + '.lua').replace(/\\/g, '\\\\'),
+            '>>',
+            path.resolve(this.PREPROCESS_LOG_FILE),
+            '2>&1'
+        ];
         this.log(cmd);
-        process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err) => {
+        //process.chdir(this.TEST_FOLDER);
+        process.chdir(this.PROFILES_PATH);
+        var opts = {
+            cwd: this.PROFILES_PATH,
+            timeout: 30000
+        }; //doesn't help
+        execFile(cmd, args, opts, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
                 process.chdir('../');
