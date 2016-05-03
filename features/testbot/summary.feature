@@ -58,19 +58,20 @@ Feature: Basic Routing
     @repeated
     Scenario: Check handling empty values
         Given the node map
-            | f |   |   |   |
-            | b | c | d | e |
-            | a |   |   |   |
+            | f |   |   | x |   |   |
+            | b | c | d | e | 1 | g |
+            | a |   |   | y |   |   |
 
         And the ways
-            | nodes | name   |
-            | ab    | first  |
-            | bc    | first  |
-            | cd    | first  |
-            | de    | second |
-            | bf    | third  |
+            | nodes | name   | # |
+            | ab    | first  |   |
+            | bc    | first  |   |
+            | cd    | first  |   |
+            | deg   | second |   |
+            | bf    | third  |   |
+            | xey   | cross  |we need this because phantom node segments are not considered for the summary |
 
         When I route I should get
             | from | to | route                     | summary       |
-            | a    | e  | first,first,second,second | first, second |
+            | a    | 1  | first,first,second,second | first, second |
 
