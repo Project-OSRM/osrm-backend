@@ -57,15 +57,13 @@ class ShortestPathRouting final
         if (search_from_forward_node)
         {
             forward_heap.Insert(source_phantom.forward_segment_id.id,
-                                total_distance_to_forward -
-                                    source_phantom.GetForwardWeightPlusOffset(),
+                                    -source_phantom.GetForwardWeightPlusOffset(),
                                 source_phantom.forward_segment_id.id);
         }
         if (search_from_reverse_node)
         {
             forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                                total_distance_to_reverse -
-                                    source_phantom.GetReverseWeightPlusOffset(),
+                                    -source_phantom.GetReverseWeightPlusOffset(),
                                 source_phantom.reverse_segment_id.id);
         }
         if (search_to_forward_node)
@@ -107,6 +105,7 @@ class ShortestPathRouting final
             super::Search(forward_heap, reverse_heap, new_total_distance, leg_packed_path,
                           needs_loop_forwad, needs_loop_backwards);
         }
+        new_total_distance += std::min(total_distance_to_forward,total_distance_to_reverse);
     }
 
     // searches shortest path between:
