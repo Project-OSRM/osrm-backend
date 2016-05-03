@@ -26,19 +26,20 @@ Feature: Basic Routing
     @smallest
     Scenario: Check handling empty values
         Given the node map
-            | a | b |  | c | d | e | f |
+            | a | b |  | c |   | d | f |
+            |   |   |  |   |   | e |
 
         And the ways
             | nodes | name |
             | ab    | ab   |
             | bc    | bc   |
-            | cd    | cd   |
+            | cd    |      |
             | de    | de   |
-            | ef    |      |
+            | df    | df   |
 
         When I route I should get
-            | from | to | route             | summary  |
-            | f    | a  | ,de,cd,bc,ab,ab   | de, bc   |
+            | from | to | route          | summary  |
+            | e    | a  | de,,bc,ab   | de, bc   |
 
     @smallest @todo
     Scenario: Summaries when routing on a simple network
@@ -70,6 +71,6 @@ Feature: Basic Routing
             | bf    | third  |
 
         When I route I should get
-            | from | to | route               | summary       |
-            | a    | e  | first,second,second | first, second |
+            | from | to | route                     | summary       |
+            | a    | e  | first,first,second,second | first, second |
 
