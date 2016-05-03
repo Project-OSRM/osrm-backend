@@ -207,21 +207,22 @@ module.exports = function () {
         var cmd = this.LOAD_LIBRARIES + path.resolve(this.BIN_PATH, 'osrm-extract' + this.EXE);
         var args = [
             path.resolve(this.osmData.osmFile) + '.osm',
-            this.extractArgs || '',
+            //this.extractArgs || '',
             '--profile',
-            path.resolve(this.PROFILES_PATH, this.profile + '.lua').replace(/\\/g, '\\\\'),
-            '>>',
-            path.resolve(this.PREPROCESS_LOG_FILE),
-            '2>&1'
+            //path.resolve(this.PROFILES_PATH, this.profile + '.lua').replace(/\\/g, '\\\\'),
+            path.resolve(this.PROFILES_PATH, this.profile + '.lua')
         ];
+        //     '>>',
+        //     path.resolve(this.PREPROCESS_LOG_FILE),
+        //     '2>&1'
+        // ];
         this.log(cmd);
-        //process.chdir(this.TEST_FOLDER);
-        process.chdir(this.PROFILES_PATH);
-        var opts = {
-            cwd: this.PROFILES_PATH,
-            timeout: 30000
-        }; //doesn't help
-        execFile(cmd, args, opts, (err) => {
+        process.chdir(this.TEST_FOLDER);
+        // var opts = {
+        //     cwd: this.PROFILES_PATH,
+        //     timeout: 30000
+        // };
+        execFile(cmd, args/*, opts*/, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
                 process.chdir('../');
