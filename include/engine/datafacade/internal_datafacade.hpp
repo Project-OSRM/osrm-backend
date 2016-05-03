@@ -113,8 +113,8 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
     {
-        typename util::ShM<QueryGraph::NodeArrayEntry, false>::vector node_list;
-        typename util::ShM<QueryGraph::EdgeArrayEntry, false>::vector edge_list;
+        util::ShM<QueryGraph::NodeArrayEntry, false>::vector node_list;
+        util::ShM<QueryGraph::EdgeArrayEntry, false>::vector edge_list;
 
         util::SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 
