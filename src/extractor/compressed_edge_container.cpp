@@ -275,7 +275,7 @@ NodeID CompressedEdgeContainer::GetLastEdgeTargetID(const EdgeID edge_id) const
 NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
 {
     const auto &bucket = GetBucketReference(edge_id);
-    BOOST_ASSERT(bucket.size() >= 1);
+    BOOST_ASSERT(bucket.size() >= 2);
     return bucket[bucket.size() - 2].node_id;
 }
 }
