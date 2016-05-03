@@ -47,16 +47,16 @@ class SharedDataFacade final : public BaseDataFacade
   private:
     using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<EdgeData, true>;
-    using GraphNode = typename QueryGraph::NodeArrayEntry;
-    using GraphEdge = typename QueryGraph::EdgeArrayEntry;
-    using NameIndexBlock = typename util::RangeTable<16, true>::BlockT;
-    using InputEdge = typename QueryGraph::InputEdge;
-    using RTreeLeaf = typename super::RTreeLeaf;
+    using GraphNode = QueryGraph::NodeArrayEntry;
+    using GraphEdge = QueryGraph::EdgeArrayEntry;
+    using NameIndexBlock = util::RangeTable<16, true>::BlockT;
+    using InputEdge = QueryGraph::InputEdge;
+    using RTreeLeaf = super::RTreeLeaf;
     using SharedRTree =
         util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
-    using RTreeNode = typename SharedRTree::TreeNode;
+    using RTreeNode = SharedRTree::TreeNode;
 
     storage::SharedDataLayout *data_layout;
     char *shared_memory;
@@ -141,9 +141,9 @@ class SharedDataFacade final : public BaseDataFacade
         auto graph_edges_ptr = data_layout->GetBlockPtr<GraphEdge>(
             shared_memory, storage::SharedDataLayout::GRAPH_EDGE_LIST);
 
-        typename util::ShM<GraphNode, true>::vector node_list(
+        util::ShM<GraphNode, true>::vector node_list(
             graph_nodes_ptr, data_layout->num_entries[storage::SharedDataLayout::GRAPH_NODE_LIST]);
-        typename util::ShM<GraphEdge, true>::vector edge_list(
+        util::ShM<GraphEdge, true>::vector edge_list(
             graph_edges_ptr, data_layout->num_entries[storage::SharedDataLayout::GRAPH_EDGE_LIST]);
         m_query_graph.reset(new QueryGraph(node_list, edge_list));
     }
@@ -158,14 +158,14 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
-        typename util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
+        util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
         auto turn_instruction_list_ptr =
             data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
                 shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
-        typename util::ShM<extractor::guidance::TurnInstruction, true>::vector
+        util::ShM<extractor::guidance::TurnInstruction, true>::vector
             turn_instruction_list(
                 turn_instruction_list_ptr,
                 data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
@@ -173,7 +173,7 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::NAME_ID_LIST);
-        typename util::ShM<unsigned, true>::vector name_id_list(
+        util::ShM<unsigned, true>::vector name_id_list(
             name_id_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_ID_LIST]);
         m_name_ID_list = std::move(name_id_list);
     }
@@ -182,7 +182,7 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto via_node_list_ptr = data_layout->GetBlockPtr<NodeID>(
             shared_memory, storage::SharedDataLayout::VIA_NODE_LIST);
-        typename util::ShM<NodeID, true>::vector via_node_list(
+        util::ShM<NodeID, true>::vector via_node_list(
             via_node_list_ptr, data_layout->num_entries[storage::SharedDataLayout::VIA_NODE_LIST]);
         m_via_node_list = std::move(via_node_list);
     }
@@ -193,14 +193,14 @@ class SharedDataFacade final : public BaseDataFacade
             shared_memory, storage::SharedDataLayout::NAME_OFFSETS);
         auto blocks_ptr = data_layout->GetBlockPtr<NameIndexBlock>(
             shared_memory, storage::SharedDataLayout::NAME_BLOCKS);
-        typename util::ShM<unsigned, true>::vector name_offsets(
+        util::ShM<unsigned, true>::vector name_offsets(
             offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_OFFSETS]);
-        typename util::ShM<NameIndexBlock, true>::vector name_blocks(
+        util::ShM<NameIndexBlock, true>::vector name_blocks(
             blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_BLOCKS]);
 
         auto names_list_ptr = data_layout->GetBlockPtr<char>(
             shared_memory, storage::SharedDataLayout::NAME_CHAR_LIST);
-        typename util::ShM<char, true>::vector names_char_list(
+        util::ShM<char, true>::vector names_char_list(
             names_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_CHAR_LIST]);
         m_name_table = util::make_unique<util::RangeTable<16, true>>(
             name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
@@ -217,7 +217,7 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto core_marker_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::CORE_MARKER);
-        typename util::ShM<bool, true>::vector is_core_node(
+        util::ShM<bool, true>::vector is_core_node(
             core_marker_ptr, data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER]);
         m_is_core_node = std::move(is_core_node);
     }
@@ -226,7 +226,7 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto geometries_index_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::GEOMETRIES_INDEX);
-        typename util::ShM<unsigned, true>::vector geometry_begin_indices(
+        util::ShM<unsigned, true>::vector geometry_begin_indices(
             geometries_index_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
         m_geometry_indices = std::move(geometry_begin_indices);
@@ -234,35 +234,35 @@ class SharedDataFacade final : public BaseDataFacade
         auto geometries_list_ptr =
             data_layout->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge>(
                 shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
-        typename util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector
+        util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector
             geometry_list(geometries_list_ptr,
                           data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
         m_geometry_list = std::move(geometry_list);
 
         auto datasources_list_ptr = data_layout->GetBlockPtr<uint8_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCES_LIST);
-        typename util::ShM<uint8_t, true>::vector datasources_list(
+        util::ShM<uint8_t, true>::vector datasources_list(
             datasources_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCES_LIST]);
         m_datasource_list = std::move(datasources_list);
 
         auto datasource_name_data_ptr = data_layout->GetBlockPtr<char>(
             shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_DATA);
-        typename util::ShM<char, true>::vector datasource_name_data(
+        util::ShM<char, true>::vector datasource_name_data(
             datasource_name_data_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_DATA]);
         m_datasource_name_data = std::move(datasource_name_data);
 
         auto datasource_name_offsets_ptr = data_layout->GetBlockPtr<std::size_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS);
-        typename util::ShM<std::size_t, true>::vector datasource_name_offsets(
+        util::ShM<std::size_t, true>::vector datasource_name_offsets(
             datasource_name_offsets_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS]);
         m_datasource_name_offsets = std::move(datasource_name_offsets);
 
         auto datasource_name_lengths_ptr = data_layout->GetBlockPtr<std::size_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS);
-        typename util::ShM<std::size_t, true>::vector datasource_name_lengths(
+        util::ShM<std::size_t, true>::vector datasource_name_lengths(
             datasource_name_lengths_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS]);
         m_datasource_name_lengths = std::move(datasource_name_lengths);

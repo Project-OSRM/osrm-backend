@@ -56,8 +56,8 @@ class InternalDataFacade final : public BaseDataFacade
   private:
     using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<typename super::EdgeData>;
-    using InputEdge = typename QueryGraph::InputEdge;
-    using RTreeLeaf = typename super::RTreeLeaf;
+    using InputEdge = QueryGraph::InputEdge;
+    using RTreeLeaf = super::RTreeLeaf;
     using InternalRTree =
         util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, false>::vector, false>;
     using InternalGeospatialQuery = GeospatialQuery<InternalRTree, BaseDataFacade>;
@@ -113,8 +113,8 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
     {
-        typename util::ShM<typename QueryGraph::NodeArrayEntry, false>::vector node_list;
-        typename util::ShM<typename QueryGraph::EdgeArrayEntry, false>::vector edge_list;
+        typename util::ShM<QueryGraph::NodeArrayEntry, false>::vector node_list;
+        typename util::ShM<QueryGraph::EdgeArrayEntry, false>::vector edge_list;
 
         util::SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 
