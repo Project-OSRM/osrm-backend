@@ -160,7 +160,7 @@ script:
   - ./example/build/osrm-example test/data/monaco.osrm
   # All tests assume to be run from the build directory
   - pushd build
-  - ./unit_tests/library-tests test/data/monaco.osrm
+  - ./unit_tests/library-tests ../test/data/monaco.osrm
   - ./unit_tests/extractor-tests
   - ./unit_tests/engine-tests
   - ./unit_tests/util-tests
