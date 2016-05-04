@@ -133,3 +133,34 @@ Feature: New-Name Instructions
        When I route I should get
             | waypoints | route    | turns                               |
             | a,c       | ab,bc,bc | depart,new name slight right,arrive |
+
+    Scenario: Empty road names - Announce Change From, suppress Change To
+        Given the node map
+            | a |  | b |  | c |  | d |
+
+        And the ways
+            | nodes | name |
+            | ab    | ab   |
+            | bc    |      |
+            | cd    | cd   |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,d       | ab,cd,cd | depart,new name straight,arrive |
+            | a,c       | ab,      | depart,arrive                   |
+
+    Scenario: Empty road names - Loose name shortly
+        Given the node map
+            | a |  | b |  | c |  | d |  | e |
+
+        And the ways
+            | nodes | name      |
+            | ab    | name      |
+            | bc    | with-name |
+            | cd    |           |
+            | de    | with-name |
+
+        When I route I should get
+            | waypoints | route                    | turns                           |
+            | a,e       | name,with-name,with-name | depart,new name straight,arrive |
+            | b,e       | with-name,with-name      | depart,arrive                   |

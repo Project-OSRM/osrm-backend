@@ -325,6 +325,10 @@ inline bool requiresNameAnnounced(const std::string &from,
                                   const std::string &to,
                                   const SuffixTable &suffix_table)
 {
+    //first is empty and the second is not
+    if(from.empty() && !to.empty())
+        return true;
+
     // FIXME, handle in profile to begin with?
     // this uses the encoding of references in the profile, which is very BAD
     // Input for this function should be a struct separating streetname, suffix (e.g. road,

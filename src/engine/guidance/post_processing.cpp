@@ -33,10 +33,7 @@ namespace
 {
 
 // invalidate a step and set its content to nothing
-void invalidateStep(RouteStep &step)
-{
-    step = getInvalidRouteStep();
-}
+void invalidateStep(RouteStep &step) { step = getInvalidRouteStep(); }
 
 void print(const std::vector<RouteStep> &steps)
 {
@@ -512,6 +509,9 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 // Post Processing to collapse unnecessary sets of combined instructions into a single one
 std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 {
+    if (steps.size() <= 2)
+        return steps;
+
     // Get the previous non-invalid instruction
     const auto getPreviousIndex = [&steps](std::size_t index) {
         BOOST_ASSERT(index > 0);
@@ -522,6 +522,17 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 
         return index;
     };
+
+    // Check for an initial unwanted new-name
+    {
+        const auto &current_step = steps[1];
+        if (TurnType::NewName == current_step.maneuver.instruction.type &&
+            current_step.name == steps[0].name)
+        {
+            steps[0] = elongate(std::move(steps[0]), steps[1]);
+            invalidateStep(steps[1]);
+        }
+    }
 
     // first and last instructions are waypoints that cannot be collapsed
     for (std::size_t step_index = 2; step_index < steps.size(); ++step_index)
@@ -538,14 +549,22 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         const auto two_back_index = getPreviousIndex(one_back_index);
         BOOST_ASSERT(two_back_index < steps.size());
 
+        // Due to empty segments, we can get name-changes from A->A
+        // These have to be handled in post-processing
+        if (TurnType::NewName == current_step.maneuver.instruction.type &&
+            current_step.name == steps[one_back_index].name)
+        {
+            steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
+            invalidateStep(steps[step_index]);
+        }
         // If we look at two consecutive name changes, we can check for a name oszillation.
         // A name oszillation changes from name A shortly to name B and back to A.
         // In these cases, the name change will be suppressed.
-        if (TurnType::NewName == current_step.maneuver.instruction.type &&
-            TurnType::NewName == one_back_step.maneuver.instruction.type)
+        else if (TurnType::NewName == current_step.maneuver.instruction.type &&
+                 TurnType::NewName == one_back_step.maneuver.instruction.type)
         {
             // valid due to step_index starting at 2
-            const auto &coming_from_name = steps[step_index - 2].name;
+            const auto &coming_from_name = steps[two_back_index].name;
             if (current_step.name == coming_from_name)
             {
                 if (current_step.mode == one_back_step.mode &&
