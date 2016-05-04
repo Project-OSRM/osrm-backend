@@ -1,9 +1,17 @@
 language: cpp
 
+git:
+  depth: 10
 
 # sudo:required is needed for trusty images
 sudo: required
 dist: trusty
+
+# don't re-build for tags so that [publish binary] is not re-run
+# https://github.com/travis-ci/travis-ci/issues/1532
+branches:
+  except:
+    - /^v[0-9]/
 
 notifications:
   email: false
@@ -15,6 +23,11 @@ branches:
 cache:
   - ccache: true
   - apt: true
+
+env:
+  global:
+   - CCACHE_TEMPDIR=/tmp/.ccache-temp
+   - CCACHE_COMPRESS=1
 
 matrix:
   fast_finish: true
