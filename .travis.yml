@@ -28,7 +28,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'pip', 'ccache']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug'
 
     - os: linux
       compiler: gcc
