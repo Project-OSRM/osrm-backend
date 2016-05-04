@@ -39,7 +39,7 @@ Feature: Basic Routing
 
         When I route I should get
             | from | to | route          | summary  |
-            | e    | a  | de,,bc,ab   | de, bc   |
+            | e    | a  | de,,bc,ab,ab   | de, bc   |
 
     @smallest @todo
     Scenario: Summaries when routing on a simple network
