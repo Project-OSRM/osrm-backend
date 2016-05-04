@@ -43,6 +43,8 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
         {util::toFixed(util::FloatLongitude(input_node.location().lon())),
          util::toFixed(util::FloatLatitude(input_node.location().lat())),
          OSMNodeID(input_node.id()), result_node.barrier, result_node.traffic_lights});
+
+    // TODO(daniel-j-h): add exit handling for nodes here and down the call chain
 }
 
 void ExtractorCallbacks::ProcessRestriction(
@@ -160,6 +162,25 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     else
     {
         name_id = string_map_iterator->second;
+    }
+
+    // Get the unique identifier for the street destination
+    const auto destination_iter = string_map.find(parsed_way.destination);
+    unsigned destination_id = external_memory.name_lengths.size();
+    if (string_map.end() == destination_iter)
+    {
+        auto dest_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.destination.size());
+
+        external_memory.name_char_data.reserve(destination_id + dest_length);
+        std::copy(parsed_way.destination.c_str(), parsed_way.destination.c_str() + dest_length,
+                  std::back_inserter(external_memory.name_char_data));
+
+        external_memory.name_lengths.push_back(dest_length);
+        string_map.insert(std::make_pair(parsed_way.destination, destination_id));
+    }
+    else
+    {
+        destination_id = destination_iter->second;
     }
 
     const bool split_edge = (parsed_way.forward_speed > 0) &&

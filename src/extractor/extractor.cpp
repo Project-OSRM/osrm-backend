@@ -72,7 +72,8 @@ namespace extractor
  *    is extracted at this point.
  *
  * The result of this process are the following files:
- *  .names : Names of all streets, stored as long consecutive string with prefix sum based index
+ *  .names : Names of all streets and street destinations, stored as long consecutive string with
+ * prefix sum based index
  *  .osrm  : Nodes and edges in a intermediate format that easy to digest for osrm-contract
  *  .restrictions : Turn restrictions that are used by osrm-contract to construct the edge-expanded
  * graph
