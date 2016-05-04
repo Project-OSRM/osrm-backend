@@ -109,7 +109,7 @@ void ExtractionContainers::WriteNames(const std::string &names_file_name) const
 
     unsigned total_length = 0;
 
-    for (const unsigned &name_length : name_lengths)
+    for (const auto name_length : name_lengths)
     {
         total_length += name_length;
     }
@@ -124,7 +124,7 @@ void ExtractionContainers::WriteNames(const std::string &names_file_name) const
     char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
     unsigned buffer_len = 0;
 
-    for (const char &c : name_char_data)
+    for (const auto c : name_char_data)
     {
         write_buffer[buffer_len++] = c;
 
