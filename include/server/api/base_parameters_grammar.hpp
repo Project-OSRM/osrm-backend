@@ -134,7 +134,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
 
         hints_rule
             = qi::lit("hints=")
-            > qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][ph::bind(add_hint, qi::_r1, qi::_1)] % ';'
+            > -qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][ph::bind(add_hint, qi::_r1, qi::_1)] % ';'
             ;
 
         bearings_rule
