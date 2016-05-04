@@ -1,4 +1,6 @@
 # 5.1.0
+   Changes with regard to 5.0.0
+
    - API:
      - added StepManeuver type `roundabout turn`. The type indicates a small roundabout that is treated as an intersection
         (turn right at the roundabout for first exit, go straight at the roundabout...)
@@ -9,9 +11,23 @@
    - Profile Changes:
     - introduced a suffix_list / get_name_suffix_list to specify name suffices to be suppressed in name change announcements
     - street names are now consistently assembled for the car, bike and walk profile as: "Name (Ref)" as in "Berlin (A5)"
+    - new `car.lua` dependency `lib/destination.lua`
+    - register a way's .nodes() function for use in the profile's way_function.
 
    - Infrastructure
-    - BREAKING: reordered internal instruction types. This breaks the data format
+    - BREAKING: reordered internal instruction types. This breaks the **data format**
+
+   - Fixes:
+    - Issue #2310: post-processing for local paths, fixes #2310
+    - Issue #2309: local path looping, fixes #2309
+    - Issue #2356: Make hint values optional
+    - Issue #2349: Segmentation fault in some requests
+    - Issue #2335: map matching was using shortest path with uturns disabled
+    - Issue #2193: Fix syntax error position indicators in parameters queries
+    - Fix search with u-turn
+    - PhantomNode packing in MSVC now the same on other platforms
+    - Summary is now not malformed when including unnamed roads
+    - Emit new-name on when changing fron unanmed road to named road
 
 # 5.0.0
    Changes with regard 5.0.0 RC2:
