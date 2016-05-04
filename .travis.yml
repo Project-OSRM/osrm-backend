@@ -7,12 +7,6 @@ git:
 sudo: required
 dist: trusty
 
-# don't re-build for tags so that [publish binary] is not re-run
-# https://github.com/travis-ci/travis-ci/issues/1532
-branches:
-  except:
-    - /^v[0-9]/
-
 notifications:
   email: false
 
@@ -21,8 +15,8 @@ branches:
     - master
 
 cache:
-  - ccache: true
-  - apt: true
+  ccache: true
+  apt: true
 
 env:
   global:
