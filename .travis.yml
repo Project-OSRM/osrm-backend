@@ -22,7 +22,7 @@ env:
   global:
    - CCACHE_TEMPDIR=/tmp/.ccache-temp
    - CCACHE_COMPRESS=1
-   - JOBS=2
+   - JOBS=3
 
 matrix:
   fast_finish: true
