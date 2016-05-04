@@ -48,7 +48,7 @@ matrix:
       env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Debug'
 
     - os: linux
-      compiler: "clang-3.9-debug"
+      compiler: "clang-3.8-debug"
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
