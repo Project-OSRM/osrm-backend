@@ -6,7 +6,6 @@ ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SET PLATFORM=x64
 SET CONFIGURATION=Release
-::SET LOCAL_DEV=1
 
 FOR /F "tokens=*" %%i in ('git rev-parse --abbrev-ref HEAD') do SET APPVEYOR_REPO_BRANCH=%%i
 ECHO APPVEYOR_REPO_BRANCH^: %APPVEYOR_REPO_BRANCH%

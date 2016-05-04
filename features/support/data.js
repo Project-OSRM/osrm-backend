@@ -1,7 +1,8 @@
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
-var exec = require('child_process').exec;
+//var exec = require('child_process').exec;
+var execFile = require('child_process').execFile;
 var d3 = require('d3-queue');
 
 var OSM = require('./build_osm');
@@ -194,11 +195,34 @@ module.exports = function () {
     this.extractData = (callback) => {
         this.logPreprocessInfo();
         this.log(util.format('== Extracting %s.osm...', this.osmData.osmFile), 'preprocess');
-        var cmd = util.format('%s%s/osrm-extract %s.osm %s --profile %s/%s.lua >>%s 2>&1',
-            this.LOAD_LIBRARIES, this.BIN_PATH, this.osmData.osmFile, this.extractArgs || '', this.PROFILES_PATH, this.profile, this.PREPROCESS_LOG_FILE);
+        // var cmd = util.format('%s%s/osrm-extract%s %s.osm %s --profile %s.lua >>%s 2>&1',
+        //     this.LOAD_LIBRARIES,
+        //     this.BIN_PATH,
+        //     this.EXE,
+        //     this.osmData.osmFile,
+        //     this.extractArgs || '',
+        //     path.resolve(this.PROFILES_PATH, this.profile),
+        //     this.PREPROCESS_LOG_FILE
+        // );
+        var cmd = this.LOAD_LIBRARIES + path.resolve(this.BIN_PATH, 'osrm-extract' + this.EXE);
+        var args = [
+            path.resolve(this.osmData.osmFile) + '.osm',
+            //this.extractArgs || '',
+            '--profile',
+            //path.resolve(this.PROFILES_PATH, this.profile + '.lua').replace(/\\/g, '\\\\'),
+            path.resolve(this.PROFILES_PATH, this.profile + '.lua')
+        ];
+        //     '>>',
+        //     path.resolve(this.PREPROCESS_LOG_FILE),
+        //     '2>&1'
+        // ];
         this.log(cmd);
         process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err) => {
+        // var opts = {
+        //     cwd: this.PROFILES_PATH,
+        //     timeout: 30000
+        // };
+        execFile(cmd, args/*, opts*/, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
                 process.chdir('../');
@@ -241,11 +265,25 @@ module.exports = function () {
     this.contractData = (callback) => {
         this.logPreprocessInfo();
         this.log(util.format('== Contracting %s.osm...', this.osmData.extractedFile), 'preprocess');
-        var cmd = util.format('%s%s/osrm-contract %s %s.osrm >>%s 2>&1',
-            this.LOAD_LIBRARIES, this.BIN_PATH, this.contractArgs || '', this.osmData.extractedFile, this.PREPROCESS_LOG_FILE);
+        //this doesn't work on Windows, because 'exec' puts the whole command into quotes:
+        // "osrm-contract.exe file.osrm"
+        //and that cannot be executed.
+        //'exeFile' does it correctly
+        // "osrm-extract" "file.osrm"
+
+        // var cmd = util.format('%s%s/osrm-contract %s %s.osrm >>%s 2>&1',
+        //     this.LOAD_LIBRARIES, this.BIN_PATH, this.contractArgs || '', this.osmData.extractedFile, this.PREPROCESS_LOG_FILE);
+        var cmd = this.LOAD_LIBRARIES + path.resolve(this.BIN_PATH, 'osrm-contract');
+        var args = [
+            this.contractArgs || '',
+            this.osmData.extractedFile + '.osrm'
+        ];
+        //     '>>"' + this.PREPROCESS_LOG_FILE + '" 2>&1'
+        // ];
+        args = args.filter(Boolean); //remove empty strings
         this.log(cmd);
         process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err) => {
+        execFile(cmd, args, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
                 process.chdir('../');

@@ -14,16 +14,17 @@ clone_folder: c:\projects\osrm
 
 platform: x64
 
+install:
+  - ps: Install-Product node 4
+
 build_script:
   - CALL appveyor-build.bat
 
 test: off
 
 artifacts:
-  - path: osrm_Release.zip
-    name: osrm_Release.zip
-#  - path: osrm_Debug.zip
-#    name: osrm_Debug.zip
+  - path: osrm_$(configuration).zip
+    name: osrm_$(configuration).zip
 
 branches:
   only:

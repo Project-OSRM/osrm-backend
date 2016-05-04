@@ -7,7 +7,7 @@ var d3 = require('d3-queue');
 module.exports = function () {
     this.initializeEnv = (callback) => {
         this.DEFAULT_PORT = 5000;
-	// OSX builds on Travis hit a timeout of ~2000 from time to time
+        // OSX builds on Travis hit a timeout of ~2000 from time to time
         this.DEFAULT_TIMEOUT = 5000;
         this.setDefaultTimeout(this.DEFAULT_TIMEOUT);
         this.ROOT_FOLDER = process.cwd();
@@ -22,7 +22,7 @@ module.exports = function () {
         this.DEFAULT_GRID_SIZE = 100;    // meters
         this.PROFILES_PATH = path.resolve(this.ROOT_FOLDER, 'profiles');
         this.FIXTURES_PATH = path.resolve(this.ROOT_FOLDER, 'unit_tests/fixtures');
-        this.BIN_PATH = path.resolve(this.ROOT_FOLDER, 'build');
+        this.BIN_PATH = path.resolve(this.ROOT_FOLDER, 'build', process.platform === 'win32' ? process.env.configuration : '');
         this.DEFAULT_INPUT_FORMAT = 'osm';
         this.DEFAULT_ORIGIN = [1,1];
         this.LAUNCH_TIMEOUT = 1000;
@@ -36,8 +36,7 @@ module.exports = function () {
         // https://forums.developer.apple.com/thread/9233
         this.LOAD_LIBRARIES = process.env.OSRM_SHARED_LIBRARY_PATH ? util.format('DYLD_LIBRARY_PATH=%s ', process.env.OSRM_SHARED_LIBRARY_PATH) : '';
 
-        // TODO make sure this works on win
-        if (process.platform.match(/indows.*/)) {
+        if (process.platform === 'win32') {
             this.TERMSIGNAL = 9;
             this.EXE = '.exe';
             this.QQ = '"';
@@ -88,7 +87,8 @@ module.exports = function () {
             var binPath = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
             fs.exists(binPath, (exists) => {
                 if (!exists) throw new Error(util.format('%s is missing. Build failed?', binPath));
-                var helpPath = util.format('%s%s --help > /dev/null 2>&1', this.LOAD_LIBRARIES, binPath);
+                var devnull = process.platform === 'win32' ? 'nul' : '/dev/null';
+                var helpPath = util.format('%s%s --help > %s 2>&1', this.LOAD_LIBRARIES, binPath, devnull);
                 exec(helpPath, (err) => {
                     if (err) {
                         this.log(util.format('*** Exited with code %d', err.code), 'preprocess');

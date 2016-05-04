@@ -26,6 +26,8 @@ module.exports = function () {
         }
 
         var cmd = util.format('%s%s%s/%s%s%s %s 2>%s', this.QQ, this.LOAD_LIBRARIES, this.BIN_PATH, bin, this.EXE, this.QQ, opts, this.ERROR_LOG_FILE);
+        console.log('opts:', opts);
+        console.log('cmd:', cmd, '\nTEST_FOLDER:', this.TEST_FOLDER);
         process.chdir(this.TEST_FOLDER);
         exec(cmd, (err, stdout, stderr) => {
             this.stdout = stdout.toString();
