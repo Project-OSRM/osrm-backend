@@ -27,11 +27,12 @@ env:
 matrix:
   fast_finish: true
 
+  # We override the compiler names here to yield better ccache behavior, which uses this as key
   include:
 
     # Debug Builds
     - os: linux
-      compiler: gcc
+      compiler: "gcc-5-debug"
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -39,7 +40,7 @@ matrix:
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug'
 
     - os: linux
-      compiler: gcc
+      compiler: "gcc-4.8-debug"
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -47,7 +48,7 @@ matrix:
       env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Debug'
 
     - os: linux
-      compiler: clang
+      compiler: "clang-3.9-debug"
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
@@ -61,7 +62,7 @@ matrix:
 
     # Release Builds
     - os: linux
-      compiler: gcc
+      compiler: "gcc-5-release"
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -94,7 +95,7 @@ matrix:
 
     # Shared Library
     - os: linux
-      compiler: gcc
+      compiler: "gcc-5-release-shared"
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
