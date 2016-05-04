@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
-var exec = require('child_process').exec;
+//var exec = require('child_process').exec;
 var execFile = require('child_process').execFile;
 var d3 = require('d3-queue');
 
@@ -265,11 +265,25 @@ module.exports = function () {
     this.contractData = (callback) => {
         this.logPreprocessInfo();
         this.log(util.format('== Contracting %s.osm...', this.osmData.extractedFile), 'preprocess');
-        var cmd = util.format('%s%s/osrm-contract %s %s.osrm >>%s 2>&1',
-            this.LOAD_LIBRARIES, this.BIN_PATH, this.contractArgs || '', this.osmData.extractedFile, this.PREPROCESS_LOG_FILE);
+        //this doesn't work on Windows, because 'exec' puts the whole command into quotes:
+        // "osrm-contract.exe file.osrm"
+        //and that cannot be executed.
+        //'exeFile' does it correctly
+        // "osrm-extract" "file.osrm"
+
+        // var cmd = util.format('%s%s/osrm-contract %s %s.osrm >>%s 2>&1',
+        //     this.LOAD_LIBRARIES, this.BIN_PATH, this.contractArgs || '', this.osmData.extractedFile, this.PREPROCESS_LOG_FILE);
+        var cmd = this.LOAD_LIBRARIES + path.resolve(this.BIN_PATH, 'osrm-contract');
+        var args = [
+            this.contractArgs || '',
+            this.osmData.extractedFile + '.osrm'
+        ];
+        //     '>>"' + this.PREPROCESS_LOG_FILE + '" 2>&1'
+        // ];
+        args = args.filter(Boolean); //remove empty strings
         this.log(cmd);
         process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err) => {
+        execFile(cmd, args, (err) => {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
                 process.chdir('../');
