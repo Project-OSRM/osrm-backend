@@ -158,11 +158,14 @@ script:
   - make -C test/data benchmark
   - echo "travis_fold:end:BENCHMARK"
   - ./example/build/osrm-example test/data/monaco.osrm
-  - ./build/unit_tests/library-tests test/data/monaco.osrm
-  - ./build/unit_tests/extractor-tests
-  - ./build/unit_tests/engine-tests
-  - ./build/unit_tests/util-tests
-  - ./build/unit_tests/server-tests
+  # All tests assume to be run from the build directory
+  - pushd build
+  - ./unit_tests/library-tests test/data/monaco.osrm
+  - ./unit_tests/extractor-tests
+  - ./unit_tests/engine-tests
+  - ./unit_tests/util-tests
+  - ./unit_tests/server-tests
+  - popd
   - npm test
 
 after_success:
