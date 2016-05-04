@@ -51,18 +51,6 @@ ExtractionContainers::ExtractionContainers()
     name_lengths.push_back(0);
 }
 
-ExtractionContainers::~ExtractionContainers()
-{
-    // FIXME isn't this done implicitly of the stxxl::vectors go out of scope?
-    used_node_id_list.clear();
-    all_nodes_list.clear();
-    all_edges_list.clear();
-    name_char_data.clear();
-    name_lengths.clear();
-    restrictions_list.clear();
-    way_start_end_id_list.clear();
-}
-
 /**
  * Processes the collected data and serializes it.
  * At this point nodes are still referenced by their OSM id.
