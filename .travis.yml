@@ -14,7 +14,9 @@ branches:
   only:
     - master
 
-cache: ccache
+cache:
+  - ccache: true
+  - apt: true
 
 matrix:
   fast_finish: true
