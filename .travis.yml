@@ -14,6 +14,8 @@ branches:
   only:
     - master
 
+cache: ccache
+
 matrix:
   fast_finish: true
 
@@ -25,7 +27,7 @@ matrix:
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'pip']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'pip', 'ccache']
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
 
     - os: linux
@@ -33,7 +35,7 @@ matrix:
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Debug'
 
     - os: linux
@@ -41,7 +43,7 @@ matrix:
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
 
     - os: osx
@@ -55,7 +57,7 @@ matrix:
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
 
       # Disabled because of CI slowness
@@ -88,7 +90,7 @@ matrix:
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
       # Disabled because CI slowness
@@ -130,7 +132,7 @@ before_script:
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - export OSRM_PORT=5000 OSRM_TIMEOUT=6000
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
 
 script:
   - echo "travis_fold:start:MAKE"
