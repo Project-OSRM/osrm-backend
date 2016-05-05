@@ -12,7 +12,7 @@ var OSRMBaseLoader = class {
     }
 
     launch (callback) {
-        var limit = Timeout(this.scope.LAUNCH_TIMEOUT, { err: this.scope.RoutedError('Launching osrm-routed timed out.') });
+        var limit = Timeout(this.scope.TIMEOUT, { err: this.scope.RoutedError('Launching osrm-routed timed out.') });
 
         var runLaunch = (cb) => {
             this.osrmUp(() => {
@@ -24,7 +24,7 @@ var OSRMBaseLoader = class {
     }
 
     shutdown (callback) {
-        var limit = Timeout(this.scope.SHUTDOWN_TIMEOUT, { err: this.scope.RoutedError('Shutting down osrm-routed timed out.')});
+        var limit = Timeout(this.scope.TIMEOUT, { err: this.scope.RoutedError('Shutting down osrm-routed timed out.')});
 
         var runShutdown = (cb) => {
             this.osrmDown(cb);

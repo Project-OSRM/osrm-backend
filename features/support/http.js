@@ -20,7 +20,7 @@ module.exports = function () {
     };
 
     this.sendRequest = (baseUri, parameters, callback) => {
-        var limit = Timeout(this.OSRM_TIMEOUT, { err: { statusCode: 408 } });
+        var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
 
         var runRequest = (cb) => {
             var params = this.paramsToString(parameters);

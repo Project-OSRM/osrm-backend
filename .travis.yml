@@ -58,7 +58,7 @@ matrix:
     - os: osx
       osx_image: xcode7.3
       compiler: clang
-      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1
+      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=10000
 
     # Release Builds
     - os: linux
@@ -134,7 +134,6 @@ install:
     fi
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - export OSRM_PORT=5000 OSRM_TIMEOUT=10000
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}

@@ -15,7 +15,7 @@ module.exports = function () {
 
     this.requestUrl = (path, callback) => {
         var uri = this.query = [this.HOST, path].join('/'),
-            limit = Timeout(this.OSRM_TIMEOUT, { err: { statusCode: 408 } });
+            limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
 
         function runRequest (cb) {
             request(uri, cb);

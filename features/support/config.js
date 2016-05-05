@@ -19,8 +19,6 @@ module.exports = function () {
 
         this.osmData = new classes.osmData(this);
 
-        this.STRESS_TIMEOUT = 300;
-
         this.OSRMLoader = this._OSRMLoader();
 
         this.PREPROCESS_LOG_FILE = path.resolve(this.TEST_FOLDER, 'preprocessing.log');
