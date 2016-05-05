@@ -74,9 +74,9 @@ class StaticRTree
     struct LeafNode
     {
         LeafNode() : object_count(0), objects() {}
-        uint32_t object_count;
+        std::uint32_t object_count;
         std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
-        unsigned char leaf_page_padding[LEAF_PAGE_SIZE - sizeof(object_count) - sizeof(objects)];
+        unsigned char leaf_page_padding[LEAF_PAGE_SIZE - sizeof(std::uint32_t) - sizeof(std::array<EdgeDataT, LEAF_NODE_SIZE>)];
     };
     static_assert(sizeof(LeafNode) == LEAF_PAGE_SIZE, "LeafNode size does not fit the page size");
 
