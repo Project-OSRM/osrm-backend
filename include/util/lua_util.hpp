@@ -43,8 +43,7 @@ inline bool luaFunctionExists(lua_State *lua_state, const char *name)
 inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_name)
 {
     boost::filesystem::path profile_path = boost::filesystem::canonical(file_name);
-    std::string folder = profile_path.parent_path().string();
-    // TODO: This code is most probably not Windows safe since it uses UNIX'ish path delimiters
+    std::string folder = profile_path.parent_path().generic_string();
     const std::string lua_code = "package.path = \"" + folder + "/?.lua;\" .. package.path";
     luaL_dostring(lua_state, lua_code.c_str());
 }
