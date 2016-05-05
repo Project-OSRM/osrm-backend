@@ -123,7 +123,7 @@ before_install:
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       # implicit deps, but seem to be installed by default with recent images: libxml2 GDAL boost
-      brew install cmake libzip libstxxl lua51 luabind tbb md5sha1sum
+      brew install cmake libzip libstxxl lua51 luabind tbb md5sha1sum ccache
     fi
 
 install:
