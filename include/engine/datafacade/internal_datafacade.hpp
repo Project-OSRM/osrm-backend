@@ -70,6 +70,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::string m_timestamp;
 
     std::shared_ptr<util::ShM<util::Coordinate, false>::vector> m_coordinate_list;
+    std::shared_ptr<util::ShM<OSMNodeID, false>::vector> m_osmnodeid_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;
@@ -140,10 +141,12 @@ class InternalDataFacade final : public BaseDataFacade
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list = std::make_shared<std::vector<util::Coordinate>>(number_of_coordinates);
+        m_osmnodeid_list = std::make_shared<std::vector<OSMNodeID>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
             m_coordinate_list->at(i) = util::Coordinate(current_node.lon, current_node.lat);
+            m_osmnodeid_list->at(i) = current_node.node_id;
             BOOST_ASSERT(m_coordinate_list->at(i).IsValid());
         }
 
@@ -362,6 +365,11 @@ class InternalDataFacade final : public BaseDataFacade
     util::Coordinate GetCoordinateOfNode(const unsigned id) const override final
     {
         return m_coordinate_list->at(id);
+    }
+
+    OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
+    {
+        return m_osmnodeid_list->at(id);
     }
 
     extractor::guidance::TurnInstruction

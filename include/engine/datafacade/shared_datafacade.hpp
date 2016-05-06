@@ -74,6 +74,7 @@ class SharedDataFacade final : public BaseDataFacade
     extractor::ProfileProperties* m_profile_properties;
 
     std::shared_ptr<util::ShM<util::Coordinate, true>::vector> m_coordinate_list;
+    std::shared_ptr<util::ShM<OSMNodeID, true>::vector> m_osmnodeid_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
@@ -417,6 +418,12 @@ class SharedDataFacade final : public BaseDataFacade
     {
         return m_coordinate_list->at(id);
     }
+
+    OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
+    {
+        return m_osmnodeid_list->at(id);
+    }
+
 
     virtual void GetUncompressedGeometry(const EdgeID id,
                                          std::vector<NodeID> &result_nodes) const override final

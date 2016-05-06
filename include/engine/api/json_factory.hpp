@@ -73,7 +73,8 @@ util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver);
 
 util::json::Object makeRouteStep(guidance::RouteStep step,
-                                 boost::optional<util::json::Value> geometry);
+                                 util::json::Value geometry,
+                                 util::json::Value nodes);
 
 util::json::Object makeRoute(const guidance::Route &route,
                              util::json::Array legs,
@@ -85,7 +86,8 @@ makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint
 util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps);
 
 util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
-                                std::vector<util::json::Value> step_geometries);
+                                std::vector<util::json::Value> step_geometries,
+                                std::vector<util::json::Value> step_nodelists);
 }
 }
 } // namespace engine
