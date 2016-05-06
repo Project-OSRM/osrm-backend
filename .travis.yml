@@ -58,7 +58,7 @@ matrix:
     - os: osx
       osx_image: xcode7.3
       compiler: clang
-      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=20000
+      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
 
     # Release Builds
     - os: linux
