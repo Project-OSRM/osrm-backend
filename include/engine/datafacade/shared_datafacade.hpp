@@ -55,7 +55,6 @@ class SharedDataFacade final : public BaseDataFacade
     using SharedRTree =
         util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
-    using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
     using RTreeNode = SharedRTree::TreeNode;
 
     storage::SharedDataLayout *data_layout;
@@ -71,7 +70,7 @@ class SharedDataFacade final : public BaseDataFacade
     std::unique_ptr<storage::SharedMemory> m_layout_memory;
     std::unique_ptr<storage::SharedMemory> m_large_memory;
     std::string m_timestamp;
-    extractor::ProfileProperties* m_profile_properties;
+    extractor::ProfileProperties *m_profile_properties;
 
     std::shared_ptr<util::ShM<util::Coordinate, true>::vector> m_coordinate_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
@@ -89,8 +88,8 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
     util::ShM<std::size_t, true>::vector m_datasource_name_lengths;
 
-    boost::thread_specific_ptr<std::pair<unsigned, std::shared_ptr<SharedRTree>>> m_static_rtree;
-    boost::thread_specific_ptr<SharedGeospatialQuery> m_geospatial_query;
+    std::unique_ptr<SharedRTree> m_static_rtree;
+    std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     boost::filesystem::path file_index_path;
 
     std::shared_ptr<util::RangeTable<16, true>> m_name_table;
@@ -104,8 +103,8 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadProfileProperties()
     {
-        m_profile_properties =
-            data_layout->GetBlockPtr<extractor::ProfileProperties>(shared_memory, storage::SharedDataLayout::PROPERTIES);
+        m_profile_properties = data_layout->GetBlockPtr<extractor::ProfileProperties>(
+            shared_memory, storage::SharedDataLayout::PROPERTIES);
     }
 
     void LoadTimestamp()
@@ -124,13 +123,11 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto tree_ptr = data_layout->GetBlockPtr<RTreeNode>(
             shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
-        m_static_rtree.reset(new TimeStampedRTreePair(
-            CURRENT_TIMESTAMP,
-            util::make_unique<SharedRTree>(
-                tree_ptr, data_layout->num_entries[storage::SharedDataLayout::R_SEARCH_TREE],
-                file_index_path, m_coordinate_list)));
+        m_static_rtree.reset(new SharedRTree(
+            tree_ptr, data_layout->num_entries[storage::SharedDataLayout::R_SEARCH_TREE],
+            file_index_path, m_coordinate_list));
         m_geospatial_query.reset(
-            new SharedGeospatialQuery(*m_static_rtree->second, m_coordinate_list, *this));
+            new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
     void LoadGraph()
@@ -165,10 +162,9 @@ class SharedDataFacade final : public BaseDataFacade
         auto turn_instruction_list_ptr =
             data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
                 shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
-        util::ShM<extractor::guidance::TurnInstruction, true>::vector
-            turn_instruction_list(
-                turn_instruction_list_ptr,
-                data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
+        util::ShM<extractor::guidance::TurnInstruction, true>::vector turn_instruction_list(
+            turn_instruction_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list = std::move(turn_instruction_list);
 
         auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
@@ -234,9 +230,9 @@ class SharedDataFacade final : public BaseDataFacade
         auto geometries_list_ptr =
             data_layout->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge>(
                 shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
-        util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector
-            geometry_list(geometries_list_ptr,
-                          data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
+        util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector geometry_list(
+            geometries_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
         m_geometry_list = std::move(geometry_list);
 
         auto datasources_list_ptr = data_layout->GetBlockPtr<uint8_t>(
@@ -354,6 +350,7 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadNames();
                 LoadCoreInformation();
                 LoadProfileProperties();
+                LoadRTree();
 
                 util::SimpleLogger().Write() << "number of geometries: "
                                              << m_coordinate_list->size();
@@ -468,11 +465,7 @@ class SharedDataFacade final : public BaseDataFacade
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
                                          const util::Coordinate north_east) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
         const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
                                         north_east.lat};
         return m_geospatial_query->Search(bbox);
@@ -482,11 +475,7 @@ class SharedDataFacade final : public BaseDataFacade
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance);
     }
@@ -497,11 +486,7 @@ class SharedDataFacade final : public BaseDataFacade
                                const int bearing,
                                const int bearing_range) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance,
                                                               bearing, bearing_range);
@@ -511,11 +496,7 @@ class SharedDataFacade final : public BaseDataFacade
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results);
     }
@@ -525,11 +506,7 @@ class SharedDataFacade final : public BaseDataFacade
                         const unsigned max_results,
                         const double max_distance) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance);
     }
@@ -540,11 +517,7 @@ class SharedDataFacade final : public BaseDataFacade
                         const int bearing,
                         const int bearing_range) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
                                                        bearing_range);
@@ -557,11 +530,7 @@ class SharedDataFacade final : public BaseDataFacade
                         const int bearing,
                         const int bearing_range) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance,
                                                        bearing, bearing_range);
@@ -570,11 +539,7 @@ class SharedDataFacade final : public BaseDataFacade
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::Coordinate input_coordinate) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate);
@@ -584,11 +549,7 @@ class SharedDataFacade final : public BaseDataFacade
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, max_distance);
@@ -600,11 +561,7 @@ class SharedDataFacade final : public BaseDataFacade
                                                       const int bearing,
                                                       const int bearing_range) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, max_distance, bearing, bearing_range);
@@ -615,11 +572,7 @@ class SharedDataFacade final : public BaseDataFacade
                                                       const int bearing,
                                                       const int bearing_range) override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, bearing, bearing_range);
@@ -710,7 +663,10 @@ class SharedDataFacade final : public BaseDataFacade
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 
-    bool GetContinueStraightDefault() const override final { return m_profile_properties->continue_straight_at_waypoint; }
+    bool GetContinueStraightDefault() const override final
+    {
+        return m_profile_properties->continue_straight_at_waypoint;
+    }
 };
 }
 }

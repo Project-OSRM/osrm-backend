@@ -83,8 +83,8 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<std::string, false>::vector m_datasource_names;
     extractor::ProfileProperties m_profile_properties;
 
-    boost::thread_specific_ptr<InternalRTree> m_static_rtree;
-    boost::thread_specific_ptr<InternalGeospatialQuery> m_geospatial_query;
+    std::unique_ptr<InternalRTree> m_static_rtree;
+    std::unique_ptr<InternalGeospatialQuery> m_geospatial_query;
     boost::filesystem::path ram_index_path;
     boost::filesystem::path file_index_path;
     util::RangeTable<16, false> m_name_table;
@@ -313,6 +313,9 @@ class InternalDataFacade final : public BaseDataFacade
 
         util::SimpleLogger().Write() << "loading street names";
         LoadStreetNames(config.names_data_path);
+
+        util::SimpleLogger().Write() << "loading rtree";
+        LoadRTree();
     }
 
     // search graph access
@@ -378,11 +381,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
                                          const util::Coordinate north_east) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
         const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
                                         north_east.lat};
         return m_geospatial_query->Search(bbox);
@@ -392,11 +391,7 @@ class InternalDataFacade final : public BaseDataFacade
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance);
     }
@@ -407,11 +402,7 @@ class InternalDataFacade final : public BaseDataFacade
                                const int bearing,
                                const int bearing_range) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance,
                                                               bearing, bearing_range);
@@ -421,11 +412,7 @@ class InternalDataFacade final : public BaseDataFacade
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results);
     }
@@ -435,11 +422,7 @@ class InternalDataFacade final : public BaseDataFacade
                         const unsigned max_results,
                         const double max_distance) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance);
     }
@@ -450,11 +433,7 @@ class InternalDataFacade final : public BaseDataFacade
                         const int bearing,
                         const int bearing_range) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
                                                        bearing_range);
@@ -467,11 +446,7 @@ class InternalDataFacade final : public BaseDataFacade
                         const int bearing,
                         const int bearing_range) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance,
                                                        bearing, bearing_range);
@@ -481,11 +456,7 @@ class InternalDataFacade final : public BaseDataFacade
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, max_distance);
@@ -494,11 +465,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::Coordinate input_coordinate) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate);
@@ -510,11 +477,7 @@ class InternalDataFacade final : public BaseDataFacade
                                                       const int bearing,
                                                       const int bearing_range) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, max_distance, bearing, bearing_range);
@@ -525,11 +488,7 @@ class InternalDataFacade final : public BaseDataFacade
                                                       const int bearing,
                                                       const int bearing_range) override final
     {
-        if (!m_static_rtree.get())
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, bearing, bearing_range);
