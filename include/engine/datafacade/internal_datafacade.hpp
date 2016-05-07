@@ -379,7 +379,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
-                                         const util::Coordinate north_east) override final
+                                         const util::Coordinate north_east) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
         const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
@@ -389,7 +389,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance) override final
+                               const float max_distance) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -400,7 +400,7 @@ class InternalDataFacade final : public BaseDataFacade
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
                                const int bearing,
-                               const int bearing_range) override final
+                               const int bearing_range) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -410,7 +410,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results) override final
+                        const unsigned max_results) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -420,7 +420,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
-                        const double max_distance) override final
+                        const double max_distance) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -431,7 +431,7 @@ class InternalDataFacade final : public BaseDataFacade
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing,
-                        const int bearing_range) override final
+                        const int bearing_range) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -444,7 +444,7 @@ class InternalDataFacade final : public BaseDataFacade
                         const unsigned max_results,
                         const double max_distance,
                         const int bearing,
-                        const int bearing_range) override final
+                        const int bearing_range) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -454,7 +454,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance) override final
+                                                      const double max_distance) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -463,7 +463,7 @@ class InternalDataFacade final : public BaseDataFacade
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate) override final
+        const util::Coordinate input_coordinate) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -475,7 +475,7 @@ class InternalDataFacade final : public BaseDataFacade
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance,
                                                       const int bearing,
-                                                      const int bearing_range) override final
+                                                      const int bearing_range) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -486,7 +486,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const int bearing,
-                                                      const int bearing_range) override final
+                                                      const int bearing_range) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 

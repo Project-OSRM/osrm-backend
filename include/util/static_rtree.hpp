@@ -326,7 +326,7 @@ class StaticRTree
 
     /* Returns all features inside the bounding box.
        Rectangle needs to be projected!*/
-    std::vector<EdgeDataT> SearchInBox(const Rectangle &search_rectangle)
+    std::vector<EdgeDataT> SearchInBox(const Rectangle &search_rectangle) const
     {
         const Rectangle projected_rectangle{
             search_rectangle.min_lon, search_rectangle.max_lon,
@@ -392,7 +392,7 @@ class StaticRTree
     }
 
     // Override filter and terminator for the desired behaviour.
-    std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate, const std::size_t max_results)
+    std::vector<EdgeDataT> Nearest(const Coordinate input_coordinate, const std::size_t max_results) const
     {
         return Nearest(input_coordinate,
                        [](const CandidateSegment &)
@@ -408,7 +408,7 @@ class StaticRTree
     // Override filter and terminator for the desired behaviour.
     template <typename FilterT, typename TerminationT>
     std::vector<EdgeDataT>
-    Nearest(const Coordinate input_coordinate, const FilterT filter, const TerminationT terminate)
+    Nearest(const Coordinate input_coordinate, const FilterT filter, const TerminationT terminate) const
     {
         std::vector<EdgeDataT> results;
         auto projected_coordinate = web_mercator::fromWGS84(input_coordinate);
@@ -473,7 +473,7 @@ class StaticRTree
     void ExploreLeafNode(const std::uint32_t leaf_id,
                          const Coordinate projected_input_coordinate_fixed,
                          const FloatCoordinate &projected_input_coordinate,
-                         QueueT &traversal_queue)
+                         QueueT &traversal_queue) const
     {
         const LeafNode& current_leaf_node = m_leaves[leaf_id];
 
@@ -500,7 +500,7 @@ class StaticRTree
     template <class QueueT>
     void ExploreTreeNode(const TreeNode &parent,
                          const Coordinate fixed_projected_input_coordinate,
-                         QueueT &traversal_queue)
+                         QueueT &traversal_queue) const
     {
         for (std::uint32_t i = 0; i < parent.child_count; ++i)
         {
