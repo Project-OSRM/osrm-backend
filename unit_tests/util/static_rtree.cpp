@@ -52,7 +52,7 @@ static const int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 template <typename DataT> class LinearSearchNN
 {
   public:
-    LinearSearchNN(const std::shared_ptr<std::vector<Coordinate>> &coords,
+    LinearSearchNN(const std::vector<Coordinate> &coords,
                    const std::vector<DataT> &edges)
         : coords(coords), edges(edges)
     {
@@ -67,9 +67,9 @@ template <typename DataT> class LinearSearchNN
                                                                  const DataT &rhs) {
             using web_mercator::fromWGS84;
             const auto lhs_result = coordinate_calculation::projectPointOnSegment(
-                fromWGS84(coords->at(lhs.u)), fromWGS84(coords->at(lhs.v)), projected_input);
+                fromWGS84(coords[lhs.u]), fromWGS84(coords[lhs.v]), projected_input);
             const auto rhs_result = coordinate_calculation::projectPointOnSegment(
-                fromWGS84(coords->at(rhs.u)), fromWGS84(coords->at(rhs.v)), projected_input);
+                fromWGS84(coords[rhs.u]), fromWGS84(coords[rhs.v]), projected_input);
             const auto lhs_squared_dist = coordinate_calculation::squaredEuclideanDistance(
                 lhs_result.second, projected_input);
             const auto rhs_squared_dist = coordinate_calculation::squaredEuclideanDistance(
@@ -85,7 +85,7 @@ template <typename DataT> class LinearSearchNN
     }
 
   private:
-    const std::shared_ptr<std::vector<Coordinate>> &coords;
+    const std::vector<Coordinate> &coords;
     const std::vector<TestData> &edges;
 };
 
@@ -105,7 +105,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         }
     };
 
-    RandomGraphFixture() : coords(std::make_shared<std::vector<Coordinate>>())
+    RandomGraphFixture()
     {
         std::mt19937 g(RANDOM_SEED);
 
@@ -116,10 +116,10 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         {
             int lon = lon_udist(g);
             int lat = lat_udist(g);
-            coords->emplace_back(Coordinate(FixedLongitude(lon), FixedLatitude(lat)));
+            coords.emplace_back(Coordinate(FixedLongitude(lon), FixedLatitude(lat)));
         }
 
-        std::uniform_int_distribution<> edge_udist(0, coords->size() - 1);
+        std::uniform_int_distribution<> edge_udist(0, coords.size() - 1);
 
         std::unordered_set<std::pair<unsigned, unsigned>, TupleHash> used_edges;
 
@@ -138,7 +138,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         }
     }
 
-    std::shared_ptr<std::vector<Coordinate>> coords;
+    std::vector<Coordinate> coords;
     std::vector<TestData> edges;
 };
 
@@ -146,12 +146,11 @@ struct GraphFixture
 {
     GraphFixture(const std::vector<std::pair<FloatLongitude, FloatLatitude>> &input_coords,
                  const std::vector<std::pair<unsigned, unsigned>> &input_edges)
-        : coords(std::make_shared<std::vector<Coordinate>>())
     {
 
         for (unsigned i = 0; i < input_coords.size(); i++)
         {
-            coords->emplace_back(input_coords[i].first, input_coords[i].second);
+            coords.emplace_back(input_coords[i].first, input_coords[i].second);
         }
 
         for (const auto &pair : input_edges)
@@ -169,7 +168,7 @@ struct GraphFixture
         }
     }
 
-    std::shared_ptr<std::vector<Coordinate>> coords;
+    std::vector<Coordinate> coords;
     std::vector<TestData> edges;
 };
 
@@ -189,13 +188,13 @@ typedef RandomGraphFixture<10, 30> TestRandomGraphFixture_10_30;
 
 template <typename RTreeT>
 void simple_verify_rtree(RTreeT &rtree,
-                         const std::shared_ptr<std::vector<Coordinate>> &coords,
+                         const std::vector<Coordinate> &coords,
                          const std::vector<TestData> &edges)
 {
     for (const auto &e : edges)
     {
-        const Coordinate &pu = coords->at(e.u);
-        const Coordinate &pv = coords->at(e.v);
+        const Coordinate &pu = coords[e.u];
+        const Coordinate &pv = coords[e.v];
         auto result_u = rtree.Nearest(pu, 1);
         auto result_v = rtree.Nearest(pv, 1);
         BOOST_CHECK(result_u.size() == 1 && result_v.size() == 1);
@@ -248,7 +247,7 @@ void build_rtree(const std::string &prefix,
     nodes_path = prefix + ".ramIndex";
     leaves_path = prefix + ".fileIndex";
 
-    RTreeT r(fixture->edges, nodes_path, leaves_path, *fixture->coords);
+    RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->coords);
 }
 
 template <typename RTreeT = TestStaticRTree, typename FixtureT>
@@ -261,7 +260,7 @@ void construction_test(const std::string &prefix, FixtureT *fixture)
     LinearSearchNN<TestData> lsnn(fixture->coords, fixture->edges);
 
     simple_verify_rtree(rtree, fixture->coords, fixture->edges);
-    sampling_verify_rtree(rtree, lsnn, *fixture->coords, 100);
+    sampling_verify_rtree(rtree, lsnn, fixture->coords, 100);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_tiny, TestRandomGraphFixture_10_30)

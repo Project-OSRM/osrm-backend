@@ -22,7 +22,7 @@ namespace engine
 
 // Implements complex queries on top of an RTree and builds PhantomNodes from it.
 //
-// Only holds a weak reference on the RTree!
+// Only holds a weak reference on the RTree and coordinates!
 template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 {
     using EdgeData = typename RTreeT::EdgeData;
@@ -31,9 +31,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
   public:
     GeospatialQuery(RTreeT &rtree_,
-                    std::shared_ptr<CoordinateList> coordinates_,
+                    const CoordinateList &coordinates_,
                     DataFacadeT &datafacade_)
-        : rtree(rtree_), coordinates(std::move(coordinates_)), datafacade(datafacade_)
+        : rtree(rtree_), coordinates(coordinates_), datafacade(datafacade_)
     {
     }
 
@@ -360,7 +360,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         double ratio;
         const auto current_perpendicular_distance =
             util::coordinate_calculation::perpendicularDistance(
-                coordinates->at(data.u), coordinates->at(data.v), input_coordinate,
+                coordinates[data.u], coordinates[data.v], input_coordinate,
                 point_on_segment, ratio);
 
         // Find the node-based-edge that this belongs to, and directly
@@ -442,7 +442,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                      !segment.data.reverse_segment_id.enabled);
 
         const double forward_edge_bearing = util::coordinate_calculation::bearing(
-            coordinates->at(segment.data.u), coordinates->at(segment.data.v));
+            coordinates[segment.data.u], coordinates[segment.data.v]);
 
         const double backward_edge_bearing = (forward_edge_bearing + 180) > 360
                                                  ? (forward_edge_bearing - 180)
@@ -460,7 +460,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     }
 
     RTreeT &rtree;
-    const std::shared_ptr<CoordinateList> coordinates;
+    const CoordinateList &coordinates;
     DataFacadeT &datafacade;
 };
 }

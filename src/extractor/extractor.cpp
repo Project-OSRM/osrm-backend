@@ -563,9 +563,9 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
     node_based_edge_list.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode> rtree(node_based_edge_list, config.rtree_nodes_output_path,
-                                           config.rtree_leafs_output_path,
-                                           internal_to_external_node_map);
+    util::StaticRTree<EdgeBasedNode, std::vector<QueryNode>> rtree(
+        node_based_edge_list, config.rtree_nodes_output_path, config.rtree_leafs_output_path,
+        internal_to_external_node_map);
 
     TIMER_STOP(construction);
     util::SimpleLogger().Write() << "finished r-tree construction in " << TIMER_SEC(construction)

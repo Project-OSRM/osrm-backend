@@ -72,7 +72,7 @@ class SharedDataFacade final : public BaseDataFacade
     std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
 
-    std::shared_ptr<util::ShM<util::Coordinate, true>::vector> m_coordinate_list;
+    util::ShM<util::Coordinate, true>::vector m_coordinate_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
@@ -119,7 +119,7 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadRTree()
     {
-        BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
+        BOOST_ASSERT_MSG(!m_coordinate_list.empty(), "coordinates must be loaded before r-tree");
 
         auto tree_ptr = data_layout->GetBlockPtr<RTreeNode>(
             shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
@@ -149,8 +149,7 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
             shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
-        m_coordinate_list = util::make_unique<util::ShM<util::Coordinate, true>::vector>(
-            coordinate_list_ptr,
+        m_coordinate_list.reset(coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
@@ -353,13 +352,10 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadRTree();
 
                 util::SimpleLogger().Write() << "number of geometries: "
-                                             << m_coordinate_list->size();
-                for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
+                                             << m_coordinate_list.size();
+                for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
                 {
-                    if (!GetCoordinateOfNode(i).IsValid())
-                    {
-                        util::SimpleLogger().Write() << "coordinate " << i << " not valid";
-                    }
+                    BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
                 }
             }
             util::SimpleLogger().Write(logDEBUG) << "Releasing exclusive lock";
@@ -412,7 +408,7 @@ class SharedDataFacade final : public BaseDataFacade
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const NodeID id) const override final
     {
-        return m_coordinate_list->at(id);
+        return m_coordinate_list[id];
     }
 
     virtual void GetUncompressedGeometry(const EdgeID id,

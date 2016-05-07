@@ -69,7 +69,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::unique_ptr<QueryGraph> m_query_graph;
     std::string m_timestamp;
 
-    std::shared_ptr<util::ShM<util::Coordinate, false>::vector> m_coordinate_list;
+    util::ShM<util::Coordinate, false>::vector m_coordinate_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;
@@ -139,12 +139,12 @@ class InternalDataFacade final : public BaseDataFacade
         extractor::QueryNode current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
-        m_coordinate_list = std::make_shared<std::vector<util::Coordinate>>(number_of_coordinates);
+        m_coordinate_list.resize(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-            m_coordinate_list->at(i) = util::Coordinate(current_node.lon, current_node.lat);
-            BOOST_ASSERT(m_coordinate_list->at(i).IsValid());
+            m_coordinate_list[i] = util::Coordinate(current_node.lon, current_node.lat);
+            BOOST_ASSERT(m_coordinate_list[i].IsValid());
         }
 
         boost::filesystem::ifstream edges_input_stream(edges_file, std::ios::binary);
@@ -253,7 +253,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadRTree()
     {
-        BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
+        BOOST_ASSERT_MSG(!m_coordinate_list.empty(), "coordinates must be loaded before r-tree");
 
         m_static_rtree.reset(new InternalRTree(ram_index_path, file_index_path, m_coordinate_list));
         m_geospatial_query.reset(
@@ -364,7 +364,7 @@ class InternalDataFacade final : public BaseDataFacade
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const unsigned id) const override final
     {
-        return m_coordinate_list->at(id);
+        return m_coordinate_list[id];
     }
 
     extractor::guidance::TurnInstruction

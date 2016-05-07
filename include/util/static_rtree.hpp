@@ -116,7 +116,7 @@ class StaticRTree
     };
 
     typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
-    std::shared_ptr<CoordinateListT> m_coordinate_list;
+    const CoordinateListT& m_coordinate_list;
 
     boost::iostreams::mapped_file_source m_leaves_region;
     // read-only view of leaves
@@ -132,6 +132,7 @@ class StaticRTree
                          const std::string &tree_node_filename,
                          const std::string &leaf_node_filename,
                          const std::vector<CoordinateT> &coordinate_list)
+    : m_coordinate_list(coordinate_list)
     {
         const uint64_t element_count = input_data_vector.size();
         std::vector<WrappedInputElement> input_wrapper_vector(element_count);
@@ -140,7 +141,7 @@ class StaticRTree
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, element_count),
             [&input_data_vector, &input_wrapper_vector,
-             &coordinate_list](const tbb::blocked_range<uint64_t> &range)
+             this](const tbb::blocked_range<uint64_t> &range)
             {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end; ++element_counter)
@@ -151,11 +152,11 @@ class StaticRTree
                     EdgeDataT const &current_element = input_data_vector[element_counter];
 
                     // Get Hilbert-Value for centroid in mercartor projection
-                    BOOST_ASSERT(current_element.u < coordinate_list.size());
-                    BOOST_ASSERT(current_element.v < coordinate_list.size());
+                    BOOST_ASSERT(current_element.u < m_coordinate_list.size());
+                    BOOST_ASSERT(current_element.v < m_coordinate_list.size());
 
                     Coordinate current_centroid = coordinate_calculation::centroid(
-                        coordinate_list[current_element.u], coordinate_list[current_element.v]);
+                        m_coordinate_list[current_element.u], m_coordinate_list[current_element.v]);
                     current_centroid.lat =
                         FixedLatitude(COORDINATE_PRECISION *
                                       web_mercator::latToY(toFloating(current_centroid.lat)));
@@ -194,7 +195,7 @@ class StaticRTree
 
             // generate tree node that resemble the objects in leaf and store it for next level
             InitializeMBRectangle(current_node.minimum_bounding_rectangle, current_leaf.objects,
-                                  current_leaf.object_count, coordinate_list);
+                                  current_leaf.object_count, m_coordinate_list);
             current_node.child_is_on_disk = true;
             current_node.children[0] = tree_nodes_in_level.size();
             tree_nodes_in_level.emplace_back(current_node);
@@ -275,11 +276,10 @@ class StaticRTree
 
     explicit StaticRTree(const boost::filesystem::path &node_file,
                          const boost::filesystem::path &leaf_file,
-                         const std::shared_ptr<CoordinateListT> coordinate_list)
+                         const CoordinateListT& coordinate_list)
+      : m_coordinate_list(coordinate_list)
     {
         // open tree node file and load into RAM.
-        m_coordinate_list = coordinate_list;
-
         if (!boost::filesystem::exists(node_file))
         {
             throw exception("ram index file does not exist");
@@ -305,9 +305,9 @@ class StaticRTree
     explicit StaticRTree(TreeNode *tree_node_ptr,
                          const uint64_t number_of_nodes,
                          const boost::filesystem::path &leaf_file,
-                         std::shared_ptr<CoordinateListT> coordinate_list)
+                         const CoordinateListT& coordinate_list)
         : m_search_tree(tree_node_ptr, number_of_nodes)
-        , m_coordinate_list(std::move(coordinate_list))
+        , m_coordinate_list(coordinate_list)
     {
         MapLeafNodesFile(leaf_file);
     }
@@ -355,14 +355,14 @@ class StaticRTree
 
                     // we don't need to project the coordinates here,
                     // because we use the unprojected rectangle to test against
-                    const Rectangle bbox{std::min((*m_coordinate_list)[current_edge.u].lon,
-                                                  (*m_coordinate_list)[current_edge.v].lon),
-                                         std::max((*m_coordinate_list)[current_edge.u].lon,
-                                                  (*m_coordinate_list)[current_edge.v].lon),
-                                         std::min((*m_coordinate_list)[current_edge.u].lat,
-                                                  (*m_coordinate_list)[current_edge.v].lat),
-                                         std::max((*m_coordinate_list)[current_edge.u].lat,
-                                                  (*m_coordinate_list)[current_edge.v].lat)};
+                    const Rectangle bbox{std::min(m_coordinate_list[current_edge.u].lon,
+                                                  m_coordinate_list[current_edge.v].lon),
+                                         std::max(m_coordinate_list[current_edge.u].lon,
+                                                  m_coordinate_list[current_edge.v].lon),
+                                         std::min(m_coordinate_list[current_edge.u].lat,
+                                                  m_coordinate_list[current_edge.v].lat),
+                                         std::max(m_coordinate_list[current_edge.u].lat,
+                                                  m_coordinate_list[current_edge.v].lat)};
 
                     // use the _unprojected_ input rectangle here
                     if (bbox.Intersects(search_rectangle))
@@ -481,8 +481,8 @@ class StaticRTree
         for (const auto i : irange(0u, current_leaf_node.object_count))
         {
             const auto &current_edge = current_leaf_node.objects[i];
-            const auto projected_u = web_mercator::fromWGS84((*m_coordinate_list)[current_edge.u]);
-            const auto projected_v = web_mercator::fromWGS84((*m_coordinate_list)[current_edge.v]);
+            const auto projected_u = web_mercator::fromWGS84(m_coordinate_list[current_edge.u]);
+            const auto projected_v = web_mercator::fromWGS84(m_coordinate_list[current_edge.v]);
 
             FloatCoordinate projected_nearest;
             std::tie(std::ignore, projected_nearest) =
