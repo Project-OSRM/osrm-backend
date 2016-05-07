@@ -16,6 +16,7 @@
 
    - Infrastructure
     - BREAKING: reordered internal instruction types. This breaks the **data format**
+    - BREAKING: Changed the on-disk encoding of the StaticRTree for better performance. This breaks the **data format**
 
    - Fixes:
     - Issue #2310: post-processing for local paths, fixes #2310
