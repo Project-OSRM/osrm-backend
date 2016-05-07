@@ -336,13 +336,12 @@ class StaticRTree
                 web_mercator::latToY(toFloating(FixedLatitude(search_rectangle.max_lat)))})};
         std::vector<EdgeDataT> results;
 
-        std::queue<TreeNode> traversal_queue;
-
-        traversal_queue.push(m_search_tree[0]);
+        std::queue<std::uint32_t> traversal_queue;
+        traversal_queue.push(0);
 
         while (!traversal_queue.empty())
         {
-            auto const current_tree_node = traversal_queue.front();
+            auto const &current_tree_node = m_search_tree[traversal_queue.front()];
             traversal_queue.pop();
 
             if (current_tree_node.child_is_on_disk)
@@ -383,7 +382,7 @@ class StaticRTree
 
                     if (child_rectangle.Intersects(projected_rectangle))
                     {
-                        traversal_queue.push(m_search_tree[child_id]);
+                        traversal_queue.push(child_id);
                     }
                 }
             }
