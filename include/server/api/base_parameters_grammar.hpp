@@ -75,11 +75,15 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     BaseParametersGrammar(qi::rule<Iterator, Signature> &root_rule)
         : BaseParametersGrammar::base_type(root_rule)
     {
-        const auto add_hint = [](engine::api::BaseParameters &base_parameters, const std::string &hint_string)
+        const auto add_hint = [](engine::api::BaseParameters &base_parameters, const boost::optional<std::string> &hint_string)
         {
-            if (hint_string.size() > 0)
+            if (hint_string)
             {
-                base_parameters.hints.emplace_back(engine::Hint::FromBase64(hint_string));
+                base_parameters.hints.emplace_back(engine::Hint::FromBase64(hint_string.get()));
+            }
+            else
+            {
+                base_parameters.hints.emplace_back(boost::none);
             }
         };
 
@@ -134,7 +138,7 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
 
         hints_rule
             = qi::lit("hints=")
-            > -qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]][ph::bind(add_hint, qi::_r1, qi::_1)] % ';'
+            > (-qi::as_string[qi::repeat(engine::ENCODED_HINT_SIZE)[base64_char]])[ph::bind(add_hint, qi::_r1, qi::_1)] % ';'
             ;
 
         bearings_rule
