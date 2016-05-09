@@ -85,6 +85,8 @@ static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::m
 
 using DatasourceID = std::uint8_t;
 
+using DatasourceID = std::uint8_t;
+
 struct SegmentID
 {
     SegmentID(const NodeID id_, const bool enabled_) : id{id_}, enabled{enabled_}

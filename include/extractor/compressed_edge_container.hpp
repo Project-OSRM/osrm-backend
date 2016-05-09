@@ -33,7 +33,7 @@ class CompressedEdgeContainer
                       const EdgeWeight weight2);
 
     void
-    AddUncompressedEdge(const EdgeID edgei_id, const NodeID target_node, const EdgeWeight weight);
+    AddUncompressedEdge(const EdgeID edge_id, const NodeID target_node, const EdgeWeight weight);
 
     bool HasEntryForID(const EdgeID edge_id) const;
     void PrintStatistics() const;
