@@ -421,7 +421,8 @@ step.
   direction of travel immediately before the maneuver.
 - `bearing_after`: The clockwise angle from true north to the
   direction of travel immediately after the maneuver.
-- `type` A string indicating the type of maneuver
+- `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
+   Types  unknown to the client should be handled like the `turn` type, the existance of correct `modifier` values is guranteed.
   
   | `type`            | Description                                                  |
   |-------------------|--------------------------------------------------------------|
@@ -476,7 +477,7 @@ step.
   | `turn` or `end of road`| Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
   
 
-New maneuver `type` and `modifier` and new properties (potentially depending on `type`) may be introduced in the future without an API version change.
+New properties (potentially depending on `type`) may be introduced in the future without an API version change.
 
 ### Waypoint
 
