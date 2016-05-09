@@ -1,3 +1,10 @@
+# 5.2
+   Changes from 5.1
+
+   - API:
+     - new parameter `annotate` for `route` and `match` requests.  Returns additional data about each
+       coordinate along the selected/matched route line.
+
 # 5.1.0
    Changes with regard to 5.0.0
 

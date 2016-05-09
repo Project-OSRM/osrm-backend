@@ -33,7 +33,9 @@ module.exports = function () {
                     var subMatchings = [],
                         turns = '',
                         route = '',
-                        duration = '';
+                        duration = '',
+                        annotation = '';
+
 
                     if (res.statusCode === 200) {
                         if (headers.has('matchings')) {
@@ -54,6 +56,11 @@ module.exports = function () {
                             if (json.matchings.length != 1) throw new Error('*** Checking duration only supported for matchings with one subtrace');
                             duration = json.matchings[0].duration;
                         }
+
+                        if (headers.has('annotation')) {
+                            if (json.matchings.length != 1) throw new Error('*** Checking annotation only supported for matchings with one subtrace');
+                            annotation = this.annotationList(json.matchings[0]);
+                        }
                     }
 
                     if (headers.has('turns')) {
@@ -66,6 +73,10 @@ module.exports = function () {
 
                     if (headers.has('duration')) {
                         got.duration = duration.toString();
+                    }
+
+                    if (headers.has('annotation')) {
+                        got.annotation = annotation.toString();
                     }
 
                     var ok = true;
@@ -134,6 +145,7 @@ module.exports = function () {
                     this.requestUrl(row.request, afterRequest);
                 } else {
                     var params = this.queryParams;
+                    params['annotate'] = 'true';
                     got = {};
                     for (var k in row) {
                         var match = k.match(/param:(.*)/);

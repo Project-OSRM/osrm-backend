@@ -145,6 +145,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------------------|-------------------------------------------------------------------------------|
 |alternatives|`true`, `false` (default)                 |Search for alternative routes and return as well.\*                            |
 |steps       |`true`, `false` (default)                 |Return route steps for each route leg                                          |
+|annotate    |`true`, `false` (default)                 |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `geojson`           |Returned route geometry format (influences overview and per step)             |
 |overview    |`simplified` (default), `full`, `false`   |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 |continue_straight |`default` (default), `true`, `false`|Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile. |
@@ -247,6 +248,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------------------------|------------------------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Return route steps for each route                                                         |
 |geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)                        |
+|annotate    |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamp of the input location.                                                          |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
@@ -292,6 +294,7 @@ In addition to the [general options](#general-options) the following options are
 |Option      |Values                                          |Description                                                                |
 |------------|------------------------------------------------|---------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Return route instructions for each trip                                    |
+|annotate    |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)         |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 
@@ -376,6 +379,13 @@ Represents a route between two waypoints.
    |--------------|-----------------------------------------------------------------------|
    | true         | array of `RouteStep` objects describing the turn-by-turn instructions |
    | false        | empty array                                                           |
+
+- `annotation`: Additional details about each coordinate along the route geometry:
+
+   | annotate     |                                                                       |
+   |--------------|-----------------------------------------------------------------------|
+   | true         | returns distance and durations of each coordinate along the route     |
+   | false        | will not exist                                                        |
 
 #### Example
 

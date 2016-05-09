@@ -72,17 +72,20 @@ struct RouteParameters : public BaseParameters
     template <typename... Args>
     RouteParameters(const bool steps_,
                     const bool alternatives_,
+                    const bool annotation_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_}
+          annotation{annotation_}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}
     {
     }
 
     bool steps = false;
     bool alternatives = false;
+    bool annotation = false;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
     boost::optional<bool> continue_straight;

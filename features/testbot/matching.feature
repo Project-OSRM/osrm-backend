@@ -104,3 +104,18 @@ Feature: Basic Map Matching
             | trace | matchings |
             | dcba  | hg,gf,fe  |
             | efgh  | ab,bc,cd  |
+
+    Scenario: Testbot - Duration details
+        Given the node map
+            | a | b | c | d | e |   | g | h |
+            |   |   | i |   |   |   |   |   |
+
+        And the ways
+            | nodes    | oneway |
+            | abcdegh  | no     |
+            | ci       | no     |
+
+        When I match I should get
+            | trace | matchings | annotation                                                                     |
+            | abeh  | abcedgh   | 1:9.897633,0:0,1:10.008842,1:10.008842,1:10.008842,0:0,2:20.017685,1:10.008842 |
+            | abci  | abc,ci    | 1:9.897633,0:0,1:10.008842,0:0.111209,1:10.121593                              |

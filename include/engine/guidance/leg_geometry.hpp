@@ -31,6 +31,13 @@ struct LegGeometry
     // length of the segment in meters
     std::vector<double> segment_distances;
 
+    // Per-coordinate metadata
+    struct Annotation {
+        double distance;
+        double duration;
+    };
+    std::vector<Annotation> annotations;
+
     std::size_t FrontIndex(std::size_t segment_index) const
     {
         return segment_offsets[segment_index];

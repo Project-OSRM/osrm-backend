@@ -626,6 +626,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     {
         // fixup the coordinate
         geometry.locations.erase(geometry.locations.begin());
+        geometry.annotations.erase(geometry.annotations.begin());
 
         // remove the initial distance value
         geometry.segment_distances.erase(geometry.segment_distances.begin());
@@ -687,6 +688,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     if (next_to_last_step.distance <= 1)
     {
         geometry.locations.pop_back();
+        geometry.annotations.pop_back();
         geometry.segment_offsets.pop_back();
         BOOST_ASSERT(geometry.segment_distances.back() < 1);
         geometry.segment_distances.pop_back();
@@ -713,6 +715,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // correct steps but duplicated coordinate in the end.
         // This can happen if the last coordinate snaps to a node in the unpacked geometry
         geometry.locations.pop_back();
+        geometry.annotations.pop_back();
         geometry.segment_offsets.back()--;
         // since the last geometry includes the location of arrival, the arrival instruction
         // geometry overlaps with the previous segment
