@@ -56,7 +56,7 @@ inline double getMatchingDiscreteBearing(const bool requires_entry,
         return 0;
 
     const double discrete_bearing =
-        BearingClass::discreteBearingID(bearing) * BearingClass::discrete_angle_step_size;
+        BearingClass::discreteIDToAngle(BearingClass::angleToDiscreteID(bearing));
     // it they are very close to the turn, the discrete bearing should be fine
     if (std::abs(bearing - discrete_bearing) < 0.25 * BearingClass::discrete_angle_step_size)
     {

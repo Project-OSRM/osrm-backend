@@ -14,7 +14,7 @@ static_assert(
     360 / BearingClass::discrete_angle_step_size <= 8 * sizeof(BearingClass::FlagBaseType),
     "The number of expressable bearings does not fit into the datatype used for storage.");
 
-std::uint8_t BearingClass::discreteBearingID(double angle)
+std::uint8_t BearingClass::angleToDiscreteID(double angle)
 {
     BOOST_ASSERT(angle >= 0. && angle <= 360.);
     // shift angle by half the step size to have the class be located around the center
@@ -23,6 +23,32 @@ std::uint8_t BearingClass::discreteBearingID(double angle)
         angle -= 360;
 
     return std::uint8_t(angle / BearingClass::discrete_angle_step_size);
+}
+
+double BearingClass::discreteIDToAngle(std::uint8_t id)
+{
+    BOOST_ASSERT(0 <= id && id <= 360. / discrete_angle_step_size);
+    return discrete_angle_step_size * id;
+}
+
+void BearingClass::resetContinuous(const double bearing) {
+    const auto id = angleToDiscreteID(bearing);
+    resetDiscreteID(id);
+}
+
+void BearingClass::resetDiscreteID(const std::uint8_t id) {
+    available_bearings_mask &= ~(1<<id);
+}
+
+bool BearingClass::hasContinuous(const double bearing) const
+{
+    const auto id = angleToDiscreteID(bearing);
+    return hasDiscrete(id);
+}
+
+bool BearingClass::hasDiscrete(const std::uint8_t id) const
+{
+    return 0 != (available_bearings_mask & (1<<id));
 }
 
 BearingClass::BearingClass() : available_bearings_mask(0) {}
@@ -39,7 +65,7 @@ bool BearingClass::operator<(const BearingClass &other) const
 
 bool BearingClass::addContinuous(const double angle)
 {
-    return addDiscreteID(discreteBearingID(angle));
+    return addDiscreteID(angleToDiscreteID(angle));
 }
 
 bool BearingClass::addDiscreteID(const std::uint8_t discrete_id)

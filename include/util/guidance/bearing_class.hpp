@@ -36,7 +36,7 @@ class BearingClass
 {
   public:
     using FlagBaseType = std::uint32_t;
-    const static constexpr double discrete_angle_step_size = 360. / 24;
+    const static constexpr double discrete_angle_step_size = 360. / 32;
 
     BearingClass();
 
@@ -45,6 +45,14 @@ class BearingClass
     bool addContinuous(const double bearing);
     // add a discrete ID, returns true if no item existed that uses the same discrete angle
     bool addDiscreteID(const std::uint8_t id);
+
+    //remove a bearing from the list
+    void resetContinuous(const double bearing);
+    void resetDiscreteID(const std::uint8_t id);
+
+    //is available
+    bool hasContinuous(const double bearing) const;
+    bool hasDiscrete(const std::uint8_t id) const;
 
     // hashing
     bool operator==(const BearingClass &other) const;
@@ -56,7 +64,8 @@ class BearingClass
 
     // get a discrete representation of an angle. Required to map a bearing/angle to the discrete
     // ones stored within the class
-    static std::uint8_t discreteBearingID(double angle);
+    static std::uint8_t angleToDiscreteID(double angle);
+    static double discreteIDToAngle( const std::uint8_t );
 
     // we are hiding the access to the flags behind a protection wall, to make sure the bit logic
     // isn't tempered with
