@@ -31,7 +31,7 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        var instructions, bearings, turns, modes, times, distances, summary;
+                        var instructions, bearings, turns, modes, times, distances, summary, intersections;
 
                         var json = JSON.parse(body);
 
@@ -41,6 +41,7 @@ module.exports = function () {
                             instructions = this.wayList(json.routes[0]);
                             bearings = this.bearingList(json.routes[0]);
                             turns = this.turnList(json.routes[0]);
+                            intersections = this.intersectionList(json.routes[0]);
                             modes = this.modeList(json.routes[0]);
                             times = this.timeList(json.routes[0]);
                             distances = this.distanceList(json.routes[0]);
@@ -106,6 +107,10 @@ module.exports = function () {
                                 } else {
                                     got.speed = '';
                                 }
+                            }
+
+                            if (headers.has('intersections')) {
+                                got.intersections = (intersections || '').trim();
                             }
 
                             var putValue = (key, value) => {

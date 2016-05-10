@@ -37,31 +37,12 @@ const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "s
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
-const constexpr char *turn_type_names[] = {"invalid",
-                                           "new name",
-                                           "continue",
-                                           "turn",
-                                           "merge",
-                                           "on ramp",
-                                           "off ramp",
-                                           "fork",
-                                           "end of road",
-                                           "notification",
-                                           "roundabout",
-                                           "roundabout",
-                                           "rotary",
-                                           "rotary",
-                                           "roundabout turn",
-                                           "roundabout turn",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid"};
+const constexpr char *turn_type_names[] = {
+    "invalid",         "new name",   "continue", "turn",        "merge",
+    "on ramp",         "off ramp",   "fork",     "end of road", "notification",
+    "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
+    "roundabout turn", "invalid",    "invalid",  "invalid",     "invalid",
+    "invalid",         "invalid",    "invalid",  "invalid",     "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
@@ -97,44 +78,77 @@ util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
     return array;
 }
 
-util::json::Object getConnection(const bool entry_allowed, const double bearing)
+util::json::Object
+getIntersection(const guidance::Intersection &intersection, bool locate_before, bool locate_after)
 {
     util::json::Object result;
-    result.values["entry_allowed"] = entry_allowed ? "true" : "false";
-    result.values["bearing"] = bearing;
+    util::json::Array bearings;
+    util::json::Array entry;
+
+    const auto &available_bearings = intersection.bearing_class.getAvailableBearings();
+    for (std::size_t i = 0; i < available_bearings.size(); ++i)
+    {
+        bearings.values.push_back(std::to_string(available_bearings[i]));
+        entry.values.push_back(intersection.entry_class.allowsEntry(i) ? "true" : "false");
+    }
+    result.values["location"] = detail::coordinateToLonLat(intersection.location);
+
+    bool requires_correction = false;
+    if (locate_before || (!available_bearings.empty() && available_bearings.front()==0))
+    {
+        // bearings are oriented in the direction of driving. For the in-bearing, we actually need
+        // to
+        // find the bearing from the view of the intersection. This means we have to rotate the
+        // bearing
+        // by 180 degree.
+        const auto rotated_bearing_before = (intersection.bearing_before >= 180.0)
+                                                ? (intersection.bearing_before - 180.0)
+                                                : (intersection.bearing_before + 180.0);
+        result.values["bearing_before"] =
+            intersection.bearing_class.findMatchingBearing(rotated_bearing_before);
+    }
+    else
+    {
+        result.values["bearing_before"] = available_bearings.size();
+        requires_correction = true;
+    }
+
+    if (locate_after || (!available_bearings.empty() && available_bearings.front()==0))
+    {
+        result.values["bearing_after"] =
+            intersection.bearing_class.findMatchingBearing(intersection.bearing_after);
+    }
+    else
+    {
+        result.values["bearing_after"] = available_bearings.size();
+        requires_correction = true;
+    }
+
+    if (requires_correction)
+    {
+        bearings.values.push_back("0");
+        entry.values.push_back("false");
+    }
+
+    result.values["bearings"] = bearings;
+    result.values["entry"] = entry;
+
     return result;
 }
 
-util::json::Array getConnections(const util::guidance::EntryClass entry_class,
-                                 const util::guidance::BearingClass bearing_class)
+util::json::Array getIntersection(const guidance::RouteStep &step)
 {
     util::json::Array result;
-    const auto bearings = bearing_class.getAvailableBearings();
-    for (size_t connection = 0; connection < bearings.size(); ++connection)
+    bool first = true;
+    for (const auto &intersection : step.intersections)
     {
-        result.values.push_back(
-            getConnection(entry_class.allowsEntry(connection), bearings[connection]));
+        // on waypoints, the first/second bearing is invalid. In these cases, we cannot locate the
+        // bearing as part of the available bearings at the intersection.
+        result.values.push_back(getIntersection(
+            intersection, !first || step.maneuver.waypoint_type != guidance::WaypointType::Depart,
+            !first || step.maneuver.waypoint_type != guidance::WaypointType::Arrive));
+        first = false;
     }
-    return result;
-}
-
-util::json::Object getIntersection(const guidance::StepManeuver maneuver)
-{
-    util::json::Object result;
-    // bearings are oriented in the direction of driving. For the in-bearing, we actually need to
-    // find the bearing from the view of the intersection. This means we have to rotate the bearing
-    // by 180 degree.
-    const auto rotated_bearing_before = (maneuver.bearing_before >= 180.0)
-                                            ? (maneuver.bearing_before - 180.0)
-                                            : (maneuver.bearing_before + 180.0);
-    result.values["from_bearing"] =
-        getMatchingDiscreteBearing(false, rotated_bearing_before, maneuver.entry_class,
-                                   maneuver.bearing_class.getAvailableBearings());
-    result.values["to_bearing"] =
-        getMatchingDiscreteBearing(true, maneuver.bearing_after, maneuver.entry_class,
-                                   maneuver.bearing_class.getAvailableBearings());
-
-    result.values["connections"] = getConnections(maneuver.entry_class, maneuver.bearing_class);
     return result;
 }
 
@@ -193,10 +207,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     if (maneuver.waypoint_type == guidance::WaypointType::None)
-    {
         step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
-        step_maneuver.values["intersection"] = detail::getIntersection(maneuver);
-    }
     else
         step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
 
@@ -204,17 +215,8 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
 
-    step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
-    step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);
-    step_maneuver.values["bearing_after"] = std::round(maneuver.bearing_after);
     if (maneuver.exit != 0)
         step_maneuver.values["exit"] = maneuver.exit;
-
-    // TODO currently we need this to comply with the api.
-    // We should move this to an additional entry, the moment we
-    // actually compute the correct locations of the intersections
-    if (!maneuver.intersections.empty() && maneuver.exit == 0)
-        step_maneuver.values["exit"] = maneuver.intersections.size();
 
     return step_maneuver;
 }
@@ -231,6 +233,7 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
     route_step.values["geometry"] = std::move(geometry);
+    route_step.values["intersections"] = detail::getIntersection(step);
     return route_step;
 }
 

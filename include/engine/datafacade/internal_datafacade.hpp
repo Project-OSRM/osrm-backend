@@ -9,12 +9,12 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
-#include "storage/storage_config.hpp"
 #include "engine/geospatial_query.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
+#include "storage/storage_config.hpp"
 #include "util/graph_loader.hpp"
 #include "util/io.hpp"
 #include "util/range_table.hpp"
@@ -23,6 +23,7 @@
 #include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
+#include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
 
@@ -100,7 +101,8 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<util::guidance::EntryClass, false>::vector m_entry_class_table;
     // the look-up table for distinct bearing classes. A bearing class lists the available bearings
     // at an intersection
-    util::ShM<util::guidance::BearingClass, false>::vector m_bearing_class_table;
+    util::RangeTable<16, false> m_bearing_ranges_table;
+    util::ShM<DiscreteBearing, false>::vector m_bearing_values_table;
 
     void LoadProfileProperties(const boost::filesystem::path &properties_path)
     {
@@ -299,34 +301,43 @@ class InternalDataFacade final : public BaseDataFacade
     {
         std::ifstream intersection_stream(intersection_class_file.string(), std::ios::binary);
         if (!intersection_stream)
-            util::SimpleLogger().Write(logWARNING) << "Failed to open " << intersection_class_file
-                                                   << " for reading.";
+            throw util::exception("Could not open " + intersection_class_file.string() +
+                                  " for reading.");
+
         if (!util::readAndCheckFingerprint(intersection_stream))
-        {
-            util::SimpleLogger().Write(logWARNING)
-                << "Fingerprint does not match or reading failed";
-            exit(-1);
-        }
+            throw util::exception("Fingeprint does not match in " +
+                                  intersection_class_file.string());
 
         {
             util::SimpleLogger().Write(logINFO) << "Loading Bearing Class IDs";
             std::vector<BearingClassID> bearing_class_id;
-            util::deserializeVector(intersection_stream, bearing_class_id);
+            if (!util::deserializeVector(intersection_stream, bearing_class_id))
+                throw util::exception("Reading from " + intersection_class_file.string() + " failed.");
+
             m_bearing_class_id_table.resize(bearing_class_id.size());
             std::copy(bearing_class_id.begin(), bearing_class_id.end(),
                       &m_bearing_class_id_table[0]);
         }
         {
             util::SimpleLogger().Write(logINFO) << "Loading Bearing Classes";
+            // read the range table
+            intersection_stream >> m_bearing_ranges_table;
             std::vector<util::guidance::BearingClass> bearing_classes;
-            util::deserializeVector(intersection_stream, bearing_classes);
-            m_bearing_class_table.resize(bearing_classes.size());
-            std::copy(bearing_classes.begin(), bearing_classes.end(), &m_bearing_class_table[0]);
+            // and the actual bearing values
+            std::uint64_t num_bearings;
+            intersection_stream >> num_bearings;
+            m_bearing_values_table.resize(num_bearings);
+            intersection_stream.read(reinterpret_cast<char *>(&m_bearing_values_table[0]),
+                                     sizeof(m_bearing_values_table[0]) * num_bearings);
+            if (!static_cast<bool>(intersection_stream))
+                throw util::exception("Reading from " + intersection_class_file.string() + " failed.");
         }
         {
             util::SimpleLogger().Write(logINFO) << "Loading Entry Classes";
             std::vector<util::guidance::EntryClass> entry_classes;
-            util::deserializeVector(intersection_stream, entry_classes);
+            if (!util::deserializeVector(intersection_stream, entry_classes))
+                throw util::exception("Reading from " + intersection_class_file.string() + " failed.");
+
             m_entry_class_table.resize(entry_classes.size());
             std::copy(entry_classes.begin(), entry_classes.end(), &m_entry_class_table[0]);
         }
@@ -509,9 +520,8 @@ class InternalDataFacade final : public BaseDataFacade
                                                        bearing, bearing_range);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance) const override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate, const double max_distance) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -676,7 +686,15 @@ class InternalDataFacade final : public BaseDataFacade
     GetBearingClass(const BearingClassID bearing_class_id) const override final
     {
         BOOST_ASSERT(bearing_class_id != INVALID_BEARING_CLASSID);
-        return m_bearing_class_table.at(bearing_class_id);
+        auto range = m_bearing_ranges_table.GetRange(bearing_class_id);
+
+        util::guidance::BearingClass result;
+
+        for (auto itr = m_bearing_values_table.begin() + range.front();
+             itr != m_bearing_values_table.begin() + range.back() + 1; ++itr)
+            result.add(*itr);
+
+        return result;
     }
 
     EntryClassID GetEntryClassID(const EdgeID eid) const override final
@@ -686,7 +704,6 @@ class InternalDataFacade final : public BaseDataFacade
 
     util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
     {
-        BOOST_ASSERT(entry_class_id != INVALID_ENTRY_CLASSID);
         return m_entry_class_table.at(entry_class_id);
     }
 };

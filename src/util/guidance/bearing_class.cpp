@@ -1,6 +1,8 @@
 #include "extractor/guidance/discrete_angle.hpp"
 #include "util/guidance/bearing_class.hpp"
+#include "util/guidance/toolkit.hpp"
 
+#include <algorithm>
 #include <boost/assert.hpp>
 
 namespace osrm
@@ -10,83 +12,69 @@ namespace util
 namespace guidance
 {
 
-static_assert(
-    360 / BearingClass::discrete_angle_step_size <= 8 * sizeof(BearingClass::FlagBaseType),
-    "The number of expressable bearings does not fit into the datatype used for storage.");
-
-std::uint8_t BearingClass::angleToDiscreteID(double angle)
-{
-    BOOST_ASSERT(angle >= 0. && angle <= 360.);
-    // shift angle by half the step size to have the class be located around the center
-    angle = (angle + 0.5 * BearingClass::discrete_angle_step_size);
-    if (angle > 360)
-        angle -= 360;
-
-    return std::uint8_t(angle / BearingClass::discrete_angle_step_size);
-}
-
-double BearingClass::discreteIDToAngle(std::uint8_t id)
-{
-    BOOST_ASSERT(0 <= id && id <= 360. / discrete_angle_step_size);
-    return discrete_angle_step_size * id;
-}
-
-void BearingClass::resetContinuous(const double bearing) {
-    const auto id = angleToDiscreteID(bearing);
-    resetDiscreteID(id);
-}
-
-void BearingClass::resetDiscreteID(const std::uint8_t id) {
-    available_bearings_mask &= ~(1<<id);
-}
-
-bool BearingClass::hasContinuous(const double bearing) const
-{
-    const auto id = angleToDiscreteID(bearing);
-    return hasDiscrete(id);
-}
-
-bool BearingClass::hasDiscrete(const std::uint8_t id) const
-{
-    return 0 != (available_bearings_mask & (1<<id));
-}
-
-BearingClass::BearingClass() : available_bearings_mask(0) {}
-
 bool BearingClass::operator==(const BearingClass &other) const
 {
-    return other.available_bearings_mask == available_bearings_mask;
+    BOOST_ASSERT(std::is_sorted(available_bearings.begin(), available_bearings.end()));
+    BOOST_ASSERT(std::is_sorted(other.available_bearings.begin(), other.available_bearings.end()));
+    if (other.available_bearings.size() != available_bearings.size())
+        return false;
+    for (std::size_t i = 0; i < available_bearings.size(); ++i)
+        if (available_bearings[i] != other.available_bearings[i])
+            return false;
+    return true;
 }
 
 bool BearingClass::operator<(const BearingClass &other) const
 {
-    return available_bearings_mask < other.available_bearings_mask;
-}
+    BOOST_ASSERT(std::is_sorted(available_bearings.begin(), available_bearings.end()));
+    BOOST_ASSERT(std::is_sorted(other.available_bearings.begin(), other.available_bearings.end()));
+    if (available_bearings.size() < other.available_bearings.size())
+        return true;
+    if (available_bearings.size() > other.available_bearings.size())
+        return false;
 
-bool BearingClass::addContinuous(const double angle)
-{
-    return addDiscreteID(angleToDiscreteID(angle));
-}
-
-bool BearingClass::addDiscreteID(const std::uint8_t discrete_id)
-{
-    const auto mask = (1 << discrete_id);
-    const auto is_new = (0 == (available_bearings_mask & mask));
-    available_bearings_mask |= mask;
-    return is_new;
-}
-
-std::vector<double> BearingClass::getAvailableBearings() const
-{
-    std::vector<double> result;
-    // account for some basic inaccuracries of double
-    for (std::size_t discrete_id = 0; discrete_id * discrete_angle_step_size <= 361; ++discrete_id)
+    for (std::size_t i = 0; i < available_bearings.size(); ++i)
     {
-        // ervery set bit indicates a bearing
-        if (available_bearings_mask & (1 << discrete_id))
-            result.push_back(discrete_id * discrete_angle_step_size);
+        if (available_bearings[i] < other.available_bearings[i])
+            return true;
+        if (available_bearings[i] > other.available_bearings[i])
+            return false;
     }
-    return result;
+
+    return false;
+}
+
+void BearingClass::add(const DiscreteBearing bearing)
+{
+    available_bearings.push_back(bearing);
+}
+
+const std::vector<DiscreteBearing> &BearingClass::getAvailableBearings() const
+{
+    return available_bearings;
+}
+
+DiscreteBearing BearingClass::getDiscreteBearing(const double bearing)
+{
+    BOOST_ASSERT(0. <= bearing && bearing <= 360.);
+    auto shifted_bearing = (bearing + 0.5 * discrete_step_size);
+    if (shifted_bearing > 360.)
+        shifted_bearing -= 360;
+    return static_cast<DiscreteBearing>(shifted_bearing / discrete_step_size);
+}
+
+std::size_t BearingClass::findMatchingBearing(const double bearing) const
+{
+    // the small size of the intersections allows a linear compare
+    auto discrete_bearing = static_cast<DiscreteBearing>(bearing);
+    auto max_element =
+        std::max_element(available_bearings.begin(), available_bearings.end(),
+                         [&](const DiscreteBearing first, const DiscreteBearing second) {
+                             return angularDeviation(first, discrete_bearing) >
+                                    angularDeviation(second, discrete_bearing);
+                         });
+
+    return std::distance(available_bearings.begin(), max_element);
 }
 
 } // namespace guidance

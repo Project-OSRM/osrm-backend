@@ -44,8 +44,10 @@ struct SharedDataLayout
         DATASOURCE_NAME_LENGTHS,
         PROPERTIES,
         BEARING_CLASSID,
+        BEARING_OFFSETS,
+        BEARING_BLOCKS,
+        BEARING_VALUES,
         ENTRY_CLASS,
-        BEARING_CLASS,
         NUM_BLOCKS
     };
 

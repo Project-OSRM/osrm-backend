@@ -6,6 +6,10 @@
 #include <functional>
 #include <vector>
 
+#include <boost/functional/hash.hpp>
+
+#include "util/typedefs.hpp"
+
 namespace osrm
 {
 namespace util
@@ -35,24 +39,8 @@ namespace guidance
 class BearingClass
 {
   public:
-    using FlagBaseType = std::uint32_t;
-    const static constexpr double discrete_angle_step_size = 360. / 32;
-
-    BearingClass();
-
-    // add a continuous angle to the, returns true if no item existed that uses the same discrete
-    // angle
-    bool addContinuous(const double bearing);
-    // add a discrete ID, returns true if no item existed that uses the same discrete angle
-    bool addDiscreteID(const std::uint8_t id);
-
-    //remove a bearing from the list
-    void resetContinuous(const double bearing);
-    void resetDiscreteID(const std::uint8_t id);
-
-    //is available
-    bool hasContinuous(const double bearing) const;
-    bool hasDiscrete(const std::uint8_t id) const;
+    // Add a bearing to the set
+    void add(const DiscreteBearing bearing);
 
     // hashing
     bool operator==(const BearingClass &other) const;
@@ -60,19 +48,15 @@ class BearingClass
     // sorting
     bool operator<(const BearingClass &other) const;
 
-    std::vector<double> getAvailableBearings() const;
+    const std::vector<DiscreteBearing> &getAvailableBearings() const;
 
-    // get a discrete representation of an angle. Required to map a bearing/angle to the discrete
-    // ones stored within the class
-    static std::uint8_t angleToDiscreteID(double angle);
-    static double discreteIDToAngle( const std::uint8_t );
+    std::size_t findMatchingBearing(const double bearing) const;
 
-    // we are hiding the access to the flags behind a protection wall, to make sure the bit logic
-    // isn't tempered with
+    const constexpr static double discrete_step_size = 360. / 24.;
+    static DiscreteBearing getDiscreteBearing(const double bearing);
+
   private:
-    // given a list of possible discrete angles, the available angles flag indicates the presence of
-    // a given turn at the intersection
-    FlagBaseType available_bearings_mask;
+    std::vector<DiscreteBearing> available_bearings;
 
     // allow hash access to internal representation
     friend std::size_t std::hash<BearingClass>::operator()(const BearingClass &) const;
@@ -88,8 +72,7 @@ namespace std
 inline size_t hash<::osrm::util::guidance::BearingClass>::
 operator()(const ::osrm::util::guidance::BearingClass &bearing_class) const
 {
-    return hash<::osrm::util::guidance::BearingClass::FlagBaseType>()(
-        bearing_class.available_bearings_mask);
+    return boost::hash_value(bearing_class.available_bearings);
 }
 } // namespace std
 

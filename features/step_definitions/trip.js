@@ -46,8 +46,8 @@ module.exports = function () {
                         if (headers.has('trips')) {
                             subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
                                 var toAdd = [];
-                                if (i === 0) toAdd.push(sl.steps[0].maneuver.location);
-                                toAdd.push(sl.steps[sl.steps.length-1].maneuver.location);
+                                if (i === 0) toAdd.push(sl.steps[0].intersections[0].location);
+                                toAdd.push(sl.steps[sl.steps.length-1].intersections[0].location);
                                 return toAdd;
                             })));
                         }

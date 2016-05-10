@@ -14,6 +14,7 @@
 #include "util/lua_util.hpp"
 #include "util/make_unique.hpp"
 #include "util/name_table.hpp"
+#include "util/range_table.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 
@@ -624,10 +625,24 @@ void Extractor::WriteIntersectionClassificationData(
     util::writeFingerprint(file_out_stream);
     util::serializeVector(file_out_stream, node_based_intersection_classes);
 
-    static_assert(std::is_trivially_copyable<util::guidance::BearingClass>::value,
-                  "BearingClass Serialization requires trivial copyable bearing classes");
+    // create range table for vectors:
+    std::vector<unsigned> bearing_counts;
+    bearing_counts.reserve(bearing_classes.size());
+    std::uint64_t total_bearings = 0;
+    for (const auto &bearing_class : bearing_classes){
+        bearing_counts.push_back(static_cast<unsigned>(bearing_class.getAvailableBearings().size()));
+        total_bearings += bearing_class.getAvailableBearings().size();
+    }
 
-    util::serializeVector(file_out_stream, bearing_classes);
+    util::RangeTable<> bearing_class_range_table(bearing_counts);
+    file_out_stream << bearing_class_range_table;
+
+    file_out_stream << total_bearings;
+    for( const auto &bearing_class : bearing_classes)
+    {
+        const auto &bearings = bearing_class.getAvailableBearings();
+        file_out_stream.write( reinterpret_cast<const char*>(&bearings[0]), sizeof(bearings[0]) * bearings.size() );
+    }
 
     static_assert(std::is_trivially_copyable<util::guidance::EntryClass>::value,
                   "EntryClass Serialization requires trivial copyable entry classes");

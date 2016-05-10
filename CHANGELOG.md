@@ -12,6 +12,7 @@
      - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:
        - Open sockets with SO_REUSEPORT to allow multiple osrm-routed processes serving requests from the same port.
        - Add SIGNAL_PARENT_WHEN_READY environment variable to enable osrm-routed signal its parent with USR1 when it's running and waiting for requests.
+     - BREAKING: Intersection Classification adds a new file to the mix (osrm.icd). This breaks the fileformat for older versions.
 
    - Guidance:
      - improved detection of turning streets, not reporting new-name in wrong situations

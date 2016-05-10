@@ -61,6 +61,8 @@ using EdgeWeight = int;
 using BearingClassID = std::uint32_t;
 static const BearingClassID INVALID_BEARING_CLASSID = std::numeric_limits<std::uint32_t>::max();
 
+using DiscreteBearing = std::uint16_t;
+
 using EntryClassID = std::uint16_t;
 static const EntryClassID INVALID_ENTRY_CLASSID = std::numeric_limits<std::uint16_t>::max();
 
