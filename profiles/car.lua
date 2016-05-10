@@ -1,6 +1,7 @@
 -- Car profile
 
 local find_access_tag = require("lib/access").find_access_tag
+local get_destination = require("lib/destination").get_destination
 
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
@@ -10,6 +11,9 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
+
+-- A list of suffixes to suppress in name change instructions
+suffix_list = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "North", "South", "West", "East" }
 
 speed_profile = {
   ["motorway"] = 90,
@@ -149,6 +153,12 @@ local min = math.min
 local max = math.max
 
 local speed_reduction = 0.8
+
+function get_name_suffix_list(vector)
+  for index,suffix in ipairs(suffix_list) do
+      vector:Add(suffix)
+  end
+end
 
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
@@ -383,6 +393,14 @@ function way_function (way, result)
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
       result.backward_mode = mode.inaccessible
+
+      -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
+      local destination = get_destination(way)
+      local has_destination = destination and "" ~= destination
+
+      if has_destination and has_name and not has_ref then
+        result.name = name .. " (" .. destination .. ")"
+      end
     end
   end
 

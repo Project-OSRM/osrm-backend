@@ -206,7 +206,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 split_points.push_back(split_index);
 
                 // note: this preserves everything before split_index
-                model.clear(split_index);
+                model.Clear(split_index);
                 std::size_t new_start = model.initialize(split_index);
                 // no new start was found -> stop viterbi calculation
                 if (new_start == map_matching::INVALID_STATE)

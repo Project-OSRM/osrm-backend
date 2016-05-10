@@ -17,7 +17,7 @@ RasterSource::RasterSource(RasterGrid _raster_data,
                            int _xmax,
                            int _ymin,
                            int _ymax)
-    : xstep(calcSize(_xmin, _xmax, _width)), ystep(calcSize(_ymin, _ymax, _height)),
+    : xstep(CalcSize(_xmin, _xmax, _width)), ystep(CalcSize(_ymin, _ymax, _height)),
       raster_data(std::move(_raster_data)), width(_width), height(_height), xmin(_xmin),
       xmax(_xmax), ymin(_ymin), ymax(_ymax)
 {
@@ -25,14 +25,14 @@ RasterSource::RasterSource(RasterGrid _raster_data,
     BOOST_ASSERT(ystep != 0);
 }
 
-float RasterSource::calcSize(int min, int max, std::size_t count) const
+float RasterSource::CalcSize(int min, int max, std::size_t count) const
 {
     BOOST_ASSERT(count > 0);
     return (max - min) / (static_cast<float>(count) - 1);
 }
 
 // Query raster source for nearest data point
-RasterDatum RasterSource::getRasterData(const int lon, const int lat) const
+RasterDatum RasterSource::GetRasterData(const int lon, const int lat) const
 {
     if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
     {
@@ -46,7 +46,7 @@ RasterDatum RasterSource::getRasterData(const int lon, const int lat) const
 }
 
 // Query raster source using bilinear interpolation
-RasterDatum RasterSource::getRasterInterpolate(const int lon, const int lat) const
+RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) const
 {
     if (lon < xmin || lon > xmax || lat < ymin || lat > ymax)
     {
@@ -74,7 +74,7 @@ RasterDatum RasterSource::getRasterInterpolate(const int lon, const int lat) con
 }
 
 // Load raster source into memory
-int SourceContainer::loadRasterSource(const std::string &path_string,
+int SourceContainer::LoadRasterSource(const std::string &path_string,
                                       double xmin,
                                       double xmax,
                                       double ymin,
@@ -120,7 +120,7 @@ int SourceContainer::loadRasterSource(const std::string &path_string,
 }
 
 // External function for looking up nearest data point from a specified source
-RasterDatum SourceContainer::getRasterDataFromSource(unsigned int source_id, double lon, double lat)
+RasterDatum SourceContainer::GetRasterDataFromSource(unsigned int source_id, double lon, double lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -133,13 +133,13 @@ RasterDatum SourceContainer::getRasterDataFromSource(unsigned int source_id, dou
     BOOST_ASSERT(lon > -180);
 
     const auto &found = LoadedSources[source_id];
-    return found.getRasterData(static_cast<int>(util::toFixed(util::FloatLongitude(lon))),
+    return found.GetRasterData(static_cast<int>(util::toFixed(util::FloatLongitude(lon))),
                                static_cast<int>(util::toFixed(util::FloatLatitude(lat))));
 }
 
 // External function for looking up interpolated data from a specified source
 RasterDatum
-SourceContainer::getRasterInterpolateFromSource(unsigned int source_id, double lon, double lat)
+SourceContainer::GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat)
 {
     if (LoadedSources.size() < source_id + 1)
     {
@@ -152,7 +152,7 @@ SourceContainer::getRasterInterpolateFromSource(unsigned int source_id, double l
     BOOST_ASSERT(lon > -180);
 
     const auto &found = LoadedSources[source_id];
-    return found.getRasterInterpolate(static_cast<int>(util::toFixed(util::FloatLongitude(lon))),
+    return found.GetRasterInterpolate(static_cast<int>(util::toFixed(util::FloatLongitude(lon))),
                                       static_cast<int>(util::toFixed(util::FloatLatitude(lat))));
 }
 }

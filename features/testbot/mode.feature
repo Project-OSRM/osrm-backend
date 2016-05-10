@@ -12,7 +12,6 @@ Feature: Testbot - Travel mode
     Background:
        Given the profile "testbot"
 
-    @mokob @2166
     Scenario: Testbot - Always announce mode change
         Given the node map
             | a | b | c | d |
@@ -28,7 +27,6 @@ Feature: Testbot - Travel mode
             | a    | d  | foo,foo,foo,foo | driving,river downstream,driving,driving |
             | b    | d  | foo,foo,foo     | river downstream,driving,driving         |
 
-    @mokob @2166
     Scenario: Testbot - Compressed Modes
         Given the node map
             | a | b | c | d | e | f | g |
@@ -44,7 +42,6 @@ Feature: Testbot - Travel mode
             | a    | g  | road,liquid,solid,solid  | driving,river downstream,driving,driving |
             | c    | g  | liquid,solid,solid       | river downstream,driving,driving         |
 
-    @mokob @2166
     Scenario: Testbot - Modes in each direction, different forward/backward speeds
         Given the node map
             |   | 0 | 1 |   |
@@ -79,7 +76,7 @@ Feature: Testbot - Travel mode
             | 0    | 1  | ab,ab | steps down,steps down | 60s +-1 |
             | 1    | 0  | ab,ab | steps up,steps up     | 60s +-1 |
 
-    @oneway @mokob @2166
+    @oneway
     Scenario: Testbot - Modes for oneway, different forward/backward speeds
         Given the node map
             | a | b |
@@ -107,7 +104,7 @@ Feature: Testbot - Travel mode
             | a    | b  | ab,ab | steps down,steps down |
             | b    | a  |       |                       |
 
-    @oneway @mokob @2166
+    @oneway
     Scenario: Testbot - Modes for reverse oneway, different forward/backward speeds
         Given the node map
             | a | b |
@@ -135,7 +132,7 @@ Feature: Testbot - Travel mode
             | a    | b  |       |                   |
             | b    | a  | ab,ab | steps up,steps up |
 
-    @via @mokob @2166
+    @via
     Scenario: Testbot - Mode should be set at via points
         Given the node map
             | a | 1 | b |
@@ -149,7 +146,6 @@ Feature: Testbot - Travel mode
             | a,1,b     | ab,ab,ab,ab | river downstream,river downstream,river downstream,river downstream |
             | b,1,a     | ab,ab,ab,ab | river upstream,river upstream,river upstream,river upstream         |
 
-    @mokob @2166
     Scenario: Testbot - Starting at a tricky node
        Given the node map
             |  | a |  |   |   |
@@ -164,7 +160,6 @@ Feature: Testbot - Travel mode
             | from | to | route | modes                         |
             | b    | a  | ab,ab | river upstream,river upstream |
 
-    @mokob @2166
     Scenario: Testbot - Mode changes on straight way without name change
        Given the node map
             | a | 1 | b | 2 | c |
@@ -204,7 +199,6 @@ Feature: Testbot - Travel mode
             | b    | d  | bc,cd,cd          | route,driving,driving                         |
             | a    | f  | ab,bc,cd,de,ef,ef | driving,route,driving,driving,driving,driving |
 
-    @mokob @2166
     Scenario: Testbot - Modes, triangle map
         Given the node map
             |   |   |   |   |   |   | d |
@@ -239,7 +233,6 @@ Feature: Testbot - Travel mode
             | a    | d  | abc,cd,cd        | driving,driving,driving                        |
             | d    | a  | de,ce,abc,abc    | driving,river upstream,driving,driving         |
 
-    @mokob @2166
     Scenario: Testbot - River in the middle
         Given the node map
             | a | b | c |   |   |

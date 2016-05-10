@@ -78,7 +78,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
         return TRAVEL_MODE_INACCESSIBLE;
     }
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate /* south_west */,
-                                         const util::Coordinate /*north_east */) override
+                                         const util::Coordinate /*north_east */) const override
     {
         return {};
     }
@@ -87,14 +87,14 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
                                const float /*max_distance*/,
                                const int /*bearing*/,
-                               const int /*bearing_range*/) override
+                               const int /*bearing_range*/) const override
     {
         return {};
     }
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
-                               const float /*max_distance*/) override
+                               const float /*max_distance*/) const override
     {
         return {};
     }
@@ -104,7 +104,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
                         const unsigned /*max_results*/,
                         const double /*max_distance*/,
                         const int /*bearing*/,
-                        const int /*bearing_range*/) override
+                        const int /*bearing_range*/) const override
     {
         return {};
     }
@@ -113,14 +113,14 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
                         const unsigned /*max_results*/,
                         const int /*bearing*/,
-                        const int /*bearing_range*/) override
+                        const int /*bearing_range*/) const override
     {
         return {};
     }
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
-                        const unsigned /*max_results*/) override
+                        const unsigned /*max_results*/) const override
     {
         return {};
     }
@@ -128,21 +128,21 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
                         const unsigned /*max_results*/,
-                        const double /*max_distance*/) override
+                        const double /*max_distance*/) const override
     {
         return {};
     }
 
     std::pair<engine::PhantomNode, engine::PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate /*input_coordinate*/) override
+        const util::Coordinate /*input_coordinate*/) const override
     {
         return {};
     }
 
     std::pair<engine::PhantomNode, engine::PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
-                                                      const double /*max_distance*/) override
+                                                      const double /*max_distance*/) const override
     {
         return {};
     }
@@ -151,7 +151,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
                                                       const double /*max_distance*/,
                                                       const int /*bearing*/,
-                                                      const int /*bearing_range*/) override
+                                                      const int /*bearing_range*/) const override
     {
         return {};
     }
@@ -159,7 +159,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     std::pair<engine::PhantomNode, engine::PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate /*input_coordinate*/,
                                                       const int /*bearing*/,
-                                                      const int /*bearing_range*/) override
+                                                      const int /*bearing_range*/) const override
     {
         return {};
     };

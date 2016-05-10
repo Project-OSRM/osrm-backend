@@ -26,7 +26,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
 
     for (const NodeID node_v : util::irange(0u, original_number_of_nodes))
     {
-        progress.printStatus(node_v);
+        progress.PrintStatus(node_v);
 
         // only contract degree 2 vertices
         if (2 != graph.GetOutDegree(node_v))

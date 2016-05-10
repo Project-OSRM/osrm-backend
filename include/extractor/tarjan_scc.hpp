@@ -57,7 +57,7 @@ template <typename GraphT> class TarjanSCC
         BOOST_ASSERT(m_graph->GetNumberOfNodes() > 0);
     }
 
-    void run()
+    void Run()
     {
         TIMER_START(SCC_RUN);
         const NodeID max_node_id = m_graph->GetNumberOfNodes();
@@ -167,16 +167,16 @@ template <typename GraphT> class TarjanSCC
                                          });
     }
 
-    std::size_t get_number_of_components() const { return component_size_vector.size(); }
+    std::size_t GetNumberOfComponents() const { return component_size_vector.size(); }
 
-    std::size_t get_size_one_count() const { return size_one_counter; }
+    std::size_t GetSizeOneCount() const { return size_one_counter; }
 
-    unsigned get_component_size(const unsigned component_id) const
+    unsigned GetComponentSize(const unsigned component_id) const
     {
         return component_size_vector[component_id];
     }
 
-    unsigned get_component_id(const NodeID node) const { return components_index[node]; }
+    unsigned GetComponentID(const NodeID node) const { return components_index[node]; }
 };
 }
 }

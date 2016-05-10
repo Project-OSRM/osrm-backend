@@ -6,10 +6,9 @@ var d3 = require('d3-queue');
 
 module.exports = function () {
     this.initializeEnv = (callback) => {
-        this.DEFAULT_PORT = 5000;
-	// OSX builds on Travis hit a timeout of ~2000 from time to time
-        this.DEFAULT_TIMEOUT = 5000;
-        this.setDefaultTimeout(this.DEFAULT_TIMEOUT);
+        this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
+        this.TIMEOUT = process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT) || 3000;
+        this.setDefaultTimeout(this.TIMEOUT);
         this.ROOT_FOLDER = process.cwd();
         this.OSM_USER = 'osrm';
         this.OSM_GENERATOR = 'osrm-test';
@@ -25,8 +24,6 @@ module.exports = function () {
         this.BIN_PATH = path.resolve(this.ROOT_FOLDER, 'build');
         this.DEFAULT_INPUT_FORMAT = 'osm';
         this.DEFAULT_ORIGIN = [1,1];
-        this.LAUNCH_TIMEOUT = 1000;
-        this.SHUTDOWN_TIMEOUT = 10000;
         this.DEFAULT_LOAD_METHOD = 'datastore';
         this.OSRM_ROUTED_LOG_FILE = path.resolve(this.TEST_FOLDER, 'osrm-routed.log');
         this.ERROR_LOG_FILE = path.resolve(this.TEST_FOLDER, 'error.log');
@@ -50,26 +47,6 @@ module.exports = function () {
         // eslint-disable-next-line no-console
         console.info(util.format('Node Version', process.version));
         if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** PLease upgrade to Node 4.+ to run OSRM cucumber tests');
-
-        if (process.env.OSRM_PORT) {
-            this.OSRM_PORT = parseInt(process.env.OSRM_PORT);
-            // eslint-disable-next-line no-console
-            console.info(util.format('Port set to %d', this.OSRM_PORT));
-        } else {
-            this.OSRM_PORT = this.DEFAULT_PORT;
-            // eslint-disable-next-line no-console
-            console.info(util.format('Using default port %d', this.OSRM_PORT));
-        }
-
-        if (process.env.OSRM_TIMEOUT) {
-            this.OSRM_TIMEOUT = parseInt(process.env.OSRM_TIMEOUT);
-            // eslint-disable-next-line no-console
-            console.info(util.format('Timeout set to %d', this.OSRM_TIMEOUT));
-        } else {
-            this.OSRM_TIMEOUT = this.DEFAULT_TIMEOUT;
-            // eslint-disable-next-line no-console
-            console.info(util.format('Using default timeout %d', this.OSRM_TIMEOUT));
-        }
 
         fs.exists(this.TEST_FOLDER, (exists) => {
             if (!exists) throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_FOLDER));

@@ -122,10 +122,10 @@ int main(int argc, char *argv[]) try
 
     auto tarjan =
         osrm::util::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
-    tarjan->run();
-    osrm::util::SimpleLogger().Write() << "identified: " << tarjan->get_number_of_components()
+    tarjan->Run();
+    osrm::util::SimpleLogger().Write() << "identified: " << tarjan->GetNumberOfComponents()
                                        << " many components";
-    osrm::util::SimpleLogger().Write() << "identified " << tarjan->get_size_one_count()
+    osrm::util::SimpleLogger().Write() << "identified " << tarjan->GetSizeOneCount()
                                        << " size 1 SCCs";
 
     // output
@@ -136,7 +136,6 @@ int main(int argc, char *argv[]) try
     osrm::tools::deleteFileIfExists("component.shx");
     osrm::tools::deleteFileIfExists("component.shp");
 
-    osrm::util::Percent percentage(graph->GetNumberOfNodes());
 
     OGRRegisterAll();
 
@@ -167,11 +166,11 @@ int main(int argc, char *argv[]) try
                                        << TIMER_MSEC(SCC_RUN_SETUP) / 1000. << "s";
 
     uint64_t total_network_length = 0;
-    percentage.reinit(graph->GetNumberOfNodes());
+    osrm::util::Percent percentage(graph->GetNumberOfNodes());
     TIMER_START(SCC_OUTPUT);
     for (const NodeID source : osrm::util::irange(0u, graph->GetNumberOfNodes()))
     {
-        percentage.printIncrement();
+        percentage.PrintIncrement();
         for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
         {
             const auto target = graph->GetTarget(current_edge);
@@ -187,8 +186,8 @@ int main(int argc, char *argv[]) try
                 BOOST_ASSERT(target != SPECIAL_NODEID);
 
                 const unsigned size_of_containing_component =
-                    std::min(tarjan->get_component_size(tarjan->get_component_id(source)),
-                             tarjan->get_component_size(tarjan->get_component_id(target)));
+                    std::min(tarjan->GetComponentSize(tarjan->GetComponentID(source)),
+                             tarjan->GetComponentSize(tarjan->GetComponentID(target)));
 
                 // edges that end on bollard nodes may actually be in two distinct components
                 if (size_of_containing_component < 1000)

@@ -1,3 +1,81 @@
+# 5.1.0
+   Changes with regard to 5.0.0
+
+   - API:
+     - added StepManeuver type `roundabout turn`. The type indicates a small roundabout that is treated as an intersection
+        (turn right at the roundabout for first exit, go straight at the roundabout...)
+     - added StepManeuver type `on ramp` and `off ramp` to distinguish between ramps that enter and exit a highway.
+     - reduced new name instructions for trivial changes
+     - combined multiple turns into a single instruction at segregated roads`
+
+   - Profile Changes:
+    - introduced a suffix_list / get_name_suffix_list to specify name suffices to be suppressed in name change announcements
+    - street names are now consistently assembled for the car, bike and walk profile as: "Name (Ref)" as in "Berlin (A5)"
+    - new `car.lua` dependency `lib/destination.lua`
+    - register a way's .nodes() function for use in the profile's way_function.
+
+   - Infrastructure
+    - BREAKING: reordered internal instruction types. This breaks the **data format**
+    - BREAKING: Changed the on-disk encoding of the StaticRTree for better performance. This breaks the **data format**
+
+   - Fixes:
+    - Issue #2310: post-processing for local paths, fixes #2310
+    - Issue #2309: local path looping, fixes #2309
+    - Issue #2356: Make hint values optional
+    - Issue #2349: Segmentation fault in some requests
+    - Issue #2335: map matching was using shortest path with uturns disabled
+    - Issue #2193: Fix syntax error position indicators in parameters queries
+    - Fix search with u-turn
+    - PhantomNode packing in MSVC now the same on other platforms
+    - Summary is now not malformed when including unnamed roads
+    - Emit new-name on when changing fron unanmed road to named road
+
+# 5.0.0
+   Changes with regard 5.0.0 RC2:
+   - API:
+     - if `geometry=geojson` is passed the resulting geometry can be a LineString or Point
+       depending on how many coordinates are present.
+     - the removal of the summary field was revered. for `steps=flase` the field will always be an empty string.
+
+   Changes with regard to 4.9.1:
+   - API:
+     - BREAKING: Complete rewrite of the HTTP and library API. See detailed documentation in the wiki.
+     - BREAKING: The default coordinate order is now `longitude, latidue`. Exception: Polyline geometry
+         which follow the original Google specification of `latitdue, longitude`.
+     - BREAKING: Polyline geometries now use precision 5, instead of previously 6
+     - BREAKING: Removed GPX support
+     - New service `tile` which serves debug vector tiles of the road network
+     - Completely new engine for guidance generation:
+        - Support for highway ramps
+        - Support for different intersection types (end of street, forks, merges)
+        - Instruction post-processing to merge unimportant instructions
+        - Improved handling of roundabouts
+
+   - Tools:
+     - BREAKING: Renamed osrm-prepare to osrm-contract
+     - BREAKING: Removes profiles from osrm-contract, only needed in osrm-extract.
+     - Abort processing in osrm-extract if there are no snappable edges remaining.
+     - Added .properties file to osrm-extract ouput.
+     - Enables the use of multiple segment-speed-files on the osrm-contract command line
+
+   - Profile changes:
+     - Remove movable bridge mode
+     - Add `maxspeed=none` tag to car profile.
+     - A `side_road` tag support for the OSRM car profile.
+
+   - Fixes:
+     - Issue #2150: Prevents routing over delivery ways and nodes
+     - Issue #1972: Provide uninstall target
+     - Issue #2072: Disable alternatives by default and if core factor < 1.0
+     - Issue #1999: Fix unpacking for self-loop nodes not in core.
+
+   - Infrastructure:
+     - Cucumber test suit is now based on cucumber-js, removes Ruby as dependency
+     - Updated to mapbox/variant v1.1
+     - Updated to libosmium v2.6.1
+     - Remove GeoJSON based debugging output, replaced by debug tiles
+
+
 # 5.0.0 RC2
    - Profiles:
       - `properties.allow_uturns_at_via` -> `properties.continue_straight_at_waypoint` (value is inverted!)

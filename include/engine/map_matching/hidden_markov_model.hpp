@@ -82,10 +82,10 @@ template <class CandidateLists> struct HiddenMarkovModel
             }
         }
 
-        clear(0);
+        Clear(0);
     }
 
-    void clear(std::size_t initial_timestamp)
+    void Clear(std::size_t initial_timestamp)
     {
         BOOST_ASSERT(viterbi.size() == parents.size() && parents.size() == path_distances.size() &&
                      path_distances.size() == pruned.size() && pruned.size() == breakage.size());

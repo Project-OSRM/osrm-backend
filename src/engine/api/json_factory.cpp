@@ -33,12 +33,32 @@ const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "s
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
-const constexpr char *turn_type_names[] = {
-    "invalid",    "no turn", "invalid",    "new name",    "continue",    "turn",
-    "turn",       "turn",    "turn",       "turn",        "merge",       "ramp",
-    "ramp",       "ramp",    "ramp",       "ramp",        "fork",        "end of road",
-    "roundabout", "invalid", "roundabout", "invalid",     "rotary",      "invalid",
-    "rotary",     "invalid", "invalid",    "restriction", "notification"};
+const constexpr char *turn_type_names[] = {"invalid",
+                                           "new name",
+                                           "continue",
+                                           "turn",
+                                           "merge",
+                                           "on ramp",
+                                           "off ramp",
+                                           "fork",
+                                           "end of road",
+                                           "notification",
+                                           "roundabout",
+                                           "roundabout",
+                                           "rotary",
+                                           "rotary",
+                                           "roundabout turn",
+                                           "roundabout turn",
+                                           "invalid",
+                                           "invalid",
+                                           "invalid",
+                                           "invalid",
+                                           "invalid",
+                                           "invalid",
+                                           "invalid",
+                                           "invalid",
+                                           "invalid"};
+
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
 // Check whether to include a modifier in the result of the API
@@ -128,7 +148,9 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     if (maneuver.waypoint_type == guidance::WaypointType::None)
+    {
         step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
+    }
     else
         step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
 
@@ -194,6 +216,7 @@ util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
     util::json::Object route_leg;
     route_leg.values["distance"] = std::round(leg.distance * 10) / 10.;
     route_leg.values["duration"] = std::round(leg.duration * 10) / 10.;
+    route_leg.values["summary"] = std::move(leg.summary);
     route_leg.values["steps"] = std::move(steps);
     return route_leg;
 }

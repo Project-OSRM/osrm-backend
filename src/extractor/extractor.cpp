@@ -392,16 +392,16 @@ void Extractor::FindComponents(unsigned max_edge_id,
 
     TarjanSCC<UncontractedGraph> component_search(
         std::const_pointer_cast<const UncontractedGraph>(uncontractor_graph));
-    component_search.run();
+    component_search.Run();
 
     for (auto &node : input_nodes)
     {
-        auto forward_component = component_search.get_component_id(node.forward_segment_id.id);
+        auto forward_component = component_search.GetComponentID(node.forward_segment_id.id);
         BOOST_ASSERT(!node.reverse_segment_id.enabled ||
                      forward_component ==
-                         component_search.get_component_id(node.reverse_segment_id.id));
+                         component_search.GetComponentID(node.reverse_segment_id.id));
 
-        const unsigned component_size = component_search.get_component_size(forward_component);
+        const unsigned component_size = component_search.GetComponentSize(forward_component);
         node.component.is_tiny = component_size < config.small_component_size;
         node.component.id = 1 + forward_component;
     }
@@ -563,9 +563,9 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
     node_based_edge_list.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode> rtree(node_based_edge_list, config.rtree_nodes_output_path,
-                                           config.rtree_leafs_output_path,
-                                           internal_to_external_node_map);
+    util::StaticRTree<EdgeBasedNode, std::vector<QueryNode>> rtree(
+        node_based_edge_list, config.rtree_nodes_output_path, config.rtree_leafs_output_path,
+        internal_to_external_node_map);
 
     TIMER_STOP(construction);
     util::SimpleLogger().Write() << "finished r-tree construction in " << TIMER_SEC(construction)

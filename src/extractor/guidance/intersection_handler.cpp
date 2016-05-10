@@ -2,9 +2,13 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
+#include "util/guidance/toolkit.hpp"
+#include "util/simple_logger.hpp"
+
 #include <algorithm>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
+using osrm::util::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -23,8 +27,10 @@ inline bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
 
 IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                          const std::vector<QueryNode> &node_info_list,
-                                         const util::NameTable &name_table)
-    : node_based_graph(node_based_graph), node_info_list(node_info_list), name_table(name_table)
+                                         const util::NameTable &name_table,
+                                         const SuffixTable &street_name_suffix_table)
+    : node_based_graph(node_based_graph), node_info_list(node_info_list), name_table(name_table),
+      street_name_suffix_table(street_name_suffix_table)
 {
 }
 
@@ -48,7 +54,7 @@ TurnType IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     bool onto_ramp = isRampClass(out_data.road_classification.road_class);
 
     if (!on_ramp && onto_ramp)
-        return TurnType::Ramp;
+        return TurnType::OnRamp;
 
     if (in_data.name_id == out_data.name_id && in_data.name_id != INVALID_NAME_ID)
     {
@@ -67,9 +73,9 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     // handle travel modes:
     const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
     const auto out_mode = node_based_graph.GetEdgeData(road.turn.eid).travel_mode;
-    if (type == TurnType::Ramp)
+    if (type == TurnType::OnRamp)
     {
-        return {TurnType::Ramp, getTurnDirection(road.turn.angle)};
+        return {TurnType::OnRamp, getTurnDirection(road.turn.angle)};
     }
 
     if (angularDeviation(road.turn.angle, 0) < 0.01)
@@ -82,7 +88,8 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
         const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
         if (in_data.name_id != out_data.name_id &&
             requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
-                                  name_table.GetNameForID(out_data.name_id)))
+                                  name_table.GetNameForID(out_data.name_id),
+                                  street_name_suffix_table))
         {
             // obvious turn onto a through street is a merge
             if (through_street)
@@ -281,6 +288,18 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
             center.turn.instruction = {findBasicTurnType(via_edge, center),
                                        getTurnDirection(center.turn.angle)};
     }
+}
+
+void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
+                                             Intersection &intersection,
+                                             const std::size_t begin,
+                                             const std::size_t end) const
+{
+    for (std::size_t index = begin; index != end; ++index)
+        if (intersection[index].entry_allowed)
+            intersection[index].turn.instruction = {
+                findBasicTurnType(via_eid, intersection[index]),
+                getTurnDirection(intersection[index].turn.angle)};
 }
 
 bool IntersectionHandler::isThroughStreet(const std::size_t index,

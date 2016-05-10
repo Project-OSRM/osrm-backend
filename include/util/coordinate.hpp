@@ -127,10 +127,16 @@ struct Coordinate
     FixedLongitude lon;
     FixedLatitude lat;
 
-    Coordinate();
+    Coordinate() : lon(std::numeric_limits<int>::min()), lat(std::numeric_limits<int>::min()) {}
+
     Coordinate(const FloatCoordinate &other);
-    Coordinate(const FixedLongitude lon_, const FixedLatitude lat_);
-    Coordinate(const FloatLongitude lon_, const FloatLatitude lat_);
+
+    Coordinate(const FloatLongitude lon_, const FloatLatitude lat_)
+        : Coordinate(toFixed(lon_), toFixed(lat_))
+    {
+    }
+
+    Coordinate(const FixedLongitude lon_, const FixedLatitude lat_) : lon(lon_), lat(lat_) {}
 
     template <class T> Coordinate(const T &coordinate) : lon(coordinate.lon), lat(coordinate.lat)
     {
@@ -166,10 +172,22 @@ struct FloatCoordinate
     FloatLongitude lon;
     FloatLatitude lat;
 
-    FloatCoordinate();
-    FloatCoordinate(const FixedLongitude lon_, const FixedLatitude lat_);
-    FloatCoordinate(const FloatLongitude lon_, const FloatLatitude lat_);
-    FloatCoordinate(const Coordinate other);
+    FloatCoordinate()
+        : lon(std::numeric_limits<double>::min()), lat(std::numeric_limits<double>::min())
+    {
+    }
+
+    FloatCoordinate(const Coordinate other)
+        : FloatCoordinate(toFloating(other.lon), toFloating(other.lat))
+    {
+    }
+
+    FloatCoordinate(const FixedLongitude lon_, const FixedLatitude lat_)
+        : FloatCoordinate(toFloating(lon_), toFloating(lat_))
+    {
+    }
+
+    FloatCoordinate(const FloatLongitude lon_, const FloatLatitude lat_) : lon(lon_), lat(lat_) {}
 
     bool IsValid() const;
     friend bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
@@ -181,6 +199,9 @@ bool operator==(const Coordinate lhs, const Coordinate rhs);
 bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
 std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
 std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
+
+inline Coordinate::Coordinate(const FloatCoordinate &other) : Coordinate(toFixed(other.lon), toFixed(other.lat)) {}
+
 }
 }
 

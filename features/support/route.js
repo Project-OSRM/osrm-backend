@@ -15,7 +15,7 @@ module.exports = function () {
 
     this.requestUrl = (path, callback) => {
         var uri = this.query = [this.HOST, path].join('/'),
-            limit = Timeout(this.OSRM_TIMEOUT, { err: { statusCode: 408 } });
+            limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
 
         function runRequest (cb) {
             request(uri, cb);
@@ -127,6 +127,12 @@ module.exports = function () {
         }
     };
 
+    this.summary = (instructions) => {
+        if (instructions) {
+            return instructions.legs.map(l => l.summary).join(',');
+        }
+    };
+
     this.wayList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.name);
     };
@@ -142,6 +148,9 @@ module.exports = function () {
                 case 'depart':
                 case 'arrive':
                     return v.maneuver.type;
+                case 'on ramp':
+                case 'off ramp':
+                    return v.maneuver.type + ' ' + v.maneuver.modifier;
                 case 'roundabout':
                     return 'roundabout-exit-' + v.maneuver.exit;
                 case 'rotary':
@@ -149,6 +158,8 @@ module.exports = function () {
                         return v.rotary_name + '-exit-' + v.maneuver.exit;
                     else
                         return 'rotary-exit-' + v.maneuver.exit;
+                case 'roundabout turn':
+                    return v.maneuver.type + ' ' + v.maneuver.modifier + ' exit-' + v.maneuver.exit;
                 // FIXME this is a little bit over-simplistic for merge/fork instructions
                 default:
                     return v.maneuver.type + ' ' + v.maneuver.modifier;

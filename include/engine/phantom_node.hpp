@@ -149,13 +149,11 @@ struct PhantomNode
     unsigned reverse_packed_geometry_id;
     struct ComponentType
     {
-        uint32_t id : 31;
-        bool is_tiny : 1;
+        std::uint32_t id         : 31;
+        std::uint32_t is_tiny    : 1;
     } component;
-// bit-fields are broken on Windows
-#ifndef _MSC_VER
     static_assert(sizeof(ComponentType) == 4, "ComponentType needs to be 4 bytes big");
-#endif
+
     util::Coordinate location;
     util::Coordinate input_location;
     unsigned short fwd_segment_position;
@@ -165,11 +163,7 @@ struct PhantomNode
     extractor::TravelMode backward_travel_mode;
 };
 
-#ifndef _MSC_VER
 static_assert(sizeof(PhantomNode) == 60, "PhantomNode has more padding then expected");
-#else
-static_assert(sizeof(PhantomNode) == 72, "PhantomNode has more padding then expected");
-#endif
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 

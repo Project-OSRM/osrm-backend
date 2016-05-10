@@ -4,13 +4,14 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/motorway_handler.hpp"
+#include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_classification.hpp"
-#include "extractor/guidance/roundabout_handler.hpp"
-#include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/turn_handler.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
+#include "extractor/suffix_table.hpp"
 
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
@@ -39,7 +40,8 @@ class TurnAnalysis
                  const RestrictionMap &restriction_map,
                  const std::unordered_set<NodeID> &barrier_nodes,
                  const CompressedEdgeContainer &compressed_edge_container,
-                 const util::NameTable &name_table);
+                 const util::NameTable &name_table,
+                 const SuffixTable &street_name_suffix_table);
 
     // the entry into the turn analysis
     std::vector<TurnOperation> getTurns(const NodeID from_node, const EdgeID via_eid) const;

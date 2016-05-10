@@ -84,9 +84,9 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     auto wrapper = std::make_shared<util::MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
                                                                           number_of_locations);
     auto scc = extractor::TarjanSCC<util::MatrixGraphWrapper<EdgeWeight>>(wrapper);
-    scc.run();
+    scc.Run();
 
-    const auto number_of_components = scc.get_number_of_components();
+    const auto number_of_components = scc.GetNumberOfComponents();
 
     std::vector<std::size_t> range_insertion;
     std::vector<std::size_t> range;
@@ -100,22 +100,21 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     {
         range_insertion.push_back(prefix);
         range.push_back(prefix);
-        prefix += scc.get_component_size(j);
+        prefix += scc.GetComponentSize(j);
     }
     // senitel
     range.push_back(components.size());
 
     for (std::size_t i = 0; i < number_of_locations; ++i)
     {
-        components[range_insertion[scc.get_component_id(i)]] = i;
-        ++range_insertion[scc.get_component_id(i)];
+        components[range_insertion[scc.GetComponentID(i)]] = i;
+        ++range_insertion[scc.GetComponentID(i)];
     }
 
     return SCC_Component(std::move(components), std::move(range));
 }
 
 InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &snapped_phantoms,
-                                             const api::TripParameters &parameters,
                                              const std::vector<NodeID> &trip)
 {
     InternalRouteResult min_route;
@@ -135,7 +134,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &sna
     }
     BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
 
-    shortest_path(min_route.segment_end_coordinates, parameters.continue_straight, min_route);
+    shortest_path(min_route.segment_end_coordinates, {false}, min_route);
 
     BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
@@ -232,7 +231,7 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     routes.reserve(trips.size());
     for (const auto &trip : trips)
     {
-        routes.push_back(ComputeRoute(snapped_phantoms, parameters, trip));
+        routes.push_back(ComputeRoute(snapped_phantoms, trip));
     }
 
     api::TripAPI trip_api{BasePlugin::facade, parameters};

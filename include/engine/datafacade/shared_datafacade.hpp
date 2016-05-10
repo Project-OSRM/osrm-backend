@@ -9,6 +9,7 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/compressed_edge_container.hpp"
 
 #include "engine/geospatial_query.hpp"
 #include "util/range_table.hpp"
@@ -46,16 +47,15 @@ class SharedDataFacade final : public BaseDataFacade
   private:
     using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<EdgeData, true>;
-    using GraphNode = typename QueryGraph::NodeArrayEntry;
-    using GraphEdge = typename QueryGraph::EdgeArrayEntry;
-    using NameIndexBlock = typename util::RangeTable<16, true>::BlockT;
-    using InputEdge = typename QueryGraph::InputEdge;
-    using RTreeLeaf = typename super::RTreeLeaf;
+    using GraphNode = QueryGraph::NodeArrayEntry;
+    using GraphEdge = QueryGraph::EdgeArrayEntry;
+    using NameIndexBlock = util::RangeTable<16, true>::BlockT;
+    using InputEdge = QueryGraph::InputEdge;
+    using RTreeLeaf = super::RTreeLeaf;
     using SharedRTree =
         util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
-    using TimeStampedRTreePair = std::pair<unsigned, std::shared_ptr<SharedRTree>>;
-    using RTreeNode = typename SharedRTree::TreeNode;
+    using RTreeNode = SharedRTree::TreeNode;
 
     storage::SharedDataLayout *data_layout;
     char *shared_memory;
@@ -70,9 +70,9 @@ class SharedDataFacade final : public BaseDataFacade
     std::unique_ptr<storage::SharedMemory> m_layout_memory;
     std::unique_ptr<storage::SharedMemory> m_large_memory;
     std::string m_timestamp;
-    extractor::ProfileProperties* m_profile_properties;
+    extractor::ProfileProperties *m_profile_properties;
 
-    std::shared_ptr<util::ShM<util::Coordinate, true>::vector> m_coordinate_list;
+    util::ShM<util::Coordinate, true>::vector m_coordinate_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
@@ -88,8 +88,8 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
     util::ShM<std::size_t, true>::vector m_datasource_name_lengths;
 
-    boost::thread_specific_ptr<std::pair<unsigned, std::shared_ptr<SharedRTree>>> m_static_rtree;
-    boost::thread_specific_ptr<SharedGeospatialQuery> m_geospatial_query;
+    std::unique_ptr<SharedRTree> m_static_rtree;
+    std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     boost::filesystem::path file_index_path;
 
     std::shared_ptr<util::RangeTable<16, true>> m_name_table;
@@ -103,8 +103,8 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadProfileProperties()
     {
-        m_profile_properties =
-            data_layout->GetBlockPtr<extractor::ProfileProperties>(shared_memory, storage::SharedDataLayout::PROPERTIES);
+        m_profile_properties = data_layout->GetBlockPtr<extractor::ProfileProperties>(
+            shared_memory, storage::SharedDataLayout::PROPERTIES);
     }
 
     void LoadTimestamp()
@@ -119,17 +119,15 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadRTree()
     {
-        BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
+        BOOST_ASSERT_MSG(!m_coordinate_list.empty(), "coordinates must be loaded before r-tree");
 
         auto tree_ptr = data_layout->GetBlockPtr<RTreeNode>(
             shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
-        m_static_rtree.reset(new TimeStampedRTreePair(
-            CURRENT_TIMESTAMP,
-            util::make_unique<SharedRTree>(
-                tree_ptr, data_layout->num_entries[storage::SharedDataLayout::R_SEARCH_TREE],
-                file_index_path, m_coordinate_list)));
+        m_static_rtree.reset(new SharedRTree(
+            tree_ptr, data_layout->num_entries[storage::SharedDataLayout::R_SEARCH_TREE],
+            file_index_path, m_coordinate_list));
         m_geospatial_query.reset(
-            new SharedGeospatialQuery(*m_static_rtree->second, m_coordinate_list, *this));
+            new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
     void LoadGraph()
@@ -140,9 +138,9 @@ class SharedDataFacade final : public BaseDataFacade
         auto graph_edges_ptr = data_layout->GetBlockPtr<GraphEdge>(
             shared_memory, storage::SharedDataLayout::GRAPH_EDGE_LIST);
 
-        typename util::ShM<GraphNode, true>::vector node_list(
+        util::ShM<GraphNode, true>::vector node_list(
             graph_nodes_ptr, data_layout->num_entries[storage::SharedDataLayout::GRAPH_NODE_LIST]);
-        typename util::ShM<GraphEdge, true>::vector edge_list(
+        util::ShM<GraphEdge, true>::vector edge_list(
             graph_edges_ptr, data_layout->num_entries[storage::SharedDataLayout::GRAPH_EDGE_LIST]);
         m_query_graph.reset(new QueryGraph(node_list, edge_list));
     }
@@ -151,28 +149,26 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
             shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
-        m_coordinate_list = util::make_unique<util::ShM<util::Coordinate, true>::vector>(
-            coordinate_list_ptr,
+        m_coordinate_list.reset(coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
-        typename util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
+        util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
         auto turn_instruction_list_ptr =
             data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
                 shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
-        typename util::ShM<extractor::guidance::TurnInstruction, true>::vector
-            turn_instruction_list(
-                turn_instruction_list_ptr,
-                data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
+        util::ShM<extractor::guidance::TurnInstruction, true>::vector turn_instruction_list(
+            turn_instruction_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list = std::move(turn_instruction_list);
 
         auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::NAME_ID_LIST);
-        typename util::ShM<unsigned, true>::vector name_id_list(
+        util::ShM<unsigned, true>::vector name_id_list(
             name_id_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_ID_LIST]);
         m_name_ID_list = std::move(name_id_list);
     }
@@ -181,7 +177,7 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto via_node_list_ptr = data_layout->GetBlockPtr<NodeID>(
             shared_memory, storage::SharedDataLayout::VIA_NODE_LIST);
-        typename util::ShM<NodeID, true>::vector via_node_list(
+        util::ShM<NodeID, true>::vector via_node_list(
             via_node_list_ptr, data_layout->num_entries[storage::SharedDataLayout::VIA_NODE_LIST]);
         m_via_node_list = std::move(via_node_list);
     }
@@ -192,14 +188,14 @@ class SharedDataFacade final : public BaseDataFacade
             shared_memory, storage::SharedDataLayout::NAME_OFFSETS);
         auto blocks_ptr = data_layout->GetBlockPtr<NameIndexBlock>(
             shared_memory, storage::SharedDataLayout::NAME_BLOCKS);
-        typename util::ShM<unsigned, true>::vector name_offsets(
+        util::ShM<unsigned, true>::vector name_offsets(
             offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_OFFSETS]);
-        typename util::ShM<NameIndexBlock, true>::vector name_blocks(
+        util::ShM<NameIndexBlock, true>::vector name_blocks(
             blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_BLOCKS]);
 
         auto names_list_ptr = data_layout->GetBlockPtr<char>(
             shared_memory, storage::SharedDataLayout::NAME_CHAR_LIST);
-        typename util::ShM<char, true>::vector names_char_list(
+        util::ShM<char, true>::vector names_char_list(
             names_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_CHAR_LIST]);
         m_name_table = util::make_unique<util::RangeTable<16, true>>(
             name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
@@ -216,7 +212,7 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto core_marker_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::CORE_MARKER);
-        typename util::ShM<bool, true>::vector is_core_node(
+        util::ShM<bool, true>::vector is_core_node(
             core_marker_ptr, data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER]);
         m_is_core_node = std::move(is_core_node);
     }
@@ -225,7 +221,7 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto geometries_index_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::GEOMETRIES_INDEX);
-        typename util::ShM<unsigned, true>::vector geometry_begin_indices(
+        util::ShM<unsigned, true>::vector geometry_begin_indices(
             geometries_index_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
         m_geometry_indices = std::move(geometry_begin_indices);
@@ -233,35 +229,35 @@ class SharedDataFacade final : public BaseDataFacade
         auto geometries_list_ptr =
             data_layout->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge>(
                 shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
-        typename util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector
-            geometry_list(geometries_list_ptr,
-                          data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
+        util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector geometry_list(
+            geometries_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
         m_geometry_list = std::move(geometry_list);
 
         auto datasources_list_ptr = data_layout->GetBlockPtr<uint8_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCES_LIST);
-        typename util::ShM<uint8_t, true>::vector datasources_list(
+        util::ShM<uint8_t, true>::vector datasources_list(
             datasources_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCES_LIST]);
         m_datasource_list = std::move(datasources_list);
 
         auto datasource_name_data_ptr = data_layout->GetBlockPtr<char>(
             shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_DATA);
-        typename util::ShM<char, true>::vector datasource_name_data(
+        util::ShM<char, true>::vector datasource_name_data(
             datasource_name_data_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_DATA]);
         m_datasource_name_data = std::move(datasource_name_data);
 
         auto datasource_name_offsets_ptr = data_layout->GetBlockPtr<std::size_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS);
-        typename util::ShM<std::size_t, true>::vector datasource_name_offsets(
+        util::ShM<std::size_t, true>::vector datasource_name_offsets(
             datasource_name_offsets_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS]);
         m_datasource_name_offsets = std::move(datasource_name_offsets);
 
         auto datasource_name_lengths_ptr = data_layout->GetBlockPtr<std::size_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS);
-        typename util::ShM<std::size_t, true>::vector datasource_name_lengths(
+        util::ShM<std::size_t, true>::vector datasource_name_lengths(
             datasource_name_lengths_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS]);
         m_datasource_name_lengths = std::move(datasource_name_lengths);
@@ -353,15 +349,13 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadNames();
                 LoadCoreInformation();
                 LoadProfileProperties();
+                LoadRTree();
 
                 util::SimpleLogger().Write() << "number of geometries: "
-                                             << m_coordinate_list->size();
-                for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
+                                             << m_coordinate_list.size();
+                for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
                 {
-                    if (!GetCoordinateOfNode(i).IsValid())
-                    {
-                        util::SimpleLogger().Write() << "coordinate " << i << " not valid";
-                    }
+                    BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
                 }
             }
             util::SimpleLogger().Write(logDEBUG) << "Releasing exclusive lock";
@@ -414,7 +408,7 @@ class SharedDataFacade final : public BaseDataFacade
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const NodeID id) const override final
     {
-        return m_coordinate_list->at(id);
+        return m_coordinate_list[id];
     }
 
     virtual void GetUncompressedGeometry(const EdgeID id,
@@ -465,13 +459,9 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
-                                         const util::Coordinate north_east) override final
+                                         const util::Coordinate north_east) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
         const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
                                         north_east.lat};
         return m_geospatial_query->Search(bbox);
@@ -479,13 +469,9 @@ class SharedDataFacade final : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
-                               const float max_distance) override final
+                               const float max_distance) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance);
     }
@@ -494,13 +480,9 @@ class SharedDataFacade final : public BaseDataFacade
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const float max_distance,
                                const int bearing,
-                               const int bearing_range) override final
+                               const int bearing_range) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance,
                                                               bearing, bearing_range);
@@ -508,13 +490,9 @@ class SharedDataFacade final : public BaseDataFacade
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
-                        const unsigned max_results) override final
+                        const unsigned max_results) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results);
     }
@@ -522,13 +500,9 @@ class SharedDataFacade final : public BaseDataFacade
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
-                        const double max_distance) override final
+                        const double max_distance) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance);
     }
@@ -537,13 +511,9 @@ class SharedDataFacade final : public BaseDataFacade
     NearestPhantomNodes(const util::Coordinate input_coordinate,
                         const unsigned max_results,
                         const int bearing,
-                        const int bearing_range) override final
+                        const int bearing_range) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
                                                        bearing_range);
@@ -554,26 +524,18 @@ class SharedDataFacade final : public BaseDataFacade
                         const unsigned max_results,
                         const double max_distance,
                         const int bearing,
-                        const int bearing_range) override final
+                        const int bearing_range) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance,
                                                        bearing, bearing_range);
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
-        const util::Coordinate input_coordinate) override final
+        const util::Coordinate input_coordinate) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate);
@@ -581,13 +543,9 @@ class SharedDataFacade final : public BaseDataFacade
 
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance) override final
+                                                      const double max_distance) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, max_distance);
@@ -597,13 +555,9 @@ class SharedDataFacade final : public BaseDataFacade
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance,
                                                       const int bearing,
-                                                      const int bearing_range) override final
+                                                      const int bearing_range) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, max_distance, bearing, bearing_range);
@@ -612,13 +566,9 @@ class SharedDataFacade final : public BaseDataFacade
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const int bearing,
-                                                      const int bearing_range) override final
+                                                      const int bearing_range) const override final
     {
-        if (!m_static_rtree.get() || CURRENT_TIMESTAMP != m_static_rtree->first)
-        {
-            LoadRTree();
-            BOOST_ASSERT(m_geospatial_query.get());
-        }
+        BOOST_ASSERT(m_geospatial_query.get());
 
         return m_geospatial_query->NearestPhantomNodeWithAlternativeFromBigComponent(
             input_coordinate, bearing, bearing_range);
@@ -709,7 +659,10 @@ class SharedDataFacade final : public BaseDataFacade
 
     std::string GetTimestamp() const override final { return m_timestamp; }
 
-    bool GetContinueStraightDefault() const override final { return m_profile_properties->continue_straight_at_waypoint; }
+    bool GetContinueStraightDefault() const override final
+    {
+        return m_profile_properties->continue_straight_at_waypoint;
+    }
 };
 }
 }

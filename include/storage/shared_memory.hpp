@@ -6,7 +6,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-#ifndef WIN32
+#ifndef _WIN32
 #include <boost/interprocess/xsi_shared_memory.hpp>
 #else
 #include <boost/interprocess/shared_memory_object.hpp>
@@ -38,7 +38,7 @@ struct OSRMLockFile
     }
 };
 
-#ifndef WIN32
+#ifndef _WIN32
 class SharedMemory
 {
 

@@ -46,7 +46,7 @@ std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &l
 {
     std::vector<util::Coordinate> overview_geometry;
     auto leg_index = 0UL;
-    for (const auto geometry : leg_geometries)
+    for (const auto& geometry : leg_geometries)
     {
         auto simplified_geometry =
             douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
@@ -82,7 +82,7 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
     overview_geometry.reserve(overview_size);
 
     auto leg_index = 0UL;
-    for (const auto geometry : leg_geometries)
+    for (const auto& geometry : leg_geometries)
     {
         auto begin = geometry.locations.begin();
         auto end = geometry.locations.end();

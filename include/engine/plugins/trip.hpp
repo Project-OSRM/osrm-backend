@@ -35,7 +35,6 @@ class TripPlugin final : public BasePlugin
     int max_locations_trip;
 
     InternalRouteResult ComputeRoute(const std::vector<PhantomNode> &phantom_node_list,
-                                     const api::TripParameters &parameters,
                                      const std::vector<NodeID> &trip);
 
   public:

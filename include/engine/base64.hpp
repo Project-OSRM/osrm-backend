@@ -15,6 +15,9 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
+namespace osrm
+{
+
 // RFC 4648 "The Base16, Base32, and Base64 Data Encodings"
 // See: https://tools.ietf.org/html/rfc4648
 
@@ -36,9 +39,6 @@ using BinaryFromBase64 = boost::archive::iterators::transform_width<
     6  // from a sequence of 6 bit
     >;
 } // ns detail
-
-namespace osrm
-{
 namespace engine
 {
 

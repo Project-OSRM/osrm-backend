@@ -3,8 +3,6 @@
 
 #include "util/coordinate.hpp"
 
-#include <boost/fusion/include/adapt_struct.hpp>
-
 #include <string>
 #include <vector>
 
@@ -21,17 +19,11 @@ struct ParsedURL final
     unsigned version;
     std::string profile;
     std::string query;
+    std::size_t prefix_length;
 };
 
 } // api
 } // server
 } // osrm
-
-BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL,
-    (std::string, service)
-    (unsigned, version)
-    (std::string, profile)
-    (std::string, query)
-)
 
 #endif

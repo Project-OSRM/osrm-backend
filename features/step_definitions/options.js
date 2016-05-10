@@ -1,7 +1,7 @@
 var assert = require('assert');
 
 module.exports = function () {
-    this.When(/^I run "osrm\-routed\s?(.*?)"$/, { timeout: this.SHUTDOWN_TIMEOUT }, (options, callback) => {
+    this.When(/^I run "osrm\-routed\s?(.*?)"$/, { timeout: this.TIMEOUT }, (options, callback) => {
         this.runBin('osrm-routed', options, () => {
             callback();
         });

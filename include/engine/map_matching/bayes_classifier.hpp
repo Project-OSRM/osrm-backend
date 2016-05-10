@@ -23,7 +23,7 @@ struct NormalDistribution
     }
 
     // FIXME implement log-probability version since it's faster
-    double density_function(const double val) const
+    double Density(const double val) const
     {
         using namespace boost::math::constants;
 
@@ -44,7 +44,7 @@ struct LaplaceDistribution
     }
 
     // FIXME implement log-probability version since it's faster
-    double density_function(const double val) const
+    double Density(const double val) const
     {
         const double x = std::abs(val - location);
         return 1.0 / (2. * scale) * std::exp(-x / scale);
@@ -79,9 +79,9 @@ class BayesClassifier
     ClassificationT classify(const ValueT &v) const
     {
         const double positive_postpriori =
-            positive_apriori_probability * positive_distribution.density_function(v);
+            positive_apriori_probability * positive_distribution.Density(v);
         const double negative_postpriori =
-            negative_apriori_probability * negative_distribution.density_function(v);
+            negative_apriori_probability * negative_distribution.Density(v);
         const double norm = positive_postpriori + negative_postpriori;
 
         if (positive_postpriori > negative_postpriori)

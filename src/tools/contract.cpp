@@ -43,6 +43,10 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
                                   &contractor_config.segment_speed_lookup_paths)
                                   ->composing(),
         "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
+        "turn-penalty-file", boost::program_options::value<std::vector<std::string>>(
+                                 &contractor_config.turn_penalty_lookup_paths)
+                                 ->composing(),
+        "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
         "level-cache,o", boost::program_options::value<bool>(&contractor_config.use_cached_priority)
                              ->default_value(false),
         "Use .level file to retain the contaction level for each node from the last run.");

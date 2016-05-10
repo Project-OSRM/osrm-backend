@@ -10,13 +10,11 @@ module.exports = function () {
     });
 
     this.Given(/^the extract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setExtractArgs(args);
-        callback();
+        this.setExtractArgs(args, callback);
     });
 
     this.Given(/^the contract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setContractArgs(args);
-        callback();
+        this.setContractArgs(args, callback);
     });
 
     this.Given(/^a grid size of (\d+) meters$/, (meters, callback) => {
@@ -49,18 +47,27 @@ module.exports = function () {
 
         var addNode = (name, ri, ci, cb) => {
             if (name) {
-                if (name.length !== 1) throw new Error(util.format('*** node invalid name %s, must be single characters', name));
-                if (!name.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name %s, must me alphanumeric', name));
-
-                var lonLat;
-                if (name.match(/[a-z]/)) {
-                    if (this.nameNodeHash[name]) throw new Error(util.format('*** duplicate node %s', name));
+                var nodeWithID = name.match(/([a-z])\:([0-9]*)/);
+                if (nodeWithID) {
+                    var nodeName = nodeWithID[1],
+                        nodeID = nodeWithID[2];
+                    if (this.nameNodeHash[nodeName]) throw new Error(util.format('*** duplicate node %s', name));
                     lonLat = this.tableCoordToLonLat(ci, ri);
-                    this.addOSMNode(name, lonLat[0], lonLat[1], null);
+                    this.addOSMNode(nodeName, lonLat[0], lonLat[1], nodeID);
                 } else {
-                    if (this.locationHash[name]) throw new Error(util.format('*** duplicate node %s'), name);
-                    lonLat = this.tableCoordToLonLat(ci, ri);
-                    this.addLocation(name, lonLat[0], lonLat[1], null);
+                    if (name.length !== 1) throw new Error(util.format('*** node invalid name %s, must be single characters', name));
+                    if (!name.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name %s, must me alphanumeric', name));
+
+                    var lonLat;
+                    if (name.match(/[a-z]/)) {
+                        if (this.nameNodeHash[name]) throw new Error(util.format('*** duplicate node %s', name));
+                        lonLat = this.tableCoordToLonLat(ci, ri);
+                        this.addOSMNode(name, lonLat[0], lonLat[1], null);
+                    } else {
+                        if (this.locationHash[name]) throw new Error(util.format('*** duplicate node %s'), name);
+                        lonLat = this.tableCoordToLonLat(ci, ri);
+                        this.addLocation(name, lonLat[0], lonLat[1], null);
+                    }
                 }
 
                 cb();
@@ -226,6 +233,10 @@ module.exports = function () {
 
     this.Given(/^the speed file$/, (data, callback) => {
         fs.writeFile(path.resolve(this.TEST_FOLDER, 'speeds.csv'), data, callback);
+    });
+
+    this.Given(/^the turn penalty file$/, (data, callback) => {
+        fs.writeFile(path.resolve(this.TEST_FOLDER, 'penalties.csv'), data, callback);
     });
 
     this.Given(/^the data has been saved to disk$/, (callback) => {

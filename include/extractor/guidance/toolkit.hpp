@@ -4,12 +4,15 @@
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/guidance/toolkit.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/suffix_table.hpp"
 
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/discrete_angle.hpp"
+#include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
 #include <algorithm>
@@ -17,6 +20,10 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace osrm
 {
@@ -24,6 +31,8 @@ namespace extractor
 {
 namespace guidance
 {
+
+using util::guidance::angularDeviation;
 
 namespace detail
 {
@@ -94,7 +103,7 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
 }
 } // namespace detail
 
-// Finds a (potentially inteprolated) coordinate that is DESIRED_SEGMENT_LENGTH away
+// Finds a (potentially interpolated) coordinate that is DESIRED_SEGMENT_LENGTH away
 // from the start of an edge
 inline util::Coordinate
 getRepresentativeCoordinate(const NodeID from_node,
@@ -245,12 +254,6 @@ inline double angleFromDiscreteAngle(const DiscreteAngle angle)
     return static_cast<double>(angle) * detail::discrete_angle_step_size;
 }
 
-inline double angularDeviation(const double angle, const double from)
-{
-    const double deviation = std::abs(angle - from);
-    return std::min(360 - deviation, deviation);
-}
-
 inline double getAngularPenalty(const double angle, DirectionModifier modifier)
 {
     // these are not aligned with getTurnDirection but represent an ideal center
@@ -269,30 +272,6 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
     const double difference = getAngularPenalty(angle, instruction.direction_modifier);
     const double max_deviation = deviations[static_cast<int>(instruction.direction_modifier)];
     return 1.0 - (difference / max_deviation) * (difference / max_deviation);
-}
-
-// Translates between angles and their human-friendly directional representation
-inline DirectionModifier getTurnDirection(const double angle)
-{
-    // An angle of zero is a u-turn
-    // 180 goes perfectly straight
-    // 0-180 are right turns
-    // 180-360 are left turns
-    if (angle > 0 && angle < 60)
-        return DirectionModifier::SharpRight;
-    if (angle >= 60 && angle < 140)
-        return DirectionModifier::Right;
-    if (angle >= 140 && angle < 170)
-        return DirectionModifier::SlightRight;
-    if (angle >= 165 && angle <= 195)
-        return DirectionModifier::Straight;
-    if (angle > 190 && angle <= 220)
-        return DirectionModifier::SlightLeft;
-    if (angle > 220 && angle <= 300)
-        return DirectionModifier::Left;
-    if (angle > 300 && angle < 360)
-        return DirectionModifier::SharpLeft;
-    return DirectionModifier::UTurn;
 }
 
 // swaps left <-> right modifier types
@@ -329,8 +308,27 @@ inline bool isDistinct(const DirectionModifier first, const DirectionModifier se
     return true;
 }
 
-inline bool requiresNameAnnounced(const std::string &from, const std::string &to)
+inline std::pair<std::string, std::string> getPrefixAndSuffix(const std::string &data)
 {
+    const auto suffix_pos = data.find_last_of(' ');
+    if (suffix_pos == std::string::npos)
+        return {};
+
+    const auto prefix_pos = data.find_first_of(' ');
+    auto result = std::make_pair(data.substr(0, prefix_pos), data.substr(suffix_pos + 1));
+    boost::to_lower(result.first);
+    boost::to_lower(result.second);
+    return result;
+}
+
+inline bool requiresNameAnnounced(const std::string &from,
+                                  const std::string &to,
+                                  const SuffixTable &suffix_table)
+{
+    //first is empty and the second is not
+    if(from.empty() && !to.empty())
+        return true;
+
     // FIXME, handle in profile to begin with?
     // this uses the encoding of references in the profile, which is very BAD
     // Input for this function should be a struct separating streetname, suffix (e.g. road,
@@ -361,7 +359,43 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
 
     // check similarity of names
     const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto names_are_equal = from_name == to_name;
+    const auto name_is_contained =
+        boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
+
+    const auto checkForPrefixOrSuffixChange =
+        [](const std::string &first, const std::string &second, const SuffixTable &suffix_table) {
+
+            const auto first_prefix_and_suffixes = getPrefixAndSuffix(first);
+            const auto second_prefix_and_suffixes = getPrefixAndSuffix(second);
+            // reverse strings, get suffices and reverse them to get prefixes
+            const auto checkTable = [&](const std::string str) {
+                return str.empty() || suffix_table.isSuffix(str);
+            };
+
+            const bool is_prefix_change = [&]() -> bool {
+                if (!checkTable(first_prefix_and_suffixes.first))
+                    return false;
+                if (!checkTable(first_prefix_and_suffixes.first))
+                    return false;
+                return !first.compare(first_prefix_and_suffixes.first.length(), std::string::npos,
+                                     second, second_prefix_and_suffixes.first.length(),
+                                     std::string::npos);
+            }();
+
+            const bool is_suffix_change = [&]() -> bool {
+                if (!checkTable(first_prefix_and_suffixes.second))
+                    return false;
+                if (!checkTable(first_prefix_and_suffixes.second))
+                    return false;
+                return !first.compare(0, first.length() - first_prefix_and_suffixes.second.length(),
+                                     second, 0, second.length() - second_prefix_and_suffixes.second.length());
+            }();
+
+            return is_prefix_change || is_suffix_change;
+        };
+
+    const auto is_suffix_change = checkForPrefixOrSuffixChange(from_name, to_name, suffix_table);
+    const auto names_are_equal = from_name == to_name || name_is_contained || is_suffix_change;
     const auto name_is_removed = !from_name.empty() && to_name.empty();
     // references are contained in one another
     const auto refs_are_empty = from_ref.empty() && to_ref.empty();
@@ -370,9 +404,10 @@ inline bool requiresNameAnnounced(const std::string &from, const std::string &to
         (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
     const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
 
-    const auto obvious_change =
-        (names_are_empty && refs_are_empty) || (names_are_equal && ref_is_contained) ||
-        (names_are_equal && refs_are_empty) || name_is_removed || ref_is_removed;
+    const auto obvious_change = (names_are_empty && refs_are_empty) ||
+                                (names_are_equal && ref_is_contained) ||
+                                (names_are_equal && refs_are_empty) || name_is_removed ||
+                                ref_is_removed || is_suffix_change;
 
     return !obvious_change;
 }
@@ -395,6 +430,25 @@ inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoa
     // Potentially we could include features like number of lanes here and others?
     // Should also be moved to profiles
     return std::abs(getPriority(first) - getPriority(second)) <= 1;
+}
+
+// To simplify handling of Left/Right hand turns, we can mirror turns and write an intersection
+// handler only for one side. The mirror function turns a left-hand turn in a equivalent right-hand
+// turn and vice versa.
+inline ConnectedRoad mirror(ConnectedRoad road)
+{
+    const constexpr DirectionModifier mirrored_modifiers[] = {
+        DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
+        DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
+        DirectionModifier::Right,      DirectionModifier::SharpRight};
+
+    if (angularDeviation(road.turn.angle, 0) > std::numeric_limits<double>::epsilon())
+    {
+        road.turn.angle = 360 - road.turn.angle;
+        road.turn.instruction.direction_modifier =
+            mirrored_modifiers[road.turn.instruction.direction_modifier];
+    }
+    return road;
 }
 
 } // namespace guidance

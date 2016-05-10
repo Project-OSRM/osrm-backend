@@ -250,11 +250,27 @@ CompressedEdgeContainer::GetBucketReference(const EdgeID edge_id) const
     return m_compressed_geometries.at(index);
 }
 
+// Since all edges are technically in the compressed geometry container,
+// regardless of whether a compressed edge actually contains multiple
+// original segments, we use 'Trivial' here to describe compressed edges
+// that only contain one original segment
+bool CompressedEdgeContainer::IsTrivial(const EdgeID edge_id) const
+{
+    const auto &bucket = GetBucketReference(edge_id);
+    return bucket.size() == 1;
+}
+
 NodeID CompressedEdgeContainer::GetFirstEdgeTargetID(const EdgeID edge_id) const
 {
     const auto &bucket = GetBucketReference(edge_id);
-    BOOST_ASSERT(bucket.size() >= 2);
+    BOOST_ASSERT(bucket.size() >= 1);
     return bucket.front().node_id;
+}
+NodeID CompressedEdgeContainer::GetLastEdgeTargetID(const EdgeID edge_id) const
+{
+    const auto &bucket = GetBucketReference(edge_id);
+    BOOST_ASSERT(bucket.size() >= 1);
+    return bucket.back().node_id;
 }
 NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
 {

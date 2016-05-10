@@ -26,22 +26,21 @@ constexpr int32_t WORLD_MIN_LON = -180 * COORDINATE_PRECISION;
 constexpr int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 
 using RTreeLeaf = extractor::EdgeBasedNode;
-using CoordinateListPtr = std::shared_ptr<std::vector<util::Coordinate>>;
 using BenchStaticRTree =
     util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, false>::vector, false>;
 
-CoordinateListPtr loadCoordinates(const boost::filesystem::path &nodes_file)
+std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
 {
     boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
     extractor::QueryNode current_node;
     unsigned coordinate_count = 0;
     nodes_input_stream.read((char *)&coordinate_count, sizeof(unsigned));
-    auto coords = std::make_shared<std::vector<Coordinate>>(coordinate_count);
+    std::vector<util::Coordinate> coords(coordinate_count);
     for (unsigned i = 0; i < coordinate_count; ++i)
     {
         nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-        coords->at(i) = util::Coordinate(current_node.lon, current_node.lat);
+        coords[i] = util::Coordinate(current_node.lon, current_node.lat);
     }
     return coords;
 }

@@ -12,10 +12,10 @@ namespace util
 class Percent
 {
   public:
-    explicit Percent(unsigned max_value, unsigned step = 5) { reinit(max_value, step); }
+    explicit Percent(unsigned max_value, unsigned step = 5) { Reinit(max_value, step); }
 
     // Reinitializes
-    void reinit(unsigned max_value, unsigned step = 5)
+    void Reinit(unsigned max_value, unsigned step = 5)
     {
         m_max_value = max_value;
         m_current_value = 0;
@@ -26,27 +26,27 @@ class Percent
     }
 
     // If there has been significant progress, display it.
-    void printStatus(unsigned current_value)
+    void PrintStatus(unsigned current_value)
     {
         if (current_value >= m_next_threshold)
         {
             m_next_threshold += m_percent_interval;
-            printPercent(current_value / static_cast<double>(m_max_value) * 100.);
+            PrintPercent(current_value / static_cast<double>(m_max_value) * 100.);
         }
         if (current_value + 1 == m_max_value)
             std::cout << " 100%" << std::endl;
     }
 
-    void printIncrement()
+    void PrintIncrement()
     {
         ++m_current_value;
-        printStatus(m_current_value);
+        PrintStatus(m_current_value);
     }
 
-    void printAddition(const unsigned addition)
+    void PrintAddition(const unsigned addition)
     {
         m_current_value += addition;
-        printStatus(m_current_value);
+        PrintStatus(m_current_value);
     }
 
   private:
@@ -58,7 +58,7 @@ class Percent
     unsigned m_step;
 
     // Displays progress.
-    void printPercent(double percent)
+    void PrintPercent(double percent)
     {
         while (percent >= m_last_percent + m_step)
         {

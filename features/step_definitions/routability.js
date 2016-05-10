@@ -71,6 +71,7 @@ module.exports = function () {
                 r.status = res.statusCode === 200 ? 'x' : null;
                 if (r.status) {
                     r.route = this.wayList(r.json.routes[0]);
+                    r.summary = r.json.routes[0].legs.map(l => l.summary).join(',');
 
                     if (r.route.split(',')[0] === util.format('w%d', i)) {
                         r.time = r.json.routes[0].duration;

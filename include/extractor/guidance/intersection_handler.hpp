@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/suffix_table.hpp"
 
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
@@ -26,7 +27,8 @@ class IntersectionHandler
   public:
     IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                         const std::vector<QueryNode> &node_info_list,
-                        const util::NameTable &name_table);
+                        const util::NameTable &name_table,
+                        const SuffixTable &street_name_suffix_table);
     virtual ~IntersectionHandler();
 
     // check whether the handler can actually handle the intersection
@@ -41,6 +43,7 @@ class IntersectionHandler
     const util::NodeBasedDynamicGraph &node_based_graph;
     const std::vector<QueryNode> &node_info_list;
     const util::NameTable &name_table;
+    const SuffixTable &street_name_suffix_table;
 
     // counts the number on allowed entry roads
     std::size_t countValid(const Intersection &intersection) const;
@@ -60,6 +63,12 @@ class IntersectionHandler
                     ConnectedRoad &left,
                     ConnectedRoad &center,
                     ConnectedRoad &right) const;
+
+    // Trivial Turns use findBasicTurnType and getTurnDirection as only criteria
+    void assignTrivialTurns(const EdgeID via_eid,
+                            Intersection &intersection,
+                            const std::size_t begin,
+                            const std::size_t end) const;
 
     bool isThroughStreet(const std::size_t index, const Intersection &intersection) const;
 };

@@ -7,6 +7,8 @@
 #include <limits>
 #include <utility>
 
+#include <boost/range/algorithm/count_if.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -14,11 +16,12 @@ namespace extractor
 namespace guidance
 {
 
-IntersectionGenerator::IntersectionGenerator(const util::NodeBasedDynamicGraph &node_based_graph,
-                      const RestrictionMap &restriction_map,
-                      const std::unordered_set<NodeID> &barrier_nodes,
-                      const std::vector<QueryNode> &node_info_list,
-                      const CompressedEdgeContainer &compressed_edge_container)
+IntersectionGenerator::IntersectionGenerator(
+    const util::NodeBasedDynamicGraph &node_based_graph,
+    const RestrictionMap &restriction_map,
+    const std::unordered_set<NodeID> &barrier_nodes,
+    const std::vector<QueryNode> &node_info_list,
+    const CompressedEdgeContainer &compressed_edge_container)
     : node_based_graph(node_based_graph), restriction_map(restriction_map),
       barrier_nodes(barrier_nodes), node_info_list(node_info_list),
       compressed_edge_container(compressed_edge_container)
@@ -53,6 +56,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     const bool is_barrier_node = barrier_nodes.find(turn_node) != barrier_nodes.end();
 
     bool has_uturn_edge = false;
+    bool uturn_could_be_valid = false;
     for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
     {
         BOOST_ASSERT(onto_edge != SPECIAL_EDGEID);
@@ -73,6 +77,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
         auto angle = 0.;
         if (from_node == to_node)
         {
+            uturn_could_be_valid = turn_is_valid;
             if (turn_is_valid && !is_barrier_node)
             {
                 // we only add u-turns for dead-end streets.
@@ -89,7 +94,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
                             ++number_of_emmiting_bidirectional_edges;
                         }
                     }
-                    // is a dead-end
+                    // is a dead-end, only possible road is to go back
                     turn_is_valid = number_of_emmiting_bidirectional_edges <= 1;
                 }
             }
@@ -105,7 +110,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
                 turn_node, to_node, onto_edge, !INVERT, compressed_edge_container, node_info_list);
             angle = util::coordinate_calculation::computeAngle(
                 first_coordinate, node_info_list[turn_node], third_coordinate);
-            if (angle < std::numeric_limits<double>::epsilon())
+            if (std::abs(angle) < std::numeric_limits<double>::epsilon())
                 has_uturn_edge = true;
         }
 
@@ -115,8 +120,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     }
 
     // We hit the case of a street leading into nothing-ness. Since the code here assumes that this
-    // will
-    // never happen we add an artificial invalid uturn in this case.
+    // will never happen we add an artificial invalid uturn in this case.
     if (!has_uturn_edge)
     {
         intersection.push_back(
@@ -130,6 +134,11 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
 
     BOOST_ASSERT(intersection[0].turn.angle >= 0. &&
                  intersection[0].turn.angle < std::numeric_limits<double>::epsilon());
+
+    const auto valid_count =
+        boost::count_if(intersection, [](const ConnectedRoad &road) { return road.entry_allowed; });
+    if (0 == valid_count && uturn_could_be_valid)
+        intersection[0].entry_allowed = true;
 
     return mergeSegregatedRoads(std::move(intersection));
 }
@@ -204,8 +213,17 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
             return result;
         }
     };
-    if (intersection.size() == 1)
+    if (intersection.size() <= 1)
         return intersection;
+
+    const bool is_connected_to_roundabout = [this, &intersection]() {
+        for (const auto &road : intersection)
+        {
+            if (node_based_graph.GetEdgeData(road.turn.eid).roundabout)
+                return true;
+        }
+        return false;
+    }();
 
     // check for merges including the basic u-turn
     // these result in an adjustment of all other angles
@@ -215,11 +233,26 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
             (360 - intersection[intersection.size() - 1].turn.angle) / 2;
         for (std::size_t i = 1; i + 1 < intersection.size(); ++i)
             intersection[i].turn.angle += correction_factor;
+
+        // FIXME if we have a left-sided country, we need to switch this off and enable it below
         intersection[0] = merge(intersection.front(), intersection.back());
         intersection[0].turn.angle = 0;
+
+        if (is_connected_to_roundabout)
+        {
+            // We are merging a u-turn against the direction of a roundabout
+            //
+            //    -----------> roundabout
+            //       /    \
+            //    out      in
+            //
+            // These cases have to be disabled, even if they are not forbidden specifically by a
+            // relation
+            intersection[0].entry_allowed = false;
+        }
+
         intersection.pop_back();
     }
-
     else if (mergable(0, 1))
     {
         const double correction_factor = (intersection[1].turn.angle) / 2;

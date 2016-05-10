@@ -5,6 +5,7 @@
 #include <utility>
 #include <boost/assert.hpp>
 #include <cstddef>
+#include <algorithm>
 
 namespace osrm
 {

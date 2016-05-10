@@ -55,6 +55,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                 json::Array{{json::Object{
                     {{"distance", 0.},
                      {"duration", 0.},
+                     {"summary", ""},
                      {"steps", json::Array{{json::Object{{{"duration", 0.},
                                                           {"distance", 0.},
                                                           {"geometry", "yw_jGupkl@??"},
@@ -153,6 +154,10 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
             const auto duration = leg_object.values.at("duration").get<json::Number>().value;
             BOOST_CHECK_EQUAL(duration, 0);
 
+            // nothing can be said about summary, empty or contains human readable summary
+            const auto summary = leg_object.values.at("summary").get<json::String>().value;
+            BOOST_CHECK(((void)summary, true));
+
             const auto &steps = leg_object.values.at("steps").get<json::Array>().values;
             BOOST_CHECK(!steps.empty());
 
@@ -237,9 +242,80 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
         const auto latitude = location[1].get<json::Number>().value;
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+    }
+}
 
-        // TODO(daniel-j-h): we could do a Nearest request for each waypoint, verifying
-        // that we did indeed not snap to the input locations inside the small component.
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
+{
+    const auto args = get_args();
+    auto osrm = getOSRM(args.at(0));
+
+    using namespace osrm;
+
+    const auto locations = get_locations_in_big_component();
+
+    RouteParameters params;
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+
+    json::Object result;
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
+
+    for (const auto &waypoint : waypoints)
+    {
+        const auto &waypoint_object = waypoint.get<json::Object>();
+
+        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
+        const auto longitude = location[0].get<json::Number>().value;
+        const auto latitude = location[1].get<json::Number>().value;
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
+{
+    const auto args = get_args();
+    auto osrm = getOSRM(args.at(0));
+
+    using namespace osrm;
+
+    const auto big_component = get_locations_in_big_component();
+    const auto small_component = get_locations_in_small_component();
+
+    RouteParameters params;
+    params.coordinates.push_back(small_component.at(0));
+    params.coordinates.push_back(big_component.at(0));
+    params.coordinates.push_back(small_component.at(1));
+    params.coordinates.push_back(big_component.at(1));
+
+    json::Object result;
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
+    BOOST_CHECK_EQUAL(waypoints.size(), params.coordinates.size());
+
+    for (const auto &waypoint : waypoints)
+    {
+        const auto &waypoint_object = waypoint.get<json::Object>();
+
+        const auto location = waypoint_object.values.at("location").get<json::Array>().values;
+        const auto longitude = location[0].get<json::Number>().value;
+        const auto latitude = location[1].get<json::Number>().value;
+        BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+        BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
 }
 

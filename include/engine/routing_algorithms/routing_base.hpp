@@ -301,8 +301,6 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
-                // ed.distance should be total_weight + penalties (turn, stop, etc)
-                BOOST_ASSERT(ed.distance >= total_weight);
                 const bool is_first_segment = unpacked_path.empty();
 
                 const std::size_t start_index =
@@ -350,7 +348,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 start_index =
                     id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
             }
-            end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
+            end_index =
+                id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
         }
         else
         {
@@ -373,8 +372,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         // t: fwd_segment 3
         // -> (U, v), (v, w), (w, x)
         // note that (x, t) is _not_ included but needs to be added later.
-        BOOST_ASSERT(start_index <= end_index);
-        for (std::size_t i = start_index; i != end_index; ++i)
+        for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
@@ -397,8 +395,17 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             // However the first segment duration needs to be adjusted to the fact that the source
             // phantom is in the middle of the segment. We do this by subtracting v--s from the
             // duration.
-            BOOST_ASSERT(unpacked_path.front().duration_until_turn >= source_weight);
-            unpacked_path.front().duration_until_turn -= source_weight;
+
+            // Since it's possible duration_until_turn can be less than source_weight here if
+            // a negative enough turn penalty is used to modify this edge weight during
+            // osrm-contract, we clamp to 0 here so as not to return a negative duration
+            // for this segment.
+
+            // TODO this creates a scenario where it's possible the duration from a phantom
+            // node to the first turn would be the same as from end to end of a segment,
+            // which is obviously incorrect and not ideal...
+            unpacked_path.front().duration_until_turn =
+                std::max(unpacked_path.front().duration_until_turn - source_weight, 0);
         }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.
@@ -559,9 +566,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         // make sure to correctly unpack loops
         if (distance != forward_heap.GetKey(middle) + reverse_heap.GetKey(middle))
         {
-            // self loop
-            BOOST_ASSERT(forward_heap.GetData(middle).parent == middle &&
-                         reverse_heap.GetData(middle).parent == middle);
+            // self loop makes up the full path
             packed_leg.push_back(middle);
             packed_leg.push_back(middle);
         }
@@ -774,18 +779,50 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         nodes.target_phantom = target_phantom;
         UnpackPath(packed_path.begin(), packed_path.end(), nodes, unpacked_path);
 
-        util::Coordinate previous_coordinate = source_phantom.location;
-        util::Coordinate current_coordinate;
+        using util::coordinate_calculation::detail::DEGREE_TO_RAD;
+        using util::coordinate_calculation::detail::EARTH_RADIUS;
+
         double distance = 0;
+        double prev_lat =
+            static_cast<double>(toFloating(source_phantom.location.lat)) * DEGREE_TO_RAD;
+        double prev_lon =
+            static_cast<double>(toFloating(source_phantom.location.lon)) * DEGREE_TO_RAD;
+        double prev_cos = std::cos(prev_lat);
         for (const auto &p : unpacked_path)
         {
-            current_coordinate = facade->GetCoordinateOfNode(p.turn_via_node);
-            distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
-                                                                        current_coordinate);
-            previous_coordinate = current_coordinate;
+            const auto current_coordinate = facade->GetCoordinateOfNode(p.turn_via_node);
+
+            const double current_lat =
+                static_cast<double>(toFloating(current_coordinate.lat)) * DEGREE_TO_RAD;
+            const double current_lon =
+                static_cast<double>(toFloating(current_coordinate.lon)) * DEGREE_TO_RAD;
+            const double current_cos = std::cos(current_lat);
+
+            const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
+            const double sin_dlat = std::sin((prev_lat - current_lat) / 2.0);
+
+            const double aharv = sin_dlat * sin_dlat + prev_cos * current_cos * sin_dlon * sin_dlon;
+            const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
+            distance += EARTH_RADIUS * charv;
+
+            prev_lat = current_lat;
+            prev_lon = current_lon;
+            prev_cos = current_cos;
         }
-        distance += util::coordinate_calculation::haversineDistance(previous_coordinate,
-                                                                    target_phantom.location);
+
+        const double current_lat =
+            static_cast<double>(toFloating(target_phantom.location.lat)) * DEGREE_TO_RAD;
+        const double current_lon =
+            static_cast<double>(toFloating(target_phantom.location.lon)) * DEGREE_TO_RAD;
+        const double current_cos = std::cos(current_lat);
+
+        const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
+        const double sin_dlat = std::sin((prev_lat - current_lat) / 2.0);
+
+        const double aharv = sin_dlat * sin_dlat + prev_cos * current_cos * sin_dlon * sin_dlon;
+        const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
+        distance += EARTH_RADIUS * charv;
+
         return distance;
     }
 

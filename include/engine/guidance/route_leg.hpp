@@ -3,6 +3,9 @@
 
 #include "engine/guidance/route_step.hpp"
 
+#include <boost/optional.hpp>
+
+#include <string>
 #include <vector>
 
 namespace osrm
@@ -16,6 +19,7 @@ struct RouteLeg
 {
     double duration;
     double distance;
+    std::string summary;
     std::vector<RouteStep> steps;
 };
 }

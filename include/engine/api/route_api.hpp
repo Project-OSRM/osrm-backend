@@ -69,7 +69,7 @@ class RouteAPI : public BaseAPI
         }
 
         BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
-        return json::makeGeoJSONLineString(begin, end);
+        return json::makeGeoJSONGeometry(begin, end);
     }
 
     util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
@@ -93,8 +93,8 @@ class RouteAPI : public BaseAPI
 
             auto leg_geometry = guidance::assembleGeometry(
                 BaseAPI::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
-            auto leg = guidance::assembleLeg(path_data, leg_geometry, phantoms.source_phantom,
-                                             phantoms.target_phantom, reversed_target);
+            auto leg = guidance::assembleLeg(facade, path_data, leg_geometry, phantoms.source_phantom,
+                                             phantoms.target_phantom, reversed_target, parameters.steps);
 
             if (parameters.steps)
             {
@@ -132,6 +132,7 @@ class RouteAPI : public BaseAPI
 
                 guidance::trimShortSegments(steps, leg_geometry);
                 leg.steps = guidance::postProcess(std::move(steps));
+                leg.steps = guidance::collapseTurns(std::move(leg.steps));
                 leg.steps = guidance::assignRelativeLocations(std::move(leg.steps), leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
@@ -169,7 +170,7 @@ class RouteAPI : public BaseAPI
                                                leg_geometry.locations.begin() + step.geometry_end));
                     }
                     BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
-                    return static_cast<util::json::Value>(json::makeGeoJSONLineString(
+                    return static_cast<util::json::Value>(json::makeGeoJSONGeometry(
                         leg_geometry.locations.begin() + step.geometry_begin,
                         leg_geometry.locations.begin() + step.geometry_end));
                 });

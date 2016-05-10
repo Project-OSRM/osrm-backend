@@ -1,8 +1,8 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_MOTORWAY_HANDLER_HPP_
 #define OSRM_EXTRACTOR_GUIDANCE_MOTORWAY_HANDLER_HPP_
 
-#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/intersection.hpp"
+#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
@@ -24,7 +24,8 @@ class MotorwayHandler : public IntersectionHandler
   public:
     MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                     const std::vector<QueryNode> &node_info_list,
-                    const util::NameTable &name_table);
+                    const util::NameTable &name_table,
+                    const SuffixTable &street_name_suffix_table);
     ~MotorwayHandler() override final;
 
     // check whether the handler can actually handle the intersection

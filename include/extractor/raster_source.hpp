@@ -104,7 +104,7 @@ class RasterSource
     const float xstep;
     const float ystep;
 
-    float calcSize(int min, int max, std::size_t count) const;
+    float CalcSize(int min, int max, std::size_t count) const;
 
   public:
     RasterGrid raster_data;
@@ -116,9 +116,9 @@ class RasterSource
     const int ymin;
     const int ymax;
 
-    RasterDatum getRasterData(const int lon, const int lat) const;
+    RasterDatum GetRasterData(const int lon, const int lat) const;
 
-    RasterDatum getRasterInterpolate(const int lon, const int lat) const;
+    RasterDatum GetRasterInterpolate(const int lon, const int lat) const;
 
     RasterSource(RasterGrid _raster_data,
                  std::size_t width,
@@ -134,7 +134,7 @@ class SourceContainer
   public:
     SourceContainer() = default;
 
-    int loadRasterSource(const std::string &path_string,
+    int LoadRasterSource(const std::string &path_string,
                          double xmin,
                          double xmax,
                          double ymin,
@@ -142,9 +142,9 @@ class SourceContainer
                          std::size_t nrows,
                          std::size_t ncols);
 
-    RasterDatum getRasterDataFromSource(unsigned int source_id, double lon, double lat);
+    RasterDatum GetRasterDataFromSource(unsigned int source_id, double lon, double lat);
 
-    RasterDatum getRasterInterpolateFromSource(unsigned int source_id, double lon, double lat);
+    RasterDatum GetRasterInterpolateFromSource(unsigned int source_id, double lon, double lat);
 
   private:
     std::vector<RasterSource> LoadedSources;

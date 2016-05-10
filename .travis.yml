@@ -1,7 +1,7 @@
-#language: cpp
-# This makes travis use the thin image which boots faster
-language: generic
+language: cpp
 
+git:
+  depth: 10
 
 # sudo:required is needed for trusty images
 sudo: required
@@ -13,101 +13,109 @@ notifications:
 branches:
   only:
     - master
-    - develop
+
+cache:
+  ccache: true
+  apt: true
+
+env:
+  global:
+   - CCACHE_TEMPDIR=/tmp/.ccache-temp
+   - CCACHE_COMPRESS=1
+   - JOBS=4
 
 matrix:
   fast_finish: true
 
+  # We override the compiler names here to yield better ccache behavior, which uses this as key
   include:
 
     # Debug Builds
     - os: linux
-      compiler: gcc
+      compiler: "gcc-5-debug"
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'pip']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug'
 
     - os: linux
-      compiler: gcc
+      compiler: "gcc-4.8-debug"
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Debug'
 
     - os: linux
-      compiler: clang
+      compiler: "clang-3.8-debug"
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
 
     - os: osx
       osx_image: xcode7.3
       compiler: clang
-      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug'
+      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
 
     # Release Builds
     - os: linux
-      compiler: gcc
+      compiler: "gcc-5-release"
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
 
-    - os: linux
-      compiler: gcc
-      addons: &gcc48
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Release'
+      # Disabled because of CI slowness
+      #- os: linux
+      #- compiler: gcc
+      #- addons: &gcc48
+      #-   apt:
+      #-     sources: ['ubuntu-toolchain-r-test']
+      #-     packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      #- env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Release'
 
-    - os: linux
-      compiler: clang
-      addons: &clang38
-        apt:
-          sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release'
+      # Disabled because of CI slowness
+      #- os: linux
+      #- compiler: clang
+      #- addons: &clang38
+      #-   apt:
+      #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
+      #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release'
 
-    - os: osx
-      osx_image: xcode7.3
-      compiler: clang
-      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
+      # Disabled because of CI slowness
+      #- os: osx
+      #- osx_image: xcode7.3
+      #- compiler: clang
+      #- env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
 
     # Shared Library
     - os: linux
-      compiler: gcc
+      compiler: "gcc-5-release-shared"
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+          packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
-    - os: linux
-      compiler: clang
-      addons: &clang38
-        apt:
-          sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
-          packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+      # Disabled because CI slowness
+      #- os: linux
+      #- compiler: clang
+      #- addons: &clang38
+      #-   apt:
+      #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
+      #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 before_install:
   - source ./scripts/install_node.sh 4
-
-install:
   - npm install
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
-  - |
-    if [[ -n "${COVERAGE}" ]]; then
-      pip install --user cpp-coveralls
-    fi
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       CMAKE_URL="http://www.cmake.org/files/v3.5/cmake-3.5.1-Linux-x86_64.tar.gz"
@@ -115,10 +123,10 @@ install:
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       # implicit deps, but seem to be installed by default with recent images: libxml2 GDAL boost
-      brew install cmake libzip libstxxl lua51 luabind tbb md5sha1sum
+      brew install cmake libzip libstxxl lua51 luabind tbb md5sha1sum ccache
     fi
 
-before_script:
+install:
   - cd ${TRAVIS_BUILD_DIR}
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
@@ -126,41 +134,45 @@ before_script:
     fi
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - export OSRM_PORT=5000 OSRM_TIMEOUT=6000
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=0
-
-script:
-  - make --jobs=2
-  - make tests --jobs=2
-  - make benchmarks
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
+  - echo "travis_fold:start:MAKE"
+  - make --jobs=${JOBS}
+  - make tests --jobs=${JOBS}
+  - make benchmarks --jobs=${JOBS}
+  - echo "travis_fold:end:MAKE"
+  - ccache -s
   - sudo make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
-  - echo "travis_fold:start:UNIT_TESTS"
+  - popd
+  - mkdir example/build && pushd example/build
+  - cmake ..
+  - make
+  - popd
+
+script:
+  - echo "travis_fold:start:BENCHMARK"
+  - make -C test/data benchmark
+  - echo "travis_fold:end:BENCHMARK"
+  - ./example/build/osrm-example test/data/monaco.osrm
+  # All tests assume to be run from the build directory
+  - pushd build
+  - ./unit_tests/library-tests ../test/data/monaco.osrm
   - ./unit_tests/extractor-tests
   - ./unit_tests/engine-tests
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
-  - echo "travis_fold:end:UNIT_TESTS"
   - popd
-  - echo "travis_fold:start:CUCUMBER"
   - npm test
-  - echo "travis_fold:end:CUCUMBER"
-  - echo "travis_fold:start:BENCHMARK"
-  - make -C test/data benchmark
-  - echo "travis_fold:end:BENCHMARK"
-  - ./build/unit_tests/library-tests test/data/monaco.osrm
-  - mkdir example/build && pushd example/build
-  - cmake ..
-  - make
-  - ./osrm-example ../../test/data/monaco.osrm
-  - popd
 
 after_success:
   - |
-    if [ -n "$RUN_CLANG_FORMAT" ]; then
+    if [ -n "${RUN_CLANG_FORMAT}" ]; then
       ./scripts/format.sh || true # we don't want to fail just yet
     fi
-  - coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+  - |
+    if [ -n "${COVERAGE}" ]; then
+      coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+    fi

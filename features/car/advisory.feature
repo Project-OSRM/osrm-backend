@@ -34,7 +34,6 @@ OSRM will use 4/5 of the projected free-flow speed.
             | a    | b  | ab,ab | 47 km/h +- 1 |
             | b    | c  | bc,bc | 47 km/h +- 1 |
 
-    @mokob @2162
     Scenario: Car - Advisory speed overwrites backwards maxspeed
         Given the node map
             | a | b | c |
@@ -49,7 +48,6 @@ OSRM will use 4/5 of the projected free-flow speed.
             | b    | a  | ab,ab | 47 km/h +- 1 |
             | c    | b  | bc,bc | 47 km/h +- 1 |
 
-    @mokob @2162 @deleteme
     Scenario: Car - Advisory speed overwrites backwards maxspeed
         Given the node map
             | a | b | c | d |
@@ -65,7 +63,6 @@ OSRM will use 4/5 of the projected free-flow speed.
             | c    | b  | bc,bc | 47 km/h +- 1 |
             | d    | c  | cd,cd | 47 km/h +- 1 |
 
-    @mokob @2162
     Scenario: Car - Directional advisory speeds play nice with eachother
         Given the node map
             | a | b | c |

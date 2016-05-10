@@ -1,15 +1,25 @@
 #include "server/api/url_parser.hpp"
 #include "engine/polyline_compressor.hpp"
 
-//#define BOOST_SPIRIT_DEBUG
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/repository/include/qi_iter_pos.hpp>
 
 #include <string>
 #include <type_traits>
 
+BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL,
+    (std::string, service)
+    (unsigned, version)
+    (std::string, profile)
+    (std::string, query)
+)
+
 // Keep impl. TU local
 namespace
 {
+namespace ph = boost::phoenix;
 namespace qi = boost::spirit::qi;
 
 template <typename Iterator, typename Into> //
@@ -17,6 +27,8 @@ struct URLParser final : qi::grammar<Iterator, Into>
 {
     URLParser() : URLParser::base_type(start)
     {
+        using boost::spirit::repository::qi::iter_pos;
+
         alpha_numeral = qi::char_("a-zA-Z0-9");
         polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
         all_chars = polyline_chars | qi::char_("=,;:&().");
@@ -28,10 +40,14 @@ struct URLParser final : qi::grammar<Iterator, Into>
 
         // Example input: /route/v1/driving/7.416351,43.731205;7.420363,43.736189
 
-        start = qi::lit('/') > service                  //
-                > qi::lit('/') > qi::lit('v') > version //
-                > qi::lit('/') > profile                //
-                > qi::lit('/') > query;                 //
+        start
+            = qi::lit('/') > service
+            > qi::lit('/') > qi::lit('v') > version
+            > qi::lit('/') > profile
+            > qi::lit('/')
+            > qi::omit[iter_pos[ph::bind(&osrm::server::api::ParsedURL::prefix_length, qi::_val) = qi::_1 - qi::_r1]]
+            > query
+            ;
 
         BOOST_SPIRIT_DEBUG_NODES((start)(service)(version)(profile)(query))
     }
@@ -61,12 +77,12 @@ boost::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::stri
 {
     using It = std::decay<decltype(iter)>::type;
 
-    static URLParser<It, ParsedURL()> const parser;
+    static URLParser<It, ParsedURL(It)> const parser;
     ParsedURL out;
 
     try
     {
-        const auto ok = boost::spirit::qi::parse(iter, end, parser, out);
+        const auto ok = boost::spirit::qi::parse(iter, end, parser(boost::phoenix::val(iter)), out);
 
         if (ok && iter == end)
             return boost::make_optional(out);

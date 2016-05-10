@@ -19,7 +19,7 @@ namespace coordinate_calculation
 {
 
 // Does not project the coordinates!
-std::uint64_t squaredEuclideanDistance(const Coordinate &lhs, const Coordinate &rhs)
+std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs)
 {
     const std::uint64_t dx = static_cast<std::int32_t>(lhs.lon - rhs.lon);
     const std::uint64_t dy = static_cast<std::int32_t>(lhs.lat - rhs.lat);
@@ -41,8 +41,8 @@ double haversineDistance(const Coordinate coordinate_1, const Coordinate coordin
     const double ln1 = lon1 / COORDINATE_PRECISION;
     const double lt2 = lat2 / COORDINATE_PRECISION;
     const double ln2 = lon2 / COORDINATE_PRECISION;
-    const double dlat1 = lt1 * detail::DEGREE_TO_RAD;
 
+    const double dlat1 = lt1 * detail::DEGREE_TO_RAD;
     const double dlong1 = ln1 * detail::DEGREE_TO_RAD;
     const double dlat2 = lt2 * detail::DEGREE_TO_RAD;
     const double dlong2 = ln2 * detail::DEGREE_TO_RAD;
@@ -77,43 +77,6 @@ double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coord
     return std::hypot(x_value, y_value) * detail::EARTH_RADIUS;
 }
 
-std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoordinate &source,
-                                                         const FloatCoordinate &target,
-                                                         const FloatCoordinate &coordinate)
-{
-    const FloatCoordinate slope_vector{target.lon - source.lon, target.lat - source.lat};
-    const FloatCoordinate rel_coordinate{coordinate.lon - source.lon, coordinate.lat - source.lat};
-    // dot product of two un-normed vectors
-    const auto unnormed_ratio = static_cast<double>(slope_vector.lon * rel_coordinate.lon) +
-                                static_cast<double>(slope_vector.lat * rel_coordinate.lat);
-    // squared length of the slope vector
-    const auto squared_length = static_cast<double>(slope_vector.lon * slope_vector.lon) +
-                                static_cast<double>(slope_vector.lat * slope_vector.lat);
-
-    if (squared_length < std::numeric_limits<double>::epsilon())
-    {
-        return {0, source};
-    }
-
-    const double normed_ratio = unnormed_ratio / squared_length;
-    double clamped_ratio = normed_ratio;
-    if (clamped_ratio > 1.)
-    {
-        clamped_ratio = 1.;
-    }
-    else if (clamped_ratio < 0.)
-    {
-        clamped_ratio = 0.;
-    }
-
-    return {clamped_ratio,
-            {
-                FloatLongitude(1.0 - clamped_ratio) * source.lon +
-                    target.lon * FloatLongitude(clamped_ratio),
-                FloatLatitude(1.0 - clamped_ratio) * source.lat +
-                    target.lat * FloatLatitude(clamped_ratio),
-            }};
-}
 
 double perpendicularDistance(const Coordinate segment_source,
                              const Coordinate segment_target,

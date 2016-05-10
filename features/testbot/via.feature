@@ -46,7 +46,6 @@ Feature: Via points
             | a,d,c     | abc,bd,bd,bd,abc,abc |
             | c,d,a     | abc,bd,bd,bd,abc,abc |
 
-    @mokob
     Scenario: Multiple via points
         Given the node map
             | a |   |   |   | e | f | g |   |
@@ -143,6 +142,47 @@ Feature: Via points
             | abc   |  no    |
             | bd    |  no    |
             | de    |  yes   |
+
+        When I route I should get
+            | waypoints | route                |
+            | a,d,c     | abc,bd,bd,bd,abc,abc |
+            | c,d,a     | abc,bd,bd,bd,abc,abc |
+
+    # See issue #2349
+    Scenario: Via point at a dead end with oneway
+        Given the node map
+            | a | b | c |
+            |   | d |   |
+            |   | e |   |
+
+        And the ways
+            | nodes | oneway |
+            | abc   |  no    |
+            | bd    |  no    |
+            | ed    |  yes   |
+
+        When I route I should get
+            | waypoints | route                |
+            | a,d,c     | abc,bd,bd,bd,abc,abc |
+            | c,d,a     | abc,bd,bd,bd,abc,abc |
+
+    # See issue #2349
+    @bug
+    Scenario: Via point at a dead end with oneway
+        Given the node map
+            | a | b | c |
+            |   | d |   |
+            |   | e | g |
+            |   | f |   |
+
+        And the ways
+            | nodes | oneway |
+            | abc   |  no    |
+            | bd    |  no    |
+            | ed    |  yes   |
+            | dg    |  yes   |
+            | ef    |  no    |
+            | fg    |  yes   |
 
         When I route I should get
             | waypoints | route                |

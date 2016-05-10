@@ -28,7 +28,6 @@ artifacts:
 branches:
   only:
     - master
-    - develop
 
 deploy:
   provider: FTP

@@ -4,7 +4,7 @@
 #include "engine/api/table_parameters.hpp"
 #include "server/api/base_parameters_grammar.hpp"
 
-//#define BOOST_SPIRIT_DEBUG
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace osrm
@@ -14,47 +14,53 @@ namespace server
 namespace api
 {
 
-namespace qi = boost::spirit::qi;
-
-struct TableParametersGrammar final : public BaseParametersGrammar
+namespace
 {
-    using Iterator = std::string::iterator;
-    using SourcesT = std::vector<std::size_t>;
-    using DestinationsT = std::vector<std::size_t>;
+namespace ph = boost::phoenix;
+namespace qi = boost::spirit::qi;
+}
 
-    TableParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
+template <typename Iterator = std::string::iterator,
+          typename Signature = void(engine::api::TableParameters &)>
+struct TableParametersGrammar final : public BaseParametersGrammar<Iterator, Signature>
+{
+    using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
+
+    TableParametersGrammar() : BaseGrammar(root_rule)
     {
-        const auto set_destiantions = [this](DestinationsT dests) {
-            parameters.destinations = std::move(dests);
-        };
-        const auto set_sources = [this](SourcesT sources) {
-            parameters.sources = std::move(sources);
-        };
-// TODO: ulonglong -> size_t not only on Windows but on all 32 bit platforms; unsupported anyway as of now
-#ifdef WIN32
-        destinations_rule = (qi::lit("destinations=") > (qi::ulong_long % ";")[set_destiantions]) |
-                            qi::lit("destinations=all");
-        sources_rule =
-            (qi::lit("sources=") > (qi::ulong_long % ";")[set_sources]) | qi::lit("sources=all");
+#ifdef BOOST_HAS_LONG_LONG
+        if (std::is_same<std::size_t, unsigned long long>::value)
+            size_t_ = qi::ulong_long;
+        else
+            size_t_ = qi::ulong_;
 #else
-        destinations_rule = (qi::lit("destinations=") > (qi::ulong_ % ";")[set_destiantions]) |
-                            qi::lit("destinations=all");
-        sources_rule =
-            (qi::lit("sources=") > (qi::ulong_ % ";")[set_sources]) | qi::lit("sources=all");
+        size_t_ = qi::ulong_;
 #endif
-        table_rule = destinations_rule | sources_rule;
 
-        root_rule =
-            query_rule > -qi::lit(".json") > -(qi::lit("?") > (table_rule | base_rule) % '&');
+        destinations_rule
+            = qi::lit("destinations=")
+            > (qi::lit("all") | (size_t_ % ';')[ph::bind(&engine::api::TableParameters::destinations, qi::_r1) = qi::_1])
+            ;
+
+        sources_rule
+            = qi::lit("sources=")
+            > (qi::lit("all") | (size_t_ % ';')[ph::bind(&engine::api::TableParameters::sources, qi::_r1) = qi::_1])
+            ;
+
+        table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1);
+
+        root_rule
+            = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json")
+            > -('?' > (table_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&')
+            ;
     }
 
-    engine::api::TableParameters parameters;
-
   private:
-    qi::rule<Iterator> root_rule;
-    qi::rule<Iterator> table_rule;
-    qi::rule<Iterator> sources_rule;
-    qi::rule<Iterator> destinations_rule;
+    qi::rule<Iterator, Signature> root_rule;
+    qi::rule<Iterator, Signature> table_rule;
+    qi::rule<Iterator, Signature> sources_rule;
+    qi::rule<Iterator, Signature> destinations_rule;
+    qi::rule<Iterator, std::size_t()> size_t_;
 };
 }
 }

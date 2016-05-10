@@ -14,6 +14,7 @@
 #include "util/typedefs.hpp"
 
 #include <luabind/tag_function.hpp>
+#include <luabind/iterator_policy.hpp>
 #include <luabind/operator.hpp>
 
 #include <osmium/osm.hpp>
@@ -41,6 +42,11 @@ template <class T> double latToDouble(T const &object)
 template <class T> double lonToDouble(T const &object)
 {
     return static_cast<double>(util::toFloating(object.lon));
+}
+
+// Luabind does not like memr funs: instead of casting to the function's signature (mem fun ptr) we simply wrap it
+auto get_nodes_for_way(const osmium::Way& way) -> decltype(way.nodes()) {
+  return way.nodes();
 }
 
 // Error handler
@@ -87,9 +93,9 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                              luabind::value("route", TRAVEL_MODE_ROUTE)],
          luabind::class_<SourceContainer>("sources")
              .def(luabind::constructor<>())
-             .def("load", &SourceContainer::loadRasterSource)
-             .def("query", &SourceContainer::getRasterDataFromSource)
-             .def("interpolate", &SourceContainer::getRasterInterpolateFromSource),
+             .def("load", &SourceContainer::LoadRasterSource)
+             .def("query", &SourceContainer::GetRasterDataFromSource)
+             .def("interpolate", &SourceContainer::GetRasterInterpolateFromSource),
          luabind::class_<const float>("constants")
              .enum_("enums")[luabind::value("precision", COORDINATE_PRECISION)],
 
@@ -134,10 +140,19 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                        &ExtractionWay::set_forward_mode)
              .property("backward_mode", &ExtractionWay::get_backward_mode,
                        &ExtractionWay::set_backward_mode),
+         luabind::class_<osmium::WayNodeList>("WayNodeList")
+           .def(luabind::constructor<>()),
+         luabind::class_<osmium::NodeRef>("NodeRef")
+           .def(luabind::constructor<>())
+           // Dear ambitious reader: registering .location() as in:
+           // .def("location", +[](const osmium::NodeRef& nref){ return nref.location(); })
+           // will crash at runtime, since we're not (yet?) using libosnmium's NodeLocationsForWays cache
+           .def("id", &osmium::NodeRef::ref),
          luabind::class_<osmium::Way>("Way")
              .def("get_value_by_key", &osmium::Way::get_value_by_key)
              .def("get_value_by_key", &get_value_by_key<osmium::Way>)
-             .def("id", &osmium::Way::id),
+             .def("id", &osmium::Way::id)
+             .def("get_nodes", get_nodes_for_way, luabind::return_stl_iterator),
          luabind::class_<InternalExtractorEdge>("EdgeSource")
              .def_readonly("source_coordinate", &InternalExtractorEdge::source_coordinate)
              .def_readwrite("weight_data", &InternalExtractorEdge::weight_data),

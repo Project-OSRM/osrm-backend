@@ -50,7 +50,7 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
         return engine::Status::Error;
     }
 
-    return service->RunQuery(parsed_url.query, result);
+    return service->RunQuery(parsed_url.prefix_length, parsed_url.query, result);
 }
 }
 }

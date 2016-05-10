@@ -39,7 +39,7 @@ namespace osrm
 namespace storage
 {
 
-using RTreeLeaf = typename engine::datafacade::BaseDataFacade::RTreeLeaf;
+using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
 using RTreeNode =
     util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;

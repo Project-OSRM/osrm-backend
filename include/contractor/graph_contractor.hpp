@@ -115,7 +115,7 @@ class GraphContractor
     {
         explicit ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes) {}
 
-        inline ContractorThreadData *getThreadData()
+        inline ContractorThreadData *GetThreadData()
         {
             bool exists = false;
             auto &ref = data.local(exists);
@@ -302,7 +302,7 @@ class GraphContractor
                               [this, &node_priorities, &node_depth,
                                &thread_data_list](const tbb::blocked_range<int> &range)
                               {
-                                  ContractorThreadData *data = thread_data_list.getThreadData();
+                                  ContractorThreadData *data = thread_data_list.GetThreadData();
                                   for (int x = range.begin(), end = range.end(); x != end; ++x)
                                   {
                                       node_priorities[x] =
@@ -424,7 +424,7 @@ class GraphContractor
                 [this, &node_priorities, &remaining_nodes,
                  &thread_data_list](const tbb::blocked_range<std::size_t> &range)
                 {
-                    ContractorThreadData *data = thread_data_list.getThreadData();
+                    ContractorThreadData *data = thread_data_list.GetThreadData();
                     // determine independent node set
                     for (auto i = range.begin(), end = range.end(); i != end; ++i)
                     {
@@ -481,7 +481,7 @@ class GraphContractor
                               [this, &remaining_nodes,
                                &thread_data_list](const tbb::blocked_range<std::size_t> &range)
                               {
-                                  ContractorThreadData *data = thread_data_list.getThreadData();
+                                  ContractorThreadData *data = thread_data_list.GetThreadData();
                                   for (int position = range.begin(), end = range.end();
                                        position != end; ++position)
                                   {
@@ -495,7 +495,7 @@ class GraphContractor
                                         DeleteGrainSize),
                 [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
                 {
-                    ContractorThreadData *data = thread_data_list.getThreadData();
+                    ContractorThreadData *data = thread_data_list.GetThreadData();
                     for (int position = range.begin(), end = range.end(); position != end;
                          ++position)
                     {
@@ -547,7 +547,7 @@ class GraphContractor
                     [this, &node_priorities, &remaining_nodes, &node_depth,
                      &thread_data_list](const tbb::blocked_range<int> &range)
                     {
-                        ContractorThreadData *data = thread_data_list.getThreadData();
+                        ContractorThreadData *data = thread_data_list.GetThreadData();
                         for (int position = range.begin(), end = range.end(); position != end;
                              ++position)
                         {
@@ -561,7 +561,7 @@ class GraphContractor
             number_of_contracted_nodes += end_independent_nodes_idx - begin_independent_nodes_idx;
             remaining_nodes.resize(begin_independent_nodes_idx);
 
-            p.printStatus(number_of_contracted_nodes);
+            p.PrintStatus(number_of_contracted_nodes);
             ++current_level;
         }
 
@@ -627,7 +627,7 @@ class GraphContractor
             Edge new_edge;
             for (const auto node : util::irange(0u, number_of_nodes))
             {
-                p.printStatus(node);
+                p.PrintStatus(node);
                 for (auto edge : contractor_graph->GetAdjacentEdgeRange(node))
                 {
                     const NodeID target = contractor_graph->GetTarget(edge);
@@ -710,9 +710,9 @@ class GraphContractor
 
     inline void Dijkstra(const int max_distance,
                          const unsigned number_of_targets,
-                         const int maxNodes,
+                         const int max_nodes,
                          ContractorThreadData &data,
-                         const NodeID middleNode)
+                         const NodeID middle_node)
     {
 
         ContractorHeap &heap = data.heap;
@@ -723,7 +723,7 @@ class GraphContractor
         {
             const NodeID node = heap.DeleteMin();
             const auto distance = heap.GetKey(node);
-            if (++nodes > maxNodes)
+            if (++nodes > max_nodes)
             {
                 return;
             }
@@ -742,7 +742,7 @@ class GraphContractor
                 }
             }
 
-            RelaxNode(node, middleNode, distance, heap);
+            RelaxNode(node, middle_node, distance, heap);
         }
     }
 
@@ -1032,7 +1032,7 @@ class GraphContractor
             }
             // tie breaking
             if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
-                bias(node, target))
+                Bias(node, target))
             {
                 return false;
             }
@@ -1061,7 +1061,7 @@ class GraphContractor
                 }
                 // tie breaking
                 if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
-                    bias(node, target))
+                    Bias(node, target))
                 {
                     return false;
                 }
@@ -1071,7 +1071,7 @@ class GraphContractor
     }
 
     // This bias function takes up 22 assembly instructions in total on X86
-    inline bool bias(const NodeID a, const NodeID b) const
+    inline bool Bias(const NodeID a, const NodeID b) const
     {
         const unsigned short hasha = fast_hash(a);
         const unsigned short hashb = fast_hash(b);
