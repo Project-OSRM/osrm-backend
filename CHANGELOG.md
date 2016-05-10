@@ -1,6 +1,6 @@
 # 5.0.2
    - Fixes:
-     - Issue #2335, map matching was using shortest path with uturns disabled
+     - Issue #2335, map matching was using shortest path with u-turns disabled
 
 # 5.0.1
    - Fixes:
@@ -13,7 +13,7 @@
    - API:
      - if `geometry=geojson` is passed the resulting geometry can be a LineString or Point
        depending on how many coordinates are present.
-     - the removal of the summary field was revered. for `steps=flase` the field will always be an empty string.
+     - the removal of the summary field was revered. for `steps=false` the field will always be an empty string.
 
    Changes with regard to 4.9.1:
    - API:
