@@ -27,11 +27,11 @@ class IsochroneAPI final : public BaseAPI
     {
     }
 
-    void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
-                      util::json::Object &response) const
-    {
-
-    }
+//    void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
+//                      util::json::Object &response) const
+//    {
+//
+//    }
 
 
 };

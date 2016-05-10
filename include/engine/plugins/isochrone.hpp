@@ -8,7 +8,9 @@
 #include "engine/plugins/plugin_base.hpp"
 #include "engine/api/isochrone_parameters.hpp"
 #include "util/static_graph.hpp"
+#include "util/coordinate.hpp"
 #include "osrm/json_container.hpp"
+#include <util/binary_heap.hpp>
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -22,6 +24,7 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 namespace osrm
 {
@@ -29,7 +32,11 @@ namespace engine
 {
 namespace plugins
 {
-
+struct HeapData
+{
+    NodeID parent;
+    HeapData(NodeID p) : parent(p) {}
+};
 struct SimpleEdgeData
 {
     SimpleEdgeData() : weight(INVALID_EDGE_WEIGHT), real(false) {}
@@ -40,21 +47,21 @@ struct SimpleEdgeData
 
 struct IsochroneNode
 {
-    IsochroneNode(NodeID node) : node(node) {}
-    IsochroneNode(NodeID node, NodeID predecessor, int distance)
+    IsochroneNode(){};
+    IsochroneNode(osrm::extractor::QueryNode node, osrm::extractor::QueryNode predecessor, int distance)
         : node(node), predecessor(predecessor), distance(distance)
     {
     }
 
-    NodeID node;
-    NodeID predecessor;
+    osrm::extractor::QueryNode node;
+    osrm::extractor::QueryNode predecessor;
     int distance;
 };
 struct IsochroneNodeIdCompare
 {
     bool operator()(const IsochroneNode &a, const IsochroneNode &b) const
     {
-        return a.node < b.node;
+        return a.node.node_id < b.node.node_id;
     }
 };
 struct IsochroneNodeDistanceCompare
@@ -67,6 +74,10 @@ struct IsochroneNodeDistanceCompare
 
 using SimpleGraph = util::StaticGraph<SimpleEdgeData>;
 using SimpleEdge = SimpleGraph::InputEdge;
+using QueryHeap = osrm::util::
+    BinaryHeap<NodeID, NodeID, int, HeapData, osrm::util::UnorderedMapStorage<NodeID, int>>;
+typedef std::set<IsochroneNode, IsochroneNodeIdCompare> IsochroneSet;
+typedef std::set<IsochroneNode, IsochroneNodeDistanceCompare> IsochroneDistanceSet;
 
 class IsochronePlugin final : public BasePlugin
 {
@@ -74,8 +85,6 @@ class IsochronePlugin final : public BasePlugin
     boost::filesystem::path base;
     std::shared_ptr<engine::plugins::SimpleGraph> graph;
     std::vector<osrm::extractor::QueryNode> coordinate_list;
-    typedef std::set<IsochroneNode, IsochroneNodeIdCompare> IsochroneSet;
-    typedef std::set<IsochroneNode, IsochroneNodeDistanceCompare> IsochroneDistanceSet;
     IsochroneSet isochroneSet;
     std::vector<engine::plugins::SimpleEdge> graph_edge_list;
     std::size_t number_of_nodes;
@@ -85,7 +94,7 @@ class IsochronePlugin final : public BasePlugin
                           std::vector<SimpleEdge> &graph_edge_list);
 
     void update(IsochroneSet &s, IsochroneNode node);
-    void findBorder(std::unordered_set<NodeID> &insidepoints, util::json::Object &response);
+    void findBorder(IsochroneSet &isochroneSet, util::json::Object &response);
 
   public:
     explicit IsochronePlugin(datafacade::BaseDataFacade &facade, const std::string base);

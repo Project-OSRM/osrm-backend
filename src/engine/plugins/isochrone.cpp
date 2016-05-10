@@ -6,13 +6,13 @@
 #include "engine/api/isochrone_api.hpp"
 #include "util/graph_loader.hpp"
 #include "engine/phantom_node.hpp"
-#include "util/coordinate.hpp"
 #include "util/simple_logger.hpp"
+#include <util/graham_scan.hpp>
 
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
-#include <util/binary_heap.hpp>
+#include <algorithm>
 
 namespace osrm
 {
@@ -24,6 +24,7 @@ namespace plugins
 IsochronePlugin::IsochronePlugin(datafacade::BaseDataFacade &facade, const std::string base)
     : BasePlugin{facade}, base{base}
 {
+    // Prepares uncontracted Graph
     number_of_nodes = loadGraph(base, coordinate_list, graph_edge_list);
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
@@ -46,24 +47,13 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     }
 
     auto phantomnodes = GetPhantomNodes(params, params.number_of_results);
-    auto phantomnodes2 = GetPhantomNodes(params);
 
-    //    if (phantomnodes.front().)
-    //    {
-    //        return Error("NoSegment", "Could not find a matching segments for coordinate",
-    //        json_result);
-    //    }
-    //    BOOST_ASSERT(phantomnodes[0] > 0);
+    if (phantomnodes.front().size() <= 0)
+    {
+        return Error("PhantomNode", "PhantomNode couldnt be found for coordinate", json_result);
+    }
 
-    util::SimpleLogger().Write() << util::toFloating(params.coordinates.front().lat);
-    util::SimpleLogger().Write() << util::toFloating(params.coordinates.front().lon);
-
-    util::SimpleLogger().Write() << "Phantom-Node-Size: " << phantomnodes.size();
-    util::SimpleLogger().Write() << "Phantom-Node-Size2: " << phantomnodes.front().size();
-
-    //    api::IsochroneAPI isochroneAPI(facade, params);
-    //    isochroneAPI.MakeResponse(phantom_nodes, json_result);
-
+    // Find closest phantomnode
     std::sort(phantomnodes.front().begin(), phantomnodes.front().end(),
               [&](const osrm::engine::PhantomNodeWithDistance &a,
                   const osrm::engine::PhantomNodeWithDistance &b)
@@ -75,47 +65,18 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     util::SimpleLogger().Write() << util::toFloating(phantom.front().phantom_node.location.lat);
     util::SimpleLogger().Write() << util::toFloating(phantom.front().phantom_node.location.lon);
 
-    util::SimpleLogger().Write() << util::toFloating(phantomnodes2.front().first.location.lat);
-    util::SimpleLogger().Write() << util::toFloating(phantomnodes2.front().first.location.lon);
-    auto source = 0;
-
-    //    if (facade.Edgeie(phantom.phantom_node.forward_segment_id.id))
-    //    {
-    //        std::vector<NodeID> forward_id_vector;
-    //        facade.GetUncompressedGeometry(phantom.phantom_node.forward_packed_geometry_id,
-    //                                        forward_id_vector);
-    //        source = forward_id_vector[phantom.phantom_node.fwd_segment_position];
-    //    }
-    //    else
-    //
-
     std::vector<NodeID> forward_id_vector;
     facade.GetUncompressedGeometry(phantom.front().phantom_node.forward_packed_geometry_id,
                                    forward_id_vector);
-    source = forward_id_vector[phantom.front().phantom_node.fwd_segment_position];
-    util::SimpleLogger().Write() << coordinate_list[source].lat << "    "
-                                 << coordinate_list[source].lon;
-
-    util::SimpleLogger().Write() << "segment id " << phantom.front().phantom_node.forward_segment_id.id;
-    util::SimpleLogger().Write() << "packed id " << source;
-    // Init complete
-
-    struct HeapData
-    {
-        NodeID parent;
-        /* explicit */ HeapData(NodeID p) : parent(p) {}
-    };
-
-    using QueryHeap = osrm::util::BinaryHeap<NodeID, NodeID, int, HeapData,
-                                             osrm::util::UnorderedMapStorage<NodeID, int>>;
+    auto source = forward_id_vector[phantom.front().phantom_node.fwd_segment_position];
 
     QueryHeap heap(number_of_nodes);
     heap.Insert(source, 0, source);
-    // value is in metres
-    const int MAX = 2000;
 
-    std::unordered_set<NodeID> edgepoints;
-    std::unordered_set<NodeID> insidepoints;
+    // value is in metres
+//    const int MAX = 2000;
+    const int MAX = 7500;
+
     std::vector<NodeID> border;
 
     {
@@ -136,19 +97,18 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
                         int to_distance = distance + data.weight;
                         if (to_distance > MAX)
                         {
-                            edgepoints.insert(target);
+                            continue;
                         }
                         else if (!heap.WasInserted(target))
                         {
                             heap.Insert(target, to_distance, source);
-                            insidepoints.insert(source);
-                            isochroneSet.insert(IsochroneNode(target, source, to_distance));
+                            isochroneSet.insert(IsochroneNode(coordinate_list[target], coordinate_list[source], to_distance));
                         }
                         else if (to_distance < heap.GetKey(target))
                         {
                             heap.GetData(target).parent = source;
                             heap.DecreaseKey(target, to_distance);
-                            update(isochroneSet, IsochroneNode(target, source, to_distance));
+                            update(isochroneSet, IsochroneNode(coordinate_list[target], coordinate_list[source], to_distance));
                         }
                     }
                 }
@@ -157,154 +117,40 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     }
 
     util::SimpleLogger().Write() << isochroneSet.size();
-
+    std::vector<IsochroneNode> isoByDistance(isochroneSet.begin(), isochroneSet.end());
+    std::sort(isoByDistance.begin(), isoByDistance.end(),[] (IsochroneNode n1, IsochroneNode n2){
+        return n1.distance < n2.distance;
+    });
     util::json::Array data;
-    for (auto node : isochroneSet)
+    for (auto isochrone : isoByDistance)
     {
         util::json::Object object;
 
         util::json::Object source;
         source.values["lat"] =
-            static_cast<double>(util::toFloating(coordinate_list[node.node].lat));
+            static_cast<double>(util::toFloating(isochrone.node.lat));
         source.values["lon"] =
-            static_cast<double>(util::toFloating(coordinate_list[node.node].lon));
+            static_cast<double>(util::toFloating(isochrone.node.lon));
         object.values["p1"] = std::move(source);
 
         util::json::Object predecessor;
         predecessor.values["lat"] =
-            static_cast<double>(util::toFloating(coordinate_list[node.predecessor].lat));
+            static_cast<double>(util::toFloating(isochrone.predecessor.lat));
         predecessor.values["lon"] =
-            static_cast<double>(util::toFloating(coordinate_list[node.predecessor].lon));
+            static_cast<double>(util::toFloating(isochrone.predecessor.lon));
         object.values["p2"] = std::move(predecessor);
 
         util::json::Object distance;
-        object.values["distance_from_start"] = node.distance;
+        object.values["distance_from_start"] = isochrone.distance;
 
-        //        util::SimpleLogger().Write() << "Node: " << node.node
-        //                                     << " Predecessor: " << node.predecessor
-        //                                     << " Distance:  " << node.distance;
         data.values.push_back(object);
     }
     json_result.values["isochrone"] = std::move(data);
 
-    //    util::json::Array data2;
-    //    for (auto b : edgepoints)
-    //    {
-    //        util::json::Object point;
-    //        point.values["lat"] = static_cast<double>(util::toFloating(coordinate_list[b].lat));
-    //        point.values["lon"] = static_cast<double>(util::toFloating(coordinate_list[b].lon));
-    //        data2.values.push_back(point);
-    //    }
-
-    //    json_result.values["border"] = std::move(data2);
-    //            findBorder(insidepoints, json_result);
+    util::convexHull(isochroneSet, json_result);
     return Status::Ok;
 }
 
-void IsochronePlugin::findBorder(std::unordered_set<NodeID> &insidepoints,
-                                 util::json::Object &response)
-{
-    NodeID startnode = SPECIAL_NODEID;
-    std::vector<NodeID> border;
-    // Find the north-west most edge node
-    for (const auto node_id : insidepoints)
-    {
-        if (startnode == SPECIAL_NODEID)
-        {
-            startnode = node_id;
-        }
-        else
-        {
-            if (coordinate_list[node_id].lon < coordinate_list[startnode].lon)
-            {
-                startnode = node_id;
-            }
-            else if (coordinate_list[node_id].lon == coordinate_list[startnode].lon &&
-                     coordinate_list[node_id].lat > coordinate_list[startnode].lat)
-            {
-                startnode = node_id;
-            }
-        }
-    }
-    NodeID node_u = startnode;
-    border.push_back(node_u);
-
-    // Find the outgoing edge with the angle closest to 180 (because we're at the west-most node,
-    // there should be no edges with angles < 0 or > 180)
-    NodeID node_v = SPECIAL_NODEID;
-    for (const auto current_edge : graph->GetAdjacentEdgeRange(node_u))
-    {
-        const auto target = graph->GetTarget(current_edge);
-        if (target != SPECIAL_NODEID && insidepoints.find(target) != insidepoints.end())
-        {
-            if (node_v == SPECIAL_NODEID)
-            {
-                node_v = target;
-            }
-            else
-            {
-                if (osrm::util::coordinate_calculation::bearing(coordinate_list[node_u],
-                                                                coordinate_list[target]) >
-                    osrm::util::coordinate_calculation::bearing(coordinate_list[node_u],
-                                                                coordinate_list[node_v]))
-                {
-                    node_v = target;
-                }
-            }
-            BOOST_ASSERT(0 <= osrm::util::coordinate_calculation::bearing(coordinate_list[node_u],
-                                                                          coordinate_list[node_v]));
-            BOOST_ASSERT(180 >= osrm::util::coordinate_calculation::bearing(
-                                    coordinate_list[node_u], coordinate_list[node_v]));
-        }
-    }
-
-    border.push_back(node_v);
-
-    // Now, we're going to always turn right (relative to the last edge)
-    // only onto nodes that are onthe inside point set
-    NodeID firsttarget = node_v;
-    while (true)
-    {
-        NodeID node_w = SPECIAL_NODEID;
-        double best_angle = 361.0;
-        for (const auto current_edge : graph->GetAdjacentEdgeRange(node_v))
-        {
-            const auto target = graph->GetTarget(current_edge);
-            if (target == SPECIAL_NODEID)
-                continue;
-            if (insidepoints.find(target) == insidepoints.end())
-                continue;
-
-            auto angle = osrm::util::coordinate_calculation::computeAngle(
-                coordinate_list[node_u], coordinate_list[node_v], coordinate_list[target]);
-            if (node_w == SPECIAL_NODEID || angle > best_angle)
-            {
-                node_w = target;
-                best_angle = angle;
-            }
-        }
-        if (firsttarget == node_w && startnode == node_v)
-        {
-            // Here, we've looped all the way around the outside and we've traversed
-            // the first segment again.  Break!
-            break;
-        }
-        border.push_back(node_w);
-
-        node_u = node_v;
-        node_v = node_w;
-
-        util::json::Array borderjson;
-        for (auto b : border)
-        {
-            util::json::Object point;
-            point.values["lat"] = static_cast<double>(util::toFloating(coordinate_list[b].lat));
-            point.values["lon"] = static_cast<double>(util::toFloating(coordinate_list[b].lon));
-            borderjson.values.push_back(point);
-        }
-        response.values["border"] = std::move(borderjson);
-    }
-}
 std::size_t IsochronePlugin::loadGraph(const std::string &path,
                                        std::vector<extractor::QueryNode> &coordinate_list,
                                        std::vector<SimpleEdge> &graph_edge_list)
