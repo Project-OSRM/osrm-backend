@@ -49,7 +49,12 @@ class Server
         boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 
         acceptor.open(endpoint.protocol());
+#ifdef SO_REUSEPORT
+        int one = 1;
+        setsockopt(acceptor.native_handle(), SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &one, sizeof(one));
+#else
         acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+#endif
         acceptor.bind(endpoint);
         acceptor.listen();
 
