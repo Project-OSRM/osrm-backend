@@ -389,13 +389,17 @@ Represents a route between two waypoints.
 
 #### Example
 
-With `steps=false`:
+With `steps=false` and `annotate=true`:
 
 ```json
 {
   "distance": 30.0,
   "duration": 100.0,
   "steps": []
+  "annotation": {
+    "distance": [5,5,10,5,5],
+    "duration": [15,15,40,15,15]
+  }
 }
 ```
 
