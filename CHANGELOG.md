@@ -1,5 +1,5 @@
-# 5.2
-   Changes from 5.1
+# 5.2.0
+   Changes from 5.1.0
 
    - API:
      - new parameter `annotate` for `route` and `match` requests.  Returns additional data about each
@@ -10,6 +10,9 @@
 
    - Infrastructure:
      - Open sockets with SO_REUSEPORT to allow multiple servers connecting to the same port
+
+   - Guidance:
+     - improved detection of turning streets, not reporting new-name in wrong situations
 
 # 5.1.0
    Changes with regard to 5.0.0

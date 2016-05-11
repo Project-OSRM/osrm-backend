@@ -323,8 +323,14 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         return angularDeviation(bearing_in, bearing_out) > 170;
     };
 
+    const auto isCollapsableInstruction = [](const TurnInstruction instruction) {
+        return instruction.type == TurnType::NewName ||
+               (instruction.type == TurnType::Turn &&
+                instruction.direction_modifier == DirectionModifier::Straight);
+    };
+
     // Very Short New Name
-    if (TurnType::NewName == one_back_step.maneuver.instruction.type)
+    if (isCollapsableInstruction(one_back_step.maneuver.instruction))
     {
         BOOST_ASSERT(two_back_index < steps.size());
         if (one_back_step.mode == steps[two_back_index].mode)
@@ -339,7 +345,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         }
     }
     // very short segment after turn
-    else if (TurnType::NewName == current_step.maneuver.instruction.type)
+    else if (isCollapsableInstruction(current_step.maneuver.instruction))
     {
         if (one_back_step.mode == current_step.mode)
         {
@@ -365,7 +371,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         // additionall collapse a name-change as well
         const bool continues_with_name_change =
             (step_index + 1 < steps.size()) &&
-            (TurnType::NewName == steps[step_index + 1].maneuver.instruction.type);
+            isCollapsableInstruction(steps[step_index + 1].maneuver.instruction);
         const bool u_turn_with_name_change =
             collapsable(current_step) && continues_with_name_change &&
             steps[step_index + 1].name == steps[two_back_index].name;
@@ -533,6 +539,11 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             invalidateStep(steps[1]);
         }
     }
+    const auto isCollapsableInstruction = [](const TurnInstruction instruction) {
+        return instruction.type == TurnType::NewName ||
+               (instruction.type == TurnType::Turn &&
+                instruction.direction_modifier == DirectionModifier::Straight);
+    };
 
     // first and last instructions are waypoints that cannot be collapsed
     for (std::size_t step_index = 2; step_index < steps.size(); ++step_index)
@@ -551,7 +562,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 
         // Due to empty segments, we can get name-changes from A->A
         // These have to be handled in post-processing
-        if (TurnType::NewName == current_step.maneuver.instruction.type &&
+        if (isCollapsableInstruction(current_step.maneuver.instruction) &&
             current_step.name == steps[one_back_index].name)
         {
             steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
@@ -560,8 +571,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         // If we look at two consecutive name changes, we can check for a name oszillation.
         // A name oszillation changes from name A shortly to name B and back to A.
         // In these cases, the name change will be suppressed.
-        else if (TurnType::NewName == current_step.maneuver.instruction.type &&
-                 TurnType::NewName == one_back_step.maneuver.instruction.type)
+        else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
+                 isCollapsableInstruction(one_back_step.maneuver.instruction))
         {
             // valid due to step_index starting at 2
             const auto &coming_from_name = steps[two_back_index].name;

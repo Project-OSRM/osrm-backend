@@ -344,4 +344,4 @@ Feature: Collapse
             | waypoints | route                   | turns                                      |
             | a,d       | first,first,first,first | depart,continue left,continue right,arrive |
             | a,e       | first,second,second     | depart,turn left,arrive                    |
-            | a,f       | first,third,third       | depart,new name straight,arrive            |
+            | a,f       | first,third,third       | depart,turn straight,arrive                |
