@@ -136,6 +136,7 @@ install:
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
+  - make osrm-extract --jobs=3
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
