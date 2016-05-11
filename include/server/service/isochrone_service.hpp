@@ -26,7 +26,7 @@ class IsochroneService final : public BaseService
   public:
     IsochroneService(OSRM &routing_machine) : BaseService(routing_machine) {}
 
-    engine::Status RunQuery(std::string &query, ResultT &result) final override;
+    engine::Status RunQuery(std::size_t prefix_length, std::string &query, ResultT &result) final override;
 
     unsigned GetVersion() final override { return 1; }
 };

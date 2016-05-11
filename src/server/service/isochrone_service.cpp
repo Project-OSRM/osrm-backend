@@ -44,7 +44,7 @@ std::string getWrongOptionHelp(const engine::api::IsochroneParameters &parameter
 }
 } // anon. ns
 
-engine::Status IsochroneService::RunQuery(std::string &query, ResultT &result)
+engine::Status IsochroneService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();

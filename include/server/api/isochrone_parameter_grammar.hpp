@@ -17,28 +17,34 @@ namespace server
 namespace api
 {
 
-namespace qi = boost::spirit::qi;
-
-struct IsochroneParametersGrammar final : public BaseParametersGrammar
+namespace
 {
-    using Iterator = std::string::iterator;
+namespace ph = boost::phoenix;
+namespace qi = boost::spirit::qi;
+}
 
-    IsochroneParametersGrammar() : BaseParametersGrammar(root_rule, parameters)
+template <typename Iterator = std::string::iterator,
+          typename Signature = void(engine::api::IsochroneParameters &)>
+struct IsochroneParametersGrammar final : public BaseParametersGrammar<Iterator, Signature>
+{
+    using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
+
+    IsochroneParametersGrammar() : BaseGrammar(root_rule)
     {
-        const auto set_number = [this](const unsigned number)
-        {
-            parameters.number_of_results = number;
-        };
-        isochrone_rule = (qi::lit("number=") > qi::uint_)[set_number];
-        root_rule =
-            query_rule > -qi::lit(".json") > -(qi::lit("?") > (isochrone_rule | base_rule) % '&');
-    }
 
-    engine::api::IsochroneParameters parameters;
+        isochrone_rule = (qi::lit("number=") >
+                          qi::uint_)[ph::bind(&engine::api::IsochroneParameters::number_of_results,
+                                              qi::_r1) = qi::_1];
+
+        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+                    -('?' > (isochrone_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
+    }
+    //
+    //    engine::api::IsochroneParameters parameters;
 
   private:
-    qi::rule<Iterator> root_rule;
-    qi::rule<Iterator> isochrone_rule;
+    qi::rule<Iterator, Signature> root_rule;
+    qi::rule<Iterator, Signature> isochrone_rule;
 };
 }
 }
