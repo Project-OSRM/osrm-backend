@@ -32,15 +32,14 @@ std::uint64_t squaredEuclideanDistance(Node n1, Node n2)
 
 int orientation(Node p, Node q, Node r)
 {
-    int Q_lat = static_cast<int>(q.node.lat); // b_x -a_x
-    int Q_lon= static_cast<int>(q.node.lon); // b_x -a_x
-    int R_lat = static_cast<int>(r.node.lat); // c_x - c_a
-    int R_lon = static_cast<int>(r.node.lon); // c_x - c_a
-    int P_lat = static_cast<int>(p.node.lat); // b_y - a_y
-    int P_lon = static_cast<int>(p.node.lon); // c_y - a_y
+    double Q_lat = static_cast<double>(util::toFloating(q.node.lat)); // b_x -a_x
+    double Q_lon = static_cast<double>(util::toFloating(q.node.lon)); // b_x -a_x
+    double R_lat = static_cast<double>(util::toFloating(r.node.lat)); // c_x - c_a
+    double R_lon = static_cast<double>(util::toFloating(r.node.lon)); // c_x - c_a
+    double P_lat = static_cast<double>(util::toFloating(p.node.lat)); // b_y - a_y
+    double P_lon = static_cast<double>(util::toFloating(p.node.lon)); // c_y - a_y
 
-    int val = (Q_lat - P_lat) * (R_lon - P_lon) - (Q_lon - P_lon) * (R_lat - P_lat);
-
+    double val = (Q_lat - P_lat) * (R_lon - P_lon) - (Q_lon - P_lon) * (R_lat - P_lat);
     if (val == 0)
     {
         return 0; // colinear
@@ -87,27 +86,26 @@ void convexHull(engine::plugins::IsochroneSet &set, util::json::Object &response
 
     swap(points[0], *result);
 
-
     std::sort(std::next(points.begin()), points.end(), NodeComparer(points[0]));
 
-//    points.push_back(*result);
-//    int m = 1; // Initialize size of modified array
-//    for (int i = 1; i < n; i++)
-//    {
-//        // Keep removing i while angle of i and i+1 is same
-//        // with respect to p0
-//        while ((i < n - 1) && (orientation(points[0], points[i], points[i + 1]) == 0))
-//        {
-//            i++;
-//        }
-//
-//        points[m] = points[i];
-//        m++; // Update size of modified array
-//    }
-    // If modified array of points has less than 3 points,
-    // convex hull is not possible
-//    if (m < 3)
-//        return;
+    points.push_back(*result);
+    int m = 1; // Initialize size of modified array
+    for (int i = 1; i < n; i++)
+    {
+        // Keep removing i while angle of i and i+1 is same
+        // with respect to p0
+        while ((i < n - 1) && (orientation(points[0], points[i], points[i + 1]) == 0))
+        {
+            i++;
+        }
+
+        points[m] = points[i];
+        m++; // Update size of modified array
+    }
+    //     If modified array of points has less than 3 points,
+    //     convex hull is not possible
+    if (m < 3)
+        return;
 
     // Create an empty stack and push first three points
     // to it.
@@ -124,7 +122,7 @@ void convexHull(engine::plugins::IsochroneSet &set, util::json::Object &response
         // a non-left turn
         Node top = S.top();
         S.pop();
-        while (orientation(S.top(), top, points[i]) != 1 )
+        while (orientation(S.top(), top, points[i]) != 1)
         {
             top = S.top();
             S.pop();
@@ -134,7 +132,6 @@ void convexHull(engine::plugins::IsochroneSet &set, util::json::Object &response
     }
 
     // Now stack has the output points, print contents of stack
-
     std::vector<Node> vec;
     while (!S.empty())
     {
@@ -143,11 +140,9 @@ void convexHull(engine::plugins::IsochroneSet &set, util::json::Object &response
         S.pop();
     }
 
-//    std::sort(vec.begin(), vec.end(), [](Node a, Node b) {
-//        return b.node.lon + b.node.lat < a.node.lon + a.node.lat;
-//    });
     util::json::Array borderjson;
-    for(auto p : vec) {
+    for (auto p : vec)
+    {
         util::json::Object point;
         point.values["lat"] = static_cast<double>(util::toFloating(p.node.lat));
         point.values["lon"] = static_cast<double>(util::toFloating(p.node.lon));
