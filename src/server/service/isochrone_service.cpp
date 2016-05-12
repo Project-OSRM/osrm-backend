@@ -56,7 +56,7 @@ engine::Status IsochroneService::RunQuery(std::size_t prefix_length, std::string
         const auto position = std::distance(query.begin(), query_iterator);
         json_result.values["code"] = "InvalidQuery";
         json_result.values["message"] =
-            "Query string malformed close to position " + std::to_string(position);
+            "Query string malformed close to position " + std::to_string(prefix_length + position);
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters);

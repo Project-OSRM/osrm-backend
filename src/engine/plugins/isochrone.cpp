@@ -47,7 +47,7 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         return Error("InvalidOptions", "Only one input coordinate is supported", json_result);
     }
 
-    auto phantomnodes = GetPhantomNodes(params, params.number_of_results);
+    auto phantomnodes = GetPhantomNodes(params, 1);
 
     if (phantomnodes.front().size() <= 0)
     {
@@ -63,6 +63,7 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
               });
     auto phantom = phantomnodes.front();
 
+    isochroneSet.clear();
 
     std::vector<NodeID> forward_id_vector;
     facade.GetUncompressedGeometry(phantom.front().phantom_node.forward_packed_geometry_id,
@@ -74,7 +75,9 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
 
     // value is in metres
 //    const int MAX = 2000;
-    const int MAX = 10000;
+    int MAX = params.distance;
+    util::SimpleLogger().Write() << MAX;
+
 
     std::vector<NodeID> border;
 
@@ -115,6 +118,7 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         }
     }
 
+    util::SimpleLogger().Write() << "Nodes Found: " << isochroneSet.size();
     std::vector<IsochroneNode> isoByDistance(isochroneSet.begin(), isochroneSet.end());
     std::sort(isoByDistance.begin(), isoByDistance.end(),[] (IsochroneNode n1, IsochroneNode n2){
         return n1.distance < n2.distance;
@@ -145,8 +149,8 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     }
     json_result.values["isochrone"] = std::move(data);
 
-    util::convexHull(isochroneSet, json_result);
-//    util::monotoneChain(isoByDistance, json_result);
+//    util::convexHull(isochroneSet, json_result);
+    util::monotoneChain(isoByDistance, json_result);
     return Status::Ok;
 }
 
