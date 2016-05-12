@@ -82,7 +82,7 @@ inline void UnpackCHPath(const DataFacadeT &facade,
         BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
 
         const auto &data = facade.GetEdgeData(smaller_edge_id);
-        BOOST_ASSERT_MSG(data.distance != std::numeric_limits<EdgeWeight>::max(),
+        BOOST_ASSERT_MSG(data.weight != std::numeric_limits<EdgeWeight>::max(),
                          "edge weight invalid");
 
         // If the edge is a shortcut, we need to add the two halfs to the stack.

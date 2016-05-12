@@ -149,7 +149,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     }
 
     /**
-     * Finds the edge with the smallest `.distance` going from `from` to `to`
+     * Finds the edge with the smallest `.weight` going from `from` to `to`
      * @param from the source node ID
      * @param to the target node ID
      * @param filter a functor that returns a `bool` that determines whether an edge should be
@@ -169,11 +169,11 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         {
             const NodeID target = GetTarget(edge);
             const auto &data = GetEdgeData(edge);
-            if (target == to && data.distance < smallest_weight &&
+            if (target == to && data.weight < smallest_weight &&
                 std::forward<FilterFunction>(filter)(data))
             {
                 smallest_edge = edge;
-                smallest_weight = data.distance;
+                smallest_weight = data.weight;
             }
         }
         return smallest_edge;
