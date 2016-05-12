@@ -780,7 +780,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
             edge_segment_byte_ptr += sizeof(extractor::lookup::SegmentHeaderBlock);
 
             auto previous_osm_node_id = header->previous_osm_node_id;
-            int new_weight = 0;
+            EdgeWeight new_weight = 0;
             int compressed_edge_nodes = static_cast<int>(header->num_osm_nodes);
 
             auto segmentblocks =
@@ -996,12 +996,12 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
         // every target needs to be valid
         BOOST_ASSERT(current_edge.target <= max_used_node_id);
 #ifndef NDEBUG
-        if (current_edge.data.distance <= 0)
+        if (current_edge.data.weight <= 0)
         {
             util::SimpleLogger().Write(logWARNING)
                 << "Edge: " << edge << ",source: " << contracted_edge_list[edge].source
                 << ", target: " << contracted_edge_list[edge].target
-                << ", dist: " << current_edge.data.distance;
+                << ", weight: " << current_edge.data.weight;
 
             util::SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
                                                    << contracted_edge_list[edge].source << "/"

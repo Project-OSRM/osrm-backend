@@ -37,22 +37,22 @@ class GraphContractor
     struct ContractorEdgeData
     {
         ContractorEdgeData()
-            : distance(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
+            : weight(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
               is_original_via_node_ID(false)
         {
         }
-        ContractorEdgeData(unsigned distance,
+        ContractorEdgeData(unsigned weight,
                            unsigned original_edges,
                            unsigned id,
                            bool shortcut,
                            bool forward,
                            bool backward)
-            : distance(distance), id(id),
-              originalEdges(std::min((unsigned)1 << 28, original_edges)), shortcut(shortcut),
-              forward(forward), backward(backward), is_original_via_node_ID(false)
+            : weight(weight), id(id), originalEdges(std::min((unsigned)1 << 28, original_edges)),
+              shortcut(shortcut), forward(forward), backward(backward),
+              is_original_via_node_ID(false)
         {
         }
-        unsigned distance;
+        unsigned weight;
         unsigned id;
         unsigned originalEdges : 28;
         bool shortcut : 1;
@@ -153,8 +153,6 @@ class GraphContractor
         const auto dend = input_edge_list.dend();
         for (auto diter = input_edge_list.dbegin(); diter != dend; ++diter)
         {
-            BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(diter->weight, 1)) > 0,
-                             "edge distance < 1");
 #ifndef NDEBUG
             if (static_cast<unsigned int>(std::max(diter->weight, 1)) > 24 * 60 * 60 * 10)
             {
@@ -210,26 +208,26 @@ class GraphContractor
             forward_edge.data.shortcut = reverse_edge.data.shortcut = false;
             forward_edge.data.id = reverse_edge.data.id = id;
             forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
-            forward_edge.data.distance = reverse_edge.data.distance = INVALID_EDGE_WEIGHT;
+            forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
             // remove parallel edges
             while (i < edges.size() && edges[i].source == source && edges[i].target == target)
             {
                 if (edges[i].data.forward)
                 {
-                    forward_edge.data.distance =
-                        std::min(edges[i].data.distance, forward_edge.data.distance);
+                    forward_edge.data.weight =
+                        std::min(edges[i].data.weight, forward_edge.data.weight);
                 }
                 if (edges[i].data.backward)
                 {
-                    reverse_edge.data.distance =
-                        std::min(edges[i].data.distance, reverse_edge.data.distance);
+                    reverse_edge.data.weight =
+                        std::min(edges[i].data.weight, reverse_edge.data.weight);
                 }
                 ++i;
             }
             // merge edges (s,t) and (t,s) into bidirectional edge
-            if (forward_edge.data.distance == reverse_edge.data.distance)
+            if (forward_edge.data.weight == reverse_edge.data.weight)
             {
-                if ((int)forward_edge.data.distance != INVALID_EDGE_WEIGHT)
+                if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
                 {
                     forward_edge.data.backward = true;
                     edges[edge++] = forward_edge;
@@ -237,11 +235,11 @@ class GraphContractor
             }
             else
             { // insert seperate edges
-                if (((int)forward_edge.data.distance) != INVALID_EDGE_WEIGHT)
+                if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
                 {
                     edges[edge++] = forward_edge;
                 }
-                if ((int)reverse_edge.data.distance != INVALID_EDGE_WEIGHT)
+                if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
                 {
                     edges[edge++] = reverse_edge;
                 }
@@ -530,7 +528,7 @@ class GraphContractor
                             contractor_graph->GetEdgeData(current_edge_ID);
                         if (current_data.shortcut && edge.data.forward == current_data.forward &&
                             edge.data.backward == current_data.backward &&
-                            edge.data.distance < current_data.distance)
+                            edge.data.weight < current_data.weight)
                         {
                             // found a duplicate edge with smaller weight, update it.
                             current_data = edge.data;
@@ -645,7 +643,7 @@ class GraphContractor
                     }
                     BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.source, "Source id invalid");
                     BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
-                    new_edge.data.distance = data.distance;
+                    new_edge.data.weight = data.weight;
                     new_edge.data.shortcut = data.shortcut;
                     if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
@@ -677,7 +675,7 @@ class GraphContractor
   private:
     inline void RelaxNode(const NodeID node,
                           const NodeID forbidden_node,
-                          const int distance,
+                          const int weight,
                           ContractorHeap &heap)
     {
         const short current_hop = heap.GetData(node).hop + 1;
@@ -693,23 +691,23 @@ class GraphContractor
             {
                 continue;
             }
-            const int to_distance = distance + data.distance;
+            const int to_weight = weight + data.weight;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!heap.WasInserted(to))
             {
-                heap.Insert(to, to_distance, ContractorHeapData{current_hop, false});
+                heap.Insert(to, to_weight, ContractorHeapData{current_hop, false});
             }
-            // Found a shorter Path -> Update distance
-            else if (to_distance < heap.GetKey(to))
+            // Found a shorter Path -> Update weight
+            else if (to_weight < heap.GetKey(to))
             {
-                heap.DecreaseKey(to, to_distance);
+                heap.DecreaseKey(to, to_weight);
                 heap.GetData(to).hop = current_hop;
             }
         }
     }
 
-    inline void Dijkstra(const int max_distance,
+    inline void Dijkstra(const int max_weight,
                          const unsigned number_of_targets,
                          const int max_nodes,
                          ContractorThreadData &data,
@@ -723,12 +721,12 @@ class GraphContractor
         while (!heap.Empty())
         {
             const NodeID node = heap.DeleteMin();
-            const auto distance = heap.GetKey(node);
+            const auto weight = heap.GetKey(node);
             if (++nodes > max_nodes)
             {
                 return;
             }
-            if (distance > max_distance)
+            if (weight > max_weight)
             {
                 return;
             }
@@ -743,7 +741,7 @@ class GraphContractor
                 }
             }
 
-            RelaxNode(node, middle_node, distance, heap);
+            RelaxNode(node, middle_node, weight, heap);
         }
     }
 
@@ -806,7 +804,7 @@ class GraphContractor
 
             heap.Clear();
             heap.Insert(source, 0, ContractorHeapData{});
-            int max_distance = 0;
+            int max_weight = 0;
             unsigned number_of_targets = 0;
 
             for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
@@ -820,10 +818,10 @@ class GraphContractor
                 if (node == target)
                     continue;
 
-                const EdgeWeight path_distance = in_data.distance + out_data.distance;
+                const EdgeWeight path_weight = in_data.weight + out_data.weight;
                 if (target == source)
                 {
-                    if (path_distance < node_weights[node])
+                    if (path_weight < node_weights[node])
                     {
                         if (RUNSIMULATION)
                         {
@@ -832,7 +830,7 @@ class GraphContractor
                             // CAREFUL: This only works due to the independent node-setting. This
                             // guarantees that source is not connected to another node that is
                             // contracted
-                            node_weights[source] = path_distance + 1;
+                            node_weights[source] = path_weight + 1;
                             BOOST_ASSERT(stats != nullptr);
                             stats->edges_added_count += 2;
                             stats->original_edges_added_count +=
@@ -843,10 +841,10 @@ class GraphContractor
                             // CAREFUL: This only works due to the independent node-setting. This
                             // guarantees that source is not connected to another node that is
                             // contracted
-                            node_weights[source] = path_distance; // make sure to prune better
+                            node_weights[source] = path_weight; // make sure to prune better
                             inserted_edges.emplace_back(source,
                                                         target,
-                                                        path_distance,
+                                                        path_weight,
                                                         out_data.originalEdges +
                                                             in_data.originalEdges,
                                                         node,
@@ -856,7 +854,7 @@ class GraphContractor
 
                             inserted_edges.emplace_back(target,
                                                         source,
-                                                        path_distance,
+                                                        path_weight,
                                                         out_data.originalEdges +
                                                             in_data.originalEdges,
                                                         node,
@@ -867,7 +865,7 @@ class GraphContractor
                     }
                     continue;
                 }
-                max_distance = std::max(max_distance, path_distance);
+                max_weight = std::max(max_weight, path_weight);
                 if (!heap.WasInserted(target))
                 {
                     heap.Insert(target, INVALID_EDGE_WEIGHT, ContractorHeapData{0, true});
@@ -878,13 +876,12 @@ class GraphContractor
             if (RUNSIMULATION)
             {
                 const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
-                Dijkstra(
-                    max_distance, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, *data, node);
+                Dijkstra(max_weight, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, *data, node);
             }
             else
             {
                 const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
-                Dijkstra(max_distance, number_of_targets, FULL_SEARCH_SPACE_SIZE, *data, node);
+                Dijkstra(max_weight, number_of_targets, FULL_SEARCH_SPACE_SIZE, *data, node);
             }
             for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
             {
@@ -896,9 +893,9 @@ class GraphContractor
                 const NodeID target = contractor_graph->GetTarget(out_edge);
                 if (target == node)
                     continue;
-                const int path_distance = in_data.distance + out_data.distance;
-                const int distance = heap.GetKey(target);
-                if (path_distance < distance)
+                const int path_weight = in_data.weight + out_data.weight;
+                const int weight = heap.GetKey(target);
+                if (path_weight < weight)
                 {
                     if (RUNSIMULATION)
                     {
@@ -911,7 +908,7 @@ class GraphContractor
                     {
                         inserted_edges.emplace_back(source,
                                                     target,
-                                                    path_distance,
+                                                    path_weight,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
@@ -920,7 +917,7 @@ class GraphContractor
 
                         inserted_edges.emplace_back(target,
                                                     source,
-                                                    path_distance,
+                                                    path_weight,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
@@ -948,7 +945,7 @@ class GraphContractor
                     {
                         continue;
                     }
-                    if (inserted_edges[other].data.distance != inserted_edges[i].data.distance)
+                    if (inserted_edges[other].data.weight != inserted_edges[i].data.weight)
                     {
                         continue;
                     }

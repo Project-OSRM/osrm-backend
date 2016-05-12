@@ -60,7 +60,7 @@ struct SegmentBlock
 {
     OSMNodeID this_osm_node_id;
     double segment_length;
-    std::int32_t segment_weight;
+    EdgeWeight segment_weight;
 };
 #pragma pack(pop)
 static_assert(sizeof(SegmentBlock) == 20, "SegmentBlock is not packed correctly");

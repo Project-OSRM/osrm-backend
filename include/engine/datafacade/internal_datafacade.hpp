@@ -89,7 +89,6 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<EdgeWeight, false>::vector m_geometry_fwd_weight_list;
     util::ShM<EdgeWeight, false>::vector m_geometry_rev_weight_list;
     util::ShM<bool, false>::vector m_is_core_node;
-    util::ShM<unsigned, false>::vector m_segment_weights;
     util::ShM<uint8_t, false>::vector m_datasource_list;
     util::ShM<std::string, false>::vector m_datasource_names;
     util::ShM<std::uint32_t, false>::vector m_lane_description_offsets;

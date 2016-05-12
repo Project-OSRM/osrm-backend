@@ -43,7 +43,7 @@ class DirectShortestPathRouting final
                     const std::vector<PhantomNodes> &phantom_nodes_vector,
                     InternalRouteResult &raw_route_data) const
     {
-        // Get distance to next pair of target nodes.
+        // Get weight to next pair of target nodes.
         BOOST_ASSERT_MSG(1 == phantom_nodes_vector.size(),
                          "Direct Shortest Path Query only accepts a single source and target pair. "
                          "Multiple ones have been specified.");
@@ -87,7 +87,7 @@ class DirectShortestPathRouting final
                                 target_phantom.reverse_segment_id.id);
         }
 
-        int distance = INVALID_EDGE_WEIGHT;
+        int weight = INVALID_EDGE_WEIGHT;
         std::vector<NodeID> packed_leg;
 
         const bool constexpr DO_NOT_FORCE_LOOPS =
@@ -107,7 +107,7 @@ class DirectShortestPathRouting final
                                   reverse_heap,
                                   forward_core_heap,
                                   reverse_core_heap,
-                                  distance,
+                                  weight,
                                   packed_leg,
                                   DO_NOT_FORCE_LOOPS,
                                   DO_NOT_FORCE_LOOPS);
@@ -117,14 +117,14 @@ class DirectShortestPathRouting final
             super::Search(facade,
                           forward_heap,
                           reverse_heap,
-                          distance,
+                          weight,
                           packed_leg,
                           DO_NOT_FORCE_LOOPS,
                           DO_NOT_FORCE_LOOPS);
         }
 
         // No path found for both target nodes?
-        if (INVALID_EDGE_WEIGHT == distance)
+        if (INVALID_EDGE_WEIGHT == weight)
         {
             raw_route_data.shortest_path_length = INVALID_EDGE_WEIGHT;
             raw_route_data.alternative_path_length = INVALID_EDGE_WEIGHT;
@@ -133,7 +133,7 @@ class DirectShortestPathRouting final
 
         BOOST_ASSERT_MSG(!packed_leg.empty(), "packed path empty");
 
-        raw_route_data.shortest_path_length = distance;
+        raw_route_data.shortest_path_length = weight;
         raw_route_data.unpacked_path_segments.resize(1);
         raw_route_data.source_traversed_in_reverse.push_back(
             (packed_leg.front() != phantom_node_pair.source_phantom.forward_segment_id.id));

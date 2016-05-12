@@ -16,11 +16,11 @@ struct QueryEdge
     NodeID target;
     struct EdgeData
     {
-        EdgeData() : id(0), shortcut(false), distance(0), forward(false), backward(false) {}
+        EdgeData() : id(0), shortcut(false), weight(0), forward(false), backward(false) {}
 
         template <class OtherT> EdgeData(const OtherT &other)
         {
-            distance = other.distance;
+            weight = other.weight;
             shortcut = other.shortcut;
             id = other.id;
             forward = other.forward;
@@ -28,7 +28,7 @@ struct QueryEdge
         }
         NodeID id : 31;
         bool shortcut : 1;
-        int distance : 30;
+        int weight : 30;
         bool forward : 1;
         bool backward : 1;
     } data;
@@ -48,7 +48,7 @@ struct QueryEdge
     bool operator==(const QueryEdge &right) const
     {
         return (source == right.source && target == right.target &&
-                data.distance == right.data.distance && data.shortcut == right.data.shortcut &&
+                data.weight == right.data.weight && data.shortcut == right.data.shortcut &&
                 data.forward == right.data.forward && data.backward == right.data.backward &&
                 data.id == right.data.id);
     }

@@ -540,13 +540,13 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                     const auto sum_node_weight = std::accumulate(
                         forward_weight_vector.begin(), forward_weight_vector.end(), EdgeWeight{0});
 
-                    // The edge.distance is the whole edge weight, which includes the turn cost.
-                    // The turn cost is the edge.distance minus the sum of the individual road
+                    // The edge.weight is the whole edge weight, which includes the turn cost.
+                    // The turn cost is the edge.weight minus the sum of the individual road
                     // segment weights.  This might not be 100% accurate, because some
                     // intersections include stop signs, traffic signals and other penalties,
                     // but at this stage, we can't divide those out, so we just treat the whole
                     // lot as the "turn cost" that we'll stick on the map.
-                    const auto turn_cost = data.distance - sum_node_weight;
+                    const auto turn_cost = data.weight - sum_node_weight;
 
                     // Find the three nodes that make up the turn movement)
                     const auto node_from = first_geometry.size() > 1
