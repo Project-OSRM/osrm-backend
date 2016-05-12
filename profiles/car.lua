@@ -1,4 +1,4 @@
-api_version = 0
+api_version = 1
 
 -- Car profile
 local find_access_tag = require("lib/access").find_access_tag
@@ -190,16 +190,19 @@ maxspeed_table = {
 }
 
 -- set profile properties
-properties.u_turn_penalty                  = 20
-properties.traffic_signal_penalty          = 2
 properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false
+-- this will use the duration and {forward/backward}_speed values as weight
+properties.weight_name                     = 'duration'
+--properties.weight_name                     = 'distance'
 
 local side_road_speed_multiplier = 0.8
-
 local turn_penalty               = 7.5
+local traffic_light_penalty      = 2
+local u_turn_penalty             = 20
+
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
 local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1.075
@@ -335,7 +338,7 @@ function is_way_blocked(way,result)
   if ignore_areas and "yes" == area then
     return false
   end
-  
+
   -- respect user-preference for toll=yes ways
   local toll = way:get_value_by_key("toll")
   if ignore_toll_ways and "yes" == toll then
@@ -445,7 +448,7 @@ function handle_speed(way,result,data)
   if -1 == result.forward_speed and -1 == result.backward_speed then
     return false
   end
-  
+
   if handle_side_roads(way,result) == false then return false end
   if handle_surface(way,result) == false then return false end
   if handle_maxspeed(way,data,result) == false then return false end
@@ -454,10 +457,9 @@ function handle_speed(way,result,data)
 end
 
 -- reduce speed on special side roads
-function handle_side_roads(way,result)  
+function handle_side_roads(way,result)
   local sideway = way:get_value_by_key("side_road")
-  if "yes" == sideway or
-  "rotary" == sideway then
+  if "yes" == sideway or "rotary" == sideway then
     result.forward_speed = result.forward_speed * side_road_speed_multiplier
     result.backward_speed = result.backward_speed * side_road_speed_multiplier
   end
@@ -562,7 +564,7 @@ function handle_speed_scaling(way,result)
     end
   end
 
-  local is_bidirectional = result.forward_mode ~= mode.inaccessible and 
+  local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
 
   local service = way:get_value_by_key("service")
@@ -605,7 +607,7 @@ function handle_oneway(way,result,data)
     else
       local junction = way:get_value_by_key("junction")
       if data.highway == "motorway" or
-         junction == "roundabout" or 
+         junction == "roundabout" or
          junction == "circular" then
         if oneway ~= "no" then
           -- implied oneway
@@ -659,7 +661,7 @@ end
 -- determine if this way can be used as a start/end point for routing
 function handle_startpoint(way,result)
   -- only allow this road as start point if it not a ferry
-  result.is_startpoint = result.forward_mode == mode.driving or 
+  result.is_startpoint = result.forward_mode == mode.driving or
                               result.backward_mode == mode.driving
 end
 
@@ -678,7 +680,7 @@ function way_function(way, result)
   -- unnecessary work. this implies we should check things that
   -- commonly forbids access early, and handle complicated edge
   -- cases later.
-  
+
   -- perform an quick initial check and abort if way is obviously
   -- not routable, e.g. because it does not have any of the key
   -- tags indicating routability
@@ -728,14 +730,30 @@ function way_function(way, result)
   if handle_names(way,result) == false then return end
 end
 
-function turn_function (angle)
+function turn_function (turn)
   -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
   -- over the space of 0-180 degrees.  Values here were chosen by fitting
   -- the function to some turn penalty samples from real driving.
-  -- multiplying by 10 converts to deci-seconds see issue #1318
-  if angle>=0 then
-    return 10 * turn_penalty / (1 + 2.718 ^ - ((13 / turn_bias) * angle/180 - 6.5*turn_bias))
-  else
-    return 10 * turn_penalty / (1 + 2.718 ^  - ((13 * turn_bias) * - angle/180 - 6.5/turn_bias))
+  if turn.turn_type ~= turn_type.no_turn then
+    if turn.angle >= 0 then
+      turn.duration = turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
+    else
+      turn.duration = turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
+    end
+
+    if turn.direction_modifier == direction_modifier.u_turn then
+      turn.duration = turn.duration + u_turn_penalty
+    end
+
+    if turn.has_traffic_light then
+       turn.duration = turn.duration + traffic_light_penalty
+    end
+
+    -- for distance based routing we don't want to have penalties based on turn angle
+    if properties.weight_name == 'distance' then
+       turn.weight = 0
+    else
+       turn.weight = turn.duration
+    end
   end
 end

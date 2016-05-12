@@ -1,4 +1,4 @@
-api_version = 0
+api_version = 1
 -- Testbot profile
 
 -- Moves at fixed, well-known speeds, practical for testing speed and travel times:
@@ -19,9 +19,11 @@ speed_profile = {
 
 properties.continue_straight_at_waypoint = true
 properties.use_turn_restrictions         = true
-properties.traffic_signal_penalty        = 7     -- seconds
-properties.u_turn_penalty                = 20
 properties.max_speed_for_map_matching    = 30/3.6 --km -> m/s
+properties.weight_name                   = 'duration'
+
+local uturn_penalty                      = 20
+local traffic_light_penalty              = 7     -- seconds
 
 function limit_speed(speed, limits)
   -- don't use ipairs(), since it stops at the first nil value
@@ -112,5 +114,15 @@ function way_function (way, result)
 
   if junction == 'roundabout' then
     result.roundabout = true
+  end
+end
+
+function turn_function (turn)
+  if turn.direction_modifier == direction_modifier.uturn then
+    turn.duration = uturn_penalty
+    turn.weight = uturn_penalty
+  end
+  if turn.has_traffic_light then
+     turn.duration = turn.duration + traffic_light_penalty
   end
 end

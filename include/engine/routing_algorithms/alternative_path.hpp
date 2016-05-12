@@ -91,7 +91,7 @@ class AlternativeRouting final : private BasicRoutingInterface
                                 QueryHeap &heap1,
                                 QueryHeap &heap2,
                                 NodeID *middle_node,
-                                int *upper_bound_to_shortest_path_weight,
+                                EdgeWeight *upper_bound_to_shortest_path_weight,
                                 std::vector<NodeID> &search_space_intersection,
                                 std::vector<SearchSpaceEdge> &search_space,
                                 const EdgeWeight min_edge_offset) const
@@ -100,14 +100,14 @@ class AlternativeRouting final : private BasicRoutingInterface
         QueryHeap &reverse_heap = (is_forward_directed ? heap2 : heap1);
 
         const NodeID node = forward_heap.DeleteMin();
-        const int weight = forward_heap.GetKey(node);
+        const EdgeWeight weight = forward_heap.GetKey(node);
         // const NodeID parentnode = forward_heap.GetData(node).parent;
         // util::Log() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled
         // edge ("
         // << parentnode << "," << node << "), dist: " << weight;
 
-        const int scaled_weight =
-            static_cast<int>((weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
+        const auto scaled_weight =
+            static_cast<EdgeWeight>((weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
         if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_weight) &&
             (scaled_weight > *upper_bound_to_shortest_path_weight))
         {
@@ -120,7 +120,7 @@ class AlternativeRouting final : private BasicRoutingInterface
         if (reverse_heap.WasInserted(node))
         {
             search_space_intersection.emplace_back(node);
-            const int new_weight = reverse_heap.GetKey(node) + weight;
+            const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
             if (new_weight < *upper_bound_to_shortest_path_weight)
             {
                 if (new_weight >= 0)
@@ -139,7 +139,7 @@ class AlternativeRouting final : private BasicRoutingInterface
                 {
                     // check whether there is a loop present at the node
                     const auto loop_weight = super::GetLoopWeight(facade, node);
-                    const int new_weight_with_loop = new_weight + loop_weight;
+                    const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                     if (loop_weight != INVALID_EDGE_WEIGHT &&
                         new_weight_with_loop <= *upper_bound_to_shortest_path_weight)
                     {
@@ -158,10 +158,10 @@ class AlternativeRouting final : private BasicRoutingInterface
             if (edge_is_forward_directed)
             {
                 const NodeID to = facade->GetTarget(edge);
-                const int edge_weight = data.weight;
+                const EdgeWeight edge_weight = data.weight;
 
                 BOOST_ASSERT(edge_weight > 0);
-                const int to_weight = weight + edge_weight;
+                const EdgeWeight to_weight = weight + edge_weight;
 
                 // New Node discovered -> Add to Heap + Node Info Storage
                 if (!forward_heap.WasInserted(to))

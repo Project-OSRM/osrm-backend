@@ -24,5 +24,5 @@ Feature: osrm-contract command line options: invalid options
     Scenario: osrm-contract - Someone forgot --generate-edge-lookup on osrm-extract
         When I try to run "osrm-contract --segment-speed-file /dev/null {processed_file}"
         Then stderr should contain "Error while trying to mmap"
-        Then stderr should contain ".osrm.edge_penalties"
+        Then stderr should contain ".osrm.turn_penalties_index"
         And it should exit with an error

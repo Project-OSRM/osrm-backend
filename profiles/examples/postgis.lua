@@ -36,7 +36,6 @@ obey_oneway             = true
 use_restrictions         = true
 ignore_areas             = true  -- future feature
 traffic_signal_penalty   = 7      -- seconds
-u_turn_penalty           = 20
 
 -- nodes processing, called from OSRM
 function node_function(node)

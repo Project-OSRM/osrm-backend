@@ -31,7 +31,7 @@ struct QueryEdge
         // node. Otherwise we see the edge based node to access node data.
         NodeID id : 31;
         bool shortcut : 1;
-        int weight : 30;
+        EdgeWeight weight : 30;
         bool forward : 1;
         bool backward : 1;
     } data;

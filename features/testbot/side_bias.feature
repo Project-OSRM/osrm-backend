@@ -9,13 +9,10 @@ Feature: Testbot - side bias
         """
 
     Scenario: Left hand bias
-        Given the profile file "testbot" extended with
+        Given the profile file "car" extended with
         """
         properties.left_hand_driving = true
-        function turn_function (angle)
-          local k = 10 * angle * angle * 50 / (90.0 * 90.0)
-          return (angle >= 0) and k * 1.2 or k / 1.2
-        end
+        turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
         """
         Given the node map
             """
@@ -31,17 +28,14 @@ Feature: Testbot - side bias
 
         When I route I should get
             | from | to | route    | time       |
-            | d    | a  | bd,ab,ab | 82s +-1    |
-            | d    | c  | bd,bc,bc | 100s +-1   |
+            | d    | a  | bd,ab,ab | 29s +-1    |
+            | d    | c  | bd,bc,bc | 33s +-1    |
 
     Scenario: Right hand bias
-        Given the profile file "testbot" extended with
+        Given the profile file "car" extended with
         """
         properties.left_hand_driving = false
-        function turn_function (angle)
-          local k = 10 * angle * angle * 50 / (90.0 * 90.0)
-          return (angle >= 0) and k / 1.2 or k * 1.2
-        end
+        turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
         """
         And the node map
             """
@@ -57,8 +51,8 @@ Feature: Testbot - side bias
 
         When I route I should get
             | from | to | route    | time       |
-            | d    | a  | bd,ab,ab | 100s +-1   |
-            | d    | c  | bd,bc,bc | 82s +-1    |
+            | d    | a  | bd,ab,ab | 33s +-1    |
+            | d    | c  | bd,bc,bc | 29s +-1    |
 
     Scenario: Roundabout exit counting for left sided driving
         And a grid size of 10 meters

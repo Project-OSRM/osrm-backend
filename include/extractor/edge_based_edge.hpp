@@ -30,9 +30,13 @@ struct EdgeBasedEdge
     NodeID target;
     NodeID edge_id;
     EdgeWeight weight : 30;
-    bool forward : 1;
-    bool backward : 1;
+    std::uint32_t forward : 1;
+    std::uint32_t backward : 1;
 };
+static_assert(sizeof(extractor::EdgeBasedEdge) == 16,
+              "Size of extractor::EdgeBasedEdge type is "
+              "bigger than expected. This will influence "
+              "memory consumption.");
 
 // Impl.
 

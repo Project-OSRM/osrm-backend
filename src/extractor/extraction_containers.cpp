@@ -1,4 +1,5 @@
 #include "extractor/extraction_containers.hpp"
+#include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_way.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -390,6 +391,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         const auto all_edges_list_end_ = all_edges_list.end();
         const auto all_nodes_list_end_ = all_nodes_list.end();
 
+        const auto weight_multiplier =
+            std::pow(10, scripting_environment.GetProfileProperties().weight_precision);
+
         while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
         {
             // skip all invalid edges
@@ -414,44 +418,28 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             }
 
             BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
-            BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
             BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
                          util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
             BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
                          util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
 
+            const util::Coordinate target_coord{node_iterator->lon, node_iterator->lat};
             const double distance = util::coordinate_calculation::greatCircleDistance(
-                edge_iterator->source_coordinate,
-                util::Coordinate(node_iterator->lon, node_iterator->lat));
+                edge_iterator->source_coordinate, target_coord);
 
-            scripting_environment.ProcessSegment(edge_iterator->source_coordinate,
-                                                 *node_iterator,
-                                                 distance,
-                                                 edge_iterator->weight_data);
+            double weight = static_cast<double>(mapbox::util::apply_visitor(
+                detail::ToValueByEdge(distance), edge_iterator->weight_data));
+            double duration = static_cast<double>(mapbox::util::apply_visitor(
+                detail::ToValueByEdge(distance), edge_iterator->duration_data));
 
-            const double weight = [distance, edge_iterator, node_iterator](
-                const InternalExtractorEdge::WeightData &data) {
-                switch (data.type)
-                {
-                case InternalExtractorEdge::WeightType::EDGE_DURATION:
-                case InternalExtractorEdge::WeightType::WAY_DURATION:
-                    return data.duration * 10.;
-                    break;
-                case InternalExtractorEdge::WeightType::SPEED:
-                    return (distance * 10.) / (data.speed / 3.6);
-                    break;
-                case InternalExtractorEdge::WeightType::INVALID:
-                    std::stringstream coordstring;
-                    coordstring << edge_iterator->source_coordinate << " to " << node_iterator->lon
-                                << "," << node_iterator->lat;
-                    util::exception("Encountered invalid weight at segment " + coordstring.str() +
-                                    SOURCE_REF);
-                }
-                return -1.0;
-            }(edge_iterator->weight_data);
+            ExtractionSegment extracted_segment(
+                edge_iterator->source_coordinate, target_coord, distance, weight, duration);
+            scripting_environment.ProcessSegment(extracted_segment);
 
             auto &edge = edge_iterator->result;
-            edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
+            edge.weight =
+                std::max<EdgeWeight>(1, std::round(extracted_segment.weight * weight_multiplier));
+            edge.duration = std::max<EdgeWeight>(1, std::round(extracted_segment.duration * 10.));
 
             // assign new node id
             auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
@@ -499,7 +487,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     }
 
     BOOST_ASSERT(all_edges_list.size() > 0);
-    for (unsigned i = 0; i < all_edges_list.size();)
+    for (std::size_t i = 0; i < all_edges_list.size();)
     {
         // only invalid edges left
         if (all_edges_list[i].result.source == SPECIAL_NODEID)
@@ -513,42 +501,44 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             continue;
         }
 
-        unsigned start_idx = i;
+        std::size_t start_idx = i;
         NodeID source = all_edges_list[i].result.source;
         NodeID target = all_edges_list[i].result.target;
 
-        int min_forward_weight = std::numeric_limits<int>::max();
-        int min_backward_weight = std::numeric_limits<int>::max();
-        unsigned min_forward_idx = std::numeric_limits<unsigned>::max();
-        unsigned min_backward_idx = std::numeric_limits<unsigned>::max();
+        auto min_forward = std::make_pair(std::numeric_limits<EdgeWeight>::max(),
+                                          std::numeric_limits<EdgeWeight>::max());
+        auto min_backward = std::make_pair(std::numeric_limits<EdgeWeight>::max(),
+                                           std::numeric_limits<EdgeWeight>::max());
+        std::size_t min_forward_idx = std::numeric_limits<std::size_t>::max();
+        std::size_t min_backward_idx = std::numeric_limits<std::size_t>::max();
 
         // find minimal edge in both directions
-        while (all_edges_list[i].result.source == source &&
+        while (i < all_edges_list.size() && all_edges_list[i].result.source == source &&
                all_edges_list[i].result.target == target)
         {
-            if (all_edges_list[i].result.forward &&
-                all_edges_list[i].result.weight < min_forward_weight)
+            const auto &result = all_edges_list[i].result;
+            const auto value = std::make_pair(result.weight, result.duration);
+            if (result.forward && value < min_forward)
             {
                 min_forward_idx = i;
-                min_forward_weight = all_edges_list[i].result.weight;
+                min_forward = value;
             }
-            if (all_edges_list[i].result.backward &&
-                all_edges_list[i].result.weight < min_backward_weight)
+            if (result.backward && value < min_backward)
             {
                 min_backward_idx = i;
-                min_backward_weight = all_edges_list[i].result.weight;
+                min_backward = value;
             }
 
             // this also increments the outer loop counter!
             i++;
         }
 
-        BOOST_ASSERT(min_forward_idx == std::numeric_limits<unsigned>::max() ||
+        BOOST_ASSERT(min_forward_idx == std::numeric_limits<std::size_t>::max() ||
                      min_forward_idx < i);
-        BOOST_ASSERT(min_backward_idx == std::numeric_limits<unsigned>::max() ||
+        BOOST_ASSERT(min_backward_idx == std::numeric_limits<std::size_t>::max() ||
                      min_backward_idx < i);
-        BOOST_ASSERT(min_backward_idx != std::numeric_limits<unsigned>::max() ||
-                     min_forward_idx != std::numeric_limits<unsigned>::max());
+        BOOST_ASSERT(min_backward_idx != std::numeric_limits<std::size_t>::max() ||
+                     min_forward_idx != std::numeric_limits<std::size_t>::max());
 
         if (min_backward_idx == min_forward_idx)
         {
@@ -558,8 +548,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         }
         else
         {
-            bool has_forward = min_forward_idx != std::numeric_limits<unsigned>::max();
-            bool has_backward = min_backward_idx != std::numeric_limits<unsigned>::max();
+            bool has_forward = min_forward_idx != std::numeric_limits<std::size_t>::max();
+            bool has_backward = min_backward_idx != std::numeric_limits<std::size_t>::max();
             if (has_forward)
             {
                 all_edges_list[min_forward_idx].result.forward = true;
@@ -577,7 +567,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         }
 
         // invalidate all unused edges
-        for (unsigned j = start_idx; j < i; j++)
+        for (std::size_t j = start_idx; j < i; j++)
         {
             if (j == min_forward_idx || j == min_backward_idx)
             {

@@ -68,6 +68,14 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     {
         return GeometryID{SPECIAL_GEOMETRYID, false};
     }
+    TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /* id */) const override final
+    {
+        return 0;
+    }
+    TurnPenalty GetDurationPenaltyForEdgeID(const unsigned /* id */) const override final
+    {
+        return 0;
+    }
     std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
         return {};
@@ -83,12 +91,17 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
         result_weights[0] = 1;
         return result_weights;
     }
-    std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID /* id */) const override
+    std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID id) const override
     {
-        std::vector<EdgeWeight> result_weights;
-        result_weights.resize(1);
-        result_weights[0] = 1;
-        return result_weights;
+        return GetUncompressedForwardWeights(id);
+    }
+    std::vector<EdgeWeight> GetUncompressedForwardDurations(const EdgeID id) const override
+    {
+        return GetUncompressedForwardWeights(id);
+    }
+    std::vector<EdgeWeight> GetUncompressedReverseDurations(const EdgeID id) const override
+    {
+        return GetUncompressedForwardWeights(id);
     }
     std::vector<DatasourceID> GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {
@@ -211,6 +224,8 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }
+    const char *GetWeightName() const override final { return "duration"; }
+    unsigned GetWeightPrecision() const override final { return 1; }
     BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; }
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
 

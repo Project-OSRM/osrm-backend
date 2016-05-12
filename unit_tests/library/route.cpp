@@ -50,6 +50,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
           json::Array{{json::Object{
               {{"distance", 0.},
                {"duration", 0.},
+               {"weight_name", "duration"},
                {"geometry", "yw_jGupkl@??"},
                {"legs",
                 json::Array{{json::Object{
@@ -59,6 +60,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                      {"steps",
                       json::Array{{{json::Object{{{"duration", 0.},
                                                   {"distance", 0.},
+                                                  {"weight", 0.},
                                                   {"geometry", "yw_jGupkl@??"},
                                                   {"name", "Boulevard du Larvotto"},
                                                   {"mode", "driving"},
@@ -78,6 +80,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 
                                    json::Object{{{"duration", 0.},
                                                  {"distance", 0.},
+                                                 {"weight", 0.},
                                                  {"geometry", "yw_jGupkl@"},
                                                  {"name", "Boulevard du Larvotto"},
                                                  {"mode", "driving"},

@@ -26,7 +26,7 @@ void AlternativeRouting::operator()(const std::shared_ptr<const datafacade::Base
     QueryHeap &forward_heap2 = *(engine_working_data.forward_heap_2);
     QueryHeap &reverse_heap2 = *(engine_working_data.reverse_heap_2);
 
-    int upper_bound_to_shortest_path_weight = INVALID_EDGE_WEIGHT;
+    EdgeWeight upper_bound_to_shortest_path_weight = INVALID_EDGE_WEIGHT;
     NodeID middle_node = SPECIAL_NODEID;
     const EdgeWeight min_edge_offset =
         std::min(phantom_node_pair.source_phantom.forward_segment_id.enabled
@@ -599,7 +599,7 @@ bool AlternativeRouting::ViaNodeCandidatePassesTTest(
         return false;
     }
     const int T_threshold = static_cast<int>(VIAPATH_EPSILON * length_of_shortest_path);
-    int unpacked_until_weight = 0;
+    EdgeWeight unpacked_until_weight = 0;
 
     std::stack<SearchSpaceEdge> unpack_stack;
     // Traverse path s-->v
@@ -607,7 +607,7 @@ bool AlternativeRouting::ViaNodeCandidatePassesTTest(
     {
         const EdgeID current_edge_id =
             facade->FindEdgeInEitherDirection(packed_s_v_path[i - 1], packed_s_v_path[i]);
-        const int length_of_current_edge = facade->GetEdgeData(current_edge_id).weight;
+        const EdgeWeight length_of_current_edge = facade->GetEdgeData(current_edge_id).weight;
         if ((length_of_current_edge + unpacked_until_weight) >= T_threshold)
         {
             unpack_stack.emplace(packed_s_v_path[i - 1], packed_s_v_path[i]);
@@ -660,7 +660,7 @@ bool AlternativeRouting::ViaNodeCandidatePassesTTest(
         }
     }
 
-    int t_test_path_length = unpacked_until_weight;
+    EdgeWeight t_test_path_length = unpacked_until_weight;
     unpacked_until_weight = 0;
     // Traverse path s-->v
     BOOST_ASSERT(!packed_v_t_path.empty());
@@ -727,7 +727,7 @@ bool AlternativeRouting::ViaNodeCandidatePassesTTest(
 
     QueryHeap &forward_heap3 = *engine_working_data.forward_heap_3;
     QueryHeap &reverse_heap3 = *engine_working_data.reverse_heap_3;
-    int upper_bound = INVALID_EDGE_WEIGHT;
+    EdgeWeight upper_bound = INVALID_EDGE_WEIGHT;
     NodeID middle = SPECIAL_NODEID;
 
     forward_heap3.Insert(s_P, 0, s_P);

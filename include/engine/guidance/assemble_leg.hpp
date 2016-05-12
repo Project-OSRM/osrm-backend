@@ -79,7 +79,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
             return NamedSegment{point.duration_until_turn, index++, point.name_id};
         });
     const auto target_duration =
-        target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
+        target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
     if (target_duration > 1)
         segments.push_back({target_duration, index++, target_node.name_id});
     // this makes sure that the segment with the lowest position comes first
@@ -130,18 +130,14 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                             const bool needs_summary)
 {
     const auto target_duration =
-        (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight) /
-        10.;
+        (target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration);
 
     auto distance = std::accumulate(
         leg_geometry.segment_distances.begin(), leg_geometry.segment_distances.end(), 0.);
-    auto duration = std::accumulate(route_data.begin(),
-                                    route_data.end(),
-                                    0.,
-                                    [](const double sum, const PathData &data) {
-                                        return sum + data.duration_until_turn;
-                                    }) /
-                    10.;
+    auto duration = std::accumulate(
+        route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
+            return sum + data.duration_until_turn;
+        });
 
     //                 s
     //                 |
@@ -155,10 +151,10 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     // The duration of the turn (a,c) -> (c,e) will be the duration of (a,c) (e.g. the duration
     // of (a,b,c)).
     // The phantom node of s will contain:
-    // `forward_weight`: duration of (a,s)
+    // `forward_duration`: duration of (a,s)
     // `forward_offset`: 0 (its the first segment)
     // The phantom node of t will contain:
-    // `forward_weight`: duration of (d,t)
+    // `forward_duration`: duration of (d,t)
     // `forward_offset`: duration of (c, d)
     // path_data will have entries for (s,b), (b, c), (c, d) but (d, t) is only
     // caputed by the phantom node. So we need to add the target duration here.
@@ -167,9 +163,8 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     duration = duration + target_duration;
     if (route_data.empty())
     {
-        duration -= (target_traversed_in_reverse ? source_node.reverse_weight
-                                                 : source_node.forward_weight) /
-                    10.0;
+        duration -= (target_traversed_in_reverse ? source_node.reverse_duration
+                                                 : source_node.forward_duration);
     }
 
     std::string summary;
@@ -201,7 +196,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         summary = boost::algorithm::join(summary_names, ", ");
     }
 
-    return RouteLeg{duration, distance, summary, {}};
+    return RouteLeg{duration / 10., distance, summary, {}};
 }
 
 } // namespace guidance

@@ -1,11 +1,10 @@
-api_version = 0
+api_version = 1
 
 -- Testbot, with turn penalty
 -- Used for testing turn penalties
 
 require 'testbot'
 
-function turn_function (angle)
-    -- multiplying by 10 converts to deci-seconds see issue #1318
-    return 10*20*math.abs(angle)/180
+function turn_function (turn)
+    turn.duration = 20 * math.abs(turn.angle) / 180
 end

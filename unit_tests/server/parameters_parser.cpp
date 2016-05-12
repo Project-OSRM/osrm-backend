@@ -81,8 +81,9 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
 
 BOOST_AUTO_TEST_CASE(valid_route_hint)
 {
-    auto hint = engine::Hint::FromBase64(
-        "XAYAgP___3-QAAAABAAAACEAAAA_AAAAHgAAAHsFAAAUAAAAaWhxALeCmwI7aHEAy4KbAgUAAQE0h8Z2");
+    auto hint = engine::Hint::FromBase64("XAYAgP___3-QAAAABAAAACEAAAA_"
+                                         "AAAAHgAAAHsFAAAUAAAAaWhxALeCmwI7aHEAy4KbAjtocQDLgpsCAAAAA"
+                                         "KCQXlw=");
     BOOST_CHECK_EQUAL(
         hint.phantom.input_location,
         util::Coordinate(util::FloatLongitude{7.432251}, util::FloatLatitude{43.745995}));
@@ -151,12 +152,12 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_3.hints, result_3->hints);
 
     std::vector<boost::optional<engine::Hint>> hints_4 = {
-        engine::Hint::FromBase64(
-            "XAYAgP___3-QAAAABAAAACEAAAA_AAAAHgAAAHsFAAAUAAAAaWhxALeCmwI7aHEAy4KbAgUAAQE0h8Z2"),
-        engine::Hint::FromBase64(
-            "lgQAgP___3-QAAAADwAAABMAAAAoAAAALAAAADQAAAAUAAAAmWFxAL1zmwLcYXEAu3ObAgQAAQE0h8Z2"),
-        engine::Hint::FromBase64(
-            "OAUAgMUFAIAAAAAADwAAAAIAAAAAAAAAnQAAALwEAAAUAAAAgz5xAE9WmwKIPnEAUFabAgAAAQE0h8Z2")};
+        engine::Hint::FromBase64("0QkAgFcLAIBFAAAADAAAACcAAAA0AAAANAAAAB4AAAAmAAAAGA0AAL8QAAARAAAAJ"
+                                 "ipxAP1ImwIfKnEABUmbAgIAAQFy"),
+        engine::Hint::FromBase64("YwsAgP___3-fAAAAEQAAACcAAAAnAAAAJwAAABYAAAAxAAAA3wEAAOQBAAARAAAA-"
+                                 "DlxAGBcmwLLOXEAfVybAgEAAQFy"),
+        engine::Hint::FromBase64("awQAgDIJAID7AQAAAAAAAB0AAAAdAAAAHQAAAP4DAAABAQAADwsAAMULAAARAAAAd"
+                                 "T5yADqVmwIAtMQEAAAAABUAAQFy")};
     RouteParameters reference_4{false,
                                 false,
                                 false,
@@ -169,9 +170,12 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                 std::vector<boost::optional<engine::Bearing>>{}};
     auto result_4 = parseParameters<RouteParameters>(
         "1,2;3,4?steps=false&hints="
-        "XAYAgP___3-QAAAABAAAACEAAAA_AAAAHgAAAHsFAAAUAAAAaWhxALeCmwI7aHEAy4KbAgUAAQE0h8Z2;"
-        "lgQAgP___3-QAAAADwAAABMAAAAoAAAALAAAADQAAAAUAAAAmWFxAL1zmwLcYXEAu3ObAgQAAQE0h8Z2;"
-        "OAUAgMUFAIAAAAAADwAAAAIAAAAAAAAAnQAAALwEAAAUAAAAgz5xAE9WmwKIPnEAUFabAgAAAQE0h8Z2");
+        "0QkAgFcLAIBFAAAADAAAACcAAAA0AAAANAAAAB4AAAAmAAAAGA0AAL8QAAARAAAAJipxAP1ImwIfKnEABUmbAgIAAQ"
+        "Fy;"
+        "YwsAgP___3-fAAAAEQAAACcAAAAnAAAAJwAAABYAAAAxAAAA3wEAAOQBAAARAAAA-"
+        "DlxAGBcmwLLOXEAfVybAgEAAQFy;"
+        "awQAgDIJAID7AQAAAAAAAB0AAAAdAAAAHQAAAP4DAAABAQAADwsAAMULAAARAAAAdT5yADqVmwIAtMQEAAAAABUAAQ"
+        "Fy");
     BOOST_CHECK(result_4);
     BOOST_CHECK_EQUAL(reference_4.steps, result_4->steps);
     BOOST_CHECK_EQUAL(reference_4.alternatives, result_4->alternatives);
@@ -266,11 +270,11 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                               {util::FloatLongitude{5}, util::FloatLatitude{6}},
                                               {util::FloatLongitude{7}, util::FloatLatitude{8}}};
     std::vector<boost::optional<engine::Hint>> hints_10 = {
-        engine::Hint::FromBase64(
-            "XAYAgP___3-QAAAABAAAACEAAAA_AAAAHgAAAHsFAAAUAAAAaWhxALeCmwI7aHEAy4KbAgUAAQE0h8Z2"),
+        engine::Hint::FromBase64("0QkAgFcLAIBFAAAADAAAACcAAAA0AAAANAAAAB4AAAAmAAAAGA0AAL8QAAARAAAAJ"
+                                 "ipxAP1ImwIfKnEABUmbAgIAAQFy"),
         boost::none,
-        engine::Hint::FromBase64(
-            "lgQAgP___3-QAAAADwAAABMAAAAoAAAALAAAADQAAAAUAAAAmWFxAL1zmwLcYXEAu3ObAgQAAQE0h8Z2"),
+        engine::Hint::FromBase64("awQAgDIJAID7AQAAAAAAAB0AAAAdAAAAHQAAAP4DAAABAQAADwsAAMULAAARAAAAd"
+                                 "T5yADqVmwIAtMQEAAAAABUAAQFy"),
         boost::none};
     RouteParameters reference_10{false,
                                  false,
@@ -282,11 +286,13 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  hints_10,
                                  std::vector<boost::optional<double>>{},
                                  std::vector<boost::optional<engine::Bearing>>{}};
-    auto result_10 = parseParameters<RouteParameters>(
-        "1,2;3,4;5,6;7,8?steps=false&hints="
-        "XAYAgP___3-QAAAABAAAACEAAAA_AAAAHgAAAHsFAAAUAAAAaWhxALeCmwI7aHEAy4KbAgUAAQE0h8Z2;;"
-        "lgQAgP___3-QAAAADwAAABMAAAAoAAAALAAAADQAAAAUAAAAmWFxAL1zmwLcYXEAu3ObAgQAAQE0h8Z2"
-        ";");
+    auto result_10 =
+        parseParameters<RouteParameters>("1,2;3,4;5,6;7,8?steps=false&hints="
+                                         "0QkAgFcLAIBFAAAADAAAACcAAAA0AAAANAAAAB4AAAAmAAAAGA0AAL8QA"
+                                         "AARAAAAJipxAP1ImwIfKnEABUmbAgIAAQFy;;"
+                                         "awQAgDIJAID7AQAAAAAAAB0AAAAdAAAAHQAAAP4DAAABAQAADwsAAMULA"
+                                         "AARAAAAdT5yADqVmwIAtMQEAAAAABUAAQFy"
+                                         ";");
     BOOST_CHECK(result_10);
     BOOST_CHECK_EQUAL(reference_10.steps, result_10->steps);
     BOOST_CHECK_EQUAL(reference_10.alternatives, result_10->alternatives);

@@ -35,6 +35,8 @@ namespace extractor
 class RestrictionParser;
 struct ExtractionNode;
 struct ExtractionWay;
+struct ExtractionTurn;
+struct ExtractionSegment;
 
 /**
  * Abstract class that handles processing osmium ways, nodes and relation objects by applying
@@ -53,11 +55,9 @@ class ScriptingEnvironment
     virtual std::vector<std::string> GetNameSuffixList() = 0;
     virtual std::vector<std::string> GetRestrictions() = 0;
     virtual void SetupSources() = 0;
-    virtual int32_t GetTurnPenalty(double angle) = 0;
-    virtual void ProcessSegment(const osrm::util::Coordinate &source,
-                                const osrm::util::Coordinate &target,
-                                double distance,
-                                InternalExtractorEdge::WeightData &weight) = 0;
+    virtual void ProcessTurn(ExtractionTurn &turn) = 0;
+    virtual void ProcessSegment(ExtractionSegment &segment) = 0;
+
     virtual void
     ProcessElements(const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
                     const RestrictionParser &restriction_parser,

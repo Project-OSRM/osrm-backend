@@ -76,10 +76,10 @@ class ManyToManyRouting final : public BasicRoutingInterface
             if (direction_flag)
             {
                 const NodeID to = facade->GetTarget(edge);
-                const int edge_weight = data.weight;
+                const EdgeWeight edge_weight = data.weight;
 
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-                const int to_weight = weight + edge_weight;
+                const EdgeWeight to_weight = weight + edge_weight;
 
                 // New Node discovered -> Add to Heap + Node Info Storage
                 if (!query_heap.WasInserted(to))
@@ -111,7 +111,7 @@ class ManyToManyRouting final : public BasicRoutingInterface
             if (reverse_flag)
             {
                 const NodeID to = facade->GetTarget(edge);
-                const int edge_weight = data.weight;
+                const EdgeWeight edge_weight = data.weight;
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 if (query_heap.WasInserted(to))
                 {

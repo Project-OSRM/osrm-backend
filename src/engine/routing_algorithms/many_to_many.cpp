@@ -128,7 +128,7 @@ void ManyToManyRouting::ForwardRoutingStep(
     std::vector<EdgeWeight> &result_table) const
 {
     const NodeID node = query_heap.DeleteMin();
-    const int source_weight = query_heap.GetKey(node);
+    const EdgeWeight source_weight = query_heap.GetKey(node);
 
     // check if each encountered node has an entry
     const auto bucket_iterator = search_space_with_buckets.find(node);
@@ -140,14 +140,14 @@ void ManyToManyRouting::ForwardRoutingStep(
         {
             // get target id from bucket entry
             const unsigned column_idx = current_bucket.target_id;
-            const int target_weight = current_bucket.weight;
+            const EdgeWeight target_weight = current_bucket.weight;
             auto &current_weight = result_table[row_idx * number_of_targets + column_idx];
             // check if new weight is better
             const EdgeWeight new_weight = source_weight + target_weight;
             if (new_weight < 0)
             {
                 const EdgeWeight loop_weight = super::GetLoopWeight(facade, node);
-                const int new_weight_with_loop = new_weight + loop_weight;
+                const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT && new_weight_with_loop >= 0)
                 {
                     current_weight = std::min(current_weight, new_weight_with_loop);
@@ -173,7 +173,7 @@ void ManyToManyRouting::BackwardRoutingStep(
     SearchSpaceWithBuckets &search_space_with_buckets) const
 {
     const NodeID node = query_heap.DeleteMin();
-    const int target_weight = query_heap.GetKey(node);
+    const EdgeWeight target_weight = query_heap.GetKey(node);
 
     // store settled nodes in search space bucket
     search_space_with_buckets[node].emplace_back(column_idx, target_weight);

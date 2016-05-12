@@ -1,4 +1,4 @@
-api_version = 0
+api_version = 1
 
 -- Foot profile
 local find_access_tag = require("lib/access").find_access_tag
@@ -21,16 +21,16 @@ barrier_whitelist = Set {
   'block'
 }
 access_tag_whitelist = Set {
-  'yes', 
-  'foot', 
-  'permissive', 
-  'designated'  
+  'yes',
+  'foot',
+  'permissive',
+  'designated'
 }
 access_tag_blacklist = Set {
-  'no', 
-  'private', 
-  'agricultural', 
-  'forestry', 
+  'no',
+  'private',
+  'agricultural',
+  'forestry',
   'delivery'
 }
 
@@ -103,11 +103,13 @@ leisure_speeds = {
   track = walking_speed
 }
 
-properties.traffic_signal_penalty        = 2
-properties.u_turn_penalty                = 2
 properties.max_speed_for_map_matching    = 40/3.6 -- kmph -> m/s
 properties.use_turn_restrictions         = false
 properties.continue_straight_at_waypoint = false
+properties.weight_name                   = 'duration'
+
+local traffic_light_penalty              = 2
+local u_turn_penalty                     = 2
 
 
 
@@ -193,7 +195,7 @@ function initial_routability_check(way,result,data)
   data.platform = way:get_value_by_key("platform")
   data.amenity = way:get_value_by_key("amenity")
   data.public_transport = way:get_value_by_key("public_transport")
-  
+
   return data.highway ~= nil or
          data.leisure ~= nil or
          data.route ~= nil or
@@ -293,14 +295,14 @@ function handle_speed(way,result,data)
                   amenity_speeds[data.amenity] or
                   man_made_speeds[data.man_made] or
                   leisure_speeds[data.leisure]
-    
+
     if speed then
       -- set speed by way type
       result.forward_speed = highway_speed
       result.backward_speed = highway_speed
       result.forward_speed = speed
       result.backward_speed = speed
-    else 
+    else
       -- Set the avg speed on ways that are marked accessible
       if access_tag_whitelist[data.forward_access] then
         result.forward_speed = speed_profile["default"]
@@ -315,7 +317,7 @@ function handle_speed(way,result,data)
   if -1 == result.forward_speed and -1 == result.backward_speed then
     return false
   end
-  
+
   if handle_surface(way,result) == false then return false end
 end
 
@@ -398,9 +400,9 @@ function handle_oneway(way,result,data)
   elseif oneway_handling == 'specific' then
     oneway = Directional.get_value_by_prefixed_sequence(way,restrictions,'oneway')
   end
-    
+
   data.oneway = oneway
-  
+
   if oneway then
     if oneway == "-1" then
       data.is_reverse_oneway = true
@@ -413,7 +415,7 @@ function handle_oneway(way,result,data)
     else
       local junction = way:get_value_by_key("junction")
       if data.highway == "motorway" or
-         junction == "roundabout" or 
+         junction == "roundabout" or
          junction == "circular" then
         if oneway ~= "no" then
           -- implied oneway
@@ -436,7 +438,7 @@ end
 -- determine if this way can be used as a start/end point for routing
 function handle_startpoint(way,result)
   -- only allow this road as start point if it not a ferry
-  result.is_startpoint = result.forward_mode == mode.walking or 
+  result.is_startpoint = result.forward_mode == mode.walking or
                               result.backward_mode == mode.walking
 end
 
@@ -455,7 +457,7 @@ function way_function(way, result)
   -- unnecessary work. this implies we should check things that
   -- commonly forbids access early, and handle complicated edge
   -- cases later.
-  
+
   -- perform an quick initial check and abort if way is obviously
   -- not routable, e.g. because it does not have any of the key
   -- tags indicating routability
@@ -496,4 +498,16 @@ function way_function(way, result)
 
   -- set name, ref and pronunciation
   if handle_names(way,result) == false then return end
+end
+
+function turn_function (turn)
+  turn.duration = 0.
+
+  if turn.direction_modifier == direction_modifier.u_turn then
+     turn.duration = turn.duration + u_turn_penalty
+  end
+
+  if turn.has_traffic_light then
+     turn.duration = traffic_light_penalty
+  end
 end

@@ -42,7 +42,10 @@ struct ExtractionWay
     {
         forward_speed = -1;
         backward_speed = -1;
+        forward_rate = -1;
+        backward_rate = -1;
         duration = -1;
+        weight = -1;
         roundabout = false;
         circular = false;
         is_startpoint = true;
@@ -84,9 +87,16 @@ struct ExtractionWay
     }
     const char *GetTurnLanesBackward() const { return turn_lanes_backward.c_str(); }
 
+    // speed in km/h
     double forward_speed;
     double backward_speed;
+    // weight per meter
+    double forward_rate;
+    double backward_rate;
+    // duration of the whole way in both directions
     double duration;
+    // weight of the whole way in both directions
+    double weight;
     std::string name;
     std::string ref;
     std::string pronunciation;

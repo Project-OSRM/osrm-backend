@@ -35,7 +35,7 @@ module.exports = function () {
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, pronunciations, instructions, refs, bearings, turns, modes, times,
-                            distances, summary, intersections, lanes, locations;
+                            distances, summary, intersections, lanes, locations, annotation, weight_name, weights;
 
                         let json = JSON.parse(body);
 
@@ -55,6 +55,9 @@ module.exports = function () {
                             lanes = this.lanesList(json.routes[0]);
                             summary = this.summary(json.routes[0]);
                             locations = this.locations(json.routes[0]);
+                            annotation = this.annotationList(json.routes[0]);
+                            weight_name = this.weightName(json.routes[0]);
+                            weights = this.weightList(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
@@ -130,6 +133,10 @@ module.exports = function () {
                                 got.locations = (locations || '').trim();
                             }
 
+                            if (headers.has('annotation')){
+                                got.annotation = (annotation || '').trim();
+                            }
+
                             var putValue = (key, value) => {
                                 if (headers.has(key)) got[key] = instructions ? value : '';
                             };
@@ -142,6 +149,8 @@ module.exports = function () {
                             putValue('distances', distances);
                             putValue('pronunciations', pronunciations);
                             putValue('destinations', destinations);
+                            putValue('weight_name', weight_name);
+                            putValue('weights', weights);
                         }
 
                         for (var key in row) {
