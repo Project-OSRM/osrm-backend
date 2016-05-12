@@ -1,8 +1,7 @@
 coverage:
-  flags:
-    branches: master
-    ignore:
-      - unit_tests/.*
-      - third_party/.*
+
+  ignore:
+    - unit_tests/.*
+    - third_party/.*
 
 comment: off
