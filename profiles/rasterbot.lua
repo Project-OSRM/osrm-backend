@@ -1,4 +1,4 @@
-api_version = 0
+api_version = 1
 -- Rasterbot profile
 
 -- Minimalist node_ and way_functions in order to test source_ and segment_functions
@@ -37,18 +37,25 @@ function source_function ()
   )
 end
 
-function segment_function (source, target, distance, weight)
-  local sourceData = sources:query(raster_source, source.lon, source.lat)
-  local targetData = sources:query(raster_source, target.lon, target.lat)
+function segment_function (segment)
+  local sourceData = sources:query(raster_source, segment.source.lon, segment.source.lat)
+  local targetData = sources:query(raster_source, segment.target.lon, segment.target.lat)
   io.write("evaluating segment: " .. sourceData.datum .. " " .. targetData.datum .. "\n")
   local invalid = sourceData.invalid_data()
+  local scaled_weight = segment.weight
+  local scaled_duration = segment.duration
 
   if sourceData.datum ~= invalid and targetData.datum ~= invalid then
-    local slope = math.abs(sourceData.datum - targetData.datum) / distance
+    local slope = math.abs(sourceData.datum - targetData.datum) / segment.distance
+    scaled_weight = scaled_weight / (1.0 - (slope * 5.0))
+    scaled_duration = scaled_duration / (1.0 - (slope * 5.0))
     io.write("   slope: " .. slope .. "\n")
-    io.write("   was speed: " .. weight.speed .. "\n")
-
-    weight.speed = weight.speed * (1 - (slope * 5))
-    io.write("   new speed: " .. weight.speed .. "\n")
+    io.write("   was weight: " .. segment.weight .. "\n")
+    io.write("   new weight: " .. scaled_weight .. "\n")
+    io.write("   was duration: " .. segment.duration .. "\n")
+    io.write("   new duration: " .. scaled_duration .. "\n")
   end
+
+  segment.weight = scaled_weight
+  segment.duration = scaled_duration
 end

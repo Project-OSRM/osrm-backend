@@ -16,7 +16,7 @@ struct ContractorEdgeData
           is_original_via_node_ID(false)
     {
     }
-    ContractorEdgeData(unsigned weight,
+    ContractorEdgeData(EdgeWeight weight,
                        unsigned original_edges,
                        unsigned id,
                        bool shortcut,
@@ -26,7 +26,7 @@ struct ContractorEdgeData
           shortcut(shortcut), forward(forward), backward(backward), is_original_via_node_ID(false)
     {
     }
-    unsigned weight;
+    EdgeWeight weight;
     unsigned id;
     unsigned originalEdges : 28;
     bool shortcut : 1;

@@ -32,7 +32,7 @@ std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge
 #endif
         edges.emplace_back(input_edge.source,
                            input_edge.target,
-                           static_cast<unsigned int>(std::max(input_edge.weight, 1)),
+                           std::max(input_edge.weight, 1),
                            1,
                            input_edge.edge_id,
                            false,
@@ -41,7 +41,7 @@ std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge
 
         edges.emplace_back(input_edge.target,
                            input_edge.source,
-                           static_cast<unsigned int>(std::max(input_edge.weight, 1)),
+                           std::max(input_edge.weight, 1),
                            1,
                            input_edge.edge_id,
                            false,

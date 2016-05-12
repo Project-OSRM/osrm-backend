@@ -19,8 +19,8 @@ struct HeapData
 
 struct SearchEngineData
 {
-    using QueryHeap =
-        util::BinaryHeap<NodeID, NodeID, int, HeapData, util::UnorderedMapStorage<NodeID, int>>;
+    using QueryHeap = util::
+        BinaryHeap<NodeID, NodeID, EdgeWeight, HeapData, util::UnorderedMapStorage<NodeID, int>>;
     using SearchEngineHeapPtr = boost::thread_specific_ptr<QueryHeap>;
 
     static SearchEngineHeapPtr forward_heap_1;

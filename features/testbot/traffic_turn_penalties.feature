@@ -37,14 +37,30 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
         Given the turn penalty file
             """
             1,2,5,0,comment
-            3,4,7,-20
+            3,4,7,-30
             """
         And the contract extra arguments "--turn-penalty-file {penalties_file}"
         When I route I should get
-            | from | to | route    | speed   | time    |
-            | a    | e  | ab,be,be | 36 km/h | 40s +-1 |
-            | 1    | e  | ab,be,be | 36 km/h | 30s +-1 |
-            | b    | f  | bc,cf,cf | 36 km/h | 40s +-1 |
-            | 2    | f  | bc,cf,cf | 36 km/h | 30s +-1 |
-            | c    | g  | cd,dg,dg | 71 km/h | 20s +-1 |
-            | 3    | g  | cd,dg,dg | 54 km/h | 20s +-1 |
+            | from | to | route    | speed    | time    |
+            | a    | e  | ab,be,be | 36 km/h  | 40s +-1 |
+            | 1    | e  | ab,be,be | 36 km/h  | 30s +-1 |
+            | b    | f  | bc,cf,cf | 36 km/h  | 40s +-1 |
+            | 2    | f  | bc,cf,cf | 36 km/h  | 30s +-1 |
+            | c    | g  | cd,dg,dg | 144 km/h | 10s +-1 |
+            | 3    | g  | cd,dg,dg | 54 km/h  | 20s +-1 |
+
+    Scenario: Weighting based on turn penalty file with weights
+        Given the turn penalty file
+            """
+            1,2,5,0,-3.33,comment
+            3,4,7,-30,100.75
+            """
+        And the contract extra arguments "--turn-penalty-file {penalties_file}"
+        When I route I should get
+            | from | to | route    | speed    | time    | weights    |
+            | a    | e  | ab,be,be | 36 km/h  | 40s +-1 | 16.7,20,0  |
+            | 1    | e  | ab,be,be | 36 km/h  | 30s +-1 | 6.7,20,0   |
+            | b    | f  | bc,cf,cf | 36 km/h  | 40s +-1 | 20,20,0    |
+            | 2    | f  | bc,cf,cf | 36 km/h  | 30s +-1 | 10,20,0    |
+            | c    | g  | cd,dg,dg | 144 km/h | 10s +-1 | 120.8,20,0 |
+            | 3    | g  | cd,dg,dg | 54 km/h  | 20s +-1 | 110.8,20,0 |

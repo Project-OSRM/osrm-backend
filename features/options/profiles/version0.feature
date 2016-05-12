@@ -27,7 +27,7 @@ end
     Scenario: Out-bound API version
         Given the profile file
           """
-api_version = 1
+api_version = 2
           """
         And the node map
           """
@@ -55,6 +55,7 @@ properties.max_speed_for_map_matching      = 180/3.6
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false
+properties.weight_name                     = 'duration'
 
 function node_function (node, result)
   print ('node_function ' .. node:id())
@@ -71,7 +72,7 @@ end
 
 function turn_function (angle)
   print('turn_function ' .. angle)
-  return angle == 0 and 0 or 42
+  return angle == 0 and 0 or 17
 end
 
 function segment_function (source, target, distance, weight)
@@ -101,6 +102,6 @@ end
 
         When I route I should get
            | from | to | route    | time  |
-           | a    | b  | ac,cb,cb | 19.2s |
-           | a    | d  | ac,cd,cd | 19.2s |
+           | a    | b  | ac,cb,cb | 16.7s |
+           | a    | d  | ac,cd,cd | 16.7s |
            | a    | e  | ac,ce,ce | 20s   |

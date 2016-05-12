@@ -9,7 +9,7 @@ ContractorDijkstra::ContractorDijkstra(const std::size_t heap_size) : heap(heap_
 
 void ContractorDijkstra::Run(const unsigned number_of_targets,
                              const int node_limit,
-                             const int weight_limit,
+                             const EdgeWeight weight_limit,
                              const NodeID forbidden_node,
                              const ContractorGraph &graph)
 {
@@ -43,7 +43,7 @@ void ContractorDijkstra::Run(const unsigned number_of_targets,
 }
 
 void ContractorDijkstra::RelaxNode(const NodeID node,
-                                   const int node_weight,
+                                   const EdgeWeight node_weight,
                                    const NodeID forbidden_node,
                                    const ContractorGraph &graph)
 {
@@ -60,7 +60,7 @@ void ContractorDijkstra::RelaxNode(const NodeID node,
         {
             continue;
         }
-        const int to_weight = node_weight + data.weight;
+        const EdgeWeight to_weight = node_weight + data.weight;
 
         // New Node discovered -> Add to Heap + Node Info Storage
         if (!heap.WasInserted(to))

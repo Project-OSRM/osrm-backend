@@ -279,6 +279,22 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<unsigned>(DataLayout::CORE_MARKER, number_of_core_markers);
     }
 
+    // load turn weight penalties
+    {
+        io::FileReader turn_weight_penalties_file(config.turn_weight_penalties_path,
+                                                  io::FileReader::HasNoFingerprint);
+        const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
+        layout.SetBlockSize<TurnPenalty>(DataLayout::TURN_WEIGHT_PENALTIES, number_of_penalties);
+    }
+
+    // load turn duration penalties
+    {
+        io::FileReader turn_duration_penalties_file(config.turn_duration_penalties_path,
+                                                    io::FileReader::HasNoFingerprint);
+        const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
+        layout.SetBlockSize<TurnPenalty>(DataLayout::TURN_DURATION_PENALTIES, number_of_penalties);
+    }
+
     // load coordinate size
     {
         io::FileReader node_file(config.nodes_data_path, io::FileReader::HasNoFingerprint);
@@ -306,6 +322,10 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
                                         number_of_compressed_geometries);
         layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_REV_WEIGHT_LIST,
+                                        number_of_compressed_geometries);
+        layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_FWD_DURATION_LIST,
+                                        number_of_compressed_geometries);
+        layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_REV_DURATION_LIST,
                                         number_of_compressed_geometries);
     }
 
@@ -582,6 +602,18 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         BOOST_ASSERT(geometry_node_lists_count ==
                      layout.num_entries[DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
         geometry_input_file.ReadInto(geometries_rev_weight_list_ptr, geometry_node_lists_count);
+
+        const auto geometries_fwd_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+            memory_ptr, DataLayout::GEOMETRIES_FWD_DURATION_LIST);
+        BOOST_ASSERT(geometry_node_lists_count ==
+                     layout.num_entries[DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
+        geometry_input_file.ReadInto(geometries_fwd_duration_list_ptr, geometry_node_lists_count);
+
+        const auto geometries_rev_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+            memory_ptr, DataLayout::GEOMETRIES_REV_DURATION_LIST);
+        BOOST_ASSERT(geometry_node_lists_count ==
+                     layout.num_entries[DataLayout::GEOMETRIES_REV_DURATION_LIST]);
+        geometry_input_file.ReadInto(geometries_rev_duration_list_ptr, geometry_node_lists_count);
     }
 
     {
@@ -664,6 +696,26 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                  coordinates_ptr,
                                  osmnodeid_list,
                                  layout.num_entries[DataLayout::COORDINATE_LIST]);
+    }
+
+    // load turn weight penalties
+    {
+        io::FileReader turn_weight_penalties_file(config.turn_weight_penalties_path,
+                                                  io::FileReader::HasNoFingerprint);
+        const auto number_of_penalties = turn_weight_penalties_file.ReadElementCount64();
+        const auto turn_weight_penalties_ptr =
+            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_WEIGHT_PENALTIES);
+        turn_weight_penalties_file.ReadInto(turn_weight_penalties_ptr, number_of_penalties);
+    }
+
+    // load turn duration penalties
+    {
+        io::FileReader turn_duration_penalties_file(config.turn_duration_penalties_path,
+                                                    io::FileReader::HasNoFingerprint);
+        const auto number_of_penalties = turn_duration_penalties_file.ReadElementCount64();
+        const auto turn_duration_penalties_ptr =
+            layout.GetBlockPtr<TurnPenalty, true>(memory_ptr, DataLayout::TURN_DURATION_PENALTIES);
+        turn_duration_penalties_file.ReadInto(turn_duration_penalties_ptr, number_of_penalties);
     }
 
     // store timestamp

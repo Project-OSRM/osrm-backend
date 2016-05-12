@@ -64,8 +64,9 @@ struct RouteStep
     std::string destinations;
     std::string rotary_name;
     std::string rotary_pronunciation;
-    double duration;
-    double distance;
+    double duration; // duration in seconds
+    double distance; // distance in meters
+    double weight;   // weight value
     extractor::TravelMode mode;
     StepManeuver maneuver;
     // indices into the locations array stored the LegGeometry
@@ -117,6 +118,7 @@ inline void RouteStep::Invalidate()
     rotary_pronunciation.clear();
     duration = 0;
     distance = 0;
+    weight = 0;
     mode = TRAVEL_MODE_INACCESSIBLE;
     maneuver = getInvalidStepManeuver();
     geometry_begin = 0;
@@ -132,6 +134,7 @@ inline RouteStep &RouteStep::AddInFront(const RouteStep &preceeding_step)
     BOOST_ASSERT(mode == preceeding_step.mode);
     duration += preceeding_step.duration;
     distance += preceeding_step.distance;
+    weight += preceeding_step.weight;
 
     geometry_begin = preceeding_step.geometry_begin;
     intersections.insert(intersections.begin(),
@@ -148,6 +151,7 @@ inline RouteStep &RouteStep::ElongateBy(const RouteStep &following_step)
     BOOST_ASSERT(mode == following_step.mode);
     duration += following_step.duration;
     distance += following_step.distance;
+    weight += following_step.weight;
 
     geometry_end = following_step.geometry_end;
     intersections.insert(intersections.end(),

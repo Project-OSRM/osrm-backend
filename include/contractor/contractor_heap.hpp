@@ -18,8 +18,11 @@ struct ContractorHeapData
     bool target = false;
 };
 
-using ContractorHeap = util::
-    BinaryHeap<NodeID, NodeID, int, ContractorHeapData, util::XORFastHashStorage<NodeID, NodeID>>;
+using ContractorHeap = util::BinaryHeap<NodeID,
+                                        NodeID,
+                                        EdgeWeight,
+                                        ContractorHeapData,
+                                        util::XORFastHashStorage<NodeID, NodeID>>;
 
 } // namespace contractor
 } // namespace osrm

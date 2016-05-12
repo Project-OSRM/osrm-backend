@@ -28,6 +28,7 @@ inline InputEdge MakeUnitEdge(const NodeID from, const NodeID to)
             1,
             SPECIAL_EDGEID,
             0,
+            0,
             false,
             false,
             false,

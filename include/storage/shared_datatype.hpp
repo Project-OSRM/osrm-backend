@@ -5,6 +5,8 @@
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
 
+#include <boost/assert.hpp>
+
 #include <array>
 #include <cstdint>
 
@@ -33,6 +35,8 @@ const constexpr char *block_id_to_name[] = {"NAME_OFFSETS",
                                             "GEOMETRIES_NODE_LIST",
                                             "GEOMETRIES_FWD_WEIGHT_LIST",
                                             "GEOMETRIES_REV_WEIGHT_LIST",
+                                            "GEOMETRIES_FWD_DURATION_LIST",
+                                            "GEOMETRIES_REV_DURATION_LIST",
                                             "HSGR_CHECKSUM",
                                             "TIMESTAMP",
                                             "FILE_INDEX_PATH",
@@ -52,7 +56,9 @@ const constexpr char *block_id_to_name[] = {"NAME_OFFSETS",
                                             "POST_TURN_BEARING",
                                             "TURN_LANE_DATA",
                                             "LANE_DESCRIPTION_OFFSETS",
-                                            "LANE_DESCRIPTION_MASKS"};
+                                            "LANE_DESCRIPTION_MASKS",
+                                            "TURN_WEIGHT_PENALTIES",
+                                            "TURN_DURATION_PENALTIES"};
 
 struct DataLayout
 {
@@ -75,6 +81,8 @@ struct DataLayout
         GEOMETRIES_NODE_LIST,
         GEOMETRIES_FWD_WEIGHT_LIST,
         GEOMETRIES_REV_WEIGHT_LIST,
+        GEOMETRIES_FWD_DURATION_LIST,
+        GEOMETRIES_REV_DURATION_LIST,
         HSGR_CHECKSUM,
         TIMESTAMP,
         FILE_INDEX_PATH,
@@ -95,6 +103,8 @@ struct DataLayout
         TURN_LANE_DATA,
         LANE_DESCRIPTION_OFFSETS,
         LANE_DESCRIPTION_MASKS,
+        TURN_WEIGHT_PENALTIES,
+        TURN_DURATION_PENALTIES,
         NUM_BLOCKS
     };
 
@@ -127,6 +137,7 @@ struct DataLayout
         uint64_t result = 0;
         for (auto i = 0; i < NUM_BLOCKS; i++)
         {
+            BOOST_ASSERT(entry_align[i] > 0);
             result += 2 * sizeof(CANARY) + GetBlockSize((BlockID)i) + entry_align[i];
         }
         return result;

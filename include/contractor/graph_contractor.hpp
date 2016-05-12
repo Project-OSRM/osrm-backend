@@ -200,7 +200,7 @@ class GraphContractor
 
             dijkstra.Clear();
             dijkstra.Insert(source, 0, ContractorHeapData{});
-            int max_weight = 0;
+            EdgeWeight max_weight = 0;
             unsigned number_of_targets = 0;
 
             for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
@@ -294,8 +294,8 @@ class GraphContractor
                 const NodeID target = contractor_graph->GetTarget(out_edge);
                 if (target == node)
                     continue;
-                const int path_weight = in_data.weight + out_data.weight;
-                const int weight = dijkstra.GetKey(target);
+                const EdgeWeight path_weight = in_data.weight + out_data.weight;
+                const EdgeWeight weight = dijkstra.GetKey(target);
                 if (path_weight < weight)
                 {
                     if (RUNSIMULATION)

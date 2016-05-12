@@ -12,19 +12,19 @@ void BasicRoutingInterface::RoutingStep(
     SearchEngineData::QueryHeap &forward_heap,
     SearchEngineData::QueryHeap &reverse_heap,
     NodeID &middle_node_id,
-    std::int32_t &upper_bound,
-    std::int32_t min_edge_offset,
+    EdgeWeight &upper_bound,
+    EdgeWeight min_edge_offset,
     const bool forward_direction,
     const bool stalling,
     const bool force_loop_forward,
     const bool force_loop_reverse) const
 {
     const NodeID node = forward_heap.DeleteMin();
-    const std::int32_t weight = forward_heap.GetKey(node);
+    const EdgeWeight weight = forward_heap.GetKey(node);
 
     if (reverse_heap.WasInserted(node))
     {
-        const std::int32_t new_weight = reverse_heap.GetKey(node) + weight;
+        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
         if (new_weight < upper_bound)
         {
             // if loops are forced, they are so at the source
@@ -45,7 +45,7 @@ void BasicRoutingInterface::RoutingStep(
                         if (to == node)
                         {
                             const EdgeWeight edge_weight = data.weight;
-                            const std::int32_t loop_weight = new_weight + edge_weight;
+                            const EdgeWeight loop_weight = new_weight + edge_weight;
                             if (loop_weight >= 0 && loop_weight < upper_bound)
                             {
                                 middle_node_id = node;
@@ -109,7 +109,7 @@ void BasicRoutingInterface::RoutingStep(
             const EdgeWeight edge_weight = data.weight;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const int to_weight = weight + edge_weight;
+            const EdgeWeight to_weight = weight + edge_weight;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!forward_heap.WasInserted(to))
@@ -216,14 +216,14 @@ void BasicRoutingInterface::RetrievePackedPathFromSingleHeap(
 void BasicRoutingInterface::Search(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                    SearchEngineData::QueryHeap &forward_heap,
                                    SearchEngineData::QueryHeap &reverse_heap,
-                                   std::int32_t &weight,
+                                   EdgeWeight &weight,
                                    std::vector<NodeID> &packed_leg,
                                    const bool force_loop_forward,
                                    const bool force_loop_reverse,
-                                   const int duration_upper_bound) const
+                                   const EdgeWeight weight_upper_bound) const
 {
     NodeID middle = SPECIAL_NODEID;
-    weight = duration_upper_bound;
+    weight = weight_upper_bound;
 
     // get offset to account for offsets on phantom nodes on compressed edges
     const auto min_edge_offset = std::min(0, forward_heap.MinKey());
@@ -264,7 +264,7 @@ void BasicRoutingInterface::Search(const std::shared_ptr<const datafacade::BaseD
     }
 
     // No path found for both target nodes?
-    if (duration_upper_bound <= weight || SPECIAL_NODEID == middle)
+    if (weight_upper_bound <= weight || SPECIAL_NODEID == middle)
     {
         weight = INVALID_EDGE_WEIGHT;
         return;
@@ -301,14 +301,14 @@ void BasicRoutingInterface::SearchWithCore(
     SearchEngineData::QueryHeap &reverse_heap,
     SearchEngineData::QueryHeap &forward_core_heap,
     SearchEngineData::QueryHeap &reverse_core_heap,
-    int &weight,
+    EdgeWeight &weight,
     std::vector<NodeID> &packed_leg,
     const bool force_loop_forward,
     const bool force_loop_reverse,
-    int duration_upper_bound) const
+    EdgeWeight weight_upper_bound) const
 {
     NodeID middle = SPECIAL_NODEID;
-    weight = duration_upper_bound;
+    weight = weight_upper_bound;
 
     using CoreEntryPoint = std::tuple<NodeID, EdgeWeight, NodeID>;
     std::vector<CoreEntryPoint> forward_entry_points;
@@ -328,7 +328,7 @@ void BasicRoutingInterface::SearchWithCore(
             if (facade->IsCoreNode(forward_heap.Min()))
             {
                 const NodeID node = forward_heap.DeleteMin();
-                const int key = forward_heap.GetKey(node);
+                const EdgeWeight key = forward_heap.GetKey(node);
                 forward_entry_points.emplace_back(node, key, forward_heap.GetData(node).parent);
             }
             else
@@ -350,7 +350,7 @@ void BasicRoutingInterface::SearchWithCore(
             if (facade->IsCoreNode(reverse_heap.Min()))
             {
                 const NodeID node = reverse_heap.DeleteMin();
-                const int key = reverse_heap.GetKey(node);
+                const EdgeWeight key = reverse_heap.GetKey(node);
                 reverse_entry_points.emplace_back(node, key, reverse_heap.GetData(node).parent);
             }
             else
@@ -392,7 +392,7 @@ void BasicRoutingInterface::SearchWithCore(
     }
 
     // get offset to account for offsets on phantom nodes on compressed edges
-    int min_core_edge_offset = 0;
+    EdgeWeight min_core_edge_offset = 0;
     if (forward_core_heap.Size() > 0)
     {
         min_core_edge_offset = std::min(min_core_edge_offset, forward_core_heap.MinKey());
@@ -432,7 +432,7 @@ void BasicRoutingInterface::SearchWithCore(
     }
 
     // No path found for both target nodes?
-    if (duration_upper_bound <= weight || SPECIAL_NODEID == middle)
+    if (weight_upper_bound <= weight || SPECIAL_NODEID == middle)
     {
         weight = INVALID_EDGE_WEIGHT;
         return;
@@ -567,7 +567,7 @@ double BasicRoutingInterface::GetNetworkDistanceWithCore(
     SearchEngineData::QueryHeap &reverse_core_heap,
     const PhantomNode &source_phantom,
     const PhantomNode &target_phantom,
-    int duration_upper_bound) const
+    EdgeWeight weight_upper_bound) const
 {
     BOOST_ASSERT(forward_heap.Empty());
     BOOST_ASSERT(reverse_heap.Empty());
@@ -601,21 +601,21 @@ double BasicRoutingInterface::GetNetworkDistanceWithCore(
     const bool constexpr DO_NOT_FORCE_LOOPS =
         false; // prevents forcing of loops, since offsets are set correctly
 
-    int duration = INVALID_EDGE_WEIGHT;
+    EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
     SearchWithCore(facade,
                    forward_heap,
                    reverse_heap,
                    forward_core_heap,
                    reverse_core_heap,
-                   duration,
+                   weight,
                    packed_path,
                    DO_NOT_FORCE_LOOPS,
                    DO_NOT_FORCE_LOOPS,
-                   duration_upper_bound);
+                   weight_upper_bound);
 
     double distance = std::numeric_limits<double>::max();
-    if (duration != INVALID_EDGE_WEIGHT)
+    if (weight != INVALID_EDGE_WEIGHT)
     {
         return GetPathDistance(facade, packed_path, source_phantom, target_phantom);
     }
@@ -631,7 +631,7 @@ double BasicRoutingInterface::GetNetworkDistance(
     SearchEngineData::QueryHeap &reverse_heap,
     const PhantomNode &source_phantom,
     const PhantomNode &target_phantom,
-    int duration_upper_bound) const
+    EdgeWeight weight_upper_bound) const
 {
     BOOST_ASSERT(forward_heap.Empty());
     BOOST_ASSERT(reverse_heap.Empty());
@@ -665,18 +665,18 @@ double BasicRoutingInterface::GetNetworkDistance(
     const bool constexpr DO_NOT_FORCE_LOOPS =
         false; // prevents forcing of loops, since offsets are set correctly
 
-    int duration = INVALID_EDGE_WEIGHT;
+    EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
     Search(facade,
            forward_heap,
            reverse_heap,
-           duration,
+           weight,
            packed_path,
            DO_NOT_FORCE_LOOPS,
            DO_NOT_FORCE_LOOPS,
-           duration_upper_bound);
+           weight_upper_bound);
 
-    if (duration == INVALID_EDGE_WEIGHT)
+    if (weight == INVALID_EDGE_WEIGHT)
     {
         return std::numeric_limits<double>::max();
     }

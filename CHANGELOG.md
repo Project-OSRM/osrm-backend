@@ -1,3 +1,10 @@
+# 6.0.0
+  - Profiles:
+    - `turn_function` now does not return an integer but takes in a `turn` object and modifies it
+    - `uturn_penalty` is deprecated set it over the `turn_function`
+    - traffic light penalties now need to be set over the node function, `traffic_light_penalty` is deprecated:
+        result.weight_penalty and result.duration_penalty
+
 # 5.6.0
   - Changes from 5.5
     - Bugfixes

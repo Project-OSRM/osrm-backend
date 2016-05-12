@@ -41,14 +41,20 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                             const bool source_traversed_in_reverse,
                                             const bool target_traversed_in_reverse)
 {
-    const double constexpr ZERO_DURATION = 0., ZERO_DISTANCE = 0.;
+    const double weight_multiplier = std::pow(10., facade.GetWeightPrecision());
+
+    const double constexpr ZERO_DURATION = 0., ZERO_DISTANCE = 0., ZERO_WEIGHT = 0;
     const constexpr char *NO_ROTARY_NAME = "";
-    const EdgeWeight source_duration =
+    const EdgeWeight source_weight =
         source_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight;
+    const EdgeWeight source_duration =
+        source_traversed_in_reverse ? source_node.reverse_duration : source_node.forward_duration;
     const auto source_mode = source_traversed_in_reverse ? source_node.backward_travel_mode
                                                          : source_node.forward_travel_mode;
 
     const EdgeWeight target_duration =
+        target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
+    const EdgeWeight target_weight =
         target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
     const auto target_mode = target_traversed_in_reverse ? target_node.backward_travel_mode
                                                          : target_node.forward_travel_mode;
@@ -84,7 +90,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         // but a RouteStep is with regard to the segment after the turn.
         // We need to skip the first segment because it is already covered by the
         // initial start of a route
-        int segment_duration = 0;
+        EdgeWeight segment_duration = 0;
+        EdgeWeight segment_weight = 0;
 
         // some name changes are not announced in our processing. For these, we have to keep the
         // first name on the segment
@@ -93,11 +100,12 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         {
             const auto &path_point = leg_data[leg_data_index];
             segment_duration += path_point.duration_until_turn;
+            segment_weight += path_point.weight_until_turn;
 
             // all changes to this check have to be matched with assemble_geometry
             if (path_point.turn_instruction.type != extractor::guidance::TurnType::NoTurn)
             {
-                BOOST_ASSERT(segment_duration >= 0);
+                BOOST_ASSERT(segment_weight >= 0);
                 const auto name = facade.GetNameForID(step_name_id);
                 const auto ref = facade.GetRefForID(step_name_id);
                 const auto pronunciation = facade.GetPronunciationForID(step_name_id);
@@ -111,8 +119,9 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                           destinations.to_string(),
                                           NO_ROTARY_NAME,
                                           NO_ROTARY_NAME,
-                                          segment_duration / 10.0,
+                                          segment_duration / 10.,
                                           distance,
+                                          segment_weight / weight_multiplier,
                                           path_point.travel_mode,
                                           maneuver,
                                           leg_geometry.FrontIndex(segment_index),
@@ -173,10 +182,12 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                             0};
                 segment_index++;
                 segment_duration = 0;
+                segment_weight = 0;
             }
         }
         const auto distance = leg_geometry.segment_distances[segment_index];
-        const int duration = segment_duration + target_duration;
+        const EdgeWeight duration = segment_duration + target_duration;
+        const EdgeWeight weight = segment_weight + target_weight;
         BOOST_ASSERT(duration >= 0);
         steps.push_back(RouteStep{step_name_id,
                                   facade.GetNameForID(step_name_id).to_string(),
@@ -187,6 +198,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   NO_ROTARY_NAME,
                                   duration / 10.,
                                   distance,
+                                  weight / weight_multiplier,
                                   target_mode,
                                   maneuver,
                                   leg_geometry.FrontIndex(segment_index),
@@ -202,7 +214,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         // |---| source_duration
         // |---------| target_duration
 
-        int duration = target_duration - source_duration;
+        const EdgeWeight duration = target_duration - source_duration;
+        const EdgeWeight weight = target_weight - source_weight;
         BOOST_ASSERT(duration >= 0);
 
         steps.push_back(RouteStep{source_node.name_id,
@@ -214,6 +227,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                   NO_ROTARY_NAME,
                                   duration / 10.,
                                   leg_geometry.segment_distances[segment_index],
+                                  weight / weight_multiplier,
                                   source_mode,
                                   std::move(maneuver),
                                   leg_geometry.FrontIndex(segment_index),
@@ -251,6 +265,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                               NO_ROTARY_NAME,
                               ZERO_DURATION,
                               ZERO_DISTANCE,
+                              ZERO_WEIGHT,
                               target_mode,
                               std::move(maneuver),
                               leg_geometry.locations.size() - 1,
